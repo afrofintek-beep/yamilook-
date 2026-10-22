@@ -191,13 +191,13 @@ export default function AcademiaSession() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col min-h-screen bg-background">
-        <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-border/40 px-4 safe-top">
-          <div className="flex items-center gap-3 h-14">
-            <button onClick={() => navigate(-1)} className="p-1 -ml-1">
+      <div className="fixed inset-0 flex h-screen-safe min-w-0 flex-col overflow-hidden bg-background pl-[env(safe-area-inset-left,0px)] pr-[env(safe-area-inset-right,0px)]">
+        <header className="relative z-30 shrink-0 border-b border-border/40 bg-background/95 backdrop-blur-md safe-top">
+          <div className="mx-auto flex min-h-14 w-full max-w-2xl min-w-0 items-center gap-2 px-3 py-1">
+            <button onClick={() => navigate(-1)} aria-label="Voltar à Academia" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
               <ArrowLeft className="h-5 w-5 text-foreground" />
             </button>
-            <GraduationCap className="h-5 w-5 text-primary" />
+            <GraduationCap className="h-5 w-5 shrink-0 text-primary" />
             <Skeleton className="h-5 w-40" />
           </div>
         </header>
@@ -227,38 +227,39 @@ export default function AcademiaSession() {
   const isRegistrationClosed = !isEnded && !isLive && now >= startTime;
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
-      <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-border/40 px-4 safe-top">
-        <div className="flex items-center gap-3 h-14">
-          <button onClick={() => navigate(-1)} className="p-1 -ml-1">
+    <div className="fixed inset-0 flex h-screen-safe min-w-0 flex-col overflow-hidden bg-background pl-[env(safe-area-inset-left,0px)] pr-[env(safe-area-inset-right,0px)]">
+      <header className="relative z-30 shrink-0 border-b border-border/40 bg-background/95 backdrop-blur-md safe-top">
+        <div className="mx-auto flex min-h-14 w-full max-w-2xl min-w-0 items-center gap-2 px-3 py-1">
+          <button onClick={() => navigate(-1)} aria-label="Voltar à Academia" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
             <ArrowLeft className="h-5 w-5 text-foreground" />
           </button>
-          <GraduationCap className="h-5 w-5 text-primary" />
-          <h1 className="text-base font-bold text-foreground truncate">{session.title}</h1>
+          <GraduationCap className="h-5 w-5 shrink-0 text-primary" />
+          <h1 className="min-w-0 flex-1 truncate text-sm font-semibold text-foreground sm:text-base" title={session.title}>{session.title}</h1>
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-5">
+      <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain">
+        <div className="mx-auto w-full max-w-2xl min-w-0 space-y-5 px-4 py-5 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))]">
         {/* Mentor */}
         <button
           className="flex items-center gap-3 w-full text-left"
           onClick={() => navigate(`/academia/mentor/${session.mentorId}`)}
         >
-          <Avatar className="h-14 w-14 ring-2 ring-primary/20">
+          <Avatar className="h-14 w-14 shrink-0 ring-2 ring-primary/20">
             <AvatarImage src={session.mentorAvatar} />
             <AvatarFallback className="bg-muted text-lg">{session.mentorName.charAt(0)}</AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <span className="text-base font-semibold text-foreground">{session.mentorName}</span>
+            <span className="block break-words text-base font-semibold text-foreground [overflow-wrap:anywhere]">{session.mentorName}</span>
             <p className="text-xs text-muted-foreground">Mentor</p>
           </div>
         </button>
 
         {/* Title & description */}
         <div className="space-y-2">
-          <h2 className="text-lg font-bold text-foreground leading-tight">{session.title}</h2>
+          <h2 className="break-words text-lg font-bold leading-snug text-foreground [overflow-wrap:anywhere]">{session.title}</h2>
           {session.description && (
-            <p className="text-sm text-muted-foreground leading-relaxed">{session.description}</p>
+            <p className="break-words text-sm leading-relaxed text-muted-foreground [overflow-wrap:anywhere]">{session.description}</p>
           )}
         </div>
 
@@ -266,28 +267,28 @@ export default function AcademiaSession() {
         <Card className="border-border/50 bg-card/50">
           <CardContent className="p-0">
             <div className="grid grid-cols-2 divide-x divide-y divide-border/40">
-              <div className="flex items-center gap-2.5 p-3">
+              <div className="flex min-w-0 items-center gap-2.5 p-3 [&>div]:min-w-0 [&_p]:break-words">
                 <Calendar className="h-4 w-4 text-primary shrink-0" />
                 <div>
                   <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Data</p>
                   <p className="text-sm font-medium text-foreground">{session.date}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2.5 p-3">
+              <div className="flex min-w-0 items-center gap-2.5 p-3 [&>div]:min-w-0 [&_p]:break-words">
                 <Clock className="h-4 w-4 text-primary shrink-0" />
                 <div>
                   <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Hora</p>
                   <p className="text-sm font-medium text-foreground">{session.time}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2.5 p-3">
+              <div className="flex min-w-0 items-center gap-2.5 p-3 [&>div]:min-w-0 [&_p]:break-words">
                 <MonitorPlay className="h-4 w-4 text-primary shrink-0" />
                 <div>
                   <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Formato</p>
                   <p className="text-sm font-medium text-foreground capitalize">{session.format}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2.5 p-3">
+              <div className="flex min-w-0 items-center gap-2.5 p-3 [&>div]:min-w-0 [&_p]:break-words">
                 <Users className="h-4 w-4 text-primary shrink-0" />
                 <div>
                   <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Lugares</p>
@@ -299,7 +300,7 @@ export default function AcademiaSession() {
         </Card>
 
         {/* Badges */}
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Badge variant={session.isPremium ? 'default' : 'secondary'} className="text-xs rounded-full px-3 py-1">
             {session.isPremium ? `${ACADEMIA_COPY.tabPremium} · ${session.priceCoins} coins` : ACADEMIA_COPY.tabFree}
           </Badge>
@@ -345,10 +346,11 @@ export default function AcademiaSession() {
             </AlertDescription>
           </Alert>
         )}
+        </div>
       </div>
 
       {!isEnded && !isRegistrationClosed && (
-        <div className="p-4 border-t border-border/40">
+        <div className="shrink-0 border-t border-border/40 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] [&>button]:whitespace-normal">
           {isLive ? (
             <Button variant="destructive" className="w-full rounded-full" onClick={() => navigate(`/academia/live/${session.id}`)}>
               {ACADEMIA_COPY.enter}
