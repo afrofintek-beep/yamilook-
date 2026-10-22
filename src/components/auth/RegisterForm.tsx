@@ -475,6 +475,7 @@ export function RegisterForm() {
           </Button>
         </motion.div>
 
+        {!isInvitationSignup && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -500,6 +501,7 @@ export function RegisterForm() {
             </Link>
           </p>
         </motion.div>
+        )}
       </motion.form>
     </Form>
   );
