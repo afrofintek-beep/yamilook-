@@ -98,7 +98,7 @@ export function InviteSheet({ open, onOpenChange }: InviteSheetProps) {
             <Button variant="outline" className="w-full" onClick={() => void share()}>Enviar convite</Button>
           </div>
         ) : (
-          <p className="mt-6" role="alert">Código único de convite ainda não está disponível. Actualiza a página. Se continuar em falta, contacta o suporte.</p>
+          <p className="mt-6">Introduz o email para gerar o convite.</p>
         )}
         <p className="text-sm text-muted-foreground mt-4" role="status">{status}</p>
       </SheetContent>
