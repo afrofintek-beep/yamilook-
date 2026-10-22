@@ -491,7 +491,7 @@ export function RegisterForm() {
             </div>
           </div>
 
-          <SocialLoginButtons isLoading={isLoading} />
+          {!isInvitationSignup && <SocialLoginButtons isLoading={isLoading} />}
 
           <p className="text-center text-sm text-muted-foreground mt-6">
             {t('auth.haveAccount')}{' '}
