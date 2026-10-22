@@ -236,6 +236,11 @@ function ProtectedRoute({ children, skipOnboardingCheck }: { children: React.Rea
     return <Navigate to="/welcome" replace />;
   }
 
+  // Do not expose protected content while the profile is still being fetched.
+  if (!skipOnboardingCheck && !profile) {
+    return <div role="status" className="min-h-screen flex items-center justify-center">A carregar perfil…</div>;
+  }
+
   // Redirect to onboarding if not completed (except on the onboarding page itself)
   if (!skipOnboardingCheck && profile && !profile.onboarding_completed) {
     return <Navigate to="/onboarding" replace />;

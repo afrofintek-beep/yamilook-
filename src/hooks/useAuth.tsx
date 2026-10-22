@@ -78,34 +78,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return null;
     }
 
-    // Background sync: ensure authenticated users are never trapped in the
-    // pre-signup onboarding wizard. If the profile exists but the flag is off,
-    // flip it on silently so ProtectedRoute lets them into the app.
-    if (data && !data.onboarding_completed) {
-      supabase
-        .from('profiles')
-        .update({ onboarding_completed: true, app_tour_completed: true })
-        .eq('id', userId)
-        .then(({ error: updateError }) => {
-          if (updateError) {
-            logger.warn('Background onboarding sync failed', 'auth', updateError);
-            return;
-          }
-          setProfile((prev) =>
-            prev ? { ...prev, onboarding_completed: true, app_tour_completed: true } : prev
-          );
-          if (
-            typeof window !== 'undefined' &&
-            (window.location.pathname === '/onboarding' ||
-              window.location.pathname === '/welcome' ||
-              window.location.pathname === '/')
-          ) {
-            window.location.replace('/muxi');
-          }
-        });
-      return { ...data, onboarding_completed: true, app_tour_completed: true } as Profile;
-    }
-
     return data as Profile;
   };
 

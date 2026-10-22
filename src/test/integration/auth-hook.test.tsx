@@ -100,6 +100,20 @@ describe('useAuth Hook', () => {
     expect(result.current.session).toEqual(mockSession);
   });
 
+  it('keeps an incomplete profile pending instead of automatically completing it', async () => {
+    mockSupabaseClient.auth.getSession.mockResolvedValueOnce({ data: { session: mockSession }, error: null });
+    const update = vi.fn().mockReturnThis();
+    mockSupabaseClient.from.mockReturnValue({
+      select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), update,
+      single: vi.fn().mockResolvedValue({ data: { ...mockProfile, onboarding_completed: false, app_tour_completed: false }, error: null }),
+    });
+    const { result } = renderHook(() => useAuth(), { wrapper: createWrapper() });
+    await waitFor(() => expect(result.current.profile).not.toBeNull());
+    expect(result.current.profile?.onboarding_completed).toBe(false);
+    expect(result.current.profile?.app_tour_completed).toBe(false);
+    expect(update).not.toHaveBeenCalled();
+  });
+
   it('signUp creates new user', async () => {
     mockSupabaseClient.auth.getSession.mockResolvedValueOnce({
       data: { session: null },

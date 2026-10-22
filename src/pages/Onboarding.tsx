@@ -109,33 +109,14 @@ export default function Onboarding() {
   // Track whether the user just completed onboarding in this session
   const justCompletedRef = useRef(false);
 
-  // The onboarding wizard is the pre-signup flow. If the user is already
-  // Capturar código de convite (?ref=) logo à entrada
-  useEffect(() => {
-    captureReferralCode();
-  }, []);
+  useEffect(() => { captureReferralCode(); }, []);
 
-  // authenticated, send them to the app. If their profile is incomplete,
-  // mark it complete in the background so they don't get bounced back here.
+  // Only the explicit completion action may finish onboarding.
   useEffect(() => {
-    if (!user || justCompletedRef.current) return;
-
-    if (profile?.onboarding_completed) {
+    if (user && profile?.onboarding_completed && !justCompletedRef.current) {
       navigate('/profile', { replace: true });
-      return;
     }
-
-    if (profile && !profile.onboarding_completed) {
-      (async () => {
-        await supabase
-          .from('profiles')
-          .update({ onboarding_completed: true, app_tour_completed: true })
-          .eq('id', user.id);
-        await refreshProfile();
-        navigate('/muxi', { replace: true });
-      })();
-    }
-  }, [user, profile, navigate, refreshProfile]);
+  }, [user, profile?.onboarding_completed, navigate]);
 
   // If user is already authenticated (e.g. came back), skip to appropriate step
   const isAuthenticated = !!user;
@@ -682,54 +663,62 @@ export default function Onboarding() {
 
   // Final registration: create account + save all onboarding data
   const handleRegister = async () => {
-    if (!isRegisterFormValid) return;
+    if (!isAuthenticated && !isRegisterFormValid) return;
+    if (!selectedGender || !birthDay || !birthMonth || !birthYear || !selectedCity ||
+        !selectedNeighborhood || (selectedNeighborhood === '__other__' && !customNeighborhood.trim())) {
+      toast.error('Completa o género, a data de nascimento e a tua banda antes de continuar.');
+      return;
+    }
 
+    let userId = user?.id;
     const code = accessCode.trim().toUpperCase();
-    if (!code) {
+    if (!isAuthenticated && !code) {
       toast.error('Introduz o código de convite de um membro para concluir o registo.');
       return;
     }
     setIsRegistering(true);
     try {
-      const { data: validation, error: validationError } = await supabase.rpc('validate_mvp_access_code', { p_code: code });
-      const result = validation as { valid?: boolean; error?: string } | null;
-      if (validationError || !result?.valid) {
-        toast.error(validationError ? 'Não foi possível validar o convite. Tenta novamente.' : result?.error || 'Código de convite inválido.');
-        return;
-      }
-      const { error } = await signUp(email, password, {
-        display_name: displayName,
-        username: username.toLowerCase(),
-        access_code: code,
-      });
-
-      if (error) {
-        toast.error(error.message);
-        setIsRegistering(false);
-        return;
-      }
-
-      clearReferralCode();
-
-      // Wait for auth state to settle — poll for session up to 5 seconds
-      let session: Awaited<ReturnType<typeof supabase.auth.getSession>>['data']['session'] = null;
-      for (let attempt = 0; attempt < 10; attempt++) {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        const { data } = await supabase.auth.getSession();
-        if (data.session?.user) {
-          session = data.session;
-          break;
+      if (!userId) {
+        const { data: validation, error: validationError } = await supabase.rpc('validate_mvp_access_code', { p_code: code });
+        const result = validation as { valid?: boolean; error?: string } | null;
+        if (validationError || !result?.valid) {
+          toast.error(validationError ? 'Não foi possível validar o convite. Tenta novamente.' : result?.error || 'Código de convite inválido.');
+          return;
         }
-      }
+        const { error } = await signUp(email, password, {
+          display_name: displayName,
+          username: username.toLowerCase(),
+          access_code: code,
+        });
 
-      if (!session?.user) {
-        toast.error('Conta criada! Verifica o teu email para confirmar.');
-        setIsRegistering(false);
-        navigate('/login');
-        return;
-      }
+        if (error) {
+          toast.error(error.message);
+          setIsRegistering(false);
+          return;
+        }
 
-      const userId = session.user.id;
+        clearReferralCode();
+
+        // Wait for auth state to settle — poll for session up to 5 seconds
+        let session: Awaited<ReturnType<typeof supabase.auth.getSession>>['data']['session'] = null;
+        for (let attempt = 0; attempt < 10; attempt++) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+          const { data } = await supabase.auth.getSession();
+          if (data.session?.user) {
+            session = data.session;
+            break;
+          }
+        }
+
+        if (!session?.user) {
+          toast.error('Conta criada! Verifica o teu email para confirmar.');
+          setIsRegistering(false);
+          navigate('/login');
+          return;
+        }
+
+        userId = session.user.id;
+      }
 
       // Upload avatar if selected
       let finalAvatarUrl: string | null = null;
@@ -1649,6 +1638,19 @@ export default function Onboarding() {
         );
 
       case 'register':
+        if (isAuthenticated) {
+          return (
+            <div className="space-y-5 px-4 max-w-sm mx-auto">
+              <h2 className="text-2xl font-bold">Concluir inscrição</h2>
+              <p>Conta: {profile?.display_name || user?.email}</p>
+              <p>Os teus dados de perfil serão guardados para completares a entrada na Banda.</p>
+              <Button variant="outline" onClick={prevStep} disabled={isRegistering}>Voltar</Button>
+              <Button onClick={handleRegister} disabled={isRegistering}>
+                {isRegistering ? 'A guardar…' : 'Concluir inscrição'}
+              </Button>
+            </div>
+          );
+        }
         return (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
