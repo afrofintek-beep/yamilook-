@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { scrollChatToEnd, scrollChatToMessage } from '@/lib/chat-scroll';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -94,6 +95,7 @@ export default function Chat() {
   } = useMessages(conversationId || null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesViewportRef = useRef<HTMLDivElement>(null);
   const highlightRef = useRef<HTMLDivElement>(null);
   const [autoScroll, setAutoScroll] = useState(true);
   const [replyTo, setReplyTo] = useState<BubbleMessage | null>(null);
@@ -271,7 +273,7 @@ export default function Chat() {
   // Scroll to highlighted message from search
   useEffect(() => {
     if (highlightMessageId && highlightRef.current) {
-      highlightRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      scrollChatToMessage(messagesViewportRef.current, highlightRef.current);
     }
   }, [highlightMessageId, messages]);
 
@@ -280,7 +282,7 @@ export default function Chat() {
     if (!loading && messages.length > 0 && messagesEndRef.current && !highlightMessageId) {
       // Small delay to ensure DOM is ready
       const timeout = setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+        scrollChatToEnd(messagesViewportRef.current, 'auto');
       }, 100);
       return () => clearTimeout(timeout);
     }
@@ -289,7 +291,7 @@ export default function Chat() {
   // Auto-scroll on new messages
   useEffect(() => {
     if (autoScroll && messagesEndRef.current && !highlightMessageId && !loading) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      scrollChatToEnd(messagesViewportRef.current, 'smooth');
     }
   }, [messages, autoScroll, highlightMessageId, loading]);
 
@@ -543,9 +545,9 @@ export default function Chat() {
   };
 
   return (
-    <div className="h-screen bg-background flex flex-col overflow-hidden">
+    <div className="fixed inset-0 h-screen-safe bg-background flex flex-col overflow-hidden overscroll-none">
       {/* Header */}
-      <header className="sticky top-0 z-50 glass border-b border-border/50 safe-top">
+      <header className="relative shrink-0 z-50 glass border-b border-border/50 safe-top">
         <div className="flex items-center justify-between px-2 py-2">
           {selectionMode ? (
             // Selection mode header
@@ -697,7 +699,8 @@ export default function Chat() {
 
       {/* Messages */}
       <div 
-        className="flex-1 overflow-y-auto py-4 relative" 
+        ref={messagesViewportRef}
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain py-4 relative"
         onScroll={handleScroll}
         style={wallpaperStyles}
       >

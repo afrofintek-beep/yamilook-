@@ -258,7 +258,7 @@ export function EnhancedChatInput({
   }, [showStickerPicker, showGifPicker]);
 
   return (
-    <div className="sticky bottom-0 glass border-t border-border/50 safe-bottom relative">
+    <div className="shrink-0 glass border-t border-border/50 safe-bottom relative">
       {/* Sticker Picker */}
       <AnimatePresence>
         {showStickerPicker && (
