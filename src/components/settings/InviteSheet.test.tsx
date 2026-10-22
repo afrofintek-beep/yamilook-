@@ -14,6 +14,12 @@ const generate = async () => {
   await screen.findByLabelText('Código único de convite');
 };
 describe('Unique invitations', () => {
+  it('closes the invitation panel with its visible close button', async () => {
+    const onOpenChange = vi.fn();
+    render(<InviteSheet open onOpenChange={onOpenChange} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Fechar convites' }));
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
   it('lets the administrator grant and revoke invitation permission', async () => {
     let authorized = false;
     rpc.mockImplementation((name: string, args: { p_allowed?: boolean }) => {

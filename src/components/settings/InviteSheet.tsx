@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Sheet, SheetClose, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { supabase } from '@/integrations/supabase/client';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database, Json } from '@/integrations/supabase/types';
+import { X } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { buildInviteUrl } from '@/lib/referral';
 
@@ -114,11 +115,17 @@ export function InviteSheet({ open, onOpenChange, isAdmin = false }: InviteSheet
 
   return (
     <Sheet open={open} onOpenChange={(value) => { setStatus(''); onOpenChange(value); }}>
-      <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle>Convidar para o Yamilook</SheetTitle>
-          <SheetDescription>Gera um código único para o email da pessoa convidada. Só pode ser usado uma vez. Gerar o código não envia um email.</SheetDescription>
+      <SheetContent side="right" hideCloseButton className="w-full max-w-full sm:max-w-md h-screen-safe flex flex-col overflow-hidden p-0 pt-[env(safe-area-inset-top,0px)]">
+        <SheetHeader className="shrink-0 border-b pl-6 pr-[max(0.5rem,env(safe-area-inset-right,0px))] py-2">
+          <div className="flex items-center justify-between gap-3 text-left">
+            <SheetTitle className="min-w-0">Convidar para o Yamilook</SheetTitle>
+            <SheetClose aria-label="Fechar convites" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              <X className="h-5 w-5" aria-hidden="true" />
+            </SheetClose>
+          </div>
         </SheetHeader>
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pt-4 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]">
+          <SheetDescription>Gera um código único para o email da pessoa convidada. Só pode ser usado uma vez. Gerar o código não envia um email.</SheetDescription>
         {allowed ? <>
         <form className="space-y-3 mt-6" onSubmit={(event) => { event.preventDefault(); void issue(); }}>
           <label htmlFor="invite-email" className="block font-medium">Email da pessoa convidada</label>
@@ -157,6 +164,7 @@ export function InviteSheet({ open, onOpenChange, isAdmin = false }: InviteSheet
           </div>)}
         </section>}
         <p className="text-sm text-muted-foreground mt-4" role="status">{status}</p>
+        </div>
       </SheetContent>
     </Sheet>
   );
