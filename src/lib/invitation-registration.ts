@@ -1,30 +1,43 @@
-export type SignupDetails = {
-  email: string;
-  password: string;
-  displayName: string;
-  username: string;
-  usernameAvailable: boolean | null;
-  invitationLink: boolean;
-};
+import { z } from 'zod';
 
-const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const invitationCodePattern = /^[a-z0-9]{4,16}$/i;
-const passwordRequirements = [/.{8,}/, /[A-Z]/, /[a-z]/, /[0-9]/];
+
+export const accessCodeSchema = z
+  .string()
+  .trim()
+  .min(1, 'Código de convite obrigatório')
+  .regex(/^(?:[A-Z0-9]{4,16}|[A-Z0-9]{4}-[A-Z0-9]{4})$/i, 'Usa o código do convite, sem aspas (ex: 92C46B28 ou ABCD-1234)');
 
 export function hasInviteCodeInSearch(search: string): boolean {
   const code = new URLSearchParams(search).get('ref')?.trim() ?? '';
   return invitationCodePattern.test(code);
 }
 
-export function isInvitationRegistrationValid(details: SignupDetails): boolean {
-  const emailValid = emailPattern.test(details.email.trim());
-  const passwordValid = passwordRequirements.every((pattern) => pattern.test(details.password));
-  const profileValid = details.displayName.trim().length >= 2
-    && details.username.trim().length >= 3
-    && details.usernameAvailable !== false;
+export function createRegisterSchema(invitationLink: boolean) {
+  return z.object({
+    accessCode: accessCodeSchema,
+    displayName: z.string(),
+    username: z.string(),
+    email: z.string().email('Please enter a valid email address'),
+    password: z
+      .string()
+      .min(8, 'Password must be at least 8 characters')
+      .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+      .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+      .regex(/[0-9]/, 'Password must contain at least one number'),
+  }).superRefine((values, context) => {
+    if (invitationLink) return;
 
-  return emailValid && passwordValid && (details.invitationLink || profileValid);
+    if (values.displayName.trim().length < 2) {
+      context.addIssue({ code: z.ZodIssueCode.custom, path: ['displayName'], message: 'Name must be at least 2 characters' });
+    }
+    if (values.username.trim().length < 3 || values.username.length > 20 || !/^[a-zA-Z0-9_]+$/.test(values.username)) {
+      context.addIssue({ code: z.ZodIssueCode.custom, path: ['username'], message: 'Username must be 3–20 letters, numbers, or underscores' });
+    }
+  });
 }
+
+export type RegisterFormValues = z.infer<ReturnType<typeof createRegisterSchema>>;
 
 export function buildInvitationSignupMetadata(
   invitationLink: boolean,
