@@ -31,8 +31,12 @@ export function createRegisterSchema(invitationLink: boolean) {
     if (values.displayName.trim().length < 2) {
       context.addIssue({ code: z.ZodIssueCode.custom, path: ['displayName'], message: 'Name must be at least 2 characters' });
     }
-    if (values.username.trim().length < 3 || values.username.length > 20 || !/^[a-zA-Z0-9_]+$/.test(values.username)) {
-      context.addIssue({ code: z.ZodIssueCode.custom, path: ['username'], message: 'Username must be 3–20 letters, numbers, or underscores' });
+    if (values.username.length < 3) {
+      context.addIssue({ code: z.ZodIssueCode.custom, path: ['username'], message: 'Username must be at least 3 characters' });
+    } else if (values.username.length > 20) {
+      context.addIssue({ code: z.ZodIssueCode.custom, path: ['username'], message: 'Username must be less than 20 characters' });
+    } else if (!/^[a-zA-Z0-9_]+$/.test(values.username)) {
+      context.addIssue({ code: z.ZodIssueCode.custom, path: ['username'], message: 'Username can only contain letters, numbers, and underscores' });
     }
   });
 }
