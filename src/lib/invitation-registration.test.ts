@@ -1,52 +1,49 @@
 import {
   buildInvitationSignupMetadata,
+  createRegisterSchema,
   hasInviteCodeInSearch,
-  isInvitationRegistrationValid,
 } from './invitation-registration';
 
 const base = {
-  email: 'guest@example.com',
-  password: 'StrongPass1',
+  accessCode: 'AB12CD34',
   displayName: '',
   username: '',
-  usernameAvailable: null,
-  invitationLink: true,
+  email: 'guest@example.com',
+  password: 'StrongPass1',
 };
 
-describe('invitation registration shortcut', () => {
+describe('invitation registration', () => {
   it('recognizes the existing ?ref= invitation link format', () => {
     expect(hasInviteCodeInSearch('?ref=AB12CD34')).toBe(true);
     expect(hasInviteCodeInSearch('?ref=bad%20code')).toBe(false);
     expect(hasInviteCodeInSearch('?other=AB12CD34')).toBe(false);
   });
 
-  it('allows a valid invitation link with only email and a strong password', () => {
-    expect(isInvitationRegistrationValid(base)).toBe(true);
+  it('accepts invited users with only code, email, and a strong password', () => {
+    expect(createRegisterSchema(true).safeParse(base).success).toBe(true);
   });
 
-  it('still rejects invalid email and weak passwords for invited users', () => {
-    expect(isInvitationRegistrationValid({ ...base, email: 'not-an-email' })).toBe(false);
-    expect(isInvitationRegistrationValid({ ...base, password: 'weak' })).toBe(false);
-  });
-
-  it('keeps the existing profile requirements when no invitation link is present', () => {
-    expect(isInvitationRegistrationValid({ ...base, invitationLink: false })).toBe(false);
-    expect(isInvitationRegistrationValid({
+  it('still requires profile fields when signup has no invitation link', () => {
+    expect(createRegisterSchema(false).safeParse(base).success).toBe(false);
+    expect(createRegisterSchema(false).safeParse({
       ...base,
-      invitationLink: false,
       displayName: 'Guest User',
       username: 'guest_user',
-      usernameAvailable: true,
-    })).toBe(true);
+    }).success).toBe(true);
   });
 
-  it('sends only the code for invited accounts, leaving profile completion optional', () => {
+  it('rejects email or password that fails authentication requirements', () => {
+    expect(createRegisterSchema(true).safeParse({ ...base, email: 'not-an-email' }).success).toBe(false);
+    expect(createRegisterSchema(true).safeParse({ ...base, password: 'weak' }).success).toBe(false);
+  });
+
+  it('sends only the invitation code for the simplified path', () => {
     expect(buildInvitationSignupMetadata(true, ' ab12cd34 ', '', '')).toEqual({
       access_code: 'AB12CD34',
     });
   });
 
-  it('preserves name and username metadata for the existing registration path', () => {
+  it('retains profile metadata for the existing registration path', () => {
     expect(buildInvitationSignupMetadata(false, ' ab12cd34 ', ' Guest User ', 'Guest_User')).toEqual({
       access_code: 'AB12CD34',
       display_name: 'Guest User',
