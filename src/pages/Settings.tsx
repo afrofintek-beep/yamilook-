@@ -473,6 +473,12 @@ export default function Settings() {
 
           <Separator />
 
+          <Button variant="ghost" className="w-full justify-start gap-3 px-4 h-14 rounded-none" onClick={() => navigate('/install')}>
+            <Smartphone className="w-5 h-5" />
+            Instalar Yamilook · modo aplicação
+            <ChevronRight className="w-4 h-4 ml-auto" />
+          </Button>
+
           {/* Appearance */}
           <SectionHeader title={t('settings.appearance')} delay={0.1} />
           <SettingItem

@@ -4,6 +4,8 @@ import { I18nextProvider } from "react-i18next";
 import i18n from "./i18n";
 import App from "./App.tsx";
 import "./index.css";
+import { captureAppInstallPrompt } from "./lib/app-install";
+captureAppInstallPrompt();
 
 
 // Prevent the service worker from interfering when the app is embedded in an iframe (e.g. dev previews)

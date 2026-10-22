@@ -46,6 +46,7 @@ export default defineConfig(({ mode }) => ({
         ],
       },
       manifest: {
+        id: "/",
         name: "Yamilook",
         short_name: "Yamilook",
         description: "A vida como ela é. Conecte-se com pessoas reais em tempo real.",
@@ -54,7 +55,7 @@ export default defineConfig(({ mode }) => ({
         display: "standalone",
         orientation: "portrait",
         scope: "/",
-        start_url: "/",
+        start_url: "/muxi",
         icons: [
           { src: "/pwa-192x192.png", sizes: "192x192", type: "image/png" },
           { src: "/pwa-512x512.png", sizes: "512x512", type: "image/png" },
