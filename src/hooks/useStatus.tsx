@@ -90,7 +90,7 @@ export function useStatus() {
         .select('status_id')
         .in('status_id', statusIds),
       supabase
-        .from('profiles')
+        .from('public_profiles')
         .select('id, display_name, avatar_url, username')
         .eq('id', user.id)
         .maybeSingle()
@@ -165,7 +165,7 @@ export function useStatus() {
 
     const [profilesResult, viewsResult] = await Promise.all([
       supabase
-        .from('profiles')
+        .from('public_profiles')
         .select('id, display_name, avatar_url, username')
         .in('id', statusUserIds),
       supabase

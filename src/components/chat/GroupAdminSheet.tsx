@@ -121,33 +121,28 @@ export function GroupAdminSheet({
     try {
       const { data, error } = await supabase
         .from('conversation_participants')
-        .select(`
-          id,
-          user_id,
-          role,
-          profile:profiles!conversation_participants_user_id_fkey (
-            id,
-            display_name,
-            username,
-            avatar_url
-          )
-        `)
+        .select('id, user_id, role')
         .eq('conversation_id', conversationId);
 
       if (error) throw error;
 
-      const mapped = (data || []).map((p) => ({
-        id: p.id,
-        user_id: p.user_id,
-        role: p.role as 'admin' | 'member',
-        profile: Array.isArray(p.profile) ? p.profile[0] : p.profile,
+      const { data: profiles, error: profileError } = await supabase
+        .from('public_profiles').select('id, display_name, username, avatar_url')
+        .in('id', (data ?? []).map(participant => participant.user_id));
+      if (profileError) throw profileError;
+      const profileMap = new Map((profiles ?? []).map(profile => [profile.id, profile]));
+      const mapped = (data ?? []).map(participant => ({
+        id: participant.id,
+        user_id: participant.user_id,
+        role: participant.role as 'admin' | 'member',
+        profile: profileMap.get(participant.user_id) ?? { id: participant.user_id, display_name: 'Utilizador', username: '', avatar_url: null },
       }));
 
       // Sort: admins first, then alphabetically
       mapped.sort((a, b) => {
         if (a.role === 'admin' && b.role !== 'admin') return -1;
         if (a.role !== 'admin' && b.role === 'admin') return 1;
-        return a.profile.display_name.localeCompare(b.profile.display_name);
+        return (a.profile.display_name ?? '').localeCompare(b.profile.display_name ?? '');
       });
 
       setParticipants(mapped);

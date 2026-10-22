@@ -121,7 +121,7 @@ export function RegisterForm() {
 
     setIsCheckingUsername(true);
     const { data } = await supabase
-      .from('profiles')
+      .from('public_profiles')
       .select('username')
       .eq('username', username.toLowerCase())
       .single();

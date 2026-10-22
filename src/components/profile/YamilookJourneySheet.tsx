@@ -115,7 +115,7 @@ export function YamilookJourneySheet({
           callsResult,
           settingsResult
         ] = await Promise.all([
-          supabase.from('profiles').select('created_at').eq('id', userId).single(),
+          supabase.from('public_profiles').select('created_at').eq('id', userId).single(),
           supabase.from('contacts').select('id', { count: 'exact', head: true }).eq('user_id', userId),
           supabase.from('posts').select('id', { count: 'exact', head: true }).eq('user_id', userId),
           supabase.from('profile_highlights').select('id', { count: 'exact', head: true }).eq('user_id', userId),

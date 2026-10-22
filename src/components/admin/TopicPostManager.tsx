@@ -268,7 +268,7 @@ export function TopicPostManager() {
       // Fetch profiles for all posts
       const userIds = [...new Set((postsData || []).map(p => p.user_id))];
       const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
+        .from('public_profiles')
         .select('id, display_name, avatar_url')
         .in('id', userIds);
 

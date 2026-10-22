@@ -230,7 +230,7 @@ export function useCalls() {
             if (participants && participants.length > 0) {
               const userIds = participants.map(p => p.user_id);
               const { data: profiles } = await supabase
-                .from('profiles')
+                .from('public_profiles')
                 .select('id, display_name, avatar_url')
                 .in('id', userIds);
               
@@ -250,7 +250,7 @@ export function useCalls() {
               
               if (otherUserId) {
                 const { data: profile } = await supabase
-                  .from('profiles')
+                  .from('public_profiles')
                   .select('id, display_name, avatar_url')
                   .eq('id', otherUserId)
                   .maybeSingle();

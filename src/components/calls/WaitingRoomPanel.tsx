@@ -39,7 +39,7 @@ export function WaitingRoomPanel({ callId, isOpen, onClose }: WaitingRoomPanelPr
         const participantsWithProfiles = await Promise.all(
           data.map(async (p) => {
             const { data: profile } = await supabase
-              .from('profiles')
+              .from('public_profiles')
               .select('display_name, avatar_url')
               .eq('id', p.user_id)
               .single();

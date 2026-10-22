@@ -1,3 +1,4 @@
+import { clearLegacyPrivateCache } from "./lib/private-cache";
 import React from "react";
 import { createRoot } from "react-dom/client";
 import { I18nextProvider } from "react-i18next";
@@ -6,6 +7,7 @@ import App from "./App.tsx";
 import "./index.css";
 import { captureAppInstallPrompt } from "./lib/app-install";
 captureAppInstallPrompt();
+void clearLegacyPrivateCache();
 
 
 // Prevent the service worker from interfering when the app is embedded in an iframe (e.g. dev previews)

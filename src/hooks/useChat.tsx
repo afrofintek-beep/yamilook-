@@ -100,7 +100,7 @@ export function useConversations() {
   useEffect(() => {
     if (!user?.id) return;
     const channel = supabase.channel(`conversation-presence-${crypto.randomUUID()}`)
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, (payload) => {
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profile_presence' }, (payload) => {
         const profile = payload.new as PublicProfile;
         setConversations(previous => previous.map(conversation => ({ ...conversation,
           participants: (conversation.participants ?? []).map(participant => participant.profile?.id === profile.id

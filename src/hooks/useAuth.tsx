@@ -1,3 +1,4 @@
+import { clearLegacyPrivateCache } from '@/lib/private-cache';
 import { useState, useEffect, createContext, useContext, ReactNode, useRef, useCallback } from 'react';
 import { User, Session, AuthError, Provider } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -230,6 +231,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    await clearLegacyPrivateCache();
     const { error } = await supabase.auth.signOut();
     
     setUser(null);

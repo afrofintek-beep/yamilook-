@@ -61,7 +61,7 @@ export function useContacts() {
   useEffect(() => {
     if (!user?.id) return;
     const channel = supabase.channel(`contact-presence-${crypto.randomUUID()}`)
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, (payload) => {
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profile_presence' }, (payload) => {
         const profile = payload.new as { id: string; is_online: boolean; last_seen: string | null };
         setContacts(previous => previous.map(contact => contact.profile?.id === profile.id
           ? { ...contact, profile: { ...contact.profile, is_online: profile.is_online, last_seen: profile.last_seen } } : contact));

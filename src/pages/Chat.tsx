@@ -131,7 +131,7 @@ export default function Chat() {
       setResolvingChat(true);
       try {
         const { data: profile } = await supabase
-          .from('profiles')
+          .from('public_profiles')
           .select('id')
           .eq('id', conversationId)
           .maybeSingle();
@@ -190,7 +190,7 @@ export default function Chat() {
     // Fetch the other user's privacy settings
     const fetchPrivacySettings = async () => {
       const { data } = await supabase
-        .from('profiles')
+        .from('public_profiles')
         .select('show_online_status, show_last_seen, show_typing_indicators')
         .eq('id', otherParticipantFromConv.id)
         .single();
@@ -209,7 +209,7 @@ export default function Chat() {
       .on('postgres_changes', {
         event: 'UPDATE',
         schema: 'public',
-        table: 'profiles',
+        table: 'profile_presence',
         filter: `id=eq.${otherParticipantFromConv.id}`,
       }, (payload) => {
         const updated = payload.new as { 

@@ -39,7 +39,7 @@ export function BlockedUsersSheet({ open, onOpenChange }: Props) {
     let profilesById: Record<string, { display_name: string | null; username: string | null; avatar_url: string | null }> = {};
     if (ids.length) {
       const { data: profs } = await supabase
-        .from('profiles')
+        .from('public_profiles')
         .select('id, display_name, username, avatar_url')
         .in('id', ids);
       profilesById = Object.fromEntries((profs ?? []).map((p) => [p.id, p]));

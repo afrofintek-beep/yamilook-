@@ -98,7 +98,7 @@ export function JourneyDetailSheet({ open, onOpenChange, type, userId }: Journey
             if (contactsData?.length) {
               const userIds = contactsData.map(c => c.contact_user_id);
               const { data: profiles } = await supabase
-                .from('profiles')
+                .from('public_profiles')
                 .select('id, display_name, username, avatar_url')
                 .in('id', userIds);
               setFriends(profiles || []);
@@ -171,7 +171,7 @@ export function JourneyDetailSheet({ open, onOpenChange, type, userId }: Journey
             const profileMap = new Map<string, string>();
             if (callerIds.length > 0) {
               const { data: profiles } = await supabase
-                .from('profiles')
+                .from('public_profiles')
                 .select('id, display_name')
                 .in('id', callerIds);
               profiles?.forEach(p => profileMap.set(p.id, p.display_name));

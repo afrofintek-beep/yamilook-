@@ -180,7 +180,7 @@ export function ProfileEditSheet({ open, onOpenChange, profile, onUpdate }: Prof
       // Check username availability if changed
       if (values.username !== profile.username) {
         const { data: existing } = await supabase
-          .from('profiles')
+          .from('public_profiles')
           .select('username')
           .eq('username', values.username.toLowerCase())
           .neq('id', profile.id)

@@ -153,7 +153,7 @@ export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
         if (filters.pinnedOnly && !pinnedIds.has(msg.id)) continue;
 
         const { data: profile } = await supabase
-          .from('profiles')
+          .from('public_profiles')
           .select('display_name, avatar_url')
           .eq('id', msg.sender_id)
           .maybeSingle();
@@ -175,7 +175,7 @@ export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
 
           if (participants?.[0]) {
             const { data: otherProfile } = await supabase
-              .from('profiles')
+              .from('public_profiles')
               .select('display_name')
               .eq('id', participants[0].user_id)
               .maybeSingle();

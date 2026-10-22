@@ -47,7 +47,7 @@ export function useAppeals() {
         ...data.filter(a => a.reviewed_by).map(a => a.reviewed_by!),
       ])];
       const { data: profiles } = await supabase
-        .from('profiles')
+        .from('public_profiles')
         .select('id, display_name, username, avatar_url')
         .in('id', allIds);
 

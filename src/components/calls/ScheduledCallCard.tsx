@@ -70,7 +70,7 @@ export function ScheduledCallCard({ call, onJoin, onEdit }: ScheduledCallCardPro
         const inviteesWithProfiles = await Promise.all(
           data.map(async (invite) => {
             const { data: profile } = await supabase
-              .from('profiles')
+              .from('public_profiles')
               .select('display_name, avatar_url')
               .eq('id', invite.user_id)
               .single();

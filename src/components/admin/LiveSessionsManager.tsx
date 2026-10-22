@@ -56,7 +56,7 @@ export function LiveSessionsManager() {
           viewer_count,
           started_at,
           created_at,
-          host:profiles!live_sessions_host_id_fkey (
+          host:public_profiles!live_sessions_host_id_fkey (
             display_name,
             avatar_url
           )

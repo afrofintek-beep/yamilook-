@@ -1,3 +1,4 @@
+import { updateModeratedProfile } from '@/lib/profile-moderation';
 import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Enums } from '@/integrations/supabase/types';
@@ -181,10 +182,10 @@ export function useStrikes() {
     }
 
     if (action_type === 'ban') {
-      await supabase.from('profiles').update({
+      await updateModeratedProfile(userId, {
         account_status: 'banned',
         suspension_reason: `Auto-ban: ${reason} (5 strikes)`,
-      }).eq('id', userId);
+      });
 
       await supabase.from('moderation_notifications').insert({
         user_id: userId,
@@ -199,11 +200,11 @@ export function useStrikes() {
     const hours = durationMap[action_type];
     if (hours) {
       const suspendedUntil = new Date(Date.now() + hours * 60 * 60 * 1000).toISOString();
-      await supabase.from('profiles').update({
+      await updateModeratedProfile(userId, {
         suspended_until: suspendedUntil,
         suspension_reason: `Auto-suspensão: ${reason}`,
         account_status: 'suspended',
-      }).eq('id', userId);
+      });
 
       await supabase.from('moderation_notifications').insert({
         user_id: userId,

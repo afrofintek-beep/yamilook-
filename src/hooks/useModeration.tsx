@@ -1,3 +1,4 @@
+import { updateModeratedProfile } from '@/lib/profile-moderation';
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Enums } from '@/integrations/supabase/types';
@@ -264,14 +265,11 @@ export function useModeration() {
 
     const suspendedUntil = new Date(Date.now() + durationHours * 60 * 60 * 1000).toISOString();
 
-    const { error } = await supabase
-      .from('profiles')
-      .update({
+    const { error } = await updateModeratedProfile(targetUserId, {
         suspended_until: suspendedUntil,
         suspension_reason: reason,
         account_status: 'suspended',
-      })
-      .eq('id', targetUserId);
+      });
 
     if (error) throw error;
 
@@ -282,14 +280,11 @@ export function useModeration() {
   const unsuspendUser = useCallback(async (targetUserId: string) => {
     if (!user) return;
 
-    const { error } = await supabase
-      .from('profiles')
-      .update({
+    const { error } = await updateModeratedProfile(targetUserId, {
         suspended_until: null,
         suspension_reason: null,
         account_status: 'active',
-      })
-      .eq('id', targetUserId);
+      });
 
     if (error) throw error;
 
@@ -300,13 +295,10 @@ export function useModeration() {
   const banUser = useCallback(async (targetUserId: string, reason: string, reportId?: string) => {
     if (!user) return;
 
-    const { error } = await supabase
-      .from('profiles')
-      .update({
+    const { error } = await updateModeratedProfile(targetUserId, {
         account_status: 'banned',
         suspension_reason: reason,
-      })
-      .eq('id', targetUserId);
+      });
 
     if (error) throw error;
 

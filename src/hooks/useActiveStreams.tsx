@@ -28,7 +28,7 @@ export function useActiveStreams() {
             id,
             title,
             viewer_count,
-            host:profiles!live_sessions_host_id_fkey(id, display_name, avatar_url)
+            host:public_profiles!live_sessions_host_id_fkey(id, display_name, avatar_url)
           `)
           .eq('status', 'live')
           .order('viewer_count', { ascending: false })

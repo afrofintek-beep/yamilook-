@@ -28,7 +28,7 @@ export function GlobalLiveInviteNotifier() {
 
           const { data } = await supabase
             .from('live_sessions')
-            .select('id, title, status, host:profiles!live_sessions_host_id_fkey(display_name)')
+            .select('id, title, status, host:public_profiles!live_sessions_host_id_fkey(display_name)')
             .eq('id', row.session_id)
             .maybeSingle();
           if (!data || data.status !== 'live') return;

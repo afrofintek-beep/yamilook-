@@ -10,7 +10,11 @@ describe('online presence expiry', () => {
     expect(isRecentlyOnline(true, new Date(now - 120_000).toISOString(), now)).toBe(false);
     expect(isRecentlyOnline(true, '2026-07-01T00:00:00Z', now)).toBe(false);
   });
+  it('honours hidden last-seen timestamps while the server lease is active', () => {
+    expect(isRecentlyOnline(true, null, now)).toBe(true);
+    expect(isRecentlyOnline(false, null, now)).toBe(false);
+  });
   it('does not trust missing, malformed or far-future signals', () => {
-    for (const date of [null, undefined, 'invalid', '2099-01-01T00:00:00Z']) expect(isRecentlyOnline(true, date, now)).toBe(false);
+    for (const date of [undefined, 'invalid', '2099-01-01T00:00:00Z']) expect(isRecentlyOnline(true, date, now)).toBe(false);
   });
 });

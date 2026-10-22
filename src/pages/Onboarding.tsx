@@ -694,7 +694,7 @@ export default function Onboarding() {
     }
     setIsCheckingUsername(true);
     const { data } = await supabase
-      .from('profiles')
+      .from('public_profiles')
       .select('username')
       .eq('username', usernameVal.toLowerCase())
       .single();

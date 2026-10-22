@@ -104,7 +104,7 @@ export function useUserStatus(userId: string | null) {
     const fetchStatus = async () => {
       try {
         const { data, error } = await supabase
-          .from('profiles')
+          .from('public_profiles')
           .select('is_online, last_seen, show_online_status, show_last_seen')
           .eq('id', userId)
           .single();
@@ -136,7 +136,7 @@ export function useUserStatus(userId: string | null) {
         {
           event: 'UPDATE',
           schema: 'public',
-          table: 'profiles',
+          table: 'profile_presence',
           filter: `id=eq.${userId}`,
         },
         (payload) => {
@@ -176,7 +176,7 @@ export function useMultipleUserStatus(userIds: string[]) {
     const fetchStatuses = async () => {
       try {
         const { data, error } = await supabase
-          .from('profiles')
+          .from('public_profiles')
           .select('id, is_online, last_seen, show_online_status, show_last_seen')
           .in('id', userIds);
 
@@ -211,7 +211,7 @@ export function useMultipleUserStatus(userIds: string[]) {
         {
           event: 'UPDATE',
           schema: 'public',
-          table: 'profiles',
+          table: 'profile_presence',
         },
         (payload) => {
           const { id, is_online, last_seen, show_online_status, show_last_seen } = payload.new as Tables<'profiles'>;

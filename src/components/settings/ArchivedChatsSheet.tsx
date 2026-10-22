@@ -91,7 +91,7 @@ export function ArchivedChatsSheet({ open, onOpenChange }: ArchivedChatsSheetPro
         .map(p => p.user_id) || [];
 
       const { data: profiles } = await supabase
-        .from('profiles')
+        .from('public_profiles')
         .select('id, display_name, avatar_url')
         .in('id', otherUserIds);
 

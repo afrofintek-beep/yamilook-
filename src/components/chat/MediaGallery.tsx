@@ -56,7 +56,7 @@ export function MediaGallery({ open, onOpenChange, conversationId }: MediaGaller
 
       for (const msg of messages || []) {
         const { data: profile } = await supabase
-          .from('profiles')
+          .from('public_profiles')
           .select('display_name')
           .eq('id', msg.sender_id)
           .maybeSingle();
@@ -90,7 +90,7 @@ export function MediaGallery({ open, onOpenChange, conversationId }: MediaGaller
       for (const msg of textMessages || []) {
         const urls = msg.content?.match(urlRegex) || [];
         const { data: profile } = await supabase
-          .from('profiles')
+          .from('public_profiles')
           .select('display_name')
           .eq('id', msg.sender_id)
           .maybeSingle();

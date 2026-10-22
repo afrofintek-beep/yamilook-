@@ -73,7 +73,7 @@ export function TopicSuggestionsManager() {
 
       if (userIds.length > 0) {
         const { data: profiles } = await supabase
-          .from('profiles')
+          .from('public_profiles')
           .select('id, display_name, avatar_url')
           .in('id', userIds);
 

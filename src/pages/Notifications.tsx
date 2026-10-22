@@ -85,7 +85,7 @@ export default function Notifications() {
         // Get sender profiles
         const senderIds = friendRequests.map(r => r.sender_id);
         const { data: senderProfiles } = await supabase
-          .from('profiles')
+          .from('public_profiles')
           .select('id, display_name, avatar_url')
           .in('id', senderIds);
 
@@ -129,7 +129,7 @@ export default function Notifications() {
         // Get receiver profiles (people who accepted)
         const receiverIds = acceptedRequests.map(r => r.receiver_id);
         const { data: receiverProfiles } = await supabase
-          .from('profiles')
+          .from('public_profiles')
           .select('id, display_name, avatar_url')
           .in('id', receiverIds);
 
@@ -174,7 +174,7 @@ export default function Notifications() {
         if (postReactions && postReactions.length > 0) {
           const reactorIds = [...new Set(postReactions.map(r => r.user_id))];
           const { data: reactorProfiles } = await supabase
-            .from('profiles')
+            .from('public_profiles')
             .select('id, display_name, avatar_url')
             .in('id', reactorIds);
 
@@ -212,7 +212,7 @@ export default function Notifications() {
         if (comments && comments.length > 0) {
           const commenterIds = [...new Set(comments.map(c => c.user_id))];
           const { data: commenterProfiles } = await supabase
-            .from('profiles')
+            .from('public_profiles')
             .select('id, display_name, avatar_url')
             .in('id', commenterIds);
 
@@ -247,7 +247,7 @@ export default function Notifications() {
       if (missedCalls && missedCalls.length > 0) {
         const callerIds = [...new Set(missedCalls.map(c => c.caller_id).filter(Boolean))];
         const { data: callerProfiles } = await supabase
-          .from('profiles')
+          .from('public_profiles')
           .select('id, display_name, avatar_url')
           .in('id', callerIds);
 
@@ -293,7 +293,7 @@ export default function Notifications() {
         if (statusViews && statusViews.length > 0) {
           const viewerIds = [...new Set(statusViews.map(v => v.viewer_id))];
           const { data: viewerProfiles } = await supabase
-            .from('profiles')
+            .from('public_profiles')
             .select('id, display_name, avatar_url')
             .in('id', viewerIds);
 

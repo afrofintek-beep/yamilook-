@@ -346,11 +346,9 @@ export default function Profile() {
   const fetchProfile = async () => {
     if (!targetUserId) return;
 
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', targetUserId)
-      .maybeSingle();
+    const { data, error } = await (isOwnProfile
+      ? supabase.from('profiles').select('*').eq('id', targetUserId).maybeSingle()
+      : supabase.from('public_profiles').select('*').eq('id', targetUserId).maybeSingle());
 
     if (error) {
       console.error('Error fetching profile:', error);

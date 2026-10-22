@@ -106,7 +106,7 @@ export function useRodasList(filters?: { status?: string; theme?: string }) {
         .from('rodas')
         .select(`
           *,
-          organizer:profiles!organizer_id(id, display_name, avatar_url, is_verified)
+          organizer:public_profiles!organizer_id(id, display_name, avatar_url, is_verified)
         `)
         .order('featured', { ascending: false })
         .order('created_at', { ascending: false });
@@ -135,7 +135,7 @@ export function useRoda(rodaId: string | undefined) {
         .from('rodas')
         .select(`
           *,
-          organizer:profiles!organizer_id(id, display_name, avatar_url, is_verified)
+          organizer:public_profiles!organizer_id(id, display_name, avatar_url, is_verified)
         `)
         .eq('id', rodaId)
         .maybeSingle();
@@ -286,7 +286,7 @@ export function usePalcos(filters?: { status?: string; theme?: string; language?
         .from('palcos')
         .select(`
           *,
-          guide:profiles!guide_id(id, display_name, avatar_url, is_verified),
+          guide:public_profiles!guide_id(id, display_name, avatar_url, is_verified),
           roda:rodas!roda_id(*)
         `)
         .eq('visibility', 'public')
@@ -320,7 +320,7 @@ export function usePalco(palcoId: string | undefined) {
         .from('palcos')
         .select(`
           *,
-          guide:profiles!guide_id(id, display_name, avatar_url, is_verified),
+          guide:public_profiles!guide_id(id, display_name, avatar_url, is_verified),
           roda:rodas!roda_id(*)
         `)
         .eq('id', palcoId)
@@ -353,7 +353,7 @@ export function usePalcosForRoda(rodaId: string | undefined) {
         .from('palcos')
         .select(`
           *,
-          guide:profiles!guide_id(id, display_name, avatar_url, is_verified)
+          guide:public_profiles!guide_id(id, display_name, avatar_url, is_verified)
         `)
         .eq('roda_id', rodaId)
         .order('created_at', { ascending: false });

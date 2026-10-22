@@ -75,7 +75,7 @@ export default function Discover() {
       setLoadingUsers(true);
       try {
         const { data, error } = await supabase
-          .from('profiles')
+          .from('public_profiles')
           .select('id, display_name, username, avatar_url, bio')
           .order('created_at', { ascending: false })
           .limit(20);

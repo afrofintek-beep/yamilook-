@@ -92,7 +92,7 @@ export function ScheduledMessagesList({
 
             if (participants?.[0]) {
               const { data: profile } = await supabase
-                .from('profiles')
+                .from('public_profiles')
                 .select('display_name')
                 .eq('id', participants[0].user_id)
                 .maybeSingle();

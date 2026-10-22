@@ -218,7 +218,7 @@ export function useLiveStream(): UseLiveStreamReturn {
     if (!user) { toast({ title: 'Please log in to join', variant: 'destructive' }); return false; }
     setLoading(true);
     try {
-      const { data: session, error: sessionError } = await supabase.from('live_sessions').select('*, host:profiles!live_sessions_host_id_fkey(id, display_name, avatar_url)').eq('id', sessionId).single();
+      const { data: session, error: sessionError } = await supabase.from('live_sessions').select('*, host:public_profiles!live_sessions_host_id_fkey(id, display_name, avatar_url)').eq('id', sessionId).single();
       if (sessionError) throw sessionError;
       if (session.status !== 'live') { toast({ title: 'This stream has ended', variant: 'destructive' }); return false; }
 
@@ -234,7 +234,7 @@ export function useLiveStream(): UseLiveStreamReturn {
 
       await supabase.from('live_participants').upsert({ session_id: sessionId, user_id: user.id, role: 'viewer' }, { onConflict: 'session_id,user_id' });
 
-      const { data: existingMessages } = await supabase.from('live_messages').select('*, user:profiles(display_name, avatar_url)').eq('session_id', sessionId).eq('is_deleted', false).order('created_at', { ascending: true }).limit(100);
+      const { data: existingMessages } = await supabase.from('live_messages').select('*, user:public_profiles(display_name, avatar_url)').eq('session_id', sessionId).eq('is_deleted', false).order('created_at', { ascending: true }).limit(100);
 
       setRoom(newRoom);
       setLocalParticipant(newRoom.localParticipant);
