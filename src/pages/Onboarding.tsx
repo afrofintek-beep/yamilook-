@@ -31,7 +31,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/useAuth';
 import { captureReferralCode, getReferralCode, clearReferralCode } from '@/lib/referral';
-import { buildInvitationSignupMetadata, hasInviteCodeInSearch, isInvitationRegistrationValid } from '@/lib/invitation-registration';
 import { supabase } from '@/integrations/supabase/client';
 import type { TablesUpdate } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
@@ -158,8 +157,7 @@ export default function Onboarding() {
     steps.map(s => s.id === 'avatar' ? { ...s, subtitle: t('onboarding.avatarSubtitle', { friends }) } : s), [t, friends]
   );
 
-  const [isInvitationSignup] = useState(() => hasInviteCodeInSearch(window.location.search));
-  const [currentStep, setCurrentStep] = useState(() => hasInviteCodeInSearch(window.location.search) ? steps.length - 1 : 0);
+  const [currentStep, setCurrentStep] = useState(0);
   const [tourSlide, setTourSlide] = useState(0);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
@@ -680,14 +678,7 @@ export default function Onboarding() {
 
   const isPasswordValid = passwordRequirements.every(req => req.regex.test(password));
   const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const isRegisterFormValid = isInvitationRegistrationValid({
-    email,
-    password,
-    displayName,
-    username,
-    usernameAvailable,
-    invitationLink: isInvitationSignup,
-  });
+  const isRegisterFormValid = displayName.length >= 2 && username.length >= 3 && isEmailValid && isPasswordValid && usernameAvailable !== false;
 
   // Final registration: create account + save all onboarding data
   const handleRegister = async () => {
@@ -706,8 +697,11 @@ export default function Onboarding() {
         toast.error(validationError ? 'Não foi possível validar o convite. Tenta novamente.' : result?.error || 'Código de convite inválido.');
         return;
       }
-      const metadata = buildInvitationSignupMetadata(isInvitationSignup, code, displayName, username);
-      const { error } = await signUp(email.trim().toLowerCase(), password, metadata);
+      const { error } = await signUp(email, password, {
+        display_name: displayName,
+        username: username.toLowerCase(),
+        access_code: code,
+      });
 
       if (error) {
         toast.error(error.message);
@@ -1672,20 +1666,15 @@ export default function Onboarding() {
                 <Sparkles className="w-10 h-10 text-white" />
               </div>
               <h2 className="text-2xl font-bold mb-2 text-foreground">
-                {isInvitationSignup ? 'Aceita o convite' : 'Cria a tua conta'}
+                Cria a tua conta
               </h2>
               <p className="text-muted-foreground text-sm max-w-sm mx-auto">
-                {isInvitationSignup ? 'Usa o email que recebeu o convite e escolhe uma palavra-passe segura.' : 'Último passo! Regista-te para entrar na banda.'}
+                Último passo! Regista-te para entrar na banda.
               </p>
             </motion.div>
 
             <div className="space-y-4 max-w-xs mx-auto">
-              {isInvitationSignup && (
-                <p className="text-sm text-muted-foreground text-center" role="note">
-                  O convite é pessoal e só pode ser usado uma vez. A confirmação do email valida o acesso.
-                </p>
-              )}
-              {!isInvitationSignup && <div>
+              <div>
                 <label htmlFor="onboarding-invite" className="text-sm font-medium text-foreground mb-1.5 block">Código de convite</label>
                 <Input
                   id="onboarding-invite"
@@ -1700,8 +1689,7 @@ export default function Onboarding() {
                 <p id="onboarding-invite-help" className="text-xs text-muted-foreground mt-2">
                   A inscrição é por convite. Se abriste um link de convite, o código aparece aqui. Caso contrário, pede o código ao membro que te convidou.
                 </p>
-              </div>}
-              {!isInvitationSignup && <>
+              </div>
               {/* Display Name */}
               <div>
                 <label className="text-sm font-medium text-foreground mb-1.5 block">Nome</label>
@@ -1759,11 +1747,9 @@ export default function Onboarding() {
                 )}
               </div>
 
-              </>}
-
               {/* Email */}
               <div>
-                <label className="text-sm font-medium text-foreground mb-1.5 block">{isInvitationSignup ? 'Email do convite' : 'Email'}</label>
+                <label className="text-sm font-medium text-foreground mb-1.5 block">Email</label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <Input
@@ -1821,7 +1807,7 @@ export default function Onboarding() {
             </div>
 
             <div className="flex gap-3 justify-center mt-6">
-              {!isInvitationSignup && <Button
+              <Button
                 variant="outline"
                 onClick={prevStep}
                 className="h-14 px-6 rounded-2xl border-2"
@@ -1829,7 +1815,7 @@ export default function Onboarding() {
               >
                 <ChevronLeft className="w-5 h-5 mr-2" />
                 Voltar
-              </Button>}
+              </Button>
               <Button
                 onClick={handleRegister}
                 disabled={!isRegisterFormValid || !accessCode.trim() || isRegistering}
@@ -1842,7 +1828,7 @@ export default function Onboarding() {
                   </>
                 ) : (
                   <>
-                    {isInvitationSignup ? 'Criar conta' : 'Entrar na Banda'}
+                    Entrar na Banda
                     <Sparkles className="w-5 h-5 ml-2" />
                   </>
                 )}
