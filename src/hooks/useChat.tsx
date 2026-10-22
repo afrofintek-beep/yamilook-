@@ -97,6 +97,19 @@ export function useConversations() {
   // callbacks ... after subscribe()").
   const instanceIdRef = useRef(Math.random().toString(36).slice(2));
 
+  useEffect(() => {
+    if (!user?.id) return;
+    const channel = supabase.channel(`conversation-presence-${crypto.randomUUID()}`)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, (payload) => {
+        const profile = payload.new as PublicProfile;
+        setConversations(previous => previous.map(conversation => ({ ...conversation,
+          participants: (conversation.participants ?? []).map(participant => participant.profile?.id === profile.id
+            ? { ...participant, profile: { ...participant.profile, is_online: profile.is_online ?? false, last_seen: profile.last_seen ?? null } } : participant),
+        })));
+      }).subscribe();
+    return () => { void supabase.removeChannel(channel); };
+  }, [user?.id]);
+
   const fetchConversations = useCallback(async () => {
     if (!user) return;
 

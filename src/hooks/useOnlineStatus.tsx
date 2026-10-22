@@ -2,6 +2,8 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import type { Tables } from '@/integrations/supabase/types';
+import { isRecentlyOnline } from '@/lib/online-presence';
+import { usePresenceClock } from './usePresenceClock';
 import { logger } from '@/lib/logger';
 
 interface UserStatus {
@@ -11,152 +13,80 @@ interface UserStatus {
   show_last_seen: boolean;
 }
 
-/**
- * Tracks the current user's online presence using Supabase Realtime Presence.
- * This replaces the old polling-based heartbeat that wrote to the DB every 30s.
- * 
- * How it works:
- * - Joins a shared "online-presence" channel and calls channel.track()
- * - Other users subscribe to the same channel to see who's online
- * - On visibility change / unload, we untrack (no DB writes needed for heartbeat)
- * - We only write to DB on login (online) and logout/unload (offline + last_seen)
- */
+/** A visible browser renews an authenticated, server-timed lease every 30 seconds. */
 export function useOnlineStatus() {
   const { user } = useAuth();
-  const wantsOnlineRef = useRef<boolean | null>(null);
-  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const userId = user?.id;
+  const clientId = useRef(crypto.randomUUID());
+  const queue = useRef(Promise.resolve());
+  const persistStatus = useCallback((active: boolean) => {
+    if (!userId) return Promise.resolve();
+    queue.current = queue.current.catch(() => {}).then(async () => {
+      if (active && (document.hidden || !navigator.onLine)) return;
+      const client = supabase as unknown as {
+        rpc: (name: 'renew_online_presence', args: { p_client_id: string; p_active: boolean }) => PromiseLike<{ error: { message: string } | null }>;
+      };
+      const { error } = await client.rpc('renew_online_presence', { p_client_id: clientId.current, p_active: active });
+      if (error) logger.error('Failed to renew presence', 'presence', error);
+    }).catch((error) => { logger.error('Failed to renew presence', 'presence', error); });
+    return queue.current;
+  }, [userId]);
 
-  // Fetch the user's show_online_status preference once
   useEffect(() => {
-    if (!user) return;
-    supabase
-      .from('profiles')
-      .select('show_online_status')
-      .eq('id', user.id)
-      .single()
-      .then(({ data }) => {
-        wantsOnlineRef.current = data?.show_online_status !== false;
-      });
-  }, [user]);
-
-  // Write online/offline to DB (only on significant state changes, not heartbeat)
-  const persistStatus = useCallback(async (isOnline: boolean) => {
-    if (!user) return;
-    if (isOnline && wantsOnlineRef.current === false) return;
-
-    try {
-      await supabase
-        .from('profiles')
-        .update({
-          is_online: isOnline,
-          last_seen: new Date().toISOString(),
-        })
-        .eq('id', user.id);
-    } catch (error) {
-      logger.error('Failed to persist online status', 'presence', error);
-    }
-  }, [user]);
-
-  // Set up Realtime Presence channel
-  useEffect(() => {
-    if (!user) return;
-
-    // Set online in DB once
-    persistStatus(true);
-
-    const channel = supabase.channel('online-presence', {
-      config: { presence: { key: user.id } },
-    });
-
-    channel
-      .on('presence', { event: 'sync' }, () => {
-        // Presence state synced — consumers use usePresenceStatus to read it
-      })
-      .subscribe(async (status) => {
-        if (status === 'SUBSCRIBED') {
-          // Only track if user wants to show online status
-          if (wantsOnlineRef.current !== false) {
-            await channel.track({
-              user_id: user.id,
-              online_at: new Date().toISOString(),
-            });
-          }
-        }
-      });
-
-    channelRef.current = channel;
-
-    // Handle visibility change
-    const handleVisibilityChange = async () => {
-      if (document.hidden) {
-        await channel.untrack();
-      } else if (wantsOnlineRef.current !== false) {
-        await channel.track({
-          user_id: user.id,
-          online_at: new Date().toISOString(),
-        });
-      }
+    if (!userId) return;
+    let disposed = false;
+    let initialized = false;
+    let wantsOnline = false;
+    const sync = () => {
+      if (!disposed && initialized) void persistStatus(wantsOnline && !document.hidden && navigator.onLine);
     };
-
-    // Handle browser close — persist offline to DB
-    const handleBeforeUnload = () => {
-      const url = `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/profiles?id=eq.${user.id}`;
-      const data = JSON.stringify({
-        is_online: false,
-        last_seen: new Date().toISOString(),
-      });
-      navigator.sendBeacon(url, new Blob([data], { type: 'application/json' }));
+    const init = async () => {
+      const { data, error } = await supabase.from('profiles').select('show_online_status').eq('id', userId).single();
+      if (disposed) return;
+      wantsOnline = !error && !!data && data.show_online_status !== false;
+      initialized = true;
+      sync();
     };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('beforeunload', handleBeforeUnload);
-
-    // Subscribe to show_online_status preference changes
-    const prefChannel = supabase
-      .channel(`my-show-online-pref-${user.id}`)
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${user.id}` },
-        async (payload) => {
-          const newPref = (payload.new as Tables<'profiles'>)?.show_online_status;
-          if (typeof newPref === 'boolean') {
-            wantsOnlineRef.current = newPref;
-            if (!newPref) {
-              await channelRef.current?.untrack();
-              await supabase
-                .from('profiles')
-                .update({ is_online: false, last_seen: new Date().toISOString() })
-                .eq('id', user.id);
-            } else {
-              await channelRef.current?.track({
-                user_id: user.id,
-                online_at: new Date().toISOString(),
-              });
-            }
-          }
+    void init().catch((error) => logger.error('Failed to initialize presence', 'presence', error));
+    const channel = supabase.channel(`presence-preference-${userId}-${clientId.current}`)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${userId}` }, (payload) => {
+        const preference = (payload.new as Tables<'profiles'>).show_online_status;
+        // Heartbeats also update profiles: only react when the preference changes.
+        if (typeof preference === 'boolean' && preference !== wantsOnline) {
+          wantsOnline = preference;
+          initialized = true;
+          sync();
         }
-      )
-      .subscribe();
-
+      }).subscribe();
+    const timer = window.setInterval(() => {
+      if (!document.hidden && navigator.onLine && wantsOnline) sync();
+    }, 30_000);
+    const hide = () => { void persistStatus(false); };
+    document.addEventListener('visibilitychange', sync);
+    window.addEventListener('online', sync);
+    window.addEventListener('offline', sync);
+    window.addEventListener('pagehide', hide);
+    window.addEventListener('pageshow', sync);
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      supabase.removeChannel(prefChannel);
-      channel.untrack();
-      supabase.removeChannel(channel);
-      channelRef.current = null;
-      persistStatus(false);
+      disposed = true;
+      window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', sync);
+      window.removeEventListener('online', sync);
+      window.removeEventListener('offline', sync);
+      window.removeEventListener('pagehide', hide);
+      window.removeEventListener('pageshow', sync);
+      void supabase.removeChannel(channel);
+      void persistStatus(false);
     };
-  }, [user, persistStatus]);
-
+  }, [userId, persistStatus]);
   return { persistStatus };
 }
 
 /**
- * Hook to check if specific users are online via Realtime Presence.
- * Falls back to DB query for last_seen and privacy settings.
+ * Reads server-confirmed presence and expires it locally if updates stop.
  */
 export function useUserStatus(userId: string | null) {
+  const now = usePresenceClock();
   const [status, setStatus] = useState<UserStatus>({
     is_online: false,
     last_seen: null,
@@ -196,11 +126,7 @@ export function useUserStatus(userId: string | null) {
 
     fetchStatus();
 
-    // Online state comes from the DB (is_online), kept live by the
-    // postgres_changes subscription below. We intentionally do NOT add a
-    // presence listener here: the shared 'online-presence' channel is owned
-    // and already subscribed by useOnlineStatus, and adding an .on() after
-    // subscribe() throws on the current Realtime server.
+    // Receive server lease changes; local expiry also handles missed updates.
 
     // DB subscription for privacy setting changes
     const dbChannel = supabase
@@ -230,10 +156,11 @@ export function useUserStatus(userId: string | null) {
     };
   }, [userId]);
 
-  return { ...status, loading };
+  return { ...status, is_online: status.show_online_status && isRecentlyOnline(status.is_online, status.last_seen, now), loading };
 }
 
 export function useMultipleUserStatus(userIds: string[]) {
+  const now = usePresenceClock();
   const [statuses, setStatuses] = useState<Record<string, UserStatus>>({});
   const [loading, setLoading] = useState(true);
   // Único por instância para não colidir no mesmo tópico do canal realtime.
@@ -241,6 +168,7 @@ export function useMultipleUserStatus(userIds: string[]) {
 
   useEffect(() => {
     if (userIds.length === 0) {
+      setStatuses({});
       setLoading(false);
       return;
     }
@@ -273,10 +201,7 @@ export function useMultipleUserStatus(userIds: string[]) {
 
     fetchStatuses();
 
-    // Online state comes from the DB (is_online), kept live by the
-    // postgres_changes subscription below — no presence listener here (the
-    // shared 'online-presence' channel is already subscribed by
-    // useOnlineStatus, and a late .on() throws on the current Realtime server).
+    // Receive server lease changes; local expiry also handles missed updates.
 
     // DB subscription for full profile changes
     const dbChannel = supabase
@@ -310,5 +235,5 @@ export function useMultipleUserStatus(userIds: string[]) {
     };
   }, [userIds.join(',')]);
 
-  return { statuses, loading };
+  return { statuses: Object.fromEntries(Object.entries(statuses).map(([id, status]) => [id, { ...status, is_online: status.show_online_status && isRecentlyOnline(status.is_online, status.last_seen, now) }])), loading };
 }

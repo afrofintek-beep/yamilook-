@@ -1,3 +1,5 @@
+import { isRecentlyOnline } from '@/lib/online-presence';
+import { usePresenceClock } from '@/hooks/usePresenceClock';
 import { formatDistanceToNow, isToday, isYesterday, format } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -69,13 +71,8 @@ export function ConversationItem({
     ? conversation.name || 'Group Chat'
     : otherParticipant?.display_name || 'Unknown';
   const avatarUrl = isGroup ? conversation.avatar_url : otherParticipant?.avatar_url;
-  // Treat user as offline if last_seen is stale (>2 min), since beforeunload
-  // doesn't reliably fire on mobile — is_online can get stuck as true.
-  const isOnline = !isGroup && otherParticipant?.is_online && (() => {
-    if (!otherParticipant?.last_seen) return false;
-    const staleMs = Date.now() - new Date(otherParticipant.last_seen).getTime();
-    return staleMs < 2 * 60 * 1000; // 2 minutes
-  })();
+  const presenceNow = usePresenceClock();
+  const isOnline = !isGroup && isRecentlyOnline(otherParticipant?.is_online, otherParticipant?.last_seen, presenceNow);
 
   const initials = displayName
     .split(' ')

@@ -1,3 +1,5 @@
+import { isRecentlyOnline } from '@/lib/online-presence';
+import { usePresenceClock } from '@/hooks/usePresenceClock';
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { scrollChatToEnd, scrollChatToMessage } from '@/lib/chat-scroll';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
@@ -172,11 +174,8 @@ export default function Chat() {
   const displayName = isGroup ? conversation?.name || 'Group Chat' : otherParticipant?.display_name || 'Chat';
   const avatarUrl = isGroup ? conversation?.avatar_url : otherParticipant?.avatar_url;
   // Only show online if the other user allows it
-  const isOnline = !isGroup && otherUserOnline && otherUserShowOnlineStatus && (() => {
-    if (!otherUserLastSeen) return false;
-    const staleMs = Date.now() - new Date(otherUserLastSeen).getTime();
-    return staleMs < 2 * 60 * 1000;
-  })();
+  const presenceNow = usePresenceClock();
+  const isOnline = !isGroup && otherUserShowOnlineStatus && isRecentlyOnline(otherUserOnline, otherUserLastSeen, presenceNow);
 
   const initials = displayName.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);
   

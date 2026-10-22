@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { isRecentlyOnline } from '@/lib/online-presence';
+import { usePresenceClock } from './usePresenceClock';
 import { useAuth } from './useAuth';
 
 interface Contact {
@@ -49,11 +51,23 @@ interface FriendRequest {
 }
 
 export function useContacts() {
+  const now = usePresenceClock();
   const { user } = useAuth();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    const channel = supabase.channel(`contact-presence-${crypto.randomUUID()}`)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, (payload) => {
+        const profile = payload.new as { id: string; is_online: boolean; last_seen: string | null };
+        setContacts(previous => previous.map(contact => contact.profile?.id === profile.id
+          ? { ...contact, profile: { ...contact.profile, is_online: profile.is_online, last_seen: profile.last_seen } } : contact));
+      }).subscribe();
+    return () => { void supabase.removeChannel(channel); };
+  }, [user?.id]);
 
   const fetchContacts = useCallback(async () => {
     if (!user) return;
@@ -479,7 +493,7 @@ export function useContacts() {
   };
 
   return {
-    contacts,
+    contacts: contacts.map(contact => contact.profile ? { ...contact, profile: { ...contact.profile, is_online: isRecentlyOnline(contact.profile.is_online, contact.profile.last_seen, now) } } : contact),
     friendRequests,
     loading,
     error,

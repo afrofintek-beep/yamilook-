@@ -1,3 +1,4 @@
+import { useUserStatus } from '@/hooks/useOnlineStatus';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -124,6 +125,7 @@ export default function Profile() {
 
   const isOwnProfile = !userId || userId === user?.id;
   const targetUserId = userId || user?.id;
+  const livePresence = useUserStatus(targetUserId ?? null);
   
   // Highlights hook
   const { 
@@ -755,8 +757,8 @@ export default function Profile() {
         bandaName={bandaName}
         isVerified={displayRole !== 'default'}
         role={displayRole}
-        isOnline={profileData.is_online}
-        showOnlineStatus={profileData.show_online_status}
+        isOnline={livePresence.is_online}
+        showOnlineStatus={livePresence.show_online_status}
         onAvatarClick={handleAvatarClick}
       />
 

@@ -1,3 +1,5 @@
+import { isRecentlyOnline } from '@/lib/online-presence';
+import { usePresenceClock } from '@/hooks/usePresenceClock';
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -75,6 +77,7 @@ interface UserProfile {
   email: string | null;
   avatar_url: string | null;
   is_online: boolean | null;
+  last_seen: string | null;
   created_at: string;
   account_status: string | null;
 }
@@ -85,6 +88,7 @@ interface UserWithRole extends UserProfile {
 }
 
 export default function Admin() {
+  const presenceNow = usePresenceClock();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
@@ -170,13 +174,24 @@ export default function Admin() {
     }
   };
 
+  useEffect(() => {
+    if (!isAdmin) return;
+    const channel = supabase.channel(`admin-presence-${crypto.randomUUID()}`)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, (payload) => {
+        const profile = payload.new as UserProfile;
+        setUsers(previous => previous.map(existing => existing.id === profile.id
+          ? { ...existing, is_online: profile.is_online, last_seen: profile.last_seen } : existing));
+      }).subscribe();
+    return () => { void supabase.removeChannel(channel); };
+  }, [isAdmin]);
+
   const fetchUsersWithRoles = async () => {
     setLoadingUsers(true);
     try {
       // Get all users
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, display_name, username, email, avatar_url, is_online, created_at, account_status')
+        .select('id, display_name, username, email, avatar_url, is_online, last_seen, created_at, account_status')
         .order('created_at', { ascending: false })
         .limit(100);
 
@@ -377,7 +392,7 @@ export default function Admin() {
 
   const adminCount = users.filter((u) => u.isAdmin).length;
   const moderatorCount = users.filter((u) => u.isModerator).length;
-  const onlineCount = users.filter((u) => u.is_online).length;
+  const onlineCount = users.filter((u) => isRecentlyOnline(u.is_online, u.last_seen, presenceNow)).length;
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -588,7 +603,7 @@ export default function Admin() {
                               {profile.display_name.charAt(0).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
-                          {profile.is_online && (
+                          {isRecentlyOnline(profile.is_online, profile.last_seen, presenceNow) && (
                             <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-background" />
                           )}
                         </div>

@@ -1,3 +1,5 @@
+import { isRecentlyOnline } from '@/lib/online-presence';
+import { usePresenceClock } from '@/hooks/usePresenceClock';
 import { cn } from '@/lib/utils';
 
 interface OnlineStatusProps {
@@ -20,6 +22,8 @@ export function OnlineStatus({
   showOnlineStatus = true,
   showLastSeen = true,
 }: OnlineStatusProps) {
+  const now = usePresenceClock();
+  const effectiveOnline = isRecentlyOnline(isOnline, lastSeen, now);
   // If user has disabled showing online status, don't render anything
   if (!showOnlineStatus) {
     return null;
@@ -35,17 +39,10 @@ export function OnlineStatus({
 
   // Determine title based on privacy settings
   const getTitle = () => {
-    if (isOnline) return 'Online';
+    if (effectiveOnline) return 'Online';
     if (!showLastSeen) return 'Offline';
     return lastSeen ? `Visto ${formatLastSeen(lastSeen)}` : 'Offline';
   };
-
-  // Guard against stale is_online flags: if last_seen > 2 min ago, treat as offline
-  const effectiveOnline = isOnline && (() => {
-    if (!lastSeen) return false;
-    const staleMs = Date.now() - new Date(lastSeen).getTime();
-    return staleMs < 2 * 60 * 1000;
-  })();
 
   return (
     <div
