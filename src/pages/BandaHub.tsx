@@ -88,9 +88,9 @@ export default function BandaHub() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="h-screen-safe overflow-hidden pb-[calc(5rem+env(safe-area-inset-bottom,0px))] bg-background flex flex-col">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-background safe-top">
+      <header className="shrink-0 relative z-50 bg-background safe-top">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-2">
             <span className="text-lg">📡</span>
@@ -162,7 +162,7 @@ export default function BandaHub() {
         </div>
       </header>
 
-      <ScrollArea className="flex-1">
+      <ScrollArea className="min-h-0 flex-1 [&_[data-radix-scroll-area-viewport]]:overscroll-y-contain">
         {/* Error Banner */}
         {streamError && (
           <StreamErrorBanner

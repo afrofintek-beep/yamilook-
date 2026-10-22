@@ -10,9 +10,9 @@ export default function MokubHome() {
   const LIVE_SPACES = liveSpaces ?? new Set<string>();
 
   return (
-    <div className="flex min-h-screen-safe flex-col bg-background pb-[calc(5rem+env(safe-area-inset-bottom,0px)+1rem)]">
+    <div className="flex h-screen-safe overflow-hidden flex-col bg-background pb-[calc(5rem+env(safe-area-inset-bottom,0px)+1rem)]">
       {/* Header - glass morphism */}
-      <header className="sticky top-0 z-30 glass-nav px-4 safe-top">
+      <header className="relative shrink-0 z-30 glass-nav px-4 safe-top">
         <div className="flex items-center gap-3 h-14">
           <motion.div 
             className="flex items-center gap-2.5"
@@ -31,7 +31,7 @@ export default function MokubHome() {
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto space-y-6 px-4 pt-5">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain space-y-6 px-4 pt-5">
         {/* Live summary */}
         <LiveSummaryCard />
 

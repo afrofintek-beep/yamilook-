@@ -24,9 +24,9 @@ export default function MokubicoSpace() {
   const hasLive = conversas.length > 0;
 
   return (
-    <div className="flex min-h-screen-safe flex-col bg-background pb-[calc(11rem+env(safe-area-inset-bottom,0px))]">
+    <div className="flex h-screen-safe overflow-hidden flex-col bg-background pb-[calc(11rem+env(safe-area-inset-bottom,0px))]">
       {/* Header */}
-      <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-border/40 px-4 safe-top">
+      <header className="relative shrink-0 z-30 bg-background/80 backdrop-blur-md border-b border-border/40 px-4 safe-top">
         <div className="flex items-center gap-3 h-14">
           <button onClick={() => navigate('/mokubico')} className="p-1 -ml-1">
             <ArrowLeft className="h-5 w-5 text-foreground" />
@@ -50,7 +50,7 @@ export default function MokubicoSpace() {
       </header>
 
       {/* Conversas list */}
-      <div className="flex-1 overflow-y-auto px-4 pt-4 space-y-3">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-4 space-y-3">
         {isLoading ? (
           <div className="space-y-3">
             {[1, 2].map((i) => (

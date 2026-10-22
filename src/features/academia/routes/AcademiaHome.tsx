@@ -71,9 +71,9 @@ export default function AcademiaHome() {
       : sessions.filter((s) => s.isPremium);
 
   return (
-    <div className="flex flex-col min-h-screen bg-background pb-20">
+    <div className="flex flex-col h-screen-safe overflow-hidden bg-background pb-[calc(5rem+env(safe-area-inset-bottom,0px))]">
       {/* Header */}
-      <header className="sticky top-0 z-30 glass-nav px-4 pt-safe-top">
+      <header className="relative shrink-0 z-30 glass-nav px-4 safe-top">
         <div className="flex items-center justify-between h-14">
           <div className="flex items-center gap-2.5">
             <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -88,7 +88,7 @@ export default function AcademiaHome() {
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto space-y-6 pt-4">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain space-y-6 pt-4">
         {/* Hero section */}
         <motion.section
           initial={{ opacity: 0, y: 15 }}

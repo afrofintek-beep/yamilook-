@@ -394,9 +394,9 @@ export default function Notifications() {
   const pendingRequests = notifications.filter(n => n.type === 'friend_request');
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="h-screen-safe overflow-hidden pb-[env(safe-area-inset-bottom,0px)] bg-background flex flex-col">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-sm border-b border-border safe-top">
+      <header className="shrink-0 relative z-50 bg-card/95 backdrop-blur-sm border-b border-border safe-top">
         <div className="flex items-center gap-3 px-4 py-3">
           <Button 
             variant="ghost" 
@@ -446,7 +446,7 @@ export default function Notifications() {
       </header>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         {loading ? (
           <div className="p-4 space-y-3">
             {[...Array(6)].map((_, i) => (

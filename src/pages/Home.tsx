@@ -216,8 +216,8 @@ export default function Home() {
   }, [toast]);
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <header className="sticky top-0 z-50 glass-nav safe-top">
+    <div className="h-screen-safe overflow-hidden pb-[calc(5rem+env(safe-area-inset-bottom,0px))] bg-background flex flex-col">
+      <header className="shrink-0 relative z-50 glass-nav safe-top">
         <div className="flex items-center justify-between px-4 py-2.5">
           <div className="flex items-center gap-3">
             <button onClick={() => navigate('/profile')} className="focus:outline-none">
@@ -300,7 +300,7 @@ export default function Home() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 20 }}
             transition={{ duration: 0.2 }}
-            className="flex-1 overflow-y-auto"
+            className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
           >
             {loading ? (
               <ConversationsSkeleton count={6} />
@@ -349,7 +349,7 @@ export default function Home() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 20 }}
             transition={{ duration: 0.2 }}
-            className="flex-1 overflow-y-auto"
+            className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
           >
             <StatusList />
           </motion.div>
@@ -362,7 +362,7 @@ export default function Home() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 20 }}
             transition={{ duration: 0.2 }}
-            className="flex-1 overflow-y-auto flex flex-col"
+            className="min-h-0 flex-1 overflow-y-auto overscroll-contain flex flex-col"
           >
             <CallsTabContent onStartCall={handleStartCallFromTab} />
           </motion.div>

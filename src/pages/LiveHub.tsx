@@ -106,9 +106,9 @@ export default function LiveHub() {
   }, [liveSessions, searchQuery, activeTab, profile?.city]);
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="h-screen-safe overflow-hidden pb-[calc(5rem+env(safe-area-inset-bottom,0px))] bg-background flex flex-col">
       {/* Header - TikTok LIVE style */}
-      <header className="sticky top-0 z-50 bg-background safe-top">
+      <header className="shrink-0 relative z-50 bg-background safe-top">
         {/* Top bar */}
         <div className="flex items-center justify-between px-4 py-2">
           <div className="flex items-center gap-2">
@@ -181,7 +181,7 @@ export default function LiveHub() {
         </div>
       </header>
 
-      <ScrollArea className="flex-1">
+      <ScrollArea className="min-h-0 flex-1 [&_[data-radix-scroll-area-viewport]]:overscroll-y-contain">
         {/* Error Banner */}
         {streamError && (
           <StreamErrorBanner

@@ -181,9 +181,9 @@ export default function Discover() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="h-screen-safe overflow-hidden pb-[calc(5rem+env(safe-area-inset-bottom,0px))] bg-background flex flex-col">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/50 safe-top">
+      <header className="shrink-0 relative z-50 bg-background/95 backdrop-blur-sm border-b border-border/50 safe-top">
         <div className="flex items-center gap-3 px-4 py-3">
           <Button 
             variant="ghost" 
@@ -230,7 +230,7 @@ export default function Discover() {
         )}
       </header>
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         {/* Local Businesses Section */}
         {!selectedTopic && !searchQuery && (
           <LocalBusinessSection 

@@ -411,9 +411,9 @@ export default function Settings() {
   const storagePercentage = (storageUsed / storageTotal) * 100;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="h-screen-safe overflow-hidden pb-[env(safe-area-inset-bottom,0px)] bg-background flex flex-col">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/50 safe-top">
+      <header className="shrink-0 relative z-50 bg-background/95 backdrop-blur-sm border-b border-border/50 safe-top">
         <div className="flex items-center gap-3 px-4 py-3">
           <Button variant="ghost" size="icon" className="rounded-full shrink-0" onClick={() => navigate(-1)}>
             <ChevronLeft className="w-6 h-6" />
@@ -423,7 +423,7 @@ export default function Settings() {
       </header>
 
       {/* Content */}
-      <ScrollArea className="flex-1">
+      <ScrollArea className="min-h-0 flex-1 [&_[data-radix-scroll-area-viewport]]:overscroll-y-contain">
         <div className="pb-8">
           {/* Profile Section */}
           <motion.button
@@ -831,11 +831,11 @@ export default function Settings() {
 
       {/* Notifications Sheet */}
       <Sheet open={notificationsOpen} onOpenChange={setNotificationsOpen}>
-        <SheetContent side="right" className="w-full sm:max-w-md p-0">
-          <SheetHeader className="p-4 border-b">
+        <SheetContent side="right" className="w-full sm:max-w-md h-screen-safe flex flex-col overflow-hidden p-0 pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)]">
+          <SheetHeader className="shrink-0 p-4 pr-16 border-b">
             <SheetTitle>{t('settings.notifications')}</SheetTitle>
           </SheetHeader>
-          <ScrollArea className="h-[calc(100vh-80px)]">
+          <ScrollArea className="min-h-0 flex-1 [&_[data-radix-scroll-area-viewport]]:overscroll-y-contain">
             <div className="p-4 space-y-4">
               {/* Message Notifications */}
               <div className="space-y-2">
@@ -1008,11 +1008,11 @@ export default function Settings() {
 
       {/* Privacy Sheet */}
       <Sheet open={privacyOpen} onOpenChange={setPrivacyOpen}>
-        <SheetContent side="right" className="w-full sm:max-w-md p-0">
-          <SheetHeader className="p-4 border-b">
+        <SheetContent side="right" className="w-full sm:max-w-md h-screen-safe flex flex-col overflow-hidden p-0 pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)]">
+          <SheetHeader className="shrink-0 p-4 pr-16 border-b">
             <SheetTitle>{t('settings.privacy')}</SheetTitle>
           </SheetHeader>
-          <ScrollArea className="h-[calc(100vh-80px)]">
+          <ScrollArea className="min-h-0 flex-1 [&_[data-radix-scroll-area-viewport]]:overscroll-y-contain">
             <div className="space-y-2 pt-2">
               <SettingItem
                 icon={Eye}
@@ -1191,11 +1191,11 @@ export default function Settings() {
 
       {/* Storage Sheet */}
       <Sheet open={storageOpen} onOpenChange={setStorageOpen}>
-        <SheetContent side="right" className="w-full sm:max-w-md p-0">
-          <SheetHeader className="p-4 border-b">
+        <SheetContent side="right" className="w-full sm:max-w-md h-screen-safe flex flex-col overflow-hidden p-0 pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)]">
+          <SheetHeader className="shrink-0 p-4 pr-16 border-b">
             <SheetTitle>{t('settings.storageBackup')}</SheetTitle>
           </SheetHeader>
-          <ScrollArea className="h-[calc(100vh-80px)]">
+          <ScrollArea className="min-h-0 flex-1 [&_[data-radix-scroll-area-viewport]]:overscroll-y-contain">
             <div className="p-4 space-y-6">
               {/* Storage usage */}
               <div className="p-4 rounded-2xl bg-secondary/50">
@@ -1274,11 +1274,11 @@ export default function Settings() {
 
       {/* About Sheet */}
       <Sheet open={aboutOpen} onOpenChange={setAboutOpen}>
-        <SheetContent side="right" className="w-full sm:max-w-md p-0">
-          <SheetHeader className="p-4 border-b">
+        <SheetContent side="right" className="w-full sm:max-w-md h-screen-safe flex flex-col overflow-hidden p-0 pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)]">
+          <SheetHeader className="shrink-0 p-4 pr-16 border-b">
             <SheetTitle>{t('settings.aboutYamilook')}</SheetTitle>
           </SheetHeader>
-          <div className="p-6 text-center">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-6 text-center">
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}

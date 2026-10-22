@@ -144,9 +144,9 @@ export default function AcademiaCreateSession() {
   const goBack = () => { setDirection(-1); handleBack(); };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col h-screen-safe overflow-hidden bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-30 glass-nav px-4 pt-safe-top">
+      <header className="relative shrink-0 z-30 glass-nav px-4 safe-top">
         <div className="flex items-center gap-3 h-14">
           <button onClick={goBack} className="p-1.5 -ml-1 rounded-lg hover:bg-card transition-colors">
             <ArrowLeft className="h-5 w-5 text-foreground" />
@@ -188,7 +188,7 @@ export default function AcademiaCreateSession() {
       </header>
 
       {/* Step content */}
-      <div className="flex-1 overflow-y-auto px-4 pt-6 pb-32">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-6 pb-32">
         <AnimatePresence mode="wait" custom={direction}>
           <motion.div
             key={step}
@@ -408,7 +408,7 @@ export default function AcademiaCreateSession() {
       </div>
 
       {/* Fixed bottom CTA */}
-      <div className="fixed bottom-0 left-0 right-0 glass-nav p-4 pb-safe-bottom">
+      <div className="fixed bottom-0 left-0 right-0 glass-nav p-4 safe-bottom">
         <Button
           className="w-full rounded-full h-11 gap-1.5 text-sm font-semibold"
           disabled={!canNext || createMutation.isPending}

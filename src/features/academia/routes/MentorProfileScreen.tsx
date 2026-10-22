@@ -118,8 +118,8 @@ export default function MentorProfileScreen() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col min-h-screen bg-background">
-        <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-border/40 px-4 pt-safe-top">
+      <div className="flex flex-col h-screen-safe overflow-hidden bg-background">
+        <header className="relative shrink-0 z-30 bg-background/80 backdrop-blur-md border-b border-border/40 px-4 safe-top">
           <div className="flex items-center gap-3 h-14">
             <button onClick={() => navigate(-1)} className="p-1 -ml-1">
               <ArrowLeft className="h-5 w-5 text-foreground" />
@@ -144,8 +144,8 @@ export default function MentorProfileScreen() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-background pb-20">
-      <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-border/40 px-4 pt-safe-top">
+    <div className="flex flex-col h-screen-safe overflow-hidden bg-background pb-[calc(5rem+env(safe-area-inset-bottom,0px))]">
+      <header className="relative shrink-0 z-30 bg-background/80 backdrop-blur-md border-b border-border/40 px-4 safe-top">
         <div className="flex items-center gap-3 h-14">
           <button onClick={() => navigate(-1)} className="p-1 -ml-1">
             <ArrowLeft className="h-5 w-5 text-foreground" />
@@ -155,7 +155,7 @@ export default function MentorProfileScreen() {
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-6 space-y-6">
         {/* Profile Header */}
         <div className="flex flex-col items-center text-center gap-3">
           <div className="relative">

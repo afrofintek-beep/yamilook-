@@ -162,9 +162,9 @@ export default function Calls() {
   }, {} as Record<string, CallHistory[]>);
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="h-screen-safe overflow-hidden pb-[env(safe-area-inset-bottom,0px)] bg-background flex flex-col">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-background border-b border-border/50 safe-top">
+      <header className="shrink-0 relative z-50 bg-background border-b border-border/50 safe-top">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
             <Button 
@@ -223,7 +223,7 @@ export default function Calls() {
       )}
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="min-h-0 flex-1 flex flex-col">
         <TabsList className="mx-4 mt-4 bg-secondary/80 p-1">
           <TabsTrigger 
             value="all" 
@@ -246,7 +246,7 @@ export default function Calls() {
         </TabsList>
 
         {/* All & Missed Calls */}
-        <TabsContent value="all" className="flex-1 overflow-y-auto mt-0">
+        <TabsContent value="all" className="min-h-0 flex-1 overflow-y-auto overscroll-contain mt-0">
           {loading ? (
             <div className="p-4 space-y-3">
               {[...Array(5)].map((_, i) => (
@@ -371,7 +371,7 @@ export default function Calls() {
           )}
         </TabsContent>
 
-        <TabsContent value="missed" className="flex-1 overflow-y-auto mt-0">
+        <TabsContent value="missed" className="min-h-0 flex-1 overflow-y-auto overscroll-contain mt-0">
           {filteredHistory.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-64 text-center px-8">
               <div className="w-20 h-20 rounded-2xl bg-destructive/10 flex items-center justify-center mb-4">
@@ -463,7 +463,7 @@ export default function Calls() {
         </TabsContent>
 
         {/* Scheduled Calls */}
-        <TabsContent value="scheduled" className="flex-1 overflow-y-auto mt-0">
+        <TabsContent value="scheduled" className="min-h-0 flex-1 overflow-y-auto overscroll-contain mt-0">
           {scheduledCalls.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-64 text-center px-8">
               <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">

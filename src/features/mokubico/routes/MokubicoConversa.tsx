@@ -1,3 +1,4 @@
+import { scrollChatToEnd } from '@/lib/chat-scroll';
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -28,7 +29,7 @@ export default function MokubicoConversa() {
   const [state, setState] = useState<'loading' | 'ok' | 'denied'>('loading');
   const [conversa, setConversa] = useState<ConversaInfo | null>(null);
   const [text, setText] = useState('');
-  const msgEndRef = useRef<HTMLDivElement>(null);
+  const messagesViewportRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
 
   const isHost = !!conversa && conversa.host_id === user?.id;
@@ -56,7 +57,7 @@ export default function MokubicoConversa() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state, conversa?.status, conversa?.media_enabled]);
 
-  useEffect(() => { msgEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [room.messages.length]);
+  useEffect(() => { scrollChatToEnd(messagesViewportRef.current, 'smooth'); }, [room.messages.length]);
 
   const send = () => { room.sendMessage(text); setText(''); };
 
@@ -96,9 +97,9 @@ export default function MokubicoConversa() {
   const media = conversa?.media_enabled ?? true; // free Quintal = text-only
 
   return (
-    <div className="flex flex-col h-screen bg-background">
+    <div className="flex flex-col h-screen-safe overflow-hidden bg-background">
       {/* Header */}
-      <header className="flex items-center gap-3 px-4 h-14 border-b border-border safe-top shrink-0">
+      <header className="flex items-center gap-3 px-4 min-h-[calc(3.5rem+env(safe-area-inset-top,0px))] border-b border-border safe-top shrink-0">
         <button onClick={leave} className="p-1 -ml-1"><ArrowLeft className="h-5 w-5" /></button>
         <div className="flex-1 min-w-0">
           <h1 className="text-sm font-bold truncate">{conversa?.title || 'Conversa'}</h1>
@@ -177,7 +178,7 @@ export default function MokubicoConversa() {
       )}
 
       {/* Text chat */}
-      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2">
+      <div ref={messagesViewportRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-3 space-y-2">
         {room.messages.length === 0 ? (
           <p className="text-xs text-muted-foreground text-center py-8">Sê o primeiro a escrever.</p>
         ) : (
@@ -204,7 +205,6 @@ export default function MokubicoConversa() {
             );
           })
         )}
-        <div ref={msgEndRef} />
       </div>
 
       {/* Controls */}
