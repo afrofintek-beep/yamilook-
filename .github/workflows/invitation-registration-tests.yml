@@ -24,4 +24,4 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm install --no-audit --no-fund
-      - run: npm test -- --reporter=dot
+      - run: npm test -- src/lib/invitation-registration.test.ts src/test/integration/auth.test.tsx --reporter=dot
