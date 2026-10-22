@@ -49,12 +49,13 @@ import { MediaCarousel } from './MediaCarousel';
 
 interface PostCardProps {
   post: PostWithUser;
+  mediaPriority?: boolean;
   onCommentClick?: () => void;
   isArchived?: boolean;
   onToggleArchive?: (postId: string) => void;
 }
 
-export const PostCard = memo(function PostCard({ post, onCommentClick, isArchived, onToggleArchive }: PostCardProps) {
+export const PostCard = memo(function PostCard({ mediaPriority = false, post, onCommentClick, isArchived, onToggleArchive }: PostCardProps) {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -317,6 +318,7 @@ export const PostCard = memo(function PostCard({ post, onCommentClick, isArchive
       {post.media_urls && post.media_urls.length > 0 && (
         <MediaCarousel
           urls={post.media_urls}
+          priority={mediaPriority}
           onDoubleTap={handleDoubleTap}
           likeOverlay={
             isLikeAnimating && currentReaction ? (

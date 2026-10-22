@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { preparePostImage } from '@/lib/post-image';
 import { useAuth } from './useAuth';
 import { ReactionCounts, createEmptyReactionCounts, normalizeReactionType } from '@/lib/reactions';
 import type { Tables } from '@/integrations/supabase/types';
@@ -310,7 +311,8 @@ export function usePosts() {
     const mediaUrls: string[] = [];
 
     if (options.mediaFiles?.length) {
-      for (const file of options.mediaFiles) {
+      for (const originalFile of options.mediaFiles) {
+        const file = await preparePostImage(originalFile);
         const fileExt = file.name.split('.').pop();
         const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
 
@@ -319,7 +321,7 @@ export function usePosts() {
         const { error: uploadError } = await supabase.storage
           .from('media')
           .upload(fileName, file, {
-            cacheControl: '3600',
+            cacheControl: '31536000',
             upsert: false,
           });
 

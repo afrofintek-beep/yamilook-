@@ -335,19 +335,19 @@ describe('Feed Page', () => {
   it('applies proper layout classes', () => {
     const { container } = render(<Feed />);
     
-    // Main container should be min-h-screen and flex column
+    // The bounded app shell keeps the header outside the scrolling feed.
     const mainDiv = container.firstChild;
-    expect(mainDiv).toHaveClass('min-h-screen');
+    expect(mainDiv).toHaveClass('h-screen-safe', 'overflow-hidden');
     expect(mainDiv).toHaveClass('flex');
     expect(mainDiv).toHaveClass('flex-col');
   });
 
-  it('has sticky header', () => {
+  it('keeps header outside the scrolling feed', () => {
     const { container } = render(<Feed />);
     
     const header = container.querySelector('header');
-    expect(header).toHaveClass('sticky');
-    expect(header).toHaveClass('top-0');
+    expect(header).toHaveClass('shrink-0', 'safe-top');
+    expect(header?.closest('[data-radix-scroll-area-viewport]')).toBeNull();
   });
 
   it('has fixed bottom navigation', () => {

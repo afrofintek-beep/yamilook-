@@ -13,7 +13,6 @@ import { StatusList } from '@/components/status/StatusList';
 import { SponsoredPostCard } from '@/components/advertising/SponsoredPostCard';
 import BottomNav from '@/components/BottomNav';
 import { FeedSkeleton } from '@/components/ui/ShimmerSkeleton';
-import { preloadImages } from '@/components/ui/OptimizedImage';
 import { LiveIndicatorBadge } from '@/components/live/LiveIndicatorBadge';
 import { LivePreviewTooltip } from '@/components/live/LivePreviewTooltip';
 import { usePosts, PostWithUser } from '@/hooks/usePosts';
@@ -66,16 +65,6 @@ export default function Feed() {
     };
     loadAds();
   }, [feedPosts, archivedPostIds, fetchActiveAdsForFeed, interleaveAdsInFeed]);
-
-  // Preload images for first 5 posts (Instagram-style prefetching)
-  useEffect(() => {
-    if (feedPosts.length > 0) {
-      const imageUrls = feedPosts
-        .slice(0, 5)
-        .flatMap(post => post.media_urls || []);
-      preloadImages(imageUrls);
-    }
-  }, [feedPosts]);
 
   const handleCommentClick = (post: PostWithUser) => {
     setSelectedPost(post);
@@ -209,7 +198,7 @@ export default function Feed() {
             </div>
           ) : feedWithAds.length === 0 ? null : (
             <>
-              {feedWithAds.map((item) => (
+              {feedWithAds.map((item, index) => (
                 <div key={item.id}>
                   {'isAd' in item ? (
                     <div className="py-2">
@@ -217,7 +206,8 @@ export default function Feed() {
                     </div>
                   ) : (
                     <PostCard 
-                      post={item} 
+                      post={item}
+                      mediaPriority={index === 0}
                       onCommentClick={() => handleCommentClick(item)}
                       isArchived={isArchived(item.id)}
                       onToggleArchive={toggleArchive}

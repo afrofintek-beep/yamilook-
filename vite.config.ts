@@ -36,6 +36,18 @@ export default defineConfig(({ mode }) => ({
         skipWaiting: true,
         runtimeCaching: [
           {
+            // Only public post media; authenticated API and signed URLs are excluded.
+            urlPattern: ({ url, request }) => request.destination === "image"
+              && url.origin === "https://rfayqekonkovfbkwjjum.supabase.co"
+              && url.pathname.startsWith("/storage/v1/object/public/media/"),
+            handler: "CacheFirst",
+            options: {
+              cacheName: "yamilook-post-images-v1",
+              cacheableResponse: { statuses: [200] },
+              expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 * 7, purgeOnQuotaError: true },
+            },
+          },
+          {
             urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
             handler: "NetworkFirst",
             options: {

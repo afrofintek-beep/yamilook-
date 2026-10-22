@@ -3,15 +3,16 @@ import { cn } from '@/lib/utils';
 
 interface MediaCarouselProps {
   urls: string[];
+  priority?: boolean;
   onDoubleTap?: () => void;
   likeOverlay?: ReactNode;
 }
 
 function isVideo(url: string) {
-  return /\.(mp4|webm|mov)$/i.test(url);
+  return /\.(mp4|webm|mov)(?:[?#]|$)/i.test(url);
 }
 
-function VideoItem({ src, index, isActive }: { src: string; index: number; isActive: boolean }) {
+function VideoItem({ src, isActive }: { src: string; isActive: boolean }) {
   const ref = useRef<HTMLVideoElement>(null);
   const [muted, setMuted] = useState(true);
   const [isVisible, setIsVisible] = useState(false);
@@ -44,9 +45,8 @@ function VideoItem({ src, index, isActive }: { src: string; index: number; isAct
       <video
         ref={ref}
         src={src}
-        poster={`${src}#t=0.1`}
         className="w-full h-full object-cover"
-        preload="auto"
+        preload={isActive && isVisible ? "metadata" : "none"}
         playsInline
         webkit-playsinline=""
         loop
@@ -66,11 +66,10 @@ function VideoItem({ src, index, isActive }: { src: string; index: number; isAct
   );
 }
 
-export function MediaCarousel({ urls, onDoubleTap, likeOverlay }: MediaCarouselProps) {
+export function MediaCarousel({ urls, priority = false, onDoubleTap, likeOverlay }: MediaCarouselProps) {
   const validUrls = urls.filter((u) => u && u.trim() !== '');
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const single = validUrls.length === 1;
 
   const handleScroll = useCallback(() => {
     const el = scrollRef.current;
@@ -78,14 +77,6 @@ export function MediaCarousel({ urls, onDoubleTap, likeOverlay }: MediaCarouselP
     const idx = Math.round(el.scrollLeft / el.clientWidth);
     setActiveIndex(idx);
 
-    // Pause off-screen videos, play the current one
-    el.querySelectorAll('video').forEach((v, i) => {
-      if (i === idx) {
-        if (v.paused) v.play().catch(() => {});
-      } else {
-        if (!v.paused) v.pause();
-      }
-    });
   }, []);
 
   return (
@@ -103,13 +94,14 @@ export function MediaCarousel({ urls, onDoubleTap, likeOverlay }: MediaCarouselP
           >
             {isVideo(url) ? (
               <div style={{ maxHeight: '70vh', minHeight: '200px' }}>
-                <VideoItem src={url} index={i} isActive={i === activeIndex} />
+                <VideoItem src={url} isActive={i === activeIndex} />
               </div>
             ) : (
               <img
                 src={url}
                 alt=""
-                loading={i === 0 ? 'eager' : 'lazy'}
+                loading={priority && i === 0 ? 'eager' : 'lazy'}
+                {...{ fetchpriority: priority && i === 0 ? 'high' : 'auto' }}
                 decoding="async"
                 className="w-full object-cover"
                 style={{ maxHeight: '70vh', minHeight: '200px' }}
