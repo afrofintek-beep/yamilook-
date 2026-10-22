@@ -1329,7 +1329,7 @@ export default function Settings() {
       {/* Two-factor auth (TOTP via Supabase MFA) */}
       <TwoFactorSheet open={twoFactorOpen} onOpenChange={setTwoFactorOpen} />
 
-      <InviteSheet open={inviteOpen} onOpenChange={setInviteOpen} referralCode={profile?.referral_code} />
+      <InviteSheet open={inviteOpen} onOpenChange={setInviteOpen} />
 
       {/* Blocked users management */}
       <BlockedUsersSheet open={blockedUsersOpen} onOpenChange={setBlockedUsersOpen} />
