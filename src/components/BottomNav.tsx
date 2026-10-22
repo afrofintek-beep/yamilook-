@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import { NavLink } from "react-router-dom";
 import { Home, Flame, GraduationCap, MessageCircle, User } from "lucide-react";
 
@@ -10,8 +11,8 @@ const navItems = [
 ];
 
 export default function BottomNav() {
-  return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 h-[calc(5rem+env(safe-area-inset-bottom,0px))] glass-nav">
+  return createPortal(
+    <nav aria-label="Navegação principal" className="app-bottom-nav fixed bottom-0 left-0 right-0 z-50 h-[calc(5rem+env(safe-area-inset-bottom,0px))] glass-nav">
       <div className="mx-auto grid h-full max-w-md grid-cols-5 items-center px-2 pt-1.5 pb-[max(0.5rem,env(safe-area-inset-bottom,0px))]">
         {navItems.map(({ to, label, Icon }) => (
           <NavLink
@@ -40,6 +41,7 @@ export default function BottomNav() {
           </NavLink>
         ))}
       </div>
-    </nav>
+    </nav>,
+    document.body,
   );
 }

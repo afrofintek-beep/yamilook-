@@ -113,7 +113,7 @@ export default function Feed() {
   }, [hasMoreFeed, loadMoreFeedPosts, feedWithAds.length]);
 
   return (
-    <div className="min-h-screen bg-muted/30 flex flex-col">
+    <div className="min-h-screen bg-muted/30 flex flex-col pb-[calc(5rem+env(safe-area-inset-bottom,0px))]">
       {/* Header - Clean, minimal */}
       <header className="sticky top-0 z-50 bg-card border-b border-border safe-top">
         <div className="flex items-center justify-between px-4 py-2 mx-auto w-full max-w-[940px]">

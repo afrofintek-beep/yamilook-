@@ -351,9 +351,9 @@ describe('Feed Page', () => {
   });
 
   it('has fixed bottom navigation', () => {
-    const { container } = render(<Feed />);
+    render(<Feed />);
 
-    const nav = container.querySelector('nav');
+    const nav = screen.getByRole('navigation', { name: 'Navegação principal' });
     expect(nav).toHaveClass('fixed');
     expect(nav).toHaveClass('bottom-0');
   });
