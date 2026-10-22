@@ -176,6 +176,10 @@ export default function Onboarding() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [accessCode, setAccessCode] = useState(() => {
+    captureReferralCode();
+    return getReferralCode() || '';
+  });
   const [showPassword, setShowPassword] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
@@ -680,16 +684,23 @@ export default function Onboarding() {
   const handleRegister = async () => {
     if (!isRegisterFormValid) return;
 
-    if (!getReferralCode()) {
-      toast.error(t('auth.mvpOnlyToast', 'A Yamilook está em fase MVP (só por convite). A data de lançamento será anunciada brevemente.'));
+    const code = accessCode.trim().toUpperCase();
+    if (!code) {
+      toast.error('Introduz o código de convite de um membro para concluir o registo.');
       return;
     }
     setIsRegistering(true);
     try {
+      const { data: validation, error: validationError } = await supabase.rpc('validate_mvp_access_code', { p_code: code });
+      const result = validation as { valid?: boolean; error?: string } | null;
+      if (validationError || !result?.valid) {
+        toast.error(validationError ? 'Não foi possível validar o convite. Tenta novamente.' : result?.error || 'Código de convite inválido.');
+        return;
+      }
       const { error } = await signUp(email, password, {
         display_name: displayName,
         username: username.toLowerCase(),
-        ref: getReferralCode() || undefined,
+        access_code: code,
       });
 
       if (error) {
@@ -1663,6 +1674,22 @@ export default function Onboarding() {
             </motion.div>
 
             <div className="space-y-4 max-w-xs mx-auto">
+              <div>
+                <label htmlFor="onboarding-invite" className="text-sm font-medium text-foreground mb-1.5 block">Código de convite</label>
+                <Input
+                  id="onboarding-invite"
+                  value={accessCode}
+                  onChange={(event) => setAccessCode(event.target.value.toUpperCase())}
+                  placeholder="Código de um membro ou de acesso MVP"
+                  autoCapitalize="characters"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  aria-describedby="onboarding-invite-help"
+                />
+                <p id="onboarding-invite-help" className="text-xs text-muted-foreground mt-2">
+                  A inscrição é por convite. Se abriste um link de convite, o código aparece aqui. Caso contrário, pede o código ao membro que te convidou.
+                </p>
+              </div>
               {/* Display Name */}
               <div>
                 <label className="text-sm font-medium text-foreground mb-1.5 block">Nome</label>
@@ -1791,7 +1818,7 @@ export default function Onboarding() {
               </Button>
               <Button
                 onClick={handleRegister}
-                disabled={!isRegisterFormValid || isRegistering}
+                disabled={!isRegisterFormValid || !accessCode.trim() || isRegistering}
                 className="h-14 px-8 rounded-2xl bg-gradient-to-r from-ubuntu to-djembe hover:opacity-90 text-white font-semibold shadow-xl shadow-ubuntu/40"
               >
                 {isRegistering ? (

@@ -46,7 +46,7 @@ interface AuthContextType {
   session: Session | null;
   profile: Profile | null;
   loading: boolean;
-  signUp: (email: string, password: string, metadata?: { display_name?: string; username?: string; ref?: string }) => Promise<{ error: AuthError | null }>;
+  signUp: (email: string, password: string, metadata?: { display_name?: string; username?: string; ref?: string; access_code?: string }) => Promise<{ error: AuthError | null }>;
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signInWithSocial: (provider: SocialProvider) => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<void>;
@@ -215,7 +215,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signUp = async (
     email: string,
     password: string,
-    metadata?: { display_name?: string; username?: string; ref?: string }
+    metadata?: { display_name?: string; username?: string; ref?: string; access_code?: string }
   ) => {
     const { error } = await supabase.auth.signUp({
       email,
