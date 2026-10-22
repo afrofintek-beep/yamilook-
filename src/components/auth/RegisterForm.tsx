@@ -1,8 +1,8 @@
 import { captureReferralCode, getReferralCode, clearReferralCode } from '@/lib/referral';
-import { useState, useEffect, useRef } from 'react';
+import { buildInvitationSignupMetadata, createRegisterSchema, hasInviteCodeInSearch, accessCodeSchema, type RegisterFormValues } from '@/lib/invitation-registration';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { Eye, EyeOff, Loader2, Mail, Lock, User, AtSign, Check, X, KeyRound } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
@@ -23,31 +23,11 @@ import { cn } from '@/lib/utils';
 import { SocialLoginButtons } from './SocialLoginButtons';
 import { triggerCelebrationConfetti } from '@/lib/confetti';
 
-const registerSchema = z.object({
-  accessCode: z
-    .string()
-    .trim()
-    .min(1, 'Código de convite obrigatório')
-    .regex(/^(?:[A-Z0-9]{4,16}|[A-Z0-9]{4}-[A-Z0-9]{4})$/i, 'Usa o código do convite, sem aspas (ex: 92C46B28 ou ABCD-1234)'),
-  displayName: z.string().min(2, 'Name must be at least 2 characters'),
-  username: z
-    .string()
-    .min(3, 'Username must be at least 3 characters')
-    .max(20, 'Username must be less than 20 characters')
-    .regex(/^[a-zA-Z0-9_]+$/, 'Username can only contain letters, numbers, and underscores'),
-  email: z.string().email('Please enter a valid email address'),
-  password: z
-    .string()
-    .min(8, 'Password must be at least 8 characters')
-    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
-    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
-    .regex(/[0-9]/, 'Password must contain at least one number'),
-});
-
-type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export function RegisterForm() {
   const { t } = useTranslation();
+  const [isInvitationSignup] = useState(() => hasInviteCodeInSearch(window.location.search));
+  const registerSchema = useMemo(() => createRegisterSchema(isInvitationSignup), [isInvitationSignup]);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
@@ -85,7 +65,7 @@ export function RegisterForm() {
   const checkAccessCode = async (code: string) => {
     const version = ++codeCheckVersion.current;
     setCodeValid(null);
-    if (!registerSchema.shape.accessCode.safeParse(code).success) {
+    if (!accessCodeSchema.safeParse(code).success) {
       setCheckingCode(false);
       return;
     }
@@ -131,7 +111,7 @@ export function RegisterForm() {
   };
 
   const onSubmit = async (values: RegisterFormValues) => {
-    if (usernameAvailable === false) {
+    if (!isInvitationSignup && usernameAvailable === false) {
       toast.error(t('auth.usernameTaken'));
       return;
     }
@@ -150,9 +130,7 @@ export function RegisterForm() {
         password: values.password,
         options: {
           data: {
-            display_name: values.displayName,
-            username: values.username.toLowerCase(),
-            access_code: values.accessCode.trim().toUpperCase(),
+            ...buildInvitationSignupMetadata(isInvitationSignup, values.accessCode, values.displayName, values.username),
           },
         },
       });
@@ -164,9 +142,10 @@ export function RegisterForm() {
         return;
       }
 
-      // Mark the access code as used
+      // New individual invitations are consumed atomically by the auth.users trigger.
+      // Legacy MVP candidate codes keep their existing client-side consumption path.
       const userId = authData?.user?.id;
-      if (userId) {
+      if (userId && !isInvitationSignup) {
         await supabase.rpc('consume_mvp_access_code', {
           p_code: values.accessCode.trim().toUpperCase(),
           p_user_id: userId,
@@ -180,8 +159,19 @@ export function RegisterForm() {
         navigate('/login');
         return;
       }
+      if (isInvitationSignup && userId) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({ onboarding_completed: true, app_tour_completed: true })
+          .eq('id', userId);
+        if (profileError) {
+          toast.error('A conta foi criada, mas o perfil não ficou concluído. Entra novamente para continuar.');
+          navigate('/login');
+          return;
+        }
+      }
       toast.success(t('auth.accountCreated'));
-      navigate('/onboarding');
+      navigate(isInvitationSignup ? '/muxi' : '/onboarding');
     } catch {
       toast.error(t('errors.generic'));
     } finally {
@@ -203,9 +193,16 @@ export function RegisterForm() {
       >
         {/* Aviso de fase MVP */}
         <div className="rounded-xl border border-primary/30 bg-primary/10 px-4 py-3 text-sm text-foreground">
-          🚀 {t('auth.mvpBanner', 'A Yamilook está em fase de lançamento fechado (MVP): a inscrição requer um código de convite de um membro. A data de lançamento pública será anunciada brevemente.')}
+          🚀 {isInvitationSignup ? 'Convite individual: usa o email que recebeu este link. O perfil pode ser completado depois.' : t('auth.mvpBanner', 'A Yamilook está em fase de lançamento fechado (MVP): a inscrição requer um código de convite de um membro. A data de lançamento pública será anunciada brevemente.')}
         </div>
 
+        {isInvitationSignup ? (
+          <div className="rounded-xl border border-primary/20 bg-secondary/40 px-4 py-3 text-sm text-center" role="note">
+            O convite é individual e de utilização única. Introduz o email ao qual foi enviado.
+            {codeValid === false && <p className="mt-2 text-destructive">Este convite é inválido ou já foi utilizado. Pede um novo convite.</p>}
+          </div>
+        ) : (
+          <>
         {/* Access Code — first field */}
         <motion.div
           initial={{ opacity: 0, x: -10 }}
@@ -264,6 +261,10 @@ export function RegisterForm() {
           />
         </motion.div>
 
+          </>
+        )}
+
+        {!isInvitationSignup && <>
         <motion.div
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
@@ -350,6 +351,8 @@ export function RegisterForm() {
           />
         </motion.div>
 
+        </>}
+
         <motion.div
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
@@ -360,7 +363,7 @@ export function RegisterForm() {
             name="email"
             render={({ field, fieldState }) => (
               <FormItem>
-                <FormLabel>{t('auth.email')}</FormLabel>
+                <FormLabel>{isInvitationSignup ? 'Email do convite' : t('auth.email')}</FormLabel>
                   <div className={fieldState.error ? "animate-shake" : ""}>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
@@ -459,7 +462,7 @@ export function RegisterForm() {
           <Button
             type="submit"
             className="w-full h-12 rounded-xl bg-gradient-primary hover:opacity-90 transition-all text-white font-semibold shadow-md hover:shadow-lg mt-6"
-            disabled={isLoading || isCheckingUsername || usernameAvailable === false}
+            disabled={isLoading || (!isInvitationSignup && (isCheckingUsername || usernameAvailable === false))}
           >
             {isLoading ? (
               <>
