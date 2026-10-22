@@ -89,7 +89,7 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { applyTheme, type ThemePref } from '@/lib/theme';
 import { languages } from '@/i18n';
-import { buildInviteUrl } from '@/lib/referral';
+import { InviteSheet } from '@/components/settings/InviteSheet';
 import { supabase } from '@/integrations/supabase/client';
 import { ChangePasswordSheet } from '@/components/settings/ChangePasswordSheet';
 import { ChatWallpaperSheet } from '@/components/settings/ChatWallpaperSheet';
@@ -133,6 +133,7 @@ export default function Settings() {
   const [privacyOpen, setPrivacyOpen] = useState(false);
   const [storageOpen, setStorageOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
   const [exportingData, setExportingData] = useState(false);
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   const [chatWallpaperOpen, setChatWallpaperOpen] = useState(false);
@@ -454,30 +455,7 @@ export default function Settings() {
           <div className="p-4 grid grid-cols-2 gap-3">
             {[
               { id: 'backup', icon: CloudUpload, label: t('settings.backup'), color: 'text-blue-500', onClick: () => setStorageOpen(true) },
-              { id: 'invite', icon: Share2, label: t('settings.invite'), color: 'text-green-500', onClick: async () => {
-                const inviteUrl = buildInviteUrl(profile?.referral_code);
-                const shareData = {
-                  title: 'Yamilook',
-                  text: t('settings.inviteMessage') || 'Hey! Join me on Yamilook - a great way to stay connected!',
-                  url: inviteUrl,
-                };
-                
-                if (navigator.share && navigator.canShare(shareData)) {
-                  try {
-                    await navigator.share(shareData);
-                    toast({ title: t('settings.inviteSent') || 'Invite shared!' });
-                  } catch (err) {
-                    // User cancelled or error
-                    if ((err as Error).name !== 'AbortError') {
-                      await navigator.clipboard.writeText(inviteUrl);
-                      toast({ title: t('settings.linkCopied') || 'Link copied to clipboard!' });
-                    }
-                  }
-                } else {
-                  await navigator.clipboard.writeText(inviteUrl);
-                  toast({ title: t('settings.linkCopied') || 'Link copied to clipboard!' });
-                }
-              }},
+              { id: 'invite', icon: Share2, label: t('settings.invite'), color: 'text-green-500', onClick: () => setInviteOpen(true) },
             ].map((action, index) => (
               <motion.button
                 key={action.id}
@@ -1308,19 +1286,7 @@ export default function Settings() {
             <div className="space-y-3 text-left">
               <Button
                 variant="outline" className="w-full rounded-xl justify-between"
-                onClick={async () => {
-                  const url = buildInviteUrl(profile?.referral_code);
-                  const data = { title: 'Yamilook', text: t('settings.inviteMessage', 'Junta-te a mim no Yamilook!'), url };
-                  try {
-                    if (navigator.share) await navigator.share(data);
-                    else { await navigator.clipboard.writeText(url); toast({ title: t('settings.linkCopied', 'Link copiado!') }); }
-                  } catch (e) {
-                    if ((e as Error).name !== 'AbortError') {
-                      await navigator.clipboard.writeText(url);
-                      toast({ title: t('settings.linkCopied', 'Link copiado!') });
-                    }
-                  }
-                }}
+                onClick={() => { setAboutOpen(false); setInviteOpen(true); }}
               >
                 {t('settings.shareApp')}
                 <Share2 className="w-4 h-4" />
@@ -1362,6 +1328,8 @@ export default function Settings() {
 
       {/* Two-factor auth (TOTP via Supabase MFA) */}
       <TwoFactorSheet open={twoFactorOpen} onOpenChange={setTwoFactorOpen} />
+
+      <InviteSheet open={inviteOpen} onOpenChange={setInviteOpen} referralCode={profile?.referral_code} />
 
       {/* Blocked users management */}
       <BlockedUsersSheet open={blockedUsersOpen} onOpenChange={setBlockedUsersOpen} />
