@@ -1,16 +1,20 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { supabase } from '@/integrations/supabase/client';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database, Json } from '@/integrations/supabase/types';
+import { useAuth } from '@/hooks/useAuth';
 import { buildInviteUrl } from '@/lib/referral';
 
 // Keep the generated database snapshot untouched until the migration is applied.
 type InvitationDatabase = Omit<Database, 'public'> & {
   public: Omit<Database['public'], 'Functions'> & {
     Functions: Database['public']['Functions'] & {
+      can_issue_user_invitation: { Args: { p_user_id: string }; Returns: boolean };
+      list_invitation_permissions: { Args: Record<string, never>; Returns: { email: string; granted_at: string }[] };
+      set_invitation_permission: { Args: { p_email: string; p_allowed: boolean }; Returns: undefined };
       issue_user_invitation: { Args: { p_email: string }; Returns: Json };
     };
   };
@@ -20,15 +24,52 @@ const invitationClient = supabase as unknown as SupabaseClient<InvitationDatabas
 interface InviteSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  isAdmin?: boolean;
 }
 
-export function InviteSheet({ open, onOpenChange }: InviteSheetProps) {
+export function InviteSheet({ open, onOpenChange, isAdmin = false }: InviteSheetProps) {
+  const { user } = useAuth();
+  const userId = user?.id;
+  const [allowedUser, setAllowedUser] = useState<string | null>(null);
+  const allowed = !!userId && allowedUser === userId;
+  const [delegateEmail, setDelegateEmail] = useState('');
+  const [delegates, setDelegates] = useState<{ email: string; granted_at: string }[]>([]);
+  const [managing, setManaging] = useState(false);
+  useEffect(() => {
+    setAllowedUser(null);
+    setCode('');
+    setDelegates([]);
+    if (!open || !userId) return;
+    let active = true;
+    invitationClient.rpc('can_issue_user_invitation', { p_user_id: userId }).then(({ data, error }) => {
+      if (active) setAllowedUser(!error && data === true ? userId : null);
+    });
+    if (isAdmin) invitationClient.rpc('list_invitation_permissions', {}).then(({ data, error }) => {
+      if (active && !error) setDelegates(data ?? []);
+    });
+    return () => { active = false; };
+  }, [open, userId, isAdmin]);
+  const managePermission = async (address: string, grant: boolean) => {
+    setManaging(true);
+    try {
+      const { error } = await invitationClient.rpc('set_invitation_permission', { p_email: address.trim().toLowerCase(), p_allowed: grant });
+      if (error) throw error;
+      const result = await invitationClient.rpc('list_invitation_permissions', {});
+      if (result.error) throw result.error;
+      setDelegates(result.data ?? []);
+      setDelegateEmail('');
+      setStatus(grant ? 'Autorização concedida.' : 'Autorização retirada.');
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : 'Não foi possível alterar a autorização.');
+    } finally { setManaging(false); }
+  };
   const [status, setStatus] = useState('');
   const [code, setCode] = useState('');
   const [email, setEmail] = useState('');
   const [issuing, setIssuing] = useState(false);
   const [issuedFor, setIssuedFor] = useState('');
   const issue = async () => {
+    if (!allowed) return;
     setIssuing(true);
     setStatus('');
     try {
@@ -78,6 +119,7 @@ export function InviteSheet({ open, onOpenChange }: InviteSheetProps) {
           <SheetTitle>Convidar para o Yamilook</SheetTitle>
           <SheetDescription>Gera um código único para o email da pessoa convidada. Só pode ser usado uma vez. Gerar o código não envia um email.</SheetDescription>
         </SheetHeader>
+        {allowed ? <>
         <form className="space-y-3 mt-6" onSubmit={(event) => { event.preventDefault(); void issue(); }}>
           <label htmlFor="invite-email" className="block font-medium">Email da pessoa convidada</label>
           <Input id="invite-email" type="email" required value={email} disabled={issuing}
@@ -100,6 +142,20 @@ export function InviteSheet({ open, onOpenChange }: InviteSheetProps) {
         ) : (
           <p className="mt-6">Introduz o email para gerar o convite.</p>
         )}
+        </> : <p className="mt-6">No MVP, apenas o administrador e as pessoas por ele autorizadas podem enviar convites.</p>}
+        {isAdmin && <section className="mt-8 space-y-3 border-t pt-4">
+          <h3 className="font-semibold">Pessoas autorizadas a convidar</h3>
+          <p className="text-sm text-muted-foreground">Autoriza uma conta existente. Esta permissão não dá acesso à administração.</p>
+          <form onSubmit={(event) => { event.preventDefault(); void managePermission(delegateEmail, true); }} className="space-y-3">
+            <label htmlFor="delegate-email">Email do utilizador</label>
+            <Input id="delegate-email" type="email" required value={delegateEmail} onChange={(event) => setDelegateEmail(event.target.value)} disabled={managing} />
+            <Button type="submit" disabled={managing || !delegateEmail.trim()}>Autorizar convites</Button>
+          </form>
+          {delegates.map((delegate) => <div key={delegate.email} className="flex items-center justify-between gap-2">
+            <span className="break-all text-sm">{delegate.email}</span>
+            <Button variant="outline" disabled={managing} onClick={() => void managePermission(delegate.email, false)}>Retirar autorização</Button>
+          </div>)}
+        </section>}
         <p className="text-sm text-muted-foreground mt-4" role="status">{status}</p>
       </SheetContent>
     </Sheet>
