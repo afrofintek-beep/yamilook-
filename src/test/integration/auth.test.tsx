@@ -297,7 +297,7 @@ describe('Authentication Flow', () => {
       }, { timeout: 2000 });
     });
 
-    it('submits form with valid data', async () => {
+    it.each(['ABCD-1234', '92C46B28', ' 92c46b28 '])('submits form with invitation %s', async (inviteCode) => {
       // Mock username available for all profile lookups.
       mockSupabaseClient.from.mockReturnValue({
         select: vi.fn().mockReturnThis(),
@@ -324,7 +324,7 @@ describe('Authentication Flow', () => {
       renderWithAuth(<RegisterForm />);
 
       fireEvent.change(screen.getByPlaceholderText('XXXX-XXXX'), {
-        target: { value: 'ABCD-1234' },
+        target: { value: inviteCode },
       });
       fireEvent.change(screen.getByPlaceholderText('O teu nome'), {
         target: { value: 'Test User' },
@@ -349,6 +349,9 @@ describe('Authentication Flow', () => {
 
       await waitFor(() => {
         expect(mockNavigate).toHaveBeenCalledWith('/onboarding');
+        expect(mockSupabaseClient.auth.signUp).toHaveBeenCalledWith(expect.objectContaining({
+          options: { data: expect.objectContaining({ access_code: inviteCode.trim().toUpperCase() }) },
+        }));
       });
     });
 

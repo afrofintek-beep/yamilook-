@@ -1,5 +1,5 @@
 import { captureReferralCode, getReferralCode, clearReferralCode } from '@/lib/referral';
-import { useState , useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -16,7 +16,6 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -27,8 +26,9 @@ import { triggerCelebrationConfetti } from '@/lib/confetti';
 const registerSchema = z.object({
   accessCode: z
     .string()
-    .min(1, 'Código de acesso obrigatório')
-    .regex(/^[A-Z0-9]{4}-[A-Z0-9]{4}$/i, 'Formato inválido (ex: ABCD-1234)'),
+    .trim()
+    .min(1, 'Código de convite obrigatório')
+    .regex(/^(?:[A-Z0-9]{4,16}|[A-Z0-9]{4}-[A-Z0-9]{4})$/i, 'Usa o código do convite, sem aspas (ex: 92C46B28 ou ABCD-1234)'),
   displayName: z.string().min(2, 'Name must be at least 2 characters'),
   username: z
     .string()
@@ -48,17 +48,13 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export function RegisterForm() {
   const { t } = useTranslation();
-  useEffect(() => {
-    captureReferralCode();
-  }, []);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
   const [codeValid, setCodeValid] = useState<boolean | null>(null);
   const [checkingCode, setCheckingCode] = useState(false);
-  const [candidateId, setCandidateId] = useState<string | null>(null);
-  const { signUp } = useAuth();
+  const codeCheckVersion = useRef(0);
   const navigate = useNavigate();
 
   const passwordRequirements = [
@@ -87,24 +83,35 @@ export function RegisterForm() {
   const password = form.watch('password');
 
   const checkAccessCode = async (code: string) => {
-    const formatted = code.toUpperCase().replace(/[^A-Z0-9]/g, '');
-    if (formatted.length < 8) {
-      setCodeValid(null);
-      setCandidateId(null);
+    const version = ++codeCheckVersion.current;
+    setCodeValid(null);
+    if (!registerSchema.shape.accessCode.safeParse(code).success) {
+      setCheckingCode(false);
       return;
     }
     setCheckingCode(true);
-    const { data } = await supabase.rpc('validate_mvp_access_code', { p_code: code });
-    const result = data as { valid: boolean; error?: string; candidate_id?: string } | null;
-    if (result?.valid) {
-      setCodeValid(true);
-      setCandidateId(result.candidate_id || null);
-    } else {
-      setCodeValid(false);
-      setCandidateId(null);
+    try {
+      const { data, error } = await supabase.rpc('validate_mvp_access_code', { p_code: code.trim().toUpperCase() });
+      if (version !== codeCheckVersion.current) return;
+      const result = data as { valid?: boolean } | null;
+      setCodeValid(error ? null : result?.valid === true);
+    } catch {
+      if (version === codeCheckVersion.current) setCodeValid(null);
+    } finally {
+      if (version === codeCheckVersion.current) setCheckingCode(false);
     }
-    setCheckingCode(false);
   };
+
+  useEffect(() => {
+    captureReferralCode();
+    const code = getReferralCode();
+    if (code) {
+      form.setValue('accessCode', code, { shouldValidate: true });
+      void checkAccessCode(code);
+    }
+    // Read the invitation once when this form opens.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const checkUsernameAvailability = async (username: string) => {
     if (username.length < 3) {
@@ -129,23 +136,23 @@ export function RegisterForm() {
       return;
     }
 
-    if (!codeValid) {
-      toast.error('Código de acesso inválido ou já utilizado');
-      return;
-    }
-
     setIsLoading(true);
     try {
+      const { data: validation, error: validationError } = await supabase.rpc('validate_mvp_access_code', { p_code: values.accessCode.trim().toUpperCase() });
+      const result = validation as { valid?: boolean; error?: string } | null;
+      if (validationError || !result?.valid) {
+        toast.error(validationError ? 'Não foi possível validar o convite. Tenta novamente.' : result?.error || 'Código de convite inválido ou já utilizado.');
+        return;
+      }
       // Use supabase directly to get the user object for code consumption
       const { data: authData, error } = await supabase.auth.signUp({
-        email: values.email,
+        email: values.email.trim().toLowerCase(),
         password: values.password,
         options: {
           data: {
             display_name: values.displayName,
             username: values.username.toLowerCase(),
-            ref: getReferralCode() || undefined,
-            access_code: values.accessCode?.toUpperCase() || undefined,
+            access_code: values.accessCode.trim().toUpperCase(),
           },
         },
       });
@@ -161,13 +168,18 @@ export function RegisterForm() {
       const userId = authData?.user?.id;
       if (userId) {
         await supabase.rpc('consume_mvp_access_code', {
-          p_code: values.accessCode.toUpperCase(),
+          p_code: values.accessCode.trim().toUpperCase(),
           p_user_id: userId,
         });
       }
 
       triggerCelebrationConfetti();
       clearReferralCode();
+      if (!authData.session) {
+        toast.success('Conta criada. Confirma o teu email antes de entrar.');
+        navigate('/login');
+        return;
+      }
       toast.success(t('auth.accountCreated'));
       navigate('/onboarding');
     } catch {
@@ -180,7 +192,10 @@ export function RegisterForm() {
   return (
     <Form {...form}>
       <motion.form 
-        onSubmit={form.handleSubmit(onSubmit)} 
+        onSubmit={form.handleSubmit(onSubmit, (errors) => {
+          const firstError = Object.values(errors)[0];
+          toast.error(firstError?.message || 'Verifica os campos assinalados acima.');
+        })}
         className="space-y-5"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -210,6 +225,9 @@ export function RegisterForm() {
                         <Input
                           {...field}
                           placeholder="XXXX-XXXX"
+                          autoCapitalize="characters"
+                          autoCorrect="off"
+                          spellCheck={false}
                           className={cn(
                             "pl-10 pr-10 h-12 rounded-xl bg-secondary/50 border-0 focus:ring-2 focus:ring-primary font-mono tracking-widest uppercase",
                             codeValid === true && "ring-2 ring-green-500",
@@ -441,7 +459,7 @@ export function RegisterForm() {
           <Button
             type="submit"
             className="w-full h-12 rounded-xl bg-gradient-primary hover:opacity-90 transition-all text-white font-semibold shadow-md hover:shadow-lg mt-6"
-            disabled={isLoading || usernameAvailable === false}
+            disabled={isLoading || isCheckingUsername || usernameAvailable === false}
           >
             {isLoading ? (
               <>
