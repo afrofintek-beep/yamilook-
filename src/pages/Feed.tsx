@@ -113,9 +113,9 @@ export default function Feed() {
   }, [hasMoreFeed, loadMoreFeedPosts, feedWithAds.length]);
 
   return (
-    <div className="min-h-screen bg-muted/30 flex flex-col pb-[calc(5rem+env(safe-area-inset-bottom,0px))]">
+    <div className="h-screen-safe overflow-hidden bg-muted/30 flex flex-col pb-[calc(5rem+env(safe-area-inset-bottom,0px))]">
       {/* Header - Clean, minimal */}
-      <header className="sticky top-0 z-50 bg-card border-b border-border safe-top">
+      <header className="relative z-50 shrink-0 bg-card border-b border-border safe-top">
         <div className="flex items-center justify-between px-4 py-2 mx-auto w-full max-w-[940px]">
           <YamilookLogo size="sm" showTagline={false} animate={false} bgClassName="bg-card" />
           <div className="flex items-center gap-1">
@@ -154,7 +154,7 @@ export default function Feed() {
 
       {/* New-posts pill (realtime) */}
       {newPostsCount > 0 && (
-        <div className="fixed left-1/2 -translate-x-1/2 top-16 z-40">
+        <div className="fixed left-1/2 -translate-x-1/2 top-[calc(4rem+env(safe-area-inset-top,0px))] z-40">
           <motion.button
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
@@ -167,7 +167,7 @@ export default function Feed() {
         </div>
       )}
 
-      <ScrollArea ref={scrollRef} className="flex-1">
+      <ScrollArea ref={scrollRef} className="min-h-0 flex-1 [&_[data-radix-scroll-area-viewport]]:overscroll-y-contain">
         {/* Pull-to-refresh indicator */}
         <div
           className="flex items-start justify-center overflow-hidden"
