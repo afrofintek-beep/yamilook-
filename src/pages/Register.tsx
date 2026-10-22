@@ -1,18 +1,7 @@
-import { useTranslation } from 'react-i18next';
-import { AuthLayout } from '@/components/auth/AuthLayout';
-import { RegisterForm } from '@/components/auth/RegisterForm';
+import { Navigate, useLocation } from 'react-router-dom';
 
+// Invitations and ordinary registration use the same resumable wizard.
 export default function Register() {
-  const { t } = useTranslation();
-  
-  return (
-    <AuthLayout
-      title={t('auth.registerTitle')}
-      subtitle={t('auth.registerSubtitle')}
-      showBackButton={true}
-      backTo="/welcome"
-    >
-      <RegisterForm />
-    </AuthLayout>
-  );
+  const { search } = useLocation();
+  return <Navigate to={`/onboarding${search}`} replace />;
 }

@@ -44,6 +44,7 @@ import { cn } from '@/lib/utils';
 import { logger } from '@/lib/logger';
 import { snapToGrid } from '@/lib/geo-privacy';
 import { Link } from 'react-router-dom';
+import { loadOnboardingDraft, saveOnboardingDraft, clearOnboardingDraft } from '@/lib/onboarding-draft';
 
  // Import onboarding illustrations
  import welcomeBandaImg from '@/assets/onboarding/welcome-banda.jpg';
@@ -102,7 +103,7 @@ const tourSlides = [
 ];
 
 export default function Onboarding() {
-  const { user, profile, updateProfile, signUp, refreshProfile } = useAuth();
+  const { user, profile, loading: authLoading, updateProfile, signUp, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
 
@@ -184,6 +185,58 @@ export default function Onboarding() {
   >([]);
   const [isDoingMultipleReadings, setIsDoingMultipleReadings] = useState(false);
   const [currentReadingIndex, setCurrentReadingIndex] = useState(0);
+
+  const [draftReady, setDraftReady] = useState(false);
+  const [draftSaved, setDraftSaved] = useState<boolean | null>(null);
+  const [resumedDraft, setResumedDraft] = useState(false);
+  const restoredIdentity = useRef<string | null>(null);
+  const skipDraftSave = useRef(false);
+  const draftIdentity = user?.email?.trim().toLowerCase() || 'guest';
+
+  useEffect(() => {
+    if (authLoading || restoredIdentity.current === draftIdentity) return;
+    restoredIdentity.current = draftIdentity;
+    skipDraftSave.current = true;
+    captureReferralCode();
+    const invite = getReferralCode() || '';
+    const draft = loadOnboardingDraft(user ? { email: user.email } : { inviteCode: invite || undefined });
+    const birthday = profile?.birthday?.split('-');
+    setCurrentStep(draft?.currentStep ?? 0);
+    setDisplayName(draft?.displayName ?? profile?.display_name ?? '');
+    setUsername(draft?.username ?? profile?.username?.trim() ?? '');
+    setEmail(user?.email ?? draft?.email ?? '');
+    setPassword('');
+    setAccessCode(draft?.inviteCode || invite);
+    setSelectedGender(draft?.gender ?? profile?.gender ?? null);
+    setBirthDay(draft?.birthDay ?? birthday?.[2] ?? '');
+    setBirthMonth(draft?.birthMonth ?? birthday?.[1] ?? '');
+    setBirthYear(draft?.birthYear ?? birthday?.[0] ?? '');
+    setSelectedCountry(draft?.country ?? profile?.country_code ?? 'AO');
+    setSelectedCity(draft?.city ?? profile?.city ?? '');
+    setSelectedNeighborhood(draft?.neighborhood ?? profile?.neighborhood ?? '');
+    setCustomNeighborhood(draft?.customNeighborhood ?? '');
+    setBio(draft?.bio ?? profile?.bio ?? '');
+    setUsernameAvailable(null);
+    setAvatarFile(null);
+    setAvatarUrl(profile?.avatar_url ?? null);
+    setGeoLocation(null);
+    setLocationConfirmed(false);
+    setResumedDraft(!!draft);
+    setDraftSaved(draft ? true : null);
+    setDraftReady(true);
+  }, [authLoading, draftIdentity, user, profile]);
+
+  useEffect(() => {
+    if (!draftReady || authLoading || justCompletedRef.current || profile?.onboarding_completed) return;
+    if (skipDraftSave.current) { skipDraftSave.current = false; return; }
+    setDraftSaved(saveOnboardingDraft({
+      currentStep, displayName, username, email: user?.email || email, inviteCode: accessCode,
+      gender: selectedGender, birthDay, birthMonth, birthYear, country: selectedCountry,
+      city: selectedCity, neighborhood: selectedNeighborhood, customNeighborhood, bio,
+    }, user?.email));
+  }, [draftReady, authLoading, currentStep, displayName, username, email, accessCode,
+      selectedGender, birthDay, birthMonth, birthYear, selectedCountry, selectedCity,
+      selectedNeighborhood, customNeighborhood, bio, user?.email, profile?.onboarding_completed]);
 
   // Detection logic
   const SEARCH_RADIUS_KM = 2; // eligible neighborhoods
@@ -711,7 +764,7 @@ export default function Onboarding() {
         }
 
         if (!session?.user) {
-          toast.error('Conta criada! Verifica o teu email para confirmar.');
+          toast.success('Conta criada! Confirma o email e entra para retomar a inscrição. O teu progresso ficou guardado neste navegador.');
           setIsRegistering(false);
           navigate('/login');
           return;
@@ -799,6 +852,7 @@ export default function Onboarding() {
       }
 
       justCompletedRef.current = true;
+      clearOnboardingDraft(user?.email || email);
 
       // Refresh AuthContext profile so ProtectedRoute sees onboarding_completed=true
       await refreshProfile();
@@ -1858,6 +1912,10 @@ export default function Onboarding() {
     }
   };
 
+  if (authLoading || !draftReady) {
+    return <div role="status" className="min-h-screen flex items-center justify-center">A recuperar inscrição…</div>;
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-background overflow-hidden">
       {/* Progress bar */}
@@ -1893,6 +1951,9 @@ export default function Onboarding() {
         </p>
         <div className="mt-3 px-4 py-1.5 rounded-full bg-secondary/50 text-xs font-medium text-muted-foreground">
           Passo {currentStep + 1} de {steps.length}
+          {draftReady && <span className="block text-xs mt-1" role="status">
+            {draftSaved ? (resumedDraft ? 'Inscrição retomada. Progresso guardado neste navegador.' : 'Progresso guardado neste navegador.') : draftSaved === false ? 'Não foi possível guardar o progresso neste navegador.' : 'O progresso será guardado enquanto preenches a inscrição.'}
+          </span>}
         </div>
       </motion.div>
 
