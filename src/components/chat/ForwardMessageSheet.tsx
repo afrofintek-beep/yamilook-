@@ -1,12 +1,10 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Check, X, Loader2, Forward } from 'lucide-react';
+import { Search, Check, Loader2, Forward } from 'lucide-react';
 import { ResponsiveModal } from '@/components/ui/responsive-modal';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Checkbox } from '@/components/ui/checkbox';
 import { useConversations, useMessages } from '@/hooks/useChat';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -38,7 +36,6 @@ export function ForwardMessageSheet({
   conversationId,
   onClose,
 }: ForwardMessageSheetProps) {
-  const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
   const { conversations } = useConversations();
@@ -47,6 +44,8 @@ export function ForwardMessageSheet({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [forwarding, setForwarding] = useState(false);
+  const forwardingRef = useRef(false);
+  const sourceIds = message ? [message.id] : [...new Set(messageIds)];
 
   // Get messages to forward
   const messagesToForward = message 
@@ -74,32 +73,30 @@ export function ForwardMessageSheet({
     if (newSelected.has(id)) {
       newSelected.delete(id);
     } else {
+      if (newSelected.size >= 20) {
+        toast({ title: 'Seleciona até 20 conversas de cada vez' });
+        return;
+      }
       newSelected.add(id);
     }
     setSelectedIds(newSelected);
   };
 
   const handleForward = async () => {
-    if (messagesToForward.length === 0 || !user || selectedIds.size === 0) return;
+    if (!sourceIds.length || !user || !selectedIds.size || forwardingRef.current) return;
 
+    forwardingRef.current = true;
     setForwarding(true);
 
     try {
-      for (const convId of selectedIds) {
-        for (const msg of messagesToForward) {
-          await supabase.from('messages').insert({
-            conversation_id: convId,
-            sender_id: user.id,
-            content: msg.content,
-            message_type: msg.message_type,
-            media_url: msg.media_url,
-            forwarded_from_id: msg.id,
-            forwarded_from_user_id: msg.sender_id,
-          });
-        }
-      }
+      const { data, error } = await supabase.rpc('forward_chat_messages', {
+        p_message_ids: sourceIds,
+        p_conversation_ids: Array.from(selectedIds),
+      });
+      if (error) throw error;
+      if (data !== sourceIds.length * selectedIds.size) throw new Error('Encaminhamento não confirmado');
 
-      const msgCount = messagesToForward.length;
+      const msgCount = sourceIds.length;
       const convCount = selectedIds.size;
       toast({
         title: 'Mensagens reencaminhadas',
@@ -108,13 +105,14 @@ export function ForwardMessageSheet({
 
       setSelectedIds(new Set());
       handleClose();
-    } catch (err) {
+    } catch {
       toast({
         title: 'Erro',
-        description: 'Falha ao reencaminhar mensagens',
+        description: 'Não foi possível reencaminhar. A seleção foi mantida para tentares novamente.',
         variant: 'destructive',
       });
     } finally {
+      forwardingRef.current = false;
       setForwarding(false);
     }
   };
@@ -129,12 +127,12 @@ export function ForwardMessageSheet({
   return (
     <ResponsiveModal
       open={open}
-      onOpenChange={handleClose}
+      onOpenChange={() => { if (!forwardingRef.current) handleClose(); }}
       className="h-[75vh] rounded-t-3xl sm:max-w-lg"
       title={
         <span className="flex items-center gap-2">
           <Forward className="w-5 h-5" />
-          Reencaminhar {messagesToForward.length > 1 ? `${messagesToForward.length} mensagens` : 'mensagem'}
+          Reencaminhar {sourceIds.length > 1 ? `${sourceIds.length} mensagens` : 'mensagem'}
         </span>
       }
     >
@@ -173,7 +171,7 @@ export function ForwardMessageSheet({
         </div>
 
         {/* Conversation List */}
-        <div className="flex-1 overflow-y-auto -mx-4" style={{ maxHeight: 'calc(75vh - 280px)' }}>
+        <div className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto -mx-4" style={{ maxHeight: 'calc(75vh - 280px)' }}>
           {filteredConversations.map((conv) => {
             const otherParticipant = conv.participants?.find((p) => p.user_id !== user?.id)?.profile;
             const isGroup = conv.type === 'group';
@@ -185,12 +183,14 @@ export function ForwardMessageSheet({
             return (
               <button
                 key={conv.id}
+                disabled={forwarding}
+                aria-pressed={isSelected}
                 onClick={() => toggleSelection(conv.id)}
                 className={`w-full flex items-center gap-3 px-4 py-3 transition-colors ${
                   isSelected ? 'bg-primary/10' : 'hover:bg-secondary/50'
                 }`}
               >
-                <div className="relative">
+                <div className="relative shrink-0">
                   <Avatar className="w-12 h-12">
                     <AvatarImage src={avatarUrl || ''} />
                     <AvatarFallback className="bg-gradient-primary text-white">
@@ -215,7 +215,7 @@ export function ForwardMessageSheet({
                     </span>
                   )}
                 </div>
-                <Checkbox checked={isSelected} />
+                <span aria-hidden="true" className="w-5 h-5 shrink-0 rounded border border-primary">{isSelected && <Check className="w-4 h-4" />}</span>
               </button>
             );
           })}
@@ -238,7 +238,7 @@ export function ForwardMessageSheet({
             </Button>
             <Button
               onClick={handleForward}
-              disabled={forwarding}
+              disabled={forwarding || !sourceIds.length}
               className="bg-gradient-primary text-white"
             >
               {forwarding ? (

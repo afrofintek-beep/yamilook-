@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { X, Archive, Pin, BellOff, Trash2 } from 'lucide-react';
+import { X, Archive, Pin, BellOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface ConversationSelectionBarProps {
@@ -8,7 +8,6 @@ interface ConversationSelectionBarProps {
   onArchive: () => void;
   onPin: () => void;
   onMute: () => void;
-  onDelete: () => void;
 }
 
 export function ConversationSelectionBar({
@@ -17,26 +16,26 @@ export function ConversationSelectionBar({
   onArchive,
   onPin,
   onMute,
-  onDelete,
 }: ConversationSelectionBarProps) {
   return (
     <motion.div
       initial={{ y: 100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       exit={{ y: 100, opacity: 0 }}
-      className="fixed bottom-0 left-0 right-0 bg-background border-t border-border shadow-lg z-50 safe-bottom"
+      className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom,0px))] left-0 right-0 bg-background border-t border-border shadow-lg z-[60]"
     >
-      <div className="flex items-center justify-between px-4 py-3">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between px-2 py-3 max-w-md mx-auto gap-1">
+        <div className="flex items-center gap-1 min-w-0">
           <Button
             variant="ghost"
             size="icon"
             className="rounded-full"
             onClick={onCancel}
+            aria-label="Cancelar seleção"
           >
             <X className="w-5 h-5" />
           </Button>
-          <span className="font-medium">
+          <span className="font-medium text-sm truncate">
             {selectedCount} {selectedCount === 1 ? 'selecionada' : 'selecionadas'}
           </span>
         </div>
@@ -47,7 +46,7 @@ export function ConversationSelectionBar({
             size="icon"
             className="rounded-full"
             onClick={onPin}
-            title="Fixar"
+            title="Fixar" aria-label="Fixar conversas"
           >
             <Pin className="w-5 h-5" />
           </Button>
@@ -56,7 +55,7 @@ export function ConversationSelectionBar({
             size="icon"
             className="rounded-full"
             onClick={onMute}
-            title="Silenciar"
+            title="Silenciar" aria-label="Silenciar conversas"
           >
             <BellOff className="w-5 h-5" />
           </Button>
@@ -65,19 +64,11 @@ export function ConversationSelectionBar({
             size="icon"
             className="rounded-full"
             onClick={onArchive}
-            title="Arquivar"
+            title="Arquivar" aria-label="Arquivar conversas"
           >
             <Archive className="w-5 h-5" />
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="rounded-full text-destructive hover:text-destructive"
-            onClick={onDelete}
-            title="Apagar"
-          >
-            <Trash2 className="w-5 h-5" />
-          </Button>
+
         </div>
       </div>
     </motion.div>

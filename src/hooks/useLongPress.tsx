@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useRef, useState, useEffect } from 'react';
 
 interface UseLongPressOptions {
   onLongPress: () => void;
@@ -9,11 +9,14 @@ interface UseLongPressOptions {
 export function useLongPress({ onLongPress, onClick, delay = 500 }: UseLongPressOptions) {
   const [isPressed, setIsPressed] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const targetRef = useRef<EventTarget | null>(null);
+  const originRef = useRef<{ x: number; y: number } | null>(null);
   const isLongPressRef = useRef(false);
 
   const start = useCallback((event: React.TouchEvent | React.MouseEvent) => {
-    targetRef.current = event.target;
+    if ('button' in event && event.button !== 0) return;
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    const point = 'touches' in event ? event.touches[0] : event;
+    originRef.current = point ? { x: point.clientX, y: point.clientY } : null;
     isLongPressRef.current = false;
     setIsPressed(true);
     
@@ -45,14 +48,32 @@ export function useLongPress({ onLongPress, onClick, delay = 500 }: UseLongPress
     setIsPressed(false);
   }, []);
 
+  useEffect(() => () => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+  }, []);
+  const move = useCallback((event: React.TouchEvent | React.MouseEvent) => {
+    const point = 'touches' in event ? event.touches[0] : event;
+    if (originRef.current && point && Math.hypot(point.clientX - originRef.current.x, point.clientY - originRef.current.y) > 10) {
+      cancel();
+    }
+  }, [cancel]);
+  const wasLongPress = useCallback(() => {
+    const pressed = isLongPressRef.current;
+    isLongPressRef.current = false;
+    return pressed;
+  }, []);
   return {
     isPressed,
+    cancel,
+    wasLongPress,
     handlers: {
       onTouchStart: start,
       onTouchEnd: clear,
+      onTouchMove: move,
       onTouchCancel: cancel,
       onMouseDown: start,
       onMouseUp: clear,
+      onMouseMove: move,
       onMouseLeave: cancel,
     },
   };

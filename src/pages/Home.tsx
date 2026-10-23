@@ -39,7 +39,7 @@ export default function Home() {
   const [newChatOpen, setNewChatOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [forwardOpen, setForwardOpen] = useState(false);
-  const [messageToForward, setMessageToForward] = useState<{ id: string; content: string } | null>(null);
+  const [messageToForward, setMessageToForward] = useState<Conversation['last_message'] | null>(null);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState<'chat' | 'status' | 'calls'>('chat');
@@ -141,15 +141,8 @@ export default function Home() {
     }
   }, [selectedIds, user?.id, toast, refresh]);
 
-  const handleBulkDelete = useCallback(async () => {
-    if (selectedIds.size === 0) return;
-    
-    // Archive instead of delete for safety
-    await handleBulkArchive();
-  }, [selectedIds, handleBulkArchive]);
-
   // Swipe action handlers
-  const handleDelete = useCallback(async (conversationId: string) => {
+  const handleArchive = useCallback(async (conversationId: string) => {
     const { error } = await supabase
       .from('conversation_participants')
       .update({ is_archived: true })
@@ -174,7 +167,7 @@ export default function Home() {
     if (!error) {
       toast({ title: isPinned ? 'Chat desafixado' : 'Chat fixado' });
       refresh();
-    }
+    } else { toast({ title: 'Não foi possível fixar a conversa', variant: 'destructive' }); }
   }, [user?.id, toast, refresh]);
 
   const handleMute = useCallback(async (conversationId: string, isMuted: boolean) => {
@@ -187,28 +180,25 @@ export default function Home() {
     if (!error) {
       toast({ title: isMuted ? 'Notificações ativadas' : 'Chat silenciado' });
       refresh();
-    }
+    } else { toast({ title: 'Não foi possível atualizar as notificações', variant: 'destructive' }); }
   }, [user?.id, toast, refresh]);
 
   const handleReply = useCallback((conversationId: string) => {
     navigate(`/chat/${conversationId}?focus=input`);
   }, [navigate]);
 
-  const handleCopy = useCallback((conversation: Conversation) => {
+  const handleCopy = useCallback(async (conversation: Conversation) => {
     const lastMessage = conversation.last_message?.content;
     if (lastMessage) {
-      navigator.clipboard.writeText(lastMessage);
-      toast({ title: 'Mensagem copiada' });
+      try { await navigator.clipboard.writeText(lastMessage); toast({ title: 'Mensagem copiada' }); }
+      catch { toast({ title: 'Não foi possível copiar a mensagem', variant: 'destructive' }); }
     }
   }, [toast]);
 
   const handleForward = useCallback((conversation: Conversation) => {
     const lastMessage = conversation.last_message;
-    if (lastMessage?.content) {
-      setMessageToForward({
-        id: `temp-${Date.now()}`,
-        content: lastMessage.content
-      });
+    if (lastMessage && !lastMessage.is_deleted) {
+      setMessageToForward(lastMessage);
       setForwardOpen(true);
     } else {
       toast({ title: 'Sem mensagem para encaminhar', variant: 'destructive' });
@@ -216,7 +206,7 @@ export default function Home() {
   }, [toast]);
 
   return (
-    <div className="h-screen-safe overflow-hidden pb-[calc(5rem+env(safe-area-inset-bottom,0px))] bg-background flex flex-col">
+    <div className="h-screen-safe w-full min-w-0 overflow-hidden pb-[calc(5rem+env(safe-area-inset-bottom,0px))] bg-background flex flex-col">
       <header className="shrink-0 relative z-50 glass-nav safe-top">
         <div className="flex items-center justify-between px-4 py-2.5">
           <div className="flex items-center gap-3">
@@ -276,7 +266,7 @@ export default function Home() {
               className={`flex-1 py-2.5 text-[13px] font-medium transition-colors relative ${
                 activeTab === tabKey ? 'text-primary font-semibold' : 'text-muted-foreground/60 hover:text-muted-foreground'
               }`}
-              onClick={() => setActiveTab(tabKey)}
+              onClick={() => { setActiveTab(tabKey); setSelectionMode(false); setSelectedIds(new Set()); }}
             >
               {tabKey === 'chat' ? t('nav.chat') : tabKey === 'status' ? t('nav.status') : t('nav.calls')}
               {activeTab === tabKey && (
@@ -300,7 +290,7 @@ export default function Home() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 20 }}
             transition={{ duration: 0.2 }}
-            className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
+            className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain touch-pan-y"
           >
             {loading ? (
               <ConversationsSkeleton count={6} />
@@ -316,7 +306,7 @@ export default function Home() {
                 </Button>
               </div>
             ) : (
-              <div className="divide-y divide-border/30">
+              <div className={`divide-y divide-border/30 min-w-0 ${selectionMode && selectedIds.size > 0 ? 'pb-20' : ''}`}>
                 {conversations.map((conversation) => (
                   <SwipeableConversationItem
                     key={conversation.id}
@@ -329,7 +319,7 @@ export default function Home() {
                     isSelected={selectedIds.has(conversation.id)}
                     onSelect={toggleSelection}
                     onEnterSelectionMode={enterSelectionModeWithItem}
-                    onDelete={() => handleDelete(conversation.id)}
+                    onArchive={() => handleArchive(conversation.id)}
                     onPin={() => handlePin(conversation.id, conversation.is_pinned ?? false)}
                     onMute={() => handleMute(conversation.id, conversation.is_muted ?? false)}
                     onReply={() => handleReply(conversation.id)}
@@ -349,7 +339,7 @@ export default function Home() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 20 }}
             transition={{ duration: 0.2 }}
-            className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
+            className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain touch-pan-y"
           >
             <StatusList />
           </motion.div>
@@ -362,7 +352,7 @@ export default function Home() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 20 }}
             transition={{ duration: 0.2 }}
-            className="min-h-0 flex-1 overflow-y-auto overscroll-contain flex flex-col"
+            className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain touch-pan-y flex flex-col"
           >
             <CallsTabContent onStartCall={handleStartCallFromTab} />
           </motion.div>
@@ -400,7 +390,6 @@ export default function Home() {
             onArchive={handleBulkArchive}
             onPin={handleBulkPin}
             onMute={handleBulkMute}
-            onDelete={handleBulkDelete}
           />
         )}
       </AnimatePresence>
@@ -410,13 +399,7 @@ export default function Home() {
       <ForwardMessageSheet
         open={forwardOpen}
         onOpenChange={setForwardOpen}
-        message={messageToForward ? { 
-          id: messageToForward.id, 
-          content: messageToForward.content,
-          message_type: 'text',
-          media_url: null,
-          sender_id: user?.id || ''
-        } : undefined}
+        message={messageToForward}
         onClose={() => {
           setForwardOpen(false);
           setMessageToForward(null);

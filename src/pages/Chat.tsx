@@ -40,6 +40,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel } from '@/components/ui/alert-dialog';
 import { useAuth } from '@/hooks/useAuth';
 import { useMessages, useConversations } from '@/hooks/useChat';
 import { useSettings } from '@/hooks/useSettings';
@@ -94,6 +95,7 @@ export default function Chat() {
     togglePin,
     searchMessages,
     markViewOnce,
+    historyClearedAt, setHistoryCleared,
   } = useMessages(conversationId || null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -104,6 +106,8 @@ export default function Chat() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Tables<'messages'>[]>([]);
+  const [clearHistoryOpen, setClearHistoryOpen] = useState(false);
+  const [clearingHistory, setClearingHistory] = useState(false);
   const [mediaGalleryOpen, setMediaGalleryOpen] = useState(false);
   const [scheduledMessagesOpen, setScheduledMessagesOpen] = useState(false);
   const [disappearingOpen, setDisappearingOpen] = useState(false);
@@ -309,10 +313,25 @@ export default function Chat() {
   ): Promise<{ messageId?: string }> => {
     const { error, messageId } = await sendMessage(content, type, mediaUrl, replyToId || replyTo?.id, duration, isViewOnce);
     if (error) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      toast({ title: 'Mensagem não enviada', description: error.message, variant: 'destructive' });
+      return {};
     }
     setReplyTo(null);
     return { messageId };
+  };
+
+  const handleClearHistory = async (restore = false) => {
+    setClearingHistory(true);
+    try {
+      await setHistoryCleared(restore);
+      await refreshConversations();
+      setClearHistoryOpen(false);
+      toast({ title: restore ? 'Histórico restaurado' : 'Histórico limpo só para ti' });
+    } catch {
+      toast({ title: 'Não foi possível atualizar o histórico', variant: 'destructive' });
+    } finally {
+      setClearingHistory(false);
+    }
   };
 
   const handleUpdateMediaUrl = async (messageId: string, newMediaUrl: string) => {
@@ -533,14 +552,18 @@ export default function Chat() {
   const handleArchive = async () => {
     if (!conversationId || !user) return;
 
-    await supabase
+    const { error } = await supabase
       .from('conversation_participants')
       .update({ is_archived: true })
       .eq('conversation_id', conversationId)
       .eq('user_id', user.id);
 
-    toast({ title: 'Chat archived' });
-    navigate('/');
+    if (error) {
+      toast({ title: 'Não foi possível arquivar a conversa', variant: 'destructive' });
+      return;
+    }
+    toast({ title: 'Conversa arquivada' });
+    navigate('/papos', { replace: true });
   };
 
   return (
@@ -675,10 +698,15 @@ export default function Chat() {
                     {t('chat.archiveChat') || 'Archive chat'}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem className="text-destructive">
+                  <DropdownMenuItem onClick={() => setClearHistoryOpen(true)}>
                     <Trash2 className="w-4 h-4 mr-2" />
-                    {t('chat.clearChat') || 'Clear chat'}
+                    Limpar histórico só para mim
                   </DropdownMenuItem>
+                  {historyClearedAt && (
+                    <DropdownMenuItem disabled={clearingHistory} onClick={() => void handleClearHistory(true)}>
+                      Restaurar histórico
+                    </DropdownMenuItem>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -785,8 +813,27 @@ export default function Chat() {
         replyTo={replyTo}
         onCancelReply={() => setReplyTo(null)}
         disabled={loading}
+        focusInput={searchParams.get('focus') === 'input'}
         conversationId={conversationId || ''}
       />
+
+      <AlertDialog open={clearHistoryOpen} onOpenChange={setClearHistoryOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Limpar o histórico só para ti?</AlertDialogTitle>
+            <AlertDialogDescription>
+              As mensagens atuais deixam de aparecer no teu histórico. Continuam disponíveis para a outra pessoa.
+              Podes restaurar o teu histórico no menu da conversa.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={clearingHistory}>Cancelar</AlertDialogCancel>
+            <Button disabled={clearingHistory} onClick={() => void handleClearHistory()}>
+              {clearingHistory ? 'A limpar…' : 'Limpar só para mim'}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Search Sheet */}
       <Sheet open={searchOpen} onOpenChange={setSearchOpen}>

@@ -56,6 +56,7 @@ interface EnhancedChatInputProps {
   } | null;
   onCancelReply?: () => void;
   disabled?: boolean;
+  focusInput?: boolean;
   conversationId: string;
 }
 
@@ -67,11 +68,14 @@ export function EnhancedChatInput({
   replyTo,
   onCancelReply,
   disabled,
+  focusInput,
   conversationId,
 }: EnhancedChatInputProps) {
   const { t } = useTranslation();
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
+  const sendingRef = useRef(false);
+  const [sendError, setSendError] = useState('');
   const [showStickerPicker, setShowStickerPicker] = useState(false);
   const [showGifPicker, setShowGifPicker] = useState(false);
   const [showEmojiMenu, setShowEmojiMenu] = useState(false);
@@ -91,6 +95,10 @@ export function EnhancedChatInput({
     clearRecording 
   } = useVoiceRecorder();
   const { uploading, uploadMedia } = useMediaUpload();
+
+  useEffect(() => {
+    if (focusInput && !disabled) textareaRef.current?.focus();
+  }, [focusInput, disabled]);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -116,29 +124,28 @@ export function EnhancedChatInput({
     });
   };
 
-  const handleSend = () => {
-    if (!message.trim() || sending || disabled) return;
-
+  const handleSend = async () => {
+    if (!message.trim() || sendingRef.current || disabled) return;
     const content = message.trim();
-
-    // Clear UI immediately (don’t block on network)
-    setMessage('');
-    onCancelReply?.();
-
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-    }
-
-    // Brief lock to prevent double-taps, but keep typing responsive
+    sendingRef.current = true;
     setSending(true);
-    window.setTimeout(() => setSending(false), 150);
-
-    // Fire & forget; Chat page will still show toast on error
-    void onSend(content, 'text', undefined, replyTo?.id);
+    setSendError('');
+    try {
+      const result = await onSend(content, 'text', undefined, replyTo?.id);
+      if (!result.messageId) throw new Error('Envio não confirmado');
+      // Preserve anything typed while the previous message was being delivered.
+      setMessage(current => current.trim() === content ? '' : current);
+      onCancelReply?.();
+    } catch {
+      setSendError('Mensagem não enviada. O texto foi mantido. Tenta novamente.');
+    } finally {
+      sendingRef.current = false;
+      setSending(false);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
       e.preventDefault();
       handleSend();
     }
@@ -259,6 +266,7 @@ export function EnhancedChatInput({
 
   return (
     <div className="shrink-0 glass border-t border-border/50 safe-bottom relative">
+      {sendError && <p role="alert" className="px-4 py-2 text-sm text-destructive">{sendError}</p>}
       {/* Sticker Picker */}
       <AnimatePresence>
         {showStickerPicker && (
@@ -402,10 +410,11 @@ export function EnhancedChatInput({
             onChange={(e) => handleFileSelect(e, 'file')}
           />
 
-          <div className="flex-1 relative">
+          <div className="flex-1 min-w-0 relative">
             <Textarea
               ref={textareaRef}
               value={message}
+              aria-label="Mensagem"
               onChange={handleChange}
               onKeyDown={handleKeyDown}
               placeholder={t('chat.typeMessage')}
@@ -471,6 +480,7 @@ export function EnhancedChatInput({
                 className="h-10 w-10 rounded-full bg-gradient-primary text-white flex-shrink-0"
                 onClick={handleSend}
                 disabled={sending || disabled || uploading}
+                aria-label="Enviar mensagem"
               >
                 <Send className="w-5 h-5" />
               </Button>

@@ -4,7 +4,7 @@ import { formatDistanceToNow, isToday, isYesterday, format } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Users, Image, Mic, Pin } from 'lucide-react';
+import { Users, Image, Mic, Pin, Film, FileText } from 'lucide-react';
 
 interface ConversationItemProps {
   conversation: {
@@ -28,6 +28,7 @@ interface ConversationItemProps {
       message_type: string;
       sender_id: string;
       created_at: string;
+      is_deleted?: boolean;
     };
     unread_count?: number;
     is_pinned?: boolean;
@@ -86,12 +87,17 @@ export function ConversationItem({
       return { text: 'Sem mensagens', icon: null, isEmpty: true };
     }
     
+    if (conversation.last_message.is_deleted) return { text: 'Mensagem eliminada', icon: null, isEmpty: true };
     const isOwnMessage = conversation.last_message.sender_id === currentUserId;
     const prefix = isOwnMessage ? 'Tu: ' : '';
     
     switch (conversation.last_message.message_type) {
       case 'image':
         return { text: `${prefix}Foto`, icon: <Image className="w-3.5 h-3.5 text-muted-foreground mr-1 flex-shrink-0" />, isEmpty: false };
+      case 'video':
+        return { text: `${prefix}Vídeo`, icon: <Film className="w-3.5 h-3.5 mr-1 shrink-0" />, isEmpty: false };
+      case 'file':
+        return { text: `${prefix}Documento`, icon: <FileText className="w-3.5 h-3.5 mr-1 shrink-0" />, isEmpty: false };
       case 'voice':
         return { text: `${prefix}Mensagem de voz`, icon: <Mic className="w-3.5 h-3.5 text-muted-foreground mr-1 flex-shrink-0" />, isEmpty: false };
       default: {
@@ -109,7 +115,7 @@ export function ConversationItem({
   return (
     <button
       onClick={onClick}
-      className={`w-full flex items-center gap-3.5 px-4 py-3 transition-all duration-150 text-left group ${
+      className={`w-full min-w-0 max-w-full overflow-hidden flex items-center gap-3.5 px-4 py-3 transition-all duration-150 text-left group ${
         isActive
           ? 'bg-primary/5'
           : hasUnread

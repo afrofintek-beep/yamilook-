@@ -1417,6 +1417,7 @@ export type Database = {
         Row: {
           conversation_id: string
           id: string
+          history_cleared_at: string | null
           is_archived: boolean | null
           is_muted: boolean | null
           is_pinned: boolean | null
@@ -1428,6 +1429,7 @@ export type Database = {
         Insert: {
           conversation_id: string
           id?: string
+          history_cleared_at?: string | null
           is_archived?: boolean | null
           is_muted?: boolean | null
           is_pinned?: boolean | null
@@ -1439,6 +1441,7 @@ export type Database = {
         Update: {
           conversation_id?: string
           id?: string
+          history_cleared_at?: string | null
           is_archived?: boolean | null
           is_muted?: boolean | null
           is_pinned?: boolean | null
@@ -6311,6 +6314,10 @@ export type Database = {
       }
     }
     Views: {
+      visible_messages: {
+        Row: Database["public"]["Tables"]["messages"]["Row"]
+        Relationships: Database["public"]["Tables"]["messages"]["Relationships"]
+      }
       public_profiles: {
         Row: {
           created_at: string | null
@@ -6360,6 +6367,14 @@ export type Database = {
       }
     }
     Functions: {
+      forward_chat_messages: {
+        Args: { p_message_ids: string[]; p_conversation_ids: string[] }
+        Returns: number
+      }
+      set_chat_history_cleared: {
+        Args: { p_conversation_id: string; p_restore?: boolean }
+        Returns: string | null
+      }
       can_join_academia_room: { Args: { p_session: string }; Returns: Json }
       academia_set_live: { Args: { p_session: string; p_live: boolean }; Returns: Json }
 

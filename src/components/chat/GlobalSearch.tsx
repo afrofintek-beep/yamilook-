@@ -100,7 +100,7 @@ export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
 
       // Build query
       let messagesQuery = supabase
-        .from('messages')
+        .from('visible_messages')
         .select('*')
         .in('conversation_id', conversationIds)
         .ilike('content', `%${query}%`)

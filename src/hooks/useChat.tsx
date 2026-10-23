@@ -1,3 +1,4 @@
+import { orderConversations } from '@/lib/chat-conversations';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -13,6 +14,16 @@ interface PublicProfile {
   avatar_url: string | null;
   is_online?: boolean | null;
   last_seen?: string | null;
+}
+
+function messageProfile(profile?: PublicProfile): Message['sender_profile'] {
+  if (!profile?.id) return undefined;
+  return {
+    id: profile.id,
+    display_name: profile.display_name || 'Utilizador',
+    username: profile.username || '',
+    avatar_url: profile.avatar_url,
+  };
 }
 
 interface Message {
@@ -144,7 +155,7 @@ export function useConversations() {
           .select('conversation_id, user_id')
           .in('conversation_id', conversationIds),
         supabase
-          .from('messages')
+          .from('visible_messages')
           .select('*')
           .in('conversation_id', conversationIds)
           .order('created_at', { ascending: false }),
@@ -155,6 +166,9 @@ export function useConversations() {
           .in('conversation_id', conversationIds)
       ]);
 
+      for (const result of [conversationsResult, allParticipantsResult, lastMessagesResult, userParticipationsResult]) {
+        if (result.error) throw result.error;
+      }
       const conversationsData = conversationsResult.data || [];
       const allParticipants = allParticipantsResult.data || [];
       const allMessages = lastMessagesResult.data || [];
@@ -206,7 +220,7 @@ export function useConversations() {
         const lastRead = lastReadByConv.get(convId);
         let count = 0;
         allMessages.forEach(msg => {
-          if (msg.conversation_id === convId && msg.sender_id !== user.id) {
+          if (msg.conversation_id === convId && msg.sender_id !== user.id && !msg.is_deleted) {
             if (!lastRead || new Date(msg.created_at) > new Date(lastRead)) {
               count++;
             }
@@ -224,30 +238,7 @@ export function useConversations() {
         is_muted: mutedByConv.get(conv.id) ?? false,
       }));
 
-      // Deduplicate DM conversations: keep only the most recent per other participant
-      const seen = new Map<string, number>();
-      const deduped = enrichedConversations.filter((conv, idx) => {
-        if (conv.type !== 'direct') return true;
-        const other = conv.participants?.find((p) => p.user_id !== user.id);
-        if (!other) return true;
-        const key = other.user_id;
-        if (seen.has(key)) {
-          // Already seen — keep the one with the most recent activity
-          const prevIdx = seen.get(key)!;
-          const prevConv = enrichedConversations[prevIdx];
-          const prevTime = prevConv.last_message?.created_at || prevConv.updated_at;
-          const curTime = conv.last_message?.created_at || conv.updated_at;
-          if (curTime > prevTime) {
-            seen.set(key, idx);
-            return true;
-          }
-          return false;
-        }
-        seen.set(key, idx);
-        return true;
-      });
-
-      setConversations(deduped);
+      setConversations(orderConversations(enrichedConversations, user.id));
     } catch (err) {
       console.error('Error fetching conversations:', err);
     } finally {
@@ -261,6 +252,7 @@ export function useConversations() {
     if (user) {
       channelRef.current = supabase
         .channel(`conversations-updates-${instanceIdRef.current}`)
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'conversation_participants', filter: `user_id=eq.${user.id}` }, () => { void fetchConversations(); })
         .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => {
           fetchConversations();
         })
@@ -342,6 +334,8 @@ export function useMessages(conversationId: string | null) {
   const typingPendingRef = useRef(false); // queued typing event to send on reconnect
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const typingLastSentRef = useRef<number>(0);
+  const historyCutoffRef = useRef<string | null>(null);
+  const [historyClearedAt, setHistoryClearedAt] = useState<string | null>(null);
   const typingProfileCacheRef = useRef<Map<string, { display_name: string; avatar_url: string | null }>>(new Map());
   // Per-user timeouts to auto-clear stale typing states
   const typingUserTimeoutsRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
@@ -354,8 +348,17 @@ export function useMessages(conversationId: string | null) {
     }
 
     try {
+      const { data: participation, error: participationError } = await supabase
+        .from('conversation_participants')
+        .select('history_cleared_at')
+        .eq('conversation_id', conversationId)
+        .eq('user_id', user.id)
+        .single();
+      if (participationError) throw participationError;
+      historyCutoffRef.current = participation.history_cleared_at;
+      setHistoryClearedAt(participation.history_cleared_at);
       const { data: messagesData, error } = await supabase
-        .from('messages')
+        .from('visible_messages')
         .select('*')
         .eq('conversation_id', conversationId)
         // Hide disappearing messages that have already expired (the cron purges
@@ -399,7 +402,7 @@ export function useMessages(conversationId: string | null) {
           .eq('conversation_id', conversationId),
         replyToIds.length > 0
           ? supabase
-              .from('messages')
+              .from('visible_messages')
               .select('id, content, message_type, sender_id')
               .in('id', replyToIds)
           : Promise.resolve({ data: [] }),
@@ -431,12 +434,12 @@ export function useMessages(conversationId: string | null) {
           const replyMsg = replyMessageMap.get(msg.reply_to_id);
           if (replyMsg) {
             const replyProfile = profileMap.get(replyMsg.sender_id);
-            replyTo = { ...replyMsg, sender_profile: replyProfile || undefined };
+            replyTo = { ...replyMsg, sender_profile: messageProfile(replyProfile) };
           }
         }
         return {
           ...msg,
-          sender_profile: profileMap.get(msg.sender_id) || undefined,
+          sender_profile: messageProfile(profileMap.get(msg.sender_id)),
           reply_to: replyTo,
         };
       });
@@ -502,11 +505,16 @@ export function useMessages(conversationId: string | null) {
   }, [conversationId, user]);
 
   useEffect(() => {
+    historyCutoffRef.current = null;
+    setHistoryClearedAt(null);
     fetchMessages();
 
     if (conversationId && user) {
       channelRef.current = supabase
         .channel(`messages-${conversationId}-${instanceIdRef.current}`)
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'conversation_participants', filter: `conversation_id=eq.${conversationId}` }, payload => {
+          if ((payload.new as { user_id?: string }).user_id === user.id) void fetchMessages(false);
+        })
         .on('postgres_changes', {
           event: 'INSERT',
           schema: 'public',
@@ -514,6 +522,7 @@ export function useMessages(conversationId: string | null) {
           filter: `conversation_id=eq.${conversationId}`,
         }, async (payload: RealtimePostgresChangesPayload<Tables<'messages'>>) => {
           const newMessage = payload.new as Message;
+          if (historyCutoffRef.current && newMessage.created_at <= historyCutoffRef.current) return;
 
           // For own messages, merge by id (we generate the UUID client-side for optimistic messages)
           if (newMessage.sender_id === user.id) {
@@ -565,7 +574,9 @@ export function useMessages(conversationId: string | null) {
             .eq('id', newMessage.sender_id)
             .maybeSingle();
 
-          setMessages((prev) => [...prev, { ...newMessage, sender_profile: profile || undefined }]);
+          setMessages((prev) => prev.some(message => message.id === newMessage.id)
+            ? prev
+            : [...prev, { ...newMessage, sender_profile: messageProfile(profile) }]);
 
           // Trigger notification sound/vibration for incoming messages
           notifyMessage();
@@ -951,23 +962,11 @@ export function useMessages(conversationId: string | null) {
   const forwardMessage = async (messageId: string, conversationIds: string[]) => {
     if (!user) return { error: new Error('Not authenticated') };
 
-    const message = messages.find((m) => m.id === messageId);
-    if (!message) return { error: new Error('Message not found') };
-
-    const promises = conversationIds.map((convId) =>
-      supabase.from('messages').insert({
-        conversation_id: convId,
-        sender_id: user.id,
-        content: message.content,
-        message_type: message.message_type,
-        media_url: message.media_url,
-        forwarded_from_id: messageId,
-        forwarded_from_user_id: message.sender_id,
-      })
-    );
-
-    await Promise.all(promises);
-    return { error: null };
+    const { error } = await supabase.rpc('forward_chat_messages', {
+      p_message_ids: [messageId],
+      p_conversation_ids: conversationIds,
+    });
+    return { error: error ? new Error(error.message) : null };
   };
 
   // Typing indicator - uses Realtime Broadcast for immediate feedback (no WAL latency)
@@ -1098,7 +1097,7 @@ export function useMessages(conversationId: string | null) {
     if (!conversationId || !query.trim()) return [];
 
     const { data } = await supabase
-      .from('messages')
+      .from('visible_messages')
       .select('*')
       .eq('conversation_id', conversationId)
       .ilike('content', `%${query}%`)
@@ -1125,7 +1124,21 @@ export function useMessages(conversationId: string | null) {
     return { error: error ? new Error(error.message) : null };
   };
 
+  const setHistoryCleared = async (restore = false) => {
+    if (!conversationId) throw new Error('Conversa indisponível');
+    const { data, error } = await supabase.rpc('set_chat_history_cleared', {
+      p_conversation_id: conversationId,
+      p_restore: restore,
+    });
+    if (error) throw error;
+    historyCutoffRef.current = data;
+    setHistoryClearedAt(data);
+    if (data) setMessages(previous => previous.filter(message => message.created_at > data));
+    await fetchMessages(false);
+  };
+
   return {
+    historyClearedAt, setHistoryCleared,
     messages,
     reactions,
     starredIds,

@@ -44,7 +44,7 @@ export function MediaGallery({ open, onOpenChange, conversationId }: MediaGaller
     setLoading(true);
     try {
       const { data: messages } = await supabase
-        .from('messages')
+        .from('visible_messages')
         .select('id, media_url, message_type, content, created_at, sender_id')
         .eq('conversation_id', conversationId)
         .not('media_url', 'is', null)
@@ -79,7 +79,7 @@ export function MediaGallery({ open, onOpenChange, conversationId }: MediaGaller
 
       // Extract links from text messages
       const { data: textMessages } = await supabase
-        .from('messages')
+        .from('visible_messages')
         .select('id, content, created_at, sender_id')
         .eq('conversation_id', conversationId)
         .eq('message_type', 'text')
