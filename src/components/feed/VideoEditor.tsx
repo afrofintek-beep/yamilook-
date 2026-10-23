@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import { EDITOR_TRACKS, createInstrumental, VideoEditorAudio } from '@/lib/video-editor-audio';
 
 /* ─── Types ─── */
 interface VideoFilter {
@@ -66,14 +67,9 @@ const TABS: { id: EditorTab; icon: typeof Scissors; label: string }[] = [
   { id: 'music', icon: Music, label: 'Música' },
 ];
 
-/* ─── Mock Music Tracks ─── */
 const MUSIC_TRACKS = [
   { id: 'none', name: 'Sem música', artist: '', duration: 0 },
-  { id: 'afrobeat1', name: 'Lagos Nights', artist: 'AfroVibes', duration: 30 },
-  { id: 'kuduro1', name: 'Bazuka', artist: 'DJ Maluco', duration: 25 },
-  { id: 'semba1', name: 'Saudade', artist: 'Banda Maravilha', duration: 35 },
-  { id: 'kizomba1', name: 'Dança Comigo', artist: 'Yola Semedo', duration: 28 },
-  { id: 'amapiano1', name: 'Jozi Flow', artist: 'Piano Kings', duration: 32 },
+  ...EDITOR_TRACKS.map(track => ({ ...track, artist: 'Instrumental Yamilook', duration: 16 * 60 / track.bpm })),
 ];
 
 export function VideoEditor({ file, onSave, onCancel }: VideoEditorProps) {
@@ -103,16 +99,75 @@ export function VideoEditor({ file, onSave, onCancel }: VideoEditorProps) {
   const [selectedTrack, setSelectedTrack] = useState('none');
   const [musicVolume, setMusicVolume] = useState(80);
   const [originalVolume, setOriginalVolume] = useState(100);
+  const [uploadedMusic, setUploadedMusic] = useState('');
+  const [musicLoading, setMusicLoading] = useState(false);
+  const [audioError, setAudioError] = useState('');
+  const musicInputRef = useRef<HTMLInputElement>(null);
+  const musicRequestRef = useRef(0);
+  const mixerRef = useRef<VideoEditorAudio | null>(null);
 
   // Processing
   const [isProcessing, setIsProcessing] = useState(false);
   const [processProgress, setProcessProgress] = useState(0);
   const [exportError, setExportError] = useState('');
   const exportingRef = useRef(false);
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const audioSourceRef = useRef<MediaElementAudioSourceNode | null>(null);
+  const getMixer = () => {
+    if (!videoRef.current) throw new Error('Vídeo indisponível');
+    const mixer = mixerRef.current ??= new VideoEditorAudio(videoRef.current);
+    mixer.setVolumes(originalVolume, musicVolume);
+    return mixer;
+  };
+  useEffect(() => () => {
+    musicRequestRef.current++;
+    mixerRef.current?.dispose();
+    mixerRef.current = null;
+  }, []);
+  useEffect(() => { mixerRef.current?.setVolumes(originalVolume, musicVolume); }, [originalVolume, musicVolume]);
+  useEffect(() => { mixerRef.current?.setTrimStart(trimStart / 100 * duration); }, [trimStart, duration]);
 
-  useEffect(() => () => { void audioContextRef.current?.close(); }, []);
+  const selectMusic = (id: string) => {
+    musicRequestRef.current++;
+    setMusicLoading(false);
+    setAudioError('');
+    try {
+      if (id === 'none') {
+        mixerRef.current?.setMusic(null);
+      } else {
+        const mixer = getMixer();
+        void mixer.resume().catch(() => setAudioError('Toca em reproduzir para ativar o som.'));
+        mixer.setTrimStart(trimStart / 100 * duration);
+        mixer.setMusic(createInstrumental(mixer.context, id));
+      }
+      setSelectedTrack(id);
+      setUploadedMusic('');
+    } catch {
+      setAudioError('Não foi possível preparar a música neste navegador. Tenta novamente.');
+    }
+  };
+
+  const uploadMusic = async (audioFile?: File) => {
+    if (!audioFile) return;
+    const request = ++musicRequestRef.current;
+    if (audioFile.size > 30 * 1024 * 1024) {
+      setMusicLoading(false);
+      setAudioError('Escolhe um ficheiro de áudio até 30 MB.');
+      return;
+    }
+    setAudioError(''); setMusicLoading(true);
+    try {
+      const mixer = getMixer();
+      await mixer.resume();
+      const buffer = await mixer.context.decodeAudioData(await audioFile.arrayBuffer());
+      if (request !== musicRequestRef.current) return;
+      mixer.setTrimStart(trimStart / 100 * duration);
+      mixer.setMusic(buffer);
+      setSelectedTrack('uploaded'); setUploadedMusic(audioFile.name);
+    } catch {
+      if (request === musicRequestRef.current) setAudioError('Não foi possível abrir este áudio. Experimenta um ficheiro MP3, M4A ou WAV.');
+    } finally {
+      if (request === musicRequestRef.current) setMusicLoading(false);
+    }
+  };
 
   // Create video URL
   useEffect(() => {
@@ -151,19 +206,25 @@ export function VideoEditor({ file, onSave, onCancel }: VideoEditorProps) {
     return () => v.removeEventListener('timeupdate', onTime);
   }, [duration, trimStart, trimEnd]);
 
-  const togglePlay = useCallback(() => {
+  const togglePlay = () => {
     const v = videoRef.current;
-    if (!v) return;
-    if (isPlaying) {
-      v.pause();
-    } else {
-      if (v.currentTime >= (trimEnd / 100) * duration) {
-        v.currentTime = (trimStart / 100) * duration;
+    if (!v || exportingRef.current) return;
+    if (!v.paused) { v.pause(); setIsPlaying(false); return; }
+    setAudioError('');
+    try {
+      const mixer = getMixer();
+      if (v.currentTime < trimStart / 100 * duration || v.currentTime >= trimEnd / 100 * duration) {
+        v.currentTime = trimStart / 100 * duration;
       }
-      v.play().catch(() => {});
-    }
-    setIsPlaying(!isPlaying);
-  }, [isPlaying, trimStart, trimEnd, duration]);
+      // Both calls start in the tap handler to unlock audio/video on Safari.
+      const resumed = mixer.resume();
+      const played = v.play();
+      void Promise.all([resumed, played]).then(() => setIsPlaying(!v.paused)).catch(() => {
+        v.pause(); setIsPlaying(false);
+        setAudioError('Não foi possível reproduzir. Toca novamente em reproduzir.');
+      });
+    } catch { setAudioError('O som não está disponível neste navegador.'); }
+  };
 
   const formatTime = (s: number) => {
     const m = Math.floor(s / 60);
@@ -212,7 +273,7 @@ export function VideoEditor({ file, onSave, onCancel }: VideoEditorProps) {
     let stream: MediaStream | undefined;
     let recorder: MediaRecorder | undefined;
     let frameId = 0;
-    let gainNode: GainNode | undefined;
+    let recordingAudio: ReturnType<VideoEditorAudio['record']> | undefined;
     setProcessProgress(0);
 
     try {
@@ -228,22 +289,12 @@ export function VideoEditor({ file, onSave, onCancel }: VideoEditorProps) {
       // Set up MediaRecorder
       stream = canvas.captureStream(30);
 
-      // Add original audio if volume > 0
-      if (originalVolume > 0) {
-        try {
-          const audioCtx = audioContextRef.current ??= new AudioContext();
-          await audioCtx.resume();
-          const source = audioSourceRef.current ??= audioCtx.createMediaElementSource(v);
-          gainNode = audioCtx.createGain();
-          gainNode.gain.value = originalVolume / 100;
-          const dest = audioCtx.createMediaStreamDestination();
-          source.connect(gainNode);
-          gainNode.connect(dest);
-
-          dest.stream.getAudioTracks().forEach(t => stream.addTrack(t));
-        } catch {
-          // Audio capture may fail in some browsers
-        }
+      // A failure must be visible; never silently save a video without its selected audio.
+      if (originalVolume > 0 || selectedTrack !== 'none') {
+        const mixer = getMixer();
+        await mixer.resume();
+        recordingAudio = mixer.record();
+        recordingAudio.stream.getAudioTracks().forEach(track => stream!.addTrack(track));
       }
 
       const chunks: Blob[] = [];
@@ -279,7 +330,7 @@ export function VideoEditor({ file, onSave, onCancel }: VideoEditorProps) {
           v.currentTime = startSec;
         });
       }
-      v.volume = originalVolume / 100;
+      if (mixerRef.current) v.volume = 1;
 
       recorder.start(100);
       await v.play();
@@ -334,8 +385,7 @@ export function VideoEditor({ file, onSave, onCancel }: VideoEditorProps) {
       cancelAnimationFrame(frameId);
       if (recorder && recorder.state !== 'inactive') recorder.stop();
       stream?.getTracks().forEach(track => track.stop());
-      audioSourceRef.current?.disconnect();
-      gainNode?.disconnect();
+      recordingAudio?.disconnect();
       v.pause();
       exportingRef.current = false;
       setIsPlaying(false);
@@ -368,12 +418,13 @@ export function VideoEditor({ file, onSave, onCancel }: VideoEditorProps) {
           size="sm"
           className="bg-[#D4AF37] text-black font-semibold rounded-full px-5 hover:bg-[#c9a432]"
           onClick={handleSave}
-          disabled={isProcessing}
+          disabled={isProcessing || musicLoading}
         >
           {isProcessing ? `${Math.round(processProgress)}%` : 'Guardar'}
         </Button>
       </div>
 
+      {audioError && <p role="alert" className="px-4 py-2 text-sm text-red-400">{audioError}</p>}
       {exportError && <p role="alert" className="px-4 py-2 text-sm text-red-400">{exportError}</p>}
 
       {/* Video Preview */}
@@ -386,6 +437,8 @@ export function VideoEditor({ file, onSave, onCancel }: VideoEditorProps) {
           playsInline
           muted={false}
           loop={false}
+          onPause={() => setIsPlaying(false)}
+          onEnded={() => setIsPlaying(false)}
           preload="auto"
         />
 
@@ -745,7 +798,8 @@ export function VideoEditor({ file, onSave, onCancel }: VideoEditorProps) {
                     value={[originalVolume]}
                     onValueChange={([v]) => {
                       setOriginalVolume(v);
-                      if (videoRef.current) videoRef.current.volume = v / 100;
+                      if (mixerRef.current) mixerRef.current.setVolumes(v, musicVolume);
+                      else if (videoRef.current) videoRef.current.volume = v / 100;
                     }}
                     max={100}
                     className="[&_[role=slider]]:bg-[#D4AF37] [&_[role=slider]]:border-0"
@@ -755,6 +809,13 @@ export function VideoEditor({ file, onSave, onCancel }: VideoEditorProps) {
 
               <div className="w-full h-px bg-white/5" />
 
+              <input ref={musicInputRef} type="file" accept="audio/*,.mp3,.m4a,.wav" className="sr-only" aria-label="Carregar música do telefone"
+                onChange={event => { void uploadMusic(event.target.files?.[0]); event.target.value = ''; }} />
+              <Button variant="outline" className="w-full border-white/20 text-white bg-transparent" disabled={musicLoading || isProcessing} onClick={() => musicInputRef.current?.click()}>
+                <Plus className="w-4 h-4 mr-2" />{musicLoading ? 'A preparar áudio…' : 'Adicionar música do telefone'}
+              </Button>
+              <p className="text-xs text-white/50">Escolhe uma música e toca em reproduzir para ouvir. A música acompanha o corte e repete até ao fim do vídeo.</p>
+              {uploadedMusic && <div className="flex items-center gap-2 text-sm text-[#D4AF37]"><Music className="w-4 h-4 shrink-0" /><span className="min-w-0 truncate">{uploadedMusic}</span><Check className="w-4 h-4 shrink-0" /></div>}
               {/* Track list */}
               <div className="space-y-1">
                 {MUSIC_TRACKS.map(track => (
@@ -764,7 +825,8 @@ export function VideoEditor({ file, onSave, onCancel }: VideoEditorProps) {
                       "w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-colors",
                       selectedTrack === track.id ? "bg-[#D4AF37]/15" : "bg-transparent"
                     )}
-                    onClick={() => setSelectedTrack(track.id)}
+                    disabled={isProcessing}
+                    onClick={() => selectMusic(track.id)}
                   >
                     <div className={cn(
                       "w-9 h-9 rounded-lg flex items-center justify-center shrink-0",
@@ -789,7 +851,7 @@ export function VideoEditor({ file, onSave, onCancel }: VideoEditorProps) {
                     </div>
                     {track.duration > 0 && (
                       <span className="text-[11px] text-white/20 tabular-nums shrink-0">
-                        0:{track.duration.toString().padStart(2, '0')}
+                        {formatTime(track.duration)}
                       </span>
                     )}
                     {selectedTrack === track.id && (
