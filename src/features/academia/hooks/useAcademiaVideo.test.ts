@@ -90,3 +90,22 @@ it('disconnects on connection failure without requesting devices',async()=>{
   expect(result.current.error).toBeTruthy();
   expect(room.localParticipant.setCameraEnabled).not.toHaveBeenCalled();
 });
+it('refreshes and retries once when a still-valid token is revoked',async()=>{
+  state.invoke.mockResolvedValueOnce({error:{context:{status:401}}}).mockResolvedValueOnce({data:{token:'t',url:'wss://example.invalid'}});
+  state.refresh.mockResolvedValue({data:{session:{access_token:'renewed'}}});
+  await requestAcademiaVideo('session','start');
+  expect(state.refresh).toHaveBeenCalledTimes(1);
+  expect(state.invoke).toHaveBeenCalledTimes(2);
+  expect(state.invoke.mock.calls[1][1].headers.Authorization).toBe('Bearer renewed');
+});
+it('asks for login when the session cannot be recovered',async()=>{
+  state.invoke.mockResolvedValue({error:{context:{status:401}}});
+  state.refresh.mockResolvedValue({data:{session:null},error:{message:'Refresh Token Not Found'}});
+  await expect(requestAcademiaVideo('session','join')).rejects.toThrow('Inicia sessão novamente');
+  expect(state.invoke).toHaveBeenCalledTimes(1);
+});
+it('does not refresh authorization failures',async()=>{
+  state.invoke.mockResolvedValue({error:{context:{status:403,json:async()=>({error:'too_early'})}}});
+  await expect(requestAcademiaVideo('session','start')).rejects.toThrow('15 minutos');
+  expect(state.refresh).not.toHaveBeenCalled();
+});

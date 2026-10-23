@@ -3,18 +3,32 @@ import { Room, RoomEvent, ConnectionState, Participant, RemoteParticipant } from
 import { supabase } from '@/integrations/supabase/client';
 
 export async function requestAcademiaVideo(sessionId: string, action: 'join'|'start'|'end') {
+  const expired = () => new Error('A tua sessão expirou. Inicia sessão novamente.');
+  const refresh = async () => {
+    const result = await supabase.auth.refreshSession();
+    if (result.error || !result.data.session?.access_token) throw expired();
+    return result.data.session;
+  };
   let { data: { session } } = await supabase.auth.getSession();
-  if (session?.expires_at && session.expires_at * 1000 < Date.now() + 10000) {
-    session = (await supabase.auth.refreshSession()).data.session;
-  }
-  if (!session) throw new Error('Inicia sessão novamente.');
-  const { data, error } = await supabase.functions.invoke('academia-video', {
-    headers: { Authorization: `Bearer ${session.access_token}` }, body: { sessionId, action },
+  if (session?.expires_at && session.expires_at * 1000 < Date.now() + 10000) session = await refresh();
+  if (!session?.access_token) throw expired();
+  const invoke = (token: string) => supabase.functions.invoke('academia-video', {
+    headers: { Authorization: `Bearer ${token}` }, body: { sessionId, action },
   });
+  let { data, error } = await invoke(session.access_token);
+  // A token may be revoked before its nominal expiry (e.g. after another login).
+  // Refresh once; never retry authorization/booking failures as authentication.
+  if (error?.context?.status === 401) {
+    session = await refresh();
+    ({ data, error } = await invoke(session.access_token));
+    if (error?.context?.status === 401) throw expired();
+  }
   if (error) {
     let reason = '';
     try { reason = (await error.context?.json())?.error || ''; } catch { /* network error */ }
     const messages: Record<string,string> = {
+      unauthenticated: 'A tua sessão expirou. Inicia sessão novamente.',
+      video_unavailable: 'O serviço de vídeo está temporariamente indisponível.',
       reservation_required: 'Reserva um lugar para entrar nesta sessão.',
       not_live: 'Aguarda que o mentor inicie a sessão.',
       mentor_required: 'Apenas o mentor pode iniciar ou encerrar a sessão.',

@@ -28,11 +28,13 @@ export default function AcademiaLiveRoom() {
   const video=useAcademiaVideo(sessionId);
   const [camera,setCamera]=useState(false);const [microphone,setMicrophone]=useState(false);
   const [text,setText]=useState('');const [ending,setEnding]=useState(false);const [endError,setEndError]=useState('');
-  const {data:session,isLoading,error,refetch}=useQuery({
+  const {data:session,isLoading,error,refetch,dataUpdatedAt}=useQuery({
     queryKey:['academia-live-session',sessionId],enabled:!!sessionId,refetchInterval:5000,
     queryFn:async()=>{const {data,error}=await supabase.from('academia_sessions').select('*').eq('id',sessionId!).maybeSingle();if(error)throw error;return data;},
   });
   const isMentor=!!user && session?.mentor_id===user.id;
+  const opensAt=new Date(new Date(session?.scheduled_at || '').getTime()-15*60*1000);
+  const tooEarly=isMentor && session?.status==='scheduled' && opensAt.getTime()>Math.max(Date.now(),dataUpdatedAt);
   const closed=!!session && ['ended','completed','cancelled'].includes(session.status);
   useEffect(()=>{if(closed)video.leave();},[closed,video.leave]);
   const exit=()=>{video.leave();navigate(`/academia/${sessionId}`);};
@@ -52,13 +54,13 @@ export default function AcademiaLiveRoom() {
       <span className="text-xs shrink-0">{closed?'Encerrada':video.connection===ConnectionState.Connected?'Ligado':video.connection===ConnectionState.Reconnecting?'A religar…':'Academia'}</span>
     </div></header>
     <section className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 space-y-4">
-      {(video.error||endError) && <p role="alert" className="rounded-xl border border-destructive p-3 text-sm">{endError||video.error}</p>}
+      {(video.error||endError) && <p role="alert" className="rounded-xl border border-destructive p-3 text-sm">{endError||video.error}{video.error.includes('Inicia sessão novamente') && <Button className="mt-3 block" onClick={async()=>{video.leave();await supabase.auth.signOut({scope:'local'});navigate('/login');}}>Entrar novamente</Button>}</p>}
       {closed ? <div className="space-y-3"><p>A sessão foi encerrada.</p><Button onClick={exit}>Ver sessão</Button></div> : !video.room ? <div className="max-w-lg mx-auto space-y-5">
         <h2 className="text-lg font-semibold">{isMentor?'Iniciar sessão de vídeo':'Entrar na sessão de vídeo'}</h2>
-        <p className="text-sm text-muted-foreground">{isMentor?'Podes abrir a sala 15 minutos antes da hora marcada.':'A entrada está disponível após o mentor iniciar a sessão, para quem tem uma reserva válida.'}</p>
+        <p className="text-sm text-muted-foreground">{isMentor?(tooEarly?`Esta sala abre em ${opensAt.toLocaleString('pt-AO',{dateStyle:'short',timeStyle:'short'})}. Podes entrar 15 minutos antes da hora marcada.`:'Podes abrir a sala 15 minutos antes da hora marcada.'):'A entrada está disponível após o mentor iniciar a sessão, para quem tem uma reserva válida.'}</p>
         <label className="flex items-center gap-3"><input type="checkbox" checked={camera} onChange={e=>setCamera(e.target.checked)} />Entrar com câmara</label>
         <label className="flex items-center gap-3"><input type="checkbox" checked={microphone} onChange={e=>setMicrophone(e.target.checked)} />Entrar com microfone</label>
-        <Button className="w-full" disabled={video.loading||(!isMentor&&session.status!=='live')} onClick={()=>void video.join(isMentor,camera,microphone)}>{video.loading?'A ligar…':isMentor?'Iniciar / entrar':'Entrar na sala'}</Button>
+        <Button className="w-full" disabled={video.loading||tooEarly||(!isMentor&&session.status!=='live')} onClick={()=>void video.join(isMentor,camera,microphone)}>{video.loading?'A ligar…':isMentor?'Iniciar / entrar':'Entrar na sala'}</Button>
       </div> : <>
         {video.audioBlocked && <Button className="w-full" onClick={()=>void video.room?.startAudio()}><Volume2 className="mr-2 h-4 w-4" />Ativar som</Button>}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">{video.participants.map(p=><ParticipantTile key={p.identity} participant={p} local={p===video.room?.localParticipant} />)}</div>
