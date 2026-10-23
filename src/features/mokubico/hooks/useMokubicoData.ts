@@ -117,3 +117,31 @@ export function useLiveSpaces() {
     },
   });
 }
+
+/** Members behind the active-banda counter, with public profile fields only. */
+export function useBandaActiveMembers(open: boolean) {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ['mokubico-banda-members', user?.id],
+    enabled: open && !!user,
+    refetchInterval: open ? 30_000 : false,
+    queryFn: async () => {
+      const { data: membership, error: membershipError } = await supabase
+        .from('user_bandas').select('banda_id').eq('user_id', user!.id)
+        .eq('is_active', true).limit(1).maybeSingle();
+      if (membershipError) throw membershipError;
+      if (!membership) return [];
+      const { data: members, error: membersError } = await supabase
+        .from('user_bandas').select('user_id').eq('banda_id', membership.banda_id).eq('is_active', true);
+      if (membersError) throw membersError;
+      const ids = [...new Set((members || []).map(m => m.user_id))];
+      if (!ids.length) return [];
+      const { data: profiles, error: profilesError } = await supabase
+        .from('public_profiles').select('id, display_name, username, avatar_url').in('id', ids);
+      if (profilesError) throw profilesError;
+      const byId = new Map((profiles || []).map(p => [p.id, p]));
+      return ids.map(id => byId.get(id) || { id, display_name: 'Membro da banda', username: null, avatar_url: null })
+        .sort((a, b) => (a.display_name || '').localeCompare(b.display_name || '', 'pt'));
+    },
+  });
+}

@@ -1,12 +1,17 @@
+import { useState } from 'react';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Radio, Users, Sparkles, Headphones } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MOKUBICO_COPY } from '../copy';
-import { useActiveLiveSession, useBandaActiveCount, useNovidadesCount } from '../hooks/useMokubicoData';
+import { useActiveLiveSession, useBandaActiveCount, useNovidadesCount, useBandaActiveMembers } from '../hooks/useMokubicoData';
 
 export function LiveSummaryCard() {
   const navigate = useNavigate();
+  const [membersOpen, setMembersOpen] = useState(false);
+  const members = useBandaActiveMembers(membersOpen);
   const { data: liveSession } = useActiveLiveSession();
   const { data: bandaCount } = useBandaActiveCount();
   const { data: novidades } = useNovidadesCount();
@@ -84,12 +89,14 @@ export function LiveSummaryCard() {
 
       {/* Mini stats */}
       <div className="grid grid-cols-2 gap-3">
-        <motion.div
+        <motion.button
           initial={{ opacity: 0, x: -12 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.15, duration: 0.4 }}
-          className="rounded-2xl bg-card border border-border/30 p-3.5 flex items-center gap-3 group hover:border-primary/20 transition-colors duration-300 cursor-pointer active:scale-[0.97]"
-          onClick={() => navigate('/contacts')}
+          className="text-left min-w-0 rounded-2xl bg-card border border-border/30 p-3.5 flex items-center gap-3 group hover:border-primary/20 transition-colors duration-300 cursor-pointer active:scale-[0.97]"
+          type="button"
+          aria-label="Ver membros da banda ativa"
+          onClick={() => setMembersOpen(true)}
         >
           <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/15 transition-colors">
             <Users className="h-4.5 w-4.5 text-primary" />
@@ -98,7 +105,7 @@ export function LiveSummaryCard() {
             <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">{MOKUBICO_COPY.bandaActive}</p>
             <p className="text-xl font-bold text-foreground tabular-nums">{bandaCount ?? 0}</p>
           </div>
-        </motion.div>
+        </motion.button>
         <motion.div
           initial={{ opacity: 0, x: 12 }}
           animate={{ opacity: 1, x: 0 }}
@@ -115,6 +122,22 @@ export function LiveSummaryCard() {
           </div>
         </motion.div>
       </div>
+      <Sheet open={membersOpen} onOpenChange={setMembersOpen}>
+        <SheetContent side="bottom" className="h-[80dvh] rounded-t-2xl flex flex-col overflow-hidden pb-[calc(1rem+env(safe-area-inset-bottom,0px))]">
+          <SheetHeader className="shrink-0 pr-10">
+            <SheetTitle>Membros da banda</SheetTitle>
+            <SheetDescription>Pessoas que pertencem à tua banda selecionada.</SheetDescription>
+          </SheetHeader>
+          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain mt-4 space-y-1">
+            {members.isLoading ? <p role="status">A carregar membros…</p> : members.isError ? <div role="alert"><p>Não foi possível carregar a banda.</p><Button variant="outline" onClick={() => void members.refetch()}>Tentar novamente</Button></div> : !members.data?.length ? <p>A tua banda ainda não tem membros disponíveis.</p> : members.data.map(member => (
+              <button type="button" key={member.id} className="w-full flex items-center gap-3 rounded-xl p-3 text-left hover:bg-muted focus-visible:ring-2 focus-visible:ring-primary" onClick={() => {setMembersOpen(false); navigate(`/profile/${member.id}`);}}>
+                <Avatar className="h-11 w-11 shrink-0"><AvatarImage src={member.avatar_url || undefined} /><AvatarFallback>{member.display_name?.[0]?.toUpperCase() || 'M'}</AvatarFallback></Avatar>
+                <span className="min-w-0"><span className="block font-medium break-words">{member.display_name || 'Membro da banda'}</span>{member.username && <span className="block text-sm text-muted-foreground truncate">@{member.username.trim()}</span>}</span>
+              </button>
+            ))}
+          </div>
+        </SheetContent>
+      </Sheet>
     </section>
   );
 }
