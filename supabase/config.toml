@@ -29,3 +29,5 @@ verify_jwt = false
 
 [functions.moderate-content]
 verify_jwt = false
+[functions.academia-video]
+verify_jwt = false

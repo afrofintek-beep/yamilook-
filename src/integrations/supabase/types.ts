@@ -6360,6 +6360,9 @@ export type Database = {
       }
     }
     Functions: {
+      can_join_academia_room: { Args: { p_session: string }; Returns: Json }
+      academia_set_live: { Args: { p_session: string; p_live: boolean }; Returns: Json }
+
       academia_cancel: { Args: { p_session: string }; Returns: Json }
       academia_complete: { Args: { p_session: string }; Returns: Json }
       academia_reserve: { Args: { p_session: string }; Returns: Json }

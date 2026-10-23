@@ -349,13 +349,15 @@ export default function AcademiaSession() {
         </div>
       </div>
 
-      {!isEnded && !isRegistrationClosed && (
+      {((!isEnded && !isRegistrationClosed) || (isMentor && !['completed','cancelled'].includes(session.status))) && (
         <div className="shrink-0 border-t border-border/40 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] [&>button]:whitespace-normal">
           {isLive ? (
             <Button variant="destructive" className="w-full rounded-full" onClick={() => navigate(`/academia/live/${session.id}`)}>
               {ACADEMIA_COPY.enter}
             </Button>
           ) : isMentor ? (
+            <div className="space-y-2">
+            {!isEnded && <Button className="w-full rounded-full" onClick={() => navigate(`/academia/live/${session.id}`)}>Abrir sala de vídeo</Button>}
             <Button
               className="w-full rounded-full"
               disabled={completeMutation.isPending || session.status === 'completed'}
@@ -365,6 +367,7 @@ export default function AcademiaSession() {
                 ? 'Sessão concluída'
                 : completeMutation.isPending ? 'A concluir…' : 'Concluir e receber'}
             </Button>
+            </div>
           ) : isReserved ? (
             <Button
               variant="outline"
