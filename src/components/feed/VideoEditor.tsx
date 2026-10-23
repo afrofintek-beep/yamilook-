@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { createPortal } from 'react-dom';
+import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X, Scissors, Sparkles, Type, Music, Check, Play, Pause,
@@ -107,6 +107,12 @@ export function VideoEditor({ file, onSave, onCancel }: VideoEditorProps) {
   // Processing
   const [isProcessing, setIsProcessing] = useState(false);
   const [processProgress, setProcessProgress] = useState(0);
+  const [exportError, setExportError] = useState('');
+  const exportingRef = useRef(false);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const audioSourceRef = useRef<MediaElementAudioSourceNode | null>(null);
+
+  useEffect(() => () => { void audioContextRef.current?.close(); }, []);
 
   // Create video URL
   useEffect(() => {
@@ -133,6 +139,7 @@ export function VideoEditor({ file, onSave, onCancel }: VideoEditorProps) {
     if (!v) return;
     const onTime = () => {
       setCurrentTime(v.currentTime);
+      if (exportingRef.current) return;
       const endSec = (trimEnd / 100) * duration;
       if (v.currentTime >= endSec) {
         v.pause();
@@ -197,12 +204,19 @@ export function VideoEditor({ file, onSave, onCancel }: VideoEditorProps) {
   const handleSave = async () => {
     const v = videoRef.current;
     const canvas = canvasRef.current;
-    if (!v || !canvas) return;
+    if (!v || !canvas || exportingRef.current) return;
 
+    exportingRef.current = true;
     setIsProcessing(true);
+    setExportError('');
+    let stream: MediaStream | undefined;
+    let recorder: MediaRecorder | undefined;
+    let frameId = 0;
+    let gainNode: GainNode | undefined;
     setProcessProgress(0);
 
     try {
+      if (!Number.isFinite(duration) || duration <= 0) throw new Error('Video not ready');
       const startSec = (trimStart / 100) * duration;
       const endSec = (trimEnd / 100) * duration;
       const totalDuration = endSec - startSec;
@@ -212,19 +226,20 @@ export function VideoEditor({ file, onSave, onCancel }: VideoEditorProps) {
       const ctx = canvas.getContext('2d')!;
 
       // Set up MediaRecorder
-      const stream = canvas.captureStream(30);
+      stream = canvas.captureStream(30);
 
       // Add original audio if volume > 0
       if (originalVolume > 0) {
         try {
-          const audioCtx = new AudioContext();
-          const source = audioCtx.createMediaElementSource(v);
-          const gainNode = audioCtx.createGain();
+          const audioCtx = audioContextRef.current ??= new AudioContext();
+          await audioCtx.resume();
+          const source = audioSourceRef.current ??= audioCtx.createMediaElementSource(v);
+          gainNode = audioCtx.createGain();
           gainNode.gain.value = originalVolume / 100;
           const dest = audioCtx.createMediaStreamDestination();
           source.connect(gainNode);
           gainNode.connect(dest);
-          gainNode.connect(audioCtx.destination);
+
           dest.stream.getAudioTracks().forEach(t => stream.addTrack(t));
         } catch {
           // Audio capture may fail in some browsers
@@ -232,34 +247,47 @@ export function VideoEditor({ file, onSave, onCancel }: VideoEditorProps) {
       }
 
       const chunks: Blob[] = [];
-      const recorder = new MediaRecorder(stream, {
-        mimeType: MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
-          ? 'video/webm;codecs=vp9'
-          : 'video/webm',
-      });
+      const mimeType = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm', 'video/mp4']
+        .find(type => MediaRecorder.isTypeSupported(type));
+      recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+      const activeRecorder = recorder;
 
       recorder.ondataavailable = (e) => {
         if (e.data.size > 0) chunks.push(e.data);
       };
 
-      const exportDone = new Promise<Blob>((resolve) => {
-        recorder.onstop = () => {
-          resolve(new Blob(chunks, { type: 'video/webm' }));
+      const exportDone = new Promise<Blob>((resolve, reject) => {
+        activeRecorder.onerror = () => reject(new Error('Recording failed'));
+        activeRecorder.onstop = () => {
+          const type = activeRecorder.mimeType || chunks[0]?.type;
+          const blob = new Blob(chunks, { type });
+          if (blob.size) resolve(blob);
+          else reject(new Error('Empty recording'));
         };
       });
 
       // Start recording
-      v.currentTime = startSec;
+      v.pause();
+      if (Math.abs(v.currentTime - startSec) > 0.001) {
+        await new Promise<void>((resolve, reject) => {
+          const timeout = window.setTimeout(() => {
+            v.removeEventListener('seeked', onSeeked);
+            reject(new Error('Video seek timed out'));
+          }, 10000);
+          const onSeeked = () => { window.clearTimeout(timeout); resolve(); };
+          v.addEventListener('seeked', onSeeked, { once: true });
+          v.currentTime = startSec;
+        });
+      }
       v.volume = originalVolume / 100;
-      await new Promise(r => { v.onseeked = r; });
 
       recorder.start(100);
-      v.play().catch(() => {});
+      await v.play();
 
       // Render loop
       const renderFrame = () => {
         if (v.currentTime >= endSec || v.paused) {
-          recorder.stop();
+          if (activeRecorder.state !== 'inactive') activeRecorder.stop();
           v.pause();
           return;
         }
@@ -287,23 +315,30 @@ export function VideoEditor({ file, onSave, onCancel }: VideoEditorProps) {
         const elapsed = v.currentTime - startSec;
         setProcessProgress(Math.min(95, (elapsed / totalDuration) * 100));
 
-        requestAnimationFrame(renderFrame);
+        frameId = requestAnimationFrame(renderFrame);
       };
-      requestAnimationFrame(renderFrame);
+      frameId = requestAnimationFrame(renderFrame);
 
       const blob = await exportDone;
       setProcessProgress(100);
 
-      const editedFile = new File([blob], file.name.replace(/\.\w+$/, '.webm'), {
-        type: 'video/webm',
+      const editedFile = new File([blob], file.name.replace(/\.\w+$/, '') + (blob.type.includes('mp4') ? '.mp4' : '.webm'), {
+        type: blob.type,
       });
 
       onSave(editedFile);
     } catch (err) {
       console.error('Video export error:', err);
-      // Fallback: just trim metadata and pass original
-      onSave(file);
+      setExportError('Não foi possível guardar o vídeo com as alterações. O texto foi mantido no editor. Tenta novamente.');
     } finally {
+      cancelAnimationFrame(frameId);
+      if (recorder && recorder.state !== 'inactive') recorder.stop();
+      stream?.getTracks().forEach(track => track.stop());
+      audioSourceRef.current?.disconnect();
+      gainNode?.disconnect();
+      v.pause();
+      exportingRef.current = false;
+      setIsPlaying(false);
       setIsProcessing(false);
     }
   };
@@ -313,22 +348,22 @@ export function VideoEditor({ file, onSave, onCancel }: VideoEditorProps) {
   const trimEndSec = (trimEnd / 100) * duration;
   const trimDuration = trimEndSec - trimStartSec;
 
-  // Portal para o body: fora do stacking context animado da página (senão o
-  // editor fica ATRÁS da sheet) e com pointer-events próprios (a sheet modal
-  // põe pointer-events:none no body).
-  return createPortal(
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
+  // A nested modal owns focus while editing; a plain body portal leaves the
+  // publication sheet's focus trap active and prevents typing on mobile.
+  return (
+    <DialogPrimitive.Root open onOpenChange={open => { if (!open && !isProcessing) onCancel(); }}>
+    <DialogPrimitive.Portal>
+    <DialogPrimitive.Content
+      aria-describedby={undefined}
+      onInteractOutside={event => event.preventDefault()}
       className="fixed inset-0 z-[200] bg-[#0a0a0a] flex flex-col safe-top safe-bottom pointer-events-auto"
     >
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3">
-        <Button variant="ghost" size="icon" onClick={onCancel} className="text-white">
+        <Button variant="ghost" size="icon" onClick={onCancel} disabled={isProcessing} aria-label="Voltar à publicação" className="text-white">
           <ChevronLeft className="w-6 h-6" />
         </Button>
-        <span className="text-white font-semibold text-sm">Editar Vídeo</span>
+        <DialogPrimitive.Title className="text-white font-semibold text-sm">Editar Vídeo</DialogPrimitive.Title>
         <Button
           size="sm"
           className="bg-[#D4AF37] text-black font-semibold rounded-full px-5 hover:bg-[#c9a432]"
@@ -339,8 +374,10 @@ export function VideoEditor({ file, onSave, onCancel }: VideoEditorProps) {
         </Button>
       </div>
 
+      {exportError && <p role="alert" className="px-4 py-2 text-sm text-red-400">{exportError}</p>}
+
       {/* Video Preview */}
-      <div className="flex-1 relative flex items-center justify-center overflow-hidden mx-4 rounded-2xl bg-black">
+      <div className="flex-1 min-h-0 relative flex items-center justify-center overflow-hidden mx-4 rounded-2xl bg-black">
         <video
           ref={videoRef}
           src={videoUrl}
@@ -357,7 +394,7 @@ export function VideoEditor({ file, onSave, onCancel }: VideoEditorProps) {
           <div
             key={overlay.id}
             className={cn(
-              "absolute cursor-move select-none pointer-events-auto transition-all duration-100",
+              "absolute z-10 cursor-pointer select-none pointer-events-auto transition-all duration-100",
               editingTextId === overlay.id && "ring-2 ring-[#D4AF37] ring-offset-1 ring-offset-transparent rounded"
             )}
             style={{
@@ -379,6 +416,7 @@ export function VideoEditor({ file, onSave, onCancel }: VideoEditorProps) {
 
         {/* Play/Pause button overlay */}
         <button
+          aria-label={isPlaying ? "Pausar vídeo" : "Reproduzir vídeo"}
           className="absolute inset-0 flex items-center justify-center"
           onClick={togglePlay}
         >
@@ -398,7 +436,7 @@ export function VideoEditor({ file, onSave, onCancel }: VideoEditorProps) {
 
         {/* Processing overlay */}
         {isProcessing && (
-          <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center gap-4">
+          <div className="absolute inset-0 z-20 bg-black/70 flex flex-col items-center justify-center gap-4">
             <div className="w-48 h-1.5 bg-white/20 rounded-full overflow-hidden">
               <motion.div
                 className="h-full bg-[#D4AF37] rounded-full"
@@ -549,15 +587,17 @@ export function VideoEditor({ file, onSave, onCancel }: VideoEditorProps) {
               {/* Add new text */}
               <div className="flex gap-2">
                 <Input
+                  aria-label="Texto para o vídeo"
                   value={newText}
                   onChange={e => setNewText(e.target.value)}
                   placeholder="Escreve aqui…"
                   className="bg-white/5 border-white/10 text-white placeholder:text-white/30 text-sm"
-                  onKeyDown={e => e.key === 'Enter' && addTextOverlay()}
+                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addTextOverlay(); } }}
                 />
                 <Button
                   size="icon"
                   className="bg-[#D4AF37] text-black shrink-0"
+                  aria-label="Adicionar texto"
                   onClick={addTextOverlay}
                   disabled={!newText.trim()}
                 >
@@ -781,7 +821,8 @@ export function VideoEditor({ file, onSave, onCancel }: VideoEditorProps) {
           )}
         </div>
       </div>
-    </motion.div>,
-    document.body
+    </DialogPrimitive.Content>
+    </DialogPrimitive.Portal>
+    </DialogPrimitive.Root>
   );
 }
