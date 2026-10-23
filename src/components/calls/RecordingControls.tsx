@@ -269,10 +269,11 @@ export function RecordingControls({ callId, participants }: RecordingControlsPro
       return;
     }
 
-    const path = `${callId}/${recId}.webm`;
+    const extension = blob.type.includes("mp4") ? "mp4" : "webm";
+    const path = `${callId}/${recId}.${extension}`;
     const { error: upErr } = await supabase.storage
       .from('call-recordings')
-      .upload(path, blob, { contentType: 'video/webm', upsert: true });
+      .upload(path, blob, { contentType: blob.type || 'video/webm', upsert: true });
 
     if (upErr) {
       console.error('[rec] upload failed', upErr);

@@ -79,7 +79,7 @@ export function useRitmos() {
         .from('ritmos')
         .select(`
           *,
-          profiles:user_id (id, display_name, username, avatar_url)
+          profiles:public_profiles!ritmos_user_id_fkey (id, display_name, username, avatar_url)
         `)
         .order('created_at', { ascending: false })
         .limit(50);

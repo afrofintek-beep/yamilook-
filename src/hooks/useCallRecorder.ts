@@ -16,16 +16,17 @@ interface RecorderState {
   raf: number;
 }
 
-function pickMimeType(): string {
+export function pickMimeType(): string | undefined {
   const candidates = [
     "video/webm;codecs=vp9,opus",
     "video/webm;codecs=vp8,opus",
     "video/webm",
+    "video/mp4",
   ];
   for (const t of candidates) {
     if (typeof MediaRecorder !== "undefined" && MediaRecorder.isTypeSupported(t)) return t;
   }
-  return "video/webm";
+  return undefined;
 }
 
 export function useCallRecorder() {
@@ -89,7 +90,7 @@ export function useCallRecorder() {
       ]);
 
       const chunks: BlobPart[] = [];
-      const recorder = new MediaRecorder(combined, { mimeType: pickMimeType() });
+      const recorder = new MediaRecorder(combined, pickMimeType() ? { mimeType: pickMimeType() } : undefined);
       recorder.ondataavailable = (e) => { if (e.data && e.data.size > 0) chunks.push(e.data); };
       recorder.start(1000);
 
@@ -110,7 +111,7 @@ export function useCallRecorder() {
         cancelAnimationFrame(st.raf);
         st.videos.forEach((v) => { v.srcObject = null; });
         try { st.audioCtx.close(); } catch { /* noop */ }
-        const blob = st.chunks.length ? new Blob(st.chunks, { type: "video/webm" }) : null;
+        const blob = st.chunks.length ? new Blob(st.chunks, { type: st.recorder.mimeType || (st.chunks[0] instanceof Blob ? st.chunks[0].type : "") }) : null;
         stateRef.current = null;
         resolve(blob);
       };

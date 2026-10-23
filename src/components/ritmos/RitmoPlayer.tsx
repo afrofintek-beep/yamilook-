@@ -58,67 +58,58 @@ export function RitmoPlayer({
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const [reactionAnimation, setReactionAnimation] = useState<string | null>(null);
   const hasLoggedView = useRef(false);
-  const [isVideoReady, setIsVideoReady] = useState(false);
 
-  // Handle video playback based on active state
+  // Each activation owns its listeners and pending playback promise.
   useEffect(() => {
     const vid = videoRef.current;
     if (!vid) return;
-
-    if (isActive) {
-      // Attempt play immediately; browsers guarantee muted autoplay
-      const attemptPlay = () => {
-        vid.play()
-          .then(() => setIsPlaying(true))
-          .catch(() => {
-            // If unmuted autoplay blocked, mute and retry
-            if (!vid.muted) {
-              vid.muted = true;
-              setIsMuted(true);
-              vid.play()
-                .then(() => setIsPlaying(true))
-                .catch(() => {});
-            }
-          });
-      };
-
-      // If video has enough data, play now; otherwise wait for canplay
-      if (vid.readyState >= 3) {
-        attemptPlay();
-      } else {
-        const onReady = () => {
-          attemptPlay();
-          vid.removeEventListener('canplay', onReady);
-        };
-        vid.addEventListener('canplay', onReady);
-        // Also trigger load if needed
-        vid.load();
+    let cancelled = false;
+    const attemptPlay = async () => {
+      if (cancelled) return;
+      try {
+        await vid.play();
+      } catch {
+        if (cancelled) return;
+        vid.muted = true;
+        setIsMuted(true);
+        try { await vid.play(); } catch { if (!cancelled) setIsPlaying(false); }
       }
-
-      // Log view once
-      if (!hasLoggedView.current && onView) {
-        hasLoggedView.current = true;
-        onView();
+      if (cancelled) return;
+      setIsPlaying(!vid.paused);
+    };
+    if (isActive) {
+      if (vid.readyState >= 3) void attemptPlay();
+      else {
+        vid.addEventListener('canplay', attemptPlay, { once: true });
+        vid.load();
       }
     } else {
       vid.pause();
       vid.currentTime = 0;
       setIsPlaying(false);
     }
-  }, [isActive, onView]);
+    return () => {
+      cancelled = true;
+      vid.removeEventListener('canplay', attemptPlay);
+      vid.pause();
+    };
+  }, [isActive, ritmo.video_url]);
 
-  // Toggle play/pause on tap
-  const handleVideoTap = useCallback(() => {
-    if (!videoRef.current) return;
-
-    if (isPlaying) {
-      videoRef.current.pause();
-      setIsPlaying(false);
-    } else {
-      videoRef.current.play();
-      setIsPlaying(true);
+  // Count a view only once playback actually starts.
+  const handlePlaying = () => {
+    setIsPlaying(true);
+    if (!hasLoggedView.current && onView) {
+      hasLoggedView.current = true;
+      onView();
     }
-  }, [isPlaying]);
+  };
+
+  const handleVideoTap = useCallback(() => {
+    const video = videoRef.current;
+    if (!video || !isActive) return;
+    if (!video.paused) video.pause();
+    else void video.play().catch(() => setIsPlaying(false));
+  }, [isActive]);
 
   // Quick react with Djembe (default)
   const handleQuickReact = useCallback(() => {
@@ -162,12 +153,10 @@ export function RitmoPlayer({
         loop
         playsInline
         webkit-playsinline=""
-        preload={isActive ? 'auto' : 'metadata'}
+        preload={isActive ? 'auto' : 'none'}
         muted={isMuted}
-        // A tabela ritmos não tem coluna de thumbnail; usamos o primeiro frame
-        // do vídeo (#t=0.1) como poster.
-        poster={`${ritmo.video_url}#t=0.1`}
-        onCanPlayThrough={() => setIsVideoReady(true)}
+        onPlaying={handlePlaying}
+        onPause={() => setIsPlaying(false)}
         onClick={handleVideoTap}
       />
 
