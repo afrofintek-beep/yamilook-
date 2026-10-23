@@ -650,9 +650,9 @@ function ProfileContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20 pb-20">
+    <div className="h-screen-safe w-full min-w-0 flex flex-col overflow-hidden bg-gradient-to-b from-background via-background to-muted/20 pb-[calc(5rem+env(safe-area-inset-bottom,0px))]">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 safe-top">
+      <header aria-label="Barra do perfil" className="relative z-30 shrink-0 flex items-center justify-between px-4 pb-3 safe-top bg-background border-b border-border/30">
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -663,6 +663,7 @@ function ProfileContent() {
             size="icon"
             className="rounded-full hover:bg-muted/80"
             onClick={() => navigate(-1)}
+            aria-label="Voltar"
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
@@ -678,6 +679,7 @@ function ProfileContent() {
             size="icon"
             className="rounded-full hover:bg-muted/80"
             onClick={() => setIsQROpen(true)}
+            aria-label="Código QR do perfil"
           >
             <QrCode className="w-5 h-5" />
           </Button>
@@ -758,8 +760,9 @@ function ProfileContent() {
             </DropdownMenuContent>
           </DropdownMenu>
         </motion.div>
-      </div>
+      </header>
 
+      <main aria-label="Conteúdo do perfil" className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain pt-4 pb-4">
       {/* Profile Header */}
       <ProfileHeader
         avatarUrl={profileData.avatar_url}
@@ -843,6 +846,8 @@ function ProfileContent() {
           onReorder={reorderHighlights}
         />
       </div>
+
+      </main>
 
       {/* Create Momambo Sheet */}
       <CreateHighlightSheet
