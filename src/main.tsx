@@ -1,3 +1,4 @@
+import { recoverApplicationAssets } from './lib/app-assets';
 import { clearLegacyPrivateCache } from "./lib/private-cache";
 import React from "react";
 import { createRoot } from "react-dom/client";
@@ -17,7 +18,7 @@ const isInIframe = (() => {
 
 if (isInIframe) {
   navigator.serviceWorker?.getRegistrations().then((regs) => {
-    regs.forEach((r) => r.unregister());
+    regs.filter(r => r.scope === new URL('/', location.origin).href).forEach((r) => r.unregister());
   });
 }
 
@@ -43,14 +44,7 @@ function installChunkLoadRecovery() {
       // at chunk hashes deleted by a newer deploy — reloading alone just re-serves
       // the broken page. Drop the SW + caches first so the reload fetches fresh.
       try {
-        if ("serviceWorker" in navigator) {
-          const regs = await navigator.serviceWorker.getRegistrations();
-          await Promise.all(regs.map((r) => r.unregister()));
-        }
-        if (typeof window.caches !== "undefined") {
-          const keys = await window.caches.keys();
-          await Promise.all(keys.map((k) => window.caches.delete(k)));
-        }
+        await recoverApplicationAssets('/');
       } catch { /* best-effort */ }
 
       const url = new URL(window.location.href);

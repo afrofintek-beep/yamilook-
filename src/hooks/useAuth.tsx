@@ -50,7 +50,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, metadata?: { display_name?: string; username?: string; ref?: string; access_code?: string }) => Promise<{ error: AuthError | null }>;
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signInWithSocial: (provider: SocialProvider) => Promise<{ error: AuthError | null }>;
-  signOut: () => Promise<void>;
+  signOut: (scope?: 'global' | 'local') => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<{ error: Error | null }>;
   refreshProfile: () => Promise<void>;
   /** Optimistically patch the in-memory profile without a DB write. Use for
@@ -230,9 +230,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error };
   };
 
-  const signOut = async () => {
+  const signOut = async (scope: 'global' | 'local' = 'global') => {
     await clearLegacyPrivateCache();
-    const { error } = await supabase.auth.signOut();
+    const { error } = await supabase.auth.signOut({ scope });
     
     setUser(null);
     setSession(null);

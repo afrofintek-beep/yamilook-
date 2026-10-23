@@ -1,3 +1,5 @@
+import { recoverApplicationAssets } from '@/lib/app-assets';
+import { getSharedAudioContext } from '@/lib/audio-context';
 import { useState, useEffect, Suspense, lazy, Component } from "react";
 import type { ErrorInfo, ReactNode } from "react";
 import { Toaster } from "@/components/ui/toaster";
@@ -121,14 +123,7 @@ function isChunkLoadError(error: unknown): boolean {
 // so the browser fetches the current deploy fresh. Guarded against reload loops.
 async function clearCachesAndReload() {
   try {
-    if ("serviceWorker" in navigator) {
-      const regs = await navigator.serviceWorker.getRegistrations();
-      await Promise.all(regs.map((r) => r.unregister()));
-    }
-    if ("caches" in window) {
-      const keys = await caches.keys();
-      await Promise.all(keys.map((k) => caches.delete(k)));
-    }
+    await recoverApplicationAssets('/');
   } catch (e) {
     console.error("[clearCachesAndReload]", e);
   } finally {
@@ -368,16 +363,6 @@ function AnimatedRoutes() {
     </Suspense>
     </LazyLoadErrorBoundary>
   );
-}
-
-// Singleton AudioContext unlocked on first user gesture — shared across the app
-// so that incoming call ringtones play even when triggered by Realtime (no gesture).
-let _sharedAudioCtx: AudioContext | null = null;
-export function getSharedAudioContext(): AudioContext {
-  if (!_sharedAudioCtx || _sharedAudioCtx.state === 'closed') {
-    _sharedAudioCtx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-  }
-  return _sharedAudioCtx;
 }
 
 function AppContent() {

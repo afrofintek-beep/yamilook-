@@ -1,6 +1,6 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useSettings } from './useSettings';
-import { getSharedAudioContext } from '@/App';
+import { getSharedAudioContext } from '@/lib/audio-context';
 
 // Ringtone patterns configuration
 const RINGTONE_PATTERNS = {

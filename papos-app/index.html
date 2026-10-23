@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- Apply the saved theme before first paint (default dark) to avoid a flash -->
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem('yamilook-theme') || 'dark';
+          var dark = t === 'dark' || (t === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          if (dark) document.documentElement.classList.add('dark');
+          var m = document.querySelector('meta[name="theme-color"]');
+          if (m) m.setAttribute('content', dark ? '#121214' : '#FBF9F5');
+        } catch (e) { document.documentElement.classList.add('dark'); }
+      })();
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Papos — Conversas e chamadas</title>
+    <meta name="description" content="Papos. Conversas, contactos e chamadas com a tua conta Yamilook.">
+    <meta name="author" content="Papos" />
+    <meta name="theme-color" content="#111111" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Papos" />
+    <link rel="apple-touch-icon" href="/papos-app/icon-192.png" />
+
+    
+    
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/papos-app/icon-512.png">
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@Yamilook" />
+    <meta name="twitter:image" content="/papos-app/icon-512.png">
+
+    <!-- DNS-prefetch for Supabase origin (preconnect removed — unused on landing page) -->
+    <link rel="dns-prefetch" href="https://rfayqekonkovfbkwjjum.supabase.co" />
+
+    <!-- Preload critical assets -->
+    <link rel="modulepreload" href="/src/papos-main.tsx" />
+
+    <!-- Critical CSS for instant first paint -->
+    <style>
+      *{box-sizing:border-box;margin:0;padding:0}
+      html,body,#root{height:100%;width:100%;background:#FBF9F5}
+      html.dark,html.dark body,html.dark #root{background:#121214}
+    </style>
+
+    <meta property="og:title" content="Papos — Conversas e chamadas">
+  <meta name="twitter:title" content="Papos — Conversas e chamadas">
+  <meta property="og:description" content="Papos. Conversas, contactos e chamadas com a tua conta Yamilook.">
+  <meta name="twitter:description" content="Papos. Conversas, contactos e chamadas com a tua conta Yamilook.">
+  <link rel="icon" type="image/png" href="/papos-app/icon-192.png">
+</head>
+
+  <body>
+    <div id="root"><p role="status" style="padding:2rem;color:#D5AE32">A abrir o Papos…</p><a href="/papos-app/" style="padding:2rem;color:#D5AE32">Recarregar Papos</a></div>
+    <script type="module" src="/src/papos-main.tsx"></script>
+  </body>
+</html>

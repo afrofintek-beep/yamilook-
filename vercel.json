@@ -2,6 +2,14 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
     {
+      "source": "/papos-app",
+      "destination": "/papos-app/index.html"
+    },
+    {
+      "source": "/papos-app/:path*",
+      "destination": "/papos-app/index.html"
+    },
+    {
       "source": "/store/",
       "destination": "/store/index.html"
     },
@@ -28,6 +36,26 @@
     {
       "source": "/(.*)",
       "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/papos-app/sw.js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        }
+      ]
+    },
+    {
+      "source": "/papos-app/manifest.webmanifest",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/manifest+json"
+        }
+      ]
     }
   ]
 }

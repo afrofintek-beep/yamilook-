@@ -1,3 +1,4 @@
+import { paposApplication } from "./build/papos-plugin";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -14,6 +15,7 @@ export default defineConfig(({ mode }) => ({
     sourcemap: mode === "development",
     minify: "esbuild",
     rollupOptions: {
+      input: { yamilook: path.resolve(__dirname, "index.html"), papos: path.resolve(__dirname, "papos-app/index.html") },
       output: {
         manualChunks: {
           "vendor-react": ["react", "react-dom", "react-router-dom"],
@@ -27,10 +29,12 @@ export default defineConfig(({ mode }) => ({
     react(),
     VitePWA({
       registerType: "autoUpdate",
+      injectRegister: null,
       includeAssets: ["favicon.ico", "yamilook-logo.png"],
       workbox: {
+        globIgnores: ["papos-app/**"],
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
-        navigateFallbackDenylist: [/^\/~oauth/, /^\/guia/, /^\/app/, /^\/download/, /^\/store/],
+        navigateFallbackDenylist: [/^\/papos-app(?:\/|$)/,/^\/~oauth/, /^\/guia/, /^\/app/, /^\/download/, /^\/store/],
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
@@ -68,6 +72,7 @@ export default defineConfig(({ mode }) => ({
         ],
       },
     }),
+    paposApplication(),
   ],
   resolve: {
     alias: {

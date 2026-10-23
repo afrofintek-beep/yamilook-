@@ -189,7 +189,7 @@ export function GroupInviteSheet({
   };
 
   const copyLink = async (code: string, inviteId: string) => {
-    const link = `${window.location.origin}/join/${code}`;
+    const link = `${window.location.origin}${window.location.pathname.startsWith('/papos-app/') ? '/papos-app' : ''}/join/${code}`;
     await navigator.clipboard.writeText(link);
     setCopiedId(inviteId);
     setTimeout(() => setCopiedId(null), 2000);
@@ -200,7 +200,7 @@ export function GroupInviteSheet({
   };
 
   const shareLink = async (code: string) => {
-    const link = `${window.location.origin}/join/${code}`;
+    const link = `${window.location.origin}${window.location.pathname.startsWith('/papos-app/') ? '/papos-app' : ''}/join/${code}`;
     if (navigator.share) {
       try {
         await navigator.share({

@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useMessageNotification } from '@/hooks/useMessageNotification';
 import { RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 import type { Tables } from '@/integrations/supabase/types';
+import { useLocation } from 'react-router-dom';
 
 /**
  * Global component that listens for new messages AND typing indicators
@@ -11,6 +12,7 @@ import type { Tables } from '@/integrations/supabase/types';
  * notification sound/vibration even when not viewing that specific chat.
  */
 export function GlobalMessageNotifier() {
+  const location = useLocation();
   const { user } = useAuth();
   const { notifyMessage, triggerVibration } = useMessageNotification();
   const messageChannelRef = useRef<RealtimeChannel | null>(null);
@@ -21,18 +23,8 @@ export function GlobalMessageNotifier() {
 
   // Track which conversations the user is currently viewing
   // to avoid notifying when already watching the typing happen
-  const currentPathRef = useRef(window.location.pathname);
-  useEffect(() => {
-    const update = () => { currentPathRef.current = window.location.pathname; };
-    window.addEventListener('popstate', update);
-    // Also track react-router navigation via a MutationObserver on title
-    const observer = new MutationObserver(update);
-    observer.observe(document.querySelector('title') || document.head, { childList: true, subtree: true });
-    return () => {
-      window.removeEventListener('popstate', update);
-      observer.disconnect();
-    };
-  }, []);
+  const currentPathRef = useRef(location.pathname);
+  currentPathRef.current = location.pathname;
 
   // Soft typing notification: gentle haptic only (no sound — would be annoying)
   const notifyTyping = useCallback(() => {

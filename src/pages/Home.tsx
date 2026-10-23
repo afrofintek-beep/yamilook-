@@ -1,3 +1,4 @@
+import { useAppSurface } from '@/lib/app-surface';
 import { useState, useCallback, useEffect } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -31,6 +32,7 @@ import { useActiveCall } from '@/components/calls/ActiveCallProvider';
 
 export default function Home() {
   const { t } = useTranslation();
+  const surface = useAppSurface();
   const { user, profile, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const activeCallContext = useActiveCall();
@@ -230,10 +232,11 @@ export default function Home() {
                   variant="ghost" 
                   size="icon" 
                   className="rounded-xl h-9 w-9 relative"
-                  onClick={() => navigate('/notifications')}
+                  aria-label={surface === 'papos' ? 'Instalar Papos' : 'Notificações'}
+                  onClick={() => navigate(surface === 'papos' ? '/install' : '/notifications')}
                 >
                   <Bell className="w-4.5 h-4.5" />
-                  {totalUnread > 0 && <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-destructive rounded-full" />}
+                  {surface !== 'papos' && totalUnread > 0 && <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-destructive rounded-full" />}
                 </Button>
                 <Button 
                   variant="ghost" 
@@ -280,6 +283,8 @@ export default function Home() {
           <div className="absolute bottom-0 left-0 right-0 h-px bg-border/20" />
         </div>
       </header>
+
+      {surface === 'yamilook' && <a href="/papos-app/install" className="shrink-0 px-4 py-2 text-xs text-primary border-b border-border/50">Instalar o Papos como aplicação separada</a>}
 
       {/* Tab Content */}
       <AnimatePresence mode="wait">

@@ -1,6 +1,7 @@
+import { useAppSurface } from "@/lib/app-surface";
 import { createPortal } from "react-dom";
 import { NavLink } from "react-router-dom";
-import { Home, Flame, GraduationCap, MessageCircle, User } from "lucide-react";
+import { Home, Flame, GraduationCap, MessageCircle, User, Users, Phone, Settings } from "lucide-react";
 
 const navItems = [
   { to: "/muxi", label: "Muxi", Icon: Flame },
@@ -11,10 +12,17 @@ const navItems = [
 ];
 
 export default function BottomNav() {
+  const surface = useAppSurface();
+  const items = surface === 'papos' ? [
+    { to: '/papos', label: 'Papos', Icon: MessageCircle },
+    { to: '/contacts', label: 'Contactos', Icon: Users },
+    { to: '/calls', label: 'Chamadas', Icon: Phone },
+    { to: '/settings', label: 'Definições', Icon: Settings },
+  ] : navItems;
   return createPortal(
     <nav aria-label="Navegação principal" className="app-bottom-nav fixed bottom-0 left-0 right-0 z-50 h-[calc(5rem+env(safe-area-inset-bottom,0px))] glass-nav">
-      <div className="mx-auto grid h-full max-w-md grid-cols-5 items-center px-2 pt-1.5 pb-[max(0.5rem,env(safe-area-inset-bottom,0px))]">
-        {navItems.map(({ to, label, Icon }) => (
+      <div style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }} className="mx-auto grid h-full max-w-md items-center px-2 pt-1.5 pb-[max(0.5rem,env(safe-area-inset-bottom,0px))]">
+        {items.map(({ to, label, Icon }) => (
           <NavLink
             key={to}
             to={to}
