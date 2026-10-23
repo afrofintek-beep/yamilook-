@@ -33,6 +33,7 @@ interface Message {
   content: string | null;
   message_type: string;
   media_url: string | null;
+  thumbnail_url?: string | null;
   reply_to_id: string | null;
   is_edited: boolean;
   is_deleted: boolean;
@@ -806,7 +807,8 @@ export function useMessages(conversationId: string | null) {
     mediaUrl?: string,
     replyToId?: string,
     durationSeconds?: number,
-    isViewOnce?: boolean
+    isViewOnce?: boolean,
+    thumbnailUrl?: string
   ): Promise<{ error: Error | null; messageId?: string }> => {
     if (!conversationId || !user) return { error: new Error('Invalid') };
 
@@ -845,6 +847,7 @@ export function useMessages(conversationId: string | null) {
       message_type: messageType,
       // Keep blob: URL only in UI for immediate feedback (never persist it)
       media_url: mediaUrl || null,
+      thumbnail_url: thumbnailUrl || null,
       reply_to_id: replyToId || null,
       is_edited: false,
       is_deleted: false,
@@ -874,6 +877,7 @@ export function useMessages(conversationId: string | null) {
         content: content || null,
         message_type: messageType,
         media_url: dbMediaUrl,
+        thumbnail_url: thumbnailUrl || null,
         reply_to_id: replyToId || null,
         duration_seconds: durationSeconds || null,
         is_view_once: isViewOnce || false,

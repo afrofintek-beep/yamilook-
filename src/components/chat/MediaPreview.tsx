@@ -1,142 +1,141 @@
-import { useEffect, useState } from 'react';
-import { X, Download, ZoomIn } from 'lucide-react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { X, Download, Play, RotateCcw } from 'lucide-react';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
+import { videoThumbnailSource } from '@/lib/chat-media';
 
 function parseStoragePublicUrl(rawUrl: string): { bucket: string; path: string } | null {
   try {
-    const u = new URL(rawUrl);
-    const match = u.pathname.match(/\/storage\/v1\/object\/public\/([^/]+)\/(.+)/);
-    if (!match) return null;
-    return { bucket: match[1], path: decodeURIComponent(match[2]) };
-  } catch {
-    return null;
-  }
+    const url = new URL(rawUrl);
+    const projectUrl = import.meta.env.VITE_SUPABASE_URL;
+    if (!projectUrl || url.origin !== new URL(projectUrl).origin) return null;
+    const match = url.pathname.match(/^\/storage\/v1\/object\/public\/([^/]+)\/(.+)/);
+    return match ? { bucket: match[1], path: decodeURIComponent(match[2]) } : null;
+  } catch { return null; }
 }
 
 function getFilenameFromUrl(rawUrl: string) {
-  try {
-    const u = new URL(rawUrl);
-    return u.pathname.split('/').pop() || 'media';
-  } catch {
-    return rawUrl.split('/').pop() || 'media';
-  }
+  try { return decodeURIComponent(new URL(rawUrl).pathname.split('/').pop() || 'media'); }
+  catch { return 'media'; }
 }
 
+// Public media already has a CDN URL. Sign only after an actual loading failure
+// (for legacy private objects), rather than replacing every working URL twice.
 function useResolvedMediaUrl(url: string) {
-  const [resolvedUrl, setResolvedUrl] = useState(url);
-  const [error, setError] = useState<string | null>(null);
+  const [override, setOverride] = useState<{ source: string; url: string } | null>(null);
+  const [error, setError] = useState(false);
+  const [retryId, setRetryId] = useState(0);
+  const attemptedRef = useRef<string | null>(null);
+  const generationRef = useRef(0);
+  const invalidatePending = useCallback(() => { generationRef.current++; }, []);
 
   useEffect(() => {
-    let cancelled = false;
+    invalidatePending();
+    attemptedRef.current = null;
+    setOverride(null);
+    setError(false);
+    return invalidatePending;
+  }, [url, invalidatePending]);
 
-    async function resolve() {
-      setError(null);
-      setResolvedUrl(url);
-
-      const parsed = parseStoragePublicUrl(url);
-      if (!parsed) return;
-
-      const { data, error } = await supabase.storage
-        .from(parsed.bucket)
-        .createSignedUrl(parsed.path, 60 * 60 * 24 * 7);
-
-      if (cancelled) return;
-
-      if (error || !data?.signedUrl) {
-        setError(error?.message || 'Unable to load media');
-        setResolvedUrl(url);
-        return;
-      }
-
-      setResolvedUrl(data.signedUrl);
+  const onError = useCallback(async () => {
+    const parsed = parseStoragePublicUrl(url);
+    if (!parsed || attemptedRef.current === url) { setError(true); return; }
+    attemptedRef.current = url;
+    const generation = generationRef.current;
+    try {
+      const { data, error: signingError } = await supabase.storage.from(parsed.bucket).createSignedUrl(parsed.path, 3600);
+      if (generation !== generationRef.current) return;
+      if (signingError || !data?.signedUrl) { setError(true); return; }
+      setOverride({ source: url, url: data.signedUrl });
+      setError(false);
+    } catch {
+      if (generation === generationRef.current) setError(true);
     }
-
-    resolve();
-
-    return () => {
-      cancelled = true;
-    };
   }, [url]);
 
-  return { resolvedUrl, error };
+  const retry = () => {
+    invalidatePending();
+    attemptedRef.current = null;
+    setError(false);
+    setOverride(null);
+    setRetryId(value => value + 1);
+  };
+
+  return { resolvedUrl: override?.source === url ? override.url : url, error, onError, retry, retryId };
 }
 
 interface MediaPreviewProps {
   url: string;
   type: 'image' | 'video';
+  posterUrl?: string | null;
   open: boolean;
   onClose: () => void;
 }
 
-export function MediaPreview({ url, type, open, onClose }: MediaPreviewProps) {
-  const { resolvedUrl, error } = useResolvedMediaUrl(url);
-  const [playbackError, setPlaybackError] = useState(false);
+export function MediaPreview({ url, type, posterUrl, open, onClose }: MediaPreviewProps) {
+  const { resolvedUrl, error, onError, retry, retryId } = useResolvedMediaUrl(url);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const bindVideo = useCallback((video: HTMLVideoElement | null) => {
+    if (videoRef.current && videoRef.current !== video) videoRef.current.pause();
+    videoRef.current = video;
+  }, []);
 
   useEffect(() => {
-    setPlaybackError(false);
-  }, [resolvedUrl, open]);
+    if (!open) videoRef.current?.pause();
+  }, [open]);
 
-  const handleDownload = () => {
-    const a = document.createElement('a');
-    a.href = resolvedUrl;
-    a.download = getFilenameFromUrl(url);
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+  const handleClose = () => {
+    videoRef.current?.pause();
+    onClose();
   };
 
-  const showError = Boolean(error) || playbackError;
+  // A normal link avoids fetching the whole video into memory to download it.
+  const downloadUrl = (() => {
+    try {
+      const target = new URL(resolvedUrl);
+      if (parseStoragePublicUrl(url)) target.searchParams.set('download', getFilenameFromUrl(url));
+      return target.toString();
+    } catch { return resolvedUrl; }
+  })();
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 bg-black/95 border-none">
-        <div className="relative w-full h-full flex items-center justify-center">
-          <div className="absolute top-4 right-4 flex gap-2 z-10">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-10 w-10 rounded-full bg-black/50 text-white hover:bg-black/70"
-              onClick={handleDownload}
-            >
-              <Download className="w-5 h-5" />
+    <Dialog open={open} onOpenChange={nextOpen => { if (!nextOpen) handleClose(); }}>
+      <DialogContent hideCloseButton aria-describedby={undefined}
+        className="w-[calc(100vw-1rem)] max-w-3xl max-h-[calc(100dvh-2rem)] p-0 gap-0 overflow-hidden bg-black border-none text-white">
+        <DialogTitle className="sr-only">{type === 'video' ? 'Reproduzir vídeo' : 'Ver fotografia'}</DialogTitle>
+        <div className="flex items-center justify-between gap-3 px-3 py-2 shrink-0 bg-black">
+          <span className="text-sm">{type === 'video' ? 'Vídeo' : 'Fotografia'}</span>
+          <div className="flex gap-2">
+            <Button asChild variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-white/20">
+              <a href={downloadUrl} download={getFilenameFromUrl(url)} target="_blank" rel="noopener noreferrer" aria-label="Descarregar ficheiro">
+                <Download className="w-5 h-5" />
+              </a>
             </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-10 w-10 rounded-full bg-black/50 text-white hover:bg-black/70"
-              onClick={onClose}
-            >
+            <Button variant="ghost" size="icon" aria-label="Fechar pré-visualização"
+              className="h-10 w-10 rounded-full hover:bg-white/20" onClick={handleClose}>
               <X className="w-5 h-5" />
             </Button>
           </div>
-
+        </div>
+        <div className="relative min-h-36 flex items-center justify-center bg-black">
           {type === 'image' ? (
-            <img
-              src={resolvedUrl}
-              alt="Preview"
-              className="max-w-full max-h-[90vh] object-contain"
-              onError={() => setPlaybackError(true)}
-            />
+            <img key={`${resolvedUrl}-${retryId}`} src={resolvedUrl} alt="Fotografia"
+              className="max-w-full max-h-[calc(100dvh-10rem)] object-contain" onError={() => void onError()} />
           ) : (
-            <video
-              src={resolvedUrl}
-              controls
-              autoPlay
-              playsInline
-              preload="metadata"
-              className="max-w-full max-h-[90vh]"
-              onError={() => setPlaybackError(true)}
-            />
-          )}
-
-          {showError && (
-            <div className="absolute bottom-4 left-4 right-4 text-center text-white/80 text-sm">
-              This media couldn’t be played here. Try downloading it.
-            </div>
+            <video key={`${resolvedUrl}-${retryId}`} ref={bindVideo} src={resolvedUrl} poster={posterUrl || undefined}
+              aria-label="Vídeo da conversa" controls autoPlay playsInline preload="metadata"
+              className="w-full max-h-[calc(100dvh-10rem)] object-contain" onError={() => void onError()} />
           )}
         </div>
+        {error && (
+          <div role="alert" className="px-4 py-3 text-center text-sm bg-zinc-900">
+            <p>Não foi possível reproduzir este ficheiro. Tenta novamente ou descarrega-o para abrir no telefone.</p>
+            <Button variant="ghost" className="mt-2 hover:bg-white/20" onClick={retry}>
+              <RotateCcw className="w-4 h-4 mr-2" />Tentar novamente
+            </Button>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
@@ -145,40 +144,49 @@ export function MediaPreview({ url, type, open, onClose }: MediaPreviewProps) {
 interface MediaThumbnailProps {
   url: string;
   type: 'image' | 'video';
+  posterUrl?: string | null;
+  durationSeconds?: number;
   onClick?: () => void;
 }
 
-export function MediaThumbnail({ url, type, onClick }: MediaThumbnailProps) {
-  const { resolvedUrl } = useResolvedMediaUrl(url);
+export function MediaThumbnail({ url, type, posterUrl, durationSeconds, onClick }: MediaThumbnailProps) {
+  const { resolvedUrl, error, onError } = useResolvedMediaUrl(url);
+  const [aspectRatio, setAspectRatio] = useState(3 / 4);
+  const [metadataDuration, setMetadataDuration] = useState<number | undefined>();
+  const isVideo = type === 'video';
+  const seconds = durationSeconds || metadataDuration;
+  const duration = seconds && Number.isFinite(seconds)
+    ? `${Math.floor(seconds / 60)}:${Math.floor(seconds % 60).toString().padStart(2, '0')}` : null;
+
+  useEffect(() => { setMetadataDuration(undefined); setAspectRatio(3 / 4); }, [url]);
 
   return (
-    <button
-      onClick={onClick}
-      className="relative w-full max-w-[280px] rounded-xl overflow-hidden group"
-      type="button"
-    >
-      {type === 'image' ? (
-        <img src={resolvedUrl} alt="Media" className="w-full h-auto object-cover" />
+    <button type="button" onClick={onClick} aria-label={isVideo ? 'Reproduzir vídeo' : 'Ver fotografia'}
+      className={`relative block max-w-full rounded-xl overflow-hidden bg-black text-white ${isVideo ? 'w-[240px]' : 'w-[280px]'}`}
+      style={isVideo ? { aspectRatio } : undefined}>
+      {isVideo ? (
+        <>
+          <video key={resolvedUrl} src={posterUrl ? undefined : videoThumbnailSource(resolvedUrl)}
+            poster={posterUrl || undefined} muted playsInline preload="metadata" aria-hidden="true"
+            className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+            onLoadedMetadata={event => {
+              const video = event.currentTarget;
+              if (video.videoWidth && video.videoHeight) setAspectRatio(Math.max(3 / 4, Math.min(16 / 9, video.videoWidth / video.videoHeight)));
+              if (Number.isFinite(video.duration)) setMetadataDuration(Math.ceil(video.duration));
+            }} onError={() => void onError()} />
+          <span className="absolute inset-0 flex flex-col gap-2 items-center justify-center bg-black/20 pointer-events-none">
+            <span className="w-14 h-14 rounded-full bg-black/70 flex items-center justify-center ring-1 ring-white/50">
+              <Play className="w-7 h-7 fill-white ml-1" />
+            </span>
+            {error && <span className="text-xs px-3 text-center">Toca para abrir o vídeo</span>}
+          </span>
+          <span className="absolute bottom-2 left-2 rounded bg-black/70 px-2 py-1 text-xs">Vídeo</span>
+          {duration && <span className="absolute bottom-2 right-2 rounded bg-black/70 px-2 py-1 text-xs">{duration}</span>}
+        </>
       ) : (
-        <div className="relative">
-          <video
-            src={resolvedUrl}
-            className="w-full h-auto"
-            muted
-            playsInline
-            preload="metadata"
-          />
-          <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-            <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center">
-              <div className="w-0 h-0 border-l-[16px] border-l-black border-y-[10px] border-y-transparent ml-1" />
-            </div>
-          </div>
-        </div>
+        <img src={resolvedUrl} alt="Fotografia da conversa" loading="lazy" decoding="async"
+          className="w-full h-auto object-cover" onError={() => void onError()} />
       )}
-      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-        <ZoomIn className="w-6 h-6 text-white" />
-      </div>
     </button>
   );
 }
-

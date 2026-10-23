@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
+import { chatMediaContentType, chatMediaType, createVideoPoster } from '@/lib/chat-media';
 
 export function useVoiceRecorder() {
   const { user } = useAuth();
@@ -323,8 +324,9 @@ export function useMediaUpload() {
 
   const uploadMedia = async (
     file: File,
-    type: 'image' | 'video' | 'file'
-  ): Promise<{ url: string; type: string; name: string; size: number } | null> => {
+    type: 'image' | 'video' | 'file',
+    options: { videoPoster?: boolean } = {}
+  ): Promise<{ url: string; type: string; name: string; size: number; thumbnailUrl?: string; durationSeconds?: number } | null> => {
     if (!user) return null;
 
     setUploading(true);
@@ -334,11 +336,14 @@ export function useMediaUpload() {
     const bucket = 'media';
 
     try {
-      const { data, error } = await supabase.storage
+      const posterPromise = options.videoPoster && chatMediaType(file) === 'video'
+        ? createVideoPoster(file).catch(() => null) : Promise.resolve(null);
+      const { error } = await supabase.storage
         .from(bucket)
         .upload(fileName, file, {
           cacheControl: '3600',
           upsert: false,
+          contentType: chatMediaContentType(file),
         });
 
       if (error) {
@@ -352,11 +357,23 @@ export function useMediaUpload() {
         .from(bucket)
         .getPublicUrl(fileName);
 
-      setUploading(false);
-
       if (!urlData?.publicUrl) {
         console.error('Failed to get public URL');
         return null;
+      }
+
+      const poster = await posterPromise;
+      let thumbnailUrl: string | undefined;
+      if (poster) {
+        try {
+          const posterPath = `${fileName}.poster.jpg`;
+          const { error: posterError } = await supabase.storage.from(bucket).upload(posterPath, poster.blob, {
+            contentType: 'image/jpeg', cacheControl: '31536000', upsert: false,
+          });
+          if (!posterError) thumbnailUrl = supabase.storage.from(bucket).getPublicUrl(posterPath).data.publicUrl;
+        } catch {
+          // The original is already uploaded; an optional cover must not discard it.
+        }
       }
 
       return {
@@ -364,11 +381,14 @@ export function useMediaUpload() {
         type: file.type,
         name: file.name,
         size: file.size,
+        thumbnailUrl,
+        durationSeconds: poster?.durationSeconds,
       };
     } catch (err) {
       console.error('Upload error:', err);
-      setUploading(false);
       return null;
+    } finally {
+      setUploading(false);
     }
   };
 

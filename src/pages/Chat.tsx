@@ -309,9 +309,10 @@ export default function Chat() {
     mediaUrl?: string, 
     replyToId?: string, 
     duration?: number,
-    isViewOnce?: boolean
+    isViewOnce?: boolean,
+    thumbnailUrl?: string
   ): Promise<{ messageId?: string }> => {
-    const { error, messageId } = await sendMessage(content, type, mediaUrl, replyToId || replyTo?.id, duration, isViewOnce);
+    const { error, messageId } = await sendMessage(content, type, mediaUrl, replyToId || replyTo?.id, duration, isViewOnce, thumbnailUrl);
     if (error) {
       toast({ title: 'Mensagem não enviada', description: error.message, variant: 'destructive' });
       return {};

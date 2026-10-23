@@ -2604,6 +2604,7 @@ export type Database = {
           is_edited: boolean | null
           is_view_once: boolean | null
           media_url: string | null
+          thumbnail_url: string | null
           message_type: string
           read_by: Json | null
           reply_to_id: string | null
@@ -2625,6 +2626,7 @@ export type Database = {
           is_edited?: boolean | null
           is_view_once?: boolean | null
           media_url?: string | null
+          thumbnail_url?: string | null
           message_type?: string
           read_by?: Json | null
           reply_to_id?: string | null
@@ -2646,6 +2648,7 @@ export type Database = {
           is_edited?: boolean | null
           is_view_once?: boolean | null
           media_url?: string | null
+          thumbnail_url?: string | null
           message_type?: string
           read_by?: Json | null
           reply_to_id?: string | null

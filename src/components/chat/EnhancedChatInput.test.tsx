@@ -1,16 +1,18 @@
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { EnhancedChatInput } from './EnhancedChatInput';
 
+const { uploadMedia } = vi.hoisted(() => ({ uploadMedia: vi.fn() }));
 vi.mock('@/hooks/useMediaUpload', () => ({
   useVoiceRecorder: () => ({ isRecording: false }),
-  useMediaUpload: () => ({ uploading: false, uploadMedia: vi.fn() }),
+  useMediaUpload: () => ({ uploading: false, uploadMedia }),
 }));
 vi.mock('./StickerPicker', () => ({ StickerPicker: () => null }));
 vi.mock('./GifPicker', () => ({ GifPicker: () => null }));
 vi.mock('./EmojiPanel', () => ({ EmojiPanel: () => null }));
 vi.mock('./ScheduleMessageSheet', () => ({ ScheduleMessageSheet: () => null }));
 afterEach(cleanup);
+beforeEach(() => uploadMedia.mockReset());
 
 describe('Papos draft recovery', () => {
   it('keeps the text and reply on failure, then clears them after a successful retry', async () => {
@@ -59,5 +61,14 @@ describe('Papos draft recovery', () => {
     const { rerender } = render(<EnhancedChatInput {...props} disabled />);
     rerender(<EnhancedChatInput {...props} disabled={false} />);
     expect(screen.getByRole('textbox')).toHaveFocus();
+  });
+
+  it('sends the video type, cover and duration when a MOV has no picker MIME', async () => {
+    uploadMedia.mockResolvedValue({ url: 'https://example.com/clip.mov', thumbnailUrl: 'https://example.com/poster.jpg', durationSeconds: 17 });
+    const onSend = vi.fn().mockResolvedValue({ messageId: 'saved' });
+    render(<EnhancedChatInput onSend={onSend} onTyping={vi.fn()} conversationId="chat" />);
+    fireEvent.change(screen.getByLabelText('Escolher fotografia ou vídeo'), { target: { files: [new File(['video'], 'clip.MOV')] } });
+    await waitFor(() => expect(onSend).toHaveBeenCalledWith('clip.MOV', 'video', 'https://example.com/clip.mov', undefined, 17, false, 'https://example.com/poster.jpg'));
+    expect(uploadMedia).toHaveBeenCalledWith(expect.any(File), 'video', { videoPoster: true });
   });
 });

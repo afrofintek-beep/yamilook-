@@ -61,9 +61,10 @@ begin
   assert blocked, 'Outsider can clear participant history';
 
   reset role;
+  insert into public.messages(id,conversation_id,sender_id,content,message_type,media_url,thumbnail_url,duration_seconds)
+  values(video_message,source,b,'fixture.mp4','video','https://example.invalid/fixture.mp4','https://example.invalid/poster.jpg',13);
   insert into public.messages(id,conversation_id,sender_id,content,message_type,media_url,duration_seconds,is_view_once,expires_at,is_deleted)
   values
-    (video_message,source,b,'fixture.mp4','video','https://example.invalid/fixture.mp4',13,false,null,false),
     (once_message,source,b,'once','image','https://example.invalid/once.jpg',null,true,null,false),
     (expired_message,source,b,'expired','text',null,null,false,now()-interval '1 hour',false),
     (deleted_message,source,b,'deleted','text',null,null,false,null,true),
@@ -77,6 +78,7 @@ begin
   assert (select count(*) from public.messages where conversation_id in (target_one,target_two)
     and id<>video_message and sender_id=a and forwarded_from_id=video_message and forwarded_from_user_id=b
     and content='fixture.mp4' and message_type='video' and media_url='https://example.invalid/fixture.mp4'
+    and thumbnail_url='https://example.invalid/poster.jpg'
     and duration_seconds=13) = 2, 'Forwarding lost attachment metadata';
 
   foreach invalid_source in array array[old_message,once_message,expired_message,deleted_message,pending_upload,gen_random_uuid()]

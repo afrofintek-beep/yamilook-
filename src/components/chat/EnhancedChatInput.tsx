@@ -38,10 +38,10 @@ import { EmojiPanel } from './EmojiPanel';
 import { ScheduleMessageSheet } from './ScheduleMessageSheet';
 import { ViewOnceToggle } from './ViewOnceMedia';
 import { useVoiceRecorder, useMediaUpload } from '@/hooks/useMediaUpload';
-import { toast } from 'sonner';
+import { chatMediaType } from '@/lib/chat-media';
 
 interface EnhancedChatInputProps {
-  onSend: (content: string, type?: string, mediaUrl?: string, replyToId?: string, duration?: number, isViewOnce?: boolean) => Promise<{ messageId?: string }>;
+  onSend: (content: string, type?: string, mediaUrl?: string, replyToId?: string, duration?: number, isViewOnce?: boolean, thumbnailUrl?: string) => Promise<{ messageId?: string }>;
   onUpdateMediaUrl?: (messageId: string, newMediaUrl: string) => Promise<void>;
   onTyping: () => void;
   onSchedule?: (content: string, scheduledFor: Date, isRecurring: boolean, pattern?: string) => Promise<void>;
@@ -211,20 +211,27 @@ export function EnhancedChatInput({
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'file') => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || sendingRef.current || disabled) return;
 
+    const input = e.target;
+    sendingRef.current = true;
     setSending(true);
-    const result = await uploadMedia(file, type);
-    if (result) {
-      const messageType = file.type.startsWith('image/') ? 'image' : file.type.startsWith('video/') ? 'video' : 'file';
-      await onSend(file.name, messageType, result.url, replyTo?.id, undefined, viewOnceEnabled);
+    setSendError('');
+    try {
+      const messageType = chatMediaType(file);
+      const result = await uploadMedia(file, messageType === 'file' ? type : messageType, { videoPoster: messageType === 'video' });
+      if (!result) throw new Error('Upload failed');
+      const sent = await onSend(file.name, messageType, result.url, replyTo?.id, result.durationSeconds, viewOnceEnabled, result.thumbnailUrl);
+      if (!sent.messageId) throw new Error('Delivery not confirmed');
       onCancelReply?.();
       setViewOnceEnabled(false);
-    } else {
-      toast.error('Erro ao enviar ficheiro. Tenta novamente.');
+    } catch {
+      setSendError('Ficheiro não enviado. Seleciona-o novamente para tentar de novo.');
+    } finally {
+      sendingRef.current = false;
+      setSending(false);
+      input.value = '';
     }
-    setSending(false);
-    e.target.value = '';
   };
 
   const handleStickerSelect = async (stickerUrl: string) => {
@@ -400,12 +407,14 @@ export function EnhancedChatInput({
             ref={imageInputRef}
             type="file"
             accept="image/*,video/*"
+            aria-label="Escolher fotografia ou vídeo"
             className="hidden"
             onChange={(e) => handleFileSelect(e, 'image')}
           />
           <input
             ref={fileInputRef}
             type="file"
+            aria-label="Escolher ficheiro"
             className="hidden"
             onChange={(e) => handleFileSelect(e, 'file')}
           />

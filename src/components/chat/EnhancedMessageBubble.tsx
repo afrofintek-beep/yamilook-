@@ -34,6 +34,7 @@ import { parseFormattedText } from './MessageFormatting';
 import { MessageHighlightPicker, HighlightBadge, getHighlightClass } from './MessageHighlight';
 import { MessageActionsSheet } from './MessageActionsSheet';
 import { cn } from '@/lib/utils';
+import { mediaCaption } from '@/lib/chat-media';
 
 interface Reaction {
   emoji: string;
@@ -46,6 +47,7 @@ export interface BubbleMessage {
   content: string | null;
   message_type: string;
   media_url: string | null;
+  thumbnail_url?: string | null;
   is_deleted: boolean;
   is_edited: boolean;
   created_at: string;
@@ -289,9 +291,9 @@ export function EnhancedMessageBubble({
             <MediaThumbnail
               url={message.media_url || ''}
               type="image"
-              onClick={() => setShowMediaPreview(true)}
+              onClick={() => { if (!selectionMode) setShowMediaPreview(true); }}
             />
-            {message.content && message.content !== message.media_url?.split('/').pop() && (
+            {mediaCaption(message.content, message.media_url) && (
               <p className="text-sm mt-2">{parseFormattedText(message.content)}</p>
             )}
           </>
@@ -302,9 +304,11 @@ export function EnhancedMessageBubble({
             <MediaThumbnail
               url={message.media_url || ''}
               type="video"
-              onClick={() => setShowMediaPreview(true)}
+              posterUrl={message.thumbnail_url}
+              durationSeconds={message.duration_seconds}
+              onClick={() => { if (!selectionMode) setShowMediaPreview(true); }}
             />
-            {message.content && (
+            {mediaCaption(message.content, message.media_url) && (
               <p className="text-sm mt-2">{parseFormattedText(message.content)}</p>
             )}
           </>
@@ -421,7 +425,7 @@ export function EnhancedMessageBubble({
           )}
           {!isOwn && !showAvatar && !selectionMode && <div className="w-8" />}
 
-          <div className={`flex flex-col max-w-[75%] ${isOwn ? 'items-end' : 'items-start'}`}>
+          <div className={`flex flex-col min-w-0 max-w-[75%] ${isOwn ? 'items-end' : 'items-start'}`}>
           {isGroupChat && !isOwn && showAvatar && (
             <button
               onPointerDown={(e) => e.stopPropagation()}
@@ -652,6 +656,7 @@ export function EnhancedMessageBubble({
         <MediaPreview
           url={message.media_url}
           type={message.message_type as 'image' | 'video'}
+          posterUrl={message.thumbnail_url}
           open={showMediaPreview}
           onClose={() => setShowMediaPreview(false)}
         />
