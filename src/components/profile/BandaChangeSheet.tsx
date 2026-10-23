@@ -1,3 +1,4 @@
+import { submitResidence } from '@/lib/residence';
 import { useEffect, useMemo, useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -8,7 +9,6 @@ import {
 import { MapPin, Loader2, ShieldCheck, Home, Clock, Flame, CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { AFRICAN_LOCATIONS } from '@/lib/african-locations';
-import { NEIGHBORHOOD_COORDINATES } from '@/lib/neighborhood-coordinates';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { snapToGrid } from '@/lib/geo-privacy';
@@ -30,19 +30,10 @@ interface Residency {
   can_change_now?: boolean;
 }
 
-/** Coordinates for a (country, city, neighborhood), when we know them. */
-function lookupCoords(countryCode: string, city: string, name: string) {
-  const c = NEIGHBORHOOD_COORDINATES.find(
-    (x) => x.countryCode === countryCode && x.city.toLowerCase() === city.toLowerCase(),
-  );
-  const n = c?.neighborhoods.find((y) => y.name.toLowerCase() === name.toLowerCase());
-  return n ? { lat: n.lat, lng: n.lng } : null;
-}
-
 const RESIDENCY_BADGE: Record<string, { label: string; className: string; icon: typeof Home }> = {
   novo: { label: 'Novo na banda', className: 'bg-amber-500/15 text-amber-600', icon: Home },
-  residente: { label: 'Residente', className: 'bg-sky-500/15 text-sky-600', icon: Home },
-  verificado: { label: 'Residente verificado', className: 'bg-emerald-500/15 text-emerald-600', icon: ShieldCheck },
+  residente: { label: 'Membro com antiguidade', className: 'bg-sky-500/15 text-sky-600', icon: Home },
+  verificado: { label: 'Presença regular', className: 'bg-emerald-500/15 text-emerald-600', icon: ShieldCheck },
 };
 
 /** "Mudei-me" — change the user's banda (neighborhood). One change per 60 days.
@@ -52,6 +43,8 @@ export function BandaChangeSheet({ open, onOpenChange, current, onChanged }: Pro
   const [city, setCity] = useState(current.city || '');
   const [neighborhood, setNeighborhood] = useState(current.neighborhood || '');
   const [gps, setGps] = useState<{ lat: number; lng: number } | null>(null);
+  const [homeConfirmed, setHomeConfirmed] = useState(false);
+  const [gpsAccuracy, setGpsAccuracy] = useState<number | null>(null);
   const [locating, setLocating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [checking, setChecking] = useState(false);
@@ -59,7 +52,7 @@ export function BandaChangeSheet({ open, onOpenChange, current, onChanged }: Pro
   const [residency, setResidency] = useState<Residency | null>(null);
 
   const loadResidency = () =>
-    supabase.rpc('banda_residency', {}).then(({ data }) => setResidency((data as Residency) ?? null));
+    supabase.rpc('banda_residency', {}).then(({ data }) => setResidency((data as unknown as Residency) ?? null));
 
   useEffect(() => {
     if (!open) return;
@@ -67,6 +60,8 @@ export function BandaChangeSheet({ open, onOpenChange, current, onChanged }: Pro
     setCity(current.city || '');
     setNeighborhood(current.neighborhood || '');
     setGps(null);
+    setHomeConfirmed(false);
+    setGpsAccuracy(null);
     setStreak(null);
     loadResidency();
   }, [open, current]);
@@ -115,6 +110,7 @@ export function BandaChangeSheet({ open, onOpenChange, current, onChanged }: Pro
     : null;
 
   const useGps = async () => {
+    if (!homeConfirmed) return;
     setLocating(true);
     try {
       const pos = await new Promise<GeolocationPosition>((res, rej) =>
@@ -122,7 +118,8 @@ export function BandaChangeSheet({ open, onOpenChange, current, onChanged }: Pro
       );
       const _cell = snapToGrid(pos.coords.latitude, pos.coords.longitude);
       setGps({ lat: _cell.lat, lng: _cell.lng });
-      toast.success('Endereço AFROLOC captado.');
+      setGpsAccuracy(pos.coords.accuracy);
+      toast.success('Localização captada. A validação fica pendente.');
     } catch {
       toast.error('Não foi possível gerar o teu endereço AFROLOC.');
     } finally {
@@ -137,33 +134,14 @@ export function BandaChangeSheet({ open, onOpenChange, current, onChanged }: Pro
     }
     setSaving(true);
     try {
-      const coords = gps ?? lookupCoords(country, city, neighborhood);
-      const { data, error } = await supabase.rpc('change_banda', {
-        p_name: neighborhood,
-        p_city: city,
-        p_country: country,
-        p_lat: coords?.lat ?? null,
-        p_lng: coords?.lng ?? null,
-        p_neighborhood: neighborhood,
-      });
-      if (error) throw error;
-      const res = data as { ok: boolean; reason?: string; next_change_at?: string };
-      if (!res.ok) {
-        if (res.reason === 'cooldown') {
-          const d = res.next_change_at
-            ? new Date(res.next_change_at).toLocaleDateString('pt-PT', { day: '2-digit', month: 'long', year: 'numeric' })
-            : '';
-          toast.error(`Só podes mudar de banda a partir de ${d}.`);
-        } else {
-          toast.error('Não foi possível mudar de banda.');
-        }
-        return;
-      }
+      await submitResidence(gps && homeConfirmed
+        ? {method:'home',lat:gps.lat,lng:gps.lng,accuracy:gpsAccuracy || undefined}
+        : {method:'away'},country,city,neighborhood);
       toast.success(changingBanda ? 'Mudaste de banda! 🏡' : 'Endereço AFROLOC atualizado.');
       onChanged();
       onOpenChange(false);
     } catch {
-      toast.error('Não foi possível mudar de banda.');
+      toast.error('Não foi possível guardar. Verifica o prazo de mudança de Banda e tenta novamente.');
     } finally {
       setSaving(false);
     }
@@ -192,7 +170,7 @@ export function BandaChangeSheet({ open, onOpenChange, current, onChanged }: Pro
             )}
             {residency && residency.status !== 'none' && residency.status !== 'verificado' && (
               <p className="text-[11px] text-muted-foreground">
-                Para <b>residente verificado</b>: 30 dias na banda, participar (posts/lives) e presença regular.
+                A antiguidade, a atividade e os check-ins mostram participação. A validação do endereço é um processo separado.
               </p>
             )}
           </div>
@@ -273,13 +251,14 @@ export function BandaChangeSheet({ open, onOpenChange, current, onChanged }: Pro
               </Select>
             </div>
 
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={homeConfirmed} onChange={e=>{setHomeConfirmed(e.target.checked);if(!e.target.checked)setGps(null);}}/>Estou agora no meu endereço de residência</label>
             <Button
               type="button" variant="outline"
               className={cn('w-full h-11 rounded-xl', gps && 'border-green-500 text-green-600')}
-              onClick={useGps} disabled={locating}
+              onClick={useGps} disabled={locating || !homeConfirmed}
             >
               {locating ? <Loader2 className="w-4 h-4 animate-spin" /> : <MapPin className="w-4 h-4 mr-1" />}
-              {gps ? 'Endereço AFROLOC captado ✓' : 'Gerar o meu endereço AFROLOC (mais preciso)'}
+              {gps ? 'Localização captada — validação pendente' : 'Captar localização do meu endereço'}
             </Button>
             <p className="text-[11px] text-muted-foreground">
               Isto gera a tua identidade digital territorial (endereço AFROLOC). Sem isso, usamos o centro do bairro escolhido.

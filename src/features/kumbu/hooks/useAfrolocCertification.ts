@@ -1,3 +1,4 @@
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -15,17 +16,26 @@ export interface AfrolocCertResult {
  * gate for monetization (creator application + payouts).
  */
 export function useAfrolocCertification() {
-  const { profile, refreshProfile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
 
   const status = (profile?.afroloc_certification_status ?? 'none') as AfrolocCertStatus;
   const afrolocCode = profile?.afroloc_code ?? null;
   const hasAddress = !!afrolocCode;
-  const isCertified = status === 'certified';
+  const eligibility = useQuery({
+    queryKey: ['residence-eligible',user?.id,profile?.afroloc_code,profile?.afroloc_certification_status,profile?.city,profile?.neighborhood],
+    enabled: !!user && status === 'certified', staleTime: 0,
+    queryFn: async () => {
+      const {data,error}=await supabase.rpc('can_receive_banda_benefits' as never);
+      if(error) throw error;
+      return data===true;
+    },
+  });
+  const isCertified = status === 'certified' && eligibility.data === true;
 
   const requestCertification = async (): Promise<AfrolocCertResult> => {
     const { data, error } = await supabase.rpc('request_afroloc_certification');
     if (error) return { success: false, error: error.message };
-    const res = (data ?? {}) as AfrolocCertResult;
+    const res = (data ?? {}) as unknown as AfrolocCertResult;
     if (res.success) await refreshProfile();
     return res;
   };

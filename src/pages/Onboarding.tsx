@@ -1,4 +1,6 @@
-import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import { ResidenceForm } from '@/components/residence/ResidenceForm';
+import { submitResidence, validResidencePlan, type ResidencePlan } from '@/lib/residence';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -34,15 +36,10 @@ import { captureReferralCode, getReferralCode, clearReferralCode } from '@/lib/r
 import { supabase } from '@/integrations/supabase/client';
 import type { TablesUpdate } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
-import { AFRICAN_LOCATIONS } from '@/lib/african-locations';
-import { findMatchingNeighborhood } from '@/lib/african-locations';
-import { findNearestNeighborhood, hasCityCoordinates } from '@/lib/neighborhood-coordinates';
- import { getDistancesToAllNeighborhoods } from '@/lib/neighborhood-coordinates';
 import YamilookLogo from '@/components/brand/YamilookLogo';
 import { triggerCelebrationConfetti } from '@/lib/confetti';
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/logger';
-import { snapToGrid } from '@/lib/geo-privacy';
 import { Link } from 'react-router-dom';
 import { loadOnboardingDraft, saveOnboardingDraft, clearOnboardingDraft } from '@/lib/onboarding-draft';
 
@@ -167,24 +164,7 @@ export default function Onboarding() {
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
   const [customNeighborhood, setCustomNeighborhood] = useState('');
-  const [geoLocation, setGeoLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [isGettingLocation, setIsGettingLocation] = useState(false);
-  const [geoNeighborhoodNotFound, setGeoNeighborhoodNotFound] = useState(false);
-  const [detectedNeighborhoodName, setDetectedNeighborhoodName] = useState<string | null>(null);
-  const [autoDetectionTriggered, setAutoDetectionTriggered] = useState(false);
-  const [locationConfirmed, setLocationConfirmed] = useState(false);
-  const [detectedDistance, setDetectedDistance] = useState<number | null>(null);
-  const [gpsReadings, setGpsReadings] = useState<
-    Array<{
-      lat: number;
-      lng: number;
-      neighborhood: string;
-      distance: number;
-      top5: Array<{ name: string; distance: number }>;
-    }>
-  >([]);
-  const [isDoingMultipleReadings, setIsDoingMultipleReadings] = useState(false);
-  const [currentReadingIndex, setCurrentReadingIndex] = useState(0);
+  const [residencePlan, setResidencePlan] = useState<ResidencePlan>({method:'later'});
 
   const [draftReady, setDraftReady] = useState(false);
   const [draftSaved, setDraftSaved] = useState<boolean | null>(null);
@@ -219,8 +199,7 @@ export default function Onboarding() {
     setUsernameAvailable(null);
     setAvatarFile(null);
     setAvatarUrl(profile?.avatar_url ?? null);
-    setGeoLocation(null);
-    setLocationConfirmed(false);
+    setResidencePlan({method:draft?.residenceMethod || 'later'});
     setResumedDraft(!!draft);
     setDraftSaved(draft ? true : null);
     setDraftReady(true);
@@ -232,364 +211,11 @@ export default function Onboarding() {
     setDraftSaved(saveOnboardingDraft({
       currentStep, displayName, username, email: user?.email || email, inviteCode: accessCode,
       gender: selectedGender, birthDay, birthMonth, birthYear, country: selectedCountry,
-      city: selectedCity, neighborhood: selectedNeighborhood, customNeighborhood, bio,
+      city: selectedCity, neighborhood: selectedNeighborhood, customNeighborhood, bio, residenceMethod: residencePlan.method,
     }, user?.email));
   }, [draftReady, authLoading, currentStep, displayName, username, email, accessCode,
       selectedGender, birthDay, birthMonth, birthYear, selectedCountry, selectedCity,
-      selectedNeighborhood, customNeighborhood, bio, user?.email, profile?.onboarding_completed]);
-
-  // Detection logic
-  const SEARCH_RADIUS_KM = 2; // eligible neighborhoods
-  const DISTANCE_LIMIT_KM = 2; // if farther than this from a center, do extra readings
-  const AMBIGUITY_MARGIN_KM = 0.35; // if top-2 are too close, use geocoding name when possible
-  const ADDITIONAL_READINGS = 4;
-
-  const reverseGeocodeAndMatchNeighborhood = async (lat: number, lng: number) => {
-    const response = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1&accept-language=pt`,
-      { headers: { 'User-Agent': 'Yamilook/1.0' } }
-    );
-    const data = await response.json();
-
-    const possibleNames = [
-      data.address?.suburb,
-      data.address?.neighbourhood,
-      data.address?.quarter,
-      data.address?.residential,
-      data.address?.city_district,
-      data.address?.district,
-    ].filter(Boolean);
-
-    const detectedName = (possibleNames[0] as string | undefined) || null;
-
-    for (const name of possibleNames as string[]) {
-      const match = findMatchingNeighborhood(selectedCountry, selectedCity, name);
-      if (match) return { matchedNeighborhood: match, detectedName };
-    }
-
-    return { matchedNeighborhood: null as string | null, detectedName };
-  };
-
-  // Handle getting GPS location and try to match with known neighborhoods
-  const handleGetLocation = useCallback(async (forCustomNeighborhood = false, forceNewReading = false, isAutoDetect = false) => {
-    if (!navigator.geolocation) {
-      if (!isAutoDetect) toast.error('O teu dispositivo não permite gerar o endereço AFROLOC automaticamente');
-      return;
-    }
-
-    // For auto-detection, only proceed if permission already granted
-    if (isAutoDetect) {
-      try {
-        if (navigator.permissions) {
-          const perm = await navigator.permissions.query({ name: 'geolocation' });
-          if (perm.state !== 'granted') {
-            return; // Silently skip auto-detection
-          }
-        }
-      } catch { return; }
-    }
-
-    // User explicitly clicked the GPS button — always request permission
-
-    setIsGettingLocation(true);
-    setGeoNeighborhoodNotFound(false);
-    setDetectedNeighborhoodName(null);
-    
-    if (forceNewReading) {
-      setGpsReadings([]);
-      setCurrentReadingIndex(0);
-      setLocationConfirmed(false);
-    }
-    
-    try {
-      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 0,
-        });
-      });
-
-      const _cell = snapToGrid(position.coords.latitude, position.coords.longitude);
-      const coords = {
-        lat: _cell.lat,
-        lng: _cell.lng,
-      };
-      setGeoLocation(coords);
-      
-      // Try to get neighborhood name from reverse geocoding
-      if (selectedCountry && selectedCity) {
-        try {
-           // First, try to find neighborhood by coordinates (within search radius)
-          let matchedNeighborhood: string | null = null;
-          let detectedName: string | null = null;
-          
-          if (hasCityCoordinates(selectedCountry, selectedCity)) {
-             // Debug: Log distances to all neighborhoods
-             const allDistances = getDistancesToAllNeighborhoods(
-               coords.lat,
-               coords.lng,
-               selectedCountry,
-               selectedCity
-             );
-             console.log('📍 GPS Coordinates:', coords.lat, coords.lng);
-             console.log('📏 Distances to all neighborhoods (sorted):');
-             allDistances.slice(0, 10).forEach((n, i) => {
-               console.log(`   ${i + 1}. ${n.name}: ${n.distance.toFixed(2)}km`);
-             });
-             
-            const nearestResult = findNearestNeighborhood(
-              coords.lat,
-              coords.lng,
-              selectedCountry,
-              selectedCity,
-                SEARCH_RADIUS_KM
-            );
-            
-            if (nearestResult) {
-              matchedNeighborhood = nearestResult.neighborhood;
-               let distance = nearestResult.distance;
-               setDetectedDistance(distance);
-               console.log(`Found neighborhood within ${distance.toFixed(2)}km: ${matchedNeighborhood}`);
-
-               // If far from center OR ambiguous between 2 closest options, try to prefer the name
-               // coming from reverse-geocoding (when it matches our known neighborhoods).
-               const top2 = allDistances.slice(0, 2);
-               const isAmbiguous =
-                 top2.length === 2 && Math.abs(top2[0].distance - top2[1].distance) <= AMBIGUITY_MARGIN_KM;
-               const farFromCenter = distance > DISTANCE_LIMIT_KM;
-
-               if (!forCustomNeighborhood && (farFromCenter || isAmbiguous)) {
-                 try {
-                   const geo = await reverseGeocodeAndMatchNeighborhood(coords.lat, coords.lng);
-                   if (geo.matchedNeighborhood) {
-                     const geoMatchDistance = allDistances.find(d => d.name === geo.matchedNeighborhood)?.distance;
-
-                     if (
-                       typeof geoMatchDistance === 'number' &&
-                       geoMatchDistance <= SEARCH_RADIUS_KM &&
-                       (Math.abs(geoMatchDistance - distance) <= AMBIGUITY_MARGIN_KM || farFromCenter)
-                     ) {
-                       console.log(
-                         `[GPS Debug] Overriding by geocoding match: ${geo.matchedNeighborhood} (${geoMatchDistance.toFixed(
-                           2
-                         )}km) instead of ${matchedNeighborhood} (${distance.toFixed(2)}km)`
-                       );
-                       matchedNeighborhood = geo.matchedNeighborhood;
-                       distance = geoMatchDistance;
-                       setDetectedDistance(distance);
-                     }
-                   }
-                 } catch (e) {
-                   console.warn('[GPS Debug] Reverse geocoding check failed:', e);
-                 }
-               }
-              
-              // If distance exceeds limit, do additional readings
-               if (distance > DISTANCE_LIMIT_KM && !forCustomNeighborhood) {
-                 console.log(
-                   `[GPS Debug] Distance ${distance.toFixed(2)}km > ${DISTANCE_LIMIT_KM}km. Starting ${ADDITIONAL_READINGS} additional readings...`
-                 );
-                
-                const firstReading = {
-                  lat: coords.lat,
-                  lng: coords.lng,
-                  neighborhood: matchedNeighborhood,
-                  distance,
-                  top5: allDistances.slice(0, 5)
-                };
-                
-                setGpsReadings([firstReading]);
-                await doAdditionalReadings(firstReading);
-                return; // Exit early, doAdditionalReadings handles the rest
-              } else {
-                // Distance within limit, store single reading
-                setGpsReadings([{
-                  lat: coords.lat,
-                  lng: coords.lng,
-                  neighborhood: matchedNeighborhood,
-                  distance,
-                  top5: allDistances.slice(0, 5)
-                }]);
-              }
-            }
-          }
-          
-          // If no coordinate match, fallback to reverse geocoding name matching
-          if (!matchedNeighborhood) {
-             const geo = await reverseGeocodeAndMatchNeighborhood(coords.lat, coords.lng);
-             detectedName = geo.detectedName;
-             matchedNeighborhood = geo.matchedNeighborhood;
-          }
-          
-          if (matchedNeighborhood && !forCustomNeighborhood) {
-            // Auto-select the matched neighborhood
-            setSelectedNeighborhood(matchedNeighborhood);
-            setDetectedNeighborhoodName(matchedNeighborhood);
-            setGeoNeighborhoodNotFound(false);
-             setLocationConfirmed(false); // Require explicit confirmation
-             toast.success(`Bairro detetado: ${matchedNeighborhood}. Confirma o teu endereço AFROLOC.`);
-          } else {
-            // No match found - auto-select "Outro" option
-            setGeoNeighborhoodNotFound(true);
-            setDetectedNeighborhoodName(detectedName);
-            if (!forCustomNeighborhood) {
-              // Auto-select "Outro" and pre-fill with detected name
-              setSelectedNeighborhood('__other__');
-            }
-            if (detectedName) {
-              setCustomNeighborhood(detectedName);
-            }
-            toast.success(detectedName 
-              ? `Bairro "${detectedName}" não está na lista. Podes confirmar ou editar.`
-              : 'Endereço AFROLOC gerado. Indica o nome do teu bairro.'
-            );
-          }
-        } catch (geoError) {
-          console.warn('Reverse geocoding failed:', geoError);
-          // If reverse geocoding fails, still allow location validation for "Outro"
-          if (forCustomNeighborhood) {
-            toast.success('Endereço AFROLOC validado!');
-          } else {
-            setGeoNeighborhoodNotFound(true);
-            setSelectedNeighborhood('__other__');
-            toast.info('Endereço AFROLOC gerado. Seleciona o teu bairro manualmente.');
-          }
-        }
-      } else {
-        toast.success('Endereço AFROLOC gerado!');
-      }
-    } catch (error) {
-      const code = (error as GeolocationPositionError | null)?.code;
-      if (code === 1) {
-        toast.error('Acesso negado. Ativa nas definições para gerar o teu endereço AFROLOC.');
-      } else if (code === 2) {
-        toast.error('Não foi possível gerar o teu endereço AFROLOC. Verifica a tua ligação.');
-      } else {
-        toast.error('Tempo esgotado ao gerar o teu endereço AFROLOC. Tenta novamente.');
-      }
-    } finally {
-      setIsGettingLocation(false);
-    }
-  }, [selectedCountry, selectedCity]);
-
-  // Function to do additional GPS readings
-  const doAdditionalReadings = async (
-    firstReading: {
-      lat: number;
-      lng: number;
-      neighborhood: string;
-      distance: number;
-      top5: Array<{ name: string; distance: number }>;
-    }
-  ) => {
-    setIsDoingMultipleReadings(true);
-    const readings = [firstReading];
-    
-    for (let i = 0; i < ADDITIONAL_READINGS; i++) {
-      setCurrentReadingIndex(i + 2);
-      
-      try {
-        // Small delay between readings for better GPS accuracy
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        
-        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject, {
-            enableHighAccuracy: true,
-            timeout: 10000,
-            maximumAge: 0,
-          });
-        });
-        
-        const _cell = snapToGrid(position.coords.latitude, position.coords.longitude);
-        const lat = _cell.lat;
-        const lng = _cell.lng;
-
-        // Get all distances for this reading
-        const allDistances = getDistancesToAllNeighborhoods(lat, lng, selectedCountry, selectedCity);
-        const top5 = allDistances.slice(0, 5);
-        
-        const nearestResult = findNearestNeighborhood(
-          lat,
-          lng,
-          selectedCountry,
-          selectedCity,
-          SEARCH_RADIUS_KM
-        );
-        
-        if (nearestResult) {
-          readings.push({
-            lat,
-            lng,
-            neighborhood: nearestResult.neighborhood,
-            distance: nearestResult.distance,
-            top5
-          });
-          
-          console.log(`[GPS Debug] Reading ${i + 2}:`);
-          top5.forEach((n, idx) => {
-            console.log(`   ${idx + 1}. ${n.name}: ${n.distance.toFixed(2)}km`);
-          });
-        }
-      } catch (error) {
-        console.log(`[GPS Debug] Reading ${i + 2} failed:`, error);
-      }
-    }
-    
-    // Find the best reading (smallest distance)
-    const bestReading = readings.reduce((best, current) => 
-      current.distance < best.distance ? current : best
-    );
-    
-    console.log(`[GPS Debug] Best reading: ${bestReading.neighborhood} at ${bestReading.distance.toFixed(2)}km`);
-    
-    setGpsReadings(readings);
-    setSelectedNeighborhood(bestReading.neighborhood);
-    setDetectedNeighborhoodName(bestReading.neighborhood);
-    setDetectedDistance(bestReading.distance);
-    setGeoLocation({ 
-      lat: bestReading.lat, 
-      lng: bestReading.lng
-    });
-    setIsDoingMultipleReadings(false);
-    setIsGettingLocation(false);
-    setLocationConfirmed(false);
-    
-    toast.success(`Bairro detetado: ${bestReading.neighborhood}. Confirma o teu endereço AFROLOC.`);
-  };
-
-  // Auto-trigger GPS detection when city is selected
-  useEffect(() => {
-    if (selectedCity && !autoDetectionTriggered && !selectedNeighborhood) {
-      setAutoDetectionTriggered(true);
-      handleGetLocation(false, false, true); // auto-detect: silent if no permission
-    }
-  }, [selectedCity, autoDetectionTriggered, selectedNeighborhood, handleGetLocation]);
-
-  // Reset auto-detection flag when city changes
-  useEffect(() => {
-    setAutoDetectionTriggered(false);
-    setGeoNeighborhoodNotFound(false);
-    setGeoLocation(null);
-    setDetectedNeighborhoodName(null);
-     setLocationConfirmed(false);
-     setDetectedDistance(null);
-     setGpsReadings([]);
-     setIsDoingMultipleReadings(false);
-     setCurrentReadingIndex(0);
-  }, [selectedCity]);
-
-   // Reset confirmation when neighborhood changes manually
-   useEffect(() => {
-     setLocationConfirmed(false);
-   }, [selectedNeighborhood]);
-
-   const handleConfirmLocation = () => {
-     if (geoLocation && selectedNeighborhood && selectedNeighborhood !== '__other__') {
-       setLocationConfirmed(true);
-       toast.success('Endereço AFROLOC confirmado!');
-     }
-   };
+      selectedNeighborhood, customNeighborhood, bio, residencePlan.method, user?.email, profile?.onboarding_completed]);
 
   const handleGenderSelect = (gender: 'male' | 'female' | 'other') => {
     setSelectedGender(gender);
@@ -618,24 +244,6 @@ export default function Onboarding() {
     { value: '11', label: 'Novembro' },
     { value: '12', label: 'Dezembro' },
   ];
-
-  // Get cities and neighborhoods based on selection
-  const selectedCountryData = AFRICAN_LOCATIONS.find(loc => loc.countryCode === selectedCountry);
-  const availableCities = selectedCountryData?.cities || [];
-  const selectedCityData = availableCities.find(city => city.name === selectedCity);
-  const availableNeighborhoods = selectedCityData?.neighborhoods || [];
-
-  const handleBandaSave = () => {
-    if (selectedCity) {
-      if (selectedNeighborhood === '__other__') {
-        if (!geoLocation) {
-          toast.error('Gera o teu endereço AFROLOC para continuar');
-          return;
-        }
-      }
-    }
-    nextStep();
-  };
 
   // Get personalized greeting based on gender
   const getGreeting = () => {
@@ -669,19 +277,6 @@ export default function Onboarding() {
 
   const prevStep = () => {
     if (currentStep > 0) {
-      // Reset GPS state when leaving the 'banda' step
-      const currentStepId = steps[currentStep].id;
-      if (currentStepId === 'banda') {
-        setGeoLocation(null);
-        setGpsReadings([]);
-        setLocationConfirmed(false);
-        setDetectedDistance(null);
-        setAutoDetectionTriggered(false);
-        setGeoNeighborhoodNotFound(false);
-        setDetectedNeighborhoodName(null);
-        setIsDoingMultipleReadings(false);
-        setCurrentReadingIndex(0);
-      }
       setCurrentStep(currentStep - 1);
     }
   };
@@ -722,6 +317,8 @@ export default function Onboarding() {
       toast.error('Completa o género, a data de nascimento e a tua banda antes de continuar.');
       return;
     }
+
+    if (!validResidencePlan(residencePlan)) { toast.error('Confirma a opção de endereço para continuar.'); setCurrentStep(2); return; }
 
     let userId = user?.id;
     const code = accessCode.trim().toUpperCase();
@@ -808,14 +405,6 @@ export default function Onboarding() {
           : (selectedNeighborhood || null);
       }
 
-      // Persist the captured GPS so the AFROLOC code can be generated from the
-      // real location (the DB trigger encodes it into CC-ZU-G10-X-Y). Without
-      // coordinates the code stays null — declared city/banda is not enough.
-      if (geoLocation) {
-        profileUpdate.latitude = geoLocation.lat;
-        profileUpdate.longitude = geoLocation.lng;
-      }
-
       if (finalAvatarUrl) {
         profileUpdate.avatar_url = finalAvatarUrl;
       }
@@ -823,6 +412,9 @@ export default function Onboarding() {
       if (bio.trim()) {
         profileUpdate.bio = bio.trim();
       }
+
+      await submitResidence(residencePlan, selectedCountry, selectedCity,
+        selectedNeighborhood === '__other__' ? customNeighborhood.trim() : selectedNeighborhood);
 
       // Save all onboarding data at once
       const { error: updateError } = await supabase
@@ -835,20 +427,6 @@ export default function Onboarding() {
         toast.error('Erro ao guardar perfil. Tenta novamente.');
         setIsRegistering(false);
         return;
-      }
-
-      // Phase 0: turn the chosen neighborhood into a real banda membership
-      // (find-or-create the banda + activate it in user_bandas).
-      const bandaName = selectedNeighborhood === '__other__'
-        ? customNeighborhood.trim()
-        : selectedNeighborhood;
-      if (bandaName && selectedCity) {
-        const { error: bandaErr } = await supabase.rpc('join_banda_by_location', {
-          p_name: bandaName,
-          p_city: selectedCity,
-          p_country: selectedCountry || 'Angola',
-        });
-        if (bandaErr) logger.error('Error assigning banda', 'onboarding', bandaErr);
       }
 
       justCompletedRef.current = true;
@@ -1057,284 +635,10 @@ export default function Onboarding() {
         );
 
       case 'banda':
-        return (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="text-center"
-          >
-            <div className="w-24 h-24 mx-auto rounded-3xl bg-gradient-to-br from-djembe to-djembe-glow flex items-center justify-center shadow-glow mb-6">
-              <MapPin className="w-12 h-12 text-white" />
-            </div>
-            <h2 className="text-2xl font-bold mb-2">Qual é a tua Banda?</h2>
-            <p className="text-muted-foreground mb-8 max-w-sm mx-auto">
-              Conecta-te com pessoas da tua zona e comunidade.
-            </p>
-            
-            <div className="flex flex-col gap-3 max-w-xs mx-auto mb-6">
-              <Select value={selectedCountry} onValueChange={(val) => {
-                setSelectedCountry(val);
-                setSelectedCity('');
-                setSelectedNeighborhood('');
-              }}>
-                <SelectTrigger className="h-12 rounded-xl">
-                  <SelectValue placeholder="País" />
-                </SelectTrigger>
-                <SelectContent>
-                  {AFRICAN_LOCATIONS.map((loc) => (
-                    <SelectItem key={loc.countryCode} value={loc.countryCode}>
-                      {loc.country}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              
-              <Select value={selectedCity} onValueChange={(val) => {
-                setSelectedCity(val);
-                setSelectedNeighborhood('');
-                setCustomNeighborhood('');
-              }}>
-                <SelectTrigger className="h-12 rounded-xl">
-                  <SelectValue placeholder="Cidade" />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableCities.map((city) => (
-                    <SelectItem key={city.name} value={city.name}>
-                      {city.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              
-              {(availableNeighborhoods.length > 0 || selectedCity) && (
-                <>
-                  {/* Show loading state while detecting */}
-                  {isGettingLocation && !selectedNeighborhood && (
-                    <div className="h-12 rounded-xl border border-border flex items-center justify-center gap-2 text-muted-foreground">
-                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                      A detectar o teu bairro...
-                    </div>
-                  )}
-                  
-                  {/* Show neighborhood selector after detection or if manually needed */}
-                  {(!isGettingLocation || selectedNeighborhood) && (
-                    <Select value={selectedNeighborhood} onValueChange={(val) => {
-                      setSelectedNeighborhood(val);
-                      if (val !== '__other__') {
-                        setCustomNeighborhood('');
-                      }
-                    }}>
-                      <SelectTrigger className={`h-12 rounded-xl ${selectedNeighborhood && selectedNeighborhood !== '__other__' ? 'border-green-500' : ''}`}>
-                        <SelectValue placeholder="Bairro" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {availableNeighborhoods.map((neighborhood) => (
-                          <SelectItem key={neighborhood} value={neighborhood}>
-                            {neighborhood}
-                          </SelectItem>
-                        ))}
-                        {/* Only show "Outro" option if GPS detected a location not in our list */}
-                        {geoNeighborhoodNotFound && (
-                          <SelectItem value="__other__" className="text-primary font-medium">
-                            Outro (especificar)
-                          </SelectItem>
-                        )}
-                      </SelectContent>
-                    </Select>
-                  )}
-                  
-                  {/* Show detected neighborhood confirmation */}
-                   {selectedNeighborhood && selectedNeighborhood !== '__other__' && (
-                     <div className="space-y-3 p-4 rounded-xl bg-secondary/30 border border-border">
-                       {!geoLocation ? (
-                         <>
-                           <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                             <MapPin className="w-4 h-4" />
-                             <span>Confirma o teu endereço AFROLOC para continuar</span>
-                           </div>
-                           <Button
-                             type="button"
-                             onClick={() => handleGetLocation(false)}
-                             disabled={isGettingLocation}
-                             className="w-full h-12 rounded-xl bg-gradient-primary hover:opacity-90 text-white"
-                           >
-                             {isGettingLocation ? (
-                               <>
-                                 <div className="w-4 h-4 mr-2 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                                 A gerar o teu endereço AFROLOC...
-                               </>
-                             ) : (
-                               <>
-                                 <MapPin className="w-4 h-4 mr-2" />
-                                 Gerar o meu endereço AFROLOC
-                               </>
-                             )}
-                           </Button>
-                         </>
-                       ) : (
-                         <>
-                       <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                         <MapPin className="w-4 h-4" />
-                         <span>
-                           Endereço AFROLOC gerado em <strong>{selectedNeighborhood}</strong>
-                         </span>
-                       </div>
-                       
-                       {!locationConfirmed ? (
-                         <Button
-                           type="button"
-                           onClick={handleConfirmLocation}
-                           className="w-full h-12 rounded-xl bg-gradient-primary hover:opacity-90 text-white"
-                         >
-                           ✓ Confirmar este endereço AFROLOC
-                         </Button>
-                       ) : (
-                         <div className="flex items-center justify-center gap-2 text-sm text-primary font-medium">
-                           <MapPin className="w-4 h-4" />
-                           Endereço AFROLOC confirmado ✓
-                         </div>
-                       )}
-                         
-                         {/* Button to re-read GPS location */}
-                        {isDoingMultipleReadings ? (
-                          <div className="w-full p-3 bg-muted/50 rounded-xl">
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                              <span>Leitura {currentReadingIndex} de {ADDITIONAL_READINGS + 1}...</span>
-                            </div>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              A refinar o endereço AFROLOC para maior precisão
-                            </p>
-                          </div>
-                        ) : (
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => handleGetLocation(false, true)}
-                            disabled={isGettingLocation}
-                            className="w-full h-10 rounded-xl text-sm"
-                          >
-                            {isGettingLocation ? (
-                              <>
-                                <div className="w-3 h-3 mr-2 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                                A gerar...
-                              </>
-                            ) : (
-                              <>
-                                <MapPin className="w-3 h-3 mr-2" />
-                                Gerar de novo
-                              </>
-                            )}
-                          </Button>
-                        )}
-                        
-                        {/* Show readings summary if multiple readings were done */}
-                        {gpsReadings.length >= 1 && !isDoingMultipleReadings && (
-                          <div className="w-full p-3 bg-muted/30 rounded-lg space-y-3">
-                            <p className="text-xs text-muted-foreground mb-1">
-                              {gpsReadings.length} leitura{gpsReadings.length > 1 ? 's' : ''} realizada{gpsReadings.length > 1 ? 's' : ''}:
-                            </p>
-                            {gpsReadings.map((reading, idx) => (
-                              <div key={idx} className="border-b border-border/50 pb-2 last:border-0 last:pb-0">
-                                <p className="text-xs font-medium text-foreground mb-1">
-                                  Leitura {idx + 1}:
-                                </p>
-                                <div className="grid grid-cols-1 gap-0.5">
-                                  {reading.top5.map((hood, hIdx) => (
-                                    <div
-                                      key={hIdx}
-                                      className={`text-xs px-2 py-1 rounded flex justify-between ${
-                                        hood.name === selectedNeighborhood
-                                          ? 'bg-primary/20 text-primary font-medium'
-                                          : 'text-muted-foreground'
-                                      }`}
-                                    >
-                                      <span>{hIdx + 1}. {hood.name}</span>
-                                      <span>{hood.distance.toFixed(2)}km</span>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                         </>
-                       )}
-                    </div>
-                  )}
-                </>
-              )}
-
-              {/* Custom neighborhood input with GPS validation */}
-              {selectedNeighborhood === '__other__' && (
-                <div className="space-y-3 p-4 rounded-xl bg-secondary/30 border border-border">
-                  <Input
-                    value={customNeighborhood}
-                    onChange={(e) => setCustomNeighborhood(e.target.value)}
-                    placeholder="Nome do teu bairro"
-                    className="h-12 rounded-xl"
-                  />
-                  
-                  <div className="flex items-center gap-3">
-                    <Button
-                      type="button"
-                      variant={geoLocation ? "outline" : "default"}
-                      onClick={() => handleGetLocation(true)}
-                      disabled={isGettingLocation}
-                      className={`flex-1 h-12 rounded-xl ${geoLocation ? 'border-green-500 text-green-600' : ''}`}
-                    >
-                      {isGettingLocation ? (
-                        <>
-                          <div className="w-4 h-4 mr-2 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                          A obter...
-                        </>
-                      ) : geoLocation ? (
-                        <>
-                          <MapPin className="w-4 h-4 mr-2" />
-                          Endereço AFROLOC validado ✓
-                        </>
-                      ) : (
-                        <>
-                          <MapPin className="w-4 h-4 mr-2" />
-                          Gerar o meu endereço AFROLOC
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                  
-                  {!geoLocation && (
-                    <p className="text-xs text-muted-foreground text-center">
-                      É necessário gerar o teu endereço AFROLOC para usar um bairro personalizado
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
-
-            <div className="flex gap-3 justify-center">
-              <Button
-                variant="outline"
-                onClick={prevStep}
-                className="h-12 px-6 rounded-xl"
-              >
-                <ChevronLeft className="w-5 h-5 mr-2" />
-                Voltar
-              </Button>
-              <Button
-                onClick={handleBandaSave}
-                  disabled={!selectedCity || !selectedNeighborhood || !geoLocation || !locationConfirmed || (selectedNeighborhood === '__other__' && !customNeighborhood.trim())}
-                className="h-12 px-6 rounded-xl bg-gradient-primary hover:opacity-90 text-white"
-              >
-                Continuar
-                <ChevronRight className="w-5 h-5 ml-2" />
-              </Button>
-            </div>
-            <p className="text-xs text-destructive/70 mt-4 text-center">
-               * País, cidade, bairro e confirmação do endereço AFROLOC são obrigatórios
-            </p>
-          </motion.div>
-        );
+        return <ResidenceForm country={selectedCountry} city={selectedCity} neighborhood={selectedNeighborhood}
+          customNeighborhood={customNeighborhood} onCountry={setSelectedCountry} onCity={setSelectedCity}
+          onNeighborhood={setSelectedNeighborhood} onCustomNeighborhood={setCustomNeighborhood}
+          plan={residencePlan} onPlan={setResidencePlan} onContinue={nextStep} onBack={prevStep} />;
 
       case 'welcome':
         return (

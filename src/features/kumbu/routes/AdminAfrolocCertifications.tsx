@@ -30,6 +30,8 @@ export default function AdminAfrolocCertifications() {
   const [filter, setFilter] = useState<StatusFilter>('pending');
   const [rows, setRows] = useState<CertRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [declarations, setDeclarations] = useState<Record<string, {method:string;city:string;neighborhood:string}>>({});
+  const [reviewed, setReviewed] = useState<Record<string,boolean>>({});
   const [acting, setActing] = useState<string | null>(null);
 
   const fetchRows = useCallback(async () => {
@@ -42,6 +44,13 @@ export default function AdminAfrolocCertifications() {
     else q = q.eq('afroloc_certification_status', filter);
     const { data } = await q;
     setRows((data as CertRow[]) ?? []);
+    if (data?.length) {
+      const {data:claims}=await supabase.from('residence_declarations' as never).select('user_id, method, city, neighborhood').in('user_id',data.map(p=>p.id));
+      const map: Record<string,{method:string;city:string;neighborhood:string}> = {};
+      for (const claim of (claims || []) as unknown as Array<{user_id:string;method:string;city:string;neighborhood:string}>) map[claim.user_id]=claim;
+      setDeclarations(map);
+    } else setDeclarations({});
+    setReviewed({});
     setLoading(false);
   }, [filter]);
 
@@ -79,7 +88,7 @@ export default function AdminAfrolocCertifications() {
         <Alert>
           <ShieldAlert className="h-4 w-4" />
           <AlertDescription className="text-sm">
-            Autoridade/admin — validação de endereços para monetização.
+            Autoridade/admin — confirma a ligação entre utilizador e endereço antes de certificar. Um código introduzido ou uma leitura GPS, por si só, não provam residência.
           </AlertDescription>
         </Alert>
 
@@ -116,12 +125,14 @@ export default function AdminAfrolocCertifications() {
                 <span className="font-mono truncate">{r.afroloc_code ?? 'sem endereço'}</span>
               </div>
 
+              {declarations[r.id] && <p className="text-xs text-muted-foreground">Banda declarada: {declarations[r.id].neighborhood}, {declarations[r.id].city}. Origem: {declarations[r.id].method === 'home' ? 'captura no endereço' : declarations[r.id].method === 'existing' ? 'código indicado pelo utilizador' : 'confirmação adiada'}.</p>}
+              {r.afroloc_certification_status !== 'certified' && <label className="flex gap-2 text-xs"><input type="checkbox" checked={!!reviewed[r.id]} onChange={e=>setReviewed(p=>({...p,[r.id]:e.target.checked}))}/>Verifiquei a ligação do utilizador a este endereço e à Banda declarada.</label>}
               {r.afroloc_certification_status !== 'certified' && (
                 <div className="flex gap-2 pt-1">
                   <Button
                     size="sm"
                     className="h-8 text-xs flex-1 gap-1"
-                    disabled={acting === r.id || !r.afroloc_code}
+                    disabled={acting === r.id || !r.afroloc_code || !reviewed[r.id]}
                     onClick={() => act(r.id, true)}
                   >
                     {acting === r.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <ShieldCheck className="h-3 w-3" />}

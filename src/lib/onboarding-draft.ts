@@ -17,6 +17,7 @@ export interface OnboardingDraft {
   neighborhood: string;
   customNeighborhood: string;
   bio: string;
+  residenceMethod?: 'home' | 'away' | 'existing' | 'later';
 }
 type DraftInput = Omit<OnboardingDraft, 'version' | 'savedAt'>;
 // Explicit allowlist: passwords, session tokens, photos and GPS never enter storage.
@@ -29,6 +30,7 @@ export function saveOnboardingDraft(input: DraftInput, accountEmail?: string): b
     birthMonth: input.birthMonth, birthYear: input.birthYear, country: input.country,
     city: input.city, neighborhood: input.neighborhood,
     customNeighborhood: input.customNeighborhood, bio: input.bio,
+    residenceMethod: ['home','away','existing','later'].includes(input.residenceMethod || '') ? input.residenceMethod : 'later',
   };
   try { localStorage.setItem(keyFor(accountEmail), JSON.stringify(draft)); return true; } catch { return false; }
 }
@@ -43,6 +45,7 @@ export function loadOnboardingDraft(context: { email?: string; inviteCode?: stri
     if (![null, 'male', 'female', 'other'].includes(draft.gender)) return null;
     if (context.email && draft.email.toLowerCase().trim() !== context.email.toLowerCase().trim()) return null;
     if (context.inviteCode && draft.inviteCode.toUpperCase() !== context.inviteCode.toUpperCase()) return null;
+    if (draft.residenceMethod && !['home','away','existing','later'].includes(draft.residenceMethod)) return null;
     return draft;
   } catch { return null; }
 }

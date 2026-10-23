@@ -52,3 +52,9 @@ describe('onboarding recovery', () => {
     expect(loadOnboardingDraft({ email: draft.email })).toBeNull();
   });
 });
+
+it('recovers the chosen residence method without retaining home GPS or an address code', () => {
+  saveOnboardingDraft({...draft,residenceMethod:'existing',code:'AO-PRIVATE-HOME',lat:1,lng:2} as typeof draft);
+  expect(loadOnboardingDraft()?.residenceMethod).toBe('existing');
+  expect(localStorage.getItem('yamilook_onboarding_draft_v1')).not.toContain('AO-PRIVATE-HOME');
+});

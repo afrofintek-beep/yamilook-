@@ -1,3 +1,4 @@
+import { ResidencePanel } from '@/components/residence/ResidencePanel';
 import { ProfileMuxi } from '@/components/profile/ProfileMuxi';
 import { useUserStatus } from '@/hooks/useOnlineStatus';
 import { useState, useEffect } from 'react';
@@ -798,6 +799,8 @@ function ProfileContent() {
       />
 
       {!isOwnProfile && <Button variant="outline" className="mx-4 mb-4" onClick={() => document.getElementById('profile-muxi')?.scrollIntoView({ behavior: 'smooth' })}>Ver Muxi</Button>}
+
+      {isOwnProfile && <ResidencePanel />}
 
       {/* Kumbu wallet — own profile only (entry point to /kumbu) */}
       {isOwnProfile && (
