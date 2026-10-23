@@ -28,6 +28,12 @@ const QUERY_KEY = ['academia-sessions'];
 export function useAcademiaSessions() {
   return useQuery({
     queryKey: QUERY_KEY,
+    // Availability changes on other devices; override the app's five-minute cache.
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: 'always',
+    refetchOnReconnect: 'always',
+    refetchInterval: 10_000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('academia_sessions')

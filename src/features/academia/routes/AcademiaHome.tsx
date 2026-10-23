@@ -32,7 +32,7 @@ import { motion } from 'framer-motion';
 export default function AcademiaHome() {
   const navigate = useNavigate();
   const [tab, setTab] = useState('all');
-  const { data: sessions = [], isLoading } = useAcademiaSessions();
+  const { data: sessions = [], isLoading, isError, refetch, isFetching } = useAcademiaSessions();
   const { data: mentors = [], isLoading: mentorsLoading } = useAcademiaMentors();
   const { data: isMentor = false } = useIsMentor();
   const becomeMentor = useBecomeMentor();
@@ -136,6 +136,15 @@ export default function AcademiaHome() {
             </div>
           </div>
         </motion.section>
+
+        {isError && (
+          <div role="alert" className="mx-4 rounded-xl border border-destructive/30 p-3 text-sm">
+            <p>Não foi possível atualizar as sessões. A lista pode estar desatualizada.</p>
+            <Button variant="outline" size="sm" className="mt-2" disabled={isFetching} onClick={() => void refetch()}>
+              Tentar novamente
+            </Button>
+          </div>
+        )}
 
         {/* Live now */}
         {liveSessions.length > 0 && (
