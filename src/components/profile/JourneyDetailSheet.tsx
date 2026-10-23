@@ -15,6 +15,7 @@ interface JourneyDetailSheetProps {
   onOpenChange: (open: boolean) => void;
   type: DetailType | null;
   userId: string;
+  onNavigate?: () => void;
 }
 
 interface FriendItem {
@@ -72,7 +73,7 @@ const icons: Record<DetailType, React.ElementType> = {
   reactions: Heart,
 };
 
-export function JourneyDetailSheet({ open, onOpenChange, type, userId }: JourneyDetailSheetProps) {
+export function JourneyDetailSheet({ open, onOpenChange, type, userId, onNavigate }: JourneyDetailSheetProps) {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [friends, setFriends] = useState<FriendItem[]>([]);
@@ -204,7 +205,8 @@ export function JourneyDetailSheet({ open, onOpenChange, type, userId }: Journey
 
   const handleNavigate = (path: string) => {
     onOpenChange(false);
-    setTimeout(() => navigate(path), 200);
+    onNavigate?.();
+    navigate(path);
   };
 
   if (!type) return null;
@@ -239,12 +241,14 @@ export function JourneyDetailSheet({ open, onOpenChange, type, userId }: Journey
               {type === 'friends' && (
                 friends.length > 0 ? (
                   friends.map((friend, index) => (
-                    <motion.div
+                    <motion.button
+                      type="button"
+                      aria-label={`Ver perfil de ${friend.display_name}`}
                       key={friend.id}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
-                      className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 cursor-pointer hover:bg-muted/80 transition-colors"
+                      className="w-full text-left flex items-center gap-3 p-3 rounded-xl bg-muted/50 cursor-pointer hover:bg-muted/80 transition-colors"
                       onClick={() => handleNavigate(`/profile/${friend.id}`)}
                     >
                       <Avatar className="w-12 h-12">
@@ -256,7 +260,7 @@ export function JourneyDetailSheet({ open, onOpenChange, type, userId }: Journey
                         <p className="text-sm text-muted-foreground truncate">@{friend.username}</p>
                       </div>
                       <ChevronRight className="w-4 h-4 text-muted-foreground/50" />
-                    </motion.div>
+                    </motion.button>
                   ))
                 ) : (
                   <EmptyState message="Ainda não tens kambas na tua rede" />
@@ -272,7 +276,7 @@ export function JourneyDetailSheet({ open, onOpenChange, type, userId }: Journey
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
-                      className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 cursor-pointer hover:bg-muted/80 transition-colors"
+                      className="w-full text-left flex items-center gap-3 p-3 rounded-xl bg-muted/50 cursor-pointer hover:bg-muted/80 transition-colors"
                       onClick={() => handleNavigate('/feed')}
                     >
                       {post.media_urls?.length > 0 ? (

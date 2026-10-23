@@ -1,3 +1,4 @@
+import { ProfileMuxi } from '@/components/profile/ProfileMuxi';
 import { useUserStatus } from '@/hooks/useOnlineStatus';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -91,6 +92,13 @@ type RelationshipStatus = 'none' | 'pending_sent' | 'pending_received' | 'friend
 
 export default function Profile() {
   const { userId } = useParams();
+  // Each visited profile owns its sheets, photos, loading state and badges.
+  return <ProfileContent key={userId || 'self'} />;
+}
+
+function ProfileContent() {
+  useEffect(() => { window.scrollTo(0, 0); }, []);
+  const { userId } = useParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { user, signOut } = useAuth();
@@ -98,6 +106,7 @@ export default function Profile() {
   const { createConversation } = useConversations();
   const { contacts, friendRequests, sendFriendRequest, acceptFriendRequest, cancelFriendRequest, refresh: refreshContacts } = useContacts();
 
+  const [profileError, setProfileError] = useState(false);
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [profilePhotos, setProfilePhotos] = useState<ProfilePhoto[]>([]);
   const [bandaName, setBandaName] = useState<string | null>(null);
@@ -352,17 +361,18 @@ export default function Profile() {
 
     if (error) {
       console.error('Error fetching profile:', error);
-      toast.error(t('profile.failedToLoad'));
-      navigate(-1);
+      setProfileError(true);
+      setLoading(false);
       return;
     }
 
     if (!data) {
-      // Profile not found - navigate back silently
-      navigate(-1);
+      setProfileData(null);
+      setLoading(false);
       return;
     }
 
+    setProfileError(false);
     setProfileData(data as ProfileData);
     setLoading(false);
   };
@@ -451,7 +461,7 @@ export default function Profile() {
 
   const getStats = () => {
     const publicStats = [
-      { icon: 'posts' as const, label: t('feed.posts', 'Publicações'), value: postsCount, onClick: () => navigate('/feed') },
+      { icon: 'posts' as const, label: t('feed.posts', 'Publicações'), value: postsCount, onClick: () => document.getElementById('profile-muxi')?.scrollIntoView({ behavior: 'smooth' }) },
       { icon: 'momambos' as const, label: t('profile.momambos', 'Momambos'), value: momambosCount, onClick: scrollToMomambos },
       { icon: 'ritmos' as const, label: t('profile.ritmos', 'Ritmos'), value: ritmosCount, onClick: () => navigate('/ritmos') },
     ];
@@ -630,7 +640,11 @@ export default function Profile() {
   if (!profileData) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-muted-foreground">{t('errors.notFound')}</p>
+        <div className="space-y-3 text-center">
+          <p role="alert" className="text-muted-foreground">{profileError ? t('profile.failedToLoad') : t('errors.notFound')}</p>
+          {profileError && <Button onClick={() => { setLoading(true); void fetchProfile(); }}>Tentar novamente</Button>}
+          <Button variant="ghost" onClick={() => navigate(-1)}>Voltar</Button>
+        </div>
       </div>
     );
   }
@@ -776,9 +790,11 @@ export default function Profile() {
         isOwner={isOwnProfile}
         relationshipStatus={relationshipStatus}
         isLoading={followLoading}
-        onPrimaryAction={isOwnProfile ? () => navigate('/feed') : handleFollow}
+        onPrimaryAction={isOwnProfile ? () => document.getElementById('profile-muxi')?.scrollIntoView({ behavior: 'smooth' }) : handleFollow}
         onSecondaryAction={isOwnProfile ? () => setIsEditOpen(true) : handleOpenChat}
       />
+
+      {!isOwnProfile && <Button variant="outline" className="mx-4 mb-4" onClick={() => document.getElementById('profile-muxi')?.scrollIntoView({ behavior: 'smooth' })}>Ver Muxi</Button>}
 
       {/* Kumbu wallet — own profile only (entry point to /kumbu) */}
       {isOwnProfile && (
@@ -797,6 +813,8 @@ export default function Profile() {
 
       {/* Stats */}
       <ProfileStats items={getStats()} hideZeros animateCountUp isOwner={isOwnProfile} />
+
+      {targetUserId && <ProfileMuxi key={targetUserId} userId={targetUserId} />}
 
       {/* Achievements */}
       <ProfileAchievements achievements={getAchievements()} />

@@ -317,6 +317,7 @@ export function YamilookJourneySheet({
       <JourneyDetailSheet
         open={detailOpen}
         onOpenChange={setDetailOpen}
+        onNavigate={() => onOpenChange(false)}
         type={detailType}
         userId={userId}
       />

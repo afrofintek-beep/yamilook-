@@ -78,7 +78,7 @@ export interface Topic {
   is_trending: boolean;
 }
 
-export function usePosts() {
+export function usePosts({ autoLoad = true }: { autoLoad?: boolean } = {}) {
   const { user } = useAuth();
   // Único por instância do hook para que montagens concorrentes não colidam no
   // mesmo tópico do canal realtime do Supabase (que lança "cannot add
@@ -752,12 +752,13 @@ export function usePosts() {
 
   // Get user posts
   const getUserPosts = useCallback(async (userId: string): Promise<PostWithUser[]> => {
-    const { data: posts } = await supabase
+    const { data: posts, error } = await supabase
       .from('posts')
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
+    if (error) throw error;
     if (!posts) return [];
 
     return fetchPostsWithDetails(posts);
@@ -812,13 +813,15 @@ export function usePosts() {
 
   // Initial fetch
   useEffect(() => {
+    if (!autoLoad) return;
     fetchFeedPosts();
     fetchDiscoverPosts();
     fetchTopics();
-  }, [fetchFeedPosts, fetchDiscoverPosts, fetchTopics]);
+  }, [autoLoad, fetchFeedPosts, fetchDiscoverPosts, fetchTopics]);
 
   // Realtime subscription
   useEffect(() => {
+    if (!autoLoad) return;
     const channel = supabase
       .channel(`posts-updates-${instanceIdRef.current}`)
       .on(
@@ -848,7 +851,7 @@ export function usePosts() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [fetchFeedPosts, fetchDiscoverPosts]);
+  }, [autoLoad, fetchFeedPosts, fetchDiscoverPosts]);
 
   return {
     feedPosts,
