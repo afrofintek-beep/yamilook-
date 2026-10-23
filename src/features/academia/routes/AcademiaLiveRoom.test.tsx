@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 const fixture=vi.hoisted(()=>({when:'',error:''}));
@@ -21,4 +21,15 @@ it('allows the mentor to enter within the fifteen-minute window',()=>{
 it('offers sign-in recovery for an expired session',()=>{
   fixture.error='A tua sessão expirou. Inicia sessão novamente.';draw();
   expect(screen.getByRole('button',{name:'Entrar novamente'})).toBeVisible();
+});
+
+it('leaves the video room for the Academia list instead of another session step',()=>{
+  render(<MemoryRouter initialEntries={['/academia/session','/academia/live/session']}><Routes>
+    <Route path="/academia" element={<p>Lista da Academia</p>} />
+    <Route path="/academia/live/:sessionId" element={<AcademiaLiveRoom />} />
+    <Route path="/academia/:sessionId" element={<p>Detalhes da sessão</p>} />
+  </Routes></MemoryRouter>);
+  fireEvent.click(screen.getByRole('button',{name:'Sair da sala'}));
+  expect(screen.getByText('Lista da Academia')).toBeVisible();
+  expect(screen.queryByText('Detalhes da sessão')).not.toBeInTheDocument();
 });

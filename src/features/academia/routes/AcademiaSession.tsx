@@ -194,7 +194,7 @@ export default function AcademiaSession() {
       <div className="fixed inset-0 flex h-screen-safe min-w-0 flex-col overflow-hidden bg-background pl-[env(safe-area-inset-left,0px)] pr-[env(safe-area-inset-right,0px)]">
         <header className="relative z-30 shrink-0 border-b border-border/40 bg-background/95 backdrop-blur-md safe-top">
           <div className="mx-auto flex min-h-14 w-full max-w-2xl min-w-0 items-center gap-2 px-3 py-1">
-            <button onClick={() => navigate(-1)} aria-label="Voltar à Academia" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            <button onClick={() => navigate('/academia', { replace: true })} aria-label="Voltar à Academia" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
               <ArrowLeft className="h-5 w-5 text-foreground" />
             </button>
             <GraduationCap className="h-5 w-5 shrink-0 text-primary" />
@@ -230,7 +230,7 @@ export default function AcademiaSession() {
     <div className="fixed inset-0 flex h-screen-safe min-w-0 flex-col overflow-hidden bg-background pl-[env(safe-area-inset-left,0px)] pr-[env(safe-area-inset-right,0px)]">
       <header className="relative z-30 shrink-0 border-b border-border/40 bg-background/95 backdrop-blur-md safe-top">
         <div className="mx-auto flex min-h-14 w-full max-w-2xl min-w-0 items-center gap-2 px-3 py-1">
-          <button onClick={() => navigate(-1)} aria-label="Voltar à Academia" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <button onClick={() => navigate('/academia', { replace: true })} aria-label="Voltar à Academia" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
             <ArrowLeft className="h-5 w-5 text-foreground" />
           </button>
           <GraduationCap className="h-5 w-5 shrink-0 text-primary" />

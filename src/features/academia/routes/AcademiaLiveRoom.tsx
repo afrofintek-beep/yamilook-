@@ -37,7 +37,7 @@ export default function AcademiaLiveRoom() {
   const tooEarly=isMentor && session?.status==='scheduled' && opensAt.getTime()>Math.max(Date.now(),dataUpdatedAt);
   const closed=!!session && ['ended','completed','cancelled'].includes(session.status);
   useEffect(()=>{if(closed)video.leave();},[closed,video.leave]);
-  const exit=()=>{video.leave();navigate(`/academia/${sessionId}`);};
+  const exit=()=>{video.leave();navigate('/academia',{replace:true});};
   const end=async()=>{
     if(!sessionId||ending)return;setEnding(true);setEndError('');
     try{await requestAcademiaVideo(sessionId,'end');video.leave();await refetch();}
@@ -55,7 +55,7 @@ export default function AcademiaLiveRoom() {
     </div></header>
     <section className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 space-y-4">
       {(video.error||endError) && <p role="alert" className="rounded-xl border border-destructive p-3 text-sm">{endError||video.error}{video.error.includes('Inicia sessão novamente') && <Button className="mt-3 block" onClick={async()=>{video.leave();await supabase.auth.signOut({scope:'local'});navigate('/login');}}>Entrar novamente</Button>}</p>}
-      {closed ? <div className="space-y-3"><p>A sessão foi encerrada.</p><Button onClick={exit}>Ver sessão</Button></div> : !video.room ? <div className="max-w-lg mx-auto space-y-5">
+      {closed ? <div className="space-y-3"><p>A sessão foi encerrada.</p><Button onClick={exit}>Voltar à Academia</Button></div> : !video.room ? <div className="max-w-lg mx-auto space-y-5">
         <h2 className="text-lg font-semibold">{isMentor?'Iniciar sessão de vídeo':'Entrar na sessão de vídeo'}</h2>
         <p className="text-sm text-muted-foreground">{isMentor?(tooEarly?`Esta sala abre em ${opensAt.toLocaleString('pt-AO',{dateStyle:'short',timeStyle:'short'})}. Podes entrar 15 minutos antes da hora marcada.`:'Podes abrir a sala 15 minutos antes da hora marcada.'):'A entrada está disponível após o mentor iniciar a sessão, para quem tem uma reserva válida.'}</p>
         <label className="flex items-center gap-3"><input type="checkbox" checked={camera} onChange={e=>setCamera(e.target.checked)} />Entrar com câmara</label>
