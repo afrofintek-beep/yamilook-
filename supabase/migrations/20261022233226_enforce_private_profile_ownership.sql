@@ -1,6 +1,7 @@
-DROP POLICY "Authenticated users can view all profiles" ON public.profiles;
-CREATE POLICY "Administrators can read full profiles" ON public.profiles
- FOR SELECT TO authenticated USING (public.has_role((select auth.uid()),'admin'));
+ALTER POLICY "Authenticated users can view all profiles" ON public.profiles
+ USING ((select auth.uid())=id OR public.has_role((select auth.uid()),'admin'));
+ALTER POLICY "Authenticated users can view all profiles" ON public.profiles
+ RENAME TO "Owners and administrators read full profiles";
 ALTER POLICY "Users can update own profile" ON public.profiles
  USING ((select auth.uid())=id) WITH CHECK ((select auth.uid())=id);
 
