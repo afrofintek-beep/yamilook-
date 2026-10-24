@@ -23,8 +23,10 @@ import { WaitingRoomPanel } from './WaitingRoomPanel';
 import { BreakoutRoomsPanel } from './BreakoutRoomsPanel';
 import { HostControlsPanel } from './HostControlsPanel';
 import { cn } from '@/lib/utils';
+import { CallChatPanel } from './CallChatPanel';
 
 interface VideoCallProps {
+  conversationId?: string | null;
   callId: string;
   callType: 'voice' | 'video';
   participants: Array<{
@@ -45,6 +47,7 @@ interface VideoCallProps {
 }
 
 export function VideoCall({ 
+  conversationId,
   callId, 
   callType, 
   participants, 
@@ -166,6 +169,12 @@ export function VideoCall({
         isFullscreen && "fixed inset-0 z-50"
       )}
     >
+      <Button variant="secondary" className="absolute left-3 top-[calc(env(safe-area-inset-top,0px)+0.75rem)] z-40" onClick={() => setShowChat(true)}>
+        <MessageSquare className="h-4 w-4 mr-2" />Escrever no papo
+      </Button>
+      {showChat && <CallChatPanel conversationId={conversationId}
+        contactId={!isGroupCall && participants.length === 1 ? participants[0].user_id : undefined}
+        onClose={() => setShowChat(false)} />}
       {/* Main Video Grid */}
       <ParticipantGrid
         participants={participants}
