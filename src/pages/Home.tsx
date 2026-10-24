@@ -88,16 +88,17 @@ export default function Home() {
   }, []);
 
   const handleBulkArchive = useCallback(async () => {
-    if (selectedIds.size === 0) return;
+    if (!user?.id || selectedIds.size === 0) return;
     
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('conversation_participants')
       .update({ is_archived: true })
       .in('conversation_id', Array.from(selectedIds))
-      .eq('user_id', user?.id);
+      .eq('user_id', user.id)
+      .select('conversation_id');
 
-    if (error) {
-      toast({ title: 'Erro', description: error.message, variant: 'destructive' });
+    if (error || data?.length !== selectedIds.size) {
+      toast({ title: 'Erro', description: error?.message || 'Não foi possível confirmar o arquivo de todas as conversas. Tenta novamente.', variant: 'destructive' });
     } else {
       toast({ title: `${selectedIds.size} conversa(s) arquivada(s)` });
       setSelectionMode(false);
@@ -146,14 +147,17 @@ export default function Home() {
 
   // Swipe action handlers
   const handleArchive = useCallback(async (conversationId: string) => {
-    const { error } = await supabase
+    if (!user?.id) return;
+    const { data, error } = await supabase
       .from('conversation_participants')
       .update({ is_archived: true })
       .eq('conversation_id', conversationId)
-      .eq('user_id', user?.id);
+      .eq('user_id', user.id)
+      .select('conversation_id')
+      .single();
 
-    if (error) {
-      toast({ title: 'Erro', description: error.message, variant: 'destructive' });
+    if (error || !data) {
+      toast({ title: 'Erro', description: error?.message || 'Não foi possível confirmar o arquivo. Tenta novamente.', variant: 'destructive' });
     } else {
       toast({ title: 'Conversa arquivada' });
       refresh();

@@ -553,13 +553,15 @@ export default function Chat() {
   const handleArchive = async () => {
     if (!conversationId || !user) return;
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('conversation_participants')
       .update({ is_archived: true })
       .eq('conversation_id', conversationId)
-      .eq('user_id', user.id);
+      .eq('user_id', user.id)
+      .select('conversation_id')
+      .single();
 
-    if (error) {
+    if (error || !data) {
       toast({ title: 'Não foi possível arquivar a conversa', variant: 'destructive' });
       return;
     }
