@@ -48,6 +48,18 @@ describe('Papos video presentation', () => {
     expect(createSignedUrl).not.toHaveBeenCalled();
   });
 
+  it('keeps a labelled close action available after a playback error and pauses on close', async () => {
+    const onClose = vi.fn();
+    render(<MediaPreview url="https://example.com/broken.mov" type="video" open onClose={onClose} />);
+    fireEvent.error(screen.getByLabelText('Vídeo da conversa'));
+    await screen.findByRole('alert');
+    const close = screen.getByRole('button', { name: 'Fechar pré-visualização' });
+    expect(close).toHaveTextContent('Fechar');
+    fireEvent.click(close);
+    expect(onClose).toHaveBeenCalledOnce();
+    expect(HTMLMediaElement.prototype.pause).toHaveBeenCalled();
+  });
+
   it('signs a legacy private object only on error and reports a second failure', async () => {
     createSignedUrl.mockResolvedValue({ data: { signedUrl: 'https://example.supabase.co/storage/v1/object/sign/media/clip.mov?token=test' }, error: null });
     render(<MediaPreview url={url} type="video" open onClose={vi.fn()} />);
