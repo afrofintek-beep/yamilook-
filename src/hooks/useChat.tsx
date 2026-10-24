@@ -1,4 +1,5 @@
 import { createChatConversation } from '@/lib/chat-conversations';
+import { useMessageExpiry } from './useMessageExpiry';
 import { orderConversations } from '@/lib/chat-conversations';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -28,6 +29,7 @@ function messageProfile(profile?: PublicProfile): Message['sender_profile'] {
 }
 
 interface Message {
+  expires_at?: string | null;
   id: string;
   conversation_id: string;
   sender_id: string;
@@ -289,6 +291,7 @@ export function useMessages(conversationId: string | null) {
   const { user } = useAuth();
   const { notifyMessage } = useMessageNotification();
   const [messages, setMessages] = useState<Message[]>([]);
+  const unexpiredMessages = useMessageExpiry(messages);
   const [reactions, setReactions] = useState<Record<string, Reaction[]>>({});
   const [starredIds, setStarredIds] = useState<Set<string>>(new Set());
   const [pinnedIds, setPinnedIds] = useState<Set<string>>(new Set());
@@ -1112,7 +1115,7 @@ export function useMessages(conversationId: string | null) {
 
   return {
     historyClearedAt, setHistoryCleared,
-    messages,
+    messages: unexpiredMessages,
     reactions,
     starredIds,
     pinnedIds,
