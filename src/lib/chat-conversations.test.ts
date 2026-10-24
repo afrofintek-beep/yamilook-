@@ -32,3 +32,23 @@ describe('Papos conversation order', () => {
     expect(orderConversations(entries, 'me')).toHaveLength(2);
   });
 });
+
+import { beforeEach, vi } from 'vitest';
+const { rpc } = vi.hoisted(()=>({rpc:vi.fn()}));
+vi.mock('@/integrations/supabase/client',()=>({supabase:{rpc}}));
+import { createChatConversation } from './chat-conversations';
+beforeEach(()=>rpc.mockReset());
+it('uses the atomic server operation for every creation',async()=>{
+ rpc.mockResolvedValue({data:{id:'chat',type:'group'},error:null});
+ expect((await createChatConversation(['B'],'Group')).data?.id).toBe('chat');
+ expect(rpc).toHaveBeenCalledWith('create_chat_conversation',{p_participant_ids:['B'],p_group_name:'Group',p_avatar_url:null});
+});
+it('returns a server failure without a local fallback that bypasses authorization',async()=>{
+ rpc.mockResolvedValue({data:null,error:{message:'Participant unavailable'}});
+ expect((await createChatConversation(['B'])).error?.message).toBe('Participant unavailable');
+ expect(rpc).toHaveBeenCalledOnce();
+});
+it('does not navigate with an invalid server response',async()=>{
+ rpc.mockResolvedValue({data:{},error:null});
+ expect((await createChatConversation(['B'])).data).toBeNull();
+});

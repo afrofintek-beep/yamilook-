@@ -119,19 +119,7 @@ export function GroupInviteSheet({
     }
   };
 
-  const generateCode = async (): Promise<string> => {
-    const { data, error } = await supabase.rpc('generate_invite_code');
-    if (error || !data) {
-      // Fallback to client-side generation
-      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
-      let result = '';
-      for (let i = 0; i < 8; i++) {
-        result += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
-      return result;
-    }
-    return data;
-  };
+  const generateCode = async (): Promise<string> => crypto.randomUUID().replaceAll('-', '');
 
   const createInvite = async () => {
     if (!user) return;

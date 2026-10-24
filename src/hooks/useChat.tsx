@@ -1,3 +1,4 @@
+import { createChatConversation } from '@/lib/chat-conversations';
 import { orderConversations } from '@/lib/chat-conversations';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -274,40 +275,8 @@ export function useConversations() {
   ) => {
     if (!user) return { error: new Error('Not authenticated'), data: null };
 
-    const isGroup = participantIds.length > 1 || !!groupName;
-
-    if (participantIds.length === 1 && !groupName) {
-      const otherUserId = participantIds[0];
-      for (const conv of conversations) {
-        if (conv.type === 'direct' && conv.participants?.length === 2) {
-          const hasOtherUser = conv.participants.some((p) => p.user_id === otherUserId);
-          const hasCurrentUser = conv.participants.some((p) => p.user_id === user.id);
-          if (hasOtherUser && hasCurrentUser) {
-            return { error: null, data: conv };
-          }
-        }
-      }
-    }
-
-    const { data: newConv, error: convError } = await supabase
-      .from('conversations')
-      .insert({
-        type: isGroup ? 'group' : 'direct',
-        name: groupName || null,
-        avatar_url: groupAvatarUrl || null,
-        created_by: user.id,
-      })
-      .select()
-      .single();
-
-    if (convError) return { error: new Error(convError.message), data: null };
-
-    const allParticipants = [...new Set([user.id, ...participantIds])];
-    const { error: partError } = await supabase
-      .from('conversation_participants')
-      .insert(allParticipants.map((userId) => ({ conversation_id: newConv.id, user_id: userId })));
-
-    if (partError) return { error: new Error(partError.message), data: null };
+    const { data: newConv, error } = await createChatConversation(participantIds, groupName, groupAvatarUrl);
+    if (error) return { error, data: null };
 
     await fetchConversations();
     return { error: null, data: newConv };

@@ -6370,6 +6370,14 @@ export type Database = {
       }
     }
     Functions: {
+      create_chat_conversation: {
+        Args: { p_participant_ids: string[]; p_group_name?: string | null; p_avatar_url?: string | null }
+        Returns: Json
+      }
+      preview_chat_invite: {
+        Args: { invite_code: string }
+        Returns: Json
+      }
       forward_chat_messages: {
         Args: { p_message_ids: string[]; p_conversation_ids: string[] }
         Returns: number

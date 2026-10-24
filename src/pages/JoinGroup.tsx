@@ -50,53 +50,15 @@ export default function JoinGroup() {
 
     setStatus('loading');
     
-    const { data, error } = await supabase
-      .from('group_invites')
-      .select(`
-        *,
-        conversations:conversation_id (
-          id,
-          name,
-          avatar_url
-        )
-      `)
-      .eq('code', code)
-      .eq('is_active', true)
-      .single();
-
-    if (error || !data) {
+    const { data, error } = await supabase.rpc('preview_chat_invite', { invite_code: code });
+    const result = data as { success?: boolean; conversation_id?: string; name?: string; avatar_url?: string | null; member_count?: number } | null;
+    if (error || !result?.success || !result.conversation_id) {
       setStatus('error');
       setError('Link de convite inválido ou expirado');
       return;
     }
-
-    // Check expiration
-    if (data.expires_at && new Date(data.expires_at) < new Date()) {
-      setStatus('error');
-      setError('Este link de convite expirou');
-      return;
-    }
-
-    // Check max uses
-    if (data.max_uses !== null && data.uses_count >= data.max_uses) {
-      setStatus('error');
-      setError('Este link de convite atingiu o limite de usos');
-      return;
-    }
-
-    // Get member count
-    const { count } = await supabase
-      .from('conversation_participants')
-      .select('*', { count: 'exact', head: true })
-      .eq('conversation_id', data.conversation_id);
-
-    const conv = data.conversations as { id: string; name: string; avatar_url: string | null };
-    setGroupInfo({
-      name: conv?.name || 'Grupo',
-      avatar_url: conv?.avatar_url,
-      member_count: count || 0,
-    });
-    setConversationId(data.conversation_id);
+    setGroupInfo({ name: result.name || 'Grupo', avatar_url: result.avatar_url || null, member_count: result.member_count || 0 });
+    setConversationId(result.conversation_id);
     setStatus('ready');
   };
 

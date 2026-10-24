@@ -1,3 +1,4 @@
+import { createChatConversation } from '@/lib/chat-conversations';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -104,51 +105,12 @@ export function ContactCard({
   const handleStartChat = async () => {
     if (!user) return;
     
-    // Check if conversation already exists
-    const { data: existingConvos } = await supabase
-      .from('conversation_participants')
-      .select('conversation_id')
-      .eq('user_id', user.id);
-
-    if (existingConvos) {
-      for (const convo of existingConvos) {
-        const { data: otherParticipant } = await supabase
-          .from('conversation_participants')
-          .select('user_id')
-          .eq('conversation_id', convo.conversation_id)
-          .eq('user_id', contact.contact_user_id)
-          .single();
-
-        if (otherParticipant) {
-          // Check if it's a direct conversation
-          const { data: convoData } = await supabase
-            .from('conversations')
-            .select('type')
-            .eq('id', convo.conversation_id)
-            .single();
-
-          if (convoData?.type === 'direct') {
-            navigate(`/chat/${convo.conversation_id}`);
-            return;
-          }
-        }
-      }
+    const { data, error } = await createChatConversation([contact.contact_user_id]);
+    if (error || !data) {
+      toast({ title: 'Não foi possível abrir a conversa', variant: 'destructive' });
+      return;
     }
-
-    // Create new conversation
-    const { data: newConvo } = await supabase
-      .from('conversations')
-      .insert({ type: 'direct', created_by: user.id })
-      .select()
-      .single();
-
-    if (newConvo) {
-      await supabase.from('conversation_participants').insert([
-        { conversation_id: newConvo.id, user_id: user.id },
-        { conversation_id: newConvo.id, user_id: contact.contact_user_id },
-      ]);
-      navigate(`/chat/${newConvo.id}`);
-    }
+    navigate(`/chat/${data.id}`);
   };
 
   const handleNicknameSave = async () => {

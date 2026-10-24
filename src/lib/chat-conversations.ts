@@ -1,3 +1,6 @@
+import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
+
 interface ConversationSummary {
   id: string;
   type: string;
@@ -20,4 +23,19 @@ export function orderConversations<T extends ConversationSummary>(conversations:
     seen.add(other.user_id);
     return true;
   });
+}
+
+
+type Conversation = Database['public']['Tables']['conversations']['Row'];
+
+/** The server creates the conversation and memberships in one transaction. */
+export async function createChatConversation(participants: string[], name?: string, avatar?: string | null): Promise<{ data: Conversation | null; error: Error | null }> {
+  const { data, error } = await supabase.rpc('create_chat_conversation', {
+    p_participant_ids: participants, p_group_name: name || null, p_avatar_url: avatar || null,
+  });
+  if (error) return { data: null, error: new Error(error.message) };
+  if (!data || typeof data !== 'object' || Array.isArray(data) || typeof data.id !== 'string') {
+    return { data: null, error: new Error('Resposta inválida ao criar conversa') };
+  }
+  return { data: data as unknown as Conversation, error: null };
 }
