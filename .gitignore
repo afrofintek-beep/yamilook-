@@ -30,3 +30,7 @@ pnpm-debug.log*
 public/download/
 yarn-debug.log*
 yarn-error.log*
+
+# Browser test output
+/test-results/
+/playwright-report/

@@ -102,7 +102,7 @@ export function MediaPreview({ url, type, posterUrl, open, onClose }: MediaPrevi
   return (
     <Dialog open={open} onOpenChange={nextOpen => { if (!nextOpen) handleClose(); }}>
       <DialogContent hideCloseButton aria-describedby={undefined}
-        className="flex flex-col min-w-0 w-[calc(100%-1rem)] max-w-3xl h-[calc(100dvh-2rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] max-h-[calc(100dvh-2rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] p-0 gap-0 overflow-hidden bg-black border-none text-white">
+        className="flex flex-col min-w-0 left-[calc(50%+(env(safe-area-inset-left,0px)-env(safe-area-inset-right,0px))/2)] top-[calc(50%+(env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))/2)] w-[calc(100%-1rem-env(safe-area-inset-left,0px)-env(safe-area-inset-right,0px))] max-w-3xl h-[calc(100dvh-2rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] max-h-[calc(100dvh-2rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] p-0 gap-0 overflow-hidden bg-black border-none text-white">
         <DialogTitle className="sr-only">{type === 'video' ? 'Reproduzir vídeo' : 'Ver fotografia'}</DialogTitle>
         <div className="relative z-10 flex min-w-0 items-center justify-between gap-3 px-3 py-2 shrink-0 bg-black">
           <span className="text-sm">{type === 'video' ? 'Vídeo' : 'Fotografia'}</span>

@@ -1,0 +1,27 @@
+name: Mobile controls
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  webkit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps webkit
+      - run: npx vitest run src/components/chat/MediaPreview.test.tsx
+      - run: npx playwright test -c playwright.mobile.config.ts
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: mobile-control-failures
+          path: test-results/
+          retention-days: 7
