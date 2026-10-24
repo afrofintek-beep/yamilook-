@@ -104,7 +104,7 @@ export default function Feed() {
   return (
     <div className="h-screen-safe overflow-hidden bg-muted/30 flex flex-col pb-[calc(5rem+env(safe-area-inset-bottom,0px))]">
       {/* Header - Clean, minimal */}
-      <header className="relative z-50 shrink-0 bg-card border-b border-border safe-top">
+      <header className="relative z-50 shrink-0 bg-card border-b border-border safe-top safe-inline">
         <div className="flex items-center justify-between px-4 py-2 mx-auto w-full max-w-[940px]">
           <YamilookLogo size="sm" showTagline={false} animate={false} bgClassName="bg-card" />
           <div className="flex items-center gap-1">

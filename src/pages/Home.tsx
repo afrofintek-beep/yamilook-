@@ -214,7 +214,7 @@ export default function Home() {
 
   return (
     <div className="h-screen-safe w-full min-w-0 overflow-hidden pb-[calc(5rem+env(safe-area-inset-bottom,0px))] bg-background flex flex-col">
-      <header className="shrink-0 relative z-50 glass-nav safe-top">
+      <header className="shrink-0 relative z-50 glass-nav safe-top safe-inline">
         <div className="flex items-center justify-between px-4 py-2.5">
           <div className="flex items-center gap-3">
             <button onClick={() => navigate('/profile')} className="focus:outline-none">
