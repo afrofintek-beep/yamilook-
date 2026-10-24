@@ -367,7 +367,9 @@ export default function Chat() {
   const handleDelete = async (messageId: string) => {
     const { error } = await deleteMessage(messageId);
     if (error) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      toast({ title: 'Não foi possível apagar a mensagem', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Mensagem apagada' });
     }
   };
 
@@ -490,12 +492,19 @@ export default function Chat() {
       return;
     }
 
+    const failed = new Set<string>();
     for (const id of ownMessages) {
-      await deleteMessage(id);
+      const { error } = await deleteMessage(id);
+      if (error) failed.add(id);
     }
-
-    toast({ title: `${ownMessages.length} mensagem(ns) apagada(s)` });
-    handleCancelSelection();
+    const deleted = ownMessages.length - failed.size;
+    if (failed.size) {
+      setSelectedMessages(failed);
+      toast({ title: `${deleted} apagada(s); ${failed.size} não confirmada(s)`, description: 'As mensagens que falharam continuam selecionadas. Tenta novamente.', variant: 'destructive' });
+    } else {
+      toast({ title: `${deleted} mensagem(ns) apagada(s)` });
+      handleCancelSelection();
+    }
   };
 
   const handleBatchForward = () => {

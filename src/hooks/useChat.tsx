@@ -1,3 +1,4 @@
+import { deleteChatMessage } from '@/lib/delete-chat-message';
 import { createChatConversation } from '@/lib/chat-conversations';
 import { useMessageExpiry } from './useMessageExpiry';
 import { orderConversations } from '@/lib/chat-conversations';
@@ -999,11 +1000,7 @@ export function useMessages(conversationId: string | null) {
 
   const deleteMessage = async (messageId: string) => {
     if (!user) return { error: new Error('Not authenticated') };
-    const { error } = await supabase
-      .from('messages')
-      .update({ is_deleted: true, content: null })
-      .eq('id', messageId)
-      .eq('sender_id', user.id);
+    const { error } = await deleteChatMessage(messageId, user.id);
 
     if (!error) {
       setMessages((prev) => prev.map((m) => (m.id === messageId ? { ...m, is_deleted: true, content: null } : m)));
