@@ -1,11 +1,10 @@
-import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, CheckCircle2, Star, GraduationCap, Calendar, Users, Crown } from 'lucide-react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { ArrowLeft, CheckCircle2, Star, GraduationCap, Calendar, Users } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SessionCard } from '../components/SessionCard';
-import { ACADEMIA_COPY } from '../copy';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { EmptyStateBack } from '@/components/common/EmptyStateBack';
@@ -158,7 +157,7 @@ export default function MentorProfileScreen() {
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-6 space-y-6">
         {/* Profile Header */}
         <div className="flex flex-col items-center text-center gap-3">
-          <div className="relative">
+          <Link to={`/profile/${mentor.id}`} aria-label={`Abrir perfil de ${mentor.name}`} className="relative rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
             <div className="rounded-full p-[2px] bg-gradient-to-br from-primary/60 to-primary/20">
               <Avatar className="h-20 w-20 border-2 border-card">
                 <AvatarImage src={mentor.avatar} />
@@ -172,14 +171,18 @@ export default function MentorProfileScreen() {
                 <CheckCircle2 className="h-4 w-4 text-primary fill-primary/20" />
               </div>
             )}
-          </div>
+          </Link>
 
           <div>
-            <span className="text-lg font-bold text-foreground">{mentor.name}</span>
+            <Link to={`/profile/${mentor.id}`} className="text-lg font-bold text-foreground hover:underline focus-visible:underline">{mentor.name}</Link>
             {mentor.specialty && (
               <Badge variant="secondary" className="ml-2 text-xs rounded-full">{mentor.specialty}</Badge>
             )}
           </div>
+
+          <Link to={`/profile/${mentor.id}`} className="inline-flex min-h-11 items-center justify-center rounded-full border border-primary/30 px-4 text-sm font-medium text-primary hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+            Ver perfil na Yamilook
+          </Link>
 
           {mentor.mentorBio && (
             <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">{mentor.mentorBio}</p>
