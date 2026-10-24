@@ -1,3 +1,4 @@
+import { useResolvedMediaUrl } from './MediaPreview';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, EyeOff, X, Lock } from 'lucide-react';
@@ -21,6 +22,7 @@ export function ViewOnceMediaBubble({
 }: ViewOnceMediaProps) {
   const [showMedia, setShowMedia] = useState(false);
   const [isViewing, setIsViewing] = useState(false);
+  const { resolvedUrl } = useResolvedMediaUrl(isOwn || showMedia ? url : '');
 
   const handleView = async () => {
     if (isViewed || isViewing) return;
@@ -58,7 +60,7 @@ export function ViewOnceMediaBubble({
         {isOwn ? (
           <div className="w-full h-full relative">
             <img
-              src={url}
+              src={resolvedUrl}
               alt="View once media"
               className="w-full h-full object-cover blur-md"
             />
@@ -109,13 +111,13 @@ export function ViewOnceMediaBubble({
 
                 {type === 'image' ? (
                   <img
-                    src={url}
+                    src={resolvedUrl}
                     alt="View once"
                     className="max-w-full max-h-full object-contain"
                   />
                 ) : (
                   <video
-                    src={url}
+                    src={resolvedUrl}
                     controls
                     autoPlay
                     className="max-w-full max-h-full"

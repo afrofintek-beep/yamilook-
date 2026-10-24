@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AlertCircle, Loader2, Pause, Play } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { useResolvedMediaUrl } from './MediaPreview';
 
 interface VoiceMessagePlayerProps {
   /**
@@ -23,7 +23,7 @@ export function VoiceMessagePlayer({ url, duration, isOwn }: VoiceMessagePlayerP
   const [error, setError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [waitSeconds, setWaitSeconds] = useState(0);
-  const [resolvedUrl, setResolvedUrl] = useState<string | null>(url);
+  const { resolvedUrl, error: resolutionError, onError: resolveError } = useResolvedMediaUrl(url || '');
 
   // Uploading = no url or empty placeholder (waiting for upload to finish)
   const isUploading = !url || url === '';
@@ -37,7 +37,6 @@ export function VoiceMessagePlayer({ url, duration, isOwn }: VoiceMessagePlayerP
 
   // Reset state when url changes
   useEffect(() => {
-    setResolvedUrl(url);
     setIsPlaying(false);
     setCurrentTime(0);
     setError(false);
@@ -45,59 +44,7 @@ export function VoiceMessagePlayer({ url, duration, isOwn }: VoiceMessagePlayerP
     setWaitSeconds(0);
   }, [url]);
 
-  // If the voice message URL points to a private bucket via a "public" URL,
-  // convert it to a signed URL so the browser can fetch it.
-  useEffect(() => {
-    let cancelled = false;
-
-    const resolve = async () => {
-      if (!url || url === '' || url.startsWith('blob:')) return;
-
-      // Already signed URL
-      if (url.includes('/storage/v1/object/sign/voice-messages/')) {
-        setResolvedUrl(url);
-        return;
-      }
-
-      // Public URL format (even if bucket is private):
-      // .../storage/v1/object/public/voice-messages/<path>
-      const publicMarker = '/storage/v1/object/public/voice-messages/';
-      if (!url.includes(publicMarker)) {
-        setResolvedUrl(url);
-        return;
-      }
-
-      try {
-        setIsLoading(true);
-
-        const after = url.split(publicMarker)[1];
-        const objectPath = decodeURIComponent(after.split('?')[0]);
-
-        const { data, error: signError } = await supabase.storage
-          .from('voice-messages')
-          .createSignedUrl(objectPath, 60 * 60 * 24 * 7);
-
-        if (cancelled) return;
-
-        if (signError || !data?.signedUrl) {
-          console.error('Failed to sign voice message URL:', signError);
-          setResolvedUrl(url);
-          return;
-        }
-
-        setResolvedUrl(data.signedUrl);
-      } catch (e) {
-        console.error('Failed to resolve voice message URL:', e);
-        if (!cancelled) setResolvedUrl(url);
-      }
-    };
-
-    resolve();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [url]);
+  useEffect(() => { setError(false); setIsLoading(true); }, [resolvedUrl]);
 
   // Audio element event handlers
   useEffect(() => {
@@ -115,6 +62,7 @@ export function VoiceMessagePlayer({ url, duration, isOwn }: VoiceMessagePlayerP
       setCurrentTime(0);
     };
     const handleError = () => {
+      void resolveError();
       console.error('Audio error:', audio.error);
       setError(true);
       setIsLoading(false);
@@ -216,7 +164,7 @@ export function VoiceMessagePlayer({ url, duration, isOwn }: VoiceMessagePlayerP
   }
 
   // Error state
-  if (error) {
+  if (error || resolutionError) {
     return (
       <div className="flex items-center gap-3 min-w-[200px] opacity-60">
         <div
