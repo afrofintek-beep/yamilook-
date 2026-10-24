@@ -48,7 +48,7 @@ test('membership boundary and legitimate workflows',async t=>{
   await db.query('delete from public.conversation_participants where conversation_id=$1',[row.rows[0].id]);
   await db.query('delete from public.conversations where id=$1',[row.rows[0].id]);
  });
- await db.exec(await readFile(new URL('../../supabase/migrations/20261024000541_secure_chat_membership.sql',import.meta.url),'utf8'));
+ await db.exec(await readFile(new URL('../../supabase/migrations/20261024001248_secure_chat_membership.sql',import.meta.url),'utf8'));
  await t.test('A creates a group atomically, A admin and B member',async()=>{
   group=(await asUser(A,'select public.create_chat_conversation($1,$2,null) c',[[B],'Security test'])).rows[0].c;
   assert.equal((await asUser(A,'select role from public.conversation_participants where conversation_id=$1 and user_id=$2',[group.id,A])).rows[0].role,'admin');
