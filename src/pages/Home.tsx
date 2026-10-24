@@ -289,8 +289,6 @@ export default function Home() {
         </div>
       </header>
 
-      {surface === 'yamilook' && <a href="/papos-app/install" className="shrink-0 px-4 py-2 text-xs text-primary border-b border-border/50">Instalar a KOSOLOLA como aplicação separada</a>}
-
       {/* Tab Content */}
       <AnimatePresence mode="wait">
         {activeTab === 'chat' && (
