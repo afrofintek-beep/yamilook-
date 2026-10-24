@@ -182,6 +182,7 @@ export default function Call() {
 
   return (
     <VideoCall
+      conversationId={callInfo.conversation_id}
       callId={callInfo.id}
       callType={callInfo.type}
       isGroupCall={callInfo.is_group_call}
