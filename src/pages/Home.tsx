@@ -1,3 +1,4 @@
+import PaposBrand from '@/features/papos/PaposBrand';
 import { useAppSurface } from '@/lib/app-surface';
 import { useState, useCallback, useEffect } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
@@ -220,7 +221,7 @@ export default function Home() {
                 </AvatarFallback>
               </Avatar>
             </button>
-            <span className="text-base font-bold text-foreground tracking-tight">Papos</span>
+            {surface === 'papos' ? <PaposBrand compact /> : <span className="text-base font-bold text-foreground tracking-tight">KOSOLOLA</span>}
           </div>
           <div className="flex items-center gap-1">
             {!selectionMode && (
@@ -232,7 +233,7 @@ export default function Home() {
                   variant="ghost" 
                   size="icon" 
                   className="rounded-xl h-9 w-9 relative"
-                  aria-label={surface === 'papos' ? 'Instalar Papos' : 'Notificações'}
+                  aria-label={surface === 'papos' ? 'Instalar KOSOLOLA' : 'Notificações'}
                   onClick={() => navigate(surface === 'papos' ? '/install' : '/notifications')}
                 >
                   <Bell className="w-4.5 h-4.5" />
@@ -284,7 +285,7 @@ export default function Home() {
         </div>
       </header>
 
-      {surface === 'yamilook' && <a href="/papos-app/install" className="shrink-0 px-4 py-2 text-xs text-primary border-b border-border/50">Instalar o Papos como aplicação separada</a>}
+      {surface === 'yamilook' && <a href="/papos-app/install" className="shrink-0 px-4 py-2 text-xs text-primary border-b border-border/50">Instalar a KOSOLOLA como aplicação separada</a>}
 
       {/* Tab Content */}
       <AnimatePresence mode="wait">

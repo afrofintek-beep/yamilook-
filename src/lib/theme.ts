@@ -19,5 +19,5 @@ export function applyTheme(theme: ThemePref): void {
   document.documentElement.classList.toggle('dark', dark);
   try { localStorage.setItem(STORAGE_KEY, theme); } catch { /* ignore */ }
   const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) meta.setAttribute('content', dark ? '#121214' : '#FBF9F5');
+  if (meta) meta.setAttribute('content', document.documentElement.dataset.brand === 'kosolola' ? '#006568' : dark ? '#121214' : '#FBF9F5');
 }

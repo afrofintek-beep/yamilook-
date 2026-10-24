@@ -1,0 +1,50 @@
+/* Scoped on html so portals inherit the brand without affecting Yamilook. */
+html[data-brand="kosolola"] {
+  --primary: 182 100% 20.4%;
+  --primary-foreground: 0 0% 100%;
+  --background: 180 14% 96%;
+  --foreground: 200 12% 15%;
+  --card: 0 0% 100%;
+  --card-foreground: 200 12% 15%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 200 12% 15%;
+  --secondary: 180 18% 92%;
+  --secondary-foreground: 182 100% 20.4%;
+  --muted: 180 12% 93%;
+  --muted-foreground: 190 12% 37%;
+  --accent: 37 92% 53%;
+  --accent-foreground: 200 12% 15%;
+  --border: 180 12% 85%;
+  --input: 180 12% 85%;
+  --ring: 182 100% 20.4%;
+  --bubble-sent: 182 100% 20.4%;
+  --bubble-sent-foreground: 0 0% 100%;
+  --bubble-received: 0 0% 100%;
+  --bubble-received-foreground: 200 12% 15%;
+  --gradient-primary: linear-gradient(#006568, #006568);
+  --gradient-surface: linear-gradient(#FFFFFF, #F3F6F6);
+  --shadow-glow: 0 0 20px rgb(0 101 104 / .15);
+  --shadow-glow-accent: 0 0 20px rgb(0 101 104 / .2);
+}
+html.dark[data-brand="kosolola"] {
+  --primary: 180 55% 65%;
+  --primary-foreground: 185 28% 9%;
+  --background: 185 28% 9%;
+  --foreground: 180 15% 96%;
+  --card: 185 22% 13%;
+  --card-foreground: 180 15% 96%;
+  --popover: 185 22% 15%;
+  --popover-foreground: 180 15% 96%;
+  --secondary: 185 18% 18%;
+  --secondary-foreground: 180 15% 96%;
+  --muted: 185 18% 18%;
+  --muted-foreground: 180 12% 70%;
+  --border: 185 16% 25%;
+  --input: 185 16% 25%;
+  --ring: 180 55% 65%;
+  --bubble-sent: 182 100% 20.4%;
+  --bubble-sent-foreground: 0 0% 100%;
+  --bubble-received: 185 18% 18%;
+  --bubble-received-foreground: 180 15% 96%;
+  --gradient-surface: linear-gradient(#18282A, #101C1D);
+}

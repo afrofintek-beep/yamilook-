@@ -266,14 +266,14 @@ describe('Feed Page', () => {
     expect(screen.getByText('Muxi')).toBeInTheDocument();
     expect(screen.getByText('Mokubico')).toBeInTheDocument();
     expect(screen.getByText('Academia')).toBeInTheDocument();
-    expect(screen.getByText('Papos')).toBeInTheDocument();
+    expect(screen.getByText('KOSOLOLA')).toBeInTheDocument();
     expect(screen.getByText('Perfil')).toBeInTheDocument();
   });
 
   it('links Papos nav item to the papos route', () => {
     render(<Feed />);
 
-    const paposLink = screen.getByText('Papos').closest('a');
+    const paposLink = screen.getByText('KOSOLOLA').closest('a');
     expect(paposLink).toHaveAttribute('href', '/papos');
   });
 

@@ -7,14 +7,14 @@ const navItems = [
   { to: "/muxi", label: "Muxi", Icon: Flame },
   { to: "/mokubico", label: "Mokubico", Icon: Home },
   { to: "/academia", label: "Academia", Icon: GraduationCap },
-  { to: "/papos", label: "Papos", Icon: MessageCircle },
+  { to: "/papos", label: "KOSOLOLA", Icon: MessageCircle },
   { to: "/perfil", label: "Perfil", Icon: User },
 ];
 
 export default function BottomNav() {
   const surface = useAppSurface();
   const items = surface === 'papos' ? [
-    { to: '/papos', label: 'Papos', Icon: MessageCircle },
+    { to: '/papos', label: 'Conversas', Icon: MessageCircle },
     { to: '/contacts', label: 'Contactos', Icon: Users },
     { to: '/calls', label: 'Chamadas', Icon: Phone },
     { to: '/settings', label: 'Definições', Icon: Settings },
