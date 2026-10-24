@@ -1,21 +1,39 @@
 {
   "id": "/papos-app/",
-  "name": "Papos",
-  "short_name": "Papos",
-  "description": "As tuas conversas, contactos e chamadas. Com a tua conta Yamilook.",
+  "name": "KOSOLOLA",
+  "short_name": "KOSOLOLA",
+  "description": "A conversa é nossa. Conversas, contactos e chamadas com a tua conta Yamilook.",
   "start_url": "/papos-app/",
   "scope": "/papos-app/",
   "display": "standalone",
-  "theme_color": "#121214",
-  "background_color": "#121214",
+  "theme_color": "#006568",
+  "background_color": "#101C1D",
   "lang": "pt",
   "icons": [
-    {"src": "/papos-app/icon-192.png", "sizes": "192x192", "type": "image/png"},
-    {"src": "/papos-app/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+    {
+      "src": "/papos-app/kosolola-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/papos-app/kosolola-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
   ],
   "shortcuts": [
-    {"name": "Conversas", "url": "/papos-app/papos"},
-    {"name": "Contactos", "url": "/papos-app/contacts"},
-    {"name": "Chamadas", "url": "/papos-app/calls"}
+    {
+      "name": "Conversas",
+      "url": "/papos-app/papos"
+    },
+    {
+      "name": "Contactos",
+      "url": "/papos-app/contacts"
+    },
+    {
+      "name": "Chamadas",
+      "url": "/papos-app/calls"
+    }
   ]
 }

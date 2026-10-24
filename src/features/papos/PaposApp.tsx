@@ -31,15 +31,15 @@ export function PaposGate({ children }: { children: ReactNode }) {
   if (loading) return <Loading />;
   if (!user) return <Navigate to="/login" state={{ from: location.pathname + location.search }} replace />;
   if (!profile) return <main className="min-h-screen-safe safe-top p-6 space-y-4"><p>Não foi possível carregar o perfil.</p><Button onClick={() => void refreshProfile()}>Tentar novamente</Button></main>;
-  if (!profile.onboarding_completed) return <main className="min-h-screen-safe safe-top p-6 space-y-4"><h1 className="text-2xl font-bold">Conclui a tua conta</h1><p>A tua conta é partilhada com a Yamilook. Conclui os dados pendentes e volta ao Papos.</p><Button asChild><a href="/onboarding">Continuar a inscrição</a></Button></main>;
+  if (!profile.onboarding_completed) return <main className="min-h-screen-safe safe-top p-6 space-y-4"><h1 className="text-2xl font-bold">Conclui a tua conta</h1><p>A tua conta é partilhada com a Yamilook. Conclui os dados pendentes e volta à KOSOLOLA.</p><Button asChild><a href="/onboarding">Continuar a inscrição</a></Button></main>;
   return <>{children}</>;
 }
-function Loading() { return <div role="status" className="h-screen-safe flex items-center justify-center">A carregar o Papos…</div>; }
+function Loading() { return <div role="status" className="h-screen-safe flex items-center justify-center">A carregar a KOSOLOLA…</div>; }
 class PaposBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
   state = { failed: false };
   static getDerivedStateFromError() { return { failed: true }; }
   render() {
-    return this.state.failed ? <main className="min-h-screen-safe safe-top p-6 space-y-4"><h1 className="text-xl font-bold">Não foi possível abrir esta página</h1><p>Verifica a ligação e tenta novamente. A tua conta mantém-se guardada.</p><Button onClick={() => { void recoverApplicationAssets('/papos-app/').finally(() => window.location.reload()); }}>Recarregar Papos</Button></main> : this.props.children;
+    return this.state.failed ? <main className="min-h-screen-safe safe-top p-6 space-y-4"><h1 className="text-xl font-bold">Não foi possível abrir esta página</h1><p>Verifica a ligação e tenta novamente. A tua conta mantém-se guardada.</p><Button onClick={() => { void recoverApplicationAssets('/papos-app/').finally(() => window.location.reload()); }}>Recarregar KOSOLOLA</Button></main> : this.props.children;
   }
 }
 function PaposRuntime() {
@@ -51,7 +51,7 @@ function PaposRuntime() {
     return () => { document.removeEventListener('click', unlock, true); document.removeEventListener('touchstart', unlock, true); document.removeEventListener('keydown', unlock, true); window.removeEventListener('papos:update-ready', update); };
   }, []);
   return <><OnlineStatusTracker /><GlobalMessageNotifier /><ThemeSync />
-    {updateReady && <aside className="fixed top-0 safe-top inset-x-0 z-[200] p-3 bg-primary text-primary-foreground flex items-center justify-between gap-3"><span className="text-sm">Nova versão do Papos disponível.</span><Button variant="outline" onClick={() => window.location.reload()}>Atualizar</Button></aside>}
+    {updateReady && <aside className="fixed top-0 safe-top inset-x-0 z-[200] p-3 bg-primary text-primary-foreground flex items-center justify-between gap-3"><span className="text-sm">Nova versão da KOSOLOLA disponível.</span><Button variant="outline" onClick={() => window.location.reload()}>Atualizar</Button></aside>}
     <PaposBoundary><Suspense fallback={<Loading />}><Routes>
       <Route path="/login" element={<PaposLogin />} /><Route path="/welcome" element={<Navigate to="/login" replace />} />
       <Route path="/install" element={<PaposInstall />} />
@@ -69,7 +69,7 @@ function PaposRuntime() {
       <Route path="/profile/:userId" element={<PaposProfile />} />
       <Route path="/join/:code" element={<JoinGroup />} />
       </Route>
-      <Route path="*" element={<main className="min-h-screen-safe safe-top p-6 space-y-4"><h1 className="text-xl font-bold">Esta página não está no Papos</h1><Button asChild><Link to="/papos">Voltar às conversas</Link></Button><Button asChild variant="outline"><a href="/muxi">Abrir Yamilook</a></Button></main>} />
+      <Route path="*" element={<main className="min-h-screen-safe safe-top p-6 space-y-4"><h1 className="text-xl font-bold">Esta página não está na KOSOLOLA</h1><Button asChild><Link to="/papos">Voltar às conversas</Link></Button><Button asChild variant="outline"><a href="/muxi">Abrir Yamilook</a></Button></main>} />
     </Routes></Suspense></PaposBoundary></>;
 }
 export default function PaposApp() {

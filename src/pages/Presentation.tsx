@@ -85,7 +85,7 @@ const SLIDES: Slide[] = [
   },
   {
     id: "chat",
-    title: "Papos — Chat",
+    title: "KOSOLOLA — Conversas",
     subtitle: "Conversas privadas e em grupo, com todo o mambo.",
     bullets: [
       "Mensagens de texto, áudio e vídeo",

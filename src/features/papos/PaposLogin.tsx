@@ -23,12 +23,12 @@ export default function PaposLogin() {
   };
   return <main className="min-h-screen-safe safe-top safe-bottom bg-background flex items-center justify-center px-6 py-10">
     <div className="w-full max-w-sm space-y-6"><PaposBrand /><h1 className="text-3xl font-bold">A conversa continua aqui.</h1>
-      <p className="text-muted-foreground">Entra com a tua conta Yamilook. As tuas conversas e contactos acompanham-te. A entrada no Papos é independente neste dispositivo.</p>
+      <p className="text-muted-foreground">Entra com a tua conta Yamilook. As tuas conversas e contactos acompanham-te. A entrada na KOSOLOLA é independente neste dispositivo.</p>
       <form onSubmit={submit} className="space-y-4"><div><label htmlFor="papos-email" className="text-sm">Email</label><Input id="papos-email" autoComplete="username" type="email" required value={email} onChange={e => setEmail(e.target.value)} disabled={busy} /></div>
         <div><label htmlFor="papos-password" className="text-sm">Palavra-passe</label><Input id="papos-password" autoComplete="current-password" type="password" required value={password} onChange={e => setPassword(e.target.value)} disabled={busy} /></div>
-        {error && <p role="alert" className="text-sm text-destructive">{error}</p>}<Button type="submit" disabled={busy || loading} className="w-full">{busy ? 'A entrar…' : 'Entrar no Papos'}</Button>
+        {error && <p role="alert" className="text-sm text-destructive">{error}</p>}<Button type="submit" disabled={busy || loading} className="w-full">{busy ? 'A entrar…' : 'Entrar na KOSOLOLA'}</Button>
       </form><a href="/forgot-password" className="text-primary text-sm block">Recuperar palavra-passe</a>
-      <Button asChild variant="outline" className="w-full"><Link to="/install">Instalar Papos</Link></Button>
+      <Button asChild variant="outline" className="w-full"><Link to="/install">Instalar KOSOLOLA</Link></Button>
       <p className="text-sm text-muted-foreground">Ainda não tens conta? <a href="/onboarding" className="text-primary underline">Criar conta Yamilook com convite</a>.</p>
       <div className="flex gap-4 text-xs text-muted-foreground"><a href="/terms">Termos</a><a href="/privacy">Privacidade</a><a href="/muxi">Yamilook</a></div>
     </div></main>;

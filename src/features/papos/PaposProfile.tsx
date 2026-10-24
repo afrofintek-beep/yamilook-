@@ -16,7 +16,7 @@ export default function PaposProfile() {
   const person = own ? profile : data;
   const message = async () => { if (!userId) return; const result = await createConversation([userId]); if (result.error || !result.data) { toast({ title: 'Não foi possível abrir a conversa', variant: 'destructive' }); return; } navigate(`/chat/${result.data.id}`); };
   return <div className="h-screen-safe pb-[calc(5rem+env(safe-area-inset-bottom,0px))] bg-background flex flex-col">
-    <header className="safe-top shrink-0 border-b p-4"><Button asChild variant="ghost"><Link to="/papos">Voltar aos Papos</Link></Button></header>
+    <header className="safe-top shrink-0 border-b p-4"><Button asChild variant="ghost"><Link to="/papos">Voltar às conversas</Link></Button></header>
     <main className="flex-1 overflow-y-auto p-6 max-w-md w-full mx-auto space-y-5">
       {!own && isLoading ? <p role="status">A carregar perfil…</p> : !person || isError ? <p role="alert">Perfil indisponível.</p> : <>
         <Avatar className="w-24 h-24"><AvatarImage src={person.avatar_url || ''} /><AvatarFallback>{person.display_name?.[0] || 'P'}</AvatarFallback></Avatar>

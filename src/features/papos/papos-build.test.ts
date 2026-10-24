@@ -26,7 +26,7 @@ function worker() {
 describe('Papos independent installation contract',()=>{
   it('has a distinct app ID, entry, scope and icons',()=>{
     const manifest=JSON.parse(readFileSync(resolve(root,'public/papos-app/manifest.webmanifest'),'utf8'));
-    expect(manifest).toMatchObject({id:'/papos-app/',start_url:'/papos-app/',scope:'/papos-app/',name:'Papos'});
+    expect(manifest).toMatchObject({id:'/papos-app/',start_url:'/papos-app/',scope:'/papos-app/',name:'KOSOLOLA'});
     for(const icon of manifest.icons){ const data=readFileSync(resolve(root,'public'+icon.src)); expect(data.readUInt32BE(16)).toBe(Number(icon.sizes.split('x')[0])); }
   });
   it('precaches messenger code, without pulling in the Yamilook entry',async()=>{
