@@ -1,9 +1,10 @@
+import { uploadPrivateChatFile } from '@/lib/private-chat-media';
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { chatMediaContentType, chatMediaType, createVideoPoster } from '@/lib/chat-media';
 
-export function useVoiceRecorder() {
+export function useVoiceRecorder(conversationId?: string) {
   const { user } = useAuth();
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
@@ -201,40 +202,14 @@ export function useVoiceRecorder() {
         contentType = 'audio/webm';
       }
 
-      const fileName = `${user.id}/${Date.now()}.${extension}`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from('voice-messages')
-        .upload(fileName, blob, { 
-          contentType,
-          cacheControl: '31536000', // 1 year cache
-          upsert: false
-        });
-
-      if (uploadError) {
-        console.error('Upload error:', uploadError);
-        onError();
-        return;
-      }
-
-      // Bucket is private: generate a signed URL for playback
-      const { data: signedData, error: signedError } = await supabase.storage
-        .from('voice-messages')
-        .createSignedUrl(fileName, 60 * 60 * 24 * 7); // 7 days
-
-      if (signedError || !signedData?.signedUrl) {
-        console.error('Signed URL error:', signedError);
-        onError();
-        return;
-      }
-
-      onSuccess(signedData.signedUrl);
+      if (!conversationId) throw new Error('Conversation required');
+      onSuccess(await uploadPrivateChatFile(conversationId, blob, `audio.${extension}`, contentType));
 
     } catch (err) {
       console.error('Upload error:', err);
       onError();
     }
-  }, [user]);
+  }, [user, conversationId]);
 
   // Legacy sync upload (for backwards compatibility)
   const uploadVoiceMessage = async (conversationId: string): Promise<{ url: string; duration: number } | null> => {
@@ -255,39 +230,14 @@ export function useVoiceRecorder() {
         contentType = 'audio/webm';
       }
 
-      const fileName = `${user.id}/${Date.now()}.${extension}`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from('voice-messages')
-        .upload(fileName, audioBlob, { 
-          contentType,
-          cacheControl: '31536000', // 1 year cache
-          upsert: false
-        });
-
-      if (uploadError) {
-        console.error('Upload error:', uploadError);
-        setError('Erro ao enviar áudio');
-        return null;
-      }
-
-      // Bucket is private: generate a signed URL for playback
-      const { data: signedData, error: signedError } = await supabase.storage
-        .from('voice-messages')
-        .createSignedUrl(fileName, 60 * 60 * 24 * 7); // 7 days
-
-      if (signedError || !signedData?.signedUrl) {
-        console.error('Signed URL error:', signedError);
-        setError('Erro ao enviar áudio');
-        return null;
-      }
+      const reference = await uploadPrivateChatFile(conversationId, audioBlob, `audio.${extension}`, contentType);
 
       const duration = recordingTime;
       setAudioBlob(null);
       setRecordingTime(0);
       setError(null);
 
-      return { url: signedData.signedUrl, duration };
+      return { url: reference, duration };
 
     } catch (err) {
       console.error('Upload error:', err);
@@ -325,7 +275,7 @@ export function useMediaUpload() {
   const uploadMedia = async (
     file: File,
     type: 'image' | 'video' | 'file',
-    options: { videoPoster?: boolean } = {}
+    options: { videoPoster?: boolean; conversationId?: string } = {}
   ): Promise<{ url: string; type: string; name: string; size: number; thumbnailUrl?: string; durationSeconds?: number } | null> => {
     if (!user) return null;
 
@@ -338,6 +288,16 @@ export function useMediaUpload() {
     try {
       const posterPromise = options.videoPoster && chatMediaType(file) === 'video'
         ? createVideoPoster(file).catch(() => null) : Promise.resolve(null);
+      if (options.conversationId) {
+        const url = await uploadPrivateChatFile(options.conversationId, file, file.name, chatMediaContentType(file));
+        const poster = await posterPromise;
+        let thumbnailUrl: string | undefined;
+        if (poster) {
+          try { thumbnailUrl = await uploadPrivateChatFile(options.conversationId, poster.blob, `${file.name}.poster.jpg`, 'image/jpeg'); }
+          catch { /* A missing optional cover must not discard the video. */ }
+        }
+        return { url, type: file.type, name: file.name, size: file.size, thumbnailUrl, durationSeconds: poster?.durationSeconds };
+      }
       const { error } = await supabase.storage
         .from(bucket)
         .upload(fileName, file, {

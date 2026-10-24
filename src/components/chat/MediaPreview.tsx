@@ -1,3 +1,4 @@
+import { privateChatPath, signPrivateChatMedia } from '@/lib/private-chat-media';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { X, Download, Play, RotateCcw } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
@@ -22,7 +23,7 @@ function getFilenameFromUrl(rawUrl: string) {
 
 // Public media already has a CDN URL. Sign only after an actual loading failure
 // (for legacy private objects), rather than replacing every working URL twice.
-function useResolvedMediaUrl(url: string) {
+export function useResolvedMediaUrl(url: string) {
   const [override, setOverride] = useState<{ source: string; url: string } | null>(null);
   const [error, setError] = useState(false);
   const [retryId, setRetryId] = useState(0);
@@ -35,10 +36,26 @@ function useResolvedMediaUrl(url: string) {
     attemptedRef.current = null;
     setOverride(null);
     setError(false);
+    if (privateChatPath(url)) {
+      const generation = generationRef.current;
+      void signPrivateChatMedia(url).then(signed => {
+        if (generation === generationRef.current) setOverride({ source: url, url: signed });
+      }).catch(() => { if (generation === generationRef.current) setError(true); });
+    }
     return invalidatePending;
-  }, [url, invalidatePending]);
+  }, [url, retryId, invalidatePending]);
 
   const onError = useCallback(async () => {
+    if (privateChatPath(url)) {
+      if (attemptedRef.current === url) { setError(true); return; }
+      attemptedRef.current = url;
+      const generation = generationRef.current;
+      try {
+        const signed = await signPrivateChatMedia(url);
+        if (generation === generationRef.current) { setOverride({ source: url, url: signed }); setError(false); }
+      } catch { if (generation === generationRef.current) setError(true); }
+      return;
+    }
     const parsed = parseStoragePublicUrl(url);
     if (!parsed || attemptedRef.current === url) { setError(true); return; }
     attemptedRef.current = url;
@@ -62,7 +79,7 @@ function useResolvedMediaUrl(url: string) {
     setRetryId(value => value + 1);
   };
 
-  return { resolvedUrl: override?.source === url ? override.url : url, error, onError, retry, retryId };
+  return { resolvedUrl: override?.source === url ? override.url : privateChatPath(url) ? undefined : url, error, onError, retry, retryId };
 }
 
 interface MediaPreviewProps {
@@ -75,6 +92,7 @@ interface MediaPreviewProps {
 
 export function MediaPreview({ url, type, posterUrl, open, onClose }: MediaPreviewProps) {
   const { resolvedUrl, error, onError, retry, retryId } = useResolvedMediaUrl(url);
+  const { resolvedUrl: resolvedPoster } = useResolvedMediaUrl(posterUrl || '');
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const bindVideo = useCallback((video: HTMLVideoElement | null) => {
     if (videoRef.current && videoRef.current !== video) videoRef.current.pause();
@@ -93,7 +111,7 @@ export function MediaPreview({ url, type, posterUrl, open, onClose }: MediaPrevi
   // A normal link avoids fetching the whole video into memory to download it.
   const downloadUrl = (() => {
     try {
-      const target = new URL(resolvedUrl);
+      const target = new URL(resolvedUrl || '');
       if (parseStoragePublicUrl(url)) target.searchParams.set('download', getFilenameFromUrl(url));
       return target.toString();
     } catch { return resolvedUrl; }
@@ -123,7 +141,7 @@ export function MediaPreview({ url, type, posterUrl, open, onClose }: MediaPrevi
             <img key={`${resolvedUrl}-${retryId}`} src={resolvedUrl} alt="Fotografia"
               className="max-w-full max-h-[calc(100dvh-10rem)] object-contain" onError={() => void onError()} />
           ) : (
-            <video key={`${resolvedUrl}-${retryId}`} ref={bindVideo} src={resolvedUrl} poster={posterUrl || undefined}
+            <video key={`${resolvedUrl}-${retryId}`} ref={bindVideo} src={resolvedUrl} poster={resolvedPoster || undefined}
               aria-label="Vídeo da conversa" controls autoPlay playsInline preload="metadata"
               className="w-full max-h-[calc(100dvh-10rem)] object-contain" onError={() => void onError()} />
           )}
@@ -151,6 +169,7 @@ interface MediaThumbnailProps {
 
 export function MediaThumbnail({ url, type, posterUrl, durationSeconds, onClick }: MediaThumbnailProps) {
   const { resolvedUrl, error, onError } = useResolvedMediaUrl(url);
+  const { resolvedUrl: resolvedPoster } = useResolvedMediaUrl(posterUrl || '');
   const [aspectRatio, setAspectRatio] = useState(3 / 4);
   const [metadataDuration, setMetadataDuration] = useState<number | undefined>();
   const isVideo = type === 'video';
@@ -166,8 +185,8 @@ export function MediaThumbnail({ url, type, posterUrl, durationSeconds, onClick 
       style={isVideo ? { aspectRatio } : undefined}>
       {isVideo ? (
         <>
-          <video key={resolvedUrl} src={posterUrl ? undefined : videoThumbnailSource(resolvedUrl)}
-            poster={posterUrl || undefined} muted playsInline preload="metadata" aria-hidden="true"
+          <video key={resolvedUrl} src={posterUrl ? undefined : videoThumbnailSource(resolvedUrl || '')}
+            poster={resolvedPoster || undefined} muted playsInline preload="metadata" aria-hidden="true"
             className="absolute inset-0 w-full h-full object-cover pointer-events-none"
             onLoadedMetadata={event => {
               const video = event.currentTarget;
