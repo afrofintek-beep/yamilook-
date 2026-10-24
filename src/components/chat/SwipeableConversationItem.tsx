@@ -189,12 +189,11 @@ export function SwipeableConversationItem({
     <div 
       className={cn("relative w-full min-w-0 max-w-full overflow-hidden touch-pan-y select-none", isPressed && "bg-muted/50")}
       onContextMenu={event => event.preventDefault()}
-      {...longPressHandlers}
     >
       {/* Left actions (revealed on swipe right) - Reply, Copy, Forward & Star */}
       <motion.div
         className="absolute left-0 top-0 bottom-0 flex items-center gap-0.5 pl-2" aria-hidden={isOpen !== 'left'}
-        style={{ opacity: leftActionsOpacity, scale: leftActionsScale }}
+        style={{ opacity: leftActionsOpacity, scale: leftActionsScale, zIndex: isOpen === 'left' ? 20 : 0, pointerEvents: isOpen === 'left' ? 'auto' : 'none' }}
       >
         <button
           onClick={() => handleAction(onReply)}
@@ -238,7 +237,7 @@ export function SwipeableConversationItem({
       {/* Right actions (revealed on swipe left) - Pin, Mute, Delete */}
       <motion.div
         className="absolute right-0 top-0 bottom-0 flex items-center gap-0.5 pr-2" aria-hidden={isOpen !== 'right'}
-        style={{ opacity: rightActionsOpacity, scale: rightActionsScale }}
+        style={{ opacity: rightActionsOpacity, scale: rightActionsScale, zIndex: isOpen === 'right' ? 20 : 0, pointerEvents: isOpen === 'right' ? 'auto' : 'none' }}
       >
         <button
           onClick={() => handleAction(onPin)}
@@ -274,6 +273,7 @@ export function SwipeableConversationItem({
 
       {/* Main content */}
       <motion.div
+        {...longPressHandlers}
         drag="x"
         onClickCapture={event => {
           if (wasLongPress()) {

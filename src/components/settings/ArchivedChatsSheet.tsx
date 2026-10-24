@@ -137,13 +137,15 @@ export function ArchivedChatsSheet({ open, onOpenChange }: ArchivedChatsSheetPro
     setActionLoading(conversationId);
 
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('conversation_participants')
         .update({ is_archived: false })
         .eq('conversation_id', conversationId)
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .select('conversation_id')
+        .single();
 
-      if (error) throw error;
+      if (error || !data) throw error || new Error('Restauro não confirmado');
 
       setArchivedChats(prev => prev.filter(c => c.id !== conversationId));
       toast({ title: 'Conversa restaurada' });
