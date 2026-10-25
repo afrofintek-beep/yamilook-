@@ -1,0 +1,27 @@
+name: Invitation registration tests
+
+on:
+  pull_request:
+    paths:
+      - "src/components/auth/RegisterForm.tsx"
+      - "src/lib/invitation-registration.ts"
+      - "src/lib/invitation-registration.test.ts"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/invitation-registration-tests.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  invitation-registration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm install --no-audit --no-fund
+      - run: npm test -- src/lib/invitation-registration.test.ts src/test/integration/auth.test.tsx --reporter=dot
