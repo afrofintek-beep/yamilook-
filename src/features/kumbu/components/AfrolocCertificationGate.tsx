@@ -23,10 +23,12 @@ export function AfrolocCertificationGate({
     useAfrolocCertification();
   const [submitting, setSubmitting] = useState(false);
   const [verifying, setVerifying] = useState(false);
+  const [consentedCode, setConsentedCode] = useState<string | null>(null);
 
   if (isCertified) return <>{children}</>;
 
   const handleVerify = async () => {
+    if (!afrolocCode || consentedCode !== afrolocCode) return;
     setVerifying(true);
     const res = await verifyWithAfroloc();
     setVerifying(false);
@@ -35,6 +37,10 @@ export function AfrolocCertificationGate({
       return;
     }
     const msg: Record<string, string> = {
+      integration_pending: 'A integração de certificação AFROLOC está em validação. Podes continuar a usar a aplicação.',
+      consent_required: 'Autoriza a consulta para este endereço antes de continuar.',
+      address_changed: 'O endereço mudou. Revê o endereço e autoriza uma nova consulta.',
+      identity_changed: 'A tua sessão ou telefone mudou. Inicia novamente a verificação.',
       phone_not_verified: 'A verificação automática requer um telefone confirmado na tua conta. Podes pedir validação manual.',
       no_address: 'Associa primeiro o teu endereço no perfil.',
       address_mismatch: 'O endereço confirmado pelo AFROLOC não corresponde ao declarado no teu perfil.',
@@ -100,9 +106,13 @@ export function AfrolocCertificationGate({
           </p>
         )}
 
-        <p className="text-xs text-muted-foreground">Ao verificar, autorizas a consulta ao AFROLOC com o telefone confirmado da tua conta para validar o endereço declarado.</p>
+        <label className="flex items-start gap-2 text-xs text-muted-foreground">
+          <input type="checkbox" checked={!!afrolocCode && consentedCode === afrolocCode}
+            onChange={event => setConsentedCode(event.target.checked ? afrolocCode : null)} disabled={!hasAddress || verifying} />
+          Autorizo a consulta ao AFROLOC com o telefone confirmado e este código de endereço, apenas para verificar a titularidade e certificação.
+        </label>
         {/* Primary: automatic verification against the AFROLOC partner API (by phone). */}
-        <Button className="w-full" disabled={verifying} onClick={handleVerify}>
+        <Button className="w-full" disabled={verifying || !hasAddress || consentedCode !== afrolocCode} onClick={handleVerify}>
           {verifying ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
           Verificar com AFROLOC
         </Button>
