@@ -1,7 +1,7 @@
 import { ScheduledCallNotices } from '@/features/scheduled-calls/ScheduledCallNotices';
 /* @refresh reset */
-import { createContext, useContext, useState, useCallback, ReactNode, lazy, Suspense, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { createContext, useContext, useState, useCallback, ReactNode, lazy, Suspense, useMemo, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useWebRTC, CallState } from '@/hooks/useWebRTC';
 import type { BgMode, EffectsConfig } from '@/lib/virtualBackground';
 import { useCalls } from '@/hooks/useCalls';
@@ -91,6 +91,7 @@ function formatCallError(err: unknown) {
 
 export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const [isInCall, setIsInCall] = useState(false);
   const [currentCallId, setCurrentCallId] = useState<string | null>(null);
@@ -115,6 +116,13 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
     sendReaction,
     markUserInteracted,
   } = webRTC;
+
+  useEffect(() => {
+    if (!currentCallId || !['idle', 'ended', 'declined'].includes(webRTCState.callStatus)) return;
+    setIsInCall(false);
+    setCurrentCallId(null);
+    if (location.pathname === `/call/${currentCallId}`) navigate('/calls', { replace: true });
+  }, [currentCallId, webRTCState.callStatus, location.pathname, navigate]);
 
   const startCall = useCallback(async (contactId: string, type: 'voice' | 'video', conversationId?: string) => {
     logger.debug('Starting call', 'ActiveCallProvider', { contactId, type });

@@ -17,6 +17,7 @@ import { toast } from '@/hooks/use-toast';
 import { useWebRTCSignaling, EventPayload } from './useWebRTCSignaling';
 import { useICEServers } from './useICEServers';
 
+import { finishCallLocallyFirst, watchCallTermination } from './webrtc/call-termination';
 import { useMediaCapture } from './webrtc/useMediaCapture';
 import { usePeerConnection } from './webrtc/usePeerConnection';
 import { useICECandidateQueue } from './webrtc/useICECandidateQueue';
@@ -82,11 +83,12 @@ export function useWebRTC(options: UseWebRTCOptions = {}) {
     onCallStarted: (callId) => console.log('[WebRTC] Call started:', callId),
     onCallEnded: () => { cleanupCall(); setState(prev => ({ ...prev, callStatus: 'ended' })); },
     onCallFailed: (error) => { cleanupCall(); setState(prev => ({ ...prev, callStatus: 'failed', lastError: error })); },
-    onRingTimeout: (callId) => setState(prev => ({ ...prev, callStatus: 'ended', lastError: 'No answer' })),
+    onRingTimeout: () => { cleanupCallRef.current(); setState(prev => ({ ...prev, callStatus: 'ended', lastError: 'No answer' })); },
   });
 
   // ─── Remote stream handler (writes to ref + state) ───
   const handleRemoteStream = useCallback((peerId: string, stream: MediaStream) => {
+    if (!callIdRef.current) return;
     const existing = remoteStreamsRef.current.get(peerId);
     if (existing && existing.id === stream.id) return;
 
@@ -107,6 +109,7 @@ export function useWebRTC(options: UseWebRTCOptions = {}) {
 
   // ─── Connection state handlers ───
   const handleConnectionStateChange = useCallback((connectionState: RTCPeerConnectionState) => {
+    if (!callIdRef.current) return;
     setState(prev => ({ ...prev, connectionState }));
     if (connectionState === 'connected') {
       lifecycle.clearRingTimeout();
@@ -216,6 +219,7 @@ export function useWebRTC(options: UseWebRTCOptions = {}) {
 
   // ─── Cleanup ───
   const cleanupCall = useCallback(() => {
+    callIdRef.current = null;
     lifecycle.clearRingTimeout();
     if (callConnectingTimeoutRef.current) {
       clearTimeout(callConnectingTimeoutRef.current);
@@ -227,7 +231,27 @@ export function useWebRTC(options: UseWebRTCOptions = {}) {
     mediaCapture.stopAllMedia();
     telemetry.logFinalMetrics();
     remoteStreamsRef.current.clear();
+    setState(prev => ({ ...INITIAL_STATE, callStatus: 'ended', lastError: prev.lastError }));
   }, [lifecycle, peerConnection, iceQueue, mediaCapture, telemetry]);
+
+  useEffect(() => {
+    if (!state.callId) return;
+    const id = state.callId;
+    return watchCallTermination({
+      read: async () => {
+        const { data, error } = await supabase.from('calls').select('status').eq('id', id).maybeSingle();
+        if (error) throw error;
+        return data?.status || null;
+      },
+      subscribe: listener => {
+        const channel = supabase.channel(`call-termination-${id}`)
+          .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'calls', filter: `id=eq.${id}` }, payload => listener(String(payload.new.status)))
+          .subscribe();
+        return () => { void supabase.removeChannel(channel); };
+      },
+      onEnded: () => { if (callIdRef.current === id) cleanupCallRef.current(); },
+    });
+  }, [state.callId]);
 
   // ─── Apply pending ICE candidates ───
   const applyPendingCandidates = useCallback(async (peerId: string, pc: RTCPeerConnection) => {
@@ -312,6 +336,7 @@ export function useWebRTC(options: UseWebRTCOptions = {}) {
 
   // ─── Handle signaling events ───
   const handleEvent = useCallback((event: EventPayload, from: string) => {
+    if (!callIdRef.current) return;
     switch (event.type) {
       case 'ended':
         telemetry.setCallEndReason('remote_hangup');
@@ -637,13 +662,18 @@ export function useWebRTC(options: UseWebRTCOptions = {}) {
 
   // ─── End call ───
   const endCall = useCallback(async () => {
-    if (!state.callId || !user) return;
-    if (state.targetUserId) signaling.sendCallEnded(state.targetUserId);
-    signaling.cleanupSignals();
+    const id = callIdRef.current || state.callId;
+    const target = state.targetUserId;
     telemetry.setCallEndReason('local_hangup');
-    await lifecycle.endCallInDB(state.callId, user.id);
-    cleanupCall();
-    setState(INITIAL_STATE);
+    const results = await finishCallLocallyFirst(
+      () => { cleanupCall(); setState({ ...INITIAL_STATE, remoteStreams: new Map() }); },
+      // Keep the terminal signal available for the other device's polling fallback.
+      async () => { if (id && target && user) return signaling.sendCallEnded(target); },
+      async () => { if (id && user) await lifecycle.endCallInDB(id, user.id); },
+    );
+    if (results.some(result => result.status === 'rejected' || result.value === false)) {
+      toast({ title: 'Chamada terminada neste dispositivo', description: 'Não foi possível confirmar o encerramento no outro dispositivo. Verifica a ligação.', variant: 'destructive' });
+    }
   }, [state.callId, state.targetUserId, user, signaling, lifecycle, cleanupCall, telemetry]);
 
   // ─── Media toggles with DB sync ───
