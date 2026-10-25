@@ -234,10 +234,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await clearLegacyPrivateCache();
     const { error } = await supabase.auth.signOut({ scope });
     
-    setUser(null);
-    setSession(null);
-    setProfile(null);
-    
     const msg = (error?.message || '').toLowerCase();
     const isExpectedLogoutError =
       msg.includes('session not found') ||
@@ -248,6 +244,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error && !isExpectedLogoutError) {
       throw error;
     }
+    setUser(null);
+    setSession(null);
+    setProfile(null);
   };
 
   const updateProfile = async (updates: Partial<Profile>) => {
