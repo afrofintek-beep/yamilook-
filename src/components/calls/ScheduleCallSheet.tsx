@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
+import { pt } from 'date-fns/locale';
 import { Calendar as CalendarIcon, Clock, Video, Phone, Users, Repeat, X } from 'lucide-react';
 import { motion } from 'framer-motion';
 import {
@@ -28,7 +29,6 @@ import {
 } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { useContacts } from '@/hooks/useContacts';
 import { useCalls } from '@/hooks/useCalls';
 import { useToast } from '@/hooks/use-toast';
@@ -47,20 +47,20 @@ const timeSlots = [
 ];
 
 const durationOptions = [
-  { value: '15', label: '15 minutes' },
-  { value: '30', label: '30 minutes' },
-  { value: '45', label: '45 minutes' },
-  { value: '60', label: '1 hour' },
-  { value: '90', label: '1.5 hours' },
-  { value: '120', label: '2 hours' },
+  { value: '15', label: '15 minutos' },
+  { value: '30', label: '30 minutos' },
+  { value: '45', label: '45 minutos' },
+  { value: '60', label: '1 hora' },
+  { value: '90', label: '1 hora e 30 minutos' },
+  { value: '120', label: '2 horas' },
 ];
 
 const recurrenceOptions = [
-  { value: 'none', label: 'Does not repeat' },
-  { value: 'daily', label: 'Daily' },
-  { value: 'weekly', label: 'Weekly' },
-  { value: 'biweekly', label: 'Every 2 weeks' },
-  { value: 'monthly', label: 'Monthly' },
+  { value: 'none', label: 'Não se repete' },
+  { value: 'daily', label: 'Diariamente' },
+  { value: 'weekly', label: 'Semanalmente' },
+  { value: 'biweekly', label: 'A cada 2 semanas' },
+  { value: 'monthly', label: 'Mensalmente' },
 ];
 
 export function ScheduleCallSheet({ open, onOpenChange }: ScheduleCallSheetProps) {
@@ -90,8 +90,8 @@ export function ScheduleCallSheet({ open, onOpenChange }: ScheduleCallSheetProps
   const handleSubmit = async () => {
     if (!title.trim()) {
       toast({
-        title: 'Title required',
-        description: 'Please enter a title for your call',
+        title: 'Título obrigatório',
+        description: 'Introduz um título para a chamada',
         variant: 'destructive',
       });
       return;
@@ -99,8 +99,8 @@ export function ScheduleCallSheet({ open, onOpenChange }: ScheduleCallSheetProps
 
     if (!date) {
       toast({
-        title: 'Date required',
-        description: 'Please select a date for your call',
+        title: 'Data obrigatória',
+        description: 'Seleciona uma data para a chamada',
         variant: 'destructive',
       });
       return;
@@ -123,8 +123,8 @@ export function ScheduleCallSheet({ open, onOpenChange }: ScheduleCallSheetProps
       });
 
       toast({
-        title: 'Call scheduled',
-        description: `Your ${callType} call has been scheduled for ${format(scheduledDate, 'PPp')}`,
+        title: 'Chamada agendada',
+        description: `Chamada de ${callType === 'video' ? 'vídeo' : 'voz'} agendada para ${format(scheduledDate, 'dd/MM/yyyy HH:mm', { locale: pt })}`,
       });
 
       // Reset form
@@ -140,8 +140,8 @@ export function ScheduleCallSheet({ open, onOpenChange }: ScheduleCallSheetProps
       onOpenChange(false);
     } catch (error) {
       toast({
-        title: 'Failed to schedule',
-        description: 'There was an error scheduling your call. Please try again.',
+        title: 'Não foi possível agendar',
+        description: 'Ocorreu um erro ao agendar a chamada. Tenta novamente.',
         variant: 'destructive',
       });
     } finally {
@@ -151,19 +151,19 @@ export function ScheduleCallSheet({ open, onOpenChange }: ScheduleCallSheetProps
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-[90vh] rounded-t-3xl">
-        <SheetHeader className="pb-4">
-          <SheetTitle className="text-xl">Schedule a Call</SheetTitle>
+      <SheetContent side="bottom" className="flex h-[90dvh] max-h-[calc(100dvh-env(safe-area-inset-top,0px))] flex-col gap-3 overflow-hidden rounded-t-3xl px-4 pt-2 pb-[max(1rem,env(safe-area-inset-bottom,0px))] sm:px-6">
+        <SheetHeader className="shrink-0">
+          <SheetTitle className="text-xl">Agendar chamada</SheetTitle>
         </SheetHeader>
 
-        <ScrollArea className="h-[calc(90vh-120px)] pr-4">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-1 pb-4">
           <div className="space-y-6">
             {/* Title */}
             <div className="space-y-2">
-              <Label htmlFor="title">Title *</Label>
+              <Label htmlFor="title">Título *</Label>
               <Input
                 id="title"
-                placeholder="Weekly team sync"
+                placeholder="Reunião semanal da equipa"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
               />
@@ -171,10 +171,10 @@ export function ScheduleCallSheet({ open, onOpenChange }: ScheduleCallSheetProps
 
             {/* Description */}
             <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">Descrição</Label>
               <Textarea
                 id="description"
-                placeholder="Add a description..."
+                placeholder="Adiciona uma descrição..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={3}
@@ -183,7 +183,7 @@ export function ScheduleCallSheet({ open, onOpenChange }: ScheduleCallSheetProps
 
             {/* Call Type */}
             <div className="space-y-2">
-              <Label>Call Type</Label>
+              <Label>Tipo de chamada</Label>
               <div className="flex gap-2">
                 <Button
                   type="button"
@@ -195,7 +195,7 @@ export function ScheduleCallSheet({ open, onOpenChange }: ScheduleCallSheetProps
                   onClick={() => setCallType('video')}
                 >
                   <Video className="w-4 h-4 mr-2" />
-                  Video Call
+                  Vídeo
                 </Button>
                 <Button
                   type="button"
@@ -207,28 +207,29 @@ export function ScheduleCallSheet({ open, onOpenChange }: ScheduleCallSheetProps
                   onClick={() => setCallType('voice')}
                 >
                   <Phone className="w-4 h-4 mr-2" />
-                  Voice Call
+                  Voz
                 </Button>
               </div>
             </div>
 
             {/* Date & Time */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 min-[400px]:grid-cols-2">
               <div className="space-y-2">
-                <Label>Date *</Label>
+                <Label>Data *</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
-                      className="w-full justify-start text-left font-normal rounded-xl"
+                      className="h-11 w-full min-w-0 justify-start rounded-xl text-left font-normal"
                     >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {date ? format(date, 'PPP') : 'Pick a date'}
+                      <CalendarIcon className="mr-2 h-4 w-4 shrink-0" />
+                      <span className="truncate">{date ? format(date, 'dd/MM/yyyy', { locale: pt }) : 'Seleciona a data'}</span>
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="single"
+                      locale={pt}
                       selected={date}
                       onSelect={setDate}
                       disabled={(date) => date < new Date()}
@@ -239,9 +240,9 @@ export function ScheduleCallSheet({ open, onOpenChange }: ScheduleCallSheetProps
               </div>
 
               <div className="space-y-2">
-                <Label>Time *</Label>
+                <Label>Hora *</Label>
                 <Select value={time} onValueChange={setTime}>
-                  <SelectTrigger className="rounded-xl">
+                  <SelectTrigger className="h-11 min-w-0 rounded-xl">
                     <Clock className="mr-2 h-4 w-4" />
                     <SelectValue />
                   </SelectTrigger>
@@ -258,9 +259,9 @@ export function ScheduleCallSheet({ open, onOpenChange }: ScheduleCallSheetProps
 
             {/* Duration */}
             <div className="space-y-2">
-              <Label>Duration</Label>
+              <Label>Duração</Label>
               <Select value={duration} onValueChange={setDuration}>
-                <SelectTrigger className="rounded-xl">
+                <SelectTrigger className="h-11 min-w-0 rounded-xl">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -277,10 +278,10 @@ export function ScheduleCallSheet({ open, onOpenChange }: ScheduleCallSheetProps
             <div className="space-y-2">
               <Label className="flex items-center gap-2">
                 <Repeat className="w-4 h-4" />
-                Repeat
+                Repetição
               </Label>
               <Select value={recurrence} onValueChange={setRecurrence}>
-                <SelectTrigger className="rounded-xl">
+                <SelectTrigger className="h-11 min-w-0 rounded-xl">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -294,11 +295,11 @@ export function ScheduleCallSheet({ open, onOpenChange }: ScheduleCallSheetProps
             </div>
 
             {/* Waiting Room */}
-            <div className="flex items-center justify-between p-4 rounded-xl bg-secondary/50">
+            <div className="flex items-center justify-between gap-3 p-4 rounded-xl bg-secondary/50">
               <div>
-                <p className="font-medium">Waiting Room</p>
+                <p className="font-medium">Sala de espera</p>
                 <p className="text-sm text-muted-foreground">
-                  Participants wait until you admit them
+                  Os participantes aguardam até os admitires
                 </p>
               </div>
               <Switch
@@ -311,7 +312,7 @@ export function ScheduleCallSheet({ open, onOpenChange }: ScheduleCallSheetProps
             <div className="space-y-3">
               <Label className="flex items-center gap-2">
                 <Users className="w-4 h-4" />
-                Invite Participants
+                Convidar participantes
               </Label>
 
               {/* Selected invitees */}
@@ -325,10 +326,12 @@ export function ScheduleCallSheet({ open, onOpenChange }: ScheduleCallSheetProps
                         variant="secondary"
                         className="pr-1 rounded-full"
                       >
-                        {contact?.profile?.display_name || 'Unknown'}
+                        {contact?.profile?.display_name || 'Sem nome'}
                         <button
+                          type="button"
+                          aria-label="Remover participante"
                           onClick={() => toggleInvitee(userId)}
-                          className="ml-1 p-0.5 rounded-full hover:bg-muted"
+                          className="ml-1 flex h-11 w-11 items-center justify-center rounded-full hover:bg-muted"
                         >
                           <X className="w-3 h-3" />
                         </button>
@@ -385,22 +388,22 @@ export function ScheduleCallSheet({ open, onOpenChange }: ScheduleCallSheetProps
 
                 {contacts.length === 0 && (
                   <p className="text-center text-muted-foreground py-4">
-                    No contacts to invite
+                    Não há contactos para convidar
                   </p>
                 )}
               </div>
             </div>
           </div>
-        </ScrollArea>
+        </div>
 
         {/* Submit Button */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 bg-background border-t">
+        <div className="shrink-0 border-t bg-background pt-3">
           <Button
             className="w-full rounded-xl bg-gradient-primary text-white h-12"
             onClick={handleSubmit}
             disabled={isSubmitting}
           >
-            {isSubmitting ? 'Scheduling...' : 'Schedule Call'}
+            {isSubmitting ? 'A agendar...' : 'Agendar chamada'}
           </Button>
         </div>
       </SheetContent>
