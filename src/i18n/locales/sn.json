@@ -1,0 +1,16 @@
+{
+  "auth": {
+    "email": "Imeiri",
+    "login": "Pinda",
+    "password": "Shoko Rekuvhura",
+    "forgotPassword": "Wakanganwa shoko rekuvhura?",
+    "noAccount": "Hauna akaunti?",
+    "createAccount": "Nyoresa",
+    "signingIn": "Kuri kurodha...",
+    "termsOfService": "Mitemo Yekushandisa",
+    "privacyPolicy": "Mutemo weZvakavanzika"
+  },
+  "settings": {
+    "language": "Mutauro"
+  }
+}
