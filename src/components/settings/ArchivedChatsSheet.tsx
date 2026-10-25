@@ -208,15 +208,15 @@ export function ArchivedChatsSheet({ open, onOpenChange }: ArchivedChatsSheetPro
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="right" className="w-full sm:max-w-md p-0">
-          <SheetHeader className="p-4 border-b border-border">
+        <SheetContent side="right" className="flex h-[100dvh] w-full flex-col gap-0 overflow-hidden p-0 pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)] pl-[env(safe-area-inset-left,0px)] pr-[env(safe-area-inset-right,0px)] sm:max-w-md">
+          <SheetHeader className="shrink-0 p-4 border-b border-border">
             <SheetTitle className="flex items-center gap-2">
               <Archive className="w-5 h-5" />
               Conversas Arquivadas
             </SheetTitle>
           </SheetHeader>
 
-          <ScrollArea className="h-[calc(100vh-5rem)]">
+          <ScrollArea className="min-h-0 flex-1">
             {loading ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />

@@ -134,3 +134,47 @@ for (const insets of [[0,0,21,59], [0,59,21,0]]) {
     }
   });
 }
+
+for (const [width, height, insets] of [
+  [390, 844, [59, 0, 34, 0]],
+  [844, 390, [0, 59, 21, 0]],
+  [844, 390, [0, 0, 21, 59]],
+  [320, 568, [0, 0, 0, 0]],
+] as [number, number, number[]][]) {
+  test(`archived chats close at ${width}x${height} insets ${insets}`, async ({ page }) => {
+    await page.setViewportSize({ width, height });
+    await mockAccount(page);
+    await page.route('**/rest/v1/conversations?**', route => route.fulfill({
+      json: Array.from({ length: 30 }, (_, i) => ({
+        id: i === 0 ? chat : `archive-${i}`, type: 'group',
+        name: `Conversa arquivada ${i}`, updated_at: new Date().toISOString(),
+      })),
+    }));
+    await page.goto('/papos-app/settings');
+    await page.getByRole('button', { name: 'Conversas arquivadas', exact: true }).click();
+    const panel = page.getByRole('dialog', { name: 'Conversas Arquivadas' });
+    await expect(panel).toBeVisible();
+    await expect(panel.getByText('Conversa arquivada 29', { exact: true })).toBeAttached();
+    await simulateInsets(page, insets);
+    await panel.evaluate(el => Promise.all(el.getAnimations().map(animation => animation.finished)));
+    const close = panel.getByRole('button', { name: 'Close', exact: true });
+    const assertReachable = async () => {
+      const box = await close.boundingBox();
+      expect(box).not.toBeNull();
+      expect(box!.y).toBeGreaterThanOrEqual(insets[0]);
+      expect(box!.x).toBeGreaterThanOrEqual(insets[3]);
+      expect(box!.x + box!.width).toBeLessThanOrEqual(width - insets[1] + 1);
+      expect(box!.y + box!.height).toBeLessThanOrEqual(height - insets[2]);
+      expect(await close.evaluate(el => {
+        const r = el.getBoundingClientRect();
+        return el.contains(document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2));
+      })).toBe(true);
+    };
+    await assertReachable();
+    await panel.locator('[data-radix-scroll-area-viewport]').evaluate(el => { el.scrollTop = el.scrollHeight; });
+    await assertReachable();
+    await close.click();
+    await expect(panel).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Conversas arquivadas', exact: true })).toBeVisible();
+  });
+}
