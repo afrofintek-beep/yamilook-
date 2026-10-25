@@ -460,6 +460,11 @@ export function useCalls() {
       }
     };
 
+    const onPushClick = (event: MessageEvent) => {
+      if (event.data?.type === 'kosolola:incoming-call') void checkForRingingCall();
+    };
+    navigator.serviceWorker?.addEventListener('message', onPushClick);
+
     // Start polling immediately and every 2 seconds
     void checkForRingingCall();
     pollIntervalId = setInterval(() => {
@@ -530,6 +535,7 @@ export function useCalls() {
       });
 
     return () => {
+      navigator.serviceWorker?.removeEventListener('message', onPushClick);
       if (pollIntervalId) {
         clearInterval(pollIntervalId);
       }

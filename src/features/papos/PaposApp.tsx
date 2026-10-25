@@ -1,3 +1,4 @@
+import { refreshCallPush } from '@/lib/call-push';
 import { Component, lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
 import { BrowserRouter, Link, Navigate, Route, Routes, Outlet, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -45,6 +46,13 @@ class PaposBoundary extends Component<{ children: ReactNode }, { failed: boolean
 }
 function PaposRuntime() {
   const [updateReady, setUpdateReady] = useState(false);
+  const { user } = useAuth();
+  useEffect(() => {
+    if (!user) return;
+    const refresh = () => { if (document.visibilityState === 'visible') void refreshCallPush(user.id).catch(() => {}); };
+    refresh(); document.addEventListener('visibilitychange', refresh);
+    return () => document.removeEventListener('visibilitychange', refresh);
+  }, [user?.id]);
   useEffect(() => {
     const unlock = () => { unlockCallAudio(); document.removeEventListener('click', unlock, true); document.removeEventListener('touchstart', unlock, true); document.removeEventListener('keydown', unlock, true); };
     document.addEventListener('click', unlock, true); document.addEventListener('touchstart', unlock, true); document.addEventListener('keydown', unlock, true);

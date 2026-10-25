@@ -34,3 +34,6 @@ verify_jwt = false
 
 [functions.scheduled-call-video]
 verify_jwt = false
+
+[functions.call-push]
+verify_jwt = true

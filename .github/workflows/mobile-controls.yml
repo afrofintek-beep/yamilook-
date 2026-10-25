@@ -17,7 +17,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps webkit
-      - run: npx vitest run src/components/chat/MediaPreview.test.tsx
+      - run: npx vitest run src/components/chat/MediaPreview.test.tsx src/lib/call-push*.test.ts src/features/papos/
       - run: npx playwright test -c playwright.mobile.config.ts
       - uses: actions/upload-artifact@v4
         if: failure()
