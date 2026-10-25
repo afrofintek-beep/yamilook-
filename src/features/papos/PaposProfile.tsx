@@ -34,7 +34,7 @@ export default function PaposProfile() {
         <Avatar className="w-24 h-24"><AvatarImage src={person.avatar_url || ''} alt={`Fotografia de ${person.display_name || person.username}`} className="object-cover" /><AvatarFallback>{person.display_name?.[0] || 'P'}</AvatarFallback></Avatar>
         <h1 className="text-2xl font-bold break-words">{person.display_name}</h1><p className="text-muted-foreground">@{person.username}</p><p className="whitespace-pre-wrap break-words">{person.bio}</p>
         {!own && <div className="grid gap-3"><Button onClick={() => void message()}>Enviar mensagem</Button><Button variant="outline" onClick={() => void call?.startCall(userId!, 'voice')}>Chamada de voz</Button><Button variant="outline" onClick={() => void call?.startCall(userId!, 'video')}>Videochamada</Button></div>}
-        <Button asChild variant="outline" className="w-full"><a href={own ? '/profile' : `/profile/${encodeURIComponent(userId!)}`}>{own ? 'Editar o meu perfil na Yamilook' : 'Ver perfil e Muxi na Yamilook'}</a></Button>
+        <Button asChild variant="outline" className="w-full"><a href={own ? 'https://www.yamilook.com/profile' : `https://www.yamilook.com/profile/${encodeURIComponent(userId!)}`}>{own ? 'Editar o meu perfil na Yamilook' : 'Ver perfil e Muxi na Yamilook'}</a></Button>
       </>}
     </main><BottomNav /></div>;
 }
