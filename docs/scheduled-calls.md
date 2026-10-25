@@ -55,3 +55,9 @@ npx playwright test -c playwright.scheduled.config.ts
 # Instalar @electric-sql/pglite@0.3.14 num diretório temporário, depois:
 PGLITE_MODULE=/caminho/node_modules/@electric-sql/pglite/dist/index.js node scripts/test-scheduled-calls.mjs
 ```
+
+## Estado da entrega (25 de outubro de 2026)
+
+PR #22 aberta, commit inicial `94999b4cd9342079fcacdd971dbd03b1fa49a202`. A função `scheduled-call-video` foi publicada (versão 1) e rejeita pedidos sem autenticação com HTTP 401. Isto não valida as credenciais LiveKit nem uma chamada real.
+
+A migração ainda não foi aplicada: depende da publicação coordenada da nova interface. O estado Vercel do projeto principal `yamilook` reportou falha com destino `upgradeToPro=build-rate-limit`; o projeto secundário `yamilook-clean-7iaw` passou. Não foram alterados o plano Vercel, os domínios ou os dados de contas reais.
