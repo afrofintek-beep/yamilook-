@@ -28,8 +28,8 @@ export default function PaposLogin() {
       <form onSubmit={submit} className="space-y-4"><div><label htmlFor="papos-email" className="text-sm">Email</label><Input id="papos-email" autoComplete="username" type="email" required value={email} onChange={e => setEmail(e.target.value)} disabled={busy} /></div>
         <div><label htmlFor="papos-password" className="text-sm">Palavra-passe</label><Input id="papos-password" autoComplete="current-password" type="password" required value={password} onChange={e => setPassword(e.target.value)} disabled={busy} /></div>
         {error && <p role="alert" className="text-sm text-destructive">{error}</p>}<Button type="submit" disabled={busy || loading} className="w-full">{busy ? 'A entrar…' : 'Entrar na KOSOLOLA'}</Button>
-      </form><a href="/forgot-password" className="text-primary text-sm block">Recuperar palavra-passe</a>
-      <p className="text-sm text-muted-foreground">Ainda não tens conta? <a href="/onboarding" className="text-primary underline">Criar conta Yamilook com convite</a>.</p>
-      <div className="flex gap-4 text-xs text-muted-foreground"><a href="/terms">Termos</a><a href="/privacy">Privacidade</a><a href="/muxi">Yamilook</a></div>
+      </form><a href="https://www.yamilook.com/forgot-password" className="text-primary text-sm block">Recuperar palavra-passe</a>
+      <p className="text-sm text-muted-foreground">Ainda não tens conta? <a href="https://www.yamilook.com/onboarding" className="text-primary underline">Criar conta Yamilook com convite</a>.</p>
+      <div className="flex gap-4 text-xs text-muted-foreground"><a href="https://www.yamilook.com/terms">Termos</a><a href="https://www.yamilook.com/privacy">Privacidade</a><a href="https://www.yamilook.com/muxi">Yamilook</a></div>
     </div></main>;
 }
