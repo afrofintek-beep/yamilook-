@@ -35,7 +35,13 @@ export function AfrolocCertificationGate({
       return;
     }
     const msg: Record<string, string> = {
-      no_phone: 'Não tens telefone no teu perfil.',
+      phone_not_verified: 'A verificação automática requer um telefone confirmado na tua conta. Podes pedir validação manual.',
+      no_address: 'Associa primeiro o teu endereço no perfil.',
+      address_mismatch: 'O endereço confirmado pelo AFROLOC não corresponde ao declarado no teu perfil.',
+      partner_unavailable: 'O serviço AFROLOC está indisponível. Tenta novamente mais tarde.',
+      invalid_partner_response: 'O AFROLOC não devolveu uma confirmação válida. Podes pedir validação manual.',
+      save_failed: 'Não foi possível guardar a certificação. Tenta novamente.',
+      not_certified: 'O AFROLOC não confirmou a certificação deste endereço.',
       no_afroloc_account: 'Sem conta AFROLOC com este telefone. Cria o teu endereço na app AFROLOC.',
       no_certified_address: 'O teu endereço AFROLOC ainda não está certificado (fá-lo na app AFROLOC).',
     };
@@ -94,6 +100,7 @@ export function AfrolocCertificationGate({
           </p>
         )}
 
+        <p className="text-xs text-muted-foreground">Ao verificar, autorizas a consulta ao AFROLOC com o telefone confirmado da tua conta para validar o endereço declarado.</p>
         {/* Primary: automatic verification against the AFROLOC partner API (by phone). */}
         <Button className="w-full" disabled={verifying} onClick={handleVerify}>
           {verifying ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}

@@ -1,20 +1,18 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+import { verifyCertification } from "./verification.ts";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-/**
- * Verifies, via the AFROLOC partner API, whether the calling Yamilook user's
- * (already phone-verified) number owns a certified AFROLOC address, and if so
- * marks their Yamilook profile as certified. No second OTP: the phone was
- * verified when the user signed up to each app.
- *
- * Required secrets: AFROLOC_API_URL (…/functions/v1/api-v1), YAMILOOK_PARTNER_KEY.
+/** Verify an existing declared address using an Auth-confirmed phone and partner evidence.
+ * Requires AFROLOC_API_URL and YAMILOOK_PARTNER_KEY. This is not cross-app SSO.
  */
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (req.method !== "POST") return new Response(null, { status: 405, headers: { ...corsHeaders, Allow: "POST, OPTIONS" } });
 
   const json = (body: unknown, status = 200) =>
     new Response(JSON.stringify(body), {
@@ -34,51 +32,45 @@ Deno.serve(async (req: Request) => {
       global: { headers: { Authorization: authHeader } },
     });
     const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) return json({ error: "Invalid token" }, 401);
-    const userId = claimsData.claims.sub as string;
-
     const admin = createClient(supabaseUrl, serviceKey);
-
-    // The user's phone, verified at Yamilook sign-up.
-    const { data: profile } = await admin
-      .from("profiles")
-      .select("phone_number")
-      .eq("id", userId)
-      .single();
-    const phone = (profile?.phone_number ?? "").trim();
-    if (!phone) return json({ certified: false, reason: "no_phone" });
-
     const afrolocUrl = Deno.env.get("AFROLOC_API_URL");
     const partnerKey = Deno.env.get("YAMILOOK_PARTNER_KEY");
-    if (!afrolocUrl || !partnerKey) {
-      return json({ error: "AFROLOC integration not configured" }, 500);
-    }
-
-    const res = await fetch(`${afrolocUrl}/partners/certification-status`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-partner-key": partnerKey },
-      body: JSON.stringify({ phone }),
+    const result = await verifyCertification(token, {
+      getUser: async (jwt) => {
+        const { data, error } = await userClient.auth.getUser(jwt);
+        return error ? null : data.user;
+      },
+      getAddress: async (id) => {
+        const { data, error } = await admin.from("profiles").select("afroloc_code").eq("id", id).single();
+        if (error) throw new Error("profile_unavailable");
+        return data.afroloc_code;
+      },
+      lookup: async (phone) => {
+        if (!afrolocUrl || !partnerKey || new URL(afrolocUrl).protocol !== "https:") {
+          throw new Error("integration_unavailable");
+        }
+        const response = await fetch(`${afrolocUrl.replace(/\/$/, '')}/partners/certification-status`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "x-partner-key": partnerKey },
+          body: JSON.stringify({ phone }),
+          signal: AbortSignal.timeout(10000),
+          redirect: "error",
+        });
+        return { ok: response.ok, payload: await response.json().catch(() => null) };
+      },
+      save: async (id, code) => {
+        const { data, error } = await admin.from("profiles").update({
+          afroloc_certification_status: "certified",
+          afroloc_certified_at: new Date().toISOString(),
+          afroloc_certified_by: null,
+        }).eq("id", id).eq("afroloc_code", code)
+          .select("id, afroloc_code, afroloc_certification_status").single();
+        return !error && data?.id === id && data.afroloc_code === code && data.afroloc_certification_status === "certified";
+      },
     });
-    const payload = await res.json().catch(() => ({}));
-    // api-v1 wraps successful results as { success, data }.
-    const data = (payload?.data ?? payload) as { certified?: boolean; code?: string; reason?: string };
-
-    if (!data?.certified) {
-      return json({ certified: false, reason: data?.reason ?? "not_certified" });
-    }
-
-    await admin
-      .from("profiles")
-      .update({
-        afroloc_certification_status: "certified",
-        afroloc_certified_at: new Date().toISOString(),
-        ...(data.code ? { afroloc_code: data.code } : {}),
-      })
-      .eq("id", userId);
-
-    return json({ certified: true, code: data.code ?? null });
-  } catch (e) {
-    return json({ error: e instanceof Error ? e.message : "unexpected" }, 500);
+    return json(result, result.reason === "unauthorized" ? 401 : 200);
+  } catch {
+    console.error("AFROLOC verification failed");
+    return json({ certified: false, reason: "verification_unavailable" }, 503);
   }
 });
