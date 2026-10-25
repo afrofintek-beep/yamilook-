@@ -106,9 +106,9 @@ for (const base of ['', '/papos-app']) {
         expect(box!.y).toBeGreaterThanOrEqual(insets[0]);
       }
       await page.goto(`${base}/chat/${chat}`);
-      await expect(page.locator('header h1')).toHaveText(name);
+      await expect(page.locator('.chat-page header h1')).toHaveText(name);
       await simulateInsets(page,insets);
-      const buttons = page.locator('header button');
+      const buttons = page.locator('.chat-page header button');
       for (const button of await buttons.all()) {
         const box = await button.boundingBox();
         expect(box).not.toBeNull();
@@ -208,3 +208,48 @@ for (const [width, height, insets] of [
     await expect(page.getByRole('button', { name: 'Conversas arquivadas', exact: true })).toBeVisible();
   });
 }
+
+
+test('KOSOLOLA switches between single pane and desktop split view', async ({ page }) => {
+  await mockAccount(page);
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto(`/papos-app/chat/${chat}`);
+  await expect(page.locator('.chat-page header h1')).toHaveText(name);
+  await expect(page.locator('.kosolola-list')).toBeVisible();
+  const list = await page.locator('.kosolola-list').boundingBox();
+  const conversation = await page.locator('.chat-page').boundingBox();
+  expect(conversation!.x).toBeGreaterThanOrEqual(list!.width - 1);
+  expect(conversation!.x + conversation!.width).toBeLessThanOrEqual(1281);
+  const draft = page.locator('textarea');
+  await draft.fill('Rascunho preservado');
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(page.locator('.kosolola-list')).toHaveCount(0);
+  await expect(draft).toHaveValue('Rascunho preservado');
+  await expect.poll(() => page.locator('.chat-page').evaluate(el => el.getBoundingClientRect().width)).toBe(390);
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await expect(page.locator('.kosolola-list')).toBeVisible();
+  await expect(draft).toHaveValue('Rascunho preservado');
+});
+
+test('KOSOLOLA composer follows keyboard viewport and restores after dismissal', async ({ page }) => {
+  await mockAccount(page);
+  await page.addInitScript(() => {
+    const viewport = new EventTarget();
+    Object.assign(viewport, { height: 844, offsetTop: 0, scale: 1 });
+    Object.defineProperty(window, 'visualViewport', { value: viewport, configurable: true });
+  });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(`/papos-app/chat/${chat}`);
+  const draft = page.locator('textarea');
+  await expect(draft).toBeVisible();
+  for (const [height, top] of [[430, 30], [844, 0]]) {
+    await page.evaluate(({ height, top }) => {
+      Object.assign(window.visualViewport!, { height, offsetTop: top });
+      window.visualViewport!.dispatchEvent(new Event('resize'));
+    }, { height, top });
+    await expect.poll(() => page.locator('.chat-page').evaluate(el => Math.round(el.getBoundingClientRect().bottom))).toBe(height + top);
+    const box = await draft.boundingBox();
+    expect(box!.y + box!.height).toBeLessThanOrEqual(height + top);
+    expect(box!.y).toBeGreaterThanOrEqual(top);
+  }
+});
