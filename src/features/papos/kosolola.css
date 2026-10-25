@@ -1,3 +1,40 @@
+/* Keep the standalone shell anchored; only page/list containers should scroll.
+   Do not disable pinch zoom: users can still magnify content deliberately. */
+html[data-brand="kosolola"] {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+html[data-brand="kosolola"] body {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+html[data-brand="kosolola"] #root {
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  height: 100dvh;
+  min-width: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: none;
+}
+/* iOS zooms focused fields below 16px and can leave the app enlarged after
+   dismissal. Keep the normal viewport without blocking accessible zoom. */
+@media (max-width: 767px) {
+  html[data-brand="kosolola"] input,
+  html[data-brand="kosolola"] textarea,
+  html[data-brand="kosolola"] select {
+    font-size: max(1rem, 16px);
+  }
+}
+
 /* Scoped on html so portals inherit the brand without affecting Yamilook. */
 html[data-brand="kosolola"] {
   --primary: 182 100% 20.4%;

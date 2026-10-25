@@ -55,6 +55,36 @@ async function simulateInsets(page: import('@playwright/test').Page, insets: num
   }, insets);
 }
 
+test('KOSOLOLA shell stays fitted after scroll and rotation', async ({ page }) => {
+  await mockAccount(page);
+  await page.goto('/papos-app/papos');
+  const header = page.locator('header');
+  const nav = page.getByRole('navigation', { name: 'Navegação principal' });
+  await expect(header).toBeVisible();
+  for (const size of [{ width: 390, height: 844 }, { width: 844, height: 390 }, { width: 390, height: 844 }]) {
+    await page.setViewportSize(size);
+    await page.evaluate(() => window.scrollTo(100, 200));
+    await expect.poll(() => header.evaluate(el => el.getBoundingClientRect().top)).toBe(0);
+    await expect.poll(() => nav.evaluate(el => Math.round(el.getBoundingClientRect().bottom))).toBe(size.height);
+    expect(await page.evaluate(() => ({ x: window.scrollX, y: window.scrollY }))).toEqual({ x: 0, y: 0 });
+  }
+});
+
+test('KOSOLOLA fields avoid automatic focus zoom', async ({ page }) => {
+  await page.route('**/papos-app/**', async route => {
+    if (!route.request().isNavigationRequest()) return route.continue();
+    const entry = await page.request.get('/papos-app/index.html');
+    await route.fulfill({ response: entry });
+  });
+  await page.goto('/papos-app/login');
+  const field = page.locator('input').first();
+  await expect(field).toBeVisible();
+  await field.focus();
+  expect(await field.evaluate(el => parseFloat(getComputedStyle(el).fontSize))).toBeGreaterThanOrEqual(16);
+  // Pinch zoom remains available for accessibility.
+  await expect(page.locator('meta[name="viewport"]')).not.toHaveAttribute('content', /user-scalable=no|maximum-scale=1/);
+});
+
 for (const base of ['', '/papos-app']) {
   for (const [width,height,insets] of [
     [320,568,[0,0,0,0]], [375,667,[0,0,0,0]],
