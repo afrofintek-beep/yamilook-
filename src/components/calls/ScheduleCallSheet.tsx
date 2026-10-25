@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { Calendar as CalendarIcon, Clock, Video, Phone, Users, Repeat, X } from 'lucide-react';
@@ -30,21 +30,16 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useContacts } from '@/hooks/useContacts';
-import { useCalls } from '@/hooks/useCalls';
+import { useScheduledCalls } from '@/features/scheduled-calls/useScheduledCalls';
+import { scheduledAction, type ScheduledCall, type Invitee } from '@/features/scheduled-calls/api';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
 interface ScheduleCallSheetProps {
+  existingCall?: ScheduledCall;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
-
-const timeSlots = [
-  '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
-  '12:00', '12:30', '13:00', '13:30', '14:00', '14:30',
-  '15:00', '15:30', '16:00', '16:30', '17:00', '17:30',
-  '18:00', '18:30', '19:00', '19:30', '20:00', '20:30',
-];
 
 const durationOptions = [
   { value: '15', label: '15 minutos' },
@@ -63,9 +58,11 @@ const recurrenceOptions = [
   { value: 'monthly', label: 'Mensalmente' },
 ];
 
-export function ScheduleCallSheet({ open, onOpenChange }: ScheduleCallSheetProps) {
+export function ScheduleCallSheet({ open, onOpenChange, existingCall }: ScheduleCallSheetProps) {
   const { contacts } = useContacts();
-  const { scheduleCall } = useCalls();
+  const { save } = useScheduledCalls();
+  const requestId = useRef(crypto.randomUUID());
+  const submitting = useRef(false);
   const { toast } = useToast();
 
   const [title, setTitle] = useState('');
@@ -78,6 +75,32 @@ export function ScheduleCallSheet({ open, onOpenChange }: ScheduleCallSheetProps
   const [recurrence, setRecurrence] = useState('none');
   const [selectedInvitees, setSelectedInvitees] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingRevision, setEditingRevision] = useState<number>();
+  const [occurrences, setOccurrences] = useState('4');
+  const [timezone, setTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC');
+  const [loadingInvitees, setLoadingInvitees] = useState(false);
+  const [loadError, setLoadError] = useState('');
+  useEffect(() => {
+    if (!open) return;
+    let active = true;
+    requestId.current = crypto.randomUUID();
+    setLoadError(''); setLoadingInvitees(false);setEditingRevision(existingCall?.revision);
+    setTitle(existingCall?.title || ''); setDescription(existingCall?.description || '');
+    setDate(existingCall ? new Date(existingCall.scheduled_at) : new Date());
+    setTime(existingCall ? format(new Date(existingCall.scheduled_at), 'HH:mm') : '10:00');
+    // The date picker edits local time; explicitly label that device timezone.
+    setTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC');
+    setDuration(String(existingCall?.duration_minutes || 60));setCallType(existingCall?.call_type || 'video');
+    setWaitingRoom(existingCall?.waiting_room_enabled ?? true);setRecurrence('none');setSelectedInvitees([]);
+    if (existingCall) {
+      setLoadingInvitees(true);
+      scheduledAction<{invitees:Invitee[]}>('detail', existingCall.id).then(detail=>{
+        if(active)setSelectedInvitees(detail.invitees.map(i=>i.user_id));
+      }).catch(()=>{if(active)setLoadError('Não foi possível carregar os convidados. Fecha e volta a abrir.');})
+      .finally(()=>{if(active)setLoadingInvitees(false);});
+    }
+    return ()=>{active=false;};
+  },[open,existingCall?.id]);
 
   const toggleInvitee = (userId: string) => {
     setSelectedInvitees(prev => 
@@ -88,6 +111,7 @@ export function ScheduleCallSheet({ open, onOpenChange }: ScheduleCallSheetProps
   };
 
   const handleSubmit = async () => {
+    if(submitting.current || loadingInvitees || loadError) return;
     if (!title.trim()) {
       toast({
         title: 'Título obrigatório',
@@ -106,6 +130,7 @@ export function ScheduleCallSheet({ open, onOpenChange }: ScheduleCallSheetProps
       return;
     }
 
+    submitting.current=true;
     setIsSubmitting(true);
 
     try {
@@ -113,17 +138,19 @@ export function ScheduleCallSheet({ open, onOpenChange }: ScheduleCallSheetProps
       const scheduledDate = new Date(date);
       scheduledDate.setHours(hours, minutes, 0, 0);
 
-      await scheduleCall(title, scheduledDate, callType, {
-        description: description || undefined,
-        durationMinutes: parseInt(duration),
-        isRecurring: recurrence !== 'none',
-        recurrencePattern: recurrence !== 'none' ? recurrence : undefined,
-        waitingRoomEnabled: waitingRoom,
-        invitees: selectedInvitees,
-      });
+      if (scheduledDate.getTime() <= Date.now()) throw new Error('Escolhe uma data e hora futuras.');
+      if (scheduledDate.getHours() !== hours || scheduledDate.getMinutes() !== minutes) throw new Error('Esta hora não existe devido à mudança de horário.');
+      await save({
+        title: title.trim(), scheduled_at: scheduledDate.toISOString(), call_type: callType,
+        description: description || undefined, timezone,
+        duration_minutes: Number(duration), recurrence_pattern: existingCall ? undefined : recurrence,
+        occurrences: existingCall || recurrence === 'none' ? 1 : Number(occurrences),
+        waiting_room_enabled: waitingRoom, invitees: selectedInvitees,
+        request_id: requestId.current, revision: editingRevision,
+      }, existingCall?.id);
 
       toast({
-        title: 'Chamada agendada',
+        title: existingCall ? 'Agendamento atualizado' : 'Chamada agendada',
         description: `Chamada de ${callType === 'video' ? 'vídeo' : 'voz'} agendada para ${format(scheduledDate, 'dd/MM/yyyy HH:mm', { locale: pt })}`,
       });
 
@@ -141,10 +168,11 @@ export function ScheduleCallSheet({ open, onOpenChange }: ScheduleCallSheetProps
     } catch (error) {
       toast({
         title: 'Não foi possível agendar',
-        description: 'Ocorreu um erro ao agendar a chamada. Tenta novamente.',
+        description: error instanceof Error ? error.message : 'Não foi possível agendar. Tenta novamente.',
         variant: 'destructive',
       });
     } finally {
+      submitting.current=false;
       setIsSubmitting(false);
     }
   };
@@ -153,16 +181,19 @@ export function ScheduleCallSheet({ open, onOpenChange }: ScheduleCallSheetProps
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="flex h-[90dvh] max-h-[calc(100dvh-env(safe-area-inset-top,0px))] flex-col gap-3 overflow-hidden rounded-t-3xl px-4 pt-2 pb-[max(1rem,env(safe-area-inset-bottom,0px))] sm:px-6">
         <SheetHeader className="shrink-0">
-          <SheetTitle className="text-xl">Agendar chamada</SheetTitle>
+          <SheetTitle className="text-xl">{existingCall ? 'Editar esta ocorrência' : 'Agendar chamada'}</SheetTitle>
         </SheetHeader>
 
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-1 pb-4">
           <div className="space-y-6">
+            {loadError && <p role="alert">{loadError}</p>}
+            <p className="text-sm text-muted-foreground">Horários no fuso {timezone}. Lembrete na aplicação 15 minutos antes. {existingCall && 'As alterações aplicam-se apenas a esta ocorrência.'}</p>
             {/* Title */}
             <div className="space-y-2">
               <Label htmlFor="title">Título *</Label>
               <Input
                 id="title"
+                maxLength={120}
                 placeholder="Reunião semanal da equipa"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
@@ -174,6 +205,7 @@ export function ScheduleCallSheet({ open, onOpenChange }: ScheduleCallSheetProps
               <Label htmlFor="description">Descrição</Label>
               <Textarea
                 id="description"
+                maxLength={2000}
                 placeholder="Adiciona uma descrição..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -232,7 +264,7 @@ export function ScheduleCallSheet({ open, onOpenChange }: ScheduleCallSheetProps
                       locale={pt}
                       selected={date}
                       onSelect={setDate}
-                      disabled={(date) => date < new Date()}
+                      disabled={(day) => day < new Date(new Date().setHours(0, 0, 0, 0))}
                       initialFocus
                     />
                   </PopoverContent>
@@ -241,19 +273,7 @@ export function ScheduleCallSheet({ open, onOpenChange }: ScheduleCallSheetProps
 
               <div className="space-y-2">
                 <Label>Hora *</Label>
-                <Select value={time} onValueChange={setTime}>
-                  <SelectTrigger className="h-11 min-w-0 rounded-xl">
-                    <Clock className="mr-2 h-4 w-4" />
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {timeSlots.map((slot) => (
-                      <SelectItem key={slot} value={slot}>
-                        {slot}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Input type="time" aria-label="Hora" className="h-11 min-w-0" value={time} onChange={e=>setTime(e.target.value)} />
               </div>
             </div>
 
@@ -280,7 +300,7 @@ export function ScheduleCallSheet({ open, onOpenChange }: ScheduleCallSheetProps
                 <Repeat className="w-4 h-4" />
                 Repetição
               </Label>
-              <Select value={recurrence} onValueChange={setRecurrence}>
+              <Select disabled={!!existingCall} value={recurrence} onValueChange={setRecurrence}>
                 <SelectTrigger className="h-11 min-w-0 rounded-xl">
                   <SelectValue />
                 </SelectTrigger>
@@ -294,6 +314,11 @@ export function ScheduleCallSheet({ open, onOpenChange }: ScheduleCallSheetProps
               </Select>
             </div>
 
+            {!existingCall && recurrence !== 'none' && <div className="space-y-2">
+              <Label htmlFor="occurrences">Número de ocorrências (incluindo a primeira)</Label>
+              <Input id="occurrences" type="number" min={2} max={52} value={occurrences} onChange={e=>setOccurrences(e.target.value)} />
+              <p className="text-xs text-muted-foreground">A mesma hora local em cada ocorrência. Até 52 chamadas.</p>
+            </div>}
             {/* Waiting Room */}
             <div className="flex items-center justify-between gap-3 p-4 rounded-xl bg-secondary/50">
               <div>
@@ -401,9 +426,9 @@ export function ScheduleCallSheet({ open, onOpenChange }: ScheduleCallSheetProps
           <Button
             className="w-full rounded-xl bg-gradient-primary text-white h-12"
             onClick={handleSubmit}
-            disabled={isSubmitting}
+            disabled={isSubmitting || loadingInvitees || !!loadError}
           >
-            {isSubmitting ? 'A agendar...' : 'Agendar chamada'}
+            {isSubmitting ? 'A guardar...' : existingCall ? 'Guardar alterações' : 'Agendar chamada'}
           </Button>
         </div>
       </SheetContent>

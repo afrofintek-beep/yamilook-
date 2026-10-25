@@ -31,3 +31,6 @@ verify_jwt = false
 verify_jwt = false
 [functions.academia-video]
 verify_jwt = false
+
+[functions.scheduled-call-video]
+verify_jwt = false

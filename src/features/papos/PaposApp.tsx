@@ -19,6 +19,7 @@ const Home = lazy(() => import('@/pages/Home'));
 const Chat = lazy(() => import('@/pages/Chat'));
 const Contacts = lazy(() => import('@/pages/Contacts'));
 const Calls = lazy(() => import('@/pages/Calls'));
+const ScheduledCallRoom = lazy(() => import('@/features/scheduled-calls/ScheduledCallRoom'));
 const Call = lazy(() => import('@/pages/Call'));
 const Status = lazy(() => import('@/pages/Status'));
 const JoinGroup = lazy(() => import('@/pages/JoinGroup'));
@@ -61,6 +62,7 @@ function PaposRuntime() {
       <Route path="/chat/:conversationId" element={<Chat />} />
       <Route path="/contacts" element={<Contacts />} />
       <Route path="/calls" element={<div className="h-screen-safe overflow-y-auto pb-[calc(5rem+env(safe-area-inset-bottom,0px))]"><Calls /><BottomNav /></div>} />
+      <Route path="/scheduled-call/:sessionId" element={<ScheduledCallRoom />} />
       <Route path="/call/:callId" element={<Call />} />
       <Route path="/status" element={<Status />} />
       <Route path="/settings" element={<PaposSettings />} />
