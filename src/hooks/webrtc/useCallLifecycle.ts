@@ -188,7 +188,7 @@ export function useCallLifecycle(options: UseCallLifecycleOptions): UseCallLifec
     }
 
     // Update call
-    await supabase
+    const { data: ended, error: endError } = await supabase
       .from('calls')
       .update({
         status: 'ended',
@@ -196,14 +196,16 @@ export function useCallLifecycle(options: UseCallLifecycleOptions): UseCallLifec
         duration_seconds: durationSeconds,
         end_reason: 'completed',
       })
-      .eq('id', callId);
+      .eq('id', callId).select('id').maybeSingle();
+    if (endError || !ended) throw endError || new Error('Call end was not confirmed');
 
     // Update participant
-    await supabase
+    const { error: participantError } = await supabase
       .from('call_participants')
       .update({ status: 'left', left_at: new Date().toISOString() })
       .eq('call_id', callId)
       .eq('user_id', userId);
+    if (participantError) throw participantError;
   }, []);
 
   /**

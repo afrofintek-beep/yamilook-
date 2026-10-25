@@ -294,7 +294,7 @@ export function VideoCall({
               {/* Call Status */}
               <div className="text-center mb-4">
                 <span className="text-white/70 text-sm">
-                {(state.callStatus === 'connected' || state.remoteStreams.size > 0 || state.connectionState === 'connected' || (participants.length > 0 && participants.some(p => p.is_video_enabled)))
+                {(state.callStatus === 'connected' && state.connectionState === 'connected')
                     ? t('calls.statusConnected')
                     : (state.callStatus === 'ringing' || state.callStatus === 'initiating')
                     ? t('calls.statusCalling')
