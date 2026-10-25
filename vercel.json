@@ -57,5 +57,18 @@
         }
       ]
     }
+  ],
+  "redirects": [
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "kosolola.com"
+        }
+      ],
+      "destination": "/papos-app/",
+      "permanent": false
+    }
   ]
 }
