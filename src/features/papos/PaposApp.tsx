@@ -31,7 +31,7 @@ export function PaposGate({ children }: { children: ReactNode }) {
   if (loading) return <Loading />;
   if (!user) return <Navigate to="/login" state={{ from: location.pathname + location.search }} replace />;
   if (!profile) return <main className="min-h-screen-safe safe-top p-6 space-y-4"><p>Não foi possível carregar o perfil.</p><Button onClick={() => void refreshProfile()}>Tentar novamente</Button></main>;
-  if (!profile.onboarding_completed) return <main className="min-h-screen-safe safe-top p-6 space-y-4"><h1 className="text-2xl font-bold">Conclui a tua conta</h1><p>A tua conta é partilhada com a Yamilook. Conclui os dados pendentes e volta à KOSOLOLA.</p><Button asChild><a href="/onboarding">Continuar a inscrição</a></Button></main>;
+  if (!profile.onboarding_completed) return <main className="min-h-screen-safe safe-top p-6 space-y-4"><h1 className="text-2xl font-bold">Conclui a tua conta</h1><p>A tua conta é partilhada com a Yamilook. Conclui os dados pendentes e volta à KOSOLOLA.</p><Button asChild><a href="https://www.yamilook.com/onboarding">Continuar a inscrição</a></Button></main>;
   return <>{children}</>;
 }
 function Loading() { return <div role="status" className="h-screen-safe flex items-center justify-center">A carregar a KOSOLOLA…</div>; }
@@ -69,7 +69,7 @@ function PaposRuntime() {
       <Route path="/profile/:userId" element={<PaposProfile />} />
       <Route path="/join/:code" element={<JoinGroup />} />
       </Route>
-      <Route path="*" element={<main className="min-h-screen-safe safe-top p-6 space-y-4"><h1 className="text-xl font-bold">Esta página não está na KOSOLOLA</h1><Button asChild><Link to="/papos">Voltar às conversas</Link></Button><Button asChild variant="outline"><a href="/muxi">Abrir Yamilook</a></Button></main>} />
+      <Route path="*" element={<main className="min-h-screen-safe safe-top p-6 space-y-4"><h1 className="text-xl font-bold">Esta página não está na KOSOLOLA</h1><Button asChild><Link to="/papos">Voltar às conversas</Link></Button><Button asChild variant="outline"><a href="https://www.yamilook.com/muxi">Abrir Yamilook</a></Button></main>} />
     </Routes></Suspense></PaposBoundary></>;
 }
 export default function PaposApp() {
