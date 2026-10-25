@@ -37,8 +37,6 @@
     <!-- DNS-prefetch for Supabase origin (preconnect removed — unused on landing page) -->
     <link rel="dns-prefetch" href="https://rfayqekonkovfbkwjjum.supabase.co" />
 
-    <!-- Preload critical assets -->
-    <link rel="modulepreload" href="/src/papos-main.tsx" />
 
     <!-- Critical CSS for instant first paint -->
     <style>
@@ -55,7 +53,72 @@
 </head>
 
   <body>
-    <div id="root"><p role="status" style="padding:2rem;color:#006568">A abrir a KOSOLOLA…</p><a href="/papos-app/" style="padding:2rem;color:#006568">Recarregar KOSOLOLA</a></div>
+    <div id="root">
+      <main id="startup" style="padding:calc(2rem + env(safe-area-inset-top,0px)) 1.5rem;font:1rem/1.6 system-ui;color:#76d5d6">
+        <h1 style="font-size:1.5rem">KOSOLOLA</h1>
+        <p id="startup-status" role="status">A abrir a KOSOLOLA…</p>
+        <p id="startup-help" hidden>Verifica a ligação à internet e tenta recuperar a aplicação. A tua conta e as conversas não serão apagadas.</p>
+        <button id="startup-reload" type="button" style="margin-top:1.5rem;padding:.75rem 1rem;min-height:44px;background:#76d5d6;color:#101c1d;border:0;border-radius:12px;font:inherit">Recarregar KOSOLOLA</button>
+        <noscript>Ativa o JavaScript para abrir a KOSOLOLA.</noscript>
+      </main>
+    </div>
+    <!-- Runs before the module graph: recovery must survive an unavailable entry chunk. -->
+    <script id="startup-recovery">
+      (function () {
+        var splash = document.getElementById('startup');
+        var status = document.getElementById('startup-status');
+        var help = document.getElementById('startup-help');
+        var button = document.getElementById('startup-reload');
+        var recovering = false;
+        function failed() {
+          if (!splash.isConnected || recovering) return;
+          status.textContent = 'Não foi possível concluir a abertura da KOSOLOLA.';
+          help.hidden = false;
+        }
+        var timeout = setTimeout(failed, 15000);
+        window.addEventListener('error', failed, true);
+        window.addEventListener('unhandledrejection', failed);
+        var observer = new MutationObserver(function () {
+          if (splash.isConnected) return;
+          clearTimeout(timeout);
+          window.removeEventListener('error', failed, true);
+          window.removeEventListener('unhandledrejection', failed);
+          observer.disconnect();
+        });
+        observer.observe(document.getElementById('root'), { childList: true });
+        button.addEventListener('click', function () {
+          if (recovering) return;
+          recovering = true;
+          button.disabled = true;
+          status.textContent = 'A recuperar a KOSOLOLA…';
+          // Only this application's public assets; never auth storage or message data.
+          var repair = Promise.allSettled([
+            Promise.resolve().then(function () {
+              if (!('serviceWorker' in navigator)) return;
+              return navigator.serviceWorker.getRegistrations().then(function (registrations) {
+                return Promise.all(registrations.filter(function (registration) {
+                  return registration.scope === new URL('/papos-app/', location.origin).href;
+                }).map(function (registration) { return registration.unregister(); }));
+              });
+            }),
+            Promise.resolve().then(function () {
+              if (!('caches' in window)) return;
+              return caches.keys().then(function (names) {
+                return Promise.all(names.filter(function (name) {
+                  return name.indexOf('papos-app-assets-') === 0;
+                }).map(function (name) { return caches.delete(name); }));
+              });
+            })
+          ]);
+          // A stalled storage API must not trap the user on the recovery screen.
+          Promise.race([repair, new Promise(function (resolve) { setTimeout(resolve, 4000); })]).then(function () {
+            var url = new URL(location.href);
+            url.searchParams.set('app-recovery', String(Date.now()));
+            location.replace(url.href);
+          });
+        });
+      })();
+    </script>
     <script type="module" src="/src/papos-main.tsx"></script>
   </body>
 </html>
