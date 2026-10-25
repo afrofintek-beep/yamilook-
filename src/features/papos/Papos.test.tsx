@@ -18,7 +18,7 @@ describe('Papos account and route isolation', () => {
   it('retains the destination when requesting sign-in', () => { gate(); expect(screen.getByTestId('location')).toHaveTextContent('"path":"/login"'); expect(screen.getByTestId('location')).toHaveTextContent('"from":"/chat/real-chat"'); });
   it('does not reveal messages while authentication is loading', () => { auth.loading=true; gate(); expect(screen.getByRole('status')).toBeInTheDocument(); expect(screen.queryByText('Histórico partilhado')).not.toBeInTheDocument(); });
   it('uses the existing completed account without a second registration', () => { auth.user={id:'same-user'}; auth.profile={onboarding_completed:true}; gate(); expect(screen.getByText('Histórico partilhado')).toBeInTheDocument(); expect(auth.signIn).not.toHaveBeenCalled(); });
-  it('preserves the central onboarding requirement', () => { auth.user={id:'same-user'}; auth.profile={onboarding_completed:false}; gate(); expect(screen.getByRole('link',{name:'Continuar a inscrição'})).toHaveAttribute('href','/onboarding'); expect(screen.queryByText('Histórico partilhado')).not.toBeInTheDocument(); });
+  it('preserves the central onboarding requirement', () => { auth.user={id:'same-user'}; auth.profile={onboarding_completed:false}; gate(); expect(screen.getByRole('link',{name:'Continuar a inscrição'})).toHaveAttribute('href','https://www.yamilook.com/onboarding'); expect(screen.queryByText('Histórico partilhado')).not.toBeInTheDocument(); });
   it('allows retry when the shared account profile cannot be loaded', () => { auth.user={id:'same-user'}; gate(); fireEvent.click(screen.getByRole('button',{name:'Tentar novamente'})); expect(auth.refreshProfile).toHaveBeenCalledOnce(); });
   it('keeps all messenger navigation inside the standalone application', () => {
     render(<AppSurfaceContext.Provider value="papos"><MemoryRouter basename="/papos-app" initialEntries={['/papos-app/papos']}><BottomNav /></MemoryRouter></AppSurfaceContext.Provider>);
@@ -29,6 +29,12 @@ describe('Papos account and route isolation', () => {
   });
 });
 describe('Papos password sign-in', () => {
+  it('keeps account and legal links on Yamilook from any app host', () => {
+    login();
+    for (const [name, path] of [['Recuperar palavra-passe','/forgot-password'], ['Criar conta Yamilook com convite','/onboarding'], ['Termos','/terms'], ['Privacidade','/privacy'], ['Yamilook','/muxi']]) {
+      expect(screen.getByRole('link', { name, exact: true })).toHaveAttribute('href', `https://www.yamilook.com${path}`);
+    }
+  });
   function login() { return render(<MemoryRouter basename="/papos-app" initialEntries={[{pathname:'/papos-app/login',state:{from:'/chat/real-chat'}}]}><Routes><Route path="/login" element={<PaposLogin />} /><Route path="/chat/:id" element={<Destination />} /></Routes></MemoryRouter>); }
   function submit() { fireEvent.change(screen.getByLabelText('Email'),{target:{value:'same@example.com'}}); fireEvent.change(screen.getByLabelText('Palavra-passe'),{target:{value:'private-password'}}); fireEvent.click(screen.getByRole('button',{name:'Entrar na KOSOLOLA'})); }
   it('signs into the shared identity service and returns to the requested conversation', async () => { auth.signIn.mockResolvedValue({error:null}); login(); submit(); await waitFor(()=>expect(screen.getByTestId('location')).toHaveTextContent('/chat/real-chat')); expect(auth.signIn).toHaveBeenCalledExactlyOnceWith('same@example.com','private-password'); });
