@@ -579,7 +579,7 @@ export default function Chat() {
   };
 
   return (
-    <div className="fixed inset-0 h-screen-safe bg-background flex flex-col overflow-hidden overscroll-none">
+    <div className="chat-page fixed inset-0 h-screen-safe bg-background flex flex-col overflow-hidden overscroll-none">
       {/* Header */}
       <header className="relative shrink-0 z-50 glass border-b border-border/50 safe-top safe-inline">
         <div className="flex items-center justify-between px-2 py-2">

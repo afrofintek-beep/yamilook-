@@ -85,3 +85,79 @@ html.dark[data-brand="kosolola"] {
   --bubble-received-foreground: 180 15% 96%;
   --gradient-surface: linear-gradient(#18282A, #101C1D);
 }
+
+/* One visible viewport for the shell and the composer, including iOS keyboards. */
+html[data-brand="kosolola"] #root {
+  position: relative;
+  top: var(--kosolola-top, 0px);
+  height: var(--kosolola-height, 100dvh);
+}
+html[data-brand="kosolola"] .h-screen-safe {
+  height: var(--kosolola-height, 100dvh);
+}
+html[data-brand="kosolola"] .min-h-screen-safe {
+  min-height: var(--kosolola-height, 100dvh);
+}
+html[data-brand="kosolola"] .chat-page {
+  top: var(--kosolola-top, 0px);
+  bottom: auto;
+  min-width: 0;
+}
+html[data-brand="kosolola"] .app-bottom-nav {
+  bottom: var(--kosolola-bottom, 0px);
+}
+html[data-brand="kosolola"] .fab-safe-bottom {
+  bottom: calc(var(--kosolola-bottom, 0px) + 5rem + env(safe-area-inset-bottom, 0px) + .75rem);
+}
+.kosolola-conversations {
+  height: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+.kosolola-list, .kosolola-conversation {
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+.kosolola-list {
+  container-type: inline-size;
+}
+@container (max-width: 360px) {
+  .kosolola-list header img[src$="kosolola-icon-192.png"] {
+    display: none;
+  }
+}
+html[data-brand="kosolola"] .chat-page textarea {
+  max-height: min(120px, 30dvh);
+}
+@media (min-width: 1024px) {
+  .kosolola-conversations {
+    --kosolola-sidebar: clamp(320px, 32vw, 420px);
+    display: grid;
+    grid-template-columns: var(--kosolola-sidebar) minmax(0, 1fr);
+  }
+  .kosolola-list {
+    border-inline-end: 1px solid hsl(var(--border));
+  }
+  html[data-brand="kosolola"] .kosolola-conversation .chat-page {
+    position: relative;
+    inset: auto;
+    height: 100%;
+  }
+  html[data-brand="kosolola"]:has(.kosolola-conversations) .app-bottom-nav {
+    width: clamp(320px, 32vw, 420px);
+    left: auto;
+    right: auto;
+    inset-inline-start: 0;
+  }
+  .kosolola-list .fab-safe-bottom {
+    right: auto;
+    inset-inline-start: calc(var(--kosolola-sidebar) - 4.5rem);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kosolola-conversations *, .kosolola-conversations *::before, .kosolola-conversations *::after {
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+  }
+}
