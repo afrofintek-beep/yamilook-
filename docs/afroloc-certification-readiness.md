@@ -68,3 +68,18 @@ Duas contas de ensaio distintas e autorizadas, fluxo de associação sem altera�
 - Compilação de produção passou; aviso existente de chunks grandes.
 - Não foram usados acessos de utilizadores para testar o fluxo autenticado alojado nem houve certificação real.
 - Permissões consultadas de `profiles`: `authenticated` não tem UPDATE na coluna de certificação, mas tem INSERT. Isso não prova explorabilidade por si só; rever políticas de INSERT e criação de perfil antes de ativar um novo emissor de certificados.
+
+
+## Atualização após confirmação de afroloc.ao pelo utilizador
+
+Esta secção substitui a incerteza anterior sobre o backend oficial e a hipótese de ausência do endpoint.
+
+- `afroloc.ao` redireciona para `www.afroloc.ao`; o inventário de domínios Vercel aponta para `prj_uAk8Vpx3CmFVAZNiHWVRxlE9KtZ9`.
+- O bundle público `/assets/index-eRDAyk4r.js` usa `https://ljcxqwjvjgobhisqkujr.supabase.co` (afroc_app26).
+- Repositório correto da API: `afrofintek-beep/afroc_app26`. Configuração corresponde ao projeto; `api-v1/index.ts` blob `dee14bc5098feb5da84b659f0e24e9de15bf1510` é idêntico ao entrypoint alojado v36.
+- O endpoint `/functions/v1/api-v1/partners/certification-status` EXISTE. Usa `YAMILOOK_PARTNER_KEY` / `x-partner-key`, procura os últimos nove dígitos em `profiles.phone` e devolve o primeiro endereço `certified`. Não vincula código declarado, autorização do titular ou validade da evidência. Isto é insuficiente para certificar na KOSOLOLA.
+- O código de SMS observado usa Infobip. Isso não demonstra configuração/entrega operacional nem confirmação nativa no Auth. Os fluxos personalizados de login e mudança de telefone não devem ser copiados para associar contas: há seleção do perfil mais recente em duplicados e desafios consultados por telefone sem vínculo explícito ao UUID/finalidade no handler observado.
+- Existem campos de validade e revogação nas tabelas de validações/residentes. Falta validar as regras de emissão e consumo da evidência antes de implementar um contrato novo. O frontend commit publicado permanece sem confirmação porque Vercel recusou a inspeção de deployments.
+- Correção preparada na [PR AFROLOC #3](https://github.com/afrofintek-beep/afroc_app26/pull/3), com seis testes passados: suspensão da consulta insegura sem consultas à base de dados ou divulgação de endereços. Publicação direta recusada pela revisão automática por substituir uma API multipropósito sem revisão/staging. AFROLOC produção não alterado; Yamilook v14 continua protegido.
+
+Dependências agora concretas: protocolo de ligação autorizada entre contas independentes; OTP ligado ao UUID/finalidade e consumo atómico; evidência de certificação com validade/revogação e campos protegidos; validação em staging e duas contas de ensaio. Identificação do backend oficial já resolvida; nenhuma identidade comum ou certificação automática foi ativada.
