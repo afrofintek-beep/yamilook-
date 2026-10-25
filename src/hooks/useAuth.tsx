@@ -231,6 +231,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async (scope: 'global' | 'local' = 'global') => {
+    if (window.location.pathname.startsWith('/papos-app')) {
+      const { disableCallPush } = await import('@/lib/call-push');
+      await disableCallPush();
+    }
     await clearLegacyPrivateCache();
     const { error } = await supabase.auth.signOut({ scope });
     
