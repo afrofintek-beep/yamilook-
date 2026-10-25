@@ -1,9 +1,6 @@
-// Privacidade da coordenada — quantiza o GPS para o centróide de uma célula de
-// ~10 m ANTES de guardar/enviar. Alinha o Yamilook com a AFROLOC: a posição
-// precisa (sub-métrica) nunca sai do dispositivo; só circula a célula, que é o
-// que uma morada à escala de bairro precisa. Exposição da posição exata ≈ zero.
-//
-// Mesma matemática (Web Mercator + quantização por grelha) usada no Yamioo.
+// Quantiza coordenadas numa grelha Web Mercator nominal de 10 m antes do envio.
+// Reduz a precisão, mas não anonimiza a localização nem certifica um endereço
+// AFROLOC. Uma célula pode identificar uma residência; a partilha exige consentimento.
 
 const EARTH_RADIUS = 6378137;
 const MAX_LAT = 85.0511287798;
