@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,7 +29,6 @@ export default function PaposLogin() {
         <div><label htmlFor="papos-password" className="text-sm">Palavra-passe</label><Input id="papos-password" autoComplete="current-password" type="password" required value={password} onChange={e => setPassword(e.target.value)} disabled={busy} /></div>
         {error && <p role="alert" className="text-sm text-destructive">{error}</p>}<Button type="submit" disabled={busy || loading} className="w-full">{busy ? 'A entrar…' : 'Entrar na KOSOLOLA'}</Button>
       </form><a href="/forgot-password" className="text-primary text-sm block">Recuperar palavra-passe</a>
-      <Button asChild variant="outline" className="w-full"><Link to="/install">Instalar KOSOLOLA</Link></Button>
       <p className="text-sm text-muted-foreground">Ainda não tens conta? <a href="/onboarding" className="text-primary underline">Criar conta Yamilook com convite</a>.</p>
       <div className="flex gap-4 text-xs text-muted-foreground"><a href="/terms">Termos</a><a href="/privacy">Privacidade</a><a href="/muxi">Yamilook</a></div>
     </div></main>;
