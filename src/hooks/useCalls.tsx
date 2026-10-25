@@ -5,6 +5,8 @@ import type { Tables } from '@/integrations/supabase/types';
 import { useAuth } from './useAuth';
 import { useIncomingCallSignals } from './useIncomingCallSignals';
 import { logger } from '@/lib/logger';
+import { useScheduledCalls } from '@/features/scheduled-calls/useScheduledCalls';
+export type { ScheduledCall } from '@/features/scheduled-calls/api';
 
 export interface Call {
   id: string;
@@ -39,22 +41,6 @@ export interface CallParticipant {
   virtual_background: string | null;
 }
 
-export interface ScheduledCall {
-  id: string;
-  organizer_id: string;
-  title: string;
-  description: string | null;
-  call_type: 'voice' | 'video';
-  scheduled_at: string;
-  duration_minutes: number;
-  timezone: string;
-  is_recurring: boolean;
-  recurrence_pattern: string | null;
-  invite_link: string | null;
-  waiting_room_enabled: boolean;
-  status: string;
-}
-
 export interface CallHistory {
   id: string;
   type: 'voice' | 'video';
@@ -81,7 +67,8 @@ export function useCalls() {
   // CallsTabContent, Calls page…) don't collide on one shared realtime topic.
   const instanceIdRef = useRef(Math.random().toString(36).slice(2));
   const [callHistory, setCallHistory] = useState<CallHistory[]>([]);
-  const [scheduledCalls, setScheduledCalls] = useState<ScheduledCall[]>([]);
+  const scheduling = useScheduledCalls();
+  const scheduledCalls = scheduling.scheduledCalls;
   const [loading, setLoading] = useState(true);
 
   // Keep a ref so effects don't need to re-subscribe when incomingCall changes
@@ -281,146 +268,9 @@ export function useCalls() {
     }
   }, [user]);
 
-  // Fetch scheduled calls
-  const fetchScheduledCalls = useCallback(async () => {
-    if (!user) return;
-
-    try {
-      // Fetch calls where user is organizer
-      const { data: organizerCalls, error: organizerError } = await supabase
-        .from('scheduled_calls')
-        .select('*')
-        .eq('organizer_id', user.id)
-        .gte('scheduled_at', new Date().toISOString())
-        .order('scheduled_at', { ascending: true });
-
-      if (organizerError) {
-        logger.error('Error fetching organizer calls', 'useCalls', organizerError);
-      }
-
-      // Fetch calls where user is invited
-      const { data: invites, error: invitesError } = await supabase
-        .from('scheduled_call_invites')
-        .select('scheduled_call_id')
-        .eq('user_id', user.id);
-
-      if (invitesError) {
-        logger.error('Error fetching invites', 'useCalls', invitesError);
-      }
-
-      let invitedCalls: ScheduledCall[] = [];
-      if (invites && invites.length > 0) {
-        const inviteIds = invites.map(i => i.scheduled_call_id);
-        const { data: calls } = await supabase
-          .from('scheduled_calls')
-          .select('*')
-          .in('id', inviteIds)
-          .gte('scheduled_at', new Date().toISOString())
-          .order('scheduled_at', { ascending: true });
-        
-        invitedCalls = (calls || []) as ScheduledCall[];
-      }
-
-      // Merge and deduplicate
-      const allCalls = [...(organizerCalls || []), ...invitedCalls] as ScheduledCall[];
-      const uniqueCalls = allCalls.reduce((acc, call) => {
-        if (!acc.find(c => c.id === call.id)) {
-          acc.push(call);
-        }
-        return acc;
-      }, [] as ScheduledCall[]);
-
-      // Sort by scheduled_at
-      uniqueCalls.sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime());
-
-      setScheduledCalls(uniqueCalls);
-    } catch (error) {
-      logger.error('Error fetching scheduled calls', 'useCalls', error);
-    }
-  }, [user]);
-
-  // Schedule a new call
-  const scheduleCall = useCallback(async (
-    title: string,
-    scheduledAt: Date,
-    callType: 'voice' | 'video',
-    options: {
-      description?: string;
-      durationMinutes?: number;
-      isRecurring?: boolean;
-      recurrencePattern?: string;
-      waitingRoomEnabled?: boolean;
-      invitees?: string[];
-    } = {}
-  ) => {
-    if (!user) return null;
-
-    try {
-      const { data: call, error } = await supabase
-        .from('scheduled_calls')
-        .insert({
-          organizer_id: user.id,
-          title,
-          scheduled_at: scheduledAt.toISOString(),
-          call_type: callType,
-          description: options.description,
-          duration_minutes: options.durationMinutes || 60,
-          is_recurring: options.isRecurring || false,
-          recurrence_pattern: options.recurrencePattern,
-          waiting_room_enabled: options.waitingRoomEnabled ?? true,
-          invite_link: crypto.randomUUID(),
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Create invites
-      if (options.invitees?.length) {
-        await supabase.from('scheduled_call_invites').insert(
-          options.invitees.map(userId => ({
-            scheduled_call_id: call.id,
-            user_id: userId,
-          }))
-        );
-      }
-
-      await fetchScheduledCalls();
-      return call;
-    } catch (error) {
-      logger.error('Error scheduling call', 'useCalls', error);
-      return null;
-    }
-  }, [user, fetchScheduledCalls]);
-
-  // Update RSVP
-  const updateRsvp = useCallback(async (
-    scheduledCallId: string,
-    status: 'accepted' | 'declined' | 'maybe'
-  ) => {
-    if (!user) return;
-
-    await supabase
-      .from('scheduled_call_invites')
-      .update({ rsvp_status: status })
-      .eq('scheduled_call_id', scheduledCallId)
-      .eq('user_id', user.id);
-
-    await fetchScheduledCalls();
-  }, [user, fetchScheduledCalls]);
-
-  // Cancel scheduled call
-  const cancelScheduledCall = useCallback(async (scheduledCallId: string) => {
-    if (!user) return;
-
-    await supabase
-      .from('scheduled_calls')
-      .update({ status: 'cancelled' })
-      .eq('id', scheduledCallId)
-      .eq('organizer_id', user.id);
-
-    await fetchScheduledCalls();
-  }, [user, fetchScheduledCalls]);
+  const updateRsvp = scheduling.rsvp;
+  const cancelScheduledCall = scheduling.cancel;
+  const fetchScheduledCalls = scheduling.refetch;
 
   // Get call statistics
   const getCallStatistics = useCallback(async (period: 'week' | 'month' | 'all') => {
@@ -692,16 +542,16 @@ export function useCalls() {
   // Initial fetch
   useEffect(() => {
     fetchCallHistory();
-    fetchScheduledCalls();
-  }, [fetchCallHistory, fetchScheduledCalls]);
+  }, [fetchCallHistory]);
 
   return {
     incomingCall,
     setIncomingCall,
     callHistory,
     scheduledCalls,
+    scheduledError: scheduling.error,
+    scheduledLoading: scheduling.isLoading,
     loading,
-    scheduleCall,
     updateRsvp,
     cancelScheduledCall,
     getCallStatistics,

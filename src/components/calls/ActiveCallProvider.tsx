@@ -1,3 +1,4 @@
+import { ScheduledCallNotices } from '@/features/scheduled-calls/ScheduledCallNotices';
 /* @refresh reset */
 import { createContext, useContext, useState, useCallback, ReactNode, lazy, Suspense, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -247,6 +248,7 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
   return (
     <ActiveCallContext.Provider value={contextValue}>
       {children}
+      <ScheduledCallNotices />
       
       {/* Incoming call overlay - lazy loaded */}
       {incomingCall && (

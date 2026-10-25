@@ -34,6 +34,7 @@ const Contacts = lazy(() => import("./pages/Contacts"));
 const Chat = lazy(() => import("./pages/Chat"));
 const Settings = lazy(() => import("./pages/Settings"));
 const Calls = lazy(() => import("./pages/Calls"));
+const ScheduledCallRoom = lazy(() => import('@/features/scheduled-calls/ScheduledCallRoom'));
 const Call = lazy(() => import("./pages/Call"));
 const Status = lazy(() => import("./pages/Status"));
 const Feed = lazy(() => import("./pages/Feed"));
@@ -278,6 +279,7 @@ function AnimatedRoutes() {
           <Route path="/chat/:conversationId" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
           <Route path="/calls" element={<ProtectedRoute><Calls /></ProtectedRoute>} />
+          <Route path="/scheduled-call/:sessionId" element={<ProtectedRoute><ScheduledCallRoom /></ProtectedRoute>} />
           <Route path="/call/:callId" element={<ProtectedRoute><Call /></ProtectedRoute>} />
           <Route path="/status" element={<ProtectedRoute><Status /></ProtectedRoute>} />
           <Route path="/feed" element={<ProtectedRoute><Feed /></ProtectedRoute>} />

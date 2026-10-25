@@ -48,6 +48,9 @@ export default function Calls() {
   const { 
     callHistory, 
     scheduledCalls,
+    scheduledError,
+    scheduledLoading,
+    fetchScheduledCalls,
     loading, 
     getCallStatistics,
     cancelScheduledCall,
@@ -464,7 +467,7 @@ export default function Calls() {
 
         {/* Scheduled Calls */}
         <TabsContent value="scheduled" className="min-h-0 flex-1 overflow-y-auto overscroll-contain mt-0">
-          {scheduledCalls.length === 0 ? (
+          {scheduledError ? <div role="alert" className="p-4 space-y-3"><p>Não foi possível carregar os agendamentos.</p><Button onClick={()=>void fetchScheduledCalls()}>Tentar novamente</Button></div> : scheduledLoading ? <p className="p-4">A carregar agendamentos…</p> : scheduledCalls.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-64 text-center px-8">
               <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
                 <Calendar className="w-10 h-10 text-primary" />
