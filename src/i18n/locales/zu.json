@@ -1,0 +1,14 @@
+{
+  "auth": {
+    "email": "I-imeyili",
+    "login": "Ngena",
+    "password": "Iphasiwedi",
+    "forgotPassword": "Ukhohlwe iphasiwedi?",
+    "noAccount": "Awunayo i-akhawunti?",
+    "createAccount": "Bhalisa",
+    "signingIn": "Iyalayisha..."
+  },
+  "settings": {
+    "language": "Ulimi"
+  }
+}

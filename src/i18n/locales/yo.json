@@ -1,0 +1,16 @@
+{
+  "auth": {
+    "email": "Imeeli",
+    "login": "Wọle",
+    "password": "Ọrọ Aṣinà",
+    "forgotPassword": "Ṣe o gbagbe ọrọ aṣinà?",
+    "noAccount": "Ko ni akọọlẹ?",
+    "createAccount": "Forukọsilẹ",
+    "signingIn": "A n ṣiṣẹ...",
+    "termsOfService": "Awọn Ofin Iṣẹ",
+    "privacyPolicy": "Ilana Asiri"
+  },
+  "settings": {
+    "language": "Ede"
+  }
+}
