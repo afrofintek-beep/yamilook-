@@ -30,6 +30,7 @@ it('loads the saved own photo even when the auth profile has no photo', async ()
   draw();
   await waitFor(() => expect(screen.getByRole('img')).toHaveAttribute('src', fixtures.saved.avatar_url));
   expect(fixtures.from).toHaveBeenCalledWith('profiles');
+  expect(screen.getByRole('link', { name: 'Editar o meu perfil na Yamilook' })).toHaveAttribute('href', 'https://www.yamilook.com/profile');
 });
 it('refreshes the own photo on return despite the global focus setting', async () => {
   draw();
