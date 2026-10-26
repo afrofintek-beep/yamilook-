@@ -249,7 +249,12 @@ export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?:
             setLoading(false);
           }
         });
-        if (active()) setFeedPosts(detailed);
+        if (active()) {
+          // An infinite-scroll page may already have been appended while the
+          // first page's metadata was loading. Preserve those extra posts.
+          const detailsById = new Map(detailed.map(post => [post.id, post]));
+          setFeedPosts(previous => previous.map(post => detailsById.get(post.id) || post));
+        }
       } catch (error) {
         console.error('Unable to load feed', error);
         if (active()) setFeedError(true);
