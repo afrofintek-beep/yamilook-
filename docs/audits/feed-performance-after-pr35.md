@@ -44,3 +44,20 @@ Post enrichment still awaits profiles, all reactions, post-topic mappings and pe
 ## Remaining input
 
 An authenticated production session is required to measure navigation-to-first-visible-post and first-image display, capture actual API/image timings, verify advertising insertion and scroll behavior with real data, and compare cold/warm mobile and desktop sessions. Real iPhone/Safari and local mobile-network validation remain outstanding.
+
+## Authenticated production follow-up
+
+The user completed browserAuth on their own account. Fresh visible evidence confirmed https://www.yamilook.com/feed with real publications. Desktop viewport: 1363 x 936 CSS pixels, document scrollWidth 1363 (no horizontal overflow). Sidebar and lateral navigation visually retained the PR34 layout.
+
+| Sample | Reload to first visible article, upper bound |
+| --- | --- |
+| 1 | 2459 ms |
+| 2 | 2309 ms |
+
+Method: controller wall clock immediately before tab.reload(), stopped after the first article locator became visible. These are repeat authenticated reloads with cache state uncontrolled, including browser RPC/automation overhead. They are not Navigation Timing/LCP/first-paint measurements, cold-cache benchmarks, or device/network measurements. On sample 2, the first eager image was complete with naturalWidth 1600 and displayWidth 672 when inspected immediately after article visibility. No exact image completion timestamp was captured.
+
+Organic cards were observed before the sponsored card appeared in the refreshed feed. This agrees with the controlled pending-ad test, but provides no measured ad response duration. Scrolling using the viewport End key appended real cards: article count rose from 16 to 54 across subsequent observations. This demonstrates continuation, not final-page or no-duplicates verification. Remaining lazy images had not all loaded when inspected; that alone is not an image failure.
+
+Several profile avatars had naturalWidth 2316 while displayed at 40 CSS pixels. This is evidence of oversized source dimensions, not a measurement of transfer bytes or proof of the main latency cause. Consider thumbnail variants after confirming storage/CDN capabilities and actual transfer costs.
+
+The browser API still does not expose a network waterfall or Performance entries, and offers no supported viewport-resize control here. Actual request counts/durations, cold/warm cache comparison, mobile production timings and real iPhone/Safari behavior remain unverified. Earlier unauthenticated limitations above describe the initial stage; authenticated desktop observations in this section supersede that blocker only.
