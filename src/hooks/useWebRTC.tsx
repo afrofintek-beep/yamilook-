@@ -405,6 +405,9 @@ export function useWebRTC(options: UseWebRTCOptions = {}) {
     conversationId?: string
   ): Promise<string> => {
     if (!user) throw new Error('Not authenticated');
+    // Reject impossible destinations before ICE negotiation or asking for microphone/camera.
+    if (!targetUserId?.trim()) throw new Error('Seleciona um contacto para iniciar a chamada.');
+    if (targetUserId === user.id) throw new Error('Não podes iniciar uma chamada para a tua própria conta.');
 
     // Track whether the call was created in DB so we can clean it up on failure
     let createdCallId: string | null = null;
