@@ -126,3 +126,32 @@ for (const width of [390, 1440]) {
     expect(nextPages).toBe(1);
   });
 }
+
+
+test('opt-in device report downloads sanitized timings without breaking mobile layout', async ({ page }) => {
+  await page.setViewportSize({width: 390, height: 844});
+  await mockAccount(page);
+  await page.goto('/muxi');
+  await expect(page.locator('article')).toHaveCount(12);
+  await expect(page.getByRole('complementary', {name: 'Diagnóstico do feed'})).toHaveCount(0);
+  await page.goto('/muxi?diagnostico=1');
+  await expect(page.locator('article')).toHaveCount(12);
+  await expect(page.getByRole('button', {name: 'Terminar recolha'})).toBeVisible();
+  await page.getByRole('button', {name: 'Terminar recolha'}).click();
+  const pending = page.waitForEvent('download');
+  await page.getByRole('button', {name: 'Guardar relatório'}).click();
+  const download = await pending;
+  const stream = await download.createReadStream();
+  let raw = '';
+  for await (const chunk of stream!) raw += chunk.toString();
+  const report = JSON.parse(raw);
+  expect(report.viewport.width).toBe(390);
+  expect(report.articles.atEnd).toBe(12);
+  expect(report.firstArticleObservedMsAfterObserver).not.toBeNull();
+  expect(report.resources.some((r: {category: string}) => r.category === 'api:posts')).toBe(true);
+  expect(raw).not.toContain(me);
+  expect(raw).not.toContain(peer);
+  expect(raw).not.toContain('http');
+  expect(raw).not.toContain('Publicação');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
