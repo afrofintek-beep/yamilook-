@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { fetchPublicProfileById, fetchPublicProfilesBatched } from '@/lib/public-profile-batch';
 import { useAuth } from './useAuth';
 import type { Tables } from '@/integrations/supabase/types';
 import { isRecentlyOnline } from '@/lib/online-presence';
@@ -103,11 +104,7 @@ export function useUserStatus(userId: string | null) {
 
     const fetchStatus = async () => {
       try {
-        const { data, error } = await supabase
-          .from('public_profiles')
-          .select('is_online, last_seen, show_online_status, show_last_seen')
-          .eq('id', userId)
-          .single();
+        const { data, error } = await fetchPublicProfileById(userId);
 
         if (data && !error) {
           setStatus({
@@ -175,10 +172,7 @@ export function useMultipleUserStatus(userIds: string[]) {
 
     const fetchStatuses = async () => {
       try {
-        const { data, error } = await supabase
-          .from('public_profiles')
-          .select('id, is_online, last_seen, show_online_status, show_last_seen')
-          .in('id', userIds);
+        const { data, error } = await fetchPublicProfilesBatched(userIds);
 
         if (data && !error) {
           const statusMap: Record<string, UserStatus> = {};
