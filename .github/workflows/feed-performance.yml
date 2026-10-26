@@ -3,6 +3,12 @@ on:
   pull_request:
     paths:
       - 'src/hooks/usePosts.tsx'
+      - 'src/hooks/useStatus.tsx'
+      - 'src/hooks/useContacts.tsx'
+      - 'src/hooks/useOnlineStatus.tsx'
+      - 'src/hooks/useChat.tsx'
+      - 'src/lib/public-profile-batch.ts'
+      - 'src/lib/public-profile-batch.test.ts'
       - 'src/pages/Feed.tsx'
       - 'src/components/feed/FeedDiagnostics.tsx'
       - 'e2e/feed-responsive.spec.ts'
@@ -11,6 +17,12 @@ on:
     branches: [main]
     paths:
       - 'src/hooks/usePosts.tsx'
+      - 'src/hooks/useStatus.tsx'
+      - 'src/hooks/useContacts.tsx'
+      - 'src/hooks/useOnlineStatus.tsx'
+      - 'src/hooks/useChat.tsx'
+      - 'src/lib/public-profile-batch.ts'
+      - 'src/lib/public-profile-batch.test.ts'
       - 'src/pages/Feed.tsx'
       - 'src/components/feed/FeedDiagnostics.tsx'
       - 'e2e/feed-responsive.spec.ts'
@@ -32,6 +44,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+      - run: npx vitest run src/lib/public-profile-batch.test.ts
       - run: npx playwright install --with-deps chromium
       - run: npx playwright test e2e/feed-responsive.spec.ts --project=chromium
       - uses: actions/upload-artifact@v4
