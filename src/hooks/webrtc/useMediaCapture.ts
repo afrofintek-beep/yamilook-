@@ -4,6 +4,7 @@
  */
 import { useState, useRef, useCallback } from 'react';
 import { CallSettings } from './types';
+import { isMediaPermissionDenied } from './call-preflight';
 import { logger } from '@/lib/logger';
 
 export interface UseMediaCaptureReturn {
@@ -77,6 +78,9 @@ export function useMediaCapture(): UseMediaCaptureReturn {
     } catch (err1) {
       logger.warn('First getUserMedia attempt failed', 'MediaCapture', err1);
 
+      // Respect an explicit refusal; retries can cause repeated permission prompts.
+      if (isMediaPermissionDenied(err1)) throw err1;
+
       // Attempt 2: if video was requested, fall back to audio-only
       if (settings.videoEnabled) {
         logger.warn('Retrying with audio-only fallback...', 'MediaCapture');
@@ -86,6 +90,7 @@ export function useMediaCapture(): UseMediaCaptureReturn {
             audio: settings.audioEnabled ? audioConstraints : false,
           });
         } catch (err2) {
+          if (isMediaPermissionDenied(err2)) throw err2;
           logger.warn('Audio-only fallback also failed, trying bare audio...', 'MediaCapture', err2);
         }
       }

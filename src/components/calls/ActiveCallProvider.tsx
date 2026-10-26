@@ -6,6 +6,8 @@ import { useWebRTC, CallState } from '@/hooks/useWebRTC';
 import type { BgMode, EffectsConfig } from '@/lib/virtualBackground';
 import { useCalls } from '@/hooks/useCalls';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
+import { validateCallRecipient } from '@/hooks/webrtc/call-preflight';
 import { logger } from '@/lib/logger';
 
 // Lazy load the heavy IncomingCallOverlay component
@@ -90,6 +92,7 @@ function formatCallError(err: unknown) {
 }
 
 export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
+  const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
@@ -127,6 +130,13 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
   const startCall = useCallback(async (contactId: string, type: 'voice' | 'video', conversationId?: string) => {
     logger.debug('Starting call', 'ActiveCallProvider', { contactId, type });
 
+    try {
+      validateCallRecipient(user?.id, contactId);
+    } catch (error) {
+      toast({ title: 'Destinatário inválido', description: formatCallError(error), variant: 'destructive' });
+      return;
+    }
+
     // Preflight checks to avoid "nothing happens" when the browser blocks media APIs.
     if (!window.isSecureContext) {
       toast({
@@ -162,7 +172,7 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
         variant: 'destructive',
       });
     }
-  }, [initiateCall, navigate, toast]);
+  }, [user?.id, initiateCall, navigate, toast]);
 
   const joinCall = useCallback(async (callId: string, callType: 'voice' | 'video', initiatorId: string) => {
     // If we already bootstrapped this call, do nothing.
