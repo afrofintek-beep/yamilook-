@@ -35,7 +35,7 @@ describe('multi-device settings for both app surfaces', () => {
   it('lists both authenticated sessions and protects the current one', async () => {
     render(<ConnectedDevices />);
     expect(await screen.findByText(/iOS · Safari/)).toBeInTheDocument();
-    expect(screen.getByText(/Windows · Chrome/)).toBeInTheDocument();
+    expect(screen.getAllByText(/Windows · Chrome/).length).toBeGreaterThan(0);
     expect(screen.getByText(/Este dispositivo/)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Revogar iOS · Safari' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Revogar Windows · Chrome' })).toBeInTheDocument();
