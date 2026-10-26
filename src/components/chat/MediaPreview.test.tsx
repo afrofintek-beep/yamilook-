@@ -12,6 +12,21 @@ beforeEach(() => {
 });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllEnvs(); });
 
+it('resolves a private attachment through authorization before displaying it', async () => {
+  createSignedUrl.mockResolvedValue({ data: { signedUrl: 'https://example.supabase.co/temporary-private' }, error: null });
+  const { container } = render(<MediaThumbnail url="chat-attachment://c/u/id/photo.jpg" type="image" />);
+  expect(container.querySelector('img')).not.toHaveAttribute('src');
+  await waitFor(() => expect(container.querySelector('img')).toHaveAttribute('src', 'https://example.supabase.co/temporary-private'));
+  expect(createSignedUrl).toHaveBeenCalledWith('c/u/id/photo.jpg', 300);
+});
+
+it('does not expose the private reference as a network URL when authorization fails', async () => {
+  createSignedUrl.mockResolvedValue({ data: null, error: { message: 'denied' } });
+  const { container } = render(<MediaThumbnail url="chat-attachment://c/u/id/private.jpg" type="image" />);
+  await waitFor(() => expect(createSignedUrl).toHaveBeenCalled());
+  expect(container.querySelector('img')).not.toHaveAttribute('src');
+});
+
 describe('Papos video presentation', () => {
   it('uses a saved cover without loading the original video or signing a public URL', () => {
     const { container } = render(<MediaThumbnail url={url} type="video" posterUrl="https://example.com/poster.jpg" durationSeconds={17} />);

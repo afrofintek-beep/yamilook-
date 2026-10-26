@@ -6370,6 +6370,10 @@ export type Database = {
       }
     }
     Functions: {
+      reserve_chat_attachment: {
+        Args: { p_conversation_id: string; p_filename: string }
+        Returns: Json
+      }
       create_chat_conversation: {
         Args: { p_participant_ids: string[]; p_group_name?: string | null; p_avatar_url?: string | null }
         Returns: Json

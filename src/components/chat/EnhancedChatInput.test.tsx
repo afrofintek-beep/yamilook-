@@ -69,6 +69,6 @@ describe('Papos draft recovery', () => {
     render(<EnhancedChatInput onSend={onSend} onTyping={vi.fn()} conversationId="chat" />);
     fireEvent.change(screen.getByLabelText('Escolher fotografia ou vídeo'), { target: { files: [new File(['video'], 'clip.MOV')] } });
     await waitFor(() => expect(onSend).toHaveBeenCalledWith('clip.MOV', 'video', 'https://example.com/clip.mov', undefined, 17, false, 'https://example.com/poster.jpg'));
-    expect(uploadMedia).toHaveBeenCalledWith(expect.any(File), 'video', { videoPoster: true });
+    expect(uploadMedia).toHaveBeenCalledWith(expect.any(File), 'video', { videoPoster: true, conversationId: 'chat' });
   });
 });

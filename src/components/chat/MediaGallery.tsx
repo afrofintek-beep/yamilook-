@@ -1,3 +1,5 @@
+import { ChatMediaImage, ChatMediaLink } from './PrivateMediaElements';
+import { privateChatPath, signPrivateChatMedia } from '@/lib/private-chat-media';
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { Image, Film, FileText, Link2, Download, X, Trash2 } from 'lucide-react';
@@ -126,19 +128,19 @@ export function MediaGallery({ open, onOpenChange, conversationId }: MediaGaller
     setSelectedItems(newSelected);
   };
 
-  const downloadSelected = () => {
-    selectedItems.forEach((id) => {
+  const downloadSelected = async () => {
+    for (const id of selectedItems) {
       const item = [...media, ...files, ...links].find((i) => i.id === id);
       if (item) {
         const link = document.createElement('a');
-        link.href = item.url;
+        try { link.href = privateChatPath(item.url) ? await signPrivateChatMedia(item.url) : item.url; } catch { continue; }
         link.download = item.name || 'download';
         link.target = '_blank';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
       }
-    });
+    }
     setSelectedItems(new Set());
     setIsSelecting(false);
   };
@@ -184,7 +186,7 @@ export function MediaGallery({ open, onOpenChange, conversationId }: MediaGaller
                     className="w-full h-full"
                   >
                     {item.type === 'image' ? (
-                      <img
+                      <ChatMediaImage
                         src={item.url}
                         alt=""
                         className="w-full h-full object-cover rounded"
@@ -234,9 +236,9 @@ export function MediaGallery({ open, onOpenChange, conversationId }: MediaGaller
                     </p>
                   </div>
                   <Button variant="ghost" size="icon" asChild>
-                    <a href={item.url} download target="_blank" rel="noopener noreferrer">
+                    <ChatMediaLink href={item.url} download target="_blank" rel="noopener noreferrer">
                       <Download className="w-4 h-4" />
-                    </a>
+                    </ChatMediaLink>
                   </Button>
                 </div>
               ))}

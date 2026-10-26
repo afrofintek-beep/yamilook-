@@ -93,7 +93,7 @@ export function EnhancedChatInput({
     cancelRecording, 
     uploadVoiceMessageAsync,
     clearRecording 
-  } = useVoiceRecorder();
+  } = useVoiceRecorder(conversationId);
   const { uploading, uploadMedia } = useMediaUpload();
 
   useEffect(() => {
@@ -184,7 +184,7 @@ export function EnhancedChatInput({
         uploadVoiceMessageAsync(
           blob,
           async (finalUrl) => {
-            console.log('[Voice] Upload complete, updating message:', messageId, 'with URL:', finalUrl);
+            console.log('[Voice] Upload complete, updating message:', messageId);
             if (onUpdateMediaUrl) {
               try {
                 await onUpdateMediaUrl(messageId, finalUrl);
@@ -211,7 +211,7 @@ export function EnhancedChatInput({
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'file') => {
     const file = e.target.files?.[0];
-    if (!file || sendingRef.current || disabled) return;
+    if (!file || !conversationId || sendingRef.current || disabled) return;
 
     const input = e.target;
     sendingRef.current = true;
@@ -219,7 +219,7 @@ export function EnhancedChatInput({
     setSendError('');
     try {
       const messageType = chatMediaType(file);
-      const result = await uploadMedia(file, messageType === 'file' ? type : messageType, { videoPoster: messageType === 'video' });
+      const result = await uploadMedia(file, messageType === 'file' ? type : messageType, { videoPoster: messageType === 'video', conversationId });
       if (!result) throw new Error('Upload failed');
       const sent = await onSend(file.name, messageType, result.url, replyTo?.id, result.durationSeconds, viewOnceEnabled, result.thumbnailUrl);
       if (!sent.messageId) throw new Error('Delivery not confirmed');
