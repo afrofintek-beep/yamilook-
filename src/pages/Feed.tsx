@@ -26,7 +26,7 @@ const FeedDiagnostics = lazy(() => import('@/components/feed/FeedDiagnostics'));
 
 export default function Feed() {
   const navigate = useNavigate();
-  const { feedPosts, loading, fetchFeedPosts, loadMoreFeedPosts, hasMoreFeed, loadingMoreFeed, newPostsCount } = usePosts({ loadDiscovery: false });
+  const { feedPosts, loading, feedError, loadMoreError, retryLoadMorePosts, fetchFeedPosts, loadMoreFeedPosts, hasMoreFeed, loadingMoreFeed, newPostsCount } = usePosts({ loadDiscovery: false });
   const { fetchActiveAdsForFeed, interleaveAdsInFeed } = useAdvertising();
   const { hasActiveStreams, activeStreams } = useActiveStreams();
   const { archivedPostIds, fetchArchivedIds, toggleArchive, isArchived } = useArchivedPosts();
@@ -181,6 +181,12 @@ export default function Feed() {
 
         {/* Feed posts */}
         <div className="feed-posts">
+          {feedError && (
+            <div role="alert" className="mx-3 my-3 flex items-center justify-between gap-3 rounded-lg border border-destructive/40 bg-card px-4 py-3 text-sm">
+              <span>Não foi possível atualizar as publicações. Verifique a ligação e tente novamente.</span>
+              <Button size="sm" variant="outline" onClick={() => void fetchFeedPosts()}>Repetir</Button>
+            </div>
+          )}
           {loading ? (
             <FeedSkeleton count={3} />
           ) : feedPosts.length === 0 ? (
@@ -220,6 +226,12 @@ export default function Feed() {
                 </div>
               ))}
               {hasMoreFeed && <div ref={sentinelRef} className="h-px" aria-hidden="true" />}
+              {loadMoreError && (
+                <div role="alert" className="flex items-center justify-center gap-3 py-4 text-sm">
+                  <span>Não foi possível carregar mais publicações.</span>
+                  <Button variant="outline" size="sm" onClick={() => void retryLoadMorePosts()}>Repetir</Button>
+                </div>
+              )}
               {loadingMoreFeed && (
                 <div className="flex justify-center py-6">
                   <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
