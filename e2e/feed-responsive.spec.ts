@@ -136,7 +136,7 @@ test('failed first page offers retry and recovers without a permanent loading sp
   let allowPosts = false;
   await page.route('**/rest/v1/posts*', async route => {
     if (allowPosts) return route.fallback();
-    await route.fulfill({status: 503, json: {code: 'PGRST000', message: 'Temporary test outage'}});
+    await route.fulfill({status: 400, json: {code: 'PGRST100', message: 'Simulated query failure'}});
   });
   await page.goto('/muxi');
   const error = page.getByRole('alert').filter({hasText: 'Não foi possível atualizar'});
@@ -155,7 +155,7 @@ test('pagination error allows a manual retry without automatic request storms', 
     if (!new URL(route.request().url()).searchParams.has('created_at')) return route.fallback();
     pageRequests++;
     if (allowMore) return route.fallback();
-    await route.fulfill({status: 503, json: {code: 'PGRST000', message: 'Temporary test outage'}});
+    await route.fulfill({status: 400, json: {code: 'PGRST100', message: 'Simulated query failure'}});
   });
   await page.goto('/muxi');
   await expect(page.locator('article')).toHaveCount(20);
