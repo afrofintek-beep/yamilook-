@@ -17,6 +17,7 @@ import { toast } from '@/hooks/use-toast';
 import { useWebRTCSignaling, EventPayload } from './useWebRTCSignaling';
 import { useICEServers } from './useICEServers';
 
+import { validateCallRecipient } from './webrtc/call-preflight';
 import { finishCallLocallyFirst, watchCallTermination } from './webrtc/call-termination';
 import { useMediaCapture } from './webrtc/useMediaCapture';
 import { usePeerConnection } from './webrtc/usePeerConnection';
@@ -404,7 +405,8 @@ export function useWebRTC(options: UseWebRTCOptions = {}) {
     callType: 'voice' | 'video',
     conversationId?: string
   ): Promise<string> => {
-    if (!user) throw new Error('Not authenticated');
+    validateCallRecipient(user?.id, targetUserId);
+    if (!user) throw new Error('Inicia sessão para fazer uma chamada.');
 
     // Track whether the call was created in DB so we can clean it up on failure
     let createdCallId: string | null = null;
@@ -414,6 +416,12 @@ export function useWebRTC(options: UseWebRTCOptions = {}) {
       // that could flush cleanup effects (closeAllPeerConnections / stopAllMedia)
       // between getUserMedia and createPeerConnection. All state is updated in a
       // single batch AFTER the peer connection and offer are fully created.
+
+      // Verify a visible recipient exists before requesting any device permission.
+      const { data: recipient, error: recipientError } = await supabase
+        .from('public_profiles').select('id').eq('id', targetUserId).maybeSingle();
+      if (recipientError) throw new Error('Não foi possível verificar o destinatário. Verifica a ligação e tenta novamente.');
+      if (!recipient) throw new Error('Destinatário indisponível. Seleciona outro utilizador para fazer a chamada.');
 
       // 1. Ensure ICE/TURN servers ready (with timeout gate + STUN fallback)
       await ensureIceServersReady();
@@ -554,7 +562,8 @@ export function useWebRTC(options: UseWebRTCOptions = {}) {
     callType: 'voice' | 'video',
     initiatorId: string
   ) => {
-    if (!user) return;
+    validateCallRecipient(user?.id, initiatorId);
+    if (!user) throw new Error('Inicia sessão para atender a chamada.');
 
     try {
       console.log('[WebRTC] ANSWERING CALL:', callId);
@@ -598,13 +607,8 @@ export function useWebRTC(options: UseWebRTCOptions = {}) {
       await lifecycle.updateCallStatus(callId, 'ongoing', true);
 
       // 5. Notify caller
-      await supabase.from('call_signals').insert({
-        call_id: callId,
-        from_user_id: user.id,
-        to_user_id: initiatorId,
-        signal_type: 'call-accepted',
-        payload: JSON.parse(JSON.stringify({ type: 'accepted' })),
-      });
+      const accepted = await sendSignalForCall(callId, initiatorId, 'call-accepted', { type: 'accepted' });
+      if (!accepted) throw new Error('Não foi possível confirmar a aceitação da chamada. Tenta novamente.');
 
       // 6. Set callId in state so the signaling subscription (useWebRTCSignaling)
       // starts on the next render. The signaling hook will:
@@ -647,11 +651,21 @@ export function useWebRTC(options: UseWebRTCOptions = {}) {
       callConnectingTimeoutRef.current = connectingTimeout;
     } catch (error) {
       console.error('[WebRTC] Error answering call:', error);
+      // Release hardware immediately; database notification must not hold it open.
       cleanupCall();
-      setState(prev => ({ ...prev, callStatus: 'failed' }));
+      const message = error instanceof Error ? error.message : 'Não foi possível atender a chamada.';
+      setState(prev => ({ ...prev, callStatus: 'failed', lastError: message }));
+      try {
+        const { error: endError } = await supabase.from('calls').update({
+          status: 'failed', ended_at: new Date().toISOString(), end_reason: 'answerer_error',
+        }).eq('id', callId).in('status', ['ringing', 'connecting', 'ongoing']);
+        if (endError) console.error('[WebRTC] Failed to notify caller of answer failure:', endError);
+      } catch (notifyError) {
+        console.error('[WebRTC] Failed to notify caller of answer failure:', notifyError);
+      }
       throw error;
     }
-  }, [user, ensureIceServersReady, mediaCapture, peerConnection, lifecycle, autoplay, cleanupCall]);
+  }, [user, ensureIceServersReady, mediaCapture, peerConnection, lifecycle, autoplay, cleanupCall, sendSignalForCall]);
 
   // ─── Decline ───
   const declineCall = useCallback(async (callId: string, initiatorId: string) => {

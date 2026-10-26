@@ -5,8 +5,10 @@ import { notifyIncomingCall } from '@/lib/call-push';
  */
 import { useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import type { TablesUpdate } from '@/integrations/supabase/types';
 import { useAuth } from '../useAuth';
 import { getWebRTCConfig } from './types';
+import { validateCallRecipient } from './call-preflight';
 import { logger } from '@/lib/logger';
 
 export interface UseCallLifecycleOptions {
@@ -58,6 +60,7 @@ export function useCallLifecycle(options: UseCallLifecycleOptions): UseCallLifec
     callType: 'voice' | 'video',
     conversationId?: string
   ): Promise<string> => {
+    validateCallRecipient(user?.id, targetUserId);
     logger.debug('Creating call in database...', 'CallLifecycle');
 
     const { data: callId, error } = await supabase.rpc('create_call', {
@@ -78,7 +81,7 @@ export function useCallLifecycle(options: UseCallLifecycleOptions): UseCallLifec
     logger.debug('Call created', 'CallLifecycle', callId);
     void notifyIncomingCall(callId);
     return callId;
-  }, []);
+  }, [user?.id]);
 
   /**
    * Update participant status in database
@@ -89,7 +92,7 @@ export function useCallLifecycle(options: UseCallLifecycleOptions): UseCallLifec
     status: string,
     joinedAt = false
   ) => {
-    const update: Record<string, unknown> = { status };
+    const update: TablesUpdate<'call_participants'> = { status };
     if (joinedAt) {
       update.joined_at = new Date().toISOString();
     }
@@ -97,11 +100,12 @@ export function useCallLifecycle(options: UseCallLifecycleOptions): UseCallLifec
       update.left_at = new Date().toISOString();
     }
 
-    await supabase
+    const { data, error } = await supabase
       .from('call_participants')
       .update(update)
       .eq('call_id', callId)
-      .eq('user_id', userId);
+      .eq('user_id', userId).select('id').maybeSingle();
+    if (error || !data) throw error || new Error('Não foi possível confirmar a participação na chamada.');
   }, []);
 
   /**
@@ -114,7 +118,7 @@ export function useCallLifecycle(options: UseCallLifecycleOptions): UseCallLifec
     endedAt = false,
     endReason?: string
   ) => {
-    const update: Record<string, unknown> = { status };
+    const update: TablesUpdate<'calls'> = { status };
     if (startedAt) {
       update.started_at = new Date().toISOString();
     }
@@ -125,10 +129,11 @@ export function useCallLifecycle(options: UseCallLifecycleOptions): UseCallLifec
       update.end_reason = endReason;
     }
 
-    await supabase
+    const { data, error } = await supabase
       .from('calls')
       .update(update)
-      .eq('id', callId);
+      .eq('id', callId).select('id').maybeSingle();
+    if (error || !data) throw error || new Error('Não foi possível atualizar o estado da chamada.');
   }, []);
 
   /**
@@ -276,7 +281,7 @@ export function useCallLifecycle(options: UseCallLifecycleOptions): UseCallLifec
     isVideoEnabled?: boolean,
     isScreenSharing?: boolean
   ) => {
-    const update: Record<string, boolean> = {};
+    const update: TablesUpdate<'call_participants'> = {};
     if (isMuted !== undefined) update.is_muted = isMuted;
     if (isVideoEnabled !== undefined) update.is_video_enabled = isVideoEnabled;
     if (isScreenSharing !== undefined) update.is_screen_sharing = isScreenSharing;
