@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { fetchPublicProfilesBatched } from '@/lib/public-profile-batch';
 import { preparePostImage } from '@/lib/post-image';
 import { useAuth } from './useAuth';
 import { ReactionCounts, createEmptyReactionCounts, normalizeReactionType } from '@/lib/reactions';
@@ -601,10 +602,7 @@ export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?:
     // Batch fetch all user profiles and reactions
     const userIds = [...new Set(data.map(c => c.user_id))];
     const [profilesResult, reactionsResult, myReactionsResult] = await Promise.all([
-      supabase
-        .from('public_profiles')
-        .select('id, display_name, avatar_url, username')
-        .in('id', userIds),
+      fetchPublicProfilesBatched(userIds),
       supabase
         .from('comment_reactions')
         .select('comment_id, reaction_type')
