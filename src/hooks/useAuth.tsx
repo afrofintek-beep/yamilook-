@@ -4,6 +4,8 @@ import { User, Session, AuthError, Provider } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/logger';
 import { recordDevice } from '@/lib/device';
+import { registerCurrentSession, listLoginAlerts, acknowledgeLoginAlerts } from '@/lib/account-sessions';
+import { toast as securityToast } from 'sonner';
 
 interface Profile {
   id: string;
@@ -158,6 +160,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Record the device (anti-collusion signal) on sign-in. Best-effort.
           if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
             void recordDevice(session.user.id);
+            void registerCurrentSession(navigator.userAgent, window.location.pathname)
+              .catch(err => logger.warn('Account device registration unavailable', 'auth', err));
           }
         } else {
           setProfile(null);
@@ -185,6 +189,63 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  // Notify all previously logged-in sessions of unfamiliar/new account access.
+  // A database-owned event prevents the client from forging another user's alerts.
+  useEffect(() => {
+    if (!user?.id) return;
+    let disposed = false;
+    let pending = false;
+    const check = async () => {
+      if (disposed || pending || (typeof document !== 'undefined' && document.visibilityState === 'hidden')) return;
+      pending = true;
+      try {
+        const entries = await listLoginAlerts();
+        const unread = entries.filter(event => event.unread).slice(0, 10);
+        if (disposed || !unread.length) return;
+        for (const event of unread) {
+          securityToast.warning('Novo acesso à sua conta', {
+            description: `${event.device_label} · ${event.app_surface === 'kosolola' ? 'KOSOLOLA' : 'YAMILOOK'}`,
+            duration: 12000,
+          });
+        }
+        await acknowledgeLoginAlerts(unread.map(event => event.id));
+      } catch {
+        // Offline or not migrated yet; retry without disrupting signed-in users.
+      } finally { pending = false; }
+    };
+    void check();
+    const timer = window.setInterval(() => void check(), 45000);
+    document.addEventListener('visibilitychange', check);
+    return () => { disposed = true; window.clearInterval(timer); document.removeEventListener('visibilitychange', check); };
+  }, [user?.id]);
+
+  // Remote revocation is checked when the application resumes and periodically
+  // while active. A 401/403 from Auth means the server no longer recognizes it.
+  useEffect(() => {
+    if (!user?.id) return;
+    let pending = false;
+    let disposed = false;
+    const validate = async () => {
+      if (disposed || pending || document.visibilityState === 'hidden') return;
+      pending = true;
+      try {
+        const { error } = await supabase.auth.getUser();
+        if (!disposed && (error?.status === 401 || error?.status === 403)) {
+          await supabase.auth.signOut({ scope: 'local' });
+        }
+      } catch { /* Network errors are not evidence of revoked access. */ }
+      finally { pending = false; }
+    };
+    const timer = window.setInterval(() => void validate(), 90000);
+    window.addEventListener('focus', validate);
+    document.addEventListener('visibilitychange', validate);
+    return () => {
+      disposed = true; window.clearInterval(timer);
+      window.removeEventListener('focus', validate);
+      document.removeEventListener('visibilitychange', validate);
+    };
+  }, [user?.id]);
+
   const signUp = async (
     email: string,
     password: string,
@@ -202,20 +263,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signIn = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    if (!error && data?.session) {
-      try {
-        await supabase.rpc('revoke_other_sessions', {
-          current_session_id: null,
-        });
-      } catch (err) {
-        logger.warn('Failed to revoke other sessions', 'auth', err);
-      }
-    }
 
     return { error };
   };
@@ -230,7 +282,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error };
   };
 
-  const signOut = async (scope: 'global' | 'local' = 'global') => {
+  const signOut = async (scope: 'global' | 'local' = 'local') => {
     if (window.location.pathname.startsWith('/papos-app')) {
       const { disableCallPush } = await import('@/lib/call-push');
       await disableCallPush();
