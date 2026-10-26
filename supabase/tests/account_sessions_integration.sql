@@ -16,7 +16,7 @@ create function auth.uid() returns uuid language sql stable as $$
   select nullif(auth.jwt()->>'sub','')::uuid;
 $$;
 create function public.revoke_other_sessions(current_session_id text default null)
-returns void language sql as $$ select null::void $$;
+returns void language plpgsql as $ begin null; end; $;
 
 \ir ../migrations/20261027001500_secure_multi_device_sessions.sql
 
@@ -52,7 +52,7 @@ begin
  if jsonb_array_length(public.account_list_sessions()) <> 1 then
    raise exception 'First account should have exactly one session';
  end if;
- if (select count(*) from public.account_list_login_alerts() as a) <> 0 then
+ if jsonb_array_length(public.account_list_login_alerts()) <> 0 then
    -- The returned JSON array is empty until a second login.
    raise exception 'Unexpected alert';
  end if;
