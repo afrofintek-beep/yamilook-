@@ -16,7 +16,7 @@ create function auth.uid() returns uuid language sql stable as $$
   select nullif(auth.jwt()->>'sub','')::uuid;
 $$;
 create function public.revoke_other_sessions(current_session_id text default null)
-returns void language plpgsql as $ begin null; end; $;
+returns void language plpgsql as $$ begin null; end; $$;
 
 \ir ../migrations/20261027001500_secure_multi_device_sessions.sql
 
