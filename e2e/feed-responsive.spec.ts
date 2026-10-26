@@ -94,7 +94,9 @@ test('feed remains readable while advertisements are still loading', async ({ pa
   await mockAccount(page);
   let releaseAds!: () => void;
   const pendingAds = new Promise<void>(resolve => { releaseAds = resolve; });
+  let advertisingRequests = 0;
   await page.route('**/rest/v1/advertisements*', async route => {
+    advertisingRequests++;
     await pendingAds;
     await route.fulfill({json: []});
   });
@@ -104,6 +106,8 @@ test('feed remains readable while advertisements are still loading', async ({ pa
   } finally {
     releaseAds();
   }
+  await page.waitForLoadState('networkidle');
+  expect(advertisingRequests).toBe(1);
 });
 
 test('feed renders without waiting for slower reaction and bookmark metadata', async ({ page }) => {
