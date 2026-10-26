@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Plus, Search, MessageCircle, Radio, Loader2, ArrowUp } from 'lucide-react';
@@ -21,6 +21,8 @@ import { useActiveStreams } from '@/hooks/useActiveStreams';
 import { useArchivedPosts } from '@/hooks/useArchivedPosts';
 import YamilookLogo from '@/components/brand/YamilookLogo';
 import '@/styles/feed-layout.css';
+
+const FeedDiagnostics = lazy(() => import('@/components/feed/FeedDiagnostics'));
 
 export default function Feed() {
   const navigate = useNavigate();
@@ -101,6 +103,7 @@ export default function Feed() {
 
   return (
     <div className="feed-shell h-screen-safe overflow-hidden bg-muted/30 flex flex-col pb-[calc(5rem+env(safe-area-inset-bottom,0px))]">
+      {new URLSearchParams(window.location.search).get('diagnostico') === '1' && <Suspense fallback={null}><FeedDiagnostics /></Suspense>}
       {/* Header - Clean, minimal */}
       <header className="relative z-50 shrink-0 bg-card border-b border-border safe-top safe-inline">
         <div className="flex items-center justify-between px-4 py-2 mx-auto w-full max-w-[1440px]">

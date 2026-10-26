@@ -1,0 +1,99 @@
+import { useEffect, useRef, useState } from 'react';
+
+// Never export URLs, query strings, headers, user identifiers or page content.
+export function resourceCategory(name: string, initiator: string) {
+  try {
+    const url = new URL(name);
+    const path = url.pathname;
+    if (path === '/rest/v1/posts' && url.searchParams.has('created_at')) return 'api:posts:pagination';
+    if (path === '/rest/v1/posts' && url.searchParams.get('order') === 'likes_count.desc') return 'api:posts:discovery';
+    const api = path.match(/^\/rest\/v1\/(posts|contacts|post_likes|post_topics|saved_posts|advertisements|discover_topics)$/);
+    if (api) return `api:${api[1]}`;
+    if (path.startsWith('/rest/v1/rpc/')) return 'api:rpc';
+    if (path.startsWith('/storage/v1/')) return 'media';
+  } catch { /* Invalid names are never copied to reports. */ }
+  return ['img', 'script', 'css', 'fetch', 'xmlhttprequest', 'video'].includes(initiator) ? initiator : 'other';
+}
+
+export default function FeedDiagnostics() {
+  const [report, setReport] = useState('');
+  const capture = useRef<() => void>(() => {});
+  useEffect(() => {
+    const started = performance.now();
+    let firstArticle: number | null = null;
+    let firstImage: number | null = null;
+    let stopped = false;
+    let maxArticles = 0;
+    let hiddenDuringCapture = document.visibilityState !== 'visible';
+    const initialArticles = document.querySelectorAll('.feed-posts article').length;
+    const collected: PerformanceResourceTiming[] = [];
+    const observer = typeof PerformanceObserver !== 'undefined' ? new PerformanceObserver(list => {
+      collected.push(...list.getEntries() as PerformanceResourceTiming[]);
+    }) : null;
+    try { observer?.observe({ type: 'resource', buffered: true }); } catch { /* Older browsers use the existing resource buffer. */ }
+    const visibilityChanged = () => { if (document.visibilityState !== 'visible') hiddenDuringCapture = true; };
+    document.addEventListener('visibilitychange', visibilityChanged);
+    const visible = (el: Element) => {
+      const r = el.getBoundingClientRect();
+      return r.width > 0 && r.height > 0 && r.top < innerHeight && r.bottom > 0;
+    };
+    const inspect = () => {
+      maxArticles = Math.max(maxArticles, document.querySelectorAll('.feed-posts article').length);
+      if (document.visibilityState !== 'visible') return;
+      const article = document.querySelector('.feed-posts article');
+      if (!article || !visible(article)) return;
+      firstArticle ??= performance.now() - started;
+      const img = Array.from(document.querySelectorAll<HTMLImageElement>('.feed-posts article img[loading]')).find(visible);
+      if (img && visible(img) && img.complete && img.naturalWidth > 0) firstImage ??= performance.now() - started;
+    };
+    const timer = window.setInterval(inspect, 100);
+    inspect();
+    const stop = () => {
+      if (stopped) return;
+      inspect();
+      stopped = true;
+      clearInterval(timer);
+      collected.push(...(observer?.takeRecords() ?? []) as PerformanceResourceTiming[]);
+      observer?.disconnect();
+      const resources = collected.length ? collected : performance.getEntriesByType('resource') as PerformanceResourceTiming[];
+      const nav = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined;
+      setReport(JSON.stringify({
+        version: 1,
+        method: 'Visible DOM sampled every 100ms; not paint timing. Lazy observer starts after feed mounts; add observerStartedMsAfterNavigation for navigation-relative observations. Early resource entries may be absent if the browser buffer filled. Cache uncontrolled. Zero sizes can mean unavailable cross-origin timing.',
+        observerStartedMsAfterNavigation: Math.round(started),
+        captureDurationMs: Math.round(performance.now() - started),
+        firstArticleObservedMsAfterObserver: firstArticle === null ? null : Math.round(firstArticle),
+        firstPhotoObservedLoadedMsAfterObserver: firstImage === null ? null : Math.round(firstImage),
+        viewport: { width: innerWidth, height: innerHeight },
+        standalone: matchMedia('(display-mode: standalone)').matches,
+        navigation: nav ? { ttfbMs: nav.responseStart, domContentLoadedMs: nav.domContentLoadedEventEnd } : null,
+        hiddenDuringCapture,
+        articles: { atObserverStart: initialArticles, maximumObserved: maxArticles, atEnd: document.querySelectorAll('.feed-posts article').length },
+        images: Array.from(document.querySelectorAll<HTMLImageElement>('.feed-posts article img')).slice(0, 100).map(img => ({
+          loaded: img.complete && img.naturalWidth > 0, loading: img.loading,
+          naturalWidth: img.naturalWidth, naturalHeight: img.naturalHeight,
+          renderedWidth: Math.round(img.getBoundingClientRect().width), renderedHeight: Math.round(img.getBoundingClientRect().height),
+        })),
+        resourceCountAvailable: resources.length,
+        resourceLimit: 1000,
+        resources: resources.slice(0, 1000).map(r => ({ category: resourceCategory(r.name, r.initiatorType), startMs: Math.round(r.startTime), durationMs: Math.round(r.duration), transferBytes: r.transferSize, bodyBytes: r.encodedBodySize })),
+      }, null, 2));
+    };
+    capture.current = stop;
+    const timeout = window.setTimeout(stop, 30000);
+    return () => { clearInterval(timer); clearTimeout(timeout); observer?.disconnect(); document.removeEventListener('visibilitychange', visibilityChanged); };
+  }, []);
+  const download = () => {
+    const url = URL.createObjectURL(new Blob([report], { type: 'application/json' }));
+    const a = document.createElement('a');
+    a.href = url; a.download = 'yamilook-diagnostico.json'; a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+  };
+  return <aside aria-label="Diagnóstico do feed" className="fixed bottom-24 left-2 z-[100] max-w-[calc(100vw-1rem)] rounded-xl border bg-background p-3 text-foreground shadow-lg">
+    <p className="text-sm font-semibold">Diagnóstico neste aparelho</p>
+    <p className="max-w-xs text-xs">Deslize pelo feed durante 30 segundos. O relatório fica neste aparelho; partilhe-o depois nesta conversa.</p>
+    {report ? <button className="mt-2 min-h-11 underline" onClick={download}>Guardar relatório</button>
+      : <button className="mt-2 min-h-11 underline" onClick={() => capture.current()}>Terminar recolha</button>}
+    <p className="max-w-xs text-xs">Para repetir, recarregue a página. Para sair, retire ?diagnostico=1 do endereço.</p>
+  </aside>;
+}
