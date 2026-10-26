@@ -8,6 +8,7 @@ on:
       - 'src/features/papos/PaposSettings.tsx'
       - 'src/pages/Settings.tsx'
       - 'supabase/migrations/*secure_multi_device_sessions.sql'
+      - 'supabase/tests/account_sessions_integration.sql'
       - '.github/workflows/secure-multi-device.yml'
   workflow_dispatch:
 
@@ -26,3 +27,26 @@ jobs:
         run: npx vitest run src/lib/account-sessions.test.ts src/components/settings/ConnectedDevices.test.tsx src/features/papos/PaposLogout.test.tsx
       - name: Compile YAMILOOK and KOSOLOLA
         run: npm run build
+
+  postgres-security-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: session_contract
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d session_contract"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify SQL grants, own-session guard, cross-user isolation and login alerts
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -d session_contract -v ON_ERROR_STOP=1 -f supabase/tests/account_sessions_integration.sql
