@@ -11,6 +11,7 @@ const localizedTime = (timestamp: string) =>
 /** Shared by Yamilook and KOSOLOLA: these are Auth sessions, not device fingerprints. */
 export function ConnectedDevices() {
   const { user } = useAuth();
+  const userId = user?.id;
   const { toast } = useToast();
   const [sessions, setSessions] = useState<AccountSession[]>([]);
   const [alerts, setAlerts] = useState<AccountLoginAlert[]>([]);
@@ -19,7 +20,7 @@ export function ConnectedDevices() {
   const [error, setError] = useState('');
 
   const reload = useCallback(async () => {
-    if (!user) return;
+    if (!userId) return;
     setLoading(true);
     try {
       const [active, history] = await Promise.all([listAccountSessions(), listLoginAlerts()]);
@@ -31,7 +32,7 @@ export function ConnectedDevices() {
     } finally {
       setLoading(false);
     }
-  }, [user?.id]);
+  }, [userId]);
 
   useEffect(() => { void reload(); }, [reload]);
 
