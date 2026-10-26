@@ -7,10 +7,26 @@ export function resourceCategory(name: string, initiator: string) {
     const path = url.pathname;
     if (path === '/rest/v1/posts' && url.searchParams.has('created_at')) return 'api:posts:pagination';
     if (path === '/rest/v1/posts' && url.searchParams.get('order') === 'likes_count.desc') return 'api:posts:discovery';
-    const api = path.match(/^\/rest\/v1\/(posts|contacts|post_likes|post_topics|saved_posts|advertisements|discover_topics)$/);
-    if (api) return `api:${api[1]}`;
+    const api = path.match(/^\/rest\/v1\/([a-z_]+)$/);
+    if (api) {
+      // Report only approved table names. Never export arbitrary paths.
+      const known = new Set([
+        'posts', 'contacts', 'post_likes', 'post_topics', 'saved_posts',
+        'advertisements', 'discover_topics', 'post_archives', 'post_comments',
+        'public_profiles', 'profiles', 'business_profiles', 'ad_impressions',
+        'conversation_participants', 'conversations', 'notifications',
+        'statuses', 'status_views', 'user_settings', 'live_streams',
+      ]);
+      return known.has(api[1]) ? 'api:' + api[1] : 'api:other-table';
+    }
     if (path.startsWith('/rest/v1/rpc/')) return 'api:rpc';
+    if (path.startsWith('/auth/v1/')) return 'api:auth';
+    if (path.startsWith('/functions/v1/')) return 'api:function';
+    if (path.startsWith('/realtime/v1/')) return 'api:realtime';
     if (path.startsWith('/storage/v1/')) return 'media';
+    if (initiator === 'fetch' || initiator === 'xmlhttprequest') {
+      return url.origin === window.location.origin ? 'fetch:same-origin' : 'fetch:external';
+    }
   } catch { /* Invalid names are never copied to reports. */ }
   return ['img', 'script', 'css', 'fetch', 'xmlhttprequest', 'video'].includes(initiator) ? initiator : 'other';
 }
@@ -57,8 +73,21 @@ export default function FeedDiagnostics() {
       observer?.disconnect();
       const resources = collected.length ? collected : performance.getEntriesByType('resource') as PerformanceResourceTiming[];
       const nav = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined;
+      const categorized = resources.slice(0, 1000).map(r => ({
+        category: resourceCategory(r.name, r.initiatorType),
+        startMs: Math.round(r.startTime), durationMs: Math.round(r.duration),
+        transferBytes: r.transferSize, bodyBytes: r.encodedBodySize,
+      }));
+      const categories: Record<string, number> = {};
+      for (const item of categorized) categories[item.category] = (categories[item.category] || 0) + 1;
+      const times = categorized.map(item => item.startMs).sort((a, b) => a - b);
+      let largestHundredMsBurst = 0;
+      for (let left = 0, right = 0; right < times.length; right++) {
+        while (times[right] - times[left] > 100) left++;
+        largestHundredMsBurst = Math.max(largestHundredMsBurst, right - left + 1);
+      }
       setReport(JSON.stringify({
-        version: 1,
+        version: 2,
         method: 'Visible DOM sampled every 100ms; not paint timing. Lazy observer starts after feed mounts; add observerStartedMsAfterNavigation for navigation-relative observations. Early resource entries may be absent if the browser buffer filled. Cache uncontrolled. Zero sizes can mean unavailable cross-origin timing.',
         observerStartedMsAfterNavigation: Math.round(started),
         captureDurationMs: Math.round(performance.now() - started),
@@ -76,7 +105,9 @@ export default function FeedDiagnostics() {
         })),
         resourceCountAvailable: resources.length,
         resourceLimit: 1000,
-        resources: resources.slice(0, 1000).map(r => ({ category: resourceCategory(r.name, r.initiatorType), startMs: Math.round(r.startTime), durationMs: Math.round(r.duration), transferBytes: r.transferSize, bodyBytes: r.encodedBodySize })),
+        resourceCategories: categories,
+        largestHundredMsBurst,
+        resources: categorized,
       }, null, 2));
     };
     capture.current = stop;

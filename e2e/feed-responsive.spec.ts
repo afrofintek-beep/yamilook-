@@ -94,7 +94,9 @@ test('feed remains readable while advertisements are still loading', async ({ pa
   await mockAccount(page);
   let releaseAds!: () => void;
   const pendingAds = new Promise<void>(resolve => { releaseAds = resolve; });
+  let advertisingRequests = 0;
   await page.route('**/rest/v1/advertisements*', async route => {
+    advertisingRequests++;
     await pendingAds;
     await route.fulfill({json: []});
   });
@@ -104,6 +106,66 @@ test('feed remains readable while advertisements are still loading', async ({ pa
   } finally {
     releaseAds();
   }
+  await page.waitForLoadState('networkidle');
+  expect(advertisingRequests).toBe(1);
+});
+
+test('feed renders without waiting for slower reaction and bookmark metadata', async ({ page }) => {
+  await mockAccount(page);
+  let unblock!: () => void;
+  const blocked = new Promise<void>(resolve => { unblock = resolve; });
+  await page.route('**/rest/v1/post_likes*', async route => {
+    await blocked;
+    await route.fulfill({ json: [] });
+  });
+  await page.route('**/rest/v1/saved_posts*', async route => {
+    await blocked;
+    await route.fulfill({ json: [] });
+  });
+  try {
+    await page.goto('/muxi');
+    await expect(page.locator('article').first()).toBeVisible({timeout: 4000});
+    await expect(page.locator('article')).toHaveCount(12);
+  } finally {
+    unblock();
+  }
+});
+
+test('failed first page offers retry and recovers without a permanent loading spinner', async ({ page }) => {
+  await mockAccount(page);
+  let allowPosts = false;
+  await page.route('**/rest/v1/posts*', async route => {
+    if (allowPosts) return route.fallback();
+    await route.fulfill({status: 400, json: {code: 'PGRST100', message: 'Simulated query failure'}});
+  });
+  await page.goto('/muxi');
+  const error = page.getByRole('alert').filter({hasText: 'Não foi possível atualizar'});
+  await expect(error).toBeVisible();
+  allowPosts = true;
+  await error.getByRole('button', {name: 'Repetir'}).click();
+  await expect(page.locator('article')).toHaveCount(12);
+  await expect(error).toHaveCount(0);
+});
+
+test('pagination error allows a manual retry without automatic request storms', async ({ page }) => {
+  await mockAccount(page, true);
+  let allowMore = false;
+  let pageRequests = 0;
+  await page.route('**/rest/v1/posts*', async route => {
+    if (!new URL(route.request().url()).searchParams.has('created_at')) return route.fallback();
+    pageRequests++;
+    if (allowMore) return route.fallback();
+    await route.fulfill({status: 400, json: {code: 'PGRST100', message: 'Simulated query failure'}});
+  });
+  await page.goto('/muxi');
+  await expect(page.locator('article')).toHaveCount(20);
+  await page.locator('.feed-scroll > [data-radix-scroll-area-viewport]').evaluate(el => { el.scrollTop = el.scrollHeight; });
+  const error = page.getByRole('alert').filter({hasText: 'Não foi possível carregar mais'});
+  await expect(error).toBeVisible();
+  expect(pageRequests).toBe(1);
+  allowMore = true;
+  await error.getByRole('button', {name: 'Repetir'}).click();
+  await expect(page.locator('article')).toHaveCount(25);
 });
 
 for (const width of [390, 1440]) {
@@ -146,6 +208,9 @@ test('opt-in device report downloads sanitized timings without breaking mobile l
   for await (const chunk of stream!) raw += chunk.toString();
   const report = JSON.parse(raw);
   expect(report.viewport.width).toBe(390);
+  expect(report.version).toBe(2);
+  expect(report.resourceCategories).toBeDefined();
+  expect(report.largestHundredMsBurst).toBeGreaterThanOrEqual(0);
   expect(report.articles.atEnd).toBe(12);
   expect(report.firstArticleObservedMsAfterObserver).not.toBeNull();
   expect(report.resources.some((r: {category: string}) => r.category === 'api:posts')).toBe(true);
