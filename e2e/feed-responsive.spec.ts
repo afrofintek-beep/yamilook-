@@ -7,7 +7,7 @@ const name = 'Contacto com um nome muito longo para verificar os controlos';
 const profile = (id: string) => ({ id, display_name: id === me ? 'Teste local' : name, username: 'teste', onboarding_completed: true, app_tour_completed: true, avatar_url: null });
 
 // Synthetic API responses only. No real account or production writes.
-async function mockAccount(page: import('@playwright/test').Page) {
+async function mockAccount(page: import('@playwright/test').Page, paginate = false) {
   // Match the production Vercel rewrite for the second HTML entry.
   await page.route('**/papos-app/**', async route => {
     if (!route.request().isNavigationRequest()) return route.continue();
@@ -21,7 +21,7 @@ async function mockAccount(page: import('@playwright/test').Page) {
     if (table === 'user') data = { id: me, email: 'test@example.invalid' };
     if (table === 'profiles') data = profile(me);
     if (table === 'get_public_profiles_by_ids') data = [profile(me), profile(peer)];
-    if (table === 'posts') data = Array.from({length: 12}, (_, i) => ({id: `post-${i}`, user_id: peer, type: i === 1 ? 'photo' : 'text', content: `Publicação ${i} ` + 'UmaPalavraMuitoLonga'.repeat(12), media_urls: i === 1 ? ['/yamilook-logo.png'] : [], privacy: 'everyone', likes_count: 0, comments_count: 0, shares_count: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString()}));
+    if (table === 'posts') data = Array.from({length: paginate ? (url.searchParams.has('created_at') ? 5 : 20) : 12}, (_, index) => { const i = index + (paginate && url.searchParams.has('created_at') ? 20 : 0); return ({id: `post-${i}`, user_id: peer, type: i === 1 ? 'photo' : 'text', content: `Publicação ${i} ` + 'UmaPalavraMuitoLonga'.repeat(12), media_urls: i === 1 ? ['/yamilook-logo.png'] : [], privacy: 'everyone', likes_count: 0, comments_count: 0, shares_count: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString()}); });
     if (table === 'public_profiles') data = url.searchParams.get('id')?.startsWith('eq.') ? profile(peer) : [profile(me), profile(peer)];
     if (table === 'conversation_participants') data = [me, peer].map(id => ({ conversation_id: chat, user_id: id, is_archived: false }));
     if (table === 'conversations') data = [{ id: chat, type: 'direct', created_at: new Date().toISOString(), updated_at: new Date().toISOString() }];
@@ -71,8 +71,13 @@ test('feed adapts across mobile, tablet, desktop and rotation without losing scr
 
 test('feed requests stay bounded as multiple posts mount', async ({ page }) => {
   let requests = 0;
+  let discoveryRequests = 0;
   page.on('request', request => {
-    if (new URL(request.url()).pathname === '/rest/v1/posts') requests++;
+    const url = new URL(request.url());
+    if (url.pathname === '/rest/v1/posts') {
+      requests++;
+      if (url.searchParams.get('order') === 'likes_count.desc') discoveryRequests++;
+    }
   });
   await mockAccount(page);
   await page.goto('/muxi');
@@ -80,8 +85,9 @@ test('feed requests stay bounded as multiple posts mount', async ({ page }) => {
   await page.waitForLoadState('networkidle');
   console.log(`Post collection requests for 12 cards: ${requests}`);
   // React StrictMode mounts the single page owner twice in development;
-  // each owner loads feed and discovery. Cards and closed sheets add none.
-  expect(requests).toBeLessThanOrEqual(4);
+  // each owner loads only the feed. Cards and closed sheets add none.
+  expect(requests).toBeLessThanOrEqual(2);
+  expect(discoveryRequests).toBe(0);
 });
 
 test('feed remains readable while advertisements are still loading', async ({ page }) => {
@@ -99,3 +105,24 @@ test('feed remains readable while advertisements are still loading', async ({ pa
     releaseAds();
   }
 });
+
+for (const width of [390, 1440]) {
+  test(`pagination appends once and stops at the final page at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({width, height: 844});
+    await mockAccount(page, true);
+    let nextPages = 0;
+    page.on('request', request => {
+      const url = new URL(request.url());
+      if (url.pathname === '/rest/v1/posts' && url.searchParams.has('created_at')) nextPages++;
+    });
+    await page.goto('/muxi');
+    await expect(page.locator('article')).toHaveCount(20);
+    const viewport = page.locator('.feed-scroll > [data-radix-scroll-area-viewport]');
+    await viewport.evaluate(el => { el.scrollTop = el.scrollHeight; });
+    await expect(page.locator('article')).toHaveCount(25);
+    await viewport.evaluate(el => { el.scrollTop = el.scrollHeight; });
+    await expect(page.locator('article').last()).toBeInViewport();
+    await page.waitForLoadState('networkidle');
+    expect(nextPages).toBe(1);
+  });
+}

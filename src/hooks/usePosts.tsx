@@ -78,7 +78,7 @@ export interface Topic {
   is_trending: boolean;
 }
 
-export function usePosts({ autoLoad = true }: { autoLoad?: boolean } = {}) {
+export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?: boolean; loadDiscovery?: boolean } = {}) {
   const { user } = useAuth();
   // Único por instância do hook para que montagens concorrentes não colidam no
   // mesmo tópico do canal realtime do Supabase (que lança "cannot add
@@ -815,9 +815,11 @@ export function usePosts({ autoLoad = true }: { autoLoad?: boolean } = {}) {
   useEffect(() => {
     if (!autoLoad) return;
     fetchFeedPosts();
-    fetchDiscoverPosts();
-    fetchTopics();
-  }, [autoLoad, fetchFeedPosts, fetchDiscoverPosts, fetchTopics]);
+    if (loadDiscovery) {
+      fetchDiscoverPosts();
+      fetchTopics();
+    }
+  }, [autoLoad, loadDiscovery, fetchFeedPosts, fetchDiscoverPosts, fetchTopics]);
 
   // Realtime subscription
   useEffect(() => {
@@ -837,13 +839,13 @@ export function usePosts({ autoLoad = true }: { autoLoad?: boolean } = {}) {
             const isNewer = !newestCreatedAtRef.current || p.created_at > newestCreatedAtRef.current;
             if (qualifies && !isOwn && isNewer) {
               setNewPostsCount(c => c + 1);
-              fetchDiscoverPosts();
+              if (loadDiscovery) fetchDiscoverPosts();
               return;
             }
           }
           // Edits/deletes (or own posts): refresh page 1 while not paginated.
           if (!feedPaginatedRef.current) fetchFeedPosts();
-          fetchDiscoverPosts();
+          if (loadDiscovery) fetchDiscoverPosts();
         }
       )
       .subscribe();
@@ -851,7 +853,7 @@ export function usePosts({ autoLoad = true }: { autoLoad?: boolean } = {}) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [autoLoad, fetchFeedPosts, fetchDiscoverPosts]);
+  }, [autoLoad, loadDiscovery, fetchFeedPosts, fetchDiscoverPosts]);
 
   return {
     feedPosts,

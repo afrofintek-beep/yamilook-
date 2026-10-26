@@ -24,7 +24,7 @@ import '@/styles/feed-layout.css';
 
 export default function Feed() {
   const navigate = useNavigate();
-  const { feedPosts, loading, fetchFeedPosts, loadMoreFeedPosts, hasMoreFeed, loadingMoreFeed, newPostsCount } = usePosts();
+  const { feedPosts, loading, fetchFeedPosts, loadMoreFeedPosts, hasMoreFeed, loadingMoreFeed, newPostsCount } = usePosts({ loadDiscovery: false });
   const { fetchActiveAdsForFeed, interleaveAdsInFeed } = useAdvertising();
   const { hasActiveStreams, activeStreams } = useActiveStreams();
   const { archivedPostIds, fetchArchivedIds, toggleArchive, isArchived } = useArchivedPosts();
