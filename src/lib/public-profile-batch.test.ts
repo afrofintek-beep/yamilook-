@@ -4,6 +4,8 @@ import { fetchPublicProfileById, fetchPublicProfilesBatched } from './public-pro
 const state = vi.hoisted(() => ({
   requested: [] as string[][],
   failure: false,
+  hold: false,
+  release: null as (() => void) | null,
 }));
 
 vi.mock('@/integrations/supabase/client', () => ({
@@ -14,6 +16,7 @@ vi.mock('@/integrations/supabase/client', () => ({
         select: vi.fn(() => ({
           in: vi.fn(async (_column: string, ids: string[]) => {
             state.requested.push(ids);
+            if (state.hold) await new Promise<void>(resolve => { state.release = resolve; });
             return state.failure
               ? { data: null, error: new Error('Public profile query failed') }
               : { data: ids.map(id => ({
@@ -31,6 +34,8 @@ vi.mock('@/integrations/supabase/client', () => ({
 beforeEach(() => {
   state.requested.length = 0;
   state.failure = false;
+  state.hold = false;
+  state.release = null;
 });
 
 describe('public profile request batching', () => {
@@ -44,6 +49,19 @@ describe('public profile request batching', () => {
     expect(left.data?.map(p => p.id)).toEqual(['a', 'b']);
     expect(right.data?.map(p => p.id)).toEqual(['b', 'c']);
     expect(one.data?.id).toBe('b');
+  });
+
+  it('joins reads that arrive while an earlier request is in flight', async () => {
+    state.hold = true;
+    const first = fetchPublicProfilesBatched(['same-user']);
+    await Promise.resolve();
+    const second = fetchPublicProfileById('same-user');
+    expect(state.requested).toEqual([['same-user']]);
+    state.release?.();
+    const [left, right] = await Promise.all([first, second]);
+    expect(left.data?.[0]?.id).toBe('same-user');
+    expect(right.data?.id).toBe('same-user');
+    expect(state.requested).toHaveLength(1);
   });
 
   it('skips network reads for an empty list', async () => {
