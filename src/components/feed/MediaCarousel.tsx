@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect, ReactNode } from 'react';
 import { cn } from '@/lib/utils';
+import { optimizedPublicImageUrl } from '@/lib/image-delivery';
 
 interface MediaCarouselProps {
   urls: string[];
@@ -16,6 +17,7 @@ function VideoItem({ src, isActive }: { src: string; isActive: boolean }) {
   const ref = useRef<HTMLVideoElement>(null);
   const [muted, setMuted] = useState(true);
   const [isVisible, setIsVisible] = useState(false);
+  const [isNear, setIsNear] = useState(false);
 
   // Only play when both active in carousel AND visible in viewport
   useEffect(() => {
@@ -27,7 +29,14 @@ function VideoItem({ src, isActive }: { src: string; isActive: boolean }) {
       { threshold: 0.5 }
     );
     observer.observe(v);
-    return () => observer.disconnect();
+    // Mount a video source only as it approaches the viewport, not for every
+    // post in the feed. Keep it mounted once near for scroll-back continuity.
+    const nearObserver = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setIsNear(true); },
+      { rootMargin: '300px 0px' }
+    );
+    nearObserver.observe(v);
+    return () => { observer.disconnect(); nearObserver.disconnect(); };
   }, []);
 
   useEffect(() => {
@@ -44,7 +53,7 @@ function VideoItem({ src, isActive }: { src: string; isActive: boolean }) {
     <div className="relative w-full h-full group" onClick={() => setMuted((m) => !m)}>
       <video
         ref={ref}
-        src={src}
+        src={isActive && isNear ? src : undefined}
         className="w-full h-full object-cover"
         preload={isActive && isVisible ? "metadata" : "none"}
         playsInline
@@ -63,6 +72,23 @@ function VideoItem({ src, isActive }: { src: string; isActive: boolean }) {
         </div>
       )}
     </div>
+  );
+}
+
+function MediaImage({ src, priority }: { src: string; priority: boolean }) {
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const optimized = optimizedPublicImageUrl(src, 960);
+  return (
+    <img
+      src={failedSrc === src ? src : optimized}
+      alt=""
+      loading={priority ? 'eager' : 'lazy'}
+      {...{ fetchpriority: priority ? 'high' : 'auto' }}
+      decoding="async"
+      onError={() => { if (optimized !== src && failedSrc !== src) setFailedSrc(src); }}
+      className="w-full object-cover"
+      style={{ maxHeight: '70vh', minHeight: '200px' }}
+    />
   );
 }
 
@@ -97,15 +123,7 @@ export function MediaCarousel({ urls, priority = false, onDoubleTap, likeOverlay
                 <VideoItem src={url} isActive={i === activeIndex} />
               </div>
             ) : (
-              <img
-                src={url}
-                alt=""
-                loading={priority && i === 0 ? 'eager' : 'lazy'}
-                {...{ fetchpriority: priority && i === 0 ? 'high' : 'auto' }}
-                decoding="async"
-                className="w-full object-cover"
-                style={{ maxHeight: '70vh', minHeight: '200px' }}
-              />
+              <MediaImage src={url} priority={priority && i === 0} />
             )}
           </div>
         ))}
