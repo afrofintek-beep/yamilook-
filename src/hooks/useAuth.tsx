@@ -159,9 +159,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }, 0);
           // Record the device (anti-collusion signal) on sign-in. Best-effort.
           if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
-            void recordDevice(session.user.id);
-            void registerCurrentSession(navigator.userAgent, window.location.pathname)
-              .catch(err => logger.warn('Account device registration unavailable', 'auth', err));
+            // Supabase auth callbacks must not perform nested API calls while
+            // the session lock is held. Defer device writes to the next tick.
+            window.setTimeout(() => {
+              void recordDevice(session.user.id);
+              void registerCurrentSession(navigator.userAgent, window.location.pathname)
+                .catch(err => logger.warn('Account device registration unavailable', 'auth', err));
+            }, 0);
           }
         } else {
           setProfile(null);
