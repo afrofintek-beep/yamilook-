@@ -35,6 +35,8 @@ export default function Feed() {
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [selectedPost, setSelectedPost] = useState<PostWithUser | null>(null);
   const [feedAds, setFeedAds] = useState<(Advertisement & { business: BusinessProfile })[]>([]);
+  // Enriching reactions/topics must not fetch the same ads again.
+  const feedPostIdentity = useMemo(() => feedPosts.map(post => post.id).join('|'), [feedPosts]);
   const feedWithAds = useMemo(() => {
     const visiblePosts = feedPosts.filter(post => !archivedPostIds.has(post.id));
     return interleaveAdsInFeed(visiblePosts, feedAds);
@@ -58,13 +60,13 @@ export default function Feed() {
   useEffect(() => {
     let current = true;
     setFeedAds([]);
-    if (feedPosts.length > 0) {
-      fetchActiveAdsForFeed(undefined, feedPosts.length)
+    if (feedPostIdentity) {
+      fetchActiveAdsForFeed(undefined, feedPostIdentity.split('|').length)
         .then(ads => { if (current) setFeedAds(ads); })
         .catch(() => { /* Keep organic posts visible if advertising is unavailable. */ });
     }
     return () => { current = false; };
-  }, [feedPosts, fetchActiveAdsForFeed]);
+  }, [feedPostIdentity, fetchActiveAdsForFeed]);
 
   const handleCommentClick = (post: PostWithUser) => {
     setSelectedPost(post);
