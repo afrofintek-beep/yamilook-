@@ -4,6 +4,7 @@ import { useMessageExpiry } from './useMessageExpiry';
 import { orderConversations } from '@/lib/chat-conversations';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { fetchPublicProfileById, fetchPublicProfilesBatched } from '@/lib/public-profile-batch';
 import { useAuth } from './useAuth';
 import { useMessageNotification } from './useMessageNotification';
 import { RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js';
@@ -181,10 +182,7 @@ export function useConversations() {
 
       // Get unique participant user IDs and fetch all profiles
       const participantUserIds = [...new Set(allParticipants.map(p => p.user_id))];
-      const { data: profiles } = await supabase
-        .from('public_profiles')
-        .select('id, display_name, username, avatar_url, is_online, last_seen')
-        .in('id', participantUserIds);
+      const { data: profiles } = await fetchPublicProfilesBatched(participantUserIds);
 
       const profileMap = new Map((profiles ?? []).map((p) => [p.id, p]));
 
@@ -357,10 +355,7 @@ export function useMessages(conversationId: string | null) {
 
       // Batch fetch profiles, reactions, starred, pinned, reply messages, and view-once views in parallel
       const [profilesResult, reactionsResult, starredResult, pinnedResult, replyMessagesResult, viewOnceResult] = await Promise.all([
-        supabase
-          .from('public_profiles')
-          .select('id, display_name, username, avatar_url')
-          .in('id', senderIds),
+        fetchPublicProfilesBatched(senderIds),
         supabase
           .from('message_reactions')
           .select('*')
@@ -394,10 +389,7 @@ export function useMessages(conversationId: string | null) {
       // Fetch profiles for reply senders if not already fetched
       const replySenderIds = [...new Set(replyMessages.map(m => m.sender_id).filter(id => !profileMap.has(id)))];
       if (replySenderIds.length > 0) {
-        const { data: replyProfiles } = await supabase
-          .from('public_profiles')
-          .select('id, display_name, username, avatar_url')
-          .in('id', replySenderIds);
+        const { data: replyProfiles } = await fetchPublicProfilesBatched(replySenderIds);
         (replyProfiles ?? []).forEach((p) => profileMap.set(p.id, p));
       }
 
@@ -542,11 +534,7 @@ export function useMessages(conversationId: string | null) {
           }
           
           // For other users' messages, fetch profile (non-blocking pattern)
-          const { data: profile } = await supabase
-            .from('public_profiles')
-            .select('id, display_name, username, avatar_url')
-            .eq('id', newMessage.sender_id)
-            .maybeSingle();
+          const { data: profile } = await fetchPublicProfileById(newMessage.sender_id);
 
           setMessages((prev) => prev.some(message => message.id === newMessage.id)
             ? prev
@@ -621,11 +609,7 @@ export function useMessages(conversationId: string | null) {
 
           // Fetch profile if not cached (before updating state)
           if (!typingProfileCacheRef.current.has(typingUserId) && eventType !== 'DELETE') {
-            const { data } = await supabase
-              .from('public_profiles')
-              .select('display_name, avatar_url')
-              .eq('id', typingUserId)
-              .maybeSingle();
+            const { data } = await fetchPublicProfileById(typingUserId);
             typingProfileCacheRef.current.set(typingUserId, {
               display_name: data?.display_name || 'User',
               avatar_url: data?.avatar_url ?? null,
@@ -697,11 +681,7 @@ export function useMessages(conversationId: string | null) {
           if (displayName) {
             typingProfileCacheRef.current.set(typingUserId, { display_name: displayName, avatar_url: avatarUrl });
           } else {
-            const { data } = await supabase
-              .from('public_profiles')
-              .select('display_name, avatar_url')
-              .eq('id', typingUserId)
-              .maybeSingle();
+            const { data } = await fetchPublicProfileById(typingUserId);
             typingProfileCacheRef.current.set(typingUserId, {
               display_name: data?.display_name || 'User',
               avatar_url: data?.avatar_url ?? null,
