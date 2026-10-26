@@ -223,6 +223,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => { disposed = true; window.clearInterval(timer); document.removeEventListener('visibilitychange', check); };
   }, [user?.id]);
 
+  // Lightweight heartbeat: the displayed last activity is real for open apps,
+  // and sessions which have gone offline stop updating their timestamp.
+  useEffect(() => {
+    if (!user?.id) return;
+    let running = false;
+    const heartbeat = async () => {
+      if (running || document.visibilityState === 'hidden') return;
+      running = true;
+      try { await registerCurrentSession(navigator.userAgent, window.location.pathname); }
+      catch { /* Backend migration or offline: retry on next activity. */ }
+      finally { running = false; }
+    };
+    const timer = window.setInterval(() => void heartbeat(), 5 * 60 * 1000);
+    window.addEventListener('focus', heartbeat);
+    return () => { window.clearInterval(timer); window.removeEventListener('focus', heartbeat); };
+  }, [user?.id]);
+
   // Remote revocation is checked when the application resumes and periodically
   // while active. A 401/403 from Auth means the server no longer recognizes it.
   useEffect(() => {
