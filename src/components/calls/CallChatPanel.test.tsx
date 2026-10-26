@@ -31,7 +31,7 @@ it('allows direct writing without media permission and sends to the existing con
   });
   try {
     sendMessage.mockResolvedValue({ error: null });
-    render(<CallChatPanel conversationId="conversation" open inputRef={createRef()} onClose={vi.fn()} />);
+    render(<CallChatPanel conversationId="conversation" open inputRef={createRef<HTMLTextAreaElement>()} onClose={vi.fn()} />);
     fireEvent.change(screen.getByLabelText('Escrever mensagem'), { target: { value: 'Mensagem na chamada' } });
     fireEvent.click(screen.getByRole('button', { name: 'Enviar' }));
     await waitFor(() => expect(sendMessage).toHaveBeenCalledWith('Mensagem na chamada'));
@@ -47,7 +47,7 @@ it('allows direct writing without media permission and sends to the existing con
 it('retains a failed message and closes only the chat, without ending the call', async () => {
   sendMessage.mockResolvedValue({ error: new Error('offline') });
   const onClose = vi.fn();
-  render(<CallChatPanel conversationId="conversation" open inputRef={createRef()} onClose={onClose} />);
+  render(<CallChatPanel conversationId="conversation" open inputRef={createRef<HTMLTextAreaElement>()} onClose={onClose} />);
   fireEvent.change(screen.getByLabelText('Escrever mensagem'), { target: { value: 'Manter rascunho' } });
   fireEvent.click(screen.getByRole('button', { name: 'Enviar' }));
   expect(await screen.findByRole('alert')).toHaveTextContent('A mensagem foi conservada');
@@ -70,7 +70,7 @@ it('preserves the draft while switching between the ongoing call and its chat', 
 it('allows composing while the destination conversation is being resolved', async () => {
   createConversation.mockResolvedValue({ data: { id: 'new-conversation' }, error: null });
   sendMessage.mockResolvedValue({ error: null });
-  render(<CallChatPanel contactId="contact" open inputRef={createRef()} onClose={vi.fn()} />);
+  render(<CallChatPanel contactId="contact" open inputRef={createRef<HTMLTextAreaElement>()} onClose={vi.fn()} />);
   const input = screen.getByLabelText('Escrever mensagem');
   expect(input).not.toBeDisabled();
   fireEvent.change(input, { target: { value: 'Olá' } });
