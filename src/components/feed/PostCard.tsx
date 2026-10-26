@@ -433,13 +433,16 @@ export const PostCard = memo(function PostCard({ mediaPriority = false, post, on
           <Bookmark className={cn("w-5 h-5", localSaved && "fill-current")} />
         </Button>
       </div>
-      {/* Report Sheet */}
-      <ReportContentSheet
-        open={showReport}
-        onOpenChange={setShowReport}
-        targetType="post"
-        targetId={post.id}
-      />
+      {/* Defer moderator role checks until the user actually opens a report.
+          A feed page can mount dozens of PostCards at once. */}
+      {showReport && (
+        <ReportContentSheet
+          open={showReport}
+          onOpenChange={setShowReport}
+          targetType="post"
+          targetId={post.id}
+        />
+      )}
       {/* Edit Sheet */}
       {isOwner && (
         <EditPostSheet
