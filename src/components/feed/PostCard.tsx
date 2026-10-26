@@ -59,7 +59,7 @@ export const PostCard = memo(function PostCard({ mediaPriority = false, post, on
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { user } = useAuth();
-  const { toggleLike, toggleSave, deletePost, sharePost, updatePost } = usePosts();
+  const { toggleLike, toggleSave, deletePost, sharePost, updatePost } = usePosts({ autoLoad: false });
   const { toast } = useToast();
   
   const [showReactions, setShowReactions] = useState(false);

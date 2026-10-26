@@ -68,3 +68,34 @@ test('feed adapts across mobile, tablet, desktop and rotation without losing scr
   await page.getByRole('button', {name: 'Criar publicação', exact: true}).click();
   await expect(page.getByRole('dialog')).toBeVisible();
 });
+
+test('feed requests stay bounded as multiple posts mount', async ({ page }) => {
+  let requests = 0;
+  page.on('request', request => {
+    if (new URL(request.url()).pathname === '/rest/v1/posts') requests++;
+  });
+  await mockAccount(page);
+  await page.goto('/muxi');
+  await expect(page.locator('article')).toHaveCount(12);
+  await page.waitForLoadState('networkidle');
+  console.log(`Post collection requests for 12 cards: ${requests}`);
+  // React StrictMode mounts the single page owner twice in development;
+  // each owner loads feed and discovery. Cards and closed sheets add none.
+  expect(requests).toBeLessThanOrEqual(4);
+});
+
+test('feed remains readable while advertisements are still loading', async ({ page }) => {
+  await mockAccount(page);
+  let releaseAds!: () => void;
+  const pendingAds = new Promise<void>(resolve => { releaseAds = resolve; });
+  await page.route('**/rest/v1/advertisements*', async route => {
+    await pendingAds;
+    await route.fulfill({json: []});
+  });
+  try {
+    await page.goto('/muxi');
+    await expect(page.locator('article').first()).toBeVisible({timeout: 3000});
+  } finally {
+    releaseAds();
+  }
+});

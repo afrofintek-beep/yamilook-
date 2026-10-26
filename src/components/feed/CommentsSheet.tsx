@@ -31,7 +31,7 @@ interface CommentsSheetProps {
 
 export function CommentsSheet({ open, onOpenChange, post }: CommentsSheetProps) {
   const { user } = useAuth();
-  const { getComments, addComment, deleteComment, toggleCommentReaction } = usePosts();
+  const { getComments, addComment, deleteComment, toggleCommentReaction } = usePosts({ autoLoad: false });
   
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');

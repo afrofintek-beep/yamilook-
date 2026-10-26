@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Plus, Search, MessageCircle, Radio, Loader2, ArrowUp } from 'lucide-react';
@@ -32,8 +32,11 @@ export default function Feed() {
   const [createOpen, setCreateOpen] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [selectedPost, setSelectedPost] = useState<PostWithUser | null>(null);
-  type FeedItem = PostWithUser | (Advertisement & { business: BusinessProfile; isAd: true });
-  const [feedWithAds, setFeedWithAds] = useState<FeedItem[]>([]);
+  const [feedAds, setFeedAds] = useState<(Advertisement & { business: BusinessProfile })[]>([]);
+  const feedWithAds = useMemo(() => {
+    const visiblePosts = feedPosts.filter(post => !archivedPostIds.has(post.id));
+    return interleaveAdsInFeed(visiblePosts, feedAds);
+  }, [feedPosts, archivedPostIds, feedAds, interleaveAdsInFeed]);
 
   // Refresh feed when create sheet closes (different hook instances don't share state)
   const handleCreateOpenChange = (open: boolean) => {
@@ -48,22 +51,18 @@ export default function Feed() {
     fetchArchivedIds();
   }, [fetchArchivedIds]);
 
-  // Load ads and interleave with feed, filtering out archived posts
+  // Organic posts render immediately; advertising must never block the feed.
+  // Ignore late responses after a refresh or unmount.
   useEffect(() => {
-    const loadAds = async () => {
-      // Filter out archived posts
-      const visiblePosts = feedPosts.filter(p => !archivedPostIds.has(p.id));
-      
-      if (visiblePosts.length === 0) {
-        setFeedWithAds([]);
-        return;
-      }
-      const ads = await fetchActiveAdsForFeed(undefined, visiblePosts.length);
-      const combined = interleaveAdsInFeed(visiblePosts, ads);
-      setFeedWithAds(combined);
-    };
-    loadAds();
-  }, [feedPosts, archivedPostIds, fetchActiveAdsForFeed, interleaveAdsInFeed]);
+    let current = true;
+    setFeedAds([]);
+    if (feedPosts.length > 0) {
+      fetchActiveAdsForFeed(undefined, feedPosts.length)
+        .then(ads => { if (current) setFeedAds(ads); })
+        .catch(() => { /* Keep organic posts visible if advertising is unavailable. */ });
+    }
+    return () => { current = false; };
+  }, [feedPosts, fetchActiveAdsForFeed]);
 
   const handleCommentClick = (post: PostWithUser) => {
     setSelectedPost(post);
