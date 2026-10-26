@@ -1,0 +1,84 @@
+/* Feed-only layout: other Yamilook surfaces and standalone KOSOLOLA keep
+   their own navigation. CSS breakpoints also respond to rotation and zoom. */
+.feed-grid {
+  width: 100%;
+  max-width: 1440px;
+  margin-inline: auto;
+  padding-inline: env(safe-area-inset-left, 0px) env(safe-area-inset-right, 0px);
+}
+.feed-scroll > [data-radix-scroll-area-viewport] > div { display: block !important; }
+.feed-column { overflow-wrap: anywhere; }
+.feed-right-rail { display: none; }
+.feed-posts > div { min-width: 0; }
+.feed-primary-nav { padding-inline: env(safe-area-inset-left, 0px) env(safe-area-inset-right, 0px); }
+.feed-create { right: max(24px, env(safe-area-inset-right, 0px)); }
+.feed-primary-nav a { min-width: 0; padding-inline: 2px; }
+.feed-primary-nav a > span { max-width: 100%; overflow-wrap: anywhere; }
+
+@media (min-width: 640px) {
+  .feed-grid { padding: 20px max(16px, env(safe-area-inset-left, 0px)) 24px max(16px, env(safe-area-inset-right, 0px)); }
+  .feed-column { max-width: 680px; margin-inline: auto; }
+  .feed-stories, .feed-posts > div > article, .feed-posts > div > div > article {
+    border: 1px solid hsl(var(--border));
+    border-radius: 16px;
+    overflow: hidden;
+    background: hsl(var(--card));
+  }
+  .feed-stories { margin-bottom: 16px; }
+  .feed-posts > div { margin-bottom: 16px; }
+}
+
+@media (min-width: 1024px) {
+  .feed-shell { padding-bottom: 0; }
+  .feed-grid {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 680px);
+    justify-content: center;
+    align-items: start;
+    gap: 24px;
+  }
+  .feed-column { grid-column: 2; }
+  .feed-primary-nav {
+    top: calc(6rem + env(safe-area-inset-top, 0px));
+    bottom: 16px;
+    inset-inline-start: max(16px, calc((100vw - 976px) / 2));
+    inset-inline-end: auto;
+    width: 220px;
+    padding-inline: 0;
+    height: auto;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    overflow-y: auto;
+  }
+  .feed-primary-nav > div {
+    display: flex;
+    height: auto;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 0;
+  }
+  .feed-primary-nav a {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 12px;
+    min-height: 48px;
+    font-size: 14px;
+    padding: 12px;
+  }
+  .feed-primary-nav a:hover { background: hsl(var(--muted)); }
+  .feed-create { bottom: max(24px, env(safe-area-inset-bottom, 0px)); }
+}
+
+@media (min-width: 1280px) {
+  .feed-grid { grid-template-columns: 220px minmax(0, 680px) minmax(220px, 280px); }
+  .feed-right-rail { display: block; grid-column: 3; position: sticky; top: 20px; }
+  .feed-primary-nav { inset-inline-start: max(16px, calc((100vw - 1440px) / 2 + 16px)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .feed-shell *, .feed-primary-nav * { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}

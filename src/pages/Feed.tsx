@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { Plus, Search, MessageCircle, Radio, Loader2, ArrowUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -21,9 +20,9 @@ import { useAdvertising, Advertisement, BusinessProfile } from '@/hooks/useAdver
 import { useActiveStreams } from '@/hooks/useActiveStreams';
 import { useArchivedPosts } from '@/hooks/useArchivedPosts';
 import YamilookLogo from '@/components/brand/YamilookLogo';
+import '@/styles/feed-layout.css';
 
 export default function Feed() {
-  const { t } = useTranslation();
   const navigate = useNavigate();
   const { feedPosts, loading, fetchFeedPosts, loadMoreFeedPosts, hasMoreFeed, loadingMoreFeed, newPostsCount } = usePosts();
   const { fetchActiveAdsForFeed, interleaveAdsInFeed } = useAdvertising();
@@ -102,10 +101,10 @@ export default function Feed() {
   }, [hasMoreFeed, loadMoreFeedPosts, feedWithAds.length]);
 
   return (
-    <div className="h-screen-safe overflow-hidden bg-muted/30 flex flex-col pb-[calc(5rem+env(safe-area-inset-bottom,0px))]">
+    <div className="feed-shell h-screen-safe overflow-hidden bg-muted/30 flex flex-col pb-[calc(5rem+env(safe-area-inset-bottom,0px))]">
       {/* Header - Clean, minimal */}
       <header className="relative z-50 shrink-0 bg-card border-b border-border safe-top safe-inline">
-        <div className="flex items-center justify-between px-4 py-2 mx-auto w-full max-w-[940px]">
+        <div className="flex items-center justify-between px-4 py-2 mx-auto w-full max-w-[1440px]">
           <YamilookLogo size="sm" showTagline={false} animate={false} bgClassName="bg-card" />
           <div className="flex items-center gap-1">
             <LivePreviewTooltip activeStreams={activeStreams} hasActiveStreams={hasActiveStreams}>
@@ -113,7 +112,8 @@ export default function Feed() {
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className="rounded-full text-destructive"
+                  aria-label="Bandas ao vivo"
+                  className="h-11 w-11 rounded-full text-destructive"
                   onClick={() => navigate('/live')}
                 >
                   <Radio className="w-5 h-5" />
@@ -124,7 +124,8 @@ export default function Feed() {
             <Button 
               variant="ghost" 
               size="icon" 
-              className="rounded-full"
+              className="h-11 w-11 rounded-full"
+              aria-label="Pesquisar"
               onClick={() => navigate('/discover')}
             >
               <Search className="w-5 h-5" />
@@ -132,8 +133,9 @@ export default function Feed() {
             <Button 
               variant="ghost" 
               size="icon" 
-              className="rounded-full"
-              onClick={() => navigate('/')}
+              className="h-11 w-11 rounded-full"
+              aria-label="Abrir conversas"
+              onClick={() => navigate('/papos')}
             >
               <MessageCircle className="w-5 h-5" />
             </Button>
@@ -143,7 +145,7 @@ export default function Feed() {
 
       {/* New-posts pill (realtime) */}
       {newPostsCount > 0 && (
-        <div className="fixed left-1/2 -translate-x-1/2 top-[calc(4rem+env(safe-area-inset-top,0px))] z-40">
+        <div className="fixed left-1/2 -translate-x-1/2 top-[calc(6rem+env(safe-area-inset-top,0px))] z-40">
           <motion.button
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
@@ -156,7 +158,7 @@ export default function Feed() {
         </div>
       )}
 
-      <ScrollArea ref={scrollRef} className="min-h-0 flex-1 [&_[data-radix-scroll-area-viewport]]:overscroll-y-contain">
+      <ScrollArea ref={scrollRef} className="feed-scroll min-h-0 flex-1 [&_[data-radix-scroll-area-viewport]]:overscroll-y-contain">
         {/* Pull-to-refresh indicator */}
         <div
           className="flex items-start justify-center overflow-hidden"
@@ -167,16 +169,16 @@ export default function Feed() {
             style={refreshingFeed ? undefined : { opacity: Math.min(pullDistance / 70, 1), transform: `rotate(${pullDistance * 3}deg)` }}
           />
         </div>
-        {/* Centered feed card + desktop-only right rail (Instagram/Facebook-like) */}
-        <div className="mx-auto w-full max-w-[940px] lg:flex lg:gap-6 lg:items-start lg:px-4 lg:pt-4">
-          <main className="w-full lg:max-w-[600px] lg:flex-1 bg-card lg:rounded-2xl lg:border lg:border-border lg:overflow-hidden lg:shadow-sm">
+        {/* Responsive feed with room for desktop navigation and the right rail. */}
+        <div className="feed-grid">
+          <main className="feed-column min-w-0 w-full">
         {/* Status stories */}
-        <div className="border-b border-border">
+        <div className="feed-stories bg-card border-b border-border">
           <StatusList />
         </div>
 
         {/* Feed posts */}
-        <div className="bg-card">
+        <div className="feed-posts">
           {loading ? (
             <FeedSkeleton count={3} />
           ) : feedPosts.length === 0 ? (
@@ -225,7 +227,7 @@ export default function Feed() {
           )}
         </div>
           </main>
-          <aside className="hidden lg:block w-[300px] shrink-0">
+          <aside className="feed-right-rail min-w-0" aria-label="Na tua banda">
             <FeedSidebar activeStreams={activeStreams} />
           </aside>
         </div>
@@ -235,13 +237,14 @@ export default function Feed() {
       <motion.button 
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
-        className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom,0px))] right-6 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center"
+        aria-label="Criar publicação"
+        className="feed-create fixed z-40 bottom-[calc(5.5rem+env(safe-area-inset-bottom,0px))] right-6 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center"
         onClick={() => handleCreateOpenChange(true)}
       >
         <Plus className="w-6 h-6" />
       </motion.button>
 
-      <BottomNav />
+      <BottomNav layout="feed" />
 
       {/* Sheets */}
       <CreatePostSheet open={createOpen} onOpenChange={handleCreateOpenChange} />
