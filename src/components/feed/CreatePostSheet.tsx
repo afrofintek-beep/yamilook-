@@ -72,7 +72,7 @@ interface CreatePostSheetProps {
 export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
   const { t } = useTranslation();
   const { user, profile } = useAuth();
-  const { createPost } = usePosts();
+  const { createPost } = usePosts({ autoLoad: false });
   const { toast } = useToast();
 
   const privacyOptions = [
