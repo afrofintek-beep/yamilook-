@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { 
@@ -58,12 +59,15 @@ export function VideoCall({
   isHost = false,
 }: VideoCallProps) {
   const localVideoRef = useRef<HTMLVideoElement>(null);
+  const callChatInputRef = useRef<HTMLTextAreaElement>(null);
   const { t } = useTranslation();
   const { toast } = useToast();
   const [isPipMode, setIsPipMode] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [showChat, setShowChat] = useState(false);
+  // Keep the composer mounted after first opening so drafts survive switching back to the call.
+  const [chatOpenedOnce, setChatOpenedOnce] = useState(false);
   const [showParticipants, setShowParticipants] = useState(false);
   const [handRaised, setHandRaised] = useState(false);
   const [showBackgrounds, setShowBackgrounds] = useState(false);
@@ -182,6 +186,15 @@ export function VideoCall({
     onEndCall();
   };
 
+  const openCallChat = () => {
+    // Mount and focus in the same tap: iOS otherwise declines to open its keyboard.
+    flushSync(() => {
+      setChatOpenedOnce(true);
+      setShowChat(true);
+    });
+    callChatInputRef.current?.focus({ preventScroll: true });
+  };
+
   // Debug: Log state for troubleshooting
   console.log('[VideoCall] callStatus:', state.callStatus, 'localStream:', !!state.localStream, 'isMuted:', state.isMuted, 'isVideoEnabled:', state.isVideoEnabled);
   
@@ -192,12 +205,18 @@ export function VideoCall({
         isFullscreen && "fixed inset-0 z-50"
       )}
     >
-      <Button variant="secondary" className="absolute left-3 top-[calc(env(safe-area-inset-top,0px)+0.75rem)] z-40" onClick={() => setShowChat(true)}>
-        <MessageSquare className="h-4 w-4 mr-2" />Escrever no papo
+      <Button variant="secondary" className="absolute left-3 top-[calc(env(safe-area-inset-top,0px)+0.75rem)] z-40" onClick={openCallChat}>
+        <MessageSquare className="h-4 w-4 mr-2" />Escrever mensagem
       </Button>
-      {showChat && <CallChatPanel conversationId={conversationId}
-        contactId={!isGroupCall && participants.length === 1 ? participants[0].user_id : undefined}
-        onClose={() => setShowChat(false)} />}
+      {chatOpenedOnce && (
+        <CallChatPanel
+          conversationId={conversationId}
+          contactId={!isGroupCall && participants.length === 1 ? participants[0].user_id : undefined}
+          open={showChat}
+          inputRef={callChatInputRef}
+          onClose={() => setShowChat(false)}
+        />
+      )}
       {/* Main Video Grid */}
       <ParticipantGrid
         participants={participants}
@@ -422,7 +441,7 @@ export function VideoCall({
                   variant="ghost"
                   size="sm"
                   className="text-white/70 hover:text-white hover:bg-white/10"
-                  onClick={() => setShowChat(!showChat)}
+                  onClick={() => showChat ? setShowChat(false) : openCallChat()}
                 >
                   <MessageSquare className="h-4 w-4 mr-2" />
                   {t('calls.chat')}
