@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
 import { resourceCategory } from './FeedDiagnostics';
 it('never exposes signed media paths or query secrets', () => {
-  expect(resourceCategory('https://example.com/storage/v1/object/sign/private/user/file.jpg?token=secret', 'fetch')).toBe('media');
+  expect(resourceCategory('https://example.com/storage/v1/object/sign/private/user/file.jpg?token=secret', 'fetch')).toBe('media:other');
   expect(resourceCategory('https://example.com/rest/v1/posts?user_id=private', 'fetch')).toBe('api:posts');
   expect(resourceCategory('https://example.com/rest/v1/rpc/private_function', 'fetch')).toBe('api:rpc');
   expect(resourceCategory('secret', 'private')).toBe('other');
@@ -9,4 +9,11 @@ it('never exposes signed media paths or query secrets', () => {
 it('separates pagination and discovery without exporting query values', () => {
   expect(resourceCategory('https://example.com/rest/v1/posts?created_at=lt.private', 'fetch')).toBe('api:posts:pagination');
   expect(resourceCategory('https://example.com/rest/v1/posts?order=likes_count.desc', 'fetch')).toBe('api:posts:discovery');
+});
+
+it('separates call polling and image transformations without recording URL values', () => {
+  expect(resourceCategory('https://example.com/rest/v1/call_participants?user_id=eq.private', 'fetch')).toBe('api:call_participants');
+  expect(resourceCategory('https://example.com/rest/v1/calls?caller_id=eq.private', 'fetch')).toBe('api:calls');
+  expect(resourceCategory('https://example.com/storage/v1/render/image/public/media/avatar.png?width=128', 'img')).toBe('media:transformed-image');
+  expect(resourceCategory('https://example.com/storage/v1/object/public/media/post.jpg', 'img')).toBe('media:public-object');
 });
