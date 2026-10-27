@@ -159,6 +159,23 @@ export function BackupManager() {
         setInfo('O JSON recuperado foi exportado localmente; mantenha-o privado.');
       })}>Exportar JSON recuperado</button>
     </div>}
+    <div className="rounded-xl border p-4 space-y-2">
+      <h3 className="font-semibold">Limpar dados temporários</h3>
+      <p className="text-xs text-muted-foreground">A limpeza da cache não apaga o armazenamento da conta nem os backups cifrados na nuvem. Pode exigir novo carregamento da aplicação.</p>
+      <button className="rounded-lg border px-3 py-2 disabled:opacity-50" disabled={busy}
+        onClick={()=>void run(async()=>{
+          if('caches' in window) {
+            const keys=await caches.keys();
+            await Promise.all(keys.map(key=>caches.delete(key)));
+          }
+          if('serviceWorker' in navigator) {
+            const registrations=await navigator.serviceWorker.getRegistrations();
+            await Promise.all(registrations.map(reg=>reg.unregister()));
+          }
+          setInfo('Cache limpa. A recarregar…');
+          window.setTimeout(()=>window.location.reload(),700);
+        })}>Limpar cache</button>
+    </div>
     {error&&<p role="alert" className="text-destructive">{error}</p>}
     {info&&<p role="status" className="text-green-600">{info}</p>}
   </section>;
