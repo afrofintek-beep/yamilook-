@@ -81,13 +81,13 @@ export function CallChatPanel({ conversationId, contactId, open, onClose, inputR
   return (
     <div
       role={inline ? "region" : "dialog"}
-      aria-modal={!inline && open}
+      aria-modal={inline ? undefined : open}
       aria-label="Mensagens durante a chamada"
       aria-hidden={!open}
       className={open
-        ? `${inline ? 'absolute inset-x-2 bottom-28 z-30 rounded-2xl border shadow-xl' : 'fixed inset-x-0 z-[90]'} flex flex-col overflow-hidden bg-background text-foreground`
+        ? `${inline ? 'relative min-h-0 flex-[1.2] basis-0 border-y' : 'fixed inset-x-0 z-[90]'} flex flex-col overflow-hidden bg-background text-foreground`
         : 'hidden'}
-      style={open ? inline ? { height: '42%', minHeight: '160px' } : {
+      style={open && !inline ? {
         top: 'var(--kosolola-top, 0px)',
         height: 'var(--kosolola-height, 100dvh)',
       } : undefined}

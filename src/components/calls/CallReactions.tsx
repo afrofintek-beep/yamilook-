@@ -17,17 +17,18 @@ import { AFRICAN_REACTIONS, AfricanReactionType, getReaction } from '@/lib/react
  */
 
 interface CallReactionsProps {
+  inline?: boolean;
   onReaction: (type: AfricanReactionType) => void;
 }
 
-export function CallReactions({ onReaction }: CallReactionsProps) {
+export function CallReactions({ onReaction, inline = false }: CallReactionsProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [hoveredReaction, setHoveredReaction] = useState<string | null>(null);
 
   const hoveredData = hoveredReaction ? getReaction(hoveredReaction) : null;
 
   return (
-    <div className="absolute bottom-32 left-4 z-20">
+    <div className={inline ? "relative shrink-0" : "absolute bottom-32 left-4 z-20"}>
       <AnimatePresence>
         {isOpen && (
           <motion.div

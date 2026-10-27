@@ -1,11 +1,11 @@
 import { refreshCallPush } from '@/lib/call-push';
-import { Component, lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
+import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
 import { BrowserRouter, Link, Navigate, Route, Routes, Outlet, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from '@/hooks/useAuth';
 import { AppSurfaceContext } from '@/lib/app-surface';
 import { unlockCallAudio } from '@/lib/audio-context';
-import { recoverApplicationAssets } from '@/lib/app-assets';
+import { PaposBoundary } from './PaposBoundary';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Toaster } from '@/components/ui/toaster';
 import { Toaster as Sonner } from '@/components/ui/sonner';
@@ -38,13 +38,6 @@ export function PaposGate({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 function Loading() { return <div role="status" className="h-screen-safe flex items-center justify-center">A carregar a KOSOLOLA…</div>; }
-class PaposBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
-  state = { failed: false };
-  static getDerivedStateFromError() { return { failed: true }; }
-  render() {
-    return this.state.failed ? <main className="min-h-screen-safe safe-top p-6 space-y-4"><h1 className="text-xl font-bold">Não foi possível abrir esta página</h1><p>Verifica a ligação e tenta novamente. A tua conta mantém-se guardada.</p><Button onClick={() => { void recoverApplicationAssets('/papos-app/').finally(() => window.location.reload()); }}>Recarregar KOSOLOLA</Button></main> : this.props.children;
-  }
-}
 function PaposRuntime() {
   usePaposViewport();
   const [updateReady, setUpdateReady] = useState(false);
