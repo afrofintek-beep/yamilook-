@@ -29,6 +29,31 @@ interface InviteSheetProps {
 }
 
 export function InviteSheet({ open, onOpenChange, isAdmin = false }: InviteSheetProps) {
+  const [viewportStyle, setViewportStyle] = useState<{ top: number; height: number }>();
+  useEffect(() => {
+    if (!open) return;
+    const viewport = window.visualViewport;
+    let frame = 0;
+    const update = () => {
+      // Preserve the user's pinch zoom; only follow keyboard/browser resizing.
+      if (viewport && Math.abs(viewport.scale - 1) > 0.01) return;
+      setViewportStyle({ top: viewport?.offsetTop ?? 0, height: viewport?.height ?? window.innerHeight });
+    };
+    const schedule = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(update);
+    };
+    update();
+    viewport?.addEventListener('resize', schedule);
+    viewport?.addEventListener('scroll', schedule);
+    window.addEventListener('resize', schedule);
+    return () => {
+      cancelAnimationFrame(frame);
+      viewport?.removeEventListener('resize', schedule);
+      viewport?.removeEventListener('scroll', schedule);
+      window.removeEventListener('resize', schedule);
+    };
+  }, [open]);
   const { user } = useAuth();
   const userId = user?.id;
   const [allowedUser, setAllowedUser] = useState<string | null>(null);
@@ -115,7 +140,7 @@ export function InviteSheet({ open, onOpenChange, isAdmin = false }: InviteSheet
 
   return (
     <Sheet open={open} onOpenChange={(value) => { setStatus(''); onOpenChange(value); }}>
-      <SheetContent side="right" hideCloseButton className="w-full max-w-full sm:max-w-md h-screen-safe flex flex-col overflow-hidden p-0 pt-[env(safe-area-inset-top,0px)]">
+      <SheetContent side="right" hideCloseButton style={viewportStyle} className="w-full max-w-full sm:max-w-md h-screen-safe flex flex-col overflow-hidden p-0 pt-[env(safe-area-inset-top,0px)] [&_input]:text-base md:[&_input]:text-sm">
         <SheetHeader className="shrink-0 border-b pl-6 pr-[max(0.5rem,env(safe-area-inset-right,0px))] py-2">
           <div className="flex items-center justify-between gap-3 text-left">
             <SheetTitle className="min-w-0">Convidar para o Yamilook</SheetTitle>
@@ -124,12 +149,12 @@ export function InviteSheet({ open, onOpenChange, isAdmin = false }: InviteSheet
             </SheetClose>
           </div>
         </SheetHeader>
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pt-4 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]">
+        <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain break-words px-6 pt-4 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]">
           <SheetDescription>Gera um código único para o email da pessoa convidada. Só pode ser usado uma vez. Gerar o código não envia um email.</SheetDescription>
         {allowed ? <>
         <form className="space-y-3 mt-6" onSubmit={(event) => { event.preventDefault(); void issue(); }}>
           <label htmlFor="invite-email" className="block font-medium">Email da pessoa convidada</label>
-          <Input id="invite-email" type="email" required value={email} disabled={issuing}
+          <Input id="invite-email" type="email" autoCapitalize="none" autoCorrect="off" required value={email} disabled={issuing}
             onChange={(event) => { setEmail(event.target.value); setCode(''); setStatus(''); }} />
           <Button type="submit" disabled={issuing || !email.trim()} className="w-full">
             {issuing ? 'A gerar convite…' : 'Gerar código único'}
@@ -155,7 +180,7 @@ export function InviteSheet({ open, onOpenChange, isAdmin = false }: InviteSheet
           <p className="text-sm text-muted-foreground">Autoriza uma conta existente. Esta permissão não dá acesso à administração.</p>
           <form onSubmit={(event) => { event.preventDefault(); void managePermission(delegateEmail, true); }} className="space-y-3">
             <label htmlFor="delegate-email">Email do utilizador</label>
-            <Input id="delegate-email" type="email" required value={delegateEmail} onChange={(event) => setDelegateEmail(event.target.value)} disabled={managing} />
+            <Input id="delegate-email" type="email" autoCapitalize="none" autoCorrect="off" required value={delegateEmail} onChange={(event) => setDelegateEmail(event.target.value)} disabled={managing} />
             <Button type="submit" disabled={managing || !delegateEmail.trim()}>Autorizar convites</Button>
           </form>
           {delegates.map((delegate) => <div key={delegate.email} className="flex items-center justify-between gap-2">

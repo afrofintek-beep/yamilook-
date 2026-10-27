@@ -14,6 +14,30 @@ const generate = async () => {
   await screen.findByLabelText('Código único de convite');
 };
 describe('Unique invitations', () => {
+  it('follows the keyboard viewport, preserves typed email, and removes listeners on close', async () => {
+    const viewport = new EventTarget();
+    Object.assign(viewport, { height: 360, offsetTop: 24, scale: 1 });
+    vi.stubGlobal('visualViewport', viewport);
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation(callback => { callback(0); return 1; });
+    vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => {});
+    const remove = vi.spyOn(viewport, 'removeEventListener');
+    try {
+      const { unmount } = show();
+      const input = await screen.findByLabelText('Email da pessoa convidada');
+      fireEvent.change(input, { target: { value: 'recipient@example.com' } });
+      expect(screen.getByRole('dialog')).toHaveStyle({ height: '360px', top: '24px' });
+      Object.assign(viewport, { height: 700, offsetTop: 0 });
+      fireEvent(viewport, new Event('resize'));
+      expect(screen.getByRole('dialog')).toHaveStyle({ height: '700px', top: '0px' });
+      expect(input).toHaveValue('recipient@example.com');
+      Object.assign(viewport, { height: 300, scale: 2 });
+      fireEvent(viewport, new Event('resize'));
+      expect(screen.getByRole('dialog')).toHaveStyle({ height: '700px' });
+      unmount();
+      expect(remove).toHaveBeenCalledWith('resize', expect.any(Function));
+      expect(remove).toHaveBeenCalledWith('scroll', expect.any(Function));
+    } finally { vi.unstubAllGlobals(); }
+  });
   it('closes the invitation panel with its visible close button', async () => {
     const onOpenChange = vi.fn();
     render(<InviteSheet open onOpenChange={onOpenChange} />);
