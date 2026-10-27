@@ -48,3 +48,12 @@ describe('Academia session discovery and management', () => {
     expect(screen.getByRole('button', { name: 'Gerir Outra futura' })).toBeVisible();
   });
 });
+
+it('lets a visitor browse past and cancelled sessions without entering management', () => {
+  mount();
+  fireEvent.click(screen.getByRole('button', { name: 'Passadas' }));
+  expect(screen.getByText('Minha passada')).toBeVisible();
+  fireEvent.click(screen.getByRole('button', { name: 'Canceladas' }));
+  expect(screen.getByText('Minha cancelada')).toBeVisible();
+  expect(screen.getByRole('tab', { name: 'Todos os preços' })).toBeVisible();
+});
