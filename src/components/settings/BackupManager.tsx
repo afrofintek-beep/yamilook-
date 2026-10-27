@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import {
   type BackupFile, type BackupPreferences, type BackupUsage,
-  canBackupOnConnection, createCloudBackup, decryptArchive, downloadSnapshot,
-  generateRecoveryKey, getBackupPreferences, hasDeviceKey, importRecoveryKey,
+  canBackupOnConnection, confirmRecoveryKeySaved, createCloudBackup, decryptArchive, downloadSnapshot,
+  generateRecoveryKey, getBackupPreferences, hasDeviceKey, importRecoveryKey, isRecoveryKeyConfirmed,
   listCloudBackups, readCloudBackup, restoreBackupPreferences,
   setBackupPreferences, usageForAccount,
 } from '@/lib/account-backup';
@@ -16,6 +16,7 @@ export function BackupManager() {
   const id=user?.id;
   const [usage,setUsage]=useState<BackupUsage|null>(null);
   const [keyReady,setKeyReady]=useState(false);
+  const [keyConfirmed,setKeyConfirmed]=useState(false);
   const [recoveryKey,setRecoveryKey]=useState('');
   const [acknowledged,setAcknowledged]=useState(false);
   const [inputKey,setInputKey]=useState('');
@@ -34,10 +35,10 @@ export function BackupManager() {
       usageForAccount(userId).catch(()=>null),
     ]);
     if(userId!==id) return;
-    setKeyReady(storedKey);setFiles(cloud);setUsage(measured);
+    setKeyReady(storedKey);setKeyConfirmed(isRecoveryKeyConfirmed(userId));setFiles(cloud);setUsage(measured);
   };
   useEffect(() => {
-    setUsage(null);setKeyReady(false);setSnapshot(null);setRecoveryKey('');
+    setUsage(null);setKeyReady(false);setKeyConfirmed(false);setSnapshot(null);setRecoveryKey('');
     setFiles([]);setInfo('');setError('');
     if (!id) return;
     setPrefs(getBackupPreferences(id));
@@ -83,23 +84,25 @@ export function BackupManager() {
       {!keyReady && <>
         <button className="rounded-lg bg-primary text-primary-foreground px-3 py-2 disabled:opacity-50" disabled={busy} onClick={()=>void run(async()=>{
           const key=await generateRecoveryKey(id);
-          setRecoveryKey(key);setKeyReady(true);
+          setRecoveryKey(key);setKeyReady(true);setKeyConfirmed(false);
           setInfo('Guarde esta chave fora da aplicação: será necessária num novo dispositivo.');
         })}>Criar chave de recuperação</button>
-        <label className="block">Ou introduza a chave guardada para recuperar noutro dispositivo
+      </>}
+      {!recoveryKey && <div className="space-y-2">
+        <label className="block">{keyReady ? 'Corrigir chave de recuperação (validada contra a última cópia)' : 'Ou introduza a chave guardada para recuperar noutro dispositivo'}
           <input className="w-full mt-1 rounded-lg border bg-background p-2 font-mono" type="password" autoComplete="off" value={inputKey} onChange={e=>setInputKey(e.target.value)} placeholder="64 caracteres" />
         </label>
         <button disabled={busy||!inputKey} className="rounded-lg border px-3 py-2 disabled:opacity-50" onClick={()=>void run(async()=>{
-          await importRecoveryKey(id,inputKey);setInputKey('');setKeyReady(true);setInfo('Chave recuperada neste dispositivo.');
-        })}>Ativar com chave existente</button>
-      </>}
-      {keyReady && !recoveryKey && <p className="text-xs">Este dispositivo possui uma chave de cifragem. Guarde sempre a chave original num local seguro.</p>}
+          await importRecoveryKey(id,inputKey);setInputKey('');setKeyReady(true);setKeyConfirmed(true);setInfo('Chave recuperada e verificada neste dispositivo.');
+        })}>Usar a chave existente</button>
+      </div>}
+      {keyReady && !recoveryKey && <p className="text-xs">Este dispositivo possui uma chave de cifragem. {keyConfirmed ? 'A recuperação foi confirmada.' : 'Confirme que guardou a chave original para poder fazer backups.'}</p>}
       {recoveryKey && <div className="rounded-xl border border-amber-500/50 p-3 space-y-2">
         <p className="font-semibold">Chave de recuperação — apresentada uma única vez</p>
         <code className="block break-all select-all">{recoveryKey}</code>
         <p>Se perder esta chave e o dispositivo, não será possível decifrar a cópia na nuvem.</p>
         <label className="flex items-start gap-2"><input type="checkbox" checked={acknowledged} onChange={e=>setAcknowledged(e.target.checked)} /> Guardei a chave num local privado e seguro.</label>
-        {acknowledged && <button className="underline" onClick={()=>{setRecoveryKey('');setAcknowledged(false);}}>Ocultar chave</button>}
+        {acknowledged && <button className="underline" onClick={()=>{confirmRecoveryKeySaved(id);setKeyConfirmed(true);setRecoveryKey('');setAcknowledged(false);}}>Confirmar que guardei e ocultar chave</button>}
       </div>}
     </div>
 
@@ -107,7 +110,7 @@ export function BackupManager() {
       <h3 className="font-semibold">Cópias cifradas na nuvem</h3>
       <label className="flex gap-2 items-center justify-between">
         <span>Backup automático (com aplicação aberta, aproximadamente diário)</span>
-        <input type="checkbox" disabled={!keyReady} checked={prefs.automatic} onChange={e=>changePrefs({...prefs,automatic:e.target.checked})} />
+        <input type="checkbox" disabled={!keyReady||!keyConfirmed} checked={prefs.automatic} onChange={e=>changePrefs({...prefs,automatic:e.target.checked})} />
       </label>
       <label className="flex gap-2 items-center justify-between">
         <span>Backup apenas com Wi-Fi confirmado</span>
@@ -115,7 +118,7 @@ export function BackupManager() {
       </label>
       {prefs.wifiOnly && !canBackupOnConnection(true) &&
         <p className="text-xs text-amber-600">Este navegador não confirma a ligação Wi-Fi (frequente no iPhone). O backup fica bloqueado para não consumir dados móveis. Pode desativar a restrição manualmente.</p>}
-      <button className="rounded-lg bg-primary text-primary-foreground px-3 py-2 disabled:opacity-50" disabled={!keyReady||busy||!!recoveryKey&&!acknowledged} onClick={()=>void run(async()=>{
+      <button className="rounded-lg bg-primary text-primary-foreground px-3 py-2 disabled:opacity-50" disabled={!keyReady||!keyConfirmed||busy} onClick={()=>void run(async()=>{
         await createCloudBackup(id,prefs.wifiOnly);
         await refresh(id);
         setInfo('Cópia cifrada guardada na nuvem. Pode verificá-la abaixo.');
