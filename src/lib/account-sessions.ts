@@ -57,3 +57,9 @@ export async function listLoginAlerts(): Promise<AccountLoginAlert[]> {
 export async function acknowledgeLoginAlerts(ids: string[]): Promise<void> {
   if (ids.length) await accountRpc<number>('account_acknowledge_login_alerts', { p_alert_ids: ids });
 }
+
+/** Only terminate on an explicit invalid/revoked session response. Network
+ * failures and pending DB migrations must not log out the user. */
+export function isRevokedSessionError(error: { code?: string; status?: number } | null | undefined): boolean {
+  return error?.code === '28000' || error?.code === 'PGRST301';
+}
