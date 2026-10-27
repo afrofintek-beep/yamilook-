@@ -1,6 +1,6 @@
 import { ScheduledCallNotices } from '@/features/scheduled-calls/ScheduledCallNotices';
 /* @refresh reset */
-import { createContext, useContext, useState, useCallback, ReactNode, lazy, Suspense, useMemo, useEffect } from 'react';
+import { createContext, useContext, useState, useCallback, ReactNode, lazy, Suspense, useMemo, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useWebRTC, CallState } from '@/hooks/useWebRTC';
 import type { BgMode, EffectsConfig } from '@/lib/virtualBackground';
@@ -95,6 +95,7 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
   const { toast } = useToast();
   const [isInCall, setIsInCall] = useState(false);
   const [currentCallId, setCurrentCallId] = useState<string | null>(null);
+  const answeringCallRef = useRef<string | null>(null);
   const { incomingCall, setIncomingCall } = useCalls({ loadHistory: false });
   
   // Get ALL WebRTC methods and state from a single hook instance
@@ -118,11 +119,16 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
   } = webRTC;
 
   useEffect(() => {
-    if (!currentCallId || !['idle', 'ended', 'declined'].includes(webRTCState.callStatus)) return;
+    if (!currentCallId || !['idle', 'ended', 'declined', 'failed'].includes(webRTCState.callStatus)) return;
+    // A failed transport may still be running ICE recovery. Leave only after cleanup.
+    if (webRTCState.callStatus === 'failed' && webRTCState.callId) return;
+    if (webRTCState.callStatus === 'failed') {
+      toast({ title: 'Não foi possível estabelecer a chamada', description: webRTCState.lastError || 'Verifica a ligação e tenta novamente.', variant: 'destructive' });
+    }
     setIsInCall(false);
     setCurrentCallId(null);
     if (location.pathname === `/call/${currentCallId}`) navigate('/calls', { replace: true });
-  }, [currentCallId, webRTCState.callStatus, location.pathname, navigate]);
+  }, [currentCallId, webRTCState.callId, webRTCState.callStatus, webRTCState.lastError, location.pathname, navigate, toast]);
 
   const startCall = useCallback(async (contactId: string, type: 'voice' | 'video', conversationId?: string) => {
     logger.debug('Starting call', 'ActiveCallProvider', { contactId, type });
@@ -166,7 +172,8 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
 
   const joinCall = useCallback(async (callId: string, callType: 'voice' | 'video', initiatorId: string) => {
     // If we already bootstrapped this call, do nothing.
-    if (currentCallId === callId && isInCall) return;
+    if ((currentCallId === callId && isInCall) || answeringCallRef.current) return;
+    answeringCallRef.current = callId;
 
     try {
       // iOS Safari gesture unlock: play a silent audio context on the user tap
@@ -189,6 +196,8 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
         description: message,
         variant: 'destructive',
       });
+    } finally {
+      answeringCallRef.current = null;
     }
   }, [answerCall, currentCallId, isInCall, toast]);
 
@@ -200,28 +209,23 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
   }, [endCall]);
 
   const handleAnswerCall = useCallback(async () => {
-    if (incomingCall) {
-      logger.debug('Answering incoming call', 'ActiveCallProvider', incomingCall.id);
-      // Synchronous gesture unlock BEFORE any async work (iOS Safari)
-      markUserInteracted();
-      try {
-        const ctx = new AudioContext();
-        await ctx.resume();
-        ctx.close();
-      } catch { /* non-fatal */ }
-
-      await answerCall(
-        incomingCall.id, 
-        incomingCall.type, 
-        incomingCall.initiator_id
-      );
-      
-      setCurrentCallId(incomingCall.id);
+    if (!incomingCall || answeringCallRef.current || currentCallId === incomingCall.id) return;
+    const call = incomingCall;
+    answeringCallRef.current = call.id;
+    markUserInteracted();
+    try {
+      await answerCall(call.id, call.type, call.initiator_id);
+      setCurrentCallId(call.id);
       setIsInCall(true);
       setIncomingCall(null);
-      navigate(`/call/${incomingCall.id}`);
+      navigate(`/call/${call.id}`);
+    } catch (err) {
+      logger.error('Failed to answer incoming call', 'ActiveCallProvider', err);
+      toast({ title: 'Não foi possível atender a chamada', description: formatCallError(err), variant: 'destructive' });
+    } finally {
+      answeringCallRef.current = null;
     }
-  }, [incomingCall, answerCall, markUserInteracted, setIncomingCall, navigate]);
+  }, [incomingCall, currentCallId, answerCall, markUserInteracted, setIncomingCall, navigate, toast]);
 
   const handleDeclineCall = useCallback(async () => {
     if (incomingCall) {
