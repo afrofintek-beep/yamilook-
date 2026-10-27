@@ -70,6 +70,25 @@ test('feed adapts across mobile, tablet, desktop and rotation without losing scr
 });
 
 
+test('optional editors are not requested during feed startup, but open on demand', async ({ page }) => {
+  await mockAccount(page);
+  const optionalModules: string[] = [];
+  page.on('request', request => {
+    const path = new URL(request.url()).pathname;
+    if (/(?:CreatePostSheet|CommentsSheet|EditPostSheet|ReportContentSheet)(?:[.-]|\/)/.test(path)) {
+      // In test assertions only; never export request paths in the device report.
+      optionalModules.push(path);
+    }
+  });
+  await page.goto('/muxi');
+  await expect(page.locator('article')).toHaveCount(12);
+  await page.waitForLoadState('networkidle');
+  expect(optionalModules).toEqual([]);
+  await page.getByRole('button', { name: 'Criar publicação', exact: true }).click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  expect(optionalModules.some(name => name.includes('CreatePostSheet'))).toBe(true);
+});
+
 test('feed does not download full call history when only displaying publications', async ({ page }) => {
   let historyReads = 0;
   page.on('request', request => {
