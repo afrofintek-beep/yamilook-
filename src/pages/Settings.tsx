@@ -92,6 +92,7 @@ import { languages } from '@/i18n';
 import { InviteSheet } from '@/components/settings/InviteSheet';
 import { supabase } from '@/integrations/supabase/client';
 import { ChangePasswordSheet } from '@/components/settings/ChangePasswordSheet';
+import { ConnectedDevices } from '@/components/settings/ConnectedDevices';
 import { ChatWallpaperSheet } from '@/components/settings/ChatWallpaperSheet';
 import { ArchivedChatsSheet } from '@/components/settings/ArchivedChatsSheet';
 import { TwoFactorSheet } from '@/components/settings/TwoFactorSheet';
@@ -139,6 +140,7 @@ export default function Settings() {
   const [chatWallpaperOpen, setChatWallpaperOpen] = useState(false);
   const [archivedChatsOpen, setArchivedChatsOpen] = useState(false);
   const [twoFactorOpen, setTwoFactorOpen] = useState(false);
+  const [devicesOpen, setDevicesOpen] = useState(false);
   const [blockedUsersOpen, setBlockedUsersOpen] = useState(false);
   const [lastBackupDate, setLastBackupDate] = useState<string | null>(
     localStorage.getItem('lastBackupDate')
@@ -591,6 +593,13 @@ export default function Settings() {
             badge={profile?.two_factor_enabled ? 'On' : undefined}
             delay={0.24}
             onClick={() => setTwoFactorOpen(true)}
+          />
+          <SettingItem
+            icon={Smartphone}
+            label="Dispositivos ligados"
+            description="Gerir acessos à YAMILOOK e à KOSOLOLA"
+            delay={0.25}
+            onClick={() => setDevicesOpen(true)}
           />
           <SettingItem
             icon={Key}
@@ -1311,6 +1320,13 @@ export default function Settings() {
               © 2025 Yamilook. All rights reserved.
             </p>
           </div>
+        </SheetContent>
+      </Sheet>
+
+      <Sheet open={devicesOpen} onOpenChange={setDevicesOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto pt-[env(safe-area-inset-top,0px)]">
+          <SheetHeader className="mb-4 pr-8"><SheetTitle>Segurança da conta</SheetTitle></SheetHeader>
+          {devicesOpen && <ConnectedDevices />}
         </SheetContent>
       </Sheet>
 
