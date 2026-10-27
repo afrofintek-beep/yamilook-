@@ -157,7 +157,13 @@ end;
 $$;
 
 -- Explicitly disable obsolete single-session enforcement for older client builds.
-revoke execute on function public.revoke_other_sessions(text) from public, anon, authenticated;
+do $guard$
+begin
+  if to_regprocedure('public.revoke_other_sessions(text)') is not null then
+    revoke execute on function public.revoke_other_sessions(text) from public, anon, authenticated;
+  end if;
+end;
+$guard$;
 revoke all on function public.account_current_session_id() from public, anon;
 revoke all on function public.account_register_session(text,text,text,text) from public, anon;
 revoke all on function public.account_list_sessions() from public, anon;
