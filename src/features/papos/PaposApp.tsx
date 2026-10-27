@@ -56,7 +56,8 @@ function PaposRuntime() {
     return () => document.removeEventListener('visibilitychange', refresh);
   }, [user?.id]);
   useEffect(() => {
-    const unlock = () => { unlockCallAudio(); document.removeEventListener('click', unlock, true); document.removeEventListener('touchstart', unlock, true); document.removeEventListener('keydown', unlock, true); };
+    // Keep gesture recovery available after iOS interrupts audio in the background.
+    const unlock = () => { unlockCallAudio(); };
     document.addEventListener('click', unlock, true); document.addEventListener('touchstart', unlock, true); document.addEventListener('keydown', unlock, true);
     const update = () => setUpdateReady(true); window.addEventListener('papos:update-ready', update);
     return () => { document.removeEventListener('click', unlock, true); document.removeEventListener('touchstart', unlock, true); document.removeEventListener('keydown', unlock, true); window.removeEventListener('papos:update-ready', update); };
