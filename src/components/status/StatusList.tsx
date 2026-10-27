@@ -1,17 +1,23 @@
-import { useState } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Plus, Radio } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { StatusRing } from './StatusRing';
-import { StatusViewer } from './StatusViewer';
-import { CreateStatusSheet } from './CreateStatusSheet';
+
+
 import { LiveIndicatorBadge } from '@/components/live/LiveIndicatorBadge';
 import { LivePreviewTooltip } from '@/components/live/LivePreviewTooltip';
 import { useStatus, GroupedStatuses } from '@/hooks/useStatus';
 import { useAuth } from '@/hooks/useAuth';
 import { useActiveStreams } from '@/hooks/useActiveStreams';
+
+// Status viewers/editors are never required to display the horizontal story rings.
+// Load them when opened, retaining their state during subsequent close/reopen.
+const StatusViewer = lazy(() => import('./StatusViewer').then(m => ({ default: m.StatusViewer })));
+const CreateStatusSheet = lazy(() => import('./CreateStatusSheet').then(m => ({ default: m.CreateStatusSheet })));
+
 
 export function StatusList() {
   const navigate = useNavigate();
@@ -21,12 +27,15 @@ export function StatusList() {
   const { hasActiveStreams, activeStreams } = useActiveStreams();
   
   const [viewerOpen, setViewerOpen] = useState(false);
+  const [viewerEverOpened, setViewerEverOpened] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<GroupedStatuses | null>(null);
   const [isViewingOwn, setIsViewingOwn] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
+  const [createEverOpened, setCreateEverOpened] = useState(false);
 
   const handleViewMyStatus = () => {
     if (myStatuses.length === 0) {
+      setCreateEverOpened(true);
       setCreateOpen(true);
     } else {
       const myGroup: GroupedStatuses = {
@@ -38,6 +47,7 @@ export function StatusList() {
       };
       setSelectedGroup(myGroup);
       setIsViewingOwn(true);
+      setViewerEverOpened(true);
       setViewerOpen(true);
     }
   };
@@ -45,6 +55,7 @@ export function StatusList() {
   const handleViewContactStatus = (group: GroupedStatuses) => {
     setSelectedGroup(group);
     setIsViewingOwn(false);
+    setViewerEverOpened(true);
     setViewerOpen(true);
   };
 
@@ -153,20 +164,28 @@ export function StatusList() {
         <ScrollBar orientation="horizontal" />
       </ScrollArea>
 
-      {/* Status Viewer */}
-      <StatusViewer
-        open={viewerOpen}
-        onClose={() => setViewerOpen(false)}
-        initialGroup={selectedGroup}
-        allGroups={allViewableGroups}
-        isOwnStatus={isViewingOwn}
-      />
+      {/* Keep the viewer available after its first launch for scroll-back continuity. */}
+      {viewerEverOpened && (
+        <Suspense fallback={null}>
+          <StatusViewer
+            open={viewerOpen}
+            onClose={() => setViewerOpen(false)}
+            initialGroup={selectedGroup}
+            allGroups={allViewableGroups}
+            isOwnStatus={isViewingOwn}
+          />
+        </Suspense>
+      )}
 
-      {/* Create Status Sheet */}
-      <CreateStatusSheet 
-        open={createOpen} 
-        onOpenChange={setCreateOpen} 
-      />
+      {/* Defer all status creation media/editor UI until the user taps their ring. */}
+      {createEverOpened && (
+        <Suspense fallback={null}>
+          <CreateStatusSheet
+            open={createOpen}
+            onOpenChange={setCreateOpen}
+          />
+        </Suspense>
+      )}
     </>
   );
 }
