@@ -95,6 +95,8 @@ function MediaImage({ src, priority }: { src: string; priority: boolean }) {
   return (
     <img
       src={usingVariant ? urls[1] : src}
+      data-image-delivery={usingVariant ? 'variant'
+        : supportsVariants && failedSrc === src ? 'fallback' : 'original'}
       srcSet={srcSet}
       sizes={usingVariant ? '(max-width: 680px) 100vw, 680px' : undefined}
       alt=""
