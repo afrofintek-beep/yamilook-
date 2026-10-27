@@ -69,6 +69,21 @@ test('feed adapts across mobile, tablet, desktop and rotation without losing scr
   await expect(page.getByRole('dialog')).toBeVisible();
 });
 
+
+test('feed does not download full call history when only displaying publications', async ({ page }) => {
+  let historyReads = 0;
+  page.on('request', request => {
+    const url = new URL(request.url());
+    if (url.pathname === '/rest/v1/call_participants'
+      && url.searchParams.get('limit') === '50') historyReads++;
+  });
+  await mockAccount(page);
+  await page.goto('/muxi');
+  await expect(page.locator('article')).toHaveCount(12);
+  await page.waitForLoadState('networkidle');
+  expect(historyReads).toBe(0);
+});
+
 test('feed requests stay bounded as multiple posts mount', async ({ page }) => {
   let requests = 0;
   let discoveryRequests = 0;
@@ -208,8 +223,10 @@ test('opt-in device report downloads sanitized timings without breaking mobile l
   for await (const chunk of stream!) raw += chunk.toString();
   const report = JSON.parse(raw);
   expect(report.viewport.width).toBe(390);
-  expect(report.version).toBe(2);
+  expect(report.version).toBe(3);
   expect(report.resourceCategories).toBeDefined();
+  expect(report.resourcesByFiveSeconds).toBeDefined();
+  expect(report.oversizedImageCount).toBeGreaterThanOrEqual(0);
   expect(report.largestHundredMsBurst).toBeGreaterThanOrEqual(0);
   expect(report.articles.atEnd).toBe(12);
   expect(report.firstArticleObservedMsAfterObserver).not.toBeNull();
