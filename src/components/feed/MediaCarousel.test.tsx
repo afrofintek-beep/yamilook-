@@ -31,6 +31,7 @@ describe('feed media network priority', () => {
     const img = container.querySelector('img')!;
     expect(img.getAttribute('src')).toContain('width=960&height=1920&resize=contain');
     expect(img.getAttribute('srcset')).toContain('480w');
+    expect(img).toHaveAttribute('data-image-delivery', 'variant');
     expect(img.getAttribute('srcset')).toContain('1280w');
     expect(img).toHaveAttribute('sizes', '(max-width: 680px) 100vw, 680px');
   });
@@ -42,6 +43,7 @@ describe('feed media network priority', () => {
     const img = container.querySelector('img')!;
     fireEvent.error(img);
     expect(img.getAttribute('src')).toBe(src);
+    expect(img).toHaveAttribute('data-image-delivery', 'fallback');
     expect(img).not.toHaveAttribute('srcset');
   });
 
@@ -63,6 +65,7 @@ describe('feed media network priority', () => {
     const img = container.querySelector('img')!;
     expect(img.getAttribute('src')).toBe(src);
     expect(img).not.toHaveAttribute('srcset');
+    expect(img).toHaveAttribute('data-image-delivery', 'original');
   });
 
   it('does not download offscreen videos or request a video URL as an image poster', () => {
