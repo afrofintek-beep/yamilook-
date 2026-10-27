@@ -355,27 +355,24 @@ function ProfileContent() {
 
   const fetchProfile = async () => {
     if (!targetUserId) return;
+    setLoading(true);
+    setProfileError(false);
 
-    const { data, error } = await (isOwnProfile
-      ? supabase.from('profiles').select('*').eq('id', targetUserId).maybeSingle()
-      : supabase.from('public_profiles').select('*').eq('id', targetUserId).maybeSingle());
+    try {
+      const { data, error } = await (isOwnProfile
+        ? supabase.from('profiles').select('*').eq('id', targetUserId).maybeSingle()
+        : supabase.from('public_profiles').select('*').eq('id', targetUserId).maybeSingle());
 
-    if (error) {
+      if (error) throw error;
+      setProfileData(data as ProfileData | null);
+      setProfileError(!data);
+    } catch (error) {
+      // Keep the last successfully loaded profile when a transient request fails.
       console.error('Error fetching profile:', error);
       setProfileError(true);
+    } finally {
       setLoading(false);
-      return;
     }
-
-    if (!data) {
-      setProfileData(null);
-      setLoading(false);
-      return;
-    }
-
-    setProfileError(false);
-    setProfileData(data as ProfileData);
-    setLoading(false);
   };
 
   const fetchPhotos = async () => {
@@ -643,8 +640,8 @@ function ProfileContent() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="space-y-3 text-center">
           <p role="alert" className="text-muted-foreground">{profileError ? t('profile.failedToLoad') : t('errors.notFound')}</p>
-          {profileError && <Button onClick={() => { setLoading(true); void fetchProfile(); }}>Tentar novamente</Button>}
-          <Button variant="ghost" onClick={() => navigate(-1)}>Voltar</Button>
+          {profileError && <Button onClick={() => void fetchProfile()}>Tentar novamente</Button>}
+          <Button variant="ghost" onClick={() => navigate('/feed', { replace: true })}>Voltar ao início</Button>
         </div>
       </div>
     );
