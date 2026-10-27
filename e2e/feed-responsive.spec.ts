@@ -94,7 +94,8 @@ test('status viewer, status editor and sponsored-card code stays off the startup
   const requests: string[] = [];
   page.on('request', req => {
     const filename = new URL(req.url()).pathname.split('/').pop() || '';
-    if (/^(?:StatusViewer|CreateStatusSheet|SponsoredPostCard)-.*\.js$/.test(filename)) {
+    // Vite dev serves .tsx sources; production serves hashed .js chunks.
+    if (/^(?:StatusViewer|CreateStatusSheet|SponsoredPostCard)(?:\.(?:tsx?|jsx?)|-[^.]+\.js)$/.test(filename)) {
       requests.push(filename);
     }
   });
@@ -105,8 +106,8 @@ test('status viewer, status editor and sponsored-card code stays off the startup
   expect(requests).toEqual([]);
   await page.getByTestId('my-status').locator('button').first().click();
   await expect(page.getByRole('dialog')).toBeVisible();
-  expect(requests.some(f => f.startsWith('CreateStatusSheet-'))).toBe(true);
-  expect(requests.some(f => f.startsWith('StatusViewer-'))).toBe(false);
+  expect(requests.some(f => f.startsWith('CreateStatusSheet'))).toBe(true);
+  expect(requests.some(f => f.startsWith('StatusViewer'))).toBe(false);
 });
 
 test('feed does not download full call history when only displaying publications', async ({ page }) => {
