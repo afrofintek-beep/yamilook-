@@ -40,7 +40,7 @@ jobs:
           # The repository has existing unrelated TypeScript diagnostics.
           # Fail on errors in modified app files, and clearly retain baseline warning.
           npx tsc --noEmit -p tsconfig.app.json > /tmp/tsc-account-backups.log 2>&1 || true
-          if grep -E '^src/(lib/account-backup|components/settings/BackupManager|components/AutomaticAccountBackup|features/papos/PaposSettings|pages/Settings|App\\.tsx|integrations/supabase/types)' /tmp/tsc-account-backups.log | grep -E 'error TS'; then
+          if grep -E '^src/(lib/account-backup|components/settings/BackupManager|components/AutomaticAccountBackup|features/papos/PaposSettings|pages/Settings|App[.]tsx|integrations/supabase/types)' /tmp/tsc-account-backups.log | grep -E 'error TS'; then
             echo 'TypeScript errors in backup PR files'
             exit 1
           fi
