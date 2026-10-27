@@ -26,3 +26,11 @@ it('counts oversizing against physical pixels, not CSS pixels alone', () => {
   expect(imageExceedsPixelBudget(0, 0, 40, 40, 3)).toBe(false);
   expect(imageExceedsPixelBudget(160, 160, 40, 40, 0)).toBe(false);
 });
+
+it('identifies same-origin JS module preloads without revealing file names', () => {
+  const origin = window.location.origin;
+  expect(resourceCategory(origin + '/assets/CreatePostSheet-abc123.js?token=hidden', 'link')).toBe('asset:script');
+  expect(resourceCategory(origin + '/assets/feed-abc123.css', 'link')).toBe('asset:style');
+  expect(resourceCategory(origin + '/assets/type-abc123.woff2', 'css')).toBe('asset:font');
+  expect(resourceCategory('https://untrusted.example/assets/private.js?key=secret', 'link')).toBe('other');
+});
