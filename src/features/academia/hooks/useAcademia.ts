@@ -21,6 +21,8 @@ export interface AcademiaSession {
   priceCoins: number;
   status: string;
   scheduledAt: string;
+  archivedAt?: string | null;
+  cancellationReason?: string | null;
 }
 
 const QUERY_KEY = ['academia-sessions'];
@@ -78,6 +80,8 @@ export function useAcademiaSessions() {
           isPremium: (s.price_coins ?? 0) > 0,
           priceCoins: s.price_coins ?? 0,
           status: s.status,
+          archivedAt: s.archived_at,
+          cancellationReason: s.cancellation_reason,
           scheduledAt: s.scheduled_at,
         };
       });
@@ -268,6 +272,37 @@ export function useBecomeMentor() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: MENTORS_QUERY_KEY });
       queryClient.invalidateQueries({ queryKey: [...IS_MENTOR_QUERY_KEY, user?.id] });
+    },
+  });
+}
+
+export function useManageAcademiaSession() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ sessionId, action, reason }: { sessionId: string; action: string; reason?: string }) => {
+      const { data, error } = await supabase.rpc('academia_manage_session', {
+        p_session: sessionId, p_action: action, p_reason: reason,
+      });
+      if (error) throw error;
+      if (!(data as { ok?: boolean })?.ok) throw new Error('Não foi possível gerir a sessão.');
+    },
+    onSuccess: () => {
+      for (const key of ['academia-sessions', 'academia-session', 'academia-reservation', 'academia-notices', 'kumbu-ledger']) {
+        void client.invalidateQueries({ queryKey: [key] });
+      }
+    },
+  });
+}
+
+export function useAcademiaNotices() {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ['academia-notices', user?.id], enabled: !!user,
+    staleTime: 30_000, refetchOnWindowFocus: true,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('academia_my_notices');
+      if (error) throw error;
+      return data ?? [];
     },
   });
 }
