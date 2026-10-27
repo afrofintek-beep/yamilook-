@@ -6,6 +6,9 @@ const KEY_DB = 'yamilook-private-backup-v1';
 const KEY_STORE = 'device-keys';
 const MAX_BYTES = 6 * 1024 * 1024;
 const DAY = 24 * 60 * 60 * 1000;
+const confirmationKey = (userId: string) => 'account-backup-recovery-confirmed:'+userId;
+export const isRecoveryKeyConfirmed = (userId: string) => localStorage.getItem(confirmationKey(userId))==='yes';
+export function confirmRecoveryKeySaved(userId: string) { localStorage.setItem(confirmationKey(userId),'yes'); }
 
 export type BackupArchive = {
   version: 1;
@@ -74,11 +77,34 @@ export async function generateRecoveryKey(userId: string): Promise<string> {
   if (await hasDeviceKey(userId)) throw new Error('Já existe uma chave neste dispositivo. Guarde a chave original, não crie outra.');
   const raw=crypto.getRandomValues(new Uint8Array(32));
   await storeKey(userId,raw);
+  localStorage.removeItem(confirmationKey(userId));
   return hex(raw);
 }
 export async function importRecoveryKey(userId: string, recoveryKey: string): Promise<void> {
-  if (await hasDeviceKey(userId)) throw new Error('Já existe uma chave neste dispositivo. Não pode ser substituída sem recuperar primeiro a cópia original.');
-  await storeKey(userId,fromHex(recoveryKey.replace(/\s/g,'')));
+  await verifiedUser(userId);
+  const raw=fromHex(recoveryKey.replace(/\s/g,''));
+  const files=await listCloudBackups(userId);
+  const existingKey=await hasDeviceKey(userId);
+  if (existingKey && files.length===0)
+    throw new Error('Não é permitido substituir a chave atual sem uma cópia na nuvem que permita validá-la.');
+  if(files.length>0) {
+    // Validate the candidate against the newest authenticated, owner-scoped snapshot
+    // before storing it. This makes recovery-key correction safe and reversible.
+    const {data,error}=await supabase.storage.from(BACKUP_BUCKET).download(userId+'/'+files[0].name);
+    if (error||!data) throw error || new Error('Não foi possível validar a cópia.');
+    const archive=JSON.parse(await data.text()) as BackupArchive;
+    if(archive.version!==1||archive.owner!==userId||data.size>MAX_BYTES*2) throw new Error('Cópia inválida.');
+    const key=await crypto.subtle.importKey('raw',raw as BufferSource,{name:'AES-GCM'},false,['decrypt']);
+    try {
+      const decrypted=await crypto.subtle.decrypt({name:'AES-GCM',iv:fromBase64(archive.iv) as BufferSource,
+        additionalData:new TextEncoder().encode(userId)},key,fromBase64(archive.encrypted) as BufferSource);
+      if(JSON.parse(new TextDecoder().decode(decrypted)).userId!==userId) throw new Error('Conta incompatível.');
+    } catch {
+      throw new Error('Esta chave não decifra a cópia mais recente. Verifique a chave antes de continuar.');
+    }
+  }
+  await storeKey(userId,raw);
+  confirmRecoveryKeySaved(userId);
 }
 export function backupPreferenceKey(userId: string) { return 'account-backup-preferences:'+userId; }
 export type BackupPreferences = { automatic: boolean; wifiOnly: boolean };
@@ -144,6 +170,7 @@ export async function createCloudBackup(userId: string, wifiOnly: boolean):Promi
   backupInProgress=true;
   try {
     await verifiedUser(userId);
+    if(!isRecoveryKeyConfirmed(userId)) throw new Error('Confirme primeiro que guardou a chave de recuperação.');
     const {data,error}=await supabase.functions.invoke('export-user-data');
     if (error || !data || data.userId!==userId) throw new Error('Não foi possível obter uma exportação autenticada.');
     // Ephemeral and deleted/view-once material must never be resurrected by a backup.
@@ -193,7 +220,7 @@ export function downloadSnapshot(userId:string,snapshot:Record<string,unknown>) 
 }
 export async function runDueAutomaticBackup(userId:string) {
   const p=getBackupPreferences(userId);
-  if(!p.automatic || !canBackupOnConnection(p.wifiOnly) || !await hasDeviceKey(userId)) return;
+  if(!p.automatic || !isRecoveryKeyConfirmed(userId) || !canBackupOnConnection(p.wifiOnly) || !await hasDeviceKey(userId)) return;
   const last=Number(localStorage.getItem('account-backup-last:'+userId)||0);
   if(Date.now()-last<DAY) return;
   try { await createCloudBackup(userId,p.wifiOnly); } catch (error) {
