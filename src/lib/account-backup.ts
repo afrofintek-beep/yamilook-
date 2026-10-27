@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
 
 /** Encrypted account snapshots. No account data or key material is persisted in plaintext. */
 export const BACKUP_BUCKET = 'account-backups';
@@ -203,9 +204,11 @@ export async function restoreBackupPreferences(userId:string,snapshot:Record<str
   if(snapshot.userId!==userId) throw new Error('O backup pertence a outra conta.');
   const raw = snapshot.settings as Record<string,unknown>|null;
   if(!raw) throw new Error('O backup não contém preferências.');
-  const allowed=['theme','language','language_variant','font_size','notification_sound','vibration_enabled','enter_to_send','data_saver_mode','auto_download_media'] as const;
-  const patch:Record<string,string|number|boolean|null>={};
-  for(const key of allowed) if(typeof raw[key]==='string' || typeof raw[key]==='boolean') patch[key]=raw[key] as string|boolean;
+  const patch: Database['public']['Tables']['user_settings']['Update']={};
+  const texts=['theme','language','language_variant','font_size','notification_sound','auto_download_media'] as const;
+  const booleans=['vibration_enabled','enter_to_send','data_saver_mode'] as const;
+  for(const field of texts) if(typeof raw[field]==='string') patch[field]=raw[field] as string;
+  for(const field of booleans) if(typeof raw[field]==='boolean') patch[field]=raw[field] as boolean;
   if(!Object.keys(patch).length) throw new Error('Sem preferências recuperáveis.');
   const {error}=await supabase.from('user_settings').update(patch).eq('user_id',userId);
   if(error) throw error;
