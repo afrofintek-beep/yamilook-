@@ -282,7 +282,7 @@ test('call chat, media and hangup occupy separate areas through keyboard resize'
     const [root, footer, panel, input] = rectangles;
     expect(root && footer && panel && input).toBeTruthy();
     expect(panel!.y + panel!.height).toBeLessThanOrEqual(footer!.y + 1);
-    expect(input!.y + input!.height).toBeLessThanOrEqual(footer!.y + 1);
+    expect(input!.y + input!.height, JSON.stringify({ size, root, footer, panel, input })).toBeLessThanOrEqual(footer!.y + 1);
     expect(footer!.y + footer!.height).toBeLessThanOrEqual(size.height + 1);
     const hangup = await page.getByRole('button', { name: 'Desligar chamada', exact: true }).boundingBox();
     expect(hangup!.y).toBeGreaterThanOrEqual(panel!.y + panel!.height - 1);

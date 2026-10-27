@@ -104,7 +104,7 @@ export function CallChatPanel({ conversationId, contactId, open, onClose, inputR
         ref={messagesViewportRef}
         role="log"
         aria-label="Mensagens da conversa"
-        className="min-h-0 flex-1 overflow-y-auto overscroll-contain overflow-x-hidden px-2 py-3"
+        className={`min-h-0 flex-1 overflow-y-auto overscroll-contain overflow-x-hidden px-2 ${inline ? "py-0" : "py-3"}`}
       >
         {loading && <p role="status" className="p-4">A carregar mensagens…</p>}
         {!resolvedId && !contactId && <p className="p-4">Esta chamada não tem uma conversa associada.</p>}
