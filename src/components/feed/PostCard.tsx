@@ -71,6 +71,7 @@ export const PostCard = memo(function PostCard({ mediaPriority = false, post, on
   const [showReactions, setShowReactions] = useState(false);
   const [showReport, setShowReport] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
+  const [editEverOpened, setEditEverOpened] = useState(false);
   const [isLikeAnimating, setIsLikeAnimating] = useState(false);
   
   // Long-press handling for mobile reaction picker
@@ -282,7 +283,7 @@ export const PostCard = memo(function PostCard({ mediaPriority = false, post, on
                   <Megaphone className="w-4 h-4 mr-2" />
                   {t('feed.promotePost', 'Promover')}
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setShowEdit(true)}>
+                <DropdownMenuItem onClick={() => { setEditEverOpened(true); setShowEdit(true); }}>
                   <Pencil className="w-4 h-4 mr-2" />
                   {t('feed.editPost', 'Editar publicação')}
                 </DropdownMenuItem>
@@ -456,7 +457,7 @@ export const PostCard = memo(function PostCard({ mediaPriority = false, post, on
         </Suspense>
       )}
       {/* Edit Sheet */}
-      {isOwner && showEdit && (
+      {isOwner && editEverOpened && (
         <Suspense fallback={null}>
         <EditPostSheet
           open={showEdit}
