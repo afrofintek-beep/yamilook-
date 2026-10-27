@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect, ReactNode } from 'react';
 import { cn } from '@/lib/utils';
-import { optimizedPublicImageUrl } from '@/lib/image-delivery';
+import { imageFitsVariant, optimizedPublicImageUrl, type PublicImageVariant } from '@/lib/image-delivery';
 
 interface MediaCarouselProps {
   urls: string[];
@@ -75,18 +75,44 @@ function VideoItem({ src, isActive }: { src: string; isActive: boolean }) {
   );
 }
 
+// Bound both axes and explicitly preserve proportions. A width-only URL
+// produced incorrectly tall media on Safari in the October iPhone diagnostics.
+const FEED_VARIANTS: PublicImageVariant[] = [
+  { width: 480, height: 960, resize: 'contain', quality: 74 },
+  { width: 960, height: 1920, resize: 'contain', quality: 76 },
+  { width: 1280, height: 2400, resize: 'contain', quality: 78 },
+];
+
 function MediaImage({ src, priority }: { src: string; priority: boolean }) {
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
-  const optimized = optimizedPublicImageUrl(src, 960);
+  const urls = FEED_VARIANTS.map(variant => optimizedPublicImageUrl(src, variant));
+  const supportsVariants = urls.every(url => url && url !== src);
+  const usingVariant = supportsVariants && failedSrc !== src;
+  const srcSet = usingVariant
+    ? urls.map((url, index) => `${url} ${FEED_VARIANTS[index].width}w`).join(', ')
+    : undefined;
+  const fallbackToOriginal = () => { if (usingVariant) setFailedSrc(src); };
   return (
     <img
-      src={failedSrc === src ? src : optimized}
+      src={usingVariant ? urls[1] : src}
+      srcSet={srcSet}
+      sizes={usingVariant ? '(max-width: 680px) 100vw, 680px' : undefined}
       alt=""
       loading={priority ? 'eager' : 'lazy'}
       {...{ fetchpriority: priority ? 'high' : 'auto' }}
       decoding="async"
-      onError={() => { if (optimized !== src && failedSrc !== src) setFailedSrc(src); }}
-      className="w-full object-cover"
+      onError={fallbackToOriginal}
+      onLoad={event => {
+        if (!usingVariant) return;
+        // Validate the actual selected srcset variant before accepting its geometry.
+        const chosenUrl = event.currentTarget.currentSrc || event.currentTarget.src;
+        const width = Number(new URL(chosenUrl).searchParams.get('width'));
+        const selected = FEED_VARIANTS.find(v => v.width === width);
+        if (selected && !imageFitsVariant(
+          event.currentTarget.naturalWidth, event.currentTarget.naturalHeight, selected
+        )) fallbackToOriginal();
+      }}
+      className="w-full object-contain"
       style={{ maxHeight: '70vh', minHeight: '200px' }}
     />
   );
