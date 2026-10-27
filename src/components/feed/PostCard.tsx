@@ -35,6 +35,7 @@ import { EditPostSheet } from './EditPostSheet';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { chooseAuthorAvatarUrl } from '@/lib/avatar-source';
 import { 
   AfricanReactionType, 
   getReaction,
@@ -92,11 +93,10 @@ export const PostCard = memo(function PostCard({ mediaPriority = false, post, on
   const totalReactions = getTotalReactions(localReactionCounts);
 
   const isOwner = user?.id === post.user_id;
-  // A signed-in member's own posts must show the same avatar as their profile.
-  // The public RPC can lag a profile edit; do not override avatars of others.
-  const authorAvatarUrl = isOwner && currentProfile?.id === post.user_id
-    ? currentProfile.avatar_url
-    : post.user.avatar_url;
+  // Reuse the signed-in profile for own posts. Others remain public-RPC only.
+  const authorAvatarUrl = chooseAuthorAvatarUrl(
+    post.user_id, post.user.avatar_url, user?.id, currentProfile
+  );
 
   const handleReact = useCallback((reactionType: AfricanReactionType) => {
     setIsLikeAnimating(true);
