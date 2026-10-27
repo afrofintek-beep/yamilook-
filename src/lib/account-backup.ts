@@ -77,6 +77,7 @@ export async function generateRecoveryKey(userId: string): Promise<string> {
   return hex(raw);
 }
 export async function importRecoveryKey(userId: string, recoveryKey: string): Promise<void> {
+  if (await hasDeviceKey(userId)) throw new Error('Já existe uma chave neste dispositivo. Não pode ser substituída sem recuperar primeiro a cópia original.');
   await storeKey(userId,fromHex(recoveryKey.replace(/\s/g,'')));
 }
 export function backupPreferenceKey(userId: string) { return 'account-backup-preferences:'+userId; }
