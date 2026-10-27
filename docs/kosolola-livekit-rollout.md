@@ -14,7 +14,7 @@ LiveKit manages media transport and recovery. The client enables echo cancellati
 
 ## Release gates
 
-The production Edge Function has NOT been replaced: automatic approval review rejected deployment because it changes the live token issuer and publication requires approval. The backend change must be deployed before clients are enabled. Do not merge this draft and automatically promote the frontend ahead of that deployment.
+After explicit user authorization, generate-livekit-token version 16 was deployed and confirmed ACTIVE, with deployed source matching this change. Live HTTP checks rejected both missing authentication and an invalid session with 401. The 26 focused call/transport/audio tests passed after deployment. Frontend previews are Ready; the PR remains a draft and has not been merged. Real two-device media and authorized token issuance still need validation before frontend promotion.
 
 Both test clients must refresh to the new application version. Older cached clients cannot answer a new LiveKit-marked call; this is a coordinated rollout requirement. Existing unmarked calls still use WebRTC on updated clients. Group calls are intentionally not migrated in this change.
 
