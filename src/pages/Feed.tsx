@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { PostCard } from '@/components/feed/PostCard';
 import { FeedSidebar } from '@/components/feed/FeedSidebar';
-import { CreatePostSheet } from '@/components/feed/CreatePostSheet';
-import { CommentsSheet } from '@/components/feed/CommentsSheet';
+
+
 import { StatusList } from '@/components/status/StatusList';
 import { SponsoredPostCard } from '@/components/advertising/SponsoredPostCard';
 import BottomNav from '@/components/BottomNav';
@@ -23,6 +23,12 @@ import YamilookLogo from '@/components/brand/YamilookLogo';
 import '@/styles/feed-layout.css';
 
 const FeedDiagnostics = lazy(() => import('@/components/feed/FeedDiagnostics'));
+  
+// Heavy creation/comment editors are never loaded by a passive feed visit.
+// Preserve the existing controls and mount the real sheet only on user intent.
+const CreatePostSheet = lazy(() => import('@/components/feed/CreatePostSheet').then(m => ({ default: m.CreatePostSheet })));
+const CommentsSheet = lazy(() => import('@/components/feed/CommentsSheet').then(m => ({ default: m.CommentsSheet })));
+
 
 export default function Feed() {
   const navigate = useNavigate();
@@ -263,12 +269,20 @@ export default function Feed() {
       <BottomNav layout="feed" />
 
       {/* Sheets */}
-      <CreatePostSheet open={createOpen} onOpenChange={handleCreateOpenChange} />
-      <CommentsSheet 
-        open={commentsOpen} 
-        onOpenChange={setCommentsOpen} 
-        post={selectedPost}
-      />
+      {createOpen && (
+        <Suspense fallback={<div role="status" aria-label="A carregar editor" className="sr-only">A carregar editor</div>}>
+          <CreatePostSheet open={createOpen} onOpenChange={handleCreateOpenChange} />
+        </Suspense>
+      )}
+      {commentsOpen && selectedPost && (
+        <Suspense fallback={<div role="status" aria-label="A carregar comentários" className="sr-only">A carregar comentários</div>}>
+          <CommentsSheet
+            open={commentsOpen}
+            onOpenChange={setCommentsOpen}
+            post={selectedPost}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }
