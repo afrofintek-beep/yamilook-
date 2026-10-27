@@ -6379,6 +6379,10 @@ export type Database = {
       }
     }
     Functions: {
+      my_attributed_storage_usage: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       academia_manage_session: {
         Args: { p_session: string; p_action: string; p_reason?: string }
         Returns: Json
