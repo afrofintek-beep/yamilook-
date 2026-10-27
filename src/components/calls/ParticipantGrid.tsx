@@ -1,4 +1,5 @@
 import React from 'react';
+import { CallRemoteMedia } from './CallRemoteMedia';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { MicOff, Hand, Pin } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -210,7 +211,7 @@ function ParticipantTile({ participant, stream, callType, isSpotlight }: Partici
   // Check if stream has active video track - don't rely only on database state
   const hasVideoTrack = stream?.getVideoTracks().some(track => track.enabled && track.readyState === 'live');
   const hasAudioTrack = stream?.getAudioTracks().some(track => track.enabled);
-  const showVideo = callType === 'video' && stream && hasVideoTrack;
+  const showVideo = !!stream && !!hasVideoTrack;
   const hasStream = !!stream;
 
   // Log stream state for debugging
@@ -230,38 +231,7 @@ function ParticipantTile({ participant, stream, callType, isSpotlight }: Partici
       isSpotlight && "border-2 border-primary"
     )}>
       {/* Always render video/audio element if we have a stream - even for voice calls (for audio) */}
-      {hasStream && (
-        <video
-          autoPlay
-          playsInline
-          // CRITICAL: Do NOT mute remote streams - we want to hear them!
-          muted={false}
-          className={cn(
-            "w-full h-full object-cover",
-            !showVideo && "hidden" // Hide video element but keep it for audio
-          )}
-          ref={(el) => {
-            if (el && stream) {
-              if (el.srcObject !== stream) {
-                el.srcObject = stream;
-                logger.debug('Attached stream to video element for', 'ParticipantTile', participant.display_name);
-              }
-              // Ensure video plays with audio (handle autoplay policies)
-              if (el.paused) {
-                el.play().then(() => {
-                  logger.debug('Playback started', 'ParticipantTile', { displayName: participant.display_name, muted: el.muted });
-                }).catch((err) => {
-                  logger.warn('Autoplay blocked for', 'ParticipantTile', { displayName: participant.display_name, err });
-                  // Try again after a short delay (user may have interacted)
-                  setTimeout(() => {
-                    el.play().catch(() => {});
-                  }, 1000);
-                });
-              }
-            }
-          }}
-        />
-      )}
+      {hasStream && <CallRemoteMedia stream={stream!} showVideo={showVideo} />}
       
       {/* Show avatar when no video (or voice call) */}
       {!showVideo && (
@@ -320,33 +290,13 @@ interface ParticipantThumbnailProps {
 function ParticipantThumbnail({ participant, stream, callType, isSmall }: ParticipantThumbnailProps) {
   // Check if stream has active video track - don't rely only on database state
   const hasVideoTrack = stream?.getVideoTracks().some(track => track.enabled && track.readyState === 'live');
-  const showVideo = callType === 'video' && stream && hasVideoTrack;
+  const showVideo = !!stream && !!hasVideoTrack;
   const hasStream = !!stream;
 
   return (
     <div className="relative w-20 h-16 flex-shrink-0 rounded-lg overflow-hidden bg-muted">
       {/* Always render video/audio element if we have a stream */}
-      {hasStream && (
-        <video
-          autoPlay
-          playsInline
-          muted={false}
-          className={cn(
-            "w-full h-full object-cover",
-            !showVideo && "hidden"
-          )}
-          ref={(el) => {
-            if (el && stream) {
-              if (el.srcObject !== stream) {
-                el.srcObject = stream;
-              }
-              if (el.paused) {
-                el.play().catch(() => logger.debug('Autoplay blocked', 'ParticipantThumbnail'));
-              }
-            }
-          }}
-        />
-      )}
+      {hasStream && <CallRemoteMedia stream={stream!} showVideo={showVideo} />}
       
       {!showVideo && (
         <div className="w-full h-full flex items-center justify-center">

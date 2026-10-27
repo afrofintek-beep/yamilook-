@@ -65,9 +65,9 @@ export function VideoCall({
   const [isPipMode, setIsPipMode] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
-  const [showChat, setShowChat] = useState(false);
+  const [showChat, setShowChat] = useState(true);
   // Keep the composer mounted after first opening so drafts survive switching back to the call.
-  const [chatOpenedOnce, setChatOpenedOnce] = useState(false);
+  const [chatOpenedOnce, setChatOpenedOnce] = useState(true);
   const [showParticipants, setShowParticipants] = useState(false);
   const [handRaised, setHandRaised] = useState(false);
   const [showBackgrounds, setShowBackgrounds] = useState(false);
@@ -201,15 +201,17 @@ export function VideoCall({
   return (
     <div 
       className={cn(
-        "relative w-full h-screen bg-black overflow-hidden",
+        "relative w-full bg-black overflow-hidden",
         isFullscreen && "fixed inset-0 z-50"
       )}
+      style={{ height: "var(--kosolola-height, 100dvh)" }}
     >
       <Button variant="secondary" className="absolute left-3 top-[calc(env(safe-area-inset-top,0px)+0.75rem)] z-40" onClick={openCallChat}>
         <MessageSquare className="h-4 w-4 mr-2" />Escrever mensagem
       </Button>
       {chatOpenedOnce && (
         <CallChatPanel
+          inline
           conversationId={conversationId}
           contactId={!isGroupCall && participants.length === 1 ? participants[0].user_id : undefined}
           open={showChat}
@@ -217,7 +219,11 @@ export function VideoCall({
           onClose={() => setShowChat(false)}
         />
       )}
+      <div role="status" className="absolute top-16 left-3 z-20 rounded-full bg-black/70 px-3 py-1 text-sm text-white">
+        {state.callStatus === 'connected' ? 'Ligada' : state.callStatus === 'ringing' ? 'A chamar…' : state.lastError || 'A estabelecer ligação…'}
+      </div>
       {/* Main Video Grid */}
+      <div className={showChat ? 'h-[43%] pt-12' : 'h-full'}>
       <ParticipantGrid
         participants={participants}
         localStream={state.localStream}
@@ -227,12 +233,14 @@ export function VideoCall({
         callType={callType}
       />
 
+      </div>
+
       {/* Local Video (Picture-in-Picture style) */}
       {callType === 'video' && !state.isScreenSharing && (participants.length > 0 || state.remoteStreams.size > 0) && (
         <motion.div
           drag
           dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
-          className="absolute bottom-24 right-4 w-48 h-36 rounded-2xl overflow-hidden shadow-2xl border-2 border-white/20 z-20"
+          className={cn("absolute right-4 w-24 h-32 rounded-2xl overflow-hidden shadow-2xl border-2 border-white/20 z-20", showChat ? "top-16" : "bottom-28")}
         >
           <video
             ref={localVideoRef}

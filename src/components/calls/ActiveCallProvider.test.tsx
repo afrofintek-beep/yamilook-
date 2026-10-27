@@ -10,7 +10,7 @@ vi.mock('@/hooks/useCalls', () => ({ useCalls: () => ({ incomingCall: mocks.inco
 vi.mock('@/hooks/use-toast', () => ({ useToast: () => ({ toast: mocks.toast }) }));
 vi.mock('@/features/scheduled-calls/ScheduledCallNotices', () => ({ ScheduledCallNotices: () => null }));
 vi.mock('./IncomingCallOverlay', () => ({ IncomingCallOverlay: ({ onAnswer }: { onAnswer: () => void }) => <button onClick={onAnswer}>Atender teste</button> }));
-vi.mock('@/hooks/useWebRTC', () => ({ useWebRTC: () => ({
+vi.mock('@/hooks/useCallTransport', () => ({ useCallTransport: () => ({
   state: { callStatus: 'connecting' }, answerCall: mocks.answerCall, markUserInteracted: vi.fn(),
 }) }));
 function Consumer() {

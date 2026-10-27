@@ -20,7 +20,7 @@ export interface UseCallLifecycleReturn {
   /** Ring timeout ref for clearing */
   ringTimeoutRef: React.MutableRefObject<ReturnType<typeof setTimeout> | null>;
   /** Create call in database */
-  createCallInDB: (targetUserId: string, callType: 'voice' | 'video', conversationId?: string) => Promise<string>;
+  createCallInDB: (targetUserId: string, callType: 'voice' | 'video', conversationId?: string, transport?: 'webrtc' | 'livekit') => Promise<string>;
   /** Update participant status */
   updateParticipantStatus: (callId: string, userId: string, status: string, joinedAt?: boolean) => Promise<void>;
   /** Update call status */
@@ -56,7 +56,8 @@ export function useCallLifecycle(options: UseCallLifecycleOptions): UseCallLifec
   const createCallInDB = useCallback(async (
     targetUserId: string,
     callType: 'voice' | 'video',
-    conversationId?: string
+    conversationId?: string,
+    transport: 'webrtc' | 'livekit' = 'webrtc'
   ): Promise<string> => {
     logger.debug('Creating call in database...', 'CallLifecycle');
 
@@ -76,6 +77,16 @@ export function useCallLifecycle(options: UseCallLifecycleOptions): UseCallLifec
     }
 
     logger.debug('Call created', 'CallLifecycle', callId);
+    if (transport === 'livekit') {
+      // Persist before inviting: updated clients can distinguish existing WebRTC
+      // calls from LiveKit calls without changing the call schema.
+      const { data: marked, error: markError } = await supabase.from('calls')
+        .update({ sdp_offer: { transport: 'livekit-v1' } }).eq('id', callId).select('id').maybeSingle();
+      if (markError || !marked) {
+        await supabase.from('calls').update({ status: 'failed', ended_at: new Date().toISOString() }).eq('id', callId);
+        throw markError || new Error('Não foi possível preparar a chamada.');
+      }
+    }
     void notifyIncomingCall(callId);
     return callId;
   }, []);

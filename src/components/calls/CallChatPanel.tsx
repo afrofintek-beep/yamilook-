@@ -11,7 +11,8 @@ import { createChatConversation } from '@/lib/chat-conversations';
  * must never start a second call or request microphone/camera permission.
  * Its height follows the visible iOS keyboard viewport in the KOSOLOLA PWA.
  */
-export function CallChatPanel({ conversationId, contactId, open, onClose, inputRef }: {
+export function CallChatPanel({ conversationId, contactId, open, onClose, inputRef, inline = false }: {
+  inline?: boolean;
   conversationId?: string | null;
   contactId?: string;
   open: boolean;
@@ -79,19 +80,19 @@ export function CallChatPanel({ conversationId, contactId, open, onClose, inputR
 
   return (
     <div
-      role="dialog"
-      aria-modal={open}
+      role={inline ? "region" : "dialog"}
+      aria-modal={!inline && open}
       aria-label="Mensagens durante a chamada"
       aria-hidden={!open}
       className={open
-        ? 'fixed inset-x-0 z-[90] flex flex-col overflow-hidden bg-background text-foreground'
+        ? `${inline ? 'absolute inset-x-2 bottom-28 z-30 rounded-2xl border shadow-xl' : 'fixed inset-x-0 z-[90]'} flex flex-col overflow-hidden bg-background text-foreground`
         : 'hidden'}
-      style={open ? {
+      style={open ? inline ? { height: '42%', minHeight: '160px' } : {
         top: 'var(--kosolola-top, 0px)',
         height: 'var(--kosolola-height, 100dvh)',
       } : undefined}
     >
-      <header className="flex shrink-0 items-center gap-3 border-b px-3 pb-2 pt-[calc(env(safe-area-inset-top,0px)+0.5rem)]">
+      <header className="flex shrink-0 items-center gap-3 border-b px-3 pb-2 pt-2">
         <Button variant="ghost" type="button" onClick={onClose} aria-label="Voltar à chamada" className="gap-2 px-2">
           <ArrowLeft className="h-5 w-5" />
           <span>Chamada</span>
