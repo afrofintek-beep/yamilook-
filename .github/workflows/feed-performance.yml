@@ -9,7 +9,8 @@ on:
       - 'src/components/feed/MediaCarousel.test.tsx'
       - 'src/components/feed/PostCard.tsx'
       - 'src/lib/avatar-source.ts'
-      - 'src/lib/avatar-source.test.ts'\n      - 'src/components/feed/FeedDiagnostics.test.ts'
+      - 'src/lib/avatar-source.test.ts'
+      - 'src/components/feed/FeedDiagnostics.test.ts'
       - 'src/lib/call-history.ts'
       - 'src/lib/call-history.test.ts'
       - 'src/lib/incoming-call-polling.ts'
@@ -29,7 +30,7 @@ on:
       - 'e2e/feed-responsive.spec.ts'
       - '.github/workflows/feed-performance.yml'
   push:
-    # Branch-only CI allows safe review without opening an auto-merged PR.\n    branches: [main, fix/feed-photo-integrity-20261027]
+    branches: [main]
     paths:
       - 'src/hooks/useCalls.tsx'
       - 'src/components/calls/ActiveCallProvider.tsx'
