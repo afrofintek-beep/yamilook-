@@ -4,6 +4,7 @@ import { notifyIncomingCall } from '@/lib/call-push';
  * Coordinates between media, peer connections, and signaling
  */
 import { useRef, useCallback } from 'react';
+import type { TablesUpdate } from '@/integrations/supabase/types';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '../useAuth';
 import { getWebRTCConfig } from './types';
@@ -100,7 +101,7 @@ export function useCallLifecycle(options: UseCallLifecycleOptions): UseCallLifec
     status: string,
     joinedAt = false
   ) => {
-    const update: Record<string, unknown> = { status };
+    const update: TablesUpdate<'call_participants'> = { status };
     if (joinedAt) {
       update.joined_at = new Date().toISOString();
     }
@@ -125,7 +126,7 @@ export function useCallLifecycle(options: UseCallLifecycleOptions): UseCallLifec
     endedAt = false,
     endReason?: string
   ) => {
-    const update: Record<string, unknown> = { status };
+    const update: TablesUpdate<'calls'> = { status };
     if (startedAt) {
       update.started_at = new Date().toISOString();
     }
@@ -287,7 +288,7 @@ export function useCallLifecycle(options: UseCallLifecycleOptions): UseCallLifec
     isVideoEnabled?: boolean,
     isScreenSharing?: boolean
   ) => {
-    const update: Record<string, boolean> = {};
+    const update: TablesUpdate<'call_participants'> = {};
     if (isMuted !== undefined) update.is_muted = isMuted;
     if (isVideoEnabled !== undefined) update.is_video_enabled = isVideoEnabled;
     if (isScreenSharing !== undefined) update.is_screen_sharing = isScreenSharing;
