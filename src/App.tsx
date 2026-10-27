@@ -15,6 +15,7 @@ import { GlobalMessageNotifier } from "@/components/GlobalMessageNotifier";
 import { GlobalLiveInviteNotifier } from "@/components/GlobalLiveInviteNotifier";
 import { KumbuEarnNotifier } from "@/components/KumbuEarnNotifier";
 import ThemeSync from "@/components/ThemeSync";
+import { AutomaticAccountBackup } from "@/components/AutomaticAccountBackup";
 
 
 // Lazy load the ActiveCallProvider since it imports heavy WebRTC hooks
@@ -411,6 +412,7 @@ function AppContent() {
       <GlobalLiveInviteNotifier />
       <KumbuEarnNotifier />
       <ThemeSync />
+      <AutomaticAccountBackup />
       <ActiveCallProvider>
         <AnimatedRoutes />
       </ActiveCallProvider>
