@@ -2,6 +2,18 @@ name: Feed performance regression
 on:
   pull_request:
     paths:
+      - 'src/hooks/useCalls.tsx'
+      - 'src/components/calls/ActiveCallProvider.tsx'
+      - 'src/components/ui/avatar.tsx'
+      - 'src/components/feed/MediaCarousel.tsx'
+      - 'src/components/feed/MediaCarousel.test.tsx'
+      - 'src/lib/call-history.ts'
+      - 'src/lib/call-history.test.ts'
+      - 'src/lib/incoming-call-polling.ts'
+      - 'src/lib/incoming-call-polling.test.ts'
+      - 'src/lib/image-delivery.ts'
+      - 'src/lib/image-delivery.test.ts'
+      - 'vite.config.ts'
       - 'src/hooks/usePosts.tsx'
       - 'src/hooks/useStatus.tsx'
       - 'src/hooks/useContacts.tsx'
@@ -16,6 +28,18 @@ on:
   push:
     branches: [main]
     paths:
+      - 'src/hooks/useCalls.tsx'
+      - 'src/components/calls/ActiveCallProvider.tsx'
+      - 'src/components/ui/avatar.tsx'
+      - 'src/components/feed/MediaCarousel.tsx'
+      - 'src/components/feed/MediaCarousel.test.tsx'
+      - 'src/lib/call-history.ts'
+      - 'src/lib/call-history.test.ts'
+      - 'src/lib/incoming-call-polling.ts'
+      - 'src/lib/incoming-call-polling.test.ts'
+      - 'src/lib/image-delivery.ts'
+      - 'src/lib/image-delivery.test.ts'
+      - 'vite.config.ts'
       - 'src/hooks/usePosts.tsx'
       - 'src/hooks/useStatus.tsx'
       - 'src/hooks/useContacts.tsx'
@@ -44,7 +68,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
-      - run: npx vitest run src/lib/public-profile-batch.test.ts
+      - run: npm test
       - run: npx playwright install --with-deps chromium
       - run: npx playwright test e2e/feed-responsive.spec.ts --project=chromium
       - uses: actions/upload-artifact@v4
