@@ -22,5 +22,6 @@ describe('feed media network priority', () => {
     const { container } = render(<MediaCarousel urls={['video.mp4?token=test']} />);
     expect(container.querySelector('video')).toHaveAttribute('preload', 'none');
     expect(container.querySelector('video')).not.toHaveAttribute('poster');
+    expect(container.querySelector('video')).not.toHaveAttribute('src');
   });
 });

@@ -48,7 +48,7 @@ it('allows lowering a raised hand',async()=>{
 });
 it('opens chat, backgrounds and effects while preserving the call media',()=>{
   setup();
-  fireEvent.click(screen.getByRole('button',{name:'Escrever no papo'}));
+  fireEvent.click(screen.getByRole('button',{name:'Escrever mensagem'}));
   expect(screen.getByText('Papo aberto')).toBeVisible();
   fireEvent.click(screen.getByRole('button',{name:'Fundos'}));
   expect(screen.getByText('Fundos abertos')).toBeVisible();
