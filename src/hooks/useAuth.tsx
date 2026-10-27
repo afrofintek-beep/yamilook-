@@ -183,20 +183,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setProfile(null);
       setProfileError(false);
       setLoading(true);
-      void fetchProfile(nextUserId)
-        .then((profileData) => {
-          if (disposed || request !== profileRequest) return;
-          setProfile(profileData);
-          setProfileError(!profileData);
-        })
-        .catch((error) => {
-          if (disposed || request !== profileRequest) return;
-          logger.warn('Profile unavailable after authentication', 'auth', error);
-          setProfileError(true);
-        })
-        .finally(() => {
-          if (!disposed && request === profileRequest) setLoading(false);
-        });
+      // Auth callbacks run under the Supabase auth lock. Defer queries to the
+      // next macrotask to avoid nested auth calls and a locked first render.
+      window.setTimeout(() => {
+        if (disposed || request !== profileRequest) return;
+        void fetchProfile(nextUserId)
+          .then((profileData) => {
+            if (disposed || request !== profileRequest) return;
+            setProfile(profileData);
+            setProfileError(!profileData);
+          })
+          .catch((error) => {
+            if (disposed || request !== profileRequest) return;
+            logger.warn('Profile unavailable after authentication', 'auth', error);
+            setProfileError(true);
+          })
+          .finally(() => {
+            if (!disposed && request === profileRequest) setLoading(false);
+          });
+      }, 0);
     };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
