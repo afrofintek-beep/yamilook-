@@ -4,7 +4,7 @@ import { User, Session, AuthError, Provider } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/logger';
 import { recordDevice } from '@/lib/device';
-import { registerCurrentSession, listLoginAlerts, acknowledgeLoginAlerts } from '@/lib/account-sessions';
+import { registerCurrentSession, listLoginAlerts, acknowledgeLoginAlerts, isRevokedSessionError } from '@/lib/account-sessions';
 import { toast as securityToast } from 'sonner';
 
 interface Profile {
@@ -250,9 +250,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (disposed || pending || document.visibilityState === 'hidden') return;
       pending = true;
       try {
-        const { error } = await supabase.auth.getUser();
-        if (!disposed && (error?.status === 401 || error?.status === 403)) {
-          await supabase.auth.signOut({ scope: 'local' });
+        // getUser() can accept a still-valid JWT after its database session
+        // was revoked. This RPC checks session_id against auth.sessions itself.
+        const client = supabase as unknown as {
+          rpc: (name: string) => Promise<{ error: { code?: string; status?: number } | null }>;
+        };
+        const { error } = await client.rpc('account_current_session_id');
+        if (!disposed && isRevokedSessionError(error)) {
+          await signOut('local');
         }
       } catch { /* Network errors are not evidence of revoked access. */ }
       finally { pending = false; }

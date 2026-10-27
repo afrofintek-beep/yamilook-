@@ -34,3 +34,17 @@ describe('account session RPC contract', () => {
     await expect(accountRpc('account_list_sessions')).rejects.toThrow('offline');
   });
 });
+
+describe('remote revocation classification', () => {
+  it('detects server-revoked JWT sessions', async () => {
+    const { isRevokedSessionError } = await import('./account-sessions');
+    expect(isRevokedSessionError({ code: '28000', status: 401 })).toBe(true);
+    expect(isRevokedSessionError({ code: 'PGRST301' })).toBe(true);
+  });
+  it('does not sign out for offline, permissions, or absent migrations', async () => {
+    const { isRevokedSessionError } = await import('./account-sessions');
+    expect(isRevokedSessionError({ code: 'PGRST202', status: 404 })).toBe(false);
+    expect(isRevokedSessionError({ code: '42501', status: 403 })).toBe(false);
+    expect(isRevokedSessionError(undefined)).toBe(false);
+  });
+});
