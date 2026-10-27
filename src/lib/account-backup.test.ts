@@ -6,6 +6,12 @@ import {backupPreferenceKey,canBackupOnConnection,decryptArchive,getBackupPrefer
 
 describe('account backup security constraints',()=>{
   beforeEach(()=>{
+    // The application's shared Vitest setup uses vi.fn() storage stubs without persistence.
+    // Give this test an actual in-memory store to verify account separation.
+    const storage = new Map<string,string>();
+    vi.mocked(localStorage.getItem).mockImplementation(key => storage.get(key) ?? null);
+    vi.mocked(localStorage.setItem).mockImplementation((key,value) => {storage.set(key,String(value));});
+    vi.mocked(localStorage.clear).mockImplementation(() => {storage.clear();});
     localStorage.clear();
     Object.defineProperty(navigator,'onLine',{configurable:true,value:true});
     Object.defineProperty(navigator,'connection',{configurable:true,value:undefined});
