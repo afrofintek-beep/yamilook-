@@ -241,12 +241,14 @@ function ProtectedRoute({ children, skipOnboardingCheck }: { children: React.Rea
           {profileError ? 'Não foi possível carregar o perfil. Verifique a ligação e tente novamente.' : 'A carregar perfil…'}
         </p>
         {profileError && (
-          <button type="button" onClick={() => void refreshProfile()} className="rounded-lg bg-primary px-5 py-3 text-primary-foreground">
-            Tentar novamente
-          </button>
-          <button type="button" onClick={() => void signOut('local')} className="rounded-lg px-5 py-2 underline">
-            Iniciar sessão novamente
-          </button>
+          <>
+            <button type="button" onClick={() => void refreshProfile()} className="rounded-lg bg-primary px-5 py-3 text-primary-foreground">
+              Tentar novamente
+            </button>
+            <button type="button" onClick={() => void signOut('local')} className="rounded-lg px-5 py-2 underline">
+              Iniciar sessão novamente
+            </button>
+          </>
         )}
       </div>
     );
