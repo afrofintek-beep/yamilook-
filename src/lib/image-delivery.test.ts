@@ -4,10 +4,11 @@ const base = 'https://project.supabase.co';
 const publicUrl = base + '/storage/v1/object/public/avatars/member/avatar.jpg';
 
 describe('safe public image delivery', () => {
-  it('requests a small transformed avatar and full-width post image', () => {
-    expect(optimizedPublicImageUrl(publicUrl, 128, base))
-      .toBe(base + '/storage/v1/render/image/public/avatars/member/avatar.jpg?width=128&quality=75');
-    expect(optimizedPublicImageUrl(publicUrl, 960, base)).toContain('width=960');
+  it('keeps the original avatar and post proportions until transformations are validated', () => {
+    expect(optimizedPublicImageUrl(publicUrl, 128, base)).toBe(publicUrl);
+    expect(optimizedPublicImageUrl(publicUrl, 960, base)).toBe(publicUrl);
+    expect(optimizedPublicImageUrl(base + '/storage/v1/object/public/media/post.jpg', 960, base))
+      .toBe(base + '/storage/v1/object/public/media/post.jpg');
   });
   it('never rewrites a signed, query-bearing, private or third-party URL', () => {
     for (const src of [

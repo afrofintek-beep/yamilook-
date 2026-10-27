@@ -18,6 +18,11 @@ describe('feed media network priority', () => {
     expect(images[0]).toHaveAttribute('fetchpriority', 'high');
     expect(images[1]).toHaveAttribute('loading', 'lazy');
   });
+  it('keeps the original public media source, without server distortion', () => {
+    const src = 'https://project.supabase.co/storage/v1/object/public/media/photo.jpg';
+    const { container } = render(<MediaCarousel urls={[src]} />);
+    expect(container.querySelector('img')?.getAttribute('src')).toBe(src);
+  });
   it('does not download offscreen videos or request a video URL as an image poster', () => {
     const { container } = render(<MediaCarousel urls={['video.mp4?token=test']} />);
     expect(container.querySelector('video')).toHaveAttribute('preload', 'none');

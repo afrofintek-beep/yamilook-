@@ -35,6 +35,7 @@ import { EditPostSheet } from './EditPostSheet';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { chooseAuthorAvatarUrl } from '@/lib/avatar-source';
 import { 
   AfricanReactionType, 
   getReaction,
@@ -58,7 +59,7 @@ interface PostCardProps {
 export const PostCard = memo(function PostCard({ mediaPriority = false, post, onCommentClick, isArchived, onToggleArchive }: PostCardProps) {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { user, profile: currentProfile } = useAuth();
   const { toggleLike, toggleSave, deletePost, sharePost, updatePost } = usePosts({ autoLoad: false });
   const { toast } = useToast();
   
@@ -92,6 +93,10 @@ export const PostCard = memo(function PostCard({ mediaPriority = false, post, on
   const totalReactions = getTotalReactions(localReactionCounts);
 
   const isOwner = user?.id === post.user_id;
+  // Reuse the signed-in profile for own posts. Others remain public-RPC only.
+  const authorAvatarUrl = chooseAuthorAvatarUrl(
+    post.user_id, post.user.avatar_url, user?.id, currentProfile
+  );
 
   const handleReact = useCallback((reactionType: AfricanReactionType) => {
     setIsLikeAnimating(true);
@@ -221,7 +226,7 @@ export const PostCard = memo(function PostCard({ mediaPriority = false, post, on
           onClick={() => navigate(`/profile/${post.user_id}`)}
         >
           <Avatar className="w-10 h-10 flex-shrink-0">
-            <AvatarImage src={post.user.avatar_url || ''} />
+            <AvatarImage src={authorAvatarUrl || ''} />
             <AvatarFallback className="bg-gradient-primary text-white">
               {post.user.display_name?.[0]?.toUpperCase() || '?'}
             </AvatarFallback>
