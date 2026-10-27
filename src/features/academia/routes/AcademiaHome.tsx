@@ -73,7 +73,7 @@ export default function AcademiaHome() {
   };
 
   const liveSessions = sessions.filter((s) => s.status === 'live' && !s.archivedAt);
-  const visibleSessions = sessions.filter(s => (mine ? (s.mentorId === user?.id || isAdmin) : true) && sessionMatches(s, mine ? filter : 'upcoming'));
+  const visibleSessions = sessions.filter(s => (mine ? (s.mentorId === user?.id || isAdmin) : true) && sessionMatches(s, filter));
 
   const filtered = tab === 'all'
     ? visibleSessions
@@ -272,16 +272,16 @@ export default function AcademiaHome() {
           className="px-4 pb-4"
         >
           <div className="mb-3 flex flex-wrap gap-2">
-            <Button variant={!mine ? 'default' : 'outline'} onClick={() => setMine(false)}>Próximas sessões</Button>
+            <Button variant={!mine ? 'default' : 'outline'} onClick={() => setMine(false)}>Explorar sessões</Button>
             {user && <Button variant={mine ? 'default' : 'outline'} onClick={() => setMine(true)}>{isAdmin ? 'Gerir sessões' : 'As minhas sessões'}</Button>}
           </div>
-          {mine && <div className="mb-3 flex flex-wrap gap-2" aria-label="Filtrar sessões">
+          {<div className="mb-3 flex flex-wrap gap-2" aria-label="Filtrar sessões">
             {([['upcoming', 'Próximas'], ['past', 'Passadas'], ['cancelled', 'Canceladas'], ['archived', 'Arquivadas']] as const).map(([value, label]) =>
               <Button key={value} size="sm" variant={filter === value ? 'default' : 'outline'} aria-pressed={filter === value} onClick={() => setFilter(value)}>{label}</Button>)}
           </div>}
           <Tabs value={tab} onValueChange={setTab}>
             <TabsList className="w-full rounded-xl h-10">
-              <TabsTrigger value="all" className="rounded-lg text-xs flex-1">{ACADEMIA_COPY.tabAll}</TabsTrigger>
+              <TabsTrigger value="all" className="rounded-lg text-xs flex-1">Todos os preços</TabsTrigger>
               <TabsTrigger value="free" className="rounded-lg text-xs flex-1">{ACADEMIA_COPY.tabFree}</TabsTrigger>
               <TabsTrigger value="premium" className="rounded-lg text-xs flex-1">{ACADEMIA_COPY.tabPremium}</TabsTrigger>
             </TabsList>
