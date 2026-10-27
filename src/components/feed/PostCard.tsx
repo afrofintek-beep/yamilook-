@@ -226,7 +226,7 @@ export const PostCard = memo(function PostCard({ mediaPriority = false, post, on
           onClick={() => navigate(`/profile/${post.user_id}`)}
         >
           <Avatar className="w-10 h-10 flex-shrink-0">
-            <AvatarImage src={authorAvatarUrl || ''} />
+            <AvatarImage src={authorAvatarUrl || ''} imageVariantSize={160} />
             <AvatarFallback className="bg-gradient-primary text-white">
               {post.user.display_name?.[0]?.toUpperCase() || '?'}
             </AvatarFallback>
