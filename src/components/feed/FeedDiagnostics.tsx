@@ -16,6 +16,8 @@ export function resourceCategory(name: string, initiator: string) {
         'public_profiles', 'profiles', 'business_profiles', 'ad_impressions',
         'conversation_participants', 'conversations', 'notifications',
         'statuses', 'status_views', 'user_settings', 'live_streams',
+        'calls', 'call_participants', 'call_signals', 'live_sessions',
+        'messages', 'message_reactions', 'push_subscriptions',
       ]);
       return known.has(api[1]) ? 'api:' + api[1] : 'api:other-table';
     }
@@ -23,7 +25,9 @@ export function resourceCategory(name: string, initiator: string) {
     if (path.startsWith('/auth/v1/')) return 'api:auth';
     if (path.startsWith('/functions/v1/')) return 'api:function';
     if (path.startsWith('/realtime/v1/')) return 'api:realtime';
-    if (path.startsWith('/storage/v1/')) return 'media';
+    if (path.startsWith('/storage/v1/render/image/public/')) return 'media:transformed-image';
+    if (path.startsWith('/storage/v1/object/public/')) return 'media:public-object';
+    if (path.startsWith('/storage/v1/')) return 'media:other';
     if (initiator === 'fetch' || initiator === 'xmlhttprequest') {
       return url.origin === window.location.origin ? 'fetch:same-origin' : 'fetch:external';
     }
@@ -86,9 +90,23 @@ export default function FeedDiagnostics() {
         while (times[right] - times[left] > 100) left++;
         largestHundredMsBurst = Math.max(largestHundredMsBurst, right - left + 1);
       }
+      // Five-second resource starts show sustained polling separately from
+      // the burst that naturally happens while the app mounts.
+      const resourcesByFiveSeconds: Record<string, number> = {};
+      for (const item of categorized) {
+        const bucket = String(Math.floor(item.startMs / 5000) * 5);
+        resourcesByFiveSeconds[bucket] = (resourcesByFiveSeconds[bucket] || 0) + 1;
+      }
+      const imageElements = Array.from(document.querySelectorAll<HTMLImageElement>('.feed-posts article img')).slice(0, 100);
+      const oversizedImageCount = imageElements.filter(img => {
+        const width = img.getBoundingClientRect().width;
+        return width > 0 && img.naturalWidth / width >= 4;
+      }).length;
+      const knownTransferBytes = categorized.reduce((n, item) => n + (item.transferBytes || 0), 0);
+      const sizedResourceCount = categorized.filter(item => item.transferBytes > 0).length;
       setReport(JSON.stringify({
-        version: 2,
-        method: 'Visible DOM sampled every 100ms; not paint timing. Lazy observer starts after feed mounts; add observerStartedMsAfterNavigation for navigation-relative observations. Early resource entries may be absent if the browser buffer filled. Cache uncontrolled. Zero sizes can mean unavailable cross-origin timing.',
+        version: 3,
+        method: 'Visible DOM sampled every 100ms, not paint timing. Resource categories contain no URL, headers or personal data. Five-second buckets use navigation-relative resource starts. Caching uncontrolled; some resource entries may be missing. Zero sizes can mean unavailable cross-origin timing.',
         observerStartedMsAfterNavigation: Math.round(started),
         captureDurationMs: Math.round(performance.now() - started),
         firstArticleObservedMsAfterObserver: firstArticle === null ? null : Math.round(firstArticle),
@@ -98,7 +116,7 @@ export default function FeedDiagnostics() {
         navigation: nav ? { ttfbMs: nav.responseStart, domContentLoadedMs: nav.domContentLoadedEventEnd } : null,
         hiddenDuringCapture,
         articles: { atObserverStart: initialArticles, maximumObserved: maxArticles, atEnd: document.querySelectorAll('.feed-posts article').length },
-        images: Array.from(document.querySelectorAll<HTMLImageElement>('.feed-posts article img')).slice(0, 100).map(img => ({
+        images: imageElements.map(img => ({
           loaded: img.complete && img.naturalWidth > 0, loading: img.loading,
           naturalWidth: img.naturalWidth, naturalHeight: img.naturalHeight,
           renderedWidth: Math.round(img.getBoundingClientRect().width), renderedHeight: Math.round(img.getBoundingClientRect().height),
@@ -106,6 +124,10 @@ export default function FeedDiagnostics() {
         resourceCountAvailable: resources.length,
         resourceLimit: 1000,
         resourceCategories: categories,
+        resourcesByFiveSeconds,
+        oversizedImageCount,
+        knownTransferBytes,
+        sizedResourceCount,
         largestHundredMsBurst,
         resources: categorized,
       }, null, 2));
@@ -117,7 +139,7 @@ export default function FeedDiagnostics() {
   const download = () => {
     const url = URL.createObjectURL(new Blob([report], { type: 'application/json' }));
     const a = document.createElement('a');
-    a.href = url; a.download = 'yamilook-diagnostico.json'; a.click();
+    a.href = url; a.download = 'yamilook-diagnostico-v3.json'; a.click();
     setTimeout(() => URL.revokeObjectURL(url), 10000);
   };
   return <aside aria-label="Diagnóstico do feed" className="fixed bottom-24 left-2 z-[100] max-w-[calc(100vw-1rem)] rounded-xl border bg-background p-3 text-foreground shadow-lg">
