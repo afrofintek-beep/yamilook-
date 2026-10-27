@@ -89,6 +89,26 @@ test('optional editors are not requested during feed startup, but open on demand
   expect(optionalModules.some(name => name.includes('CreatePostSheet'))).toBe(true);
 });
 
+test('status viewer, status editor and sponsored-card code stays off the startup path', async ({ page }) => {
+  await mockAccount(page);
+  const requests: string[] = [];
+  page.on('request', req => {
+    const filename = new URL(req.url()).pathname.split('/').pop() || '';
+    if (/^(?:StatusViewer|CreateStatusSheet|SponsoredPostCard)-.*\\.js$/.test(filename)) {
+      requests.push(filename);
+    }
+  });
+  await page.goto('/muxi');
+  await expect(page.locator('article')).toHaveCount(12);
+  await expect(page.getByTestId('my-status')).toBeVisible();
+  await page.waitForLoadState('networkidle');
+  expect(requests).toEqual([]);
+  await page.getByTestId('my-status').locator('button').first().click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  expect(requests.some(f => f.startsWith('CreateStatusSheet-'))).toBe(true);
+  expect(requests.some(f => f.startsWith('StatusViewer-'))).toBe(false);
+});
+
 test('feed does not download full call history when only displaying publications', async ({ page }) => {
   let historyReads = 0;
   page.on('request', request => {
