@@ -49,6 +49,7 @@ interface AuthContextType {
   session: Session | null;
   profile: Profile | null;
   loading: boolean;
+  profileError: boolean;
   signUp: (email: string, password: string, metadata?: { display_name?: string; username?: string; ref?: string; access_code?: string }) => Promise<{ error: AuthError | null }>;
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signInWithSocial: (provider: SocialProvider) => Promise<{ error: AuthError | null }>;
@@ -67,6 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profileError, setProfileError] = useState(false);
   const initialSessionResolved = useRef(false);
 
   const fetchProfile = async (userId: string) => {
@@ -78,17 +80,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (error) {
       logger.error('Error fetching profile', 'auth', error);
-      return null;
+      throw error;
     }
 
-    return data as Profile;
+    return data as Profile | null;
   };
 
   const refreshProfile = useCallback(async () => {
     const currentUser = userRef.current;
-    if (currentUser) {
+    if (!currentUser) return;
+    setProfileError(false);
+    setLoading(true);
+    try {
       const profileData = await fetchProfile(currentUser.id);
-      setProfile(profileData);
+      if (userRef.current?.id !== currentUser.id) return;
+      if (profileData) setProfile(profileData);
+      setProfileError(!profileData);
+    } catch (error) {
+      logger.warn('Retrying profile failed', 'auth', error);
+      if (userRef.current?.id === currentUser.id) setProfileError(true);
+    } finally {
+      if (userRef.current?.id === currentUser.id) setLoading(false);
     }
   }, []);
 
@@ -142,53 +154,94 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user?.id, refreshProfile]);
 
   const sessionRef = useRef<Session | null>(null);
-  useEffect(() => {
-    sessionRef.current = session;
-  }, [session]);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
+    let disposed = false;
+    let profileRequest = 0;
 
-        if (session?.user) {
-          setTimeout(async () => {
-            const profileData = await fetchProfile(session.user.id);
+    // Only a change of account starts a fresh profile read. Refresh events for
+    // the same account must not reset the screen or race with a pending fetch.
+    const applySession = (nextSession: Session | null) => {
+      const previousUserId = sessionRef.current?.user.id;
+      const nextUserId = nextSession?.user.id;
+      sessionRef.current = nextSession;
+      userRef.current = nextSession?.user ?? null;
+      setSession(nextSession);
+      setUser(nextSession?.user ?? null);
+
+      if (!nextUserId) {
+        ++profileRequest;
+        setProfile(null);
+        setProfileError(false);
+        setLoading(false);
+        return;
+      }
+
+      if (previousUserId === nextUserId) return;
+
+      const request = ++profileRequest;
+      setProfile(null);
+      setProfileError(false);
+      setLoading(true);
+      // Auth callbacks run under the Supabase auth lock. Defer queries to the
+      // next macrotask to avoid nested auth calls and a locked first render.
+      window.setTimeout(() => {
+        if (disposed || request !== profileRequest) return;
+        void fetchProfile(nextUserId)
+          .then((profileData) => {
+            if (disposed || request !== profileRequest) return;
             setProfile(profileData);
-          }, 0);
-          // Record the device (anti-collusion signal) on sign-in. Best-effort.
-          if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
-            // Supabase auth callbacks must not perform nested API calls while
-            // the session lock is held. Defer device writes to the next tick.
-            window.setTimeout(() => {
-              void recordDevice(session.user.id);
-              void registerCurrentSession(navigator.userAgent, window.location.pathname)
-                .catch(err => logger.warn('Account device registration unavailable', 'auth', err));
-            }, 0);
-          }
-        } else {
-          setProfile(null);
-        }
+            setProfileError(!profileData);
+          })
+          .catch((error) => {
+            if (disposed || request !== profileRequest) return;
+            logger.warn('Profile unavailable after authentication', 'auth', error);
+            setProfileError(true);
+          })
+          .finally(() => {
+            if (!disposed && request === profileRequest) setLoading(false);
+          });
+      }, 0);
+    };
 
-        if (initialSessionResolved.current) {
-          setLoading(false);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, nextSession) => {
+        if (disposed) return;
+        // Do not let the initial getSession() result overwrite a later sign-in
+        // or sign-out from another tab or a recovered session.
+        initialSessionResolved.current = true;
+        applySession(nextSession);
+
+        if (nextSession?.user && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
+          // No nested Supabase calls inside its auth lock.
+          window.setTimeout(() => {
+            if (disposed || sessionRef.current?.user.id !== nextSession.user.id) return;
+            void recordDevice(nextSession.user.id);
+            void registerCurrentSession(navigator.userAgent, window.location.pathname)
+              .catch(err => logger.warn('Account device registration unavailable', 'auth', err));
+          }, 0);
         }
       }
     );
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      initialSessionResolved.current = true;
-      setSession(session);
-      setUser(session?.user ?? null);
-
-      if (session?.user) {
-        fetchProfile(session.user.id).then(setProfile);
-      }
-      setLoading(false);
-    });
+    void supabase.auth.getSession()
+      .then(({ data, error }) => {
+        if (disposed || initialSessionResolved.current) return;
+        initialSessionResolved.current = true;
+        if (error) logger.warn('Stored authentication session could not be restored', 'auth', error);
+        applySession(data.session ?? null);
+      })
+      .catch((error) => {
+        if (disposed || initialSessionResolved.current) return;
+        initialSessionResolved.current = true;
+        logger.warn('Authentication initialization failed', 'auth', error);
+        // Leave protected routes for a safe sign-in instead of an infinite loader.
+        applySession(null);
+      });
 
     return () => {
+      disposed = true;
+      ++profileRequest;
       subscription.unsubscribe();
     };
   }, []);
@@ -353,6 +406,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     session,
     profile,
     loading,
+    profileError,
     signUp,
     signInWithSocial,
     signIn,
