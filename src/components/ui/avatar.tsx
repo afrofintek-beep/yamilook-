@@ -26,10 +26,12 @@ const AvatarImage = React.forwardRef<
   // original source rather than leaving the avatar blank.
   return (
     <AvatarPrimitive.Image
+      loading="lazy"
+      decoding="async"
       {...props}
       ref={ref}
       src={failedSrc === src ? src : optimized}
-      className={cn("aspect-square h-full w-full", className)}
+      className={cn("aspect-square h-full w-full object-cover", className)}
       onError={event => {
         if (optimized !== src && failedSrc !== src && src) setFailedSrc(src);
         else onError?.(event);
