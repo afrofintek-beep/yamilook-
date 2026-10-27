@@ -12,6 +12,7 @@ import { ArchivedChatsSheet } from '@/components/settings/ArchivedChatsSheet';
 import { BlockedUsersSheet } from '@/components/settings/BlockedUsersSheet';
 import PaposBrand from './PaposBrand';
 import { ConnectedDevices } from '@/components/settings/ConnectedDevices';
+import { BackupManager } from '@/components/settings/BackupManager';
 export default function PaposSettings() {
   const queryClient = useQueryClient();
   const [logoutError, setLogoutError] = useState('');
