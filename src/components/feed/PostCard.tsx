@@ -58,7 +58,7 @@ interface PostCardProps {
 export const PostCard = memo(function PostCard({ mediaPriority = false, post, onCommentClick, isArchived, onToggleArchive }: PostCardProps) {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { user, profile: currentProfile } = useAuth();
   const { toggleLike, toggleSave, deletePost, sharePost, updatePost } = usePosts({ autoLoad: false });
   const { toast } = useToast();
   
@@ -92,6 +92,11 @@ export const PostCard = memo(function PostCard({ mediaPriority = false, post, on
   const totalReactions = getTotalReactions(localReactionCounts);
 
   const isOwner = user?.id === post.user_id;
+  // A signed-in member's own posts must show the same avatar as their profile.
+  // The public RPC can lag a profile edit; do not override avatars of others.
+  const authorAvatarUrl = isOwner && currentProfile?.id === post.user_id
+    ? currentProfile.avatar_url
+    : post.user.avatar_url;
 
   const handleReact = useCallback((reactionType: AfricanReactionType) => {
     setIsLikeAnimating(true);
@@ -221,7 +226,7 @@ export const PostCard = memo(function PostCard({ mediaPriority = false, post, on
           onClick={() => navigate(`/profile/${post.user_id}`)}
         >
           <Avatar className="w-10 h-10 flex-shrink-0">
-            <AvatarImage src={post.user.avatar_url || ''} />
+            <AvatarImage src={authorAvatarUrl || ''} />
             <AvatarFallback className="bg-gradient-primary text-white">
               {post.user.display_name?.[0]?.toUpperCase() || '?'}
             </AvatarFallback>
