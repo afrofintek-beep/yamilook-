@@ -85,7 +85,7 @@ export function CallChatPanel({ conversationId, contactId, open, onClose, inputR
       aria-label="Mensagens durante a chamada"
       aria-hidden={!open}
       className={open
-        ? `${inline ? 'relative min-h-0 flex-[1.2] basis-0 border-y' : 'fixed inset-x-0 z-[90]'} flex flex-col overflow-hidden bg-background text-foreground`
+        ? `${inline ? 'relative min-h-[7.5rem] flex-[1.2] basis-0 border-y' : 'fixed inset-x-0 z-[90]'} flex flex-col overflow-hidden bg-background text-foreground`
         : 'hidden'}
       style={open && !inline ? {
         top: 'var(--kosolola-top, 0px)',

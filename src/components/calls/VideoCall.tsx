@@ -227,7 +227,7 @@ export function VideoCall({
       </span>
       </header>
       {/* Main Video Grid */}
-      <section data-testid="call-stage" className="relative min-h-24 flex-1 basis-0 overflow-hidden">
+      <section data-testid="call-stage" className="relative min-h-0 flex-1 basis-0 overflow-hidden">
       <ParticipantGrid
         participants={participants}
         localStream={state.localStream}
