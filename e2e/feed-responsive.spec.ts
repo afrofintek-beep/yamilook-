@@ -94,7 +94,7 @@ test('status viewer, status editor and sponsored-card code stays off the startup
   const requests: string[] = [];
   page.on('request', req => {
     const filename = new URL(req.url()).pathname.split('/').pop() || '';
-    if (/^(?:StatusViewer|CreateStatusSheet|SponsoredPostCard)-.*\\.js$/.test(filename)) {
+    if (/^(?:StatusViewer|CreateStatusSheet|SponsoredPostCard)-.*\.js$/.test(filename)) {
       requests.push(filename);
     }
   });
