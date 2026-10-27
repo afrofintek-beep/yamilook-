@@ -9,6 +9,6 @@ export function getSharedAudioContext(): AudioContext {
 export function unlockCallAudio() {
   try {
     const audio = getSharedAudioContext();
-    if (audio.state === 'suspended') void audio.resume().catch(() => {});
+    if (audio.state !== 'running') void audio.resume().catch(() => {});
   } catch { /* The call screen reports unsupported audio when a call is started. */ }
 }

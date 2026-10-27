@@ -90,6 +90,9 @@ export function useRingtone(options?: RingtoneOptions) {
   const isPlayingRef = useRef(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const vibrationIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const generationRef = useRef(0);
+  const pendingRingRef = useRef<number | null>(null);
+  const ringTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Get effective settings (options override settings from database)
   const getEffectiveSettings = useCallback(() => {
@@ -99,7 +102,8 @@ export function useRingtone(options?: RingtoneOptions) {
       vibrationEnabled: options?.vibrationEnabled ?? settings?.call_vibration_enabled ?? true,
       ringtoneEnabled: options?.ringtoneEnabled ?? settings?.ringtone_enabled ?? true,
     };
-  }, [options, settings]);
+  }, [options?.volume, options?.pattern, options?.vibrationEnabled, options?.ringtoneEnabled,
+    settings?.ringtone_volume, settings?.ringtone_pattern, settings?.call_vibration_enabled, settings?.ringtone_enabled]);
 
   // Use the shared (pre-unlocked) AudioContext
   const initAudioContext = useCallback(() => {
@@ -110,6 +114,8 @@ export function useRingtone(options?: RingtoneOptions) {
 
   // Create a ring sound
   const createRing = useCallback(async () => {
+    const generation = generationRef.current;
+    if (!isPlayingRef.current || pendingRingRef.current === generation) return;
     const effectiveSettings = getEffectiveSettings();
     
     if (!effectiveSettings.ringtoneEnabled) return;
@@ -118,18 +124,24 @@ export function useRingtone(options?: RingtoneOptions) {
     
     if (patternConfig.frequencies.length === 0) return; // Silent pattern
     
-    const audioContext = initAudioContext();
+    let audioContext: AudioContext;
+    try { audioContext = initAudioContext(); } catch { return; }
     if (!audioContext || audioContext.state === 'closed') return;
 
     // CRITICAL: await resume so oscillators start in an active context
     // Without this, oscillators created while context is 'suspended' produce no sound
-    if (audioContext.state === 'suspended') {
+    if (audioContext.state !== 'running') {
+      pendingRingRef.current = generation;
       try {
         await audioContext.resume();
       } catch {
-        // Non-fatal: browser may still block audio without a gesture
+        return;
+      } finally {
+        if (pendingRingRef.current === generation) pendingRingRef.current = null;
       }
     }
+    // An answer/decline or a new preview may have happened while resume awaited a gesture.
+    if (!isPlayingRef.current || generation !== generationRef.current || audioContext.state !== 'running') return;
 
     // Create gain node for volume control
     const gainNode = audioContext.createGain();
@@ -162,7 +174,7 @@ export function useRingtone(options?: RingtoneOptions) {
     gainNode.gain.linearRampToValueAtTime(0, ringEndTime);
 
     // Stop oscillators after ring duration
-    setTimeout(() => {
+    ringTimeoutRef.current = setTimeout(() => {
       oscillators.forEach((osc) => {
         try {
           osc.stop();
@@ -171,7 +183,12 @@ export function useRingtone(options?: RingtoneOptions) {
           // Ignore if already stopped
         }
       });
-      oscillatorsRef.current = [];
+      gainNode.disconnect();
+      if (generation === generationRef.current) {
+        oscillatorsRef.current = [];
+        gainNodeRef.current = null;
+        ringTimeoutRef.current = null;
+      }
     }, patternConfig.ringDuration);
   }, [initAudioContext, getEffectiveSettings]);
 
@@ -235,6 +252,7 @@ export function useRingtone(options?: RingtoneOptions) {
     });
     
     isPlayingRef.current = true;
+    generationRef.current += 1;
 
     // Play audio immediately (if enabled)
     if (effectiveSettings.ringtoneEnabled) {
@@ -261,6 +279,9 @@ export function useRingtone(options?: RingtoneOptions) {
   const stopRingtone = useCallback(() => {
     console.log('[Ringtone] Stopping ringtone and vibration');
     isPlayingRef.current = false;
+    generationRef.current += 1;
+    if (ringTimeoutRef.current) clearTimeout(ringTimeoutRef.current);
+    ringTimeoutRef.current = null;
 
     // Clear audio interval
     if (intervalRef.current) {
@@ -286,10 +307,12 @@ export function useRingtone(options?: RingtoneOptions) {
     if (gainNodeRef.current && audioContextRef.current) {
       try {
         gainNodeRef.current.gain.linearRampToValueAtTime(0, audioContextRef.current.currentTime + 0.1);
+        gainNodeRef.current.disconnect();
       } catch {
         // Ignore if context is closed
       }
     }
+    gainNodeRef.current = null;
   }, [stopVibrationPattern]);
 
   // Cleanup on unmount
@@ -309,15 +332,21 @@ export function useRingtone(options?: RingtoneOptions) {
 }
 
 // Test ringtone function for settings preview
-export function useRingtonePreview() {
-  const { startRingtone, stopRingtone } = useRingtone();
+export function useRingtonePreview(options?: RingtoneOptions) {
+  const { startRingtone, stopRingtone } = useRingtone(options);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const stopPreview = useCallback(() => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = null;
+    stopRingtone();
+  }, [stopRingtone]);
+  useEffect(() => stopPreview, [stopPreview]);
   
   const playPreview = useCallback((durationMs: number = 2000) => {
+    stopPreview();
     startRingtone();
-    setTimeout(() => {
-      stopRingtone();
-    }, durationMs);
-  }, [startRingtone, stopRingtone]);
+    timeoutRef.current = setTimeout(stopPreview, durationMs);
+  }, [startRingtone, stopPreview]);
 
-  return { playPreview, stopRingtone };
+  return { playPreview, stopRingtone: stopPreview };
 }
