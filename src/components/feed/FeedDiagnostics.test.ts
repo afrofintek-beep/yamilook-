@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { resourceCategory } from './FeedDiagnostics';
+import { resourceCategory, imageExceedsPixelBudget } from './FeedDiagnostics';
 it('never exposes signed media paths or query secrets', () => {
   expect(resourceCategory('https://example.com/storage/v1/object/sign/private/user/file.jpg?token=secret', 'fetch')).toBe('media:other');
   expect(resourceCategory('https://example.com/rest/v1/posts?user_id=private', 'fetch')).toBe('api:posts');
@@ -15,4 +15,14 @@ it('keeps transformed image and call-poll counters anonymous', () => {
   expect(resourceCategory('https://example.com/storage/v1/render/image/public/media/photo.jpg?width=128', 'img')).toBe('media:transformed-image');
   expect(resourceCategory('https://example.com/storage/v1/object/public/media/photo.jpg', 'img')).toBe('media:public-object');
   expect(resourceCategory('https://example.com/rest/v1/call_participants?user_id=eq.private', 'fetch')).toBe('api:call_participants');
+});
+
+it('counts oversizing against physical pixels, not CSS pixels alone', () => {
+  // iPhone 3x: a 160x160 thumbnail at 40x40 CSS px is appropriately sized.
+  expect(imageExceedsPixelBudget(160, 160, 40, 40, 3)).toBe(false);
+  // Prior release used a 2316x3088 original for the same avatar.
+  expect(imageExceedsPixelBudget(2316, 3088, 40, 40, 3)).toBe(true);
+  expect(imageExceedsPixelBudget(402, 301, 402, 302, 3)).toBe(false);
+  expect(imageExceedsPixelBudget(0, 0, 40, 40, 3)).toBe(false);
+  expect(imageExceedsPixelBudget(160, 160, 40, 40, 0)).toBe(false);
 });

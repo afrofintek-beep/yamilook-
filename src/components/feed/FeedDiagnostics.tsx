@@ -35,6 +35,19 @@ export function resourceCategory(name: string, initiator: string) {
   return ['img', 'script', 'css', 'fetch', 'xmlhttprequest', 'video'].includes(initiator) ? initiator : 'other';
 }
 
+/** Compare against physical pixels, not CSS pixels, to avoid flagging 160px
+ * avatars displayed at 40px on a 3x Retina screen. */
+export function imageExceedsPixelBudget(
+  naturalWidth: number, naturalHeight: number,
+  renderedWidth: number, renderedHeight: number, dpr: number,
+): boolean {
+  if (![naturalWidth, naturalHeight, renderedWidth, renderedHeight, dpr]
+    .every(v => Number.isFinite(v) && v > 0)) return false;
+  const requiredWidth = renderedWidth * dpr;
+  const requiredHeight = renderedHeight * dpr;
+  return naturalWidth > requiredWidth * 2 || naturalHeight > requiredHeight * 2;
+}
+
 export default function FeedDiagnostics() {
   const [report, setReport] = useState('');
   const capture = useRef<() => void>(() => {});
@@ -98,15 +111,30 @@ export default function FeedDiagnostics() {
         resourcesByFiveSeconds[bucket] = (resourcesByFiveSeconds[bucket] || 0) + 1;
       }
       const imageElements = Array.from(document.querySelectorAll<HTMLImageElement>('.feed-posts article img')).slice(0, 100);
+      const pixelRatio = Math.max(1, window.devicePixelRatio || 1);
       const oversizedImageCount = imageElements.filter(img => {
-        const width = img.getBoundingClientRect().width;
-        return width > 0 && img.naturalWidth / width >= 4;
+        const box = img.getBoundingClientRect();
+        return imageExceedsPixelBudget(img.naturalWidth, img.naturalHeight,
+          box.width, box.height, pixelRatio);
       }).length;
+      // Count the actual displayed mode; resource entries alone cannot tell a
+      // legitimate public original from a fallback after a failed transform.
+      const imageDeliveryModes = { variant: 0, fallback: 0, original: 0, unknown: 0 };
+      let pendingImageCount = 0;
+      for (const img of imageElements) {
+        if (!img.complete || img.naturalWidth === 0) pendingImageCount++;
+        const mode = img.getAttribute('data-image-delivery');
+        if (mode === 'variant' || mode === 'fallback' || mode === 'original') {
+          imageDeliveryModes[mode]++;
+        } else {
+          imageDeliveryModes.unknown++;
+        }
+      }
       const knownTransferBytes = categorized.reduce((n, item) => n + (item.transferBytes || 0), 0);
       const sizedResourceCount = categorized.filter(item => item.transferBytes > 0).length;
       setReport(JSON.stringify({
         version: 3,
-        method: 'Visible DOM sampled every 100ms, not paint timing. Resource categories contain no URL, headers or personal data. Five-second buckets use navigation-relative resource starts. Caching uncontrolled; some resource entries may be missing. Zero sizes can mean unavailable cross-origin timing.',
+        method: 'Visible DOM sampled every 100ms, not paint timing. Resource categories contain no URL, headers or personal data. Five-second buckets use navigation-relative resource starts. Caching uncontrolled; some resource entries may be missing. Zero sizes can mean unavailable cross-origin timing. Image delivery mode is counted from loaded DOM attributes and not from network entries.',
         observerStartedMsAfterNavigation: Math.round(started),
         captureDurationMs: Math.round(performance.now() - started),
         firstArticleObservedMsAfterObserver: firstArticle === null ? null : Math.round(firstArticle),
@@ -126,6 +154,10 @@ export default function FeedDiagnostics() {
         resourceCategories: categories,
         resourcesByFiveSeconds,
         oversizedImageCount,
+        oversizedImageDefinition: 'Either natural dimension is more than 2x the physical-pixel display requirement; excludes unloaded images.',
+        pixelRatio,
+        imageDeliveryModes,
+        pendingImageCount,
         knownTransferBytes,
         sizedResourceCount,
         largestHundredMsBurst,

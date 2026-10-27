@@ -227,6 +227,10 @@ test('opt-in device report downloads sanitized timings without breaking mobile l
   expect(report.resourceCategories).toBeDefined();
   expect(report.resourcesByFiveSeconds).toBeDefined();
   expect(report.oversizedImageCount).toBeGreaterThanOrEqual(0);
+  expect(report.imageDeliveryModes).toBeDefined();
+  expect(Object.keys(report.imageDeliveryModes).sort()).toEqual(['fallback', 'original', 'unknown', 'variant']);
+  expect(report.pixelRatio).toBeGreaterThan(0);
+  expect(report.pendingImageCount).toBeGreaterThanOrEqual(0);
   expect(report.largestHundredMsBurst).toBeGreaterThanOrEqual(0);
   expect(report.articles.atEnd).toBe(12);
   expect(report.firstArticleObservedMsAfterObserver).not.toBeNull();

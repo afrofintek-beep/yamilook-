@@ -39,6 +39,8 @@ const AvatarImage = React.forwardRef<
       {...props}
       ref={ref}
       src={usingVariant ? optimized : src}
+      data-image-delivery={imageVariantSize ? (usingVariant ? 'variant'
+        : optimized !== src && failedSrc === src ? 'fallback' : 'original') : undefined}
       className={cn("aspect-square h-full w-full object-cover", className)}
       onError={event => {
         if (usingVariant && src) setFailedSrc(src);
