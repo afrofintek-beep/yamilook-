@@ -2,7 +2,8 @@ import { ScheduledCallNotices } from '@/features/scheduled-calls/ScheduledCallNo
 /* @refresh reset */
 import { createContext, useContext, useState, useCallback, ReactNode, lazy, Suspense, useMemo, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useWebRTC, CallState } from '@/hooks/useWebRTC';
+import type { CallState } from '@/hooks/webrtc/types';
+import { useCallTransport } from '@/hooks/useCallTransport';
 import type { BgMode, EffectsConfig } from '@/lib/virtualBackground';
 import { useCalls } from '@/hooks/useCalls';
 import { useToast } from '@/hooks/use-toast';
@@ -99,7 +100,7 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
   const { incomingCall, setIncomingCall } = useCalls({ loadHistory: false });
   
   // Get ALL WebRTC methods and state from a single hook instance
-  const webRTC = useWebRTC();
+  const webRTC = useCallTransport();
   const { 
     state: webRTCState,
     initiateCall, 
