@@ -3,6 +3,8 @@
 create role anon nologin;
 create role authenticated nologin;
 create schema auth;
+-- Match production Supabase grants: RLS may call auth.uid() as authenticated.
+grant usage on schema auth to authenticated;
 create table auth.users (id uuid primary key);
 create table auth.sessions (
   id uuid primary key, user_id uuid not null references auth.users(id),
