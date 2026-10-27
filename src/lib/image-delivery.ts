@@ -3,12 +3,19 @@
  * origin. Authenticated, signed, external, animated and SVG URLs are unchanged.
  * The caller must retry the original URL if the image transformer is unavailable.
  */
-// iPhone diagnostic v3 showed 128x3088 avatar and 960x1200 post renders\n// from originally 2316x3088 and 1600x1200 media. Do not ship altered\n// aspect ratios. Keep original public and signed URLs until resizing can be\n// validated end-to-end on-device. This deliberately prioritizes fidelity.\nconst TRANSFORMS_ASPECT_VERIFIED = false;\n\nexport function optimizedPublicImageUrl(
+// iPhone diagnostic v3 showed 128x3088 avatar and 960x1200 post renders
+// from originally 2316x3088 and 1600x1200 media. Do not ship altered
+// aspect ratios. Keep original public and signed URLs until resizing can be
+// validated end-to-end on-device. This deliberately prioritizes fidelity.
+const TRANSFORMS_ASPECT_VERIFIED = false;
+
+export function optimizedPublicImageUrl(
   src: string | null | undefined,
   width: number,
   projectUrl: string = import.meta.env.VITE_SUPABASE_URL || '',
 ): string | undefined {
-  if (!src) return undefined;\n  if (!TRANSFORMS_ASPECT_VERIFIED) return src;
+  if (!src) return undefined;
+  if (!TRANSFORMS_ASPECT_VERIFIED) return src;
   try {
     if (!projectUrl || !Number.isInteger(width) || width < 1 || width > 1600) return src;
     const url = new URL(src);
