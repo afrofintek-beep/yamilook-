@@ -70,6 +70,25 @@ test('feed adapts across mobile, tablet, desktop and rotation without losing scr
 });
 
 
+test('optional editors are not requested during feed startup, but open on demand', async ({ page }) => {
+  await mockAccount(page);
+  const optionalModules: string[] = [];
+  page.on('request', request => {
+    const path = new URL(request.url()).pathname;
+    if (/(?:CreatePostSheet|CommentsSheet|EditPostSheet|ReportContentSheet)(?:[.-]|\/)/.test(path)) {
+      // In test assertions only; never export request paths in the device report.
+      optionalModules.push(path);
+    }
+  });
+  await page.goto('/muxi');
+  await expect(page.locator('article')).toHaveCount(12);
+  await page.waitForLoadState('networkidle');
+  expect(optionalModules).toEqual([]);
+  await page.getByRole('button', { name: 'Criar publicação', exact: true }).click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  expect(optionalModules.some(name => name.includes('CreatePostSheet'))).toBe(true);
+});
+
 test('feed does not download full call history when only displaying publications', async ({ page }) => {
   let historyReads = 0;
   page.on('request', request => {
@@ -232,6 +251,9 @@ test('opt-in device report downloads sanitized timings without breaking mobile l
   expect(report.pixelRatio).toBeGreaterThan(0);
   expect(report.pendingImageCount).toBeGreaterThanOrEqual(0);
   expect(report.largestHundredMsBurst).toBeGreaterThanOrEqual(0);
+  expect(report.peakHundredMsCategories).toBeDefined();
+  expect(Object.values(report.peakHundredMsCategories).reduce((sum: number, n) => sum + Number(n), 0)).toBe(report.largestHundredMsBurst);
+  expect(report.peakHundredMsStart).toBeGreaterThanOrEqual(0);
   expect(report.articles.atEnd).toBe(12);
   expect(report.firstArticleObservedMsAfterObserver).not.toBeNull();
   expect(report.resources.some((r: {category: string}) => r.category === 'api:posts')).toBe(true);

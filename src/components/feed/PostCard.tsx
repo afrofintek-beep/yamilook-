@@ -1,6 +1,6 @@
-import { useState, useRef, useCallback, useEffect, memo } from 'react';
+import { useState, useRef, useCallback, useEffect, memo, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ReportContentSheet } from '@/components/moderation/ReportContentSheet';
+
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatDistanceToNow } from 'date-fns';
@@ -31,7 +31,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 import { PostWithUser, usePosts } from '@/hooks/usePosts';
-import { EditPostSheet } from './EditPostSheet';
+
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -47,6 +47,11 @@ import {
 import { AfricanReactionPicker } from './AfricanReactionPicker';
 import { ReactionDisplay } from './ReactionDisplay';
 import { MediaCarousel } from './MediaCarousel';
+
+// Opening a post is common; opening its edit/moderation editor is rare.
+// Keep these chunks off the critical feed startup path.
+const EditPostSheet = lazy(() => import('./EditPostSheet').then(m => ({ default: m.EditPostSheet })));
+const ReportContentSheet = lazy(() => import('@/components/moderation/ReportContentSheet').then(m => ({ default: m.ReportContentSheet })));
 
 interface PostCardProps {
   post: PostWithUser;
@@ -66,6 +71,7 @@ export const PostCard = memo(function PostCard({ mediaPriority = false, post, on
   const [showReactions, setShowReactions] = useState(false);
   const [showReport, setShowReport] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
+  const [editEverOpened, setEditEverOpened] = useState(false);
   const [isLikeAnimating, setIsLikeAnimating] = useState(false);
   
   // Long-press handling for mobile reaction picker
@@ -277,7 +283,7 @@ export const PostCard = memo(function PostCard({ mediaPriority = false, post, on
                   <Megaphone className="w-4 h-4 mr-2" />
                   {t('feed.promotePost', 'Promover')}
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setShowEdit(true)}>
+                <DropdownMenuItem onClick={() => { setEditEverOpened(true); setShowEdit(true); }}>
                   <Pencil className="w-4 h-4 mr-2" />
                   {t('feed.editPost', 'Editar publicação')}
                 </DropdownMenuItem>
@@ -441,15 +447,18 @@ export const PostCard = memo(function PostCard({ mediaPriority = false, post, on
       {/* Defer moderator role checks until the user actually opens a report.
           A feed page can mount dozens of PostCards at once. */}
       {showReport && (
-        <ReportContentSheet
-          open={showReport}
-          onOpenChange={setShowReport}
-          targetType="post"
-          targetId={post.id}
-        />
+        <Suspense fallback={null}>
+          <ReportContentSheet
+            open={showReport}
+            onOpenChange={setShowReport}
+            targetType="post"
+            targetId={post.id}
+          />
+        </Suspense>
       )}
       {/* Edit Sheet */}
-      {isOwner && (
+      {isOwner && editEverOpened && (
+        <Suspense fallback={null}>
         <EditPostSheet
           open={showEdit}
           onOpenChange={setShowEdit}
@@ -465,6 +474,7 @@ export const PostCard = memo(function PostCard({ mediaPriority = false, post, on
             });
           }}
         />
+        </Suspense>
       )}
     </motion.article>
   );
