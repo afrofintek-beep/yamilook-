@@ -2,7 +2,7 @@ import * as React from "react";
 import * as AvatarPrimitive from "@radix-ui/react-avatar";
 
 import { cn } from "@/lib/utils";
-import { optimizedPublicImageUrl } from "@/lib/image-delivery";
+import { imageFitsVariant, optimizedPublicImageUrl } from "@/lib/image-delivery";
 
 const Avatar = React.forwardRef<
   React.ElementRef<typeof AvatarPrimitive.Root>,
@@ -16,25 +16,39 @@ const Avatar = React.forwardRef<
 ));
 Avatar.displayName = AvatarPrimitive.Root.displayName;
 
+type VariantAvatarImageProps = React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Image> & {
+  /** Opt-in: YAMILOOK-only avatars. Other apps keep their original URLs. */
+  imageVariantSize?: 160 | 320;
+};
+
 const AvatarImage = React.forwardRef<
   React.ElementRef<typeof AvatarPrimitive.Image>,
-  React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Image>
->(({ className, src, onError, ...props }, ref) => {
+  VariantAvatarImageProps
+>(({ className, src, onError, onLoad, imageVariantSize, ...props }, ref) => {
   const [failedSrc, setFailedSrc] = React.useState<string | null>(null);
-  const optimized = optimizedPublicImageUrl(src, 128);
-  // If image transforms are not enabled for this storage project, use the
-  // original source rather than leaving the avatar blank.
+  const variant = imageVariantSize
+    ? { width: imageVariantSize, height: imageVariantSize, resize: 'cover' as const, quality: 78 }
+    : null;
+  const optimized = variant ? optimizedPublicImageUrl(src, variant) : src;
+  const usingVariant = Boolean(variant && optimized && optimized !== src && failedSrc !== src);
+
   return (
     <AvatarPrimitive.Image
       loading="lazy"
       decoding="async"
       {...props}
       ref={ref}
-      src={failedSrc === src ? src : optimized}
+      src={usingVariant ? optimized : src}
       className={cn("aspect-square h-full w-full object-cover", className)}
       onError={event => {
-        if (optimized !== src && failedSrc !== src && src) setFailedSrc(src);
+        if (usingVariant && src) setFailedSrc(src);
         else onError?.(event);
+      }}
+      onLoad={event => {
+        if (usingVariant && variant
+          && !imageFitsVariant(event.currentTarget.naturalWidth, event.currentTarget.naturalHeight, variant)
+          && src) setFailedSrc(src);
+        onLoad?.(event);
       }}
     />
   );
