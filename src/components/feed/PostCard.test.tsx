@@ -282,7 +282,9 @@ describe('PostCard', () => {
     
     const video = container.querySelector('video');
     expect(video).toBeInTheDocument();
-    expect(video).toHaveAttribute('src', 'https://example.com/video.mp4');
+    expect(video).toHaveAttribute('preload', 'none');
+    // Offscreen video sources are deferred until the viewport observer fires.
+    expect(video).not.toHaveAttribute('src');
   });
 
   it('displays relative time for post creation', () => {
