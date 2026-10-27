@@ -116,7 +116,7 @@ begin
 end $$;
 
 select public.account_revoke_session('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb');
-do $
+do $$
 begin
  if (select count(*) from public.account_session_revocations where session_id='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb')<>1 then
    raise exception 'Revocation event not created atomically';
@@ -124,8 +124,8 @@ begin
  if not exists (select 1 from public.account_session_revocations where user_id=auth.uid()) then
    raise exception 'Owner cannot read its own revocation event';
  end if;
-end $;
-do $
+end $$;
+do $$
 begin
  if jsonb_array_length(public.account_list_sessions())<>1 then
    raise exception 'Targeted revocation did not remove exactly one session';
