@@ -219,7 +219,7 @@ const queryClient = new QueryClient({
 });
 
 function ProtectedRoute({ children, skipOnboardingCheck }: { children: React.ReactNode; skipOnboardingCheck?: boolean }) {
-  const { user, profile, loading } = useAuth();
+  const { user, profile, loading, profileError, refreshProfile } = useAuth();
   
   if (loading) {
     return (
@@ -235,7 +235,18 @@ function ProtectedRoute({ children, skipOnboardingCheck }: { children: React.Rea
 
   // Do not expose protected content while the profile is still being fetched.
   if (!skipOnboardingCheck && !profile) {
-    return <div role="status" className="min-h-screen flex items-center justify-center">A carregar perfil…</div>;
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-6 text-center">
+        <p role={profileError ? 'alert' : 'status'}>
+          {profileError ? 'Não foi possível carregar o perfil. Verifique a ligação e tente novamente.' : 'A carregar perfil…'}
+        </p>
+        {profileError && (
+          <button type="button" onClick={() => void refreshProfile()} className="rounded-lg bg-primary px-5 py-3 text-primary-foreground">
+            Tentar novamente
+          </button>
+        )}
+      </div>
+    );
   }
 
   // Redirect to onboarding if not completed (except on the onboarding page itself)
