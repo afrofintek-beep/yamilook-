@@ -293,35 +293,83 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => { window.clearInterval(timer); window.removeEventListener('focus', heartbeat); };
   }, [user?.id]);
 
-  // Remote revocation is checked when the application resumes and periodically
-  // while active. A 401/403 from Auth means the server no longer recognizes it.
+  // A Realtime INSERT is an authenticated signal to re-check server state.
+  // The RPC remains authoritative: never log out on an unverified client event.
+  // A modest fallback interval plus resume/online checks cover missed WebSocket
+  // messages (including when iOS suspends the application).
   useEffect(() => {
     if (!user?.id) return;
     let pending = false;
     let disposed = false;
+    let signingOut = false;
+
     const validate = async () => {
-      if (disposed || pending || document.visibilityState === 'hidden') return;
+      if (disposed || pending || signingOut || document.visibilityState === 'hidden') return;
       pending = true;
+      const accessToken = sessionRef.current?.access_token;
       try {
-        // getUser() can accept a still-valid JWT after its database session
-        // was revoked. This RPC checks session_id against auth.sessions itself.
-        const client = supabase as unknown as {
-          rpc: (name: string) => Promise<{ error: { code?: string; status?: number } | null }>;
-        };
-        const { error } = await client.rpc('account_current_session_id');
-        if (!disposed && isRevokedSessionError(error)) {
+        // Unlike getUser(), this verifies the JWT's session_id in auth.sessions.
+        const { error } = await supabase.rpc('account_current_session_id');
+        if (disposed || !isRevokedSessionError(error)) return;
+        // A prior async check must not log out a newly authenticated session.
+        if (!accessToken || sessionRef.current?.access_token !== accessToken) return;
+        signingOut = true;
+
+        // Hide protected UI without waiting for push deregistration or logout
+        // network requests, then remove the actual local Supabase session.
+        userRef.current = null;
+        sessionRef.current = null;
+        setUser(null);
+        setSession(null);
+        setProfile(null);
+        setProfileError(false);
+        setLoading(false);
+        securityToast.warning('Acesso terminado neste dispositivo', {
+          description: 'A sessão foi encerrada remotamente. Inicie sessão novamente.',
+        });
+        try {
           await signOut('local');
+        } catch (logoutError) {
+          logger.warn('Remote revocation local cleanup failed', 'auth', logoutError);
+          // Retry local credential cleanup even when push-unsubscription failed.
+          await supabase.auth.signOut({ scope: 'local' });
         }
-      } catch { /* Network errors are not evidence of revoked access. */ }
-      finally { pending = false; }
+      } catch (error) {
+        // A network error or Realtime outage is not proof of revocation.
+        logger.warn('Remote revocation check unavailable', 'auth', error);
+      } finally {
+        pending = false;
+      }
     };
-    const timer = window.setInterval(() => void validate(), 90000);
+
+    const channel = supabase
+      .channel(`session-revocations-${user.id}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'account_session_revocations',
+        filter: `user_id=eq.${user.id}`,
+      }, () => {
+        // Only server-owned revocation records trigger this verification.
+        void validate();
+      })
+      .subscribe(status => {
+        // Also closes the race between a revocation and initial subscription.
+        if (status === 'SUBSCRIBED') void validate();
+      });
+
+    void validate();
+    const timer = window.setInterval(() => void validate(), 30000);
     window.addEventListener('focus', validate);
+    window.addEventListener('online', validate);
     document.addEventListener('visibilitychange', validate);
     return () => {
-      disposed = true; window.clearInterval(timer);
+      disposed = true;
+      window.clearInterval(timer);
       window.removeEventListener('focus', validate);
+      window.removeEventListener('online', validate);
       document.removeEventListener('visibilitychange', validate);
+      void supabase.removeChannel(channel);
     };
   }, [user?.id]);
 
