@@ -219,7 +219,7 @@ const queryClient = new QueryClient({
 });
 
 function ProtectedRoute({ children, skipOnboardingCheck }: { children: React.ReactNode; skipOnboardingCheck?: boolean }) {
-  const { user, profile, loading, profileError, refreshProfile } = useAuth();
+  const { user, profile, loading, profileError, refreshProfile, signOut } = useAuth();
   
   if (loading) {
     return (
@@ -243,6 +243,9 @@ function ProtectedRoute({ children, skipOnboardingCheck }: { children: React.Rea
         {profileError && (
           <button type="button" onClick={() => void refreshProfile()} className="rounded-lg bg-primary px-5 py-3 text-primary-foreground">
             Tentar novamente
+          </button>
+          <button type="button" onClick={() => void signOut('local')} className="rounded-lg px-5 py-2 underline">
+            Iniciar sessão novamente
           </button>
         )}
       </div>
