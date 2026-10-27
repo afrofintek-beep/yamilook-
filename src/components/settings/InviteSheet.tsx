@@ -22,6 +22,15 @@ type InvitationDatabase = Omit<Database, 'public'> & {
 };
 const invitationClient = supabase as unknown as SupabaseClient<InvitationDatabase>;
 
+function invitationErrorMessage(error: unknown, fallback: string): string {
+  // RPC errors are plain PostgREST objects, not necessarily Error instances.
+  if (typeof error === 'object' && error !== null && 'code' in error &&
+      error.code === 'P0001' && 'message' in error && typeof error.message === 'string') {
+    return error.message;
+  }
+  return error instanceof Error ? error.message : fallback;
+}
+
 interface InviteSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -86,7 +95,7 @@ export function InviteSheet({ open, onOpenChange, isAdmin = false }: InviteSheet
       setDelegateEmail('');
       setStatus(grant ? 'Autorização concedida.' : 'Autorização retirada.');
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : 'Não foi possível alterar a autorização.');
+      setStatus(invitationErrorMessage(error, 'Não foi possível alterar a autorização.'));
     } finally { setManaging(false); }
   };
   const [status, setStatus] = useState('');
@@ -106,7 +115,7 @@ export function InviteSheet({ open, onOpenChange, isAdmin = false }: InviteSheet
       setCode(result.code);
       setIssuedFor(email.trim().toLowerCase());
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : 'Não foi possível gerar o convite. Tenta novamente.');
+      setStatus(invitationErrorMessage(error, 'Não foi possível gerar o convite. Tenta novamente.'));
     } finally {
       setIssuing(false);
     }
@@ -172,9 +181,10 @@ export function InviteSheet({ open, onOpenChange, isAdmin = false }: InviteSheet
             <Button variant="outline" className="w-full" onClick={() => void share()}>Enviar convite</Button>
           </div>
         ) : (
-          <p className="mt-6">Introduz o email para gerar o convite.</p>
+          <p className="mt-6">Os convites destinam-se a pessoas que ainda não têm conta na Yamilook.</p>
         )}
         </> : <p className="mt-6">No MVP, apenas o administrador e as pessoas por ele autorizadas podem enviar convites.</p>}
+        <p className="text-sm text-muted-foreground mt-4" role="status">{status}</p>
         {isAdmin && <section className="mt-8 space-y-3 border-t pt-4">
           <h3 className="font-semibold">Pessoas autorizadas a convidar</h3>
           <p className="text-sm text-muted-foreground">Autoriza uma conta existente. Esta permissão não dá acesso à administração.</p>
@@ -188,7 +198,6 @@ export function InviteSheet({ open, onOpenChange, isAdmin = false }: InviteSheet
             <Button variant="outline" disabled={managing} onClick={() => void managePermission(delegate.email, false)}>Retirar autorização</Button>
           </div>)}
         </section>}
-        <p className="text-sm text-muted-foreground mt-4" role="status">{status}</p>
         </div>
       </SheetContent>
     </Sheet>

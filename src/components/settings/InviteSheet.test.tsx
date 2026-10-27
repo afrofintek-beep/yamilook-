@@ -90,11 +90,11 @@ describe('Unique invitations', () => {
     expect(screen.queryByRole('button', { name: 'Enviar convite' })).not.toBeInTheDocument();
   });
   it('never exposes a code if the server rejects generation', async () => {
-    rpc.mockImplementation((name: string) => Promise.resolve(name === 'can_issue_user_invitation' ? { data: true, error: null } : { data: null, error: new Error('Email já registado') }));
+    rpc.mockImplementation((name: string) => Promise.resolve(name === 'can_issue_user_invitation' ? { data: true, error: null } : { data: null, error: { code: 'P0001', message: 'Este email já tem conta. Usa a opção de entrar.', details: null, hint: null } }));
     show();
     fireEvent.change(await screen.findByLabelText('Email da pessoa convidada'), { target: { value: 'old@example.com' } });
     fireEvent.click(screen.getByRole('button', { name: 'Gerar código único' }));
-    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Email já registado'));
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Este email já tem conta. Usa a opção de entrar.'));
     expect(screen.queryByLabelText('Código único de convite')).not.toBeInTheDocument();
   });
 });
