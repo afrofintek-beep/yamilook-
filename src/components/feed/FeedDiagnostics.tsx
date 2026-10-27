@@ -28,6 +28,16 @@ export function resourceCategory(name: string, initiator: string) {
     if (path.startsWith('/storage/v1/render/image/public/')) return 'media:transformed-image';
     if (path.startsWith('/storage/v1/object/public/')) return 'media:public-object';
     if (path.startsWith('/storage/v1/')) return 'media:other';
+    // Dynamic imports and modulepreload fetches are often initiated as "link"
+    // on Safari. Classify by safe extension without recording the asset name.
+    // This distinguishes the large, persistent "other" burst from API traffic.
+    if (url.origin === window.location.origin && path.startsWith('/assets/')) {
+      if (/\.(?:js|mjs)$/i.test(path)) return 'asset:script';
+      if (/\.css$/i.test(path)) return 'asset:style';
+      if (/\.(?:woff2?|ttf|otf)$/i.test(path)) return 'asset:font';
+      if (/\.(?:png|jpe?g|webp|svg|avif)$/i.test(path)) return 'asset:image';
+      return 'asset:other';
+    }
     if (initiator === 'fetch' || initiator === 'xmlhttprequest') {
       return url.origin === window.location.origin ? 'fetch:same-origin' : 'fetch:external';
     }
@@ -97,11 +107,22 @@ export default function FeedDiagnostics() {
       }));
       const categories: Record<string, number> = {};
       for (const item of categorized) categories[item.category] = (categories[item.category] || 0) + 1;
-      const times = categorized.map(item => item.startMs).sort((a, b) => a - b);
+      const byTime = [...categorized].sort((a, b) => a.startMs - b.startMs);
       let largestHundredMsBurst = 0;
-      for (let left = 0, right = 0; right < times.length; right++) {
-        while (times[right] - times[left] > 100) left++;
-        largestHundredMsBurst = Math.max(largestHundredMsBurst, right - left + 1);
+      let peakLeft = 0;
+      let peakRight = 0;
+      for (let left = 0, right = 0; right < byTime.length; right++) {
+        while (byTime[right].startMs - byTime[left].startMs > 100) left++;
+        if (right - left + 1 > largestHundredMsBurst) {
+          largestHundredMsBurst = right - left + 1;
+          peakLeft = left;
+          peakRight = right;
+        }
+      }
+      // Retain only category counts, never filenames, paths or remote origins.
+      const peakHundredMsCategories: Record<string, number> = {};
+      for (const item of byTime.slice(peakLeft, peakRight + 1)) {
+        peakHundredMsCategories[item.category] = (peakHundredMsCategories[item.category] || 0) + 1;
       }
       // Five-second resource starts show sustained polling separately from
       // the burst that naturally happens while the app mounts.
@@ -161,6 +182,8 @@ export default function FeedDiagnostics() {
         knownTransferBytes,
         sizedResourceCount,
         largestHundredMsBurst,
+        peakHundredMsStart: byTime[peakLeft]?.startMs ?? null,
+        peakHundredMsCategories,
         resources: categorized,
       }, null, 2));
     };
