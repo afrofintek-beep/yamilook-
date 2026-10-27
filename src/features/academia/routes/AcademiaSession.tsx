@@ -1,3 +1,5 @@
+import { useAdmin } from '@/hooks/useAdmin';
+import { SessionManagement } from '../components/SessionManagement';
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, GraduationCap, Calendar, Clock, Users, Coins, MonitorPlay } from 'lucide-react';
@@ -21,6 +23,7 @@ import { pt } from 'date-fns/locale';
 export default function AcademiaSession() {
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
+  const { isAdmin } = useAdmin();
   const { user, refreshProfile, patchProfile } = useAuth();
   const queryClient = useQueryClient();
   const submitReview = useSubmitAcademiaReview();
@@ -61,6 +64,8 @@ export default function AcademiaSession() {
         isPremium: (data.price_coins ?? 0) > 0,
         priceCoins: data.price_coins ?? 0,
         status: data.status,
+        archivedAt: data.archived_at,
+        cancellationReason: data.cancellation_reason,
       };
     },
   });
@@ -349,7 +354,9 @@ export default function AcademiaSession() {
         </div>
       </div>
 
-      {((!isEnded && !isRegistrationClosed) || (isMentor && !['completed','cancelled'].includes(session.status))) && (
+      {(isMentor || isAdmin) && <div className="flex justify-end px-4"><SessionManagement session={session} /></div>}
+      {session.cancellationReason && <Alert className="mx-4 w-auto"><AlertDescription>Sessão cancelada: {session.cancellationReason}</AlertDescription></Alert>}
+      {!session.archivedAt && ((!isEnded && !isRegistrationClosed) || (isMentor && !['completed','cancelled'].includes(session.status))) && (
         <div className="shrink-0 border-t border-border/40 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] [&>button]:whitespace-normal">
           {isLive ? (
             <Button variant="destructive" className="w-full rounded-full" onClick={() => navigate(`/academia/live/${session.id}`)}>

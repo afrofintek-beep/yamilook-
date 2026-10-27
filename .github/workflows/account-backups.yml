@@ -1,0 +1,50 @@
+name: Account backup validation
+
+on:
+  pull_request:
+    paths:
+      - 'src/lib/account-backup*'
+      - 'src/components/settings/BackupManager.tsx'
+      - 'src/components/AutomaticAccountBackup.tsx'
+      - 'src/pages/Settings.tsx'
+      - 'src/features/papos/PaposSettings.tsx'
+      - 'src/App.tsx'
+      - 'src/integrations/supabase/types.ts'
+      - 'supabase/migrations/*account_backups.sql'
+      - '.github/workflows/account-backups.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backup-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts --no-audit
+      - name: Build
+        run: npm run build
+      - name: Backup security tests
+        run: npx vitest run src/lib/account-backup.test.ts
+      - name: Check TypeScript diagnostics in modified application files
+        shell: bash
+        run: |
+          # The repository has existing unrelated TypeScript diagnostics.
+          # Fail on errors in modified app files, and clearly retain baseline warning.
+          npx tsc --noEmit -p tsconfig.app.json > /tmp/tsc-account-backups.log 2>&1 || true
+          if grep -E '^src/(lib/account-backup|components/settings/BackupManager|components/AutomaticAccountBackup|features/papos/PaposSettings|pages/Settings|App[.]tsx|integrations/supabase/types)' /tmp/tsc-account-backups.log | grep -E 'error TS'; then
+            echo 'TypeScript errors in backup PR files'
+            exit 1
+          fi
+          echo 'No TypeScript diagnostics in modified account-backup code.'
+          if grep -q 'error TS' /tmp/tsc-account-backups.log; then
+            echo 'WARNING: Pre-existing TypeScript errors in unrelated files remain.'
+          fi

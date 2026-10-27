@@ -89,6 +89,9 @@ export type Database = {
       }
       academia_sessions: {
         Row: {
+          archived_at: string | null
+          deleted_at: string | null
+          cancellation_reason: string | null
           banda_id: string | null
           created_at: string
           description: string | null
@@ -104,6 +107,9 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          archived_at?: string | null
+          deleted_at?: string | null
+          cancellation_reason?: string | null
           banda_id?: string | null
           created_at?: string
           description?: string | null
@@ -119,6 +125,9 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          archived_at?: string | null
+          deleted_at?: string | null
+          cancellation_reason?: string | null
           banda_id?: string | null
           created_at?: string
           description?: string | null
@@ -6370,6 +6379,19 @@ export type Database = {
       }
     }
     Functions: {
+      my_attributed_storage_usage: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      academia_manage_session: {
+        Args: { p_session: string; p_action: string; p_reason?: string }
+        Returns: Json
+      }
+      academia_my_notices: {
+        Args: Record<PropertyKey, never>
+        Returns: { session_id: string; title: string; reason: string; refunded: number }[]
+      }
+
       create_chat_conversation: {
         Args: { p_participant_ids: string[]; p_group_name?: string | null; p_avatar_url?: string | null }
         Returns: Json

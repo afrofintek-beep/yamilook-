@@ -5,7 +5,7 @@ import AccountPhoneConfirmation from './AccountPhoneConfirmation';
 type LinkRow={id:string;code:string;linked_at:string|null;revoked_at:string|null};
 export default function AuthorizedAfrolocLink() {
  const [code,setCode]=useState(''),[consent,setConsent]=useState(false),[busy,setBusy]=useState(false),[message,setMessage]=useState(''),[links,setLinks]=useState<LinkRow[]>([]),[request,setRequest]=useState<{request_id:string;authorization_url:string;account_reference:string}|null>(null);
- useEffect(()=>{const {data}=supabase.auth.onAuthStateChange(()=>{setConsent(false);setRequest(null);setLinks([]);setMessage('');});return()=>data.subscription.unsubscribe();},[]);
+ useEffect(()=>{if(import.meta.env.VITE_ACCOUNT_LINK_V1_ENABLED!=='true')return;const {data}=supabase.auth.onAuthStateChange(()=>{setConsent(false);setRequest(null);setLinks([]);setMessage('');});return()=>data.subscription.unsubscribe();},[]);
  const run=async(action:string,id?:string)=>{
   setBusy(true);setMessage('');
   try {

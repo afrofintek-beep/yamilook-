@@ -1,13 +1,22 @@
-import { useEffect, useRef, useState } from 'react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
+import { useEffect, useRef, useState, type RefObject } from 'react';
+import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useMessages } from '@/hooks/useChat';
 import { useAuth } from '@/hooks/useAuth';
 import { EnhancedMessageBubble } from '@/components/chat/EnhancedMessageBubble';
 import { createChatConversation } from '@/lib/chat-conversations';
 
-export function CallChatPanel({ conversationId, contactId, onClose }: {
-  conversationId?: string | null; contactId?: string; onClose: () => void;
+/**
+ * The conversation stays attached to the active call; opening the composer
+ * must never start a second call or request microphone/camera permission.
+ * Its height follows the visible iOS keyboard viewport in the KOSOLOLA PWA.
+ */
+export function CallChatPanel({ conversationId, contactId, open, onClose, inputRef }: {
+  conversationId?: string | null;
+  contactId?: string;
+  open: boolean;
+  onClose: () => void;
+  inputRef: RefObject<HTMLTextAreaElement>;
 }) {
   const { user } = useAuth();
   const [resolvedId, setResolvedId] = useState(conversationId || null);
@@ -16,52 +25,129 @@ export function CallChatPanel({ conversationId, contactId, onClose }: {
   const [sending, setSending] = useState(false);
   const pending = useRef<ReturnType<typeof createChatConversation> | null>(null);
   const { messages, reactions, starredIds, pinnedIds, viewOnceViewedIds, markViewOnce, loading, sendMessage } = useMessages(resolvedId);
-  const endRef = useRef<HTMLDivElement>(null);
+  const messagesViewportRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    if (conversationId || !contactId) return;
+    if (conversationId) {
+      setResolvedId(conversationId);
+      return;
+    }
+    if (!contactId) return;
     let active = true;
     pending.current ||= createChatConversation([contactId]);
     void pending.current.then(({ data, error }) => {
       if (!active) return;
-      if (error || !data) setError('Não foi possível abrir o papo. Fecha o painel e tenta novamente.');
+      if (error || !data) setError('Não foi possível abrir a conversa.');
       else setResolvedId(data.id);
     });
     return () => { active = false; };
   }, [conversationId, contactId]);
-  useEffect(() => { endRef.current?.scrollIntoView?.({ block: 'end' }); }, [messages]);
-  const send = async (event: React.FormEvent) => {
+
+  useEffect(() => {
+    if (!open) return;
+    const viewport = messagesViewportRef.current;
+    if (viewport) viewport.scrollTop = viewport.scrollHeight;
+  }, [messages, open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onClose();
+      }
+    };
+    document.addEventListener('keydown', onEscape);
+    return () => document.removeEventListener('keydown', onEscape);
+  }, [open, onClose]);
+
+  const send = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!resolvedId || sending || !draft.trim()) return;
-    setSending(true); setError('');
+    setSending(true);
+    setError('');
     try {
       const result = await sendMessage(draft.trim());
-      if (result.error) setError('Não foi possível enviar. O texto foi mantido para tentares novamente.');
+      if (result.error) setError('Não foi possível enviar. A mensagem foi conservada.');
       else setDraft('');
-    } catch { setError('Não foi possível enviar. O texto foi mantido para tentares novamente.'); }
-    finally { setSending(false); }
+    } catch {
+      setError('Não foi possível enviar. A mensagem foi conservada.');
+    } finally {
+      setSending(false);
+    }
   };
-  return <Sheet open onOpenChange={open => { if (!open) onClose(); }}>
-    <SheetContent side="right" className="flex flex-col w-full sm:max-w-lg h-screen-safe gap-0 p-0 safe-top safe-bottom overflow-hidden">
-      <SheetHeader className="shrink-0 px-4 py-4 pr-16 border-b text-left">
-        <SheetTitle>Papo durante a chamada</SheetTitle>
-        <SheetDescription>Fecha este painel para voltar à chamada, sem desligar.</SheetDescription>
-      </SheetHeader>
-      <div role="log" aria-label="Mensagens da conversa" className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden py-3">
+
+  return (
+    <div
+      role="dialog"
+      aria-modal={open}
+      aria-label="Mensagens durante a chamada"
+      aria-hidden={!open}
+      className={open
+        ? 'fixed inset-x-0 z-[90] flex flex-col overflow-hidden bg-background text-foreground'
+        : 'hidden'}
+      style={open ? {
+        top: 'var(--kosolola-top, 0px)',
+        height: 'var(--kosolola-height, 100dvh)',
+      } : undefined}
+    >
+      <header className="flex shrink-0 items-center gap-3 border-b px-3 pb-2 pt-[calc(env(safe-area-inset-top,0px)+0.5rem)]">
+        <Button variant="ghost" type="button" onClick={onClose} aria-label="Voltar à chamada" className="gap-2 px-2">
+          <ArrowLeft className="h-5 w-5" />
+          <span>Chamada</span>
+        </Button>
+        <span className="text-sm font-semibold">Mensagens</span>
+      </header>
+
+      <div
+        ref={messagesViewportRef}
+        role="log"
+        aria-label="Mensagens da conversa"
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain overflow-x-hidden px-2 py-3"
+      >
         {loading && <p role="status" className="p-4">A carregar mensagens…</p>}
-        {!resolvedId && !contactId && <p className="p-4">Esta chamada não tem um papo associado.</p>}
-        {messages.map(message => <EnhancedMessageBubble key={message.id} message={message}
-          currentUserId={user?.id || ''} isOwn={message.sender_id === user?.id}
-          reactions={reactions[message.id] || []} isStarred={starredIds.has(message.id)} isPinned={pinnedIds.has(message.id)}
-          viewOnceViewed={viewOnceViewedIds.has(message.id)} onViewOnce={async id => { await markViewOnce(id); }} />)}
-        <div ref={endRef} />
+        {!resolvedId && !contactId && <p className="p-4">Esta chamada não tem uma conversa associada.</p>}
+        {messages.map(message => (
+          <EnhancedMessageBubble
+            key={message.id}
+            message={message}
+            currentUserId={user?.id || ''}
+            isOwn={message.sender_id === user?.id}
+            reactions={reactions[message.id] || []}
+            isStarred={starredIds.has(message.id)}
+            isPinned={pinnedIds.has(message.id)}
+            viewOnceViewed={viewOnceViewedIds.has(message.id)}
+            onViewOnce={async id => { await markViewOnce(id); }}
+          />
+        ))}
       </div>
-      {error && <p role="alert" className="shrink-0 p-3 text-sm text-destructive">{error}</p>}
-      <form onSubmit={send} className="shrink-0 flex gap-2 border-t p-3">
-        <textarea aria-label="Mensagem durante a chamada" placeholder="Escreve uma mensagem…" value={draft}
-          onChange={event => setDraft(event.target.value)} disabled={!resolvedId || sending}
-          rows={2} className="flex-1 min-w-0 rounded-xl border bg-background p-3 text-sm" />
-        <Button type="submit" disabled={!resolvedId || sending || !draft.trim()}>{sending ? 'A enviar…' : 'Enviar'}</Button>
+
+      {error && <p role="alert" className="shrink-0 px-3 py-2 text-sm text-destructive">{error}</p>}
+      <form
+        onSubmit={send}
+        className="flex shrink-0 items-end gap-2 border-t bg-background px-3 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] pt-3"
+      >
+        <textarea
+          ref={inputRef}
+          aria-label="Escrever mensagem"
+          placeholder="Mensagem…"
+          value={draft}
+          onChange={event => setDraft(event.target.value)}
+          onKeyDown={event => {
+            if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
+              event.preventDefault();
+              event.currentTarget.form?.requestSubmit();
+            }
+          }}
+          disabled={sending}
+          enterKeyHint="send"
+          rows={1}
+          className="max-h-32 min-h-11 flex-1 min-w-0 resize-none rounded-2xl border bg-background px-4 py-3 text-base"
+        />
+        <Button type="submit" disabled={!resolvedId || sending || !draft.trim()} className="min-h-11 shrink-0">
+          {sending ? 'A enviar…' : 'Enviar'}
+        </Button>
       </form>
-    </SheetContent>
-  </Sheet>;
+    </div>
+  );
 }

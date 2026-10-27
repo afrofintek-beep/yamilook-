@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { fetchPublicProfileById, fetchPublicProfilesBatched } from '@/lib/public-profile-batch';
 import { useAuth } from './useAuth';
 import type { Json } from '@/integrations/supabase/types';
 
@@ -89,11 +90,7 @@ export function useStatus() {
         .from('status_views')
         .select('status_id')
         .in('status_id', statusIds),
-      supabase
-        .from('public_profiles')
-        .select('id, display_name, avatar_url, username')
-        .eq('id', user.id)
-        .maybeSingle()
+      fetchPublicProfileById(user.id)
     ]);
 
     // Count views per status
@@ -164,10 +161,7 @@ export function useStatus() {
     const statusIds = statuses.map(s => s.id);
 
     const [profilesResult, viewsResult] = await Promise.all([
-      supabase
-        .from('public_profiles')
-        .select('id, display_name, avatar_url, username')
-        .in('id', statusUserIds),
+      fetchPublicProfilesBatched(statusUserIds),
       supabase
         .from('status_views')
         .select('status_id')

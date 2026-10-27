@@ -40,3 +40,5 @@ verify_jwt = false
 verify_jwt = false
 [functions.account-link]
 verify_jwt = false
+[functions.call-push]
+verify_jwt = true

@@ -1,3 +1,4 @@
+import { refreshCallPush } from '@/lib/call-push';
 import { Component, lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
 import { BrowserRouter, Link, Navigate, Route, Routes, Outlet, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -15,7 +16,8 @@ import ThemeSync from '@/components/ThemeSync';
 import BottomNav from '@/components/BottomNav';
 import PaposLogin from './PaposLogin';
 import PaposInstall from './PaposInstall';
-const Home = lazy(() => import('@/pages/Home'));
+import PaposConversations from './PaposConversations';
+import { usePaposViewport } from './usePaposViewport';
 const Chat = lazy(() => import('@/pages/Chat'));
 const Contacts = lazy(() => import('@/pages/Contacts'));
 const Calls = lazy(() => import('@/pages/Calls'));
@@ -44,7 +46,15 @@ class PaposBoundary extends Component<{ children: ReactNode }, { failed: boolean
   }
 }
 function PaposRuntime() {
+  usePaposViewport();
   const [updateReady, setUpdateReady] = useState(false);
+  const { user } = useAuth();
+  useEffect(() => {
+    if (!user) return;
+    const refresh = () => { if (document.visibilityState === 'visible') void refreshCallPush(user.id).catch(() => {}); };
+    refresh(); document.addEventListener('visibilitychange', refresh);
+    return () => document.removeEventListener('visibilitychange', refresh);
+  }, [user?.id]);
   useEffect(() => {
     const unlock = () => { unlockCallAudio(); document.removeEventListener('click', unlock, true); document.removeEventListener('touchstart', unlock, true); document.removeEventListener('keydown', unlock, true); };
     document.addEventListener('click', unlock, true); document.addEventListener('touchstart', unlock, true); document.addEventListener('keydown', unlock, true);
@@ -58,8 +68,10 @@ function PaposRuntime() {
       <Route path="/install" element={<PaposInstall />} />
       <Route element={<PaposGate><ActiveCallProvider><Outlet /></ActiveCallProvider></PaposGate>}>
       <Route path="/" element={<Navigate to="/papos" replace />} />
-      <Route path="/papos" element={<Home />} />
+      <Route element={<PaposConversations />}>
+      <Route path="/papos" element={null} />
       <Route path="/chat/:conversationId" element={<Chat />} />
+      </Route>
       <Route path="/contacts" element={<Contacts />} />
       <Route path="/calls" element={<div className="h-screen-safe overflow-y-auto pb-[calc(5rem+env(safe-area-inset-bottom,0px))]"><Calls /><BottomNav /></div>} />
       <Route path="/scheduled-call/:sessionId" element={<ScheduledCallRoom />} />

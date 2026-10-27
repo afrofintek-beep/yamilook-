@@ -49,8 +49,11 @@ Deno.serve(async req=>{
   if(!validEvidence(remote,{subject:user,code:link.code,linkId:link.id},Date.now()))return json({ok:false,certified:false,reason:'not_current'});
   const {data:current,error:ce}=await db.from('profiles').select('afroloc_code').eq('id',user).single();
   const {data:latest,error:le}=await db.from('afroloc_link_requests').select('revoked_at').eq('id',link.id).eq('user_id',user).single();
-  if(ce||le||latest?.revoked_at||current?.afroloc_code!==link.code)return json({ok:false,certified:false,reason:'state_changed'});
+  const finalPhone=await rpc(db,'account_phone_action',{p_actor:user,p_action:'status'});
+  if(!finalPhone.verified||ce||le||!latest||latest.revoked_at||current?.afroloc_code!==link.code)return json({ok:false,certified:false,reason:'state_changed'});
   if(input.action==='exchange') {const {error:se}=await db.from('afroloc_link_requests').update({linked_at:new Date().toISOString(),verifier:null}).eq('id',link.id).eq('user_id',user).is('revoked_at',null);if(se)throw new Error('unavailable');}
+  // Database reads can outlive the evidence window; recheck time at point of return.
+  if(!validEvidence(remote,{subject:user,code:link.code,linkId:link.id},Date.now()))return json({ok:false,certified:false,reason:'not_current'});
   // Observation only. Never write profiles.certified or authorize financial actions.
   return json(remote);
  }catch(error){return failure(error);}

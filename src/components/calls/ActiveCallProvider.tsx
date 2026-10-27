@@ -95,7 +95,7 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
   const { toast } = useToast();
   const [isInCall, setIsInCall] = useState(false);
   const [currentCallId, setCurrentCallId] = useState<string | null>(null);
-  const { incomingCall, setIncomingCall } = useCalls();
+  const { incomingCall, setIncomingCall } = useCalls({ loadHistory: false });
   
   // Get ALL WebRTC methods and state from a single hook instance
   const webRTC = useWebRTC();

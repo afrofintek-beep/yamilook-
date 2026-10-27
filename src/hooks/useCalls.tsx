@@ -5,6 +5,9 @@ import type { Tables } from '@/integrations/supabase/types';
 import { useAuth } from './useAuth';
 import { useIncomingCallSignals } from './useIncomingCallSignals';
 import { logger } from '@/lib/logger';
+import { fetchPublicProfilesBatched } from '@/lib/public-profile-batch';
+import { attachCallParticipants } from '@/lib/call-history';
+import { shouldPollIncomingCall } from '@/lib/incoming-call-polling';
 import { useScheduledCalls } from '@/features/scheduled-calls/useScheduledCalls';
 export type { ScheduledCall } from '@/features/scheduled-calls/api';
 
@@ -59,7 +62,7 @@ export interface CallHistory {
   }[];
 }
 
-export function useCalls() {
+export function useCalls({ loadHistory = true }: { loadHistory?: boolean } = {}) {
   const { user } = useAuth();
   const [incomingCall, setIncomingCall] = useState<Call | null>(null);
   const incomingCallRef = useRef<Call | null>(null);
@@ -160,107 +163,54 @@ export function useCalls() {
   // Use the incoming call signals hook with stable callback
   useIncomingCallSignals(stableOfferHandler);
 
-  // Fetch call history
+  // Do not fetch history for the app-wide incoming-call listener. The calls page
+  // opts into this read; realtime incoming call handling always remains active.
   const fetchCallHistory = useCallback(async () => {
     if (!user) return;
-
     try {
-      // Fetch calls where user is a participant
-      const { data: participations } = await supabase
+      const { data: participations, error } = await supabase
         .from('call_participants')
         .select(`
           call_id,
           calls (
-            id,
-            type,
-            status,
-            started_at,
-            ended_at,
-            duration_seconds,
-            is_group_call,
-            caller_id,
-            callee_id,
-            initiator_id
+            id, type, status, started_at, ended_at, duration_seconds,
+            is_group_call, caller_id, callee_id, initiator_id
           )
         `)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(50);
-
-      if (participations) {
-        const callsWithParticipants = await Promise.all(
-          participations.map(async (p) => {
-            const call = p.calls as {
-              id: string;
-              type: string;
-              status: string;
-              started_at: string | null;
-              ended_at: string | null;
-              duration_seconds: number | null;
-              is_group_call: boolean;
-              caller_id: string | null;
-              callee_id: string | null;
-              initiator_id: string;
-            } | null;
-            if (!call) return null;
-
-            // First try to get participants from call_participants table
-            const { data: participants } = await supabase
-              .from('call_participants')
-              .select('user_id')
-              .eq('call_id', call.id)
-              .neq('user_id', user.id);
-
-            // Fetch profiles separately for each participant
-            let participantsList: { user_id: string; display_name: string; avatar_url: string | null }[] = [];
-            
-            if (participants && participants.length > 0) {
-              const userIds = participants.map(p => p.user_id);
-              const { data: profiles } = await supabase
-                .from('public_profiles')
-                .select('id, display_name, avatar_url')
-                .in('id', userIds);
-              
-              participantsList = participants.map(part => {
-                const profile = profiles?.find(p => p.id === part.user_id);
-                return {
-                  user_id: part.user_id,
-                  display_name: profile?.display_name || 'Unknown',
-                  avatar_url: profile?.avatar_url || null,
-                };
-              });
-            }
-
-            // If participants list is empty, fetch caller/callee profile directly
-            if (participantsList.length === 0) {
-              const otherUserId = call.caller_id === user.id ? call.callee_id : call.caller_id;
-              
-              if (otherUserId) {
-                const { data: profile } = await supabase
-                  .from('public_profiles')
-                  .select('id, display_name, avatar_url')
-                  .eq('id', otherUserId)
-                  .maybeSingle();
-
-                if (profile) {
-                  participantsList = [{
-                    user_id: profile.id,
-                    display_name: profile.display_name || 'Unknown',
-                    avatar_url: profile.avatar_url,
-                  }];
-                }
-              }
-            }
-
-            return {
-              ...call,
-              participants: participantsList,
-            };
-          })
-        );
-
-        setCallHistory(callsWithParticipants.filter(Boolean) as CallHistory[]);
+      if (error) throw error;
+      if (!participations) return;
+      const callRecords = participations.flatMap(row =>
+        row.calls ? [row.calls as Omit<CallHistory, 'participants'>] : []
+      );
+      if (!callRecords.length) {
+        setCallHistory([]);
+        return;
       }
+
+      // One participant query for all history records, not one per call.
+      const callIds = [...new Set(callRecords.map(call => call.id))];
+      const { data: participants, error: participantError } = await supabase
+        .from('call_participants')
+        .select('call_id, user_id')
+        .in('call_id', callIds)
+        .neq('user_id', user.id);
+      if (participantError) throw participantError;
+
+      const participantIds = participants?.map(participant => participant.user_id) ?? [];
+      const fallbackIds = callRecords.flatMap(call => {
+        const otherId = call.caller_id === user.id ? call.callee_id : call.caller_id;
+        return otherId ? [otherId] : [];
+      });
+      const { data: profiles, error: profilesError } =
+        await fetchPublicProfilesBatched([...new Set([...participantIds, ...fallbackIds])]);
+      if (profilesError) throw profilesError;
+
+      setCallHistory(attachCallParticipants(
+        callRecords, participants ?? [], profiles ?? [], user.id
+      ) as CallHistory[]);
     } catch (error) {
       logger.error('Error fetching call history', 'useCalls', error);
     } finally {
@@ -384,6 +334,9 @@ export function useCalls() {
 
     let pollIntervalId: ReturnType<typeof setInterval> | null = null;
     let channelRemoved = false;
+    let channelHealthy = false;
+    let lastPollAt = 0;
+    let checkInFlight = false;
 
     // Poll for incoming calls – works even if Realtime is delayed/broken
     // Call timeout: 90 seconds (matches DB cleanup function)
@@ -391,7 +344,9 @@ export function useCalls() {
 
     const checkForRingingCall = async () => {
       // Don't poll if we already have an incoming call displayed (handled by the watcher above)
-      if (incomingCallRef.current) return;
+      if (incomingCallRef.current || checkInFlight) return;
+      checkInFlight = true;
+      lastPollAt = Date.now();
 
       try {
         const { data: participant, error } = await supabase
@@ -457,14 +412,34 @@ export function useCalls() {
         }
       } catch (error) {
         logger.error('Error in checkForRingingCall', 'useCalls', error);
+      } finally {
+        checkInFlight = false;
       }
     };
 
-    // Start polling immediately and every 2 seconds
+    const onPushClick = (event: MessageEvent) => {
+      if (event.data?.type === 'kosolola:incoming-call') void checkForRingingCall();
+    };
+    navigator.serviceWorker?.addEventListener('message', onPushClick);
+
+    // Realtime is primary; poll fast only when it is unavailable. Retain a
+    // slow safety check when subscribed, and recover promptly on foreground.
+    const pollIfDue = () => {
+      if (shouldPollIncomingCall({
+        now: Date.now(),
+        lastCheckAt: lastPollAt,
+        subscribed: channelHealthy,
+        visible: document.visibilityState === 'visible',
+      })) void checkForRingingCall();
+    };
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') void checkForRingingCall();
+    };
+    const onOnline = () => { void checkForRingingCall(); };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    window.addEventListener('online', onOnline);
     void checkForRingingCall();
-    pollIntervalId = setInterval(() => {
-      void checkForRingingCall();
-    }, 2000);
+    pollIntervalId = setInterval(pollIfDue, 2000);
 
     // Also subscribe to Realtime for faster detection when available
     const channel = supabase
@@ -514,6 +489,7 @@ export function useCalls() {
 
         logger.debug('Realtime subscription status', 'useCalls', { status, error: errMsg || undefined });
 
+        channelHealthy = status === 'SUBSCRIBED';
         if (status === 'SUBSCRIBED') {
           // Do an immediate check once subscription is ready
           void checkForRingingCall();
@@ -530,6 +506,9 @@ export function useCalls() {
       });
 
     return () => {
+      navigator.serviceWorker?.removeEventListener('message', onPushClick);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.removeEventListener('online', onOnline);
       if (pollIntervalId) {
         clearInterval(pollIntervalId);
       }
@@ -539,10 +518,11 @@ export function useCalls() {
     };
   }, [user]);
 
-  // Initial fetch
+  // The app-wide call listener only needs signaling; history is opened on demand.
   useEffect(() => {
-    fetchCallHistory();
-  }, [fetchCallHistory]);
+    if (loadHistory) void fetchCallHistory();
+    else setLoading(false);
+  }, [loadHistory, fetchCallHistory]);
 
   return {
     incomingCall,

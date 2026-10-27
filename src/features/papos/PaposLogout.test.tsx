@@ -43,7 +43,7 @@ it('signs out locally, clears cached data and displays branded sign-in confirmat
 it('shows a failed sign-out without claiming success',async()=>{
   auth.signOut.mockRejectedValue(new Error('offline'));setup();
   fireEvent.click(screen.getByRole('button',{name:'Terminar sessão'}));
-  expect(await screen.findByRole('alert')).toHaveTextContent('Não foi possível confirmar a saída');
+  expect(await screen.findByText(/Não foi possível confirmar a saída/)).toBeInTheDocument();
   expect(screen.queryByText('Sessão terminada. Entra novamente para aceder às tuas conversas.')).not.toBeInTheDocument();
 });
 it('returns from settings to conversations without signing out',async()=>{

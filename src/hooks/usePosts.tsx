@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { fetchPublicProfilesBatched } from '@/lib/public-profile-batch';
 import { preparePostImage } from '@/lib/post-image';
 import { useAuth } from './useAuth';
 import { ReactionCounts, createEmptyReactionCounts, normalizeReactionType } from '@/lib/reactions';
@@ -78,7 +79,7 @@ export interface Topic {
   is_trending: boolean;
 }
 
-export function usePosts({ autoLoad = true }: { autoLoad?: boolean } = {}) {
+export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?: boolean; loadDiscovery?: boolean } = {}) {
   const { user } = useAuth();
   // Único por instância do hook para que montagens concorrentes não colidam no
   // mesmo tópico do canal realtime do Supabase (que lança "cannot add
@@ -88,6 +89,11 @@ export function usePosts({ autoLoad = true }: { autoLoad?: boolean } = {}) {
   const [discoverPosts, setDiscoverPosts] = useState<PostWithUser[]>([]);
   const [topics, setTopics] = useState<Topic[]>([]);
   const [loading, setLoading] = useState(true);
+  const [feedError, setFeedError] = useState(false);
+  const [loadMoreError, setLoadMoreError] = useState(false);
+  const pendingFeedRef = useRef<{ userId: string; promise: Promise<void> } | null>(null);
+  const feedGenerationRef = useRef(0);
+  const paginationFailedRef = useRef(false);
   // Feed pagination (infinite scroll)
   const [loadingMoreFeed, setLoadingMoreFeed] = useState(false);
   const [hasMoreFeed, setHasMoreFeed] = useState(true);
@@ -100,7 +106,7 @@ export function usePosts({ autoLoad = true }: { autoLoad?: boolean } = {}) {
   const userIdRef = useRef<string | null>(null);
 
   // Batch fetch posts with user data, likes, saves, reaction counts, and topics
-  const fetchPostsWithDetails = async (posts: Tables<'posts'>[]): Promise<PostWithUser[]> => {
+  const fetchPostsWithDetails = async (posts: Tables<'posts'>[], onProfilesReady?: (posts: PostWithUser[]) => void): Promise<PostWithUser[]> => {
     if (!posts.length) return [];
 
     // Get unique user IDs
@@ -113,17 +119,36 @@ export function usePosts({ autoLoad = true }: { autoLoad?: boolean } = {}) {
     });
 
     const profileMap = new Map((profiles || []).map((p) => [p.id, p]));
+    // Show safe public author details as soon as they are available. Reactions,
+    // bookmarks and topics can fill in without holding the first render.
+    const initialPosts: PostWithUser[] = posts.map(post => ({
+      ...post,
+      type: post.type as PostWithUser['type'],
+      privacy: post.privacy as PostWithUser['privacy'],
+      media_urls: post.media_urls || [],
+      user: profileMap.get(post.user_id) || { id: post.user_id, display_name: 'Unknown', avatar_url: null, username: '' },
+      is_liked: false,
+      my_reaction: null,
+      is_saved: false,
+      reaction_counts: createEmptyReactionCounts(),
+      topics: [],
+    }));
+    onProfilesReady?.(initialPosts);
 
     // Batch fetch likes and saves for current user + all reactions for counts
     const likesMap = new Map<string, string>();
     const savedSet = new Set<string>();
     const reactionCountsMap = new Map<string, ReactionCounts>();
 
-    // Fetch all reactions for these posts to calculate counts
-    const { data: allReactions } = await supabase
-      .from('post_likes')
-      .select('post_id, reaction_type')
-      .in('post_id', postIds);
+    // Independent enrichment requests run together, rather than forming a waterfall.
+    const [reactionsResponse, postTopicsResponse, likesResult, savedResult] = await Promise.all([
+      supabase.from('post_likes').select('post_id, reaction_type').in('post_id', postIds),
+      supabase.from('post_topics').select('post_id, topic_id').in('post_id', postIds),
+      user ? supabase.from('post_likes').select('post_id, reaction_type').in('post_id', postIds).eq('user_id', user.id) : Promise.resolve({ data: [] }),
+      user ? supabase.from('saved_posts').select('post_id').in('post_id', postIds).eq('user_id', user.id) : Promise.resolve({ data: [] }),
+    ]);
+    const allReactions = reactionsResponse.data;
+    const postTopicsData = postTopicsResponse.data;
 
     // Calculate reaction counts per post (normalize legacy types into African set)
     allReactions?.forEach(reaction => {
@@ -139,11 +164,6 @@ export function usePosts({ autoLoad = true }: { autoLoad?: boolean } = {}) {
     });
 
     // Fetch topics for all posts
-    const { data: postTopicsData } = await supabase
-      .from('post_topics')
-      .select('post_id, topic_id')
-      .in('post_id', postIds);
-
     // Get unique topic IDs and fetch topic details
     const topicIds = [...new Set(postTopicsData?.map(pt => pt.topic_id) || [])];
     const topicsMap = new Map<string, PostTopic>();
@@ -171,19 +191,6 @@ export function usePosts({ autoLoad = true }: { autoLoad?: boolean } = {}) {
     });
 
     if (user) {
-      const [likesResult, savedResult] = await Promise.all([
-        supabase
-          .from('post_likes')
-          .select('post_id, reaction_type')
-          .in('post_id', postIds)
-          .eq('user_id', user.id),
-        supabase
-          .from('saved_posts')
-          .select('post_id')
-          .in('post_id', postIds)
-          .eq('user_id', user.id)
-      ]);
-
       likesResult.data?.forEach(l => {
         const normalized = normalizeReactionType(l.reaction_type);
         if (normalized) likesMap.set(l.post_id, normalized);
@@ -191,12 +198,8 @@ export function usePosts({ autoLoad = true }: { autoLoad?: boolean } = {}) {
       savedResult.data?.forEach(s => savedSet.add(s.post_id));
     }
 
-    return posts.map(post => ({
+    return initialPosts.map(post => ({
       ...post,
-      type: post.type as 'text' | 'photo' | 'video' | 'link',
-      privacy: post.privacy as 'everyone' | 'contacts' | 'close_friends' | 'only_me',
-      media_urls: post.media_urls || [],
-      user: profileMap.get(post.user_id) || { id: post.user_id, display_name: 'Unknown', avatar_url: null, username: '' },
       is_liked: likesMap.has(post.id),
       my_reaction: likesMap.get(post.id) || null,
       is_saved: savedSet.has(post.id),
@@ -205,46 +208,77 @@ export function usePosts({ autoLoad = true }: { autoLoad?: boolean } = {}) {
     }));
   };
 
-  // Fetch the first page of the feed: contacts' visible posts + all public
-  // posts, as a single cursor-paginatable query (user_id in contacts OR public).
+  // A single in-flight first page per signed-in user avoids StrictMode and
+  // overlapping refresh duplicates. Failed requests never leave a spinner stuck.
   const fetchFeedPosts = useCallback(async () => {
-    if (!user) return;
-
-    const { data: contacts } = await supabase
-      .from('contacts')
-      .select('contact_user_id')
-      .eq('user_id', user.id);
-
-    const contactIds = contacts?.map(c => c.contact_user_id) || [];
-    contactIds.push(user.id); // Include own posts
-    contactIdsRef.current = contactIds;
-    userIdRef.current = user.id;
-
-    const { data } = await supabase
-      .from('posts')
-      .select('*')
-      .or(`user_id.in.(${contactIds.join(',')}),privacy.eq.everyone`)
-      .order('created_at', { ascending: false })
-      .limit(FEED_PAGE_SIZE);
-
-    const posts = data || [];
-    feedCursorRef.current = posts.length ? posts[posts.length - 1].created_at : null;
-    newestCreatedAtRef.current = posts.length ? posts[0].created_at : null;
-    feedPaginatedRef.current = false;
-    setNewPostsCount(0);
-    setHasMoreFeed(posts.length === FEED_PAGE_SIZE);
-    setFeedPosts(posts.length ? await fetchPostsWithDetails(posts) : []);
-    setLoading(false);
+    if (!user) { setLoading(false); return; }
+    if (pendingFeedRef.current?.userId === user.id) return pendingFeedRef.current.promise;
+    const generation = ++feedGenerationRef.current;
+    const active = () => feedGenerationRef.current === generation;
+    const request = (async () => {
+      if (active()) setFeedError(false);
+      try {
+        const { data: contacts, error: contactsError } = await supabase
+          .from('contacts').select('contact_user_id').eq('user_id', user.id);
+        if (contactsError) throw contactsError;
+        const contactIds = [...new Set([...(contacts || []).map(c => c.contact_user_id), user.id])];
+        const { data, error: postsError } = await supabase
+          .from('posts').select('*')
+          .or('user_id.in.(' + contactIds.join(',') + '),privacy.eq.everyone')
+          .order('created_at', { ascending: false })
+          .limit(FEED_PAGE_SIZE);
+        if (postsError) throw postsError;
+        if (!active()) return;
+        const posts = data || [];
+        contactIdsRef.current = contactIds;
+        userIdRef.current = user.id;
+        feedCursorRef.current = posts.length ? posts[posts.length - 1].created_at : null;
+        newestCreatedAtRef.current = posts.length ? posts[0].created_at : null;
+        feedPaginatedRef.current = false;
+        paginationFailedRef.current = false;
+        setLoadMoreError(false);
+        setNewPostsCount(0);
+        setHasMoreFeed(posts.length === FEED_PAGE_SIZE);
+        if (!posts.length) {
+          setFeedPosts([]);
+          setLoading(false);
+          return;
+        }
+        const detailed = await fetchPostsWithDetails(posts, initial => {
+          if (active()) {
+            setFeedPosts(initial);
+            setLoading(false);
+          }
+        });
+        if (active()) {
+          // An infinite-scroll page may already have been appended while the
+          // first page's metadata was loading. Preserve those extra posts.
+          const detailsById = new Map(detailed.map(post => [post.id, post]));
+          setFeedPosts(previous => previous.map(post => detailsById.get(post.id) || post));
+        }
+      } catch (error) {
+        console.error('Unable to load feed', error);
+        if (active()) setFeedError(true);
+      } finally {
+        if (active()) setLoading(false);
+      }
+    })();
+    pendingFeedRef.current = { userId: user.id, promise: request };
+    try { await request; }
+    finally {
+      if (pendingFeedRef.current?.promise === request) pendingFeedRef.current = null;
+    }
   }, [user]);
 
   // Load the next page (posts older than the current cursor) and append.
   const loadMoreFeedPosts = useCallback(async () => {
-    if (!user || loadingMoreRef.current || !feedCursorRef.current) return;
+    if (!user || loadingMoreRef.current || !feedCursorRef.current || paginationFailedRef.current) return;
+    setLoadMoreError(false);
     loadingMoreRef.current = true;
     feedPaginatedRef.current = true;
     setLoadingMoreFeed(true);
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('posts')
         .select('*')
         .or(`user_id.in.(${contactIdsRef.current.join(',')}),privacy.eq.everyone`)
@@ -252,6 +286,7 @@ export function usePosts({ autoLoad = true }: { autoLoad?: boolean } = {}) {
         .order('created_at', { ascending: false })
         .limit(FEED_PAGE_SIZE);
 
+      if (error) throw error;
       const posts = data || [];
       setHasMoreFeed(posts.length === FEED_PAGE_SIZE);
       if (posts.length) {
@@ -262,11 +297,20 @@ export function usePosts({ autoLoad = true }: { autoLoad?: boolean } = {}) {
           return [...prev, ...enriched.filter(p => !seen.has(p.id))];
         });
       }
+    } catch (error) {
+      console.error('Unable to load next page', error);
+      paginationFailedRef.current = true;
+      setLoadMoreError(true);
     } finally {
       loadingMoreRef.current = false;
       setLoadingMoreFeed(false);
     }
   }, [user]);
+
+  const retryLoadMorePosts = useCallback(() => {
+    paginationFailedRef.current = false;
+    return loadMoreFeedPosts();
+  }, [loadMoreFeedPosts]);
 
   // Fetch discover posts (public posts)
   const fetchDiscoverPosts = useCallback(async () => {
@@ -558,10 +602,7 @@ export function usePosts({ autoLoad = true }: { autoLoad?: boolean } = {}) {
     // Batch fetch all user profiles and reactions
     const userIds = [...new Set(data.map(c => c.user_id))];
     const [profilesResult, reactionsResult, myReactionsResult] = await Promise.all([
-      supabase
-        .from('public_profiles')
-        .select('id, display_name, avatar_url, username')
-        .in('id', userIds),
+      fetchPublicProfilesBatched(userIds),
       supabase
         .from('comment_reactions')
         .select('comment_id, reaction_type')
@@ -815,9 +856,11 @@ export function usePosts({ autoLoad = true }: { autoLoad?: boolean } = {}) {
   useEffect(() => {
     if (!autoLoad) return;
     fetchFeedPosts();
-    fetchDiscoverPosts();
-    fetchTopics();
-  }, [autoLoad, fetchFeedPosts, fetchDiscoverPosts, fetchTopics]);
+    if (loadDiscovery) {
+      fetchDiscoverPosts();
+      fetchTopics();
+    }
+  }, [autoLoad, loadDiscovery, fetchFeedPosts, fetchDiscoverPosts, fetchTopics]);
 
   // Realtime subscription
   useEffect(() => {
@@ -837,13 +880,13 @@ export function usePosts({ autoLoad = true }: { autoLoad?: boolean } = {}) {
             const isNewer = !newestCreatedAtRef.current || p.created_at > newestCreatedAtRef.current;
             if (qualifies && !isOwn && isNewer) {
               setNewPostsCount(c => c + 1);
-              fetchDiscoverPosts();
+              if (loadDiscovery) fetchDiscoverPosts();
               return;
             }
           }
           // Edits/deletes (or own posts): refresh page 1 while not paginated.
           if (!feedPaginatedRef.current) fetchFeedPosts();
-          fetchDiscoverPosts();
+          if (loadDiscovery) fetchDiscoverPosts();
         }
       )
       .subscribe();
@@ -851,13 +894,16 @@ export function usePosts({ autoLoad = true }: { autoLoad?: boolean } = {}) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [autoLoad, fetchFeedPosts, fetchDiscoverPosts]);
+  }, [autoLoad, loadDiscovery, fetchFeedPosts, fetchDiscoverPosts]);
 
   return {
     feedPosts,
     discoverPosts,
     topics,
     loading,
+    feedError,
+    loadMoreError,
+    retryLoadMorePosts,
     createPost,
     updatePost,
     deletePost,

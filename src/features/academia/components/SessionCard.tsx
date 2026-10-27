@@ -150,7 +150,7 @@ export function SessionCard({
 
           {/* CTA */}
           {isEnded ? (
-            <p className="text-[11px] text-muted-foreground text-center py-1">{ACADEMIA_COPY.sessionEndedInfo}</p>
+            <p className="text-[11px] text-muted-foreground text-center py-1">{status === 'cancelled' ? 'Sessão cancelada' : ACADEMIA_COPY.sessionEndedInfo}</p>
           ) : isRegistrationClosed ? (
             <Button size="sm" variant="secondary" className="w-full rounded-full text-xs h-9" disabled>
               {ACADEMIA_COPY.registrationClosed}

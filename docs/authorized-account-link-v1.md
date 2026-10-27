@@ -67,3 +67,7 @@ Yamilook development branch creation failed before this migration: `MIGRATIONS_F
 Remaining rollout dependencies: Yamilook schema baseline, merge Yamilook PR #28, dedicated partner secret and independent OTP peppers, restricted Infobip test credentials/destinations, matching frontend staging deployments, authority-reviewed test certificate, and real two-account acceptance tests. Legacy AFROLOC login must be secured or excluded before production activation. No common identity is operational.
 
 The AFROLOC advisor also reports inherited schema findings (legacy function search paths, PostGIS placement and exposed definer functions). New tables intentionally have no client policies: only service-role access. See the [RLS/no-policy advisor](https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy).
+
+## Lifecycle verification update — 2026-10-27
+
+See [current validation and remaining release boundaries](certificate-lifecycle-validation-20261027.md). The consumer now requires version 1, active status, null revocation and owner relationship. Deploy the incremental authority migration before the matching consumer. Earlier merge prerequisites for Yamilook PR #28 are resolved in the updated branch; staging/SMS acceptance remains outstanding.

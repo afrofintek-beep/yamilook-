@@ -1,3 +1,4 @@
+import { notifyIncomingCall } from '@/lib/call-push';
 /**
  * useCallLifecycle - Manages call lifecycle (initiate, answer, decline, end)
  * Coordinates between media, peer connections, and signaling
@@ -75,6 +76,7 @@ export function useCallLifecycle(options: UseCallLifecycleOptions): UseCallLifec
     }
 
     logger.debug('Call created', 'CallLifecycle', callId);
+    void notifyIncomingCall(callId);
     return callId;
   }, []);
 

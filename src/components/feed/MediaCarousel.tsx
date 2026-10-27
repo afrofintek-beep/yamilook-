@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect, ReactNode } from 'react';
 import { cn } from '@/lib/utils';
+import { imageFitsVariant, optimizedPublicImageUrl, type PublicImageVariant } from '@/lib/image-delivery';
 
 interface MediaCarouselProps {
   urls: string[];
@@ -16,6 +17,7 @@ function VideoItem({ src, isActive }: { src: string; isActive: boolean }) {
   const ref = useRef<HTMLVideoElement>(null);
   const [muted, setMuted] = useState(true);
   const [isVisible, setIsVisible] = useState(false);
+  const [isNear, setIsNear] = useState(false);
 
   // Only play when both active in carousel AND visible in viewport
   useEffect(() => {
@@ -27,7 +29,14 @@ function VideoItem({ src, isActive }: { src: string; isActive: boolean }) {
       { threshold: 0.5 }
     );
     observer.observe(v);
-    return () => observer.disconnect();
+    // Mount a video source only as it approaches the viewport, not for every
+    // post in the feed. Keep it mounted once near for scroll-back continuity.
+    const nearObserver = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setIsNear(true); },
+      { rootMargin: '300px 0px' }
+    );
+    nearObserver.observe(v);
+    return () => { observer.disconnect(); nearObserver.disconnect(); };
   }, []);
 
   useEffect(() => {
@@ -44,7 +53,7 @@ function VideoItem({ src, isActive }: { src: string; isActive: boolean }) {
     <div className="relative w-full h-full group" onClick={() => setMuted((m) => !m)}>
       <video
         ref={ref}
-        src={src}
+        src={isActive && isNear ? src : undefined}
         className="w-full h-full object-cover"
         preload={isActive && isVisible ? "metadata" : "none"}
         playsInline
@@ -63,6 +72,51 @@ function VideoItem({ src, isActive }: { src: string; isActive: boolean }) {
         </div>
       )}
     </div>
+  );
+}
+
+// Bound both axes and explicitly preserve proportions. A width-only URL
+// produced incorrectly tall media on Safari in the October iPhone diagnostics.
+const FEED_VARIANTS: PublicImageVariant[] = [
+  { width: 480, height: 960, resize: 'contain', quality: 74 },
+  { width: 960, height: 1920, resize: 'contain', quality: 76 },
+  { width: 1280, height: 2400, resize: 'contain', quality: 78 },
+];
+
+function MediaImage({ src, priority }: { src: string; priority: boolean }) {
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const urls = FEED_VARIANTS.map(variant => optimizedPublicImageUrl(src, variant));
+  const supportsVariants = urls.every(url => url && url !== src);
+  const usingVariant = supportsVariants && failedSrc !== src;
+  const srcSet = usingVariant
+    ? urls.map((url, index) => `${url} ${FEED_VARIANTS[index].width}w`).join(', ')
+    : undefined;
+  const fallbackToOriginal = () => { if (usingVariant) setFailedSrc(src); };
+  return (
+    <img
+      src={usingVariant ? urls[1] : src}
+      data-image-delivery={usingVariant ? 'variant'
+        : supportsVariants && failedSrc === src ? 'fallback' : 'original'}
+      srcSet={srcSet}
+      sizes={usingVariant ? '(max-width: 680px) 100vw, 680px' : undefined}
+      alt=""
+      loading={priority ? 'eager' : 'lazy'}
+      {...{ fetchpriority: priority ? 'high' : 'auto' }}
+      decoding="async"
+      onError={fallbackToOriginal}
+      onLoad={event => {
+        if (!usingVariant) return;
+        // Validate the actual selected srcset variant before accepting its geometry.
+        const chosenUrl = event.currentTarget.currentSrc || event.currentTarget.src;
+        const width = Number(new URL(chosenUrl).searchParams.get('width'));
+        const selected = FEED_VARIANTS.find(v => v.width === width);
+        if (selected && !imageFitsVariant(
+          event.currentTarget.naturalWidth, event.currentTarget.naturalHeight, selected
+        )) fallbackToOriginal();
+      }}
+      className="w-full object-contain"
+      style={{ maxHeight: '70vh', minHeight: '200px' }}
+    />
   );
 }
 
@@ -97,15 +151,7 @@ export function MediaCarousel({ urls, priority = false, onDoubleTap, likeOverlay
                 <VideoItem src={url} isActive={i === activeIndex} />
               </div>
             ) : (
-              <img
-                src={url}
-                alt=""
-                loading={priority && i === 0 ? 'eager' : 'lazy'}
-                {...{ fetchpriority: priority && i === 0 ? 'high' : 'auto' }}
-                decoding="async"
-                className="w-full object-cover"
-                style={{ maxHeight: '70vh', minHeight: '200px' }}
-              />
+              <MediaImage src={url} priority={priority && i === 0} />
             )}
           </div>
         ))}

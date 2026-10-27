@@ -58,3 +58,7 @@ A RDC usa país CD e indicativo +243; não confundir com CG/+242. Validar portug
 - Testar iPhone e Android instalados, sessão expirada, perda de rede, entrada por telefone, ligação às outras aplicações e recuperação sem perda do histórico. Testes locais e estados Vercel não substituem estas provas.
 
 Resultado desta etapa: fronteira de certificação reforçada e dependências identificadas. Conta única, SMS universal, domínio próprio e partilha AFROLOC revogável ainda não estão implementados.
+
+## Atualização da revisão de 25-10-2026
+
+Ver [certificação: evidência, suspensão e dependências](afroloc-certification-readiness.md). A função alojada consultada ainda era a versão antiga v13. A correção desta revisão substitui a tentativa de certificação automática por uma resposta autenticada `integration_pending`, sem transmissão de dados ao parceiro ou escrita de certificados. Os requisitos descritos acima não constituem um contrato oficial confirmado. A ativação exige validação do serviço oficial, da titularidade e do ciclo de vida da evidência. Nenhuma identidade comum foi ativada.

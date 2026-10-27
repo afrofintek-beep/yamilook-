@@ -43,7 +43,11 @@ export default defineConfig(({ mode }) => ({
             // Only public post media; authenticated API and signed URLs are excluded.
             urlPattern: ({ url, request }) => request.destination === "image"
               && url.origin === "https://rfayqekonkovfbkwjjum.supabase.co"
-              && url.pathname.startsWith("/storage/v1/object/public/media/"),
+              && (
+                url.pathname.startsWith("/storage/v1/object/public/media/")
+                || url.pathname.startsWith("/storage/v1/render/image/public/media/")
+                || url.pathname.startsWith("/storage/v1/render/image/public/avatars/")
+              ),
             handler: "CacheFirst",
             options: {
               cacheName: "yamilook-post-images-v1",

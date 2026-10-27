@@ -312,7 +312,7 @@ describe('Feed Page', () => {
     
     if (buttons && buttons.length >= 3) {
       fireEvent.click(buttons[2]); // Third button should be messages
-      expect(mockNavigate).toHaveBeenCalledWith('/');
+      expect(mockNavigate).toHaveBeenCalledWith('/papos');
     }
   });
 

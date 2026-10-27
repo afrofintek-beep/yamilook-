@@ -62,9 +62,11 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
 import { getWallpaperStyles } from '@/components/settings/ChatWallpaperSheet';
 import { formatLastSeen } from '@/components/ui/OnlineStatus';
+import { useAppSurface } from '@/lib/app-surface';
 
 export default function Chat() {
   const navigate = useNavigate();
+  const isKosolola = useAppSurface() === 'papos';
   const { t } = useTranslation();
   const { conversationId } = useParams();
   const [searchParams] = useSearchParams();
@@ -579,7 +581,14 @@ export default function Chat() {
   };
 
   return (
-    <div className="fixed inset-0 h-screen-safe bg-background flex flex-col overflow-hidden overscroll-none">
+    <div
+      className="chat-page fixed inset-0 h-screen-safe bg-background flex flex-col overflow-hidden overscroll-none"
+      style={isKosolola ? {
+        top: 'var(--kosolola-top, 0px)',
+        bottom: 'auto',
+        height: 'var(--kosolola-height, 100dvh)',
+      } : undefined}
+    >
       {/* Header */}
       <header className="relative shrink-0 z-50 glass border-b border-border/50 safe-top safe-inline">
         <div className="flex items-center justify-between px-2 py-2">

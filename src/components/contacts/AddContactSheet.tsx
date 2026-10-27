@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Search, UserPlus, Loader2 } from 'lucide-react';
+import { Search, UserPlus, Loader2, MailPlus } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { InviteSheet } from '@/components/settings/InviteSheet';
 import {
   Sheet,
   SheetContent,
@@ -38,6 +40,9 @@ export function AddContactSheet({
   pendingRequestIds,
 }: AddContactSheetProps) {
   const { toast } = useToast();
+  const { i18n } = useTranslation();
+  const pt = i18n.language.toLowerCase().startsWith('pt');
+  const [inviteOpen, setInviteOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -102,11 +107,14 @@ export function AddContactSheet({
     return null;
   };
 
+  const beginInvitation = () => { handleClose(); setInviteOpen(true); };
+
   return (
-    <Sheet open={open} onOpenChange={handleClose}>
-      <SheetContent side="bottom" className="h-[85vh] rounded-t-3xl">
+    <>
+    <Sheet open={open} onOpenChange={(next) => { if (!next) handleClose(); }}>
+      <SheetContent side="bottom" className="h-[85dvh] max-h-[calc(100dvh-env(safe-area-inset-top,0px))] rounded-t-3xl overflow-y-auto pb-[calc(1rem+env(safe-area-inset-bottom,0px))]">
         <SheetHeader className="mb-4">
-          <SheetTitle className="text-xl">Add Contact</SheetTitle>
+          <SheetTitle className="text-xl">{pt ? 'Adicionar contacto' : 'Add contact'}</SheetTitle>
         </SheetHeader>
 
         {selectedUser ? (
@@ -131,7 +139,7 @@ export function AddContactSheet({
 
             <div className="space-y-2">
               <label className="text-sm font-medium">
-                Add a message (optional)
+                {pt ? 'Mensagem (opcional)' : 'Add a message (optional)'}
               </label>
               <Textarea
                 value={message}
@@ -148,7 +156,7 @@ export function AddContactSheet({
                 className="flex-1"
                 onClick={() => setSelectedUser(null)}
               >
-                Back
+                {pt ? 'Voltar' : 'Back'}
               </Button>
               <Button
                 className="flex-1 bg-gradient-primary text-white"
@@ -160,7 +168,7 @@ export function AddContactSheet({
                 ) : (
                   <UserPlus className="w-4 h-4 mr-2" />
                 )}
-                Send Request
+                {pt ? 'Enviar pedido' : 'Send request'}
               </Button>
             </div>
           </div>
@@ -171,7 +179,7 @@ export function AddContactSheet({
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by name or username..."
+                placeholder={pt ? 'Pesquisar por nome ou utilizador...' : 'Search by name or username...'}
                 className="pl-10 h-12 rounded-xl"
               />
             </div>
@@ -184,13 +192,13 @@ export function AddContactSheet({
               ) : results.length === 0 ? (
                 searchQuery.trim() ? (
                   <div className="text-center py-12 text-muted-foreground">
-                    <p>No users found</p>
-                    <p className="text-sm">Try a different search term</p>
+                    <p>{pt ? 'Nenhum utilizador encontrado' : 'No users found'}</p>
+                    <p className="text-sm">{pt ? 'Tenta outra pesquisa ou convida a pessoa para a Yamilook.' : 'Try another search or invite the person to Yamilook.'}</p>
                   </div>
                 ) : (
                   <div className="text-center py-12 text-muted-foreground">
                     <Search className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                    <p>Search for users to add</p>
+                    <p>{pt ? 'Pesquisa utilizadores da Yamilook' : 'Search Yamilook users to add'}</p>
                   </div>
                 )
               ) : (
@@ -226,12 +234,12 @@ export function AddContactSheet({
                         </div>
                         {status === 'contact' && (
                           <span className="text-xs px-2 py-1 rounded-full bg-success/10 text-success">
-                            Contact
+                            {pt ? 'Contacto' : 'Contact'}
                           </span>
                         )}
                         {status === 'pending' && (
                           <span className="text-xs px-2 py-1 rounded-full bg-warning/10 text-warning">
-                            Pending
+                            {pt ? 'Pendente' : 'Pending'}
                           </span>
                         )}
                         {!status && (
@@ -243,9 +251,19 @@ export function AddContactSheet({
                 </div>
               )}
             </div>
+            <div className="border-t border-border/40 pt-4 space-y-2">
+              <p className="text-sm text-muted-foreground">{pt ? 'A pessoa ainda não está na Yamilook?' : 'Not on Yamilook yet?'}</p>
+              <Button variant="outline" className="w-full min-h-11 rounded-xl" onClick={beginInvitation}>
+                <MailPlus className="w-4 h-4 mr-2" />
+                {pt ? 'Convidar para a Yamilook' : 'Invite to Yamilook'}
+              </Button>
+              <p className="text-xs text-muted-foreground">{pt ? 'O convite utiliza o registo e as permissões já existentes.' : 'Invitations use existing registration and permissions.'}</p>
+            </div>
           </div>
         )}
       </SheetContent>
     </Sheet>
+    <InviteSheet open={inviteOpen} onOpenChange={setInviteOpen} />
+    </>
   );
 }

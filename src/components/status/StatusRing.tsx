@@ -56,7 +56,7 @@ export function StatusRing({
         sizeClasses[size],
         showRing && "border-2 border-background"
       )}>
-        <AvatarImage src={avatarUrl || ''} alt={displayName} />
+        <AvatarImage src={avatarUrl || ''} imageVariantSize={160} alt={displayName} />
         <AvatarFallback className="bg-muted text-foreground text-lg">
           {displayName?.[0]?.toUpperCase() || '?'}
         </AvatarFallback>

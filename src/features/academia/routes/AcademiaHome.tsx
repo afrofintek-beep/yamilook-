@@ -1,3 +1,8 @@
+import { useAuth } from '@/hooks/useAuth';
+import { useAdmin } from '@/hooks/useAdmin';
+import { SessionManagement } from '../components/SessionManagement';
+import { sessionMatches, type SessionFilter } from '../session-management';
+import { useAcademiaNotices } from '../hooks/useAcademia';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, GraduationCap, Sparkles, TrendingUp } from 'lucide-react';
@@ -31,6 +36,11 @@ import { motion } from 'framer-motion';
 
 export default function AcademiaHome() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { isAdmin } = useAdmin();
+  const { data: notices = [] } = useAcademiaNotices();
+  const [mine, setMine] = useState(false);
+  const [filter, setFilter] = useState<SessionFilter>('upcoming');
   const [tab, setTab] = useState('all');
   const { data: sessions = [], isLoading, isError, refetch, isFetching } = useAcademiaSessions();
   const { data: mentors = [], isLoading: mentorsLoading } = useAcademiaMentors();
@@ -62,13 +72,14 @@ export default function AcademiaHome() {
     );
   };
 
-  const liveSessions = sessions.filter((s) => s.status === 'live');
+  const liveSessions = sessions.filter((s) => s.status === 'live' && !s.archivedAt);
+  const visibleSessions = sessions.filter(s => (mine ? (s.mentorId === user?.id || isAdmin) : true) && sessionMatches(s, filter));
 
   const filtered = tab === 'all'
-    ? sessions
+    ? visibleSessions
     : tab === 'free'
-      ? sessions.filter((s) => !s.isPremium)
-      : sessions.filter((s) => s.isPremium);
+      ? visibleSessions.filter((s) => !s.isPremium)
+      : visibleSessions.filter((s) => s.isPremium);
 
   return (
     <div className="flex flex-col h-screen-safe overflow-hidden bg-background pb-[calc(5rem+env(safe-area-inset-bottom,0px))]">
@@ -89,6 +100,13 @@ export default function AcademiaHome() {
       </header>
 
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain space-y-6 pt-4">
+        {notices.length > 0 && <section className="mx-4 space-y-2" aria-label="Avisos da Academia">
+          {notices.map(n => <div key={n.session_id} role="status" className="rounded-xl border p-3 text-sm">
+            <p className="font-semibold">Sessão cancelada: {n.title}</p><p>{n.reason}</p>
+            {n.refunded > 0 && <p>Foram devolvidos {n.refunded} Kumbu.</p>}
+            <Button variant="link" onClick={() => navigate(`/academia/${n.session_id}`)}>Ver sessão</Button>
+          </div>)}
+        </section>}
         {/* Hero section */}
         <motion.section
           initial={{ opacity: 0, y: 15 }}
@@ -253,9 +271,17 @@ export default function AcademiaHome() {
           transition={{ delay: 0.3, duration: 0.4 }}
           className="px-4 pb-4"
         >
+          <div className="mb-3 flex flex-wrap gap-2">
+            <Button variant={!mine ? 'default' : 'outline'} onClick={() => setMine(false)}>Explorar sessões</Button>
+            {user && <Button variant={mine ? 'default' : 'outline'} onClick={() => setMine(true)}>{isAdmin ? 'Gerir sessões' : 'As minhas sessões'}</Button>}
+          </div>
+          {<div className="mb-3 flex flex-wrap gap-2" aria-label="Filtrar sessões">
+            {([['upcoming', 'Próximas'], ['past', 'Passadas'], ['cancelled', 'Canceladas'], ['archived', 'Arquivadas']] as const).map(([value, label]) =>
+              <Button key={value} size="sm" variant={filter === value ? 'default' : 'outline'} aria-pressed={filter === value} onClick={() => setFilter(value)}>{label}</Button>)}
+          </div>}
           <Tabs value={tab} onValueChange={setTab}>
             <TabsList className="w-full rounded-xl h-10">
-              <TabsTrigger value="all" className="rounded-lg text-xs flex-1">{ACADEMIA_COPY.tabAll}</TabsTrigger>
+              <TabsTrigger value="all" className="rounded-lg text-xs flex-1">Todos os preços</TabsTrigger>
               <TabsTrigger value="free" className="rounded-lg text-xs flex-1">{ACADEMIA_COPY.tabFree}</TabsTrigger>
               <TabsTrigger value="premium" className="rounded-lg text-xs flex-1">{ACADEMIA_COPY.tabPremium}</TabsTrigger>
             </TabsList>
@@ -268,8 +294,9 @@ export default function AcademiaHome() {
                 </div>
               )}
               {!isLoading && filtered.map((s) => (
+                <div key={s.id}>
+                {(s.mentorId === user?.id || isAdmin) && <div className="flex justify-end"><SessionManagement session={s} /></div>}
                 <SessionCard
-                  key={s.id}
                   id={s.id}
                   title={s.title}
                   mentorName={s.mentorName}
@@ -289,6 +316,7 @@ export default function AcademiaHome() {
                       : `/academia/${s.id}`
                   )}
                 />
+                </div>
               ))}
               {!isLoading && filtered.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-16 text-center gap-3">

@@ -1,3 +1,4 @@
+import { callPushWorker } from './call-push-worker';
 import { createHash } from 'node:crypto';
 import type { Plugin } from 'vite';
 
@@ -44,7 +45,8 @@ self.addEventListener('fetch',event=>{
  }
  if(!url.pathname.startsWith('/assets/')&&!/^\\/papos-app\\/kosolola-icon-(192|512)\\.png$/.test(url.pathname))return;
  event.respondWith((async()=>{const names=(await caches.keys()).filter(name=>name.startsWith(PREFIX));for(const name of names){const cached=await(await caches.open(name)).match(request);if(cached)return cached;}return fetch(request);})());
-});` });
+});
+${callPushWorker}` });
     },
   };
 }
