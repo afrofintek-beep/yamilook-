@@ -9,7 +9,7 @@ import { FeedSidebar } from '@/components/feed/FeedSidebar';
 
 
 import { StatusList } from '@/components/status/StatusList';
-import { SponsoredPostCard } from '@/components/advertising/SponsoredPostCard';
+
 import BottomNav from '@/components/BottomNav';
 import { FeedSkeleton } from '@/components/ui/ShimmerSkeleton';
 import { LiveIndicatorBadge } from '@/components/live/LiveIndicatorBadge';
@@ -23,6 +23,10 @@ import YamilookLogo from '@/components/brand/YamilookLogo';
 import '@/styles/feed-layout.css';
 
 const FeedDiagnostics = lazy(() => import('@/components/feed/FeedDiagnostics'));
+// Sponsorship never gates the organic feed. Load the rendering code only if
+// the server actually returns a visible ad; preserve existing ad behavior.
+const SponsoredPostCard = lazy(() => import('@/components/advertising/SponsoredPostCard').then(m => ({ default: m.SponsoredPostCard })));
+
   
 // Heavy creation/comment editors are never loaded by a passive feed visit.
 // Preserve the existing controls and mount the real sheet only on user intent.
@@ -224,7 +228,9 @@ export default function Feed() {
                 <div key={item.id}>
                   {'isAd' in item ? (
                     <div className="py-2">
-                      <SponsoredPostCard ad={item} />
+                      <Suspense fallback={<div className="min-h-24" aria-hidden="true" />}>
+                        <SponsoredPostCard ad={item} />
+                      </Suspense>
                     </div>
                   ) : (
                     <PostCard 
