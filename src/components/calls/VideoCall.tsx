@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useLayoutEffect, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -58,6 +58,17 @@ export function VideoCall({
   isGroupCall = false,
   isHost = false,
 }: VideoCallProps) {
+  const callViewportRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const viewport = window.visualViewport;
+    const fit = () => {
+      if (viewport && Math.abs(viewport.scale - 1) > 0.01) return;
+      const root = callViewportRef.current;
+      if (root) { root.style.height = `${viewport?.height ?? window.innerHeight}px`; root.style.top = `${viewport?.offsetTop ?? 0}px`; }
+    };
+    fit(); viewport?.addEventListener('resize', fit); viewport?.addEventListener('scroll', fit); window.addEventListener('resize', fit);
+    return () => { viewport?.removeEventListener('resize', fit); viewport?.removeEventListener('scroll', fit); window.removeEventListener('resize', fit); };
+  }, []);
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const callChatInputRef = useRef<HTMLTextAreaElement>(null);
   const { t } = useTranslation();
@@ -199,31 +210,24 @@ export function VideoCall({
   console.log('[VideoCall] callStatus:', state.callStatus, 'localStream:', !!state.localStream, 'isMuted:', state.isMuted, 'isVideoEnabled:', state.isVideoEnabled);
   
   return (
-    <div 
+    <div ref={callViewportRef}
+      data-testid="call-layout"
       className={cn(
-        "relative w-full bg-black overflow-hidden",
+        "fixed inset-x-0 top-0 z-50 flex flex-col w-full bg-black overflow-hidden",
         isFullscreen && "fixed inset-0 z-50"
       )}
       style={{ height: "var(--kosolola-height, 100dvh)" }}
     >
-      <Button variant="secondary" className="absolute left-3 top-[calc(env(safe-area-inset-top,0px)+0.75rem)] z-40" onClick={openCallChat}>
+      <header className="shrink-0 flex items-center justify-between gap-2 px-3 pb-2 pt-[calc(env(safe-area-inset-top,0px)+0.5rem)]">
+      <Button variant="secondary" className="min-h-11" onClick={openCallChat}>
         <MessageSquare className="h-4 w-4 mr-2" />Escrever mensagem
       </Button>
-      {chatOpenedOnce && (
-        <CallChatPanel
-          inline
-          conversationId={conversationId}
-          contactId={!isGroupCall && participants.length === 1 ? participants[0].user_id : undefined}
-          open={showChat}
-          inputRef={callChatInputRef}
-          onClose={() => setShowChat(false)}
-        />
-      )}
-      <div role="status" className="absolute top-16 left-3 z-20 rounded-full bg-black/70 px-3 py-1 text-sm text-white">
-        {state.callStatus === 'connected' ? 'Ligada' : state.callStatus === 'ringing' ? 'A chamar…' : state.lastError || 'A estabelecer ligação…'}
-      </div>
+      <span role="status" className="rounded-full bg-black/70 px-3 py-1 text-sm text-white">
+        {(state.callStatus === 'connected' && state.connectionState === 'connected') ? 'Ligada' : state.callStatus === 'ringing' ? 'A chamar…' : state.lastError || 'A estabelecer ligação…'}
+      </span>
+      </header>
       {/* Main Video Grid */}
-      <div className={showChat ? 'h-[43%] pt-12' : 'h-full'}>
+      <section data-testid="call-stage" className="relative min-h-0 flex-1 basis-0 overflow-hidden">
       <ParticipantGrid
         participants={participants}
         localStream={state.localStream}
@@ -233,14 +237,12 @@ export function VideoCall({
         callType={callType}
       />
 
-      </div>
-
       {/* Local Video (Picture-in-Picture style) */}
       {callType === 'video' && !state.isScreenSharing && (participants.length > 0 || state.remoteStreams.size > 0) && (
         <motion.div
           drag
           dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
-          className={cn("absolute right-4 w-24 h-32 rounded-2xl overflow-hidden shadow-2xl border-2 border-white/20 z-20", showChat ? "top-16" : "bottom-28")}
+          className="absolute right-3 top-3 w-20 h-24 rounded-2xl overflow-hidden shadow-2xl border-2 border-white/20 z-20"
         >
           <video
             ref={localVideoRef}
@@ -265,6 +267,18 @@ export function VideoCall({
             </div>
           )}
         </motion.div>
+      )}
+
+      </section>
+      {chatOpenedOnce && (
+        <CallChatPanel
+          inline
+          conversationId={conversationId}
+          contactId={!isGroupCall && participants.length === 1 ? participants[0].user_id : undefined}
+          open={showChat}
+          inputRef={callChatInputRef}
+          onClose={() => setShowChat(false)}
+        />
       )}
 
       {/* Active Reactions */}
@@ -312,31 +326,20 @@ export function VideoCall({
       <AnimatePresence>
         {showControls && (
           <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 50 }}
-            className="absolute bottom-0 left-0 right-0 z-30"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            data-testid="call-controls" className="relative shrink-0 z-30"
           >
-            <div className="bg-gradient-to-t from-black/80 to-transparent p-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] max-h-[75dvh] overflow-y-auto">
-              {/* Call Status */}
-              <div className="text-center mb-4">
-                <span className="text-white/70 text-sm">
-                {(state.callStatus === 'connected' && state.connectionState === 'connected')
-                    ? t('calls.statusConnected')
-                    : (state.callStatus === 'ringing' || state.callStatus === 'initiating')
-                    ? t('calls.statusCalling')
-                    : t('calls.statusConnecting')}
-                </span>
-              </div>
-
+            <div className="bg-black p-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))]">
               {/* Main Controls */}
-              <div className="flex flex-wrap items-center justify-center gap-3">
+              <div className="flex flex-wrap items-center justify-center gap-2">
                 {/* Mute */}
                 <Button
                   variant="outline"
                   size="icon"
                   className={cn(
-                    "h-14 w-14 rounded-full border-white/20 bg-white/10 hover:bg-white/20",
+                    "h-11 w-11 shrink-0 rounded-full border-white/20 bg-white/10 hover:bg-white/20",
                     state.isMuted && "bg-red-500 hover:bg-red-600 border-red-500"
                   )}
                   onClick={toggleMute}
@@ -356,7 +359,7 @@ export function VideoCall({
                     variant="outline"
                     size="icon"
                     className={cn(
-                      "h-14 w-14 rounded-full border-white/20 bg-white/10 hover:bg-white/20",
+                      "h-11 w-11 shrink-0 rounded-full border-white/20 bg-white/10 hover:bg-white/20",
                       !state.isVideoEnabled && "bg-red-500 hover:bg-red-600 border-red-500"
                     )}
                     onClick={toggleVideo}
@@ -370,26 +373,10 @@ export function VideoCall({
                   </Button>
                 )}
 
-                {/* Screen Share */}
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className={cn(
-                    "h-14 w-14 rounded-full border-white/20 bg-white/10 hover:bg-white/20",
-                    state.isScreenSharing && "bg-primary hover:bg-primary/90 border-primary"
-                  )}
-                  onClick={toggleScreenShare}
-                  disabled={!state.isScreenSharing && !navigator.mediaDevices?.getDisplayMedia}
-                  aria-label={state.isScreenSharing ? 'Parar partilha de ecrã' : 'Partilhar ecrã'}
-                  title={!navigator.mediaDevices?.getDisplayMedia ? 'Partilha de ecrã não suportada neste navegador' : undefined}
-                >
-                  <MonitorUp className="h-6 w-6 text-white" />
-                </Button>
-
                 {/* End Call */}
                 <Button
                   size="icon"
-                  className="h-14 w-14 rounded-full bg-red-500 hover:bg-red-600"
+                  className="h-11 w-11 shrink-0 rounded-full bg-red-500 hover:bg-red-600"
                   onClick={handleEndCall}
                   aria-label="Desligar chamada"
                 >
@@ -401,7 +388,7 @@ export function VideoCall({
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-14 w-14 rounded-full border-white/20 bg-white/10 hover:bg-white/20"
+                    className="h-11 w-11 shrink-0 rounded-full border-white/20 bg-white/10 hover:bg-white/20"
                     onClick={flipCamera}
                     aria-label="Trocar câmara"
                   >
@@ -409,23 +396,13 @@ export function VideoCall({
                   </Button>
                 )}
 
-                {/* Raise Hand */}
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-14 w-14 rounded-full border-white/20 bg-white/10 hover:bg-white/20"
-                  onClick={toggleHand}
-                  aria-label={handRaised ? 'Baixar a mão' : 'Levantar a mão'}
-                  aria-pressed={handRaised}
-                >
-                  <Hand className="h-6 w-6 text-white" />
-                </Button>
+                <CallReactions inline onReaction={handleReaction} />
 
                 {/* More Options */}
                 <Button
                   variant="outline"
                   size="icon"
-                  className="h-14 w-14 rounded-full border-white/20 bg-white/10 hover:bg-white/20"
+                  className="h-11 w-11 shrink-0 rounded-full border-white/20 bg-white/10 hover:bg-white/20"
                   onClick={() => setShowEffects(true)}
                   aria-label="Definições da chamada"
                 >
@@ -434,7 +411,7 @@ export function VideoCall({
               </div>
 
               {/* Secondary Controls */}
-                <div className="flex flex-wrap items-center justify-center gap-2 mt-4">
+                <div className="flex items-center gap-2 mt-2 overflow-x-auto [&>button]:shrink-0">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -453,6 +430,34 @@ export function VideoCall({
                 >
                   <MessageSquare className="h-4 w-4 mr-2" />
                   {t('calls.chat')}
+                </Button>
+
+                {/* Screen Share */}
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className={cn(
+                    "h-11 w-11 shrink-0 rounded-full border-white/20 bg-white/10 hover:bg-white/20",
+                    state.isScreenSharing && "bg-primary hover:bg-primary/90 border-primary"
+                  )}
+                  onClick={toggleScreenShare}
+                  disabled={!state.isScreenSharing && !navigator.mediaDevices?.getDisplayMedia}
+                  aria-label={state.isScreenSharing ? 'Parar partilha de ecrã' : 'Partilhar ecrã'}
+                  title={!navigator.mediaDevices?.getDisplayMedia ? 'Partilha de ecrã não suportada neste navegador' : undefined}
+                >
+                  <MonitorUp className="h-6 w-6 text-white" />
+                </Button>
+
+                {/* Raise Hand */}
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-11 w-11 shrink-0 rounded-full border-white/20 bg-white/10 hover:bg-white/20"
+                  onClick={toggleHand}
+                  aria-label={handRaised ? 'Baixar a mão' : 'Levantar a mão'}
+                  aria-pressed={handRaised}
+                >
+                  <Hand className="h-6 w-6 text-white" />
                 </Button>
 
                 {/* Host Controls Button - Only visible to hosts in group calls */}
@@ -542,7 +547,7 @@ export function VideoCall({
       </AnimatePresence>
 
       {/* Reactions Bar */}
-      <CallReactions onReaction={handleReaction} />
+
 
       {/* Virtual Background Picker */}
       {showBackgrounds && (

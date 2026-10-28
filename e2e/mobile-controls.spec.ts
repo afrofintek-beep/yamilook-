@@ -253,3 +253,58 @@ test('KOSOLOLA composer follows keyboard viewport and restores after dismissal',
     expect(box!.y).toBeGreaterThanOrEqual(top);
   }
 });
+
+test('call chat, media and hangup occupy separate areas through keyboard resize', async ({ page }) => {
+  await mockAccount(page);
+  const callId = '44444444-4444-4444-8444-444444444444';
+  await page.route('**/127.0.0.1:54321/rest/v1/calls*', route => route.fulfill({ json: new URL(route.request().url()).searchParams.has('id') ? {
+    id: callId, type: 'video', initiator_id: me, caller_id: me, callee_id: peer,
+    status: 'ongoing', is_group_call: false, conversation_id: chat,
+  } : [] }));
+  await page.route('**/127.0.0.1:54321/rest/v1/call_participants*', route => route.fulfill({ json:
+    !new URL(route.request().url()).searchParams.has('call_id') ? [] : route.request().url().includes('role') ? { role: 'participant' } : [me, peer].map((id, index) => ({
+      id: `participant-${index}`, user_id: id, is_muted: false, is_video_enabled: true,
+      is_screen_sharing: false, is_hand_raised: false, is_spotlight: false,
+    })),
+  }));
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await page.goto(`/papos-app/call/${callId}`);
+  const layout = page.getByTestId('call-layout');
+  const controls = page.getByTestId('call-controls');
+  const chatPanel = page.getByRole('region', { name: 'Mensagens durante a chamada' });
+  const composer = page.getByRole('textbox', { name: 'Escrever mensagem', exact: true });
+  await expect(composer).toBeVisible();
+  for (const size of [{ width: 390, height: 740 }, { width: 390, height: 430 }, { width: 844, height: 390 }, { width: 390, height: 740 }]) {
+    await page.setViewportSize(size);
+    await composer.fill('Continuo a escrever durante a chamada');
+    const rectangles = await Promise.all([layout, controls, chatPanel, composer].map(locator => locator.boundingBox()));
+    const [root, footer, panel, input] = rectangles;
+    expect(root && footer && panel && input).toBeTruthy();
+    expect(panel!.y + panel!.height).toBeLessThanOrEqual(footer!.y + 1);
+    expect(input!.y + input!.height, JSON.stringify({ size, root, footer, panel, input })).toBeLessThanOrEqual(footer!.y + 1);
+    expect(footer!.y + footer!.height).toBeLessThanOrEqual(size.height + 1);
+    const stage = await page.getByTestId('call-stage').boundingBox();
+    expect(stage!.height).toBeGreaterThan(0);
+    expect(stage!.y + stage!.height).toBeLessThanOrEqual(panel!.y + 1);
+    const hangup = await page.getByRole('button', { name: 'Desligar chamada', exact: true }).boundingBox();
+    expect(hangup!.y).toBeGreaterThanOrEqual(panel!.y + panel!.height - 1);
+    await expect(composer).toHaveValue('Continuo a escrever durante a chamada');
+  }
+  for (const width of [390, 320]) {
+    await page.setViewportSize({ width, height: 430 });
+    await page.getByRole('button', { name: 'Open reactions', exact: true }).click();
+    const reactionButtons = page.locator('button[aria-label]').filter({ has: page.locator('span[role="img"]') });
+    await expect(reactionButtons).toHaveCount(5);
+    for (const button of await reactionButtons.all()) {
+      await expect.poll(async () => {
+        const box = await button.boundingBox();
+        return !!box && box.x >= 0 && box.x + box.width <= width;
+      }).toBe(true);
+    }
+    await reactionButtons.last().click();
+    await expect(reactionButtons).toHaveCount(0);
+  }
+  expect(errors).toEqual([]);
+  await page.screenshot({ path: 'test-results/call-layout-mobile.png' });
+});

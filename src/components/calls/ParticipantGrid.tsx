@@ -43,7 +43,7 @@ export function ParticipantGrid({
   const streamOnlyParticipants: Participant[] = streamOnlyUserIds.map(userId => ({
     id: `stream-${userId}`,
     user_id: userId,
-    display_name: 'Connecting...',
+    display_name: 'Participante',
     avatar_url: null,
     is_muted: false,
     is_video_enabled: true,

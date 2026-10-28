@@ -182,7 +182,7 @@ class LazyLoadErrorBoundary extends Component<
           </div>
           <h2 className="text-lg font-semibold text-foreground">Erro ao carregar a página</h2>
           <p className="text-sm text-muted-foreground max-w-xs">
-            Houve um problema de rede ao carregar. Tenta novamente.
+            Não foi possível apresentar esta página. Tenta novamente ou recarrega a aplicação.
           </p>
           <div className="flex gap-3">
             <button
