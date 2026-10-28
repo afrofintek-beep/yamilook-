@@ -28,14 +28,14 @@ export function CallReactions({ onReaction, inline = false }: CallReactionsProps
   const hoveredData = hoveredReaction ? getReaction(hoveredReaction) : null;
 
   return (
-    <div className={inline ? "relative shrink-0" : "absolute bottom-32 left-4 z-20"}>
+    <div className={inline ? "shrink-0" : "absolute bottom-32 left-4 z-20"}>
       <AnimatePresence>
         {isOpen && (
           <motion.div
             initial={{ opacity: 0, scale: 0.8, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 20 }}
-            className="absolute bottom-16 left-0 bg-background/90 backdrop-blur-lg rounded-2xl p-3 shadow-xl border border-border"
+            className={cn("absolute bg-background/90 backdrop-blur-lg rounded-2xl p-3 shadow-xl border border-border", inline ? "bottom-full inset-x-2 mb-2 flex justify-center" : "bottom-16 left-0")}
             onMouseLeave={() => {
               setHoveredReaction(null);
               setIsOpen(false);

@@ -329,7 +329,7 @@ export function VideoCall({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            data-testid="call-controls" className="shrink-0 z-30"
+            data-testid="call-controls" className="relative shrink-0 z-30"
           >
             <div className="bg-black p-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))]">
               {/* Main Controls */}

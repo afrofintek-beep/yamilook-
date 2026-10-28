@@ -284,9 +284,26 @@ test('call chat, media and hangup occupy separate areas through keyboard resize'
     expect(panel!.y + panel!.height).toBeLessThanOrEqual(footer!.y + 1);
     expect(input!.y + input!.height, JSON.stringify({ size, root, footer, panel, input })).toBeLessThanOrEqual(footer!.y + 1);
     expect(footer!.y + footer!.height).toBeLessThanOrEqual(size.height + 1);
+    const stage = await page.getByTestId('call-stage').boundingBox();
+    expect(stage!.height).toBeGreaterThan(0);
+    expect(stage!.y + stage!.height).toBeLessThanOrEqual(panel!.y + 1);
     const hangup = await page.getByRole('button', { name: 'Desligar chamada', exact: true }).boundingBox();
     expect(hangup!.y).toBeGreaterThanOrEqual(panel!.y + panel!.height - 1);
     await expect(composer).toHaveValue('Continuo a escrever durante a chamada');
+  }
+  for (const width of [390, 320]) {
+    await page.setViewportSize({ width, height: 430 });
+    await page.getByRole('button', { name: 'Open reactions', exact: true }).click();
+    const reactionButtons = page.locator('button[aria-label]').filter({ has: page.locator('span[role="img"]') });
+    await expect(reactionButtons).toHaveCount(5);
+    for (const button of await reactionButtons.all()) {
+      await expect.poll(async () => {
+        const box = await button.boundingBox();
+        return !!box && box.x >= 0 && box.x + box.width <= width;
+      }).toBe(true);
+    }
+    await reactionButtons.last().click();
+    await expect(reactionButtons).toHaveCount(0);
   }
   expect(errors).toEqual([]);
   await page.screenshot({ path: 'test-results/call-layout-mobile.png' });
