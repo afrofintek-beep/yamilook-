@@ -1,10 +1,11 @@
 import { act, cleanup, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { useMessages } from './useChat';
+import { useMessages, useConversations } from './useChat';
 type Change = { old?: Record<string, unknown>; new: Record<string, unknown> };
 type Filter = { table?: string };
 type Channel = { handlers: { filter: Filter; callback: (payload: Change) => void }[]; on: (event: string, filter: Filter, callback: (payload: Change) => void) => Channel; subscribe: () => Channel };
 const m = vi.hoisted(() => ({
+  listMode: false, messages: [] as Record<string, unknown>[], holdReceipt: false,
   user: { id: 'me' }, reads: vi.fn(), channels: [] as Channel[],
 }));
 vi.mock('./useAuth', () => ({ useAuth: () => ({ user: m.user }) }));
@@ -12,14 +13,16 @@ vi.mock('./useMessageNotification', () => ({ useMessageNotification: () => ({ no
 vi.mock('@/lib/public-profile-batch', () => ({ fetchPublicProfilesBatched: vi.fn().mockResolvedValue({ data: [] }), fetchPublicProfileById: vi.fn() }));
 vi.mock('@/integrations/supabase/client', () => ({ supabase: {
   from: (table: string) => {
+    let updating = false;
     const q: Record<string, (...args: unknown[]) => unknown> = {};
     for (const method of ['select', 'eq', 'or', 'order', 'in', 'update']) q[method] = () => q;
+    q.update = () => { updating = true; return q; };
     const result = () => {
       m.reads(table);
-      return { data: table === 'conversation_participants' ? { history_cleared_at: null } : [], error: null };
+      return { data: table === 'conversation_participants' ? (m.listMode ? [{ conversation_id: 'chat', is_archived: false, user_id: 'me' }] : { history_cleared_at: null }) : table === 'visible_messages' ? m.messages : [], error: null };
     };
     q.single = async () => result();
-    q.then = (resolve: (value: unknown) => unknown) => Promise.resolve(result()).then(resolve);
+    q.then = (resolve: (value: unknown) => unknown) => updating && m.holdReceipt ? new Promise(() => {}) : Promise.resolve(result()).then(resolve);
     return q;
   },
   channel: () => {
@@ -28,7 +31,7 @@ vi.mock('@/integrations/supabase/client', () => ({ supabase: {
   },
   removeChannel: vi.fn(),
 } }));
-beforeEach(() => { m.reads.mockClear(); m.channels.length = 0; m.user = { id: 'me' }; });
+beforeEach(() => { m.listMode = false; m.messages = []; m.holdReceipt = false; m.reads.mockClear(); m.channels.length = 0; m.user = { id: 'me' }; });
 afterEach(cleanup);
 it('does not reload history or resubscribe when the same user receives a refreshed auth object', async () => {
   const { rerender } = renderHook(() => useMessages('chat'));
@@ -61,4 +64,24 @@ it('still reloads and resubscribes when the authenticated account changes', asyn
   rerender();
   await waitFor(() => expect(m.reads).toHaveBeenCalledWith('visible_messages'));
   expect(m.channels.length).toBeGreaterThan(subscriptions);
+});
+
+it('shows loaded messages even while the read receipt request is pending', async () => {
+  m.messages = [{ id: 'message', sender_id: 'other', conversation_id: 'chat', content: 'Olá', created_at: new Date().toISOString() }];
+  m.holdReceipt = true;
+  const { result } = renderHook(() => useMessages('chat'));
+  await waitFor(() => expect(result.current.loading).toBe(false));
+  expect(result.current.messages[0].content).toBe('Olá');
+});
+
+it('reuses participation data and keeps conversation subscriptions stable on token refresh', async () => {
+  m.listMode = true;
+  const { result, rerender } = renderHook(useConversations);
+  await waitFor(() => expect(result.current.loading).toBe(false));
+  expect(m.reads.mock.calls.filter(([table]) => table === 'conversation_participants')).toHaveLength(2);
+  const subscriptions = m.channels.length;
+  m.reads.mockClear(); m.user = { id: 'me' }; rerender();
+  await act(async () => {});
+  expect(m.reads).not.toHaveBeenCalled();
+  expect(m.channels).toHaveLength(subscriptions);
 });

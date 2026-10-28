@@ -13,7 +13,7 @@ vi.mock('./CallChatPanel',()=>({CallChatPanel:()=> <div>Papo aberto</div>}));
 vi.mock('./CallEffects',()=>({CallEffects:()=> <div>Definições abertas</div>}));
 vi.mock('./CallReactions',()=>({CallReactions:()=>null}));
 vi.mock('./VirtualBackgroundPicker',()=>({VirtualBackgroundPicker:()=> <div>Fundos abertos</div>}));
-vi.mock('./RecordingControls',()=>({RecordingControls:()=>null}));
+vi.mock('./RecordingControls',()=>({RecordingControls:()=> <button>Gravar chamada</button>}));
 vi.mock('./LiveCaptions',()=>({LiveCaptions:()=> <div>Demo captions</div>}));
 vi.mock('./WaitingRoomPanel',()=>({WaitingRoomPanel:()=>null}));
 vi.mock('./BreakoutRoomsPanel',()=>({BreakoutRoomsPanel:()=>null}));
@@ -69,4 +69,10 @@ it('uses one transport-backed status while reconnecting',()=>{
   callState.connectionState='disconnected';setup();
   expect(screen.getByRole('status')).toHaveTextContent('A estabelecer ligação');
   expect(screen.queryByText('Ligada')).not.toBeInTheDocument();
+});
+
+it('keeps recording controls inside the media stage rather than over the header', () => {
+  setup();
+  expect(screen.getByTestId('call-stage')).toContainElement(screen.getByRole('button', { name: 'Gravar chamada' }));
+  expect(screen.getByTestId('call-stage')).not.toContainElement(screen.getByRole('button', { name: 'Escrever mensagem' }));
 });
