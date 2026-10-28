@@ -288,6 +288,7 @@ export function useConversations() {
 
 export function useMessages(conversationId: string | null) {
   const { user } = useAuth();
+  const userId = user?.id;
   const { notifyMessage } = useMessageNotification();
   const [messages, setMessages] = useState<Message[]>([]);
   const unexpiredMessages = useMessageExpiry(messages);
@@ -313,7 +314,7 @@ export function useMessages(conversationId: string | null) {
   const typingUserTimeoutsRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
   const fetchMessages = useCallback(async (markRead = true) => {
-    if (!conversationId || !user) {
+    if (!conversationId || !userId) {
       setMessages([]);
       setLoading(false);
       return;
@@ -324,7 +325,7 @@ export function useMessages(conversationId: string | null) {
         .from('conversation_participants')
         .select('history_cleared_at')
         .eq('conversation_id', conversationId)
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .single();
       if (participationError) throw participationError;
       historyCutoffRef.current = participation.history_cleared_at;
@@ -363,7 +364,7 @@ export function useMessages(conversationId: string | null) {
         supabase
           .from('starred_messages')
           .select('message_id')
-          .eq('user_id', user.id)
+          .eq('user_id', userId)
           .in('message_id', messageIds),
         supabase
           .from('pinned_messages')
@@ -378,7 +379,7 @@ export function useMessages(conversationId: string | null) {
         supabase
           .from('view_once_views')
           .select('message_id')
-          .eq('user_id', user.id)
+          .eq('user_id', userId)
           .in('message_id', messageIds),
       ]);
 
@@ -461,14 +462,14 @@ export function useMessages(conversationId: string | null) {
           .from('conversation_participants')
           .update({ last_read_at: new Date().toISOString() })
           .eq('conversation_id', conversationId)
-          .eq('user_id', user.id);
+          .eq('user_id', userId);
       }
     } catch (err) {
       console.error('Error fetching messages:', err);
     } finally {
       setLoading(false);
     }
-  }, [conversationId, user]);
+  }, [conversationId, userId]);
 
   useEffect(() => {
     historyCutoffRef.current = null;
@@ -479,7 +480,14 @@ export function useMessages(conversationId: string | null) {
       channelRef.current = supabase
         .channel(`messages-${conversationId}-${instanceIdRef.current}`)
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'conversation_participants', filter: `conversation_id=eq.${conversationId}` }, payload => {
-          if ((payload.new as { user_id?: string }).user_id === user.id) void fetchMessages(false);
+          const row = payload.new as { user_id?: string; history_cleared_at?: string | null };
+          // last_read_at updates are acknowledgements, not history changes.
+          // Compare with our known cutoff: payload.old may contain only an id.
+          if (row.user_id === userId && row.history_cleared_at !== undefined &&
+              row.history_cleared_at !== historyCutoffRef.current) {
+            historyCutoffRef.current = row.history_cleared_at;
+            void fetchMessages(false);
+          }
         })
         .on('postgres_changes', {
           event: 'INSERT',
