@@ -8,6 +8,10 @@ on:
       - 'src/components/calls/VideoCall.tsx'
       - 'src/pages/Chat.tsx'
       - 'src/hooks/useWebRTC.tsx'
+      - 'src/hooks/useAuth.tsx'
+      - 'src/hooks/useAuth.revocation.test.tsx'
+      - 'src/hooks/useChat.tsx'
+      - 'src/hooks/useChat.refresh.test.tsx'
       - '.github/workflows/kosolola-chat-checks.yml'
   workflow_dispatch:
 
@@ -23,6 +27,6 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Direct chat and iOS viewport regression tests
-        run: npx vitest run src/components/calls/CallChatPanel.test.tsx src/features/papos/usePaposViewport.test.ts
+        run: npx vitest run src/components/calls/CallChatPanel.test.tsx src/features/papos/usePaposViewport.test.ts src/hooks/useAuth.revocation.test.tsx src/hooks/useChat.refresh.test.tsx
       - name: Build both Yamilook and KOSOLOLA
         run: npm run build

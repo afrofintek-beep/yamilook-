@@ -113,7 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     userRef.current = user;
   }, [user]);
 
-  // Realtime: re-fetch profile when onboarding_completed (or any row field) changes
+  // Apply realtime profile changes without restarting authenticated screens.
   useEffect(() => {
     if (!user?.id) return;
 
@@ -129,21 +129,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         },
         (payload) => {
           const newRow = payload.new as Profile | undefined;
-          const oldRow = payload.old as Partial<Profile> | undefined;
-          if (
-            newRow &&
-            oldRow &&
-            newRow.onboarding_completed !== oldRow.onboarding_completed
-          ) {
-            logger.info('onboarding_completed changed, refreshing profile', 'auth', {
-              from: oldRow.onboarding_completed,
-              to: newRow.onboarding_completed,
-            });
-            refreshProfile();
-          } else if (newRow) {
-            // Keep context in sync with any profile change
-            setProfile((prev) => (prev ? { ...prev, ...newRow } : newRow));
-          }
+          // UPDATE includes the new row. The old row may contain only its
+          // primary key, so comparing old.onboarding_completed to true treats
+          // every presence update as an onboarding change. A blocking profile
+          // refresh here unmounts PaposGate, releasing the active call/media.
+          if (newRow) setProfile(prev => prev ? { ...prev, ...newRow } : newRow);
         }
       )
       .subscribe();
