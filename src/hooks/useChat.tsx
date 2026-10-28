@@ -106,6 +106,7 @@ interface TypingUser {
 
 export function useConversations() {
   const { user } = useAuth();
+  const userId = user?.id;
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const channelRef = useRef<RealtimeChannel | null>(null);
@@ -115,7 +116,7 @@ export function useConversations() {
   const instanceIdRef = useRef(Math.random().toString(36).slice(2));
 
   useEffect(() => {
-    if (!user?.id) return;
+    if (!userId) return;
     const channel = supabase.channel(`conversation-presence-${crypto.randomUUID()}`)
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profile_presence' }, (payload) => {
         const profile = payload.new as PublicProfile;
@@ -125,16 +126,16 @@ export function useConversations() {
         })));
       }).subscribe();
     return () => { void supabase.removeChannel(channel); };
-  }, [user?.id]);
+  }, [userId]);
 
   const fetchConversations = useCallback(async () => {
-    if (!user) return;
+    if (!userId) { setConversations([]); setLoading(false); return; }
 
     try {
       const { data: participations, error: partError } = await supabase
         .from('conversation_participants')
-        .select('conversation_id, is_archived')
-        .eq('user_id', user.id);
+        .select('conversation_id, is_archived, last_read_at, is_pinned, is_muted')
+        .eq('user_id', userId);
 
       if (partError) throw partError;
 
@@ -149,8 +150,8 @@ export function useConversations() {
         return;
       }
 
-      // Fetch conversations, all participants, last messages, and user's participation in parallel
-      const [conversationsResult, allParticipantsResult, lastMessagesResult, userParticipationsResult] = await Promise.all([
+      // Reuse the current user's participation above; fetch the remaining data in parallel
+      const [conversationsResult, allParticipantsResult, lastMessagesResult] = await Promise.all([
         supabase
           .from('conversations')
           .select('*')
@@ -165,20 +166,15 @@ export function useConversations() {
           .select('*')
           .in('conversation_id', conversationIds)
           .order('created_at', { ascending: false }),
-        supabase
-          .from('conversation_participants')
-          .select('conversation_id, last_read_at, is_pinned, is_muted')
-          .eq('user_id', user.id)
-          .in('conversation_id', conversationIds)
       ]);
 
-      for (const result of [conversationsResult, allParticipantsResult, lastMessagesResult, userParticipationsResult]) {
+      for (const result of [conversationsResult, allParticipantsResult, lastMessagesResult]) {
         if (result.error) throw result.error;
       }
       const conversationsData = conversationsResult.data || [];
       const allParticipants = allParticipantsResult.data || [];
       const allMessages = lastMessagesResult.data || [];
-      const userParticipations = userParticipationsResult.data || [];
+      const userParticipations = participations || [];
 
       // Get unique participant user IDs and fetch all profiles
       const participantUserIds = [...new Set(allParticipants.map(p => p.user_id))];
@@ -223,7 +219,7 @@ export function useConversations() {
         const lastRead = lastReadByConv.get(convId);
         let count = 0;
         allMessages.forEach(msg => {
-          if (msg.conversation_id === convId && msg.sender_id !== user.id && !msg.is_deleted) {
+          if (msg.conversation_id === convId && msg.sender_id !== userId && !msg.is_deleted) {
             if (!lastRead || new Date(msg.created_at) > new Date(lastRead)) {
               count++;
             }
@@ -241,21 +237,21 @@ export function useConversations() {
         is_muted: mutedByConv.get(conv.id) ?? false,
       }));
 
-      setConversations(orderConversations(enrichedConversations, user.id));
+      setConversations(orderConversations(enrichedConversations, userId));
     } catch (err) {
       console.error('Error fetching conversations:', err);
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [userId]);
 
   useEffect(() => {
     fetchConversations();
 
-    if (user) {
+    if (userId) {
       channelRef.current = supabase
         .channel(`conversations-updates-${instanceIdRef.current}`)
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'conversation_participants', filter: `user_id=eq.${user.id}` }, () => { void fetchConversations(); })
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'conversation_participants', filter: `user_id=eq.${userId}` }, () => { void fetchConversations(); })
         .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => {
           fetchConversations();
         })
@@ -267,7 +263,7 @@ export function useConversations() {
         supabase.removeChannel(channelRef.current);
       }
     };
-  }, [fetchConversations, user]);
+  }, [fetchConversations, userId]);
 
   const createConversation = async (
     participantIds: string[],
@@ -321,23 +317,19 @@ export function useMessages(conversationId: string | null) {
     }
 
     try {
-      const { data: participation, error: participationError } = await supabase
-        .from('conversation_participants')
-        .select('history_cleared_at')
-        .eq('conversation_id', conversationId)
-        .eq('user_id', userId)
-        .single();
-      if (participationError) throw participationError;
-      historyCutoffRef.current = participation.history_cleared_at;
-      setHistoryClearedAt(participation.history_cleared_at);
-      const { data: messagesData, error } = await supabase
-        .from('visible_messages')
-        .select('*')
-        .eq('conversation_id', conversationId)
-        // Hide disappearing messages that have already expired (the cron purges
-        // them from the DB shortly after; this keeps them out of view meanwhile).
-        .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
-        .order('created_at', { ascending: true });
+      // The visible_messages view enforces membership and cleared history.
+      // These reads are independent, so avoid a serial network round trip.
+      const [participationResult, messagesResult] = await Promise.all([
+        supabase.from('conversation_participants').select('history_cleared_at')
+          .eq('conversation_id', conversationId).eq('user_id', userId).single(),
+        supabase.from('visible_messages').select('*').eq('conversation_id', conversationId)
+          .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
+          .order('created_at', { ascending: true }),
+      ]);
+      if (participationResult.error) throw participationResult.error;
+      historyCutoffRef.current = participationResult.data.history_cleared_at;
+      setHistoryClearedAt(participationResult.data.history_cleared_at);
+      const { data: messagesData, error } = messagesResult;
 
       if (error) throw error;
 
@@ -458,11 +450,13 @@ export function useMessages(conversationId: string | null) {
       // refetches (e.g. a reaction elsewhere), which would wrongly clear the
       // unread badge.
       if (markRead) {
-        await supabase
+        void supabase
           .from('conversation_participants')
           .update({ last_read_at: new Date().toISOString() })
           .eq('conversation_id', conversationId)
-          .eq('user_id', userId);
+          .eq('user_id', userId)
+          .then(({ error }) => { if (error) console.error('Error marking messages read:', error); },
+            error => console.error('Error marking messages read:', error));
       }
     } catch (err) {
       console.error('Error fetching messages:', err);

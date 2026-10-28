@@ -269,6 +269,8 @@ export function VideoCall({
         </motion.div>
       )}
 
+      {/* Anchor recording controls to the media stage, below the header. */}
+      <RecordingControls callId={callId} participants={participants} />
       </section>
       {chatOpenedOnce && (
         <CallChatPanel
@@ -563,8 +565,7 @@ export function VideoCall({
         <CallEffects onClose={() => setShowEffects(false)} />
       )}
 
-      {/* Recording Controls */}
-      <RecordingControls callId={callId} participants={participants} />
+
 
       {/* Host Controls Panel */}
       <HostControlsPanel
