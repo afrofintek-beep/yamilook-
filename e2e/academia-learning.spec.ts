@@ -67,9 +67,11 @@ test('learner and mentor complete a private goal with revision on a mobile scree
     await teacher.getByRole('button', { name: 'Atualizar', exact: true }).click();
     await teacher.getByLabel('Feedback para o aluno').fill('Falta incluir o transporte.');
     await teacher.getByRole('button', { name: 'Pedir revisão' }).click();
+    await expect(teacher.getByText('Rever e entregar novamente', { exact: true })).toBeVisible();
     await student.getByRole('button', { name: 'Atualizar', exact: true }).click();
     await student.getByLabel('Descreve o trabalho que realizaste').fill('Com transporte o custo é 110 e vendo a 160.');
     await student.getByRole('button', { name: 'Enviar nova versão' }).click();
+    await expect(student.getByText('Em avaliação', { exact: true })).toBeVisible();
     await teacher.getByRole('button', { name: 'Atualizar', exact: true }).click();
     await teacher.getByLabel('Feedback para o aluno').fill('Custos completos e preço justificado.');
     await teacher.getByRole('button', { name: 'Validar trabalho' }).click();
@@ -81,6 +83,7 @@ test('learner and mentor complete a private goal with revision on a mobile scree
     for (const size of [{ width: 320, height: 568 }, { width: 390, height: 844 }, { width: 1280, height: 800 }]) {
       await student.setViewportSize(size);
       await expect.poll(() => student.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+      await expect.poll(() => student.locator('main').evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true);
     }
     await student.setViewportSize({ width: 390, height: 844 });
     await student.screenshot({ path: test.info().outputPath('academia-percurso-mobile.png'), fullPage: true });

@@ -52,7 +52,7 @@ export default function AcademiaLearning() {
       {!goals.isLoading && !goals.isError && !visible.length && <p className="text-muted-foreground">{scope === 'mentor' ? 'Os pedidos dos alunos aparecerão aqui.' : 'Ainda não tens percursos. Começa com um objetivo concreto.'}</p>}
       <section aria-label="Percursos recentes" className="space-y-3">
         {visible.map(g => <button key={g.id} className="w-full text-left rounded-xl border p-4 space-y-2 hover:bg-muted/40" onClick={() => navigate(`/academia/percursos/${g.id}`)}>
-          <h2 className="font-semibold break-words">{g.title}</h2><p className="text-sm text-muted-foreground">{scope === 'mentor' ? `Aluno: ${g.learnerName}` : `Mentor: ${g.mentorName}`}</p>
+          <h2 className="font-semibold break-words">{g.title}</h2><p className="text-sm text-muted-foreground break-words">{scope === 'mentor' ? `Aluno: ${g.learnerName}` : `Mentor: ${g.mentorName}`}</p>
           <p className="text-sm">{learningStatus[g.status]} · {g.approved}/{g.total} desafios validados</p>
           {g.total > 0 && <progress className="w-full accent-primary" aria-label={`Progresso de ${g.title}`} value={g.approved} max={g.total} />}
         </button>)}

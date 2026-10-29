@@ -34,8 +34,8 @@ jobs:
       - run: npx playwright test -c playwright.academia.config.ts
       - run: npm run build
       - uses: actions/upload-artifact@v4
-        if: failure()
+        if: always()
         with:
-          name: academia-learning-failures
+          name: academia-learning-results
           path: test-results/
           retention-days: 7

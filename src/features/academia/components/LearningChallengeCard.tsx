@@ -9,9 +9,9 @@ export function LearningChallengeCard({ challenge, submissions, goalId, isMentor
 }) {
   const save = useLearningAction(); const [content, setContent] = useState(''); const [url, setUrl] = useState(''); const [feedback, setFeedback] = useState('');
   return <article className="rounded-xl border p-4 space-y-3">
-    <div className="flex flex-wrap justify-between gap-2"><h3 className="font-semibold break-words">{challenge.title}</h3><span className="text-sm text-primary">{learningStatus[challenge.status]}</span></div>
+    <div className="flex flex-wrap justify-between gap-2"><h3 className="min-w-0 max-w-full font-semibold break-words">{challenge.title}</h3><span className="text-sm text-primary">{learningStatus[challenge.status]}</span></div>
     <p className="text-sm whitespace-pre-wrap break-words">{challenge.instructions}</p>
-    <p className="text-xs text-muted-foreground">Competência trabalhada: {challenge.skill}</p>
+    <p className="text-xs text-muted-foreground break-words">Competência trabalhada: {challenge.skill}</p>
     {submissions.map((s, index) => {
       const link = safeEvidenceUrl(s.evidence_url);
       return <section key={s.id} aria-label={`Entrega ${submissions.length - index}`} className="rounded-lg bg-muted/40 p-3 space-y-2">
