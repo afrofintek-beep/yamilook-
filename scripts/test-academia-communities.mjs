@@ -12,7 +12,7 @@ test('Academia communities: enrollment, public consent and private evidence',asy
    create table public.mentor_profiles(user_id uuid primary key references public.profiles(id));
    insert into public.profiles select ('00000000-0000-4000-8000-'||lpad(n::text,12,'0'))::uuid,'Pessoa '||n from generate_series(1,6)n;
    insert into public.mentor_profiles select id from public.profiles where display_name in ('Pessoa 1','Pessoa 6');`);
-  for(const file of ['20261029110218_academia_learning_results.sql','20261029120212_academia_communities.sql'])await db.exec(await readFile(new URL('../supabase/migrations/'+file,import.meta.url),'utf8'));
+  for(const file of ['20261029113425_academia_learning_results.sql','20261029123434_academia_communities.sql'])await db.exec(await readFile(new URL('../supabase/migrations/'+file,import.meta.url),'utf8'));
   const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
   const as=async(n,role='authenticated')=>{await db.exec('reset role;set role '+role);await db.query("select set_config('request.jwt.claim.sub',$1,false)",[n?id(n):'']);};
   const action=async(name,target=null,payload={})=>(await db.query('select public.academia_community_action($1,$2,$3::jsonb) id',[name,target,JSON.stringify(payload)])).rows[0].id;

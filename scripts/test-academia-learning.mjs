@@ -17,7 +17,7 @@ test('Academia learning migration and role isolation', async t => {
       create table public.mentor_profiles(user_id uuid primary key references public.profiles(id));
       insert into public.profiles select ('00000000-0000-4000-8000-'||lpad(n::text,12,'0'))::uuid from generate_series(1,4)n;
       insert into public.mentor_profiles select id from public.profiles where id::text in ('00000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000004');`);
-    const migration = await readFile(new URL('../supabase/migrations/20261029110218_academia_learning_results.sql', import.meta.url), 'utf8');
+    const migration = await readFile(new URL('../supabase/migrations/20261029113425_academia_learning_results.sql', import.meta.url), 'utf8');
     await db.exec(migration);
     const mentor = '00000000-0000-4000-8000-000000000001', learner = '00000000-0000-4000-8000-000000000002', outsider = '00000000-0000-4000-8000-000000000003';
     const as = async (user, role = 'authenticated') => { await db.exec(`reset role; set role ${role}`); await db.query("select set_config('request.jwt.claim.sub',$1,false)", [user || '']); };

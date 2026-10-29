@@ -23,7 +23,7 @@ The `Academia learning journeys` workflow runs these checks for the PR.
 
 ## Rollout order
 
-1. Apply `20261029110218_academia_learning_results.sql` to the intended Supabase environment and verify its RLS grants and function execution.
+1. Apply `20261029113425_academia_learning_results.sql` to the intended Supabase environment and verify its RLS grants and function execution.
 2. Deploy the `academia-learning` Edge Function with its included configuration. Gateway JWT verification is disabled because the handler explicitly verifies the caller with Auth. No new provider keys are required.
 3. Release the frontend only after both server changes are available. Test a real learner account, assigned mentor and unrelated account against that environment. Confirm creation, revision, validation, completion and access denial.
 
@@ -45,6 +45,8 @@ The implementation uses text and optional external links, with no autoplaying me
 
 ### Additional rollout and checks
 
-Apply `20261029120212_academia_communities.sql`, redeploy the updated `academia-learning` function, then release the frontend. The migration also changes the existing private goal-creation profile lock to `FOR NO KEY UPDATE`: it still serializes learner limits while allowing foreign-key references, avoiding unnecessary profile-lock conflicts in cross-mentoring enrollment. A multi-connection contention/load test has not been performed.
+Apply `20261029123434_academia_communities.sql`, redeploy the updated `academia-learning` function, then release the frontend. The migration also changes the existing private goal-creation profile lock to `FOR NO KEY UPDATE`: it still serializes learner limits while allowing foreign-key references, avoiding unnecessary profile-lock conflicts in cross-mentoring enrollment. A multi-connection contention/load test has not been performed.
 
 `node --test scripts/test-academia-communities.mjs` applies both learning migrations to an isolated Postgres WASM instance and tests real RLS, capacity, idempotence, private rosters, explicit consent, validation, attribution and withdrawal. `academia-communities.spec.ts` exercises mentor creation, learner enrollment/review/publication, anonymous discovery, a referred peer enrollment and withdrawal with simulated transport in WebKit. The existing private journey, account and invitation tests remain part of CI.
+
+The migration file versions match the versions registered by deployment in Supabase. This alignment renames repository files only; existing production migration-history rows were not edited. SQL contents were verified by matching MD5 hashes before the rename.
