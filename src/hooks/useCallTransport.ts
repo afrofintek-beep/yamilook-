@@ -40,6 +40,10 @@ export function useCallTransport() {
     },
     markUserInteracted: () => { legacy.markUserInteracted(); livekit.markUserInteracted(); },
     // Declining needs only the authoritative call row, not a media session.
-    declineCall: livekit.declineCall,
+    declineCall: async (id: string, target: string) => {
+      const { data, error } = await supabase.from('calls').select('is_group_call').eq('id', id).single();
+      if (error || !data) throw new Error('Não foi possível verificar a chamada.');
+      await (data.is_group_call ? legacy : livekit).declineCall(id, target);
+    },
   };
 }

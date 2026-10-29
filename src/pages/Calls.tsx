@@ -88,7 +88,7 @@ export default function Calls() {
 
   const formatDuration = (seconds: number | null) => {
     if (!seconds || seconds === 0) {
-      return '< 1m';
+      return '0s';
     }
     const hours = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
@@ -124,12 +124,12 @@ export default function Calls() {
   };
 
   const getCallIcon = (call: CallHistory, userId: string) => {
-    if (call.status === 'missed' || call.status === 'declined') {
+    if (call.status === 'missed' || call.end_reason === 'no_answer' || call.status === 'declined') {
       return <PhoneMissed className="w-4 h-4 text-destructive" />;
     }
     // Check if user was the initiator - would need initiator_id in CallHistory
     // For now, we'll just show outgoing/incoming based on some logic
-    return call.participants.length > 0 ? (
+    return (call.caller_id || call.initiator_id) === user?.id ? (
       <PhoneOutgoing className="w-4 h-4 text-green-500" />
     ) : (
       <PhoneIncoming className="w-4 h-4 text-primary" />
@@ -138,7 +138,8 @@ export default function Calls() {
 
   const filteredHistory = callHistory.filter(call => {
     if (activeTab === 'missed') {
-      return call.status === 'missed' || call.status === 'declined';
+      return (call.callee_id === user?.id || (!call.callee_id && call.initiator_id !== user?.id))
+        && (call.status === 'missed' || call.end_reason === 'no_answer');
     }
     if (searchQuery) {
       return call.participants.some(p => 
@@ -325,7 +326,7 @@ export default function Calls() {
                               {getCallIcon(call, user?.id || '')}
                               <span>{call.type === 'video' ? t('calls.videoCall') : t('calls.voiceCall')}</span>
                               <span>•</span>
-                              <span>{formatDuration(call.duration_seconds)}</span>
+                              <span>{call.end_reason === 'no_answer' ? 'Sem resposta' : call.end_reason === 'cancelled' ? 'Cancelada' : call.status === 'declined' ? 'Recusada' : formatDuration(call.duration_seconds)}</span>
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
@@ -333,7 +334,7 @@ export default function Calls() {
                               {formatCallTime(call.started_at)}
                             </span>
                             {/* Voicemail button for missed calls */}
-                            {(call.status === 'missed' || call.status === 'declined') && call.participants[0] && (
+                            {(call.status === 'missed' || call.end_reason === 'no_answer' || call.status === 'declined') && call.participants[0] && (
                               <Button 
                                 variant="ghost" 
                                 size="icon" 
