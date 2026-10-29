@@ -1,3 +1,4 @@
+import { getYamilookPublicUrl } from '@/lib/public-site';
 import { clearLegacyPrivateCache } from '@/lib/private-cache';
 import { useState, useEffect, createContext, useContext, ReactNode, useRef, useCallback } from 'react';
 import { User, Session, AuthError, Provider } from '@supabase/supabase-js';
@@ -372,7 +373,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email,
       password,
       options: {
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo: getYamilookPublicUrl('/onboarding'),
         data: metadata,
       },
     });
@@ -393,7 +394,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: provider as Provider,
       options: {
-        redirectTo: `${window.location.origin}/feed`,
+        redirectTo: getYamilookPublicUrl('/feed'),
       },
     });
     return { error };
