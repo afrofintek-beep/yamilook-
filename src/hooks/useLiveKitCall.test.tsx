@@ -2,20 +2,20 @@ import { act, cleanup, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { useLiveKitCall } from './useLiveKitCall';
 import { canJoinCall } from '../../supabase/functions/generate-livekit-token/call-access';
-const m = vi.hoisted(() => ({ media: vi.fn(), rpc: vi.fn(), invoke: vi.fn(), create: vi.fn(), end: vi.fn(), stop: vi.fn(), rooms: [] as any[], release: undefined as undefined | (() => void) }));
+const m = vi.hoisted(() => ({ update: vi.fn(), capture: vi.fn(), micStop: vi.fn(), media: vi.fn(), rpc: vi.fn(), invoke: vi.fn(), create: vi.fn(), end: vi.fn(), stop: vi.fn(), rooms: [] as any[], release: undefined as undefined | (() => void) }));
 vi.mock('./useAuth', () => ({ useAuth: () => ({ user: { id: 'me' }, profile: { display_name: 'Me' } }) }));
 vi.mock('./webrtc/useCallLifecycle', () => ({ useCallLifecycle: () => ({ createCallInDB: m.create, endCallInDB: m.end, clearRingTimeout: vi.fn(), updateMediaStatus: m.media, updateParticipantStatus: vi.fn(), updateCallStatus: vi.fn(), raiseHand: vi.fn(), sendReaction: vi.fn() }) }));
 vi.mock('./webrtc/call-termination', () => ({ watchCallTermination: ({ onEnded }: any) => { m.release = onEnded; return vi.fn(); } }));
 vi.mock('@/hooks/use-toast', () => ({ toast: vi.fn() }));
 vi.mock('@/lib/virtualBackground', () => ({ DEFAULT_EFFECTS: {}, effectsActive: () => false, VirtualBackgroundProcessor: {} }));
-vi.mock('@/integrations/supabase/client', () => ({ supabase: { rpc: m.rpc, functions: { invoke: m.invoke }, from: () => { const q: any = { update: () => q, eq: () => q, in: () => q, select: () => q, maybeSingle: () => Promise.resolve({ data: { id: 'call-id' }, error: null }), then: (resolve: any) => Promise.resolve({ error: null }).then(resolve) }; return q; } } }));
+vi.mock('@/integrations/supabase/client', () => ({ supabase: { rpc: m.rpc, functions: { invoke: m.invoke }, from: () => { const q: any = { update: (value: any) => { m.update(value); return q; }, eq: () => q, in: () => q, select: () => q, maybeSingle: () => Promise.resolve({ data: { id: 'call-id' }, error: null }), then: (resolve: any) => Promise.resolve({ error: null }).then(resolve) }; return q; } } }));
 vi.mock('livekit-client', () => ({
   Track: { Source: { Camera: 'camera', Microphone: 'microphone', ScreenShare: 'screen' } },
   ConnectionState: { Connected: 'connected' },
   RoomEvent: Object.fromEntries(['TrackSubscribed','TrackUnsubscribed','TrackMuted','TrackUnmuted','LocalTrackPublished','LocalTrackUnpublished','ParticipantConnected','ParticipantDisconnected','Reconnecting','Reconnected','Disconnected'].map(x => [x,x])),
   Room: class {
     listeners = new Map(); state = 'connected'; remoteParticipants = new Map();
-    localParticipant = { trackPublications: new Map([['mic', { track: { mediaStreamTrack: { kind: 'audio' }, stop: m.stop } }]]), isMicrophoneEnabled: true, isCameraEnabled: false, isScreenShareEnabled: false, getTrackPublication: () => undefined, setMicrophoneEnabled: vi.fn(async (enabled: boolean) => {this.localParticipant.isMicrophoneEnabled = enabled;}), setCameraEnabled: vi.fn(async (enabled: boolean) => {this.localParticipant.isCameraEnabled = enabled;}), setScreenShareEnabled: vi.fn(async (enabled: boolean) => {this.localParticipant.isScreenShareEnabled = enabled;}) };
+    localParticipant = { trackPublications: new Map([['mic', { track: { mediaStreamTrack: { kind: 'audio' }, stop: m.stop } }]]), isMicrophoneEnabled: true, isCameraEnabled: false, isScreenShareEnabled: false, getTrackPublication: () => undefined, publishTrack: vi.fn().mockResolvedValue({}), setMicrophoneEnabled: vi.fn(async (enabled: boolean) => {this.localParticipant.isMicrophoneEnabled = enabled;}), setCameraEnabled: vi.fn(async (enabled: boolean) => {this.localParticipant.isCameraEnabled = enabled;}), setScreenShareEnabled: vi.fn(async (enabled: boolean) => {this.localParticipant.isScreenShareEnabled = enabled;}) };
     connect = vi.fn().mockResolvedValue(undefined); disconnect = vi.fn().mockResolvedValue(undefined); startAudio = vi.fn();
     constructor() { m.rooms.push(this); }
     on(event: string, callback: any) { this.listeners.set(event, callback); return this; }
@@ -28,6 +28,8 @@ beforeEach(() => {
   m.invoke.mockResolvedValue({ data: { token: 'token', url: 'wss://test' }, error: null });
   m.rpc.mockResolvedValue({ data: true, error: null });
   m.create.mockResolvedValue('call-id'); m.end.mockResolvedValue(undefined);
+  Object.defineProperty(navigator, 'mediaDevices', { configurable: true, value: { getUserMedia: m.capture } });
+  m.capture.mockResolvedValue({ getAudioTracks: () => [{ kind: 'audio', readyState: 'live', stop: m.micStop }], getTracks: () => [{ kind: 'audio', stop: m.micStop }] });
   vi.stubGlobal('MediaStream', class { constructor(public tracks: any[]) {} });
 });
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.useRealTimers(); });
@@ -53,11 +55,11 @@ it('stops the microphone immediately even when remote persistence hangs', async 
   expect(m.stop).toHaveBeenCalled(); expect(m.rooms[0].disconnect).toHaveBeenCalled();
   expect(result.current.state.callStatus).toBe('ended');
 });
-it('does not capture media when server authorization fails', async () => {
+it('releases the prepared microphone when server authorization fails', async () => {
   m.invoke.mockResolvedValue({ data: null, error: new Error('403') });
   const { result } = renderHook(useLiveKitCall);
   await act(async () => { await expect(result.current.initiateCall('other', 'video')).rejects.toThrow('acesso seguro'); });
-  expect(m.rooms).toHaveLength(0); expect(result.current.state.callStatus).toBe('failed');
+  expect(m.rooms).toHaveLength(0); expect(m.micStop).toHaveBeenCalled(); expect(result.current.state.callStatus).toBe('failed');
 });
 it('cancels an in-flight token request without reopening devices', async () => {
   let resolve!: (v: any) => void;
@@ -93,7 +95,7 @@ it('authorizes only active, directly invited call members', () => {
 it('publishes microphone and camera for video calls', async () => {
   const { result } = renderHook(useLiveKitCall);
   await act(async () => { await result.current.initiateCall('other', 'video'); });
-  expect(m.rooms[0].localParticipant.setMicrophoneEnabled).toHaveBeenCalledWith(true);
+  expect(m.rooms[0].localParticipant.publishTrack).toHaveBeenCalledWith(expect.objectContaining({ kind: 'audio' }), { source: 'microphone' });
   expect(m.rooms[0].localParticipant.setCameraEnabled).toHaveBeenCalledWith(true);
   expect(result.current.state.callStatus).not.toBe('failed');
 });
@@ -181,4 +183,48 @@ it('preserves remote rejection after releasing media so the caller receives reje
   expect(result.current.state.callId).toBeNull();
   expect(result.current.state.callStatus).toBe('declined');
   expect(result.current.state.lastError).toBe('Chamada recusada.');
+});
+
+it('waits for microphone permission before creating or announcing an outgoing call', async () => {
+  let allow!: (stream: any) => void;
+  m.capture.mockReturnValue(new Promise(resolve => { allow = resolve; }));
+  const { result } = renderHook(useLiveKitCall);
+  let pending!: Promise<unknown>;
+  act(() => { pending = result.current.initiateCall('other', 'voice'); });
+  expect(m.capture).toHaveBeenCalledOnce();
+  expect(m.create).not.toHaveBeenCalled(); expect(m.invoke).not.toHaveBeenCalled();
+  expect(result.current.state.callStatus).toBe('initiating');
+  const track = { kind: 'audio', readyState: 'live', stop: m.micStop };
+  await act(async () => { allow({ getAudioTracks: () => [track], getTracks: () => [track] }); await pending; });
+  expect(m.create).toHaveBeenCalledOnce();
+  expect(m.rooms[0].localParticipant.publishTrack).toHaveBeenCalledWith(track, { source: 'microphone' });
+  expect(m.rooms[0].localParticipant.setMicrophoneEnabled).not.toHaveBeenCalled();
+  expect(m.capture).toHaveBeenCalledOnce();
+});
+it('does not notify the recipient when microphone permission is denied', async () => {
+  m.capture.mockRejectedValue(new DOMException('denied', 'NotAllowedError'));
+  const { result } = renderHook(useLiveKitCall);
+  await act(async () => { await expect(result.current.initiateCall('other', 'voice')).rejects.toThrow('denied'); });
+  expect(m.create).not.toHaveBeenCalled(); expect(m.invoke).not.toHaveBeenCalled();
+  expect(result.current.state.lastError).toContain('microfone não foi autorizado');
+});
+it('stops a microphone granted after setup was cancelled without notifying the recipient', async () => {
+  let allow!: (stream: any) => void;
+  m.capture.mockReturnValue(new Promise(resolve => { allow = resolve; }));
+  const { result } = renderHook(useLiveKitCall);
+  let pending!: Promise<unknown>;
+  act(() => { pending = result.current.initiateCall('other', 'voice').catch(e => e); });
+  await act(async () => { await result.current.endCall(); });
+  await act(async () => { allow({ getTracks: () => [{ stop: m.micStop }] }); await pending; });
+  expect(m.micStop).toHaveBeenCalled(); expect(m.create).not.toHaveBeenCalled();
+  expect(m.rooms).toHaveLength(0);
+});
+it('records the failing transport stage without recording an error message', async () => {
+  m.invoke.mockResolvedValue({ data: { token: 'token', url: 'wss://test' } });
+  m.capture.mockRejectedValue(new DOMException('private device name', 'NotReadableError'));
+  const { result } = renderHook(useLiveKitCall);
+  await act(async () => { await expect(result.current.answerCall('call-id', 'voice', 'other')).rejects.toThrow(); });
+  expect(result.current.state.lastError).toContain('Não foi possível abrir o microfone');
+  expect(m.invoke).not.toHaveBeenCalled();
+  expect(m.update).toHaveBeenCalledWith(expect.objectContaining({ end_reason: 'transport_failed:microphone:NotReadableError' }));
 });

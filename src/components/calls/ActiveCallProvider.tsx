@@ -100,6 +100,7 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
   const [isInCall, setIsInCall] = useState(false);
   const [currentCallId, setCurrentCallId] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
+  const [answering, setAnswering] = useState(false);
   const startEpoch = useRef(0);
   const startingRef = useRef(false);
   const answeringCallRef = useRef<string | null>(null);
@@ -206,6 +207,8 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
     // If we already bootstrapped this call, do nothing.
     if ((currentCallId === callId && isInCall) || answeringCallRef.current) return;
     answeringCallRef.current = callId;
+    const epoch = ++startEpoch.current;
+    setAnswering(true);
 
     try {
       // iOS Safari gesture unlock: play a silent audio context on the user tap
@@ -218,9 +221,11 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
 
       // Answering a call requires user media; if this fails, show a clear toast.
       await answerCall(callId, callType, initiatorId);
+      if (epoch !== startEpoch.current) return;
       setCurrentCallId(callId);
       setIsInCall(true);
     } catch (err) {
+      if (epoch !== startEpoch.current) return;
       const message = formatCallError(err);
       logger.error('Failed to join call', 'ActiveCallProvider', err);
       toast({
@@ -229,13 +234,14 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
         variant: 'destructive',
       });
     } finally {
-      answeringCallRef.current = null;
+      if (epoch === startEpoch.current) setAnswering(false);
+      if (answeringCallRef.current === callId) answeringCallRef.current = null;
     }
   }, [answerCall, currentCallId, isInCall, toast]);
 
   const endCurrentCall = useCallback(() => {
     logger.debug('Ending current call', 'ActiveCallProvider');
-    startEpoch.current++; startingRef.current = false; setStarting(false);
+    startEpoch.current++; startingRef.current = false; setStarting(false); setAnswering(false);
     stopCallTone();
     void endCall();
     setCurrentCallId(null);
@@ -246,18 +252,23 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
     if (!incomingCall || answeringCallRef.current || currentCallId === incomingCall.id) return;
     const call = incomingCall;
     answeringCallRef.current = call.id;
-    markUserInteracted();
+    const epoch = ++startEpoch.current;
+    setAnswering(true);
+    unlockCallAudio(); markUserInteracted();
     try {
       await answerCall(call.id, call.type, call.initiator_id);
+      if (epoch !== startEpoch.current) return;
       setCurrentCallId(call.id);
       setIsInCall(true);
       setIncomingCall(null);
       navigate(`/call/${call.id}`);
     } catch (err) {
+      if (epoch !== startEpoch.current) return;
       logger.error('Failed to answer incoming call', 'ActiveCallProvider', err);
       toast({ title: 'Não foi possível atender a chamada', description: formatCallError(err), variant: 'destructive' });
     } finally {
-      answeringCallRef.current = null;
+      if (epoch === startEpoch.current) setAnswering(false);
+      if (answeringCallRef.current === call.id) answeringCallRef.current = null;
     }
   }, [incomingCall, currentCallId, answerCall, markUserInteracted, setIncomingCall, navigate, toast]);
 
@@ -298,8 +309,9 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
   return (
     <ActiveCallContext.Provider value={contextValue}>
       {children}
-      {starting && <div role="dialog" aria-modal="true" aria-label="A iniciar chamada" className="fixed inset-0 z-[190] bg-background/95 flex flex-col items-center justify-center gap-5 p-6">
-        <p role="status">{webRTCState.callStatus === 'ringing' ? 'A chamar…' : 'A preparar a chamada…'}</p>
+      {(starting || answering) && <div role="dialog" aria-modal="true" aria-label="A iniciar chamada" className="fixed inset-0 z-[190] bg-background/95 flex flex-col items-center justify-center gap-5 p-6">
+        <p role="status">{webRTCState.callStatus === 'ringing' ? 'A chamar…' : 'A preparar o microfone e a ligação…'}</p>
+        <p className="max-w-sm text-center text-sm text-muted-foreground">Se o dispositivo pedir, permite o acesso ao microfone para falar.</p>
         <Button variant="destructive" onClick={endCurrentCall}>Cancelar chamada</Button>
       </div>}
       <ScheduledCallNotices />
