@@ -35,8 +35,16 @@ export function clearReferralCode(): void {
   }
 }
 
-/** Link de convite pessoal para partilhar. */
+/**
+ * Convites são destinados a utilizadores externos. Nunca incluir o domínio
+ * do ambiente de desenvolvimento ou preview (window.location.origin).
+ * O domínio abaixo está associado ao projeto de produção da YAMILOOK.
+ */
+const PUBLIC_INVITE_URL = 'https://www.yamilook.com/register';
+
+/** Link de convite pessoal para partilhar, sempre no domínio público. */
 export function buildInviteUrl(referralCode: string | null | undefined): string {
-  const base = `${window.location.origin}/register`;
-  return referralCode ? `${base}?ref=${referralCode}` : base;
+  const url = new URL(PUBLIC_INVITE_URL);
+  if (referralCode) url.searchParams.set('ref', referralCode);
+  return url.toString();
 }
