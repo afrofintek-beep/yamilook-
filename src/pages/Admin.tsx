@@ -60,6 +60,7 @@ import { TopicPostManager } from '@/components/admin/TopicPostManager';
 import { TopicSuggestionsManager } from '@/components/admin/TopicSuggestionsManager';
 import { LiveSessionsManager } from '@/components/admin/LiveSessionsManager';
 import { MvpCandidatesManager } from '@/components/admin/MvpCandidatesManager';
+import { FounderInviteAssistant } from '@/components/admin/FounderInviteAssistant';
 
 interface Stats {
   users: number;
@@ -523,6 +524,9 @@ export default function Admin() {
             </Button>
           </CardContent>
         </Card>
+
+        {/* Founder invitation workflow — uses server-authorized invitation RPC */}
+        <FounderInviteAssistant />
 
         {/* MVP Candidates Manager */}
         <MvpCandidatesManager />
