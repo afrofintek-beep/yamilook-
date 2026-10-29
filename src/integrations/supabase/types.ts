@@ -6439,6 +6439,14 @@ export type Database = {
       }
     }
     Functions: {
+      admin_topic_action: {
+        Args: { p_action: string; p_id?: string; p_ids?: string[]; p_reason?: string }
+        Returns: undefined
+      }
+      admin_topic_counts: {
+        Args: Record<PropertyKey, never>
+        Returns: { topic_id: string; post_count: number }[]
+      }
       academia_community_action: { Args: { p_action: string; p_target?: string; p_payload?: Json }; Returns: string }
       academia_learning_progress: { Args: { p_goals: string[] }; Returns: { goal_id: string; total: number; approved: number }[] }
       academia_learning_action: { Args: { p_action: string; p_goal?: string; p_payload?: Json }; Returns: string }
