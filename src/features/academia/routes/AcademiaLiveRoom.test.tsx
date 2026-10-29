@@ -1,14 +1,14 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-const fixture=vi.hoisted(()=>({when:'',error:''}));
+const fixture=vi.hoisted(()=>({when:'',error:'',queryError:null as Error|null,inRoom:false}));
 vi.mock('@/hooks/useAuth',()=>({useAuth:()=>({user:{id:'mentor'}})}));
-vi.mock('@tanstack/react-query',()=>({useQuery:()=>({data:{id:'session',title:'Teste',mentor_id:'mentor',scheduled_at:fixture.when,status:'scheduled'},isLoading:false,refetch:vi.fn(),dataUpdatedAt:Date.now()})}));
+vi.mock('@tanstack/react-query',()=>({useQuery:()=>({data:{id:'session',title:'Teste',mentor_id:'mentor',scheduled_at:fixture.when,status:'scheduled'},isLoading:false,error:fixture.queryError,refetch:vi.fn(),dataUpdatedAt:Date.now()})}));
 vi.mock('@/integrations/supabase/client',()=>({supabase:{auth:{signOut:vi.fn()}}}));
-vi.mock('../hooks/useAcademiaVideo',()=>({requestAcademiaVideo:vi.fn(),useAcademiaVideo:()=>({room:null,participants:[],connection:'disconnected',loading:false,error:fixture.error,messages:[],leave:vi.fn(),join:vi.fn()})}));
+vi.mock('../hooks/useAcademiaVideo',()=>({requestAcademiaVideo:vi.fn(),useAcademiaVideo:()=>({room:fixture.inRoom?{localParticipant:{isCameraEnabled:true,isMicrophoneEnabled:true}}:null,participants:[],connection:'disconnected',loading:false,error:fixture.error,messages:[],leave:vi.fn(),join:vi.fn()})}));
 import AcademiaLiveRoom from './AcademiaLiveRoom';
 const draw=()=>render(<MemoryRouter initialEntries={['/academia/live/session']}><Routes><Route path="/academia/live/:sessionId" element={<AcademiaLiveRoom />} /></Routes></MemoryRouter>);
-beforeEach(()=>{fixture.when=new Date(Date.now()+24*60*60*1000).toISOString();fixture.error='';});
+beforeEach(()=>{fixture.when=new Date(Date.now()+24*60*60*1000).toISOString();fixture.error='';fixture.queryError=null;fixture.inRoom=false;});
 afterEach(cleanup);
 it('shows opening time and disables a session scheduled for tomorrow',()=>{
   draw();expect(screen.getByRole('button',{name:'Iniciar / entrar'})).toBeDisabled();
@@ -32,4 +32,14 @@ it('leaves the video room for the Academia list instead of another session step'
   fireEvent.click(screen.getByRole('button',{name:'Sair da sala'}));
   expect(screen.getByText('Lista da Academia')).toBeVisible();
   expect(screen.queryByText('Detalhes da sessão')).not.toBeInTheDocument();
+});
+
+it('keeps the room screen mounted when a background session refresh fails',()=>{
+  fixture.queryError=new Error('Temporary network failure');fixture.inRoom=true;
+  draw();
+  expect(screen.getByRole('heading',{name:'Teste'})).toBeVisible();
+  expect(screen.getByText(/A tentar novamente/)).toBeVisible();
+  expect(screen.getByRole('region',{name:'Chat da sessão'})).toBeVisible();
+  expect(screen.getByRole('button',{name:'Microfone'})).toBeVisible();
+  expect(screen.queryByText('Não foi possível carregar a sessão.')).not.toBeInTheDocument();
 });

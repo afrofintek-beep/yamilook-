@@ -1,3 +1,4 @@
+import { deferCallUpdate } from './lib/call-update-guard';
 import { recoverApplicationAssets } from './lib/app-assets';
 import { clearLegacyPrivateCache } from "./lib/private-cache";
 import React from "react";
@@ -34,7 +35,8 @@ function installChunkLoadRecovery() {
     setTimeout(() => { try { window.sessionStorage.removeItem(KEY); } catch { /* noop */ } }, 4000);
   });
 
-  const reloadLimited = async (reason: string) => {
+  const reloadLimited = (reason: string) => deferCallUpdate(() => { void recoverAndReload(reason); });
+  const recoverAndReload = async (reason: string) => {
     try {
       const current = Number(window.sessionStorage.getItem(KEY) ?? "0") || 0;
       if (current >= MAX_RELOADS) return;
@@ -49,9 +51,9 @@ function installChunkLoadRecovery() {
 
       const url = new URL(window.location.href);
       url.searchParams.set("__cr", String(Date.now()));
-      window.location.replace(url.toString());
+      deferCallUpdate(() => window.location.replace(url.toString()));
     } catch {
-      window.location.reload();
+      deferCallUpdate(() => window.location.reload());
     }
   };
 
@@ -121,7 +123,7 @@ if (typeof navigator !== "undefined" && "serviceWorker" in navigator) {
   navigator.serviceWorker.addEventListener("controllerchange", () => {
     if (swReloaded) return;
     swReloaded = true;
-    window.location.reload();
+    deferCallUpdate(() => window.location.reload());
   });
 }
 

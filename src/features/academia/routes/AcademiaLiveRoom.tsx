@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { VideoTrack } from '@/components/live/VideoTrack';
 import { AudioTrack } from '@/components/live/AudioTrack';
 import { EmptyStateBack } from '@/components/common/EmptyStateBack';
+import { downloadAcademiaDiagnostics } from '../hooks/academia-call-diagnostics';
 import { requestAcademiaVideo, useAcademiaVideo } from '../hooks/useAcademiaVideo';
 
 function ParticipantTile({participant,local}:{participant:Participant;local:boolean}) {
@@ -45,7 +46,7 @@ export default function AcademiaLiveRoom() {
     finally{setEnding(false);}
   };
   if(isLoading)return <div className="h-screen-safe bg-background grid place-items-center">A carregar sessão…</div>;
-  if(error)return <EmptyStateBack message="Não foi possível carregar a sessão." fallbackRoute="/academia" />;
+  if(error&&!session)return <EmptyStateBack message="Não foi possível carregar a sessão." fallbackRoute="/academia" />;
   if(!session)return <EmptyStateBack message="Sessão não encontrada." fallbackRoute="/academia" />;
   return <main className="fixed inset-0 h-screen-safe overflow-hidden flex flex-col bg-background">
     <header className="shrink-0 safe-top border-b border-border bg-background"><div className="h-14 px-3 flex items-center gap-2">
@@ -54,7 +55,8 @@ export default function AcademiaLiveRoom() {
       <span className="text-xs shrink-0">{closed?'Encerrada':video.connection===ConnectionState.Connected?'Ligado':video.connection===ConnectionState.Reconnecting?'A religar…':'Academia'}</span>
     </div></header>
     <section className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 space-y-4">
-      {(video.error||endError) && <p role="alert" className="rounded-xl border border-destructive p-3 text-sm">{endError||video.error}{video.error.includes('Inicia sessão novamente') && <Button className="mt-3 block" onClick={async()=>{video.leave();await supabase.auth.signOut({scope:'local'});navigate('/login');}}>Entrar novamente</Button>}</p>}
+      {error && <p role="status" className="text-sm text-muted-foreground">Não foi possível atualizar os dados da sessão. A tentar novamente…</p>}
+      {(video.error||endError) && <p role="alert" className="rounded-xl border border-destructive p-3 text-sm">{endError||video.error}<Button variant="outline" className="mt-2 block" onClick={downloadAcademiaDiagnostics}>Descarregar diagnóstico</Button>{video.error.includes('Inicia sessão novamente') && <Button className="mt-3 block" onClick={async()=>{video.leave();await supabase.auth.signOut({scope:'local'});navigate('/login');}}>Entrar novamente</Button>}</p>}
       {closed ? <div className="space-y-3"><p>A sessão foi encerrada.</p><Button onClick={exit}>Voltar à Academia</Button></div> : !video.room ? <div className="max-w-lg mx-auto space-y-5">
         <h2 className="text-lg font-semibold">{isMentor?'Iniciar sessão de vídeo':'Entrar na sessão de vídeo'}</h2>
         <p className="text-sm text-muted-foreground">{isMentor?(tooEarly?`Esta sala abre em ${opensAt.toLocaleString('pt-AO',{dateStyle:'short',timeStyle:'short'})}. Podes entrar 15 minutos antes da hora marcada.`:'Podes abrir a sala 15 minutos antes da hora marcada.'):'A entrada está disponível após o mentor iniciar a sessão, para quem tem uma reserva válida.'}</p>
@@ -62,6 +64,7 @@ export default function AcademiaLiveRoom() {
         <label className="flex items-center gap-3"><input type="checkbox" checked={microphone} onChange={e=>setMicrophone(e.target.checked)} />Entrar com microfone</label>
         <Button className="w-full" disabled={video.loading||tooEarly||(!isMentor&&session.status!=='live')} onClick={()=>void video.join(isMentor,camera,microphone)}>{video.loading?'A ligar…':isMentor?'Iniciar / entrar':'Entrar na sala'}</Button>
       </div> : <>
+        {video.connection===ConnectionState.Reconnecting && <p role="status">A religar à sala… Mantém esta página aberta.</p>}
         {video.audioBlocked && <Button className="w-full" onClick={()=>void video.room?.startAudio()}><Volume2 className="mr-2 h-4 w-4" />Ativar som</Button>}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">{video.participants.map(p=><ParticipantTile key={p.identity} participant={p} local={p===video.room?.localParticipant} />)}</div>
         <p className="text-sm text-muted-foreground">{video.participants.length} participante(s) ligado(s)</p>
