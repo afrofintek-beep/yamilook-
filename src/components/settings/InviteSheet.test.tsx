@@ -72,7 +72,7 @@ describe('Unique invitations', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Copiar código' }));
     await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('copia manualmente'));
     expect(screen.getByLabelText('Código único de convite')).toHaveValue(code);
-    expect(screen.getByLabelText('Link de convite')).toHaveValue(`${window.location.origin}/register?ref=${code}`);
+    expect(screen.getByLabelText('Link de convite')).toHaveValue(`https://www.yamilook.com/register?ref=${code}`);
   });
   it('keeps the invitation after cancelling native sharing without canShare', async () => {
     Object.defineProperty(navigator, 'canShare', { configurable: true, value: undefined });
