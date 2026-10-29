@@ -138,7 +138,7 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
       toast({ title: 'Não foi possível estabelecer a chamada', description: webRTCState.lastError || 'Verifica a ligação e tenta novamente.', variant: 'destructive' });
     }
     if ((webRTCState.callStatus === 'ended' && webRTCState.lastError) || webRTCState.callStatus === 'declined') {
-      playCallTone('ended');
+      playCallTone(webRTCState.callStatus === 'declined' ? 'declined' : 'ended');
       toast({ title: webRTCState.callStatus === 'declined' ? 'Chamada recusada.' : webRTCState.lastError || 'Chamada terminada.' });
     }
     setIsInCall(false);

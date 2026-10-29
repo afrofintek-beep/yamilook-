@@ -3,7 +3,7 @@ import { afterEach, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import { ActiveCallProvider, useActiveCallRequired } from './ActiveCallProvider';
 const mocks = vi.hoisted(() => ({
-  start: vi.fn(), end: vi.fn(), tone: vi.fn(), answerCall: vi.fn(), toast: vi.fn(), setIncomingCall: vi.fn(),
+  state: { callStatus: 'connecting' } as any, start: vi.fn(), end: vi.fn(), tone: vi.fn(), answerCall: vi.fn(), toast: vi.fn(), setIncomingCall: vi.fn(),
   incomingCall: { id: 'call', type: 'voice', initiator_id: 'caller' },
 }));
 vi.mock('@/lib/call-feedback', async importOriginal => ({ ...(await importOriginal<typeof import('@/lib/call-feedback')>()), playCallTone: mocks.tone, stopCallTone: vi.fn() }));
@@ -13,13 +13,13 @@ vi.mock('@/hooks/use-toast', () => ({ useToast: () => ({ toast: mocks.toast }) }
 vi.mock('@/features/scheduled-calls/ScheduledCallNotices', () => ({ ScheduledCallNotices: () => null }));
 vi.mock('./IncomingCallOverlay', () => ({ IncomingCallOverlay: ({ onAnswer }: { onAnswer: () => void }) => <button onClick={onAnswer}>Atender teste</button> }));
 vi.mock('@/hooks/useCallTransport', () => ({ useCallTransport: () => ({
-  state: { callStatus: 'connecting' }, initiateCall: mocks.start, endCall: mocks.end, answerCall: mocks.answerCall, markUserInteracted: vi.fn(),
+  state: mocks.state, initiateCall: mocks.start, endCall: mocks.end, answerCall: mocks.answerCall, markUserInteracted: vi.fn(),
 }) }));
 function Consumer() {
   const { joinCall, startCall } = useActiveCallRequired();
   return <><button onClick={() => void joinCall('call', 'voice', 'caller')}>Entrar teste</button><button onClick={() => void startCall('other', 'voice')}>Ligar teste</button></>;
 }
-afterEach(() => { cleanup(); vi.clearAllMocks(); });
+afterEach(() => { cleanup(); mocks.state = { callStatus: 'connecting' }; vi.clearAllMocks(); });
 it('answers once when repeated taps and a room join overlap', async () => {
   let finish!: () => void;
   mocks.answerCall.mockImplementation(() => new Promise<void>(resolve => { finish = resolve; }));
@@ -64,5 +64,21 @@ it('can cancel setup and ignores its late successful result', async () => {
   await act(async () => finish('late-call'));
   expect(screen.queryByRole('dialog', {name:'A iniciar chamada'})).not.toBeInTheDocument();
   expect(mocks.toast).not.toHaveBeenCalled();
+  vi.unstubAllGlobals();
+});
+
+it('plays rejection feedback once when the recipient declines', async () => {
+  vi.stubGlobal('isSecureContext', true);
+  Object.defineProperty(navigator, 'mediaDevices', { configurable: true, value: { getUserMedia: vi.fn() } });
+  mocks.start.mockResolvedValue('rejected-call');
+  const view = () => <MemoryRouter><ActiveCallProvider><Consumer /></ActiveCallProvider></MemoryRouter>;
+  const { rerender } = render(view());
+  await act(async () => fireEvent.click(screen.getByText('Ligar teste')));
+  mocks.state = { callStatus: 'declined', callId: null, lastError: 'Chamada recusada.' };
+  rerender(view());
+  expect(mocks.tone).toHaveBeenCalledWith('declined');
+  expect(mocks.toast).toHaveBeenCalledWith({ title: 'Chamada recusada.' });
+  rerender(view());
+  expect(mocks.tone.mock.calls.filter(([tone]) => tone === 'declined')).toHaveLength(1);
   vi.unstubAllGlobals();
 });
