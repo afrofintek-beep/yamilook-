@@ -82,3 +82,16 @@ it('plays rejection feedback once when the recipient declines', async () => {
   expect(mocks.tone.mock.calls.filter(([tone]) => tone === 'declined')).toHaveLength(1);
   vi.unstubAllGlobals();
 });
+
+it('shows preparation while answering and ignores completion after cancellation', async () => {
+  let finish!: () => void;
+  mocks.answerCall.mockImplementation(() => new Promise<void>(resolve => { finish = resolve; }));
+  render(<MemoryRouter><ActiveCallProvider><Consumer /></ActiveCallProvider></MemoryRouter>);
+  fireEvent.click(await screen.findByText('Atender teste'));
+  expect(screen.getByRole('dialog', { name: 'A iniciar chamada' })).toHaveTextContent('microfone');
+  fireEvent.click(screen.getByRole('button', { name: 'Cancelar chamada' }));
+  await act(async () => finish());
+  expect(mocks.end).toHaveBeenCalledOnce();
+  expect(mocks.setIncomingCall).not.toHaveBeenCalled();
+  expect(screen.queryByRole('dialog', { name: 'A iniciar chamada' })).not.toBeInTheDocument();
+});

@@ -7,6 +7,7 @@ on:
       - 'src/hooks/useCalls.tsx'
       - 'src/hooks/webrtc/call-termination*'
       - 'src/lib/call-feedback*'
+      - 'src/lib/call-setup-failure*'
       - 'src/components/calls/**'
       - 'src/pages/Calls*'
       - 'supabase/functions/generate-livekit-token/**'
@@ -31,5 +32,5 @@ jobs:
           cache: npm
       - run: npm ci
       - run: node scripts/test-direct-call-lifecycle.mjs
-      - run: npx vitest run src/hooks/useLiveKitCall.test.tsx src/hooks/useCallTransport.test.tsx src/hooks/webrtc/call-termination.test.ts src/lib/call-feedback.test.ts src/components/calls src/features/papos src/pages/Calls.test.tsx src/hooks/useRingtone.test.tsx
+      - run: npx vitest run src/hooks/useLiveKitCall.test.tsx src/hooks/useCallTransport.test.tsx src/hooks/webrtc/call-termination.test.ts src/lib/call-feedback.test.ts src/lib/call-setup-failure.test.ts src/components/calls src/features/papos src/pages/Calls.test.tsx src/hooks/useRingtone.test.tsx
       - run: npm run build

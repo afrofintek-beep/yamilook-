@@ -8,6 +8,7 @@ import { INITIAL_STATE, type CallState } from './webrtc/types';
 import { VirtualBackgroundProcessor, DEFAULT_EFFECTS, effectsActive, type BgMode, type EffectsConfig } from '@/lib/virtualBackground';
 import { registerCallMedia } from '@/lib/call-media';
 import { callOutcomeMessage } from '@/lib/call-feedback';
+import { callSetupFailure } from '@/lib/call-setup-failure';
 import { toast } from '@/hooks/use-toast';
 
 /** LiveKit owns transport, ICE/TURN, congestion control and reconnection.
@@ -22,6 +23,8 @@ export function useLiveKitCall() {
   const callRef = useRef<string | null>(null);
   const generation = useRef(0);
   const busy = useRef(false);
+  const microphoneRef = useRef<MediaStreamTrack | null>(null);
+  const setupStage = useRef('microphone');
   const deadline = useRef<ReturnType<typeof setTimeout>>();
   const peerDeadline = useRef<ReturnType<typeof setTimeout>>();
   const processor = useRef<VirtualBackgroundProcessor | null>(null);
@@ -46,6 +49,8 @@ export function useLiveKitCall() {
     processor.current = null;
     rawCamera.current?.stop();
     rawCamera.current = null;
+    microphoneRef.current?.stop();
+    microphoneRef.current = null;
     effects.current = { ...DEFAULT_EFFECTS };
     const room = roomRef.current;
     roomRef.current = null;
@@ -57,15 +62,32 @@ export function useLiveKitCall() {
   }, []);
   releaseRef.current = release;
 
-  const fail = useCallback((message: string) => {
+  const fail = useCallback((message: string, reason = 'transport_failed') => {
     const id = callRef.current;
     release();
     setState(s => ({ ...s, callStatus: 'failed', lastError: message }));
-    if (id) void supabase.from('calls').update({ status: 'failed', ended_at: new Date().toISOString(), end_reason: 'transport_failed' })
+    if (id) void supabase.from('calls').update({ status: 'failed', ended_at: new Date().toISOString(), end_reason: reason })
       .eq('id', id).in('status', ['ringing', 'connecting', 'ongoing']).then(({ error }) => {
         if (error) console.error('[LiveKitCall] Persist failure:', error.message);
       });
   }, [release]);
+
+  const prepareMicrophone = useCallback(async (epoch: number) => {
+    setupStage.current = 'microphone';
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video: false,
+    });
+    if (generation.current !== epoch) {
+      stream.getTracks().forEach(track => track.stop());
+      throw new Error('Chamada cancelada.');
+    }
+    const microphone = stream.getAudioTracks()[0];
+    if (!microphone) {
+      stream.getTracks().forEach(track => track.stop());
+      throw new DOMException('Microfone indisponível.', 'NotFoundError');
+    }
+    microphoneRef.current = microphone;
+  }, []);
 
   const refresh = useCallback((room: Room) => {
     if (roomRef.current !== room) return;
@@ -96,11 +118,13 @@ export function useLiveKitCall() {
   }, []);
 
   const connect = useCallback(async (id: string, type: 'voice' | 'video', target: string, initiator: boolean, epoch: number) => {
+    setupStage.current = 'token';
     const { data, error } = await supabase.functions.invoke('generate-livekit-token', {
       body: { roomName: `call-${id}`, participantName: profile?.display_name || 'Utilizador', participantIdentity: user!.id },
     });
     if (generation.current !== epoch) throw new Error('Chamada cancelada.');
     if (error || !data?.token || !data?.url) throw new Error('Não foi possível obter acesso seguro à chamada.');
+    setupStage.current = 'sdk';
     const sdk = await import('livekit-client');
     if (generation.current !== epoch) throw new Error('Chamada cancelada.');
     sdkRef.current = sdk;
@@ -139,10 +163,16 @@ export function useLiveKitCall() {
       if (timeoutError) { fail('Não foi possível confirmar a resposta. Tenta novamente.'); return; }
       if (ended) { releaseRef.current(); setState(s => ({ ...s, lastError: 'Sem resposta.' })); }
     }, 60_000);
+    setupStage.current = 'room_connect';
     await room.connect(data.url, data.token);
     if (roomRef.current !== room || generation.current !== epoch) { await room.disconnect(); throw new Error('Chamada cancelada.'); }
-    await room.localParticipant.setMicrophoneEnabled(true);
+    setupStage.current = 'microphone_publish';
+    const microphone = microphoneRef.current;
+    if (!microphone || microphone.readyState === 'ended') throw new DOMException('Microfone indisponível.', 'NotReadableError');
+    // Publish the already authorised track; do not capture a second microphone.
+    await room.localParticipant.publishTrack(microphone, { source: sdk.Track.Source.Microphone });
     if (type === 'video') {
+      setupStage.current = 'camera';
       try { await room.localParticipant.setCameraEnabled(true); }
       catch { toast({ title: 'Câmara indisponível', description: 'A chamada continua por voz. Podes voltar a ligar a câmara.' }); }
     }
@@ -158,6 +188,9 @@ export function useLiveKitCall() {
     let id: string | null = null;
     setState(s => ({ ...s, callStatus: 'initiating', isInitiator: true, callType: type, targetUserId: target, lastError: null }));
     try {
+      // Nothing is announced to the recipient while the caller is deciding on permission.
+      await prepareMicrophone(epoch);
+      setupStage.current = 'create';
       id = await lifecycleRef.current.createCallInDB(target, type, conversationId, 'livekit');
       if (generation.current !== epoch) {
         await supabase.rpc('finish_direct_call', { p_call_id: id, p_outcome: 'cancelled' });
@@ -167,10 +200,10 @@ export function useLiveKitCall() {
       await connect(id, type, target, true, epoch);
       return id;
     } catch (e) {
-      if (generation.current === epoch) fail(e instanceof Error ? e.message : 'Falha ao iniciar chamada.');
+      if (generation.current === epoch) { const failure = callSetupFailure(setupStage.current, e); fail(failure.message, failure.reason); }
       throw e;
     } finally { if (generation.current === epoch) busy.current = false; }
-  }, [user, connect, fail]);
+  }, [user, connect, fail, prepareMicrophone]);
 
   const answerCall = useCallback(async (id: string, type: 'voice' | 'video', target: string) => {
     if (!user) throw new Error('Inicia sessão.');
@@ -178,6 +211,7 @@ export function useLiveKitCall() {
     busy.current = true;
     const epoch = ++generation.current;
     try {
+      setupStage.current = 'claim';
       const { data: claimed, error: claimError } = await supabase.rpc('claim_direct_call', { p_call_id: id });
       if (generation.current !== epoch) {
         if (claimed) await supabase.rpc('finish_direct_call', { p_call_id: id, p_outcome: 'completed' });
@@ -185,8 +219,10 @@ export function useLiveKitCall() {
       }
       if (claimError || !claimed) throw new Error('A chamada já terminou ou foi atendida noutro dispositivo.');
       callRef.current = id;
+      await prepareMicrophone(epoch);
       await connect(id, type, target, false, epoch);
       if (generation.current !== epoch) return;
+      setupStage.current = 'accept';
       // Only persist acceptance after the transport and local microphone are ready.
       const { data: accepted, error: acceptError } = await supabase.from('calls')
         .update({ status: 'ongoing', started_at: new Date().toISOString() })
@@ -198,10 +234,10 @@ export function useLiveKitCall() {
         .eq('call_id', id).eq('user_id', user.id).in('status', ['ringing', 'connected']).select('id').maybeSingle();
       if (joinError || !joined) throw new Error('Não foi possível confirmar a participação na chamada.');
     } catch (e) {
-      if (generation.current === epoch) fail(e instanceof Error ? e.message : 'Falha ao atender chamada.');
+      if (generation.current === epoch) { const failure = callSetupFailure(setupStage.current, e); fail(failure.message, failure.reason); }
       throw e;
     } finally { if (generation.current === epoch) busy.current = false; }
-  }, [user, connect, fail]);
+  }, [user, connect, fail, prepareMicrophone]);
 
   const endCall = useCallback(async () => {
     const id = callRef.current;
