@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      academia_communities: {
+        Row: { slug: string; title: string; description: string; position: number; starter_title: string; starter_instructions: string; starter_skill: string }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      academia_cohorts: {
+        Row: { id: string; community_slug: string; mentor_id: string; mentor_name: string; title: string; level: string; language: string; locality: string; requirements: string; plan: string; challenge_title: string; instructions: string; skill: string; capacity: number; seats_taken: number; status: string; created_at: string }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      academia_public_works: {
+        Row: { id: string; community_slug: string; cohort_id: string | null; title: string; skill: string; caption: string; learner_name: string; mentor_name: string; evidence_url: string | null; published: boolean; created_at: string }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      academia_work_sources: {
+        Row: { work_id: string; challenge_id: string; owner_id: string }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      academia_cohort_members: {
+        Row: { id: string; cohort_id: string; learner_id: string; goal_id: string; source_work_id: string | null; created_at: string }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      academia_community_audit: {
+        Row: { id: string; actor_id: string; action: string; cohort_id: string | null; work_id: string | null; created_at: string }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
       academia_goals: {
         Row: { id: string; learner_id: string; mentor_id: string; title: string; context: string; plan: string; closure_reason: string; status: string; created_at: string; updated_at: string }
         Insert: never
@@ -6403,6 +6439,7 @@ export type Database = {
       }
     }
     Functions: {
+      academia_community_action: { Args: { p_action: string; p_target?: string; p_payload?: Json }; Returns: string }
       academia_learning_progress: { Args: { p_goals: string[] }; Returns: { goal_id: string; total: number; approved: number }[] }
       academia_learning_action: { Args: { p_action: string; p_goal?: string; p_payload?: Json }; Returns: string }
       my_attributed_storage_usage: {

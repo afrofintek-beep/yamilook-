@@ -138,6 +138,21 @@ describe('Authentication Flow', () => {
       });
     });
 
+    it('returns to a community challenge after login and preserves it in the registration link', async () => {
+      const previous = window.location.pathname + window.location.search;
+      const target = '/academia/comunidades/criacao-digital/turmas/11111111-1111-4111-8111-111111111111?origem=22222222-2222-4222-8222-222222222222';
+      window.history.replaceState({}, '', '/login?next=' + encodeURIComponent(target));
+      try {
+        mockSupabaseClient.auth.signInWithPassword.mockResolvedValueOnce({ data: { session: mockSession, user: mockSession.user }, error: null });
+        renderWithAuth(<LoginForm />);
+        expect(document.querySelector('a[href^="/register?next="]')).toHaveAttribute('href', '/register?next=' + encodeURIComponent(target));
+        fireEvent.change(screen.getByPlaceholderText('nome@yamilook.com'), { target: { value: 'test@example.com' } });
+        fireEvent.change(screen.getByPlaceholderText('••••••••'), { target: { value: 'password123' } });
+        fireEvent.click(screen.getByRole('button', { name: /entrar no yamilook/i }));
+        await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith(target));
+      } finally { window.history.replaceState({}, '', previous); }
+    });
+
     it('shows error message on login failure', async () => {
       const { toast } = await import('sonner');
 

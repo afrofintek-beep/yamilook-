@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { learningStatus, useLearningAction, type LearningChallenge, type LearningSubmission } from '../hooks/useAcademiaLearning';
+import { ShareValidatedWork } from './ShareValidatedWork';
 import { safeEvidenceUrl } from '../learning-evidence';
 export function LearningChallengeCard({ challenge, submissions, goalId, isMentor, active }: {
   challenge: LearningChallenge; submissions: LearningSubmission[]; goalId: string; isMentor: boolean; active: boolean;
@@ -36,6 +37,7 @@ export function LearningChallengeCard({ challenge, submissions, goalId, isMentor
       <p className="text-xs text-muted-foreground">Podes incluir uma ligação para uma fotografia, vídeo ou documento. Confirma que o mentor tem acesso ao ficheiro.</p>
       <Button disabled={save.isPending || content.trim().length < 3}>{save.isPending ? 'A enviar…' : challenge.status === 'revision' ? 'Enviar nova versão' : 'Entregar trabalho'}</Button>
     </form>}
+    {!isMentor && challenge.status === 'approved' && <ShareValidatedWork challenge={challenge} />}
     {save.error && <p role="alert" className="text-sm text-destructive">{save.error.message}</p>}
   </article>;
 }

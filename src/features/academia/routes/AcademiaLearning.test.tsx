@@ -6,6 +6,7 @@ const state = vi.hoisted(() => ({
   user: 'learner', goal: null as LearningGoal | null, challenges: [] as LearningChallenge[], submissions: [] as LearningSubmission[],
   error: false, mutate: vi.fn(), mutateAsync: vi.fn(), refetch: vi.fn(), noMentors: false,
 }));
+vi.mock('../hooks/useAcademiaCommunity', () => ({ useCommunities: vi.fn(), useOwnWork: vi.fn(), useGoalCommunity: vi.fn(), useCommunityAction: vi.fn() }));
 vi.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: { id: state.user } }) }));
 vi.mock('../hooks/useAcademia', () => ({ useAcademiaMentors: () => ({ data: state.noMentors ? [] : [{ id: 'mentor', name: 'Maria', specialty: 'Negócios' }, { id: 'learner', name: 'Eu', specialty: 'Teste' }], isLoading: false, isError: false }) }));
 vi.mock('../hooks/useAcademiaLearning', () => ({

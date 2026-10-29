@@ -9,8 +9,9 @@ export const learningStatus: Record<string, string> = {
   requested: 'A aguardar o mentor', active: 'Em curso', completed: 'Concluído', cancelled: 'Encerrado',
   open: 'Por entregar', submitted: 'Em avaliação', revision: 'Rever e entregar novamente', approved: 'Validado', pending: 'Em avaliação',
 };
-export type LearningAction = 'create' | 'plan' | 'challenge' | 'submit' | 'review' | 'complete' | 'cancel';
-export interface LearningInput { action: LearningAction; goalId?: string; payload?: Record<string, Json> }
+export type CommunityAction = 'cohort_create' | 'cohort_join' | 'cohort_close' | 'work_publish' | 'work_hide';
+export type LearningAction = CommunityAction | 'create' | 'plan' | 'challenge' | 'submit' | 'review' | 'complete' | 'cancel';
+export interface LearningInput { action: LearningAction; goalId?: string; targetId?: string; payload?: Record<string, Json> }
 export async function requestLearningAction(input: LearningInput): Promise<string> {
   const refresh = async () => {
     const { data, error } = await supabase.auth.refreshSession();

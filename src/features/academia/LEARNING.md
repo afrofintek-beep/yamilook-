@@ -28,3 +28,23 @@ The `Academia learning journeys` workflow runs these checks for the PR.
 3. Release the frontend only after both server changes are available. Test a real learner account, assigned mentor and unrelated account against that environment. Confirm creation, revision, validation, completion and access denial.
 
 No production database or Edge Function deployment is performed by the local test scripts.
+
+## Communities, small cohorts and voluntary public work
+
+The next phase adds six public affinity communities and mentor-authored, free entry challenges. The seeded entries are discovery categories and editable starting examples, not fabricated mentors, cohorts, students or outcomes. Mentors publish a plan, a first challenge, skill, language, locality, experience level and requirements. A mentor can have at most three open-registration cohorts. Cohorts admit at most twenty learners.
+
+Joining atomically reserves one lifetime entry seat and copies the mentor's published plan and first challenge into an active private learning goal. Repeated joins return the existing goal without consuming another seat, including after registration closes. Seats are not recycled after cancellation. Goal limits are shared across individual and cohort journeys. No Kumbu charge, automatic public sharing, group chat or continuous video call is introduced. Private feedback remains one-to-one; the cohort is an asynchronous challenge group. The mentor can adapt each private goal using the existing controls.
+
+The cohort mentor can read their own roster, private progress and the number of enrollments attributed to published work. Fellow learners cannot read one another's membership or goal. A shared, published work ID can attribute a new enrollment; invalid, withdrawn or unrelated sources do not generate attribution. These counts are enrollments, not views, reach or a promise of viral growth. No financial referral rewards are issued.
+
+Only the owner of a mentor-approved challenge can create a public presentation, with explicit consent. It contains the challenge title, validated skill, learner/mentor display names and a learner-written caption. The original submission and feedback are never copied. Evidence is excluded by default; opting in includes only the URL of the approved submission. Private ownership and challenge links live in a separate protected source table. The learner can withdraw or republish the same presentation ID. Previously copied content or externally hosted files cannot be recalled by withdrawing the Academia page.
+
+Public discovery and presentations are accessible without an account. Share links always use www.yamilook.com. A narrowly validated return path preserves the community challenge and valid proof attribution through email/password login, registration and onboarding, with normal account/invitation requirements. It rejects external destinations and strips unrelated query parameters. Real email confirmation and social OAuth return continuity are not validated by the simulated browser tests.
+
+The implementation uses text and optional external links, with no autoplaying media or required video upload. The first version supports manual refresh and normal focus revalidation, not live roster push updates. Public link previews retain the site's current generic social metadata; no per-work Open Graph images are generated.
+
+### Additional rollout and checks
+
+Apply `20261029120212_academia_communities.sql`, redeploy the updated `academia-learning` function, then release the frontend. The migration also changes the existing private goal-creation profile lock to `FOR NO KEY UPDATE`: it still serializes learner limits while allowing foreign-key references, avoiding unnecessary profile-lock conflicts in cross-mentoring enrollment. A multi-connection contention/load test has not been performed.
+
+`node --test scripts/test-academia-communities.mjs` applies both learning migrations to an isolated Postgres WASM instance and tests real RLS, capacity, idempotence, private rosters, explicit consent, validation, attribution and withdrawal. `academia-communities.spec.ts` exercises mentor creation, learner enrollment/review/publication, anonymous discovery, a referred peer enrollment and withdrawal with simulated transport in WebKit. The existing private journey, account and invitation tests remain part of CI.

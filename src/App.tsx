@@ -1,3 +1,4 @@
+import { communityReturn } from './features/academia/community-links';
 import { recoverApplicationAssets } from '@/lib/app-assets';
 import { getSharedAudioContext } from '@/lib/audio-context';
 import { useState, useEffect, Suspense, lazy, Component } from "react";
@@ -80,6 +81,9 @@ const AcademiaHome = lazy(() => import("./features/academia/routes/AcademiaHome"
 const AcademiaCreateSession = lazy(() => import("./features/academia/routes/AcademiaCreateSession"));
 const AcademiaSession = lazy(() => import("./features/academia/routes/AcademiaSession"));
 const MentorProfileScreen = lazy(() => import("./features/academia/routes/MentorProfileScreen"));
+const AcademiaCommunities = lazy(() => import('./features/academia/routes/AcademiaCommunities'));
+const AcademiaCohort = lazy(() => import('./features/academia/routes/AcademiaCohort'));
+const AcademiaPublicWork = lazy(() => import('./features/academia/routes/AcademiaPublicWork'));
 const AcademiaLearning = lazy(() => import('./features/academia/routes/AcademiaLearning'));
 const AcademiaLearningGoal = lazy(() => import('./features/academia/routes/AcademiaLearningGoal'));
 const AcademiaLiveRoom = lazy(() => import("./features/academia/routes/AcademiaLiveRoom"));
@@ -266,6 +270,7 @@ function ProtectedRoute({ children, skipOnboardingCheck }: { children: React.Rea
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
+  const location = useLocation();
   
   if (loading) {
     return (
@@ -276,7 +281,7 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   }
   
   if (user) {
-    return <Navigate to="/feed" replace />;
+    return <Navigate to={communityReturn(location.search) || "/feed"} replace />;
   }
   
   return <>{children}</>;
@@ -306,6 +311,10 @@ function AnimatedRoutes() {
           <Route path="/mokubico" element={<ProtectedRoute><MokubHome /></ProtectedRoute>} />
           <Route path="/academia" element={<ProtectedRoute><AcademiaHome /></ProtectedRoute>} />
           <Route path="/academia/create" element={<ProtectedRoute><AcademiaCreateSession /></ProtectedRoute>} />
+          <Route path="/academia/comunidades" element={<AcademiaCommunities />} />
+          <Route path="/academia/comunidades/:slug" element={<AcademiaCommunities />} />
+          <Route path="/academia/comunidades/:slug/turmas/:cohortId" element={<AcademiaCohort />} />
+          <Route path="/academia/trabalhos/:workId" element={<AcademiaPublicWork />} />
           <Route path="/academia/percursos" element={<ProtectedRoute><AcademiaLearning /></ProtectedRoute>} />
           <Route path="/academia/percursos/:goalId" element={<ProtectedRoute><AcademiaLearningGoal /></ProtectedRoute>} />
           <Route path="/academia/live/:sessionId" element={<ProtectedRoute><AcademiaLiveRoom /></ProtectedRoute>} />
