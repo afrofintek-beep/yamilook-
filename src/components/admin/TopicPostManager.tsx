@@ -595,7 +595,7 @@ export function TopicPostManager() {
                   </div>
                 </motion.div>
               ))}
-              {filteredPosts.length === 0 && (
+              {!loadError && filteredPosts.length === 0 && (
                 <div className="text-center py-8 text-muted-foreground">
                   <FileText className="w-12 h-12 mx-auto mb-3 opacity-50" />
                   <p>Nenhum post encontrado</p>
