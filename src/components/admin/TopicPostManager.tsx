@@ -198,6 +198,8 @@ interface Post {
 
 export function TopicPostManager() {
   const { t } = useTranslation();
+  const [loadError, setLoadError] = useState(false);
+  const [postCounts, setPostCounts] = useState<Record<string, number>>({});
   const [topics, setTopics] = useState<Topic[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
@@ -230,6 +232,9 @@ export function TopicPostManager() {
   useEffect(() => {
     fetchTopics();
     fetchPosts();
+    const refresh = () => { fetchTopics(); };
+    window.addEventListener('admin-topics-changed', refresh);
+    return () => window.removeEventListener('admin-topics-changed', refresh);
   }, []);
 
   const fetchTopics = async () => {
@@ -240,8 +245,12 @@ export function TopicPostManager() {
         .order('display_order');
 
       if (error) throw error;
+      const { data: counts, error: countError } = await supabase.rpc('admin_topic_counts');
+      if (countError) throw countError;
+      setPostCounts(Object.fromEntries((counts || []).map(c => [c.topic_id, Number(c.post_count)])));
       setTopics(data || []);
     } catch (error) {
+      setLoadError(true);
       console.error('Error fetching topics:', error);
     } finally {
       setLoadingTopics(false);
@@ -304,6 +313,7 @@ export function TopicPostManager() {
 
       setPosts(enrichedPosts);
     } catch (error) {
+      setLoadError(true);
       console.error('Error fetching posts:', error);
     } finally {
       setLoadingPosts(false);
@@ -338,25 +348,9 @@ export function TopicPostManager() {
 
     setSaving(true);
     try {
-      // Delete existing topics for this post
-      await supabase
-        .from('post_topics')
-        .delete()
-        .eq('post_id', selectedPost.id);
-
-      // Insert new topics
-      if (selectedTopics.length > 0) {
-        const { error } = await supabase
-          .from('post_topics')
-          .insert(
-            selectedTopics.map(topicId => ({
-              post_id: selectedPost.id,
-              topic_id: topicId,
-            }))
-          );
-
-        if (error) throw error;
-      }
+      const { error } = await supabase.rpc('admin_topic_action', { p_action: 'assign', p_id: selectedPost.id, p_ids: selectedTopics });
+      if (error) throw error;
+      await fetchTopics();
 
       // Update local state
       setPosts(prev =>
@@ -390,18 +384,7 @@ export function TopicPostManager() {
 
     setDeleting(true);
     try {
-      // First, delete all post_topics associations
-      await supabase
-        .from('post_topics')
-        .delete()
-        .eq('topic_id', topicToDelete.id);
-
-      // Then delete the topic
-      const { error } = await supabase
-        .from('discover_topics')
-        .delete()
-        .eq('id', topicToDelete.id);
-
+      const { error } = await supabase.rpc('admin_topic_action', { p_action: 'delete', p_id: topicToDelete.id });
       if (error) throw error;
 
       toast.success('Tópico eliminado com sucesso!');
@@ -418,6 +401,7 @@ export function TopicPostManager() {
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
+    if (savingOrder) return;
     const { active, over } = event;
 
     if (over && active.id !== over.id) {
@@ -430,18 +414,8 @@ export function TopicPostManager() {
       // Save new order to database
       setSavingOrder(true);
       try {
-        const updates = newTopics.map((topic, index) => ({
-          id: topic.id,
-          display_order: index + 1,
-        }));
-
-        // Update each topic's display_order
-        for (const update of updates) {
-          await supabase
-            .from('discover_topics')
-            .update({ display_order: update.display_order })
-            .eq('id', update.id);
-        }
+        const { error } = await supabase.rpc('admin_topic_action', { p_action: 'reorder', p_ids: newTopics.map(t => t.id) });
+        if (error) throw error;
 
         toast.success('Ordem dos tópicos atualizada!');
       } catch (error) {
@@ -498,6 +472,8 @@ export function TopicPostManager() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
+          {loadError && <div role="alert">Não foi possível carregar todos os dados. <Button variant="outline" onClick={() => { setLoadError(false); fetchTopics(); fetchPosts(); }}>Tentar novamente</Button></div>}
+          <p className="text-xs text-muted-foreground">São apresentados os 100 posts mais recentes. As contagens dos tópicos incluem todas as associações.</p>
           {/* Drag-and-drop Topics */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -530,7 +506,7 @@ export function TopicPostManager() {
                     strategy={horizontalListSortingStrategy}
                   >
                     {topics.map(topic => {
-                      const count = posts.filter(p => p.topics.includes(topic.id)).length;
+                      const count = postCounts[topic.id] ?? 0;
                       return (
                         <SortableTopicItem
                           key={topic.id}
