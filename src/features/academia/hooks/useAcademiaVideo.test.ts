@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const state=vi.hoisted(()=>({invoke:vi.fn(),session:vi.fn(),refresh:vi.fn(),rooms:[] as any[], denyCamera:false, failConnect:false}));
 vi.mock('@/integrations/supabase/client',()=>({supabase:{auth:{getSession:state.session,refreshSession:state.refresh},functions:{invoke:state.invoke}}}));
 vi.mock('livekit-client',()=>({
+  DisconnectReason:{DUPLICATE_IDENTITY:2,PARTICIPANT_REMOVED:4,ROOM_DELETED:5,2:'DUPLICATE_IDENTITY',4:'PARTICIPANT_REMOVED',5:'ROOM_DELETED'},
   ConnectionState:{Disconnected:'disconnected',Connected:'connected'},
   RoomEvent:{Disconnected:'disconnected',ConnectionStateChanged:'state',DataReceived:'data'},
   Room:class {
@@ -10,11 +11,13 @@ vi.mock('livekit-client',()=>({
     localParticipant={isCameraEnabled:false,isMicrophoneEnabled:false,setCameraEnabled:vi.fn().mockResolvedValue(undefined),setMicrophoneEnabled:vi.fn().mockResolvedValue(undefined),publishData:vi.fn().mockResolvedValue(undefined)};
     connect=vi.fn().mockResolvedValue(undefined);disconnect=vi.fn().mockResolvedValue(undefined);startAudio=vi.fn().mockResolvedValue(undefined);
     on(e:any,cb:any){this.handlers.set(e,cb);return this;}
-    constructor(){if(state.failConnect)this.connect.mockRejectedValue(new Error("Network unavailable"));if(state.denyCamera)this.localParticipant.setCameraEnabled.mockRejectedValue(new Error("NotAllowedError"));state.rooms.push(this);}
+    constructor(public options:any){if(state.failConnect)this.connect.mockRejectedValue(new Error("Network unavailable"));if(state.denyCamera)this.localParticipant.setCameraEnabled.mockRejectedValue(new Error("NotAllowedError"));state.rooms.push(this);}
   }
 }));
-import { requestAcademiaVideo, useAcademiaVideo } from './useAcademiaVideo';
+import { deferCallUpdate } from '@/lib/call-update-guard';
+import { academiaReconnectPolicy, requestAcademiaVideo, useAcademiaVideo } from './useAcademiaVideo';
 beforeEach(()=>{
+  sessionStorage.clear();
   state.rooms.length=0;state.denyCamera=false;state.failConnect=false;state.invoke.mockReset();state.session.mockReset();state.refresh.mockReset();
   state.session.mockResolvedValue({data:{session:{access_token:'test-token',expires_at:Date.now()/1000+1000}}});
   state.invoke.mockResolvedValue({data:{token:'room-token',url:'wss://example.invalid'},error:null});
@@ -51,6 +54,7 @@ describe('Academia video connection',()=>{
     expect(result.current.room).toBe(state.rooms[0]);
     expect(result.current.error).toContain('Ligado sem');
     expect(state.rooms[0].localParticipant.setCameraEnabled).toHaveBeenCalledWith(true);
+    expect(state.rooms[0].localParticipant.setMicrophoneEnabled).toHaveBeenCalledWith(true);
   });
   it('disconnects on unmount and blocks a late credential response',async()=>{
     let resolve:any;state.invoke.mockReturnValue(new Promise(r=>{resolve=r;}));
@@ -108,4 +112,50 @@ it('does not refresh authorization failures',async()=>{
   state.invoke.mockResolvedValue({error:{context:{status:403,json:async()=>({error:'too_early'})}}});
   await expect(requestAcademiaVideo('session','start')).rejects.toThrow('15 minutos');
   expect(state.refresh).not.toHaveBeenCalled();
+});
+
+it('preserves the room while the SDK reconnects and uses a bounded recovery window',async()=>{
+  const {result}=renderHook(()=>useAcademiaVideo('session'));
+  await act(()=>result.current.join(true,true,true));
+  const room=state.rooms[0];
+  act(()=>room.handlers.get('state')('reconnecting'));
+  expect(result.current.room).toBe(room);
+  expect(result.current.connection).toBe('reconnecting');
+  expect(room.disconnect).not.toHaveBeenCalled();
+  expect(room.options.reconnectPolicy).toBe(academiaReconnectPolicy);
+  expect(academiaReconnectPolicy.nextRetryDelayInMs({elapsedMs:60000,retryCount:5})).toBe(5000);
+  expect(academiaReconnectPolicy.nextRetryDelayInMs({elapsedMs:120000})).toBeNull();
+  act(()=>room.handlers.get('state')('connected'));
+  expect(result.current.room).toBe(room);
+});
+it.each([2,4,5])('records definitive disconnect %s without automatically reopening the room',async(reason)=>{
+  const {result}=renderHook(()=>useAcademiaVideo('session'));
+  await act(()=>result.current.join(true,false,false));
+  act(()=>state.rooms[0].handlers.get('disconnected')(reason));
+  expect(result.current.room).toBeNull();
+  expect(result.current.connection).toBe('disconnected');
+  expect(result.current.error).toBeTruthy();
+  expect(state.invoke).toHaveBeenCalledTimes(1);
+  const events=JSON.parse(sessionStorage.getItem('academia-call-diagnostics-v1')!);
+  expect(events.at(-1).event).toBe('disconnected');
+  expect(events.at(-1).detail).not.toBe('unknown');
+  expect(JSON.stringify(events)).not.toContain('test-token');
+});
+
+it('holds pending updates through reconnection and releases them on leaving',async()=>{
+  const {result}=renderHook(()=>useAcademiaVideo('session'));
+  await act(()=>result.current.join(true,false,false));
+  const update=vi.fn();deferCallUpdate(update);
+  act(()=>state.rooms[0].handlers.get('state')('reconnecting'));
+  expect(update).not.toHaveBeenCalled();
+  act(()=>result.current.leave());
+  await waitFor(()=>expect(update).toHaveBeenCalledOnce());
+});
+it('does not apply late room events after a definitive disconnect',async()=>{
+  const {result}=renderHook(()=>useAcademiaVideo('session'));
+  await act(()=>result.current.join(true,false,false));
+  act(()=>state.rooms[0].handlers.get('disconnected')(2));
+  act(()=>state.rooms[0].handlers.get('state')('connected'));
+  expect(result.current.connection).toBe('disconnected');
+  expect(result.current.room).toBeNull();
 });
