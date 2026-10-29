@@ -1,12 +1,12 @@
 import { fireEvent, render, screen, waitFor, cleanup } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { InviteSheet } from './InviteSheet';
-const { rpc } = vi.hoisted(() => ({ rpc: vi.fn() }));
-vi.mock('@/integrations/supabase/client', () => ({ supabase: { rpc } }));
+const { rpc, invoke } = vi.hoisted(() => ({ rpc: vi.fn(), invoke: vi.fn() }));
+vi.mock('@/integrations/supabase/client', () => ({ supabase: { rpc, functions: { invoke } } }));
 vi.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: { id: 'inviter' } }) }));
 const code = 'A123456789ABCDEF';
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
-beforeEach(() => { rpc.mockReset(); rpc.mockImplementation((name: string) => Promise.resolve({ data: name === 'can_issue_user_invitation' ? true : { code }, error: null })); });
+beforeEach(() => { rpc.mockReset(); invoke.mockReset(); invoke.mockResolvedValue({ data: { ok: true }, error: null }); rpc.mockImplementation((name: string) => Promise.resolve({ data: name === 'can_issue_user_invitation' ? true : { code }, error: null })); });
 const show = () => render(<InviteSheet open onOpenChange={() => {}} />);
 const generate = async () => {
   fireEvent.change(await screen.findByLabelText('Email da pessoa convidada'), { target: { value: 'new@example.com' } });
@@ -74,20 +74,37 @@ describe('Unique invitations', () => {
     expect(screen.getByLabelText('Código único de convite')).toHaveValue(code);
     expect(screen.getByLabelText('Link de convite')).toHaveValue(`https://www.yamilook.com/register?ref=${code}`);
   });
-  it('keeps the invitation after cancelling native sharing without canShare', async () => {
-    Object.defineProperty(navigator, 'canShare', { configurable: true, value: undefined });
-    const share = vi.fn().mockRejectedValue(new DOMException('cancelled', 'AbortError'));
-    Object.defineProperty(navigator, 'share', { configurable: true, value: share });
+  it('offers optional email and WhatsApp without auto-sending after code generation', async () => {
     show(); await generate();
-    fireEvent.click(screen.getByRole('button', { name: 'Enviar convite' }));
-    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Partilha cancelada'));
-    expect(share).toHaveBeenCalledOnce();
-    expect(screen.getByLabelText('Código único de convite')).toHaveValue(code);
+    expect(invoke).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Enviar por email' })).toBeInTheDocument();
+    const whatsapp = screen.getByRole('link', { name: 'Partilhar pelo WhatsApp' });
+    expect(whatsapp).toHaveAttribute('target', '_blank');
+    expect(whatsapp).toHaveAttribute('rel', 'noopener noreferrer');
+    const url = new URL(whatsapp.getAttribute('href')!);
+    expect(url.host).toBe('api.whatsapp.com');
+    expect(url.searchParams.get('text')).toContain('https://www.yamilook.com/register?ref=' + code);
+    expect(screen.getByRole('link', { name: 'Preparar email manual' })).toHaveAttribute('href', expect.stringContaining('mailto:'));
+  });
+  it('sends the invitation by email only after explicit click', async () => {
+    show(); await generate();
+    fireEvent.click(screen.getByRole('button', { name: 'Enviar por email' }));
+    await waitFor(() => expect(invoke).toHaveBeenCalledWith('send-user-invitation', {
+      body: { email: 'new@example.com', code },
+    }));
+    expect(screen.getByRole('status')).toHaveTextContent('aceitou o convite para envio');
+  });
+  it('offers manual email if the automatic service is not configured', async () => {
+    invoke.mockResolvedValue({ data: { error: 'email_not_configured' }, error: null });
+    show(); await generate();
+    fireEvent.click(screen.getByRole('button', { name: 'Enviar por email' }));
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('ainda não está configurado'));
+    expect(screen.getByRole('link', { name: 'Preparar email manual' })).toBeInTheDocument();
   });
   it('hides the old invitation when the recipient changes', async () => {
     show(); await generate();
     fireEvent.change(await screen.findByLabelText('Email da pessoa convidada'), { target: { value: 'other@example.com' } });
-    expect(screen.queryByRole('button', { name: 'Enviar convite' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Enviar por email' })).not.toBeInTheDocument();
   });
   it('never exposes a code if the server rejects generation', async () => {
     rpc.mockImplementation((name: string) => Promise.resolve(name === 'can_issue_user_invitation' ? { data: true, error: null } : { data: null, error: { code: 'P0001', message: 'Este email já tem conta. Usa a opção de entrar.', details: null, hint: null } }));

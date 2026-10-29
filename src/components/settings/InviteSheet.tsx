@@ -8,6 +8,7 @@ import type { Database, Json } from '@/integrations/supabase/types';
 import { X } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { buildInviteUrl } from '@/lib/referral';
+import { buildEmailInviteDraftUrl, buildWhatsAppInviteUrl } from '@/lib/invite-delivery';
 
 // Keep the generated database snapshot untouched until the migration is applied.
 type InvitationDatabase = Omit<Database, 'public'> & {
@@ -103,6 +104,7 @@ export function InviteSheet({ open, onOpenChange, isAdmin = false }: InviteSheet
   const [email, setEmail] = useState('');
   const [issuing, setIssuing] = useState(false);
   const [issuedFor, setIssuedFor] = useState('');
+  const [sendingEmail, setSendingEmail] = useState(false);
   const issue = async () => {
     if (!allowed) return;
     setIssuing(true);
@@ -131,19 +133,26 @@ export function InviteSheet({ open, onOpenChange, isAdmin = false }: InviteSheet
     }
   };
 
-  const share = async () => {
-    const data = { title: 'Yamilook', text: `Junta-te a mim no Yamilook! Código de convite: ${code}`, url };
+  const sendEmail = async () => {
+    if (!allowed || !code || !issuedFor || sendingEmail) return;
+    setSendingEmail(true);
+    setStatus('');
     try {
-      if (!navigator.share || (navigator.canShare && !navigator.canShare(data))) {
-        setStatus('A partilha não está disponível neste navegador. Copia o código ou o link e envia por mensagem.');
+      const { data, error } = await supabase.functions.invoke('send-user-invitation', {
+        body: { email: issuedFor, code },
+      });
+      if (error || !data?.ok) {
+        const responseStatus = (error as { context?: { status?: number } } | null)?.context?.status;
+        setStatus(responseStatus === 503 || data?.error === 'email_not_configured'
+          ? 'O envio automático ainda não está configurado. Usa «Preparar email manual» ou WhatsApp.'
+          : 'Não foi possível enviar o convite por email. Usa o envio manual ou tenta novamente.');
         return;
       }
-      await navigator.share(data);
-      setStatus('Partilha concluída.');
-    } catch (error) {
-      setStatus((error as Error).name === 'AbortError'
-        ? 'Partilha cancelada. O código e o link continuam disponíveis abaixo.'
-        : 'Não foi possível partilhar. Copia o código ou o link e envia por mensagem.');
+      setStatus('O serviço de email aceitou o convite para envio. A entrega na caixa de correio ainda não está confirmada.');
+    } catch {
+      setStatus('Não foi possível enviar o convite por email. Usa o envio manual ou WhatsApp.');
+    } finally {
+      setSendingEmail(false);
     }
   };
 
@@ -159,7 +168,7 @@ export function InviteSheet({ open, onOpenChange, isAdmin = false }: InviteSheet
           </div>
         </SheetHeader>
         <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain break-words px-6 pt-4 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]">
-          <SheetDescription>Gera um código único para o email da pessoa convidada. Só pode ser usado uma vez. Gerar o código não envia um email.</SheetDescription>
+          <SheetDescription>Gera um código único para o email da pessoa convidada. Só pode ser usado uma vez. Depois de o gerar, escolhe enviar por email ou partilhar pelo WhatsApp.</SheetDescription>
         {allowed ? <>
         <form className="space-y-3 mt-6" onSubmit={(event) => { event.preventDefault(); void issue(); }}>
           <label htmlFor="invite-email" className="block font-medium">Email da pessoa convidada</label>
@@ -178,7 +187,21 @@ export function InviteSheet({ open, onOpenChange, isAdmin = false }: InviteSheet
             <label htmlFor="invite-link" className="block font-medium">Link de convite</label>
             <Input id="invite-link" value={url} readOnly onFocus={(event) => event.target.select()} />
             <Button variant="outline" className="w-full" onClick={() => void copy(url)}>Copiar link</Button>
-            <Button variant="outline" className="w-full" onClick={() => void share()}>Enviar convite</Button>
+            <div className="space-y-3 border-t border-border pt-4">
+              <p className="font-medium">Como queres enviar o convite?</p>
+              <Button className="w-full" disabled={sendingEmail || !allowed} onClick={() => void sendEmail()}>
+                {sendingEmail ? 'A enviar email…' : 'Enviar por email'}
+              </Button>
+              <Button variant="outline" className="w-full" asChild>
+                <a href={buildWhatsAppInviteUrl(issuedFor, code)} target="_blank" rel="noopener noreferrer">
+                  Partilhar pelo WhatsApp
+                </a>
+              </Button>
+              <Button variant="ghost" className="w-full" asChild>
+                <a href={buildEmailInviteDraftUrl(issuedFor, code)}>Preparar email manual</a>
+              </Button>
+              <p className="text-xs text-muted-foreground">No WhatsApp e no email manual, confirma o destinatário e o envio na aplicação escolhida.</p>
+            </div>
           </div>
         ) : (
           <p className="mt-6">Os convites destinam-se a pessoas que ainda não têm conta na Yamilook.</p>
