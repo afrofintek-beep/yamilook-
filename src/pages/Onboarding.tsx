@@ -1,8 +1,9 @@
+import { communityReturn } from '@/features/academia/community-links';
 import { ResidenceForm } from '@/components/residence/ResidenceForm';
 import { submitResidence, validResidencePlan, type ResidencePlan } from '@/lib/residence';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Camera, 
@@ -102,6 +103,7 @@ const tourSlides = [
 export default function Onboarding() {
   const { user, profile, loading: authLoading, updateProfile, signUp, refreshProfile } = useAuth();
   const navigate = useNavigate();
+  const returnToCommunity = communityReturn(useLocation().search);
   const { t } = useTranslation();
 
   // Track whether the user just completed onboarding in this session
@@ -112,9 +114,9 @@ export default function Onboarding() {
   // Only the explicit completion action may finish onboarding.
   useEffect(() => {
     if (user && profile?.onboarding_completed && !justCompletedRef.current) {
-      navigate('/profile', { replace: true });
+      navigate(returnToCommunity || '/profile', { replace: true });
     }
-  }, [user, profile?.onboarding_completed, navigate]);
+  }, [user, profile?.onboarding_completed, navigate, returnToCommunity]);
 
   // If user is already authenticated (e.g. came back), skip to appropriate step
   const isAuthenticated = !!user;
@@ -437,7 +439,7 @@ export default function Onboarding() {
 
       triggerCelebrationConfetti();
       toast.success('Bem-vindo à Banda! 🎉');
-      navigate('/profile', { replace: true });
+      navigate(returnToCommunity || '/profile', { replace: true });
     } catch (error) {
       toast.error('Erro ao criar conta. Tenta novamente.');
     } finally {

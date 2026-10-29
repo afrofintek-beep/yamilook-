@@ -17,10 +17,14 @@ export async function handleLearningRequest(req: Request, createDatabase: (autho
     if (new TextEncoder().encode(body).byteLength > 16000) return respond({ error: 'O pedido é demasiado longo.' }, 413);
     let input;
     try { input = JSON.parse(body); } catch { return respond({ error: 'Pedido inválido.' }, 400); }
-    if (!input || Array.isArray(input) || !['create', 'plan', 'challenge', 'submit', 'review', 'complete', 'cancel'].includes(input.action) ||
-      (input.action !== 'create' && (typeof input.goalId !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(input.goalId))) ||
+    const communityActions = ['cohort_create', 'cohort_join', 'cohort_close', 'work_publish', 'work_hide'];
+    const community = input && communityActions.includes(input.action);
+    const target = community ? input.targetId : input?.goalId;
+    const create = input?.action === 'create' || input?.action === 'cohort_create';
+    if (!input || Array.isArray(input) || !['create', 'plan', 'challenge', 'submit', 'review', 'complete', 'cancel', ...communityActions].includes(input.action) ||
+      (!create && (typeof target !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(target))) ||
       (input.payload !== undefined && (!input.payload || typeof input.payload !== 'object' || Array.isArray(input.payload)))) return respond({ error: 'Pedido inválido.' }, 400);
-    const { data, error } = await db.rpc('academia_learning_action', { p_action: input.action, p_goal: input.action === 'create' ? null : input.goalId, p_payload: input.payload || {} });
+    const { data, error } = await db.rpc(community ? 'academia_community_action' : 'academia_learning_action', { p_action: input.action, [community ? 'p_target' : 'p_goal']: create ? null : target, p_payload: input.payload || {} });
     if (error) {
       const message = ['P0001', '42501'].includes(error.code) ? error.message : 'Verifica os campos e tenta novamente.';
       return respond({ error: message }, error.code === '42501' ? 403 : 400);

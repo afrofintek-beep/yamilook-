@@ -33,3 +33,13 @@ it('returns authorization failures without exposing database internals', async (
   const response = await handleLearningRequest(request({ action: 'create' }), createDatabase);
   expect(response.status).toBe(400); expect(JSON.stringify(await response.json())).not.toContain('Internal');
 });
+it('routes cohort and publication actions to their own authorized RPC', async () => {
+  const id='11111111-1111-4111-8111-111111111111';
+  const response=await handleLearningRequest(request({action:'cohort_join',targetId:id,goalId:'ignored',actor_id:'forged',payload:{source_work_id:null}}),createDatabase);
+  expect(response.status).toBe(200);
+  expect(rpc).toHaveBeenCalledWith('academia_community_action',{p_action:'cohort_join',p_target:id,p_payload:{source_work_id:null}});
+});
+it('does not treat a missing publication target as a create request',async()=>{
+  expect((await handleLearningRequest(request({action:'work_publish',payload:{consent:true}}),createDatabase)).status).toBe(400);
+  expect(rpc).not.toHaveBeenCalled();
+});

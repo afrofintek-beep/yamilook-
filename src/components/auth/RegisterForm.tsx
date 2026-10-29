@@ -1,3 +1,4 @@
+import { communityReturn } from '@/features/academia/community-links';
 import { getYamilookPublicUrl } from '@/lib/public-site';
 import { captureReferralCode, getReferralCode, clearReferralCode } from '@/lib/referral';
 import { buildInvitationSignupMetadata, createRegisterSchema, hasInviteCodeInSearch, accessCodeSchema, type RegisterFormValues } from '@/lib/invitation-registration';
@@ -18,7 +19,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { toast } from 'sonner';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { SocialLoginButtons } from './SocialLoginButtons';
@@ -37,6 +38,8 @@ export function RegisterForm() {
   const [checkingCode, setCheckingCode] = useState(false);
   const codeCheckVersion = useRef(0);
   const navigate = useNavigate();
+  const returnToCommunity = communityReturn(useLocation().search);
+  const communitySearch = returnToCommunity ? `?next=${encodeURIComponent(returnToCommunity)}` : "";
 
   const passwordRequirements = [
     { regex: /.{8,}/, label: t('auth.passwordRequirements.minLength') },
@@ -130,7 +133,7 @@ export function RegisterForm() {
         email: values.email.trim().toLowerCase(),
         password: values.password,
         options: {
-          emailRedirectTo: getYamilookPublicUrl('/onboarding'),
+          emailRedirectTo: getYamilookPublicUrl(`/onboarding${communitySearch}`),
           data: {
             ...buildInvitationSignupMetadata(isInvitationSignup, values.accessCode, values.displayName, values.username),
           },
@@ -158,7 +161,7 @@ export function RegisterForm() {
       clearReferralCode();
       if (!authData.session) {
         toast.success('Conta criada. Confirma o teu email antes de entrar.');
-        navigate('/login');
+        navigate(`/login${communitySearch}`);
         return;
       }
       if (isInvitationSignup && userId) {
@@ -168,12 +171,12 @@ export function RegisterForm() {
           .eq('id', userId);
         if (profileError) {
           toast.error('A conta foi criada, mas o perfil não ficou concluído. Entra novamente para continuar.');
-          navigate('/login');
+          navigate(`/login${communitySearch}`);
           return;
         }
       }
       toast.success(t('auth.accountCreated'));
-      navigate(isInvitationSignup ? '/muxi' : '/onboarding');
+      navigate(isInvitationSignup ? (returnToCommunity || '/muxi') : `/onboarding${communitySearch}`);
     } catch {
       toast.error(t('errors.generic'));
     } finally {

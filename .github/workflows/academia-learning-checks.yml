@@ -4,11 +4,17 @@ on:
     paths:
       - 'src/features/academia/**'
       - 'src/App.tsx'
+      - 'src/components/auth/LoginForm.tsx'
+      - 'src/components/auth/RegisterForm.tsx'
+      - 'src/pages/Onboarding.tsx'
       - 'src/integrations/supabase/types.ts'
       - 'supabase/functions/academia-learning/**'
       - 'supabase/migrations/*academia_learning_results.sql'
+      - 'supabase/migrations/*academia_communities.sql'
       - 'scripts/test-academia-learning.mjs'
+      - 'scripts/test-academia-communities.mjs'
       - 'e2e/academia-learning.spec.ts'
+      - 'e2e/academia-communities.spec.ts'
       - 'playwright.academia.config.ts'
       - 'package*.json'
       - '.github/workflows/academia-learning-checks.yml'
@@ -27,9 +33,9 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Postgres authorization, RLS and workflow transitions
-        run: node --test scripts/test-academia-learning.mjs
+        run: node --test scripts/test-academia-learning.mjs scripts/test-academia-communities.mjs
       - name: Academia interface and API regressions
-        run: npx vitest run src/features/academia/
+        run: npx vitest run src/features/academia/ src/test/integration/auth.test.tsx
       - run: npx playwright install --with-deps webkit
       - run: npx playwright test -c playwright.academia.config.ts
       - run: npm run build
