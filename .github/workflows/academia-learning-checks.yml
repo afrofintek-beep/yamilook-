@@ -1,0 +1,41 @@
+name: Academia learning journeys
+on:
+  pull_request:
+    paths:
+      - 'src/features/academia/**'
+      - 'src/App.tsx'
+      - 'src/integrations/supabase/types.ts'
+      - 'supabase/functions/academia-learning/**'
+      - 'supabase/migrations/*academia_learning_results.sql'
+      - 'scripts/test-academia-learning.mjs'
+      - 'e2e/academia-learning.spec.ts'
+      - 'playwright.academia.config.ts'
+      - 'package*.json'
+      - '.github/workflows/academia-learning-checks.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  learning:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Postgres authorization, RLS and workflow transitions
+        run: node --test scripts/test-academia-learning.mjs
+      - name: Academia interface and API regressions
+        run: npx vitest run src/features/academia/
+      - run: npx playwright install --with-deps webkit
+      - run: npx playwright test -c playwright.academia.config.ts
+      - run: npm run build
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: academia-learning-results
+          path: test-results/
+          retention-days: 7

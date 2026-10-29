@@ -80,6 +80,8 @@ const AcademiaHome = lazy(() => import("./features/academia/routes/AcademiaHome"
 const AcademiaCreateSession = lazy(() => import("./features/academia/routes/AcademiaCreateSession"));
 const AcademiaSession = lazy(() => import("./features/academia/routes/AcademiaSession"));
 const MentorProfileScreen = lazy(() => import("./features/academia/routes/MentorProfileScreen"));
+const AcademiaLearning = lazy(() => import('./features/academia/routes/AcademiaLearning'));
+const AcademiaLearningGoal = lazy(() => import('./features/academia/routes/AcademiaLearningGoal'));
 const AcademiaLiveRoom = lazy(() => import("./features/academia/routes/AcademiaLiveRoom"));
 
 // Kumbu (monetização)
@@ -304,6 +306,8 @@ function AnimatedRoutes() {
           <Route path="/mokubico" element={<ProtectedRoute><MokubHome /></ProtectedRoute>} />
           <Route path="/academia" element={<ProtectedRoute><AcademiaHome /></ProtectedRoute>} />
           <Route path="/academia/create" element={<ProtectedRoute><AcademiaCreateSession /></ProtectedRoute>} />
+          <Route path="/academia/percursos" element={<ProtectedRoute><AcademiaLearning /></ProtectedRoute>} />
+          <Route path="/academia/percursos/:goalId" element={<ProtectedRoute><AcademiaLearningGoal /></ProtectedRoute>} />
           <Route path="/academia/live/:sessionId" element={<ProtectedRoute><AcademiaLiveRoom /></ProtectedRoute>} />
           <Route path="/academia/mentor/:mentorId" element={<ProtectedRoute><MentorProfileScreen /></ProtectedRoute>} />
           <Route path="/academia/:sessionId" element={<ProtectedRoute><AcademiaSession /></ProtectedRoute>} />

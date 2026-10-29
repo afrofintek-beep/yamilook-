@@ -107,6 +107,11 @@ export default function AcademiaHome() {
             <Button variant="link" onClick={() => navigate(`/academia/${n.session_id}`)}>Ver sessão</Button>
           </div>)}
         </section>}
+        <section className="mx-4 rounded-2xl border border-primary/20 bg-primary/5 p-4 space-y-2">
+          <h2 className="font-semibold">Aprender, fazer e mostrar resultados</h2>
+          <p className="text-sm text-muted-foreground">Transforma um objetivo num plano com o mentor. Entrega desafios e acompanha o teu progresso.</p>
+          <Button onClick={() => navigate('/academia/percursos')}>Explorar os meus percursos</Button>
+        </section>
         {/* Hero section */}
         <motion.section
           initial={{ opacity: 0, y: 15 }}
