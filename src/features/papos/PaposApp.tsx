@@ -37,6 +37,14 @@ export function PaposGate({ children }: { children: ReactNode }) {
   if (!profile.onboarding_completed) return <main className="min-h-screen-safe safe-top p-6 space-y-4"><h1 className="text-2xl font-bold">Conclui a tua conta</h1><p>A tua conta é partilhada com a Yamilook. Conclui os dados pendentes e volta à KOSOLOLA.</p><Button asChild><a href="https://www.yamilook.com/onboarding">Continuar a inscrição</a></Button></main>;
   return <>{children}</>;
 }
+export function PaposCallLayout() {
+  const location = useLocation();
+  return <ActiveCallProvider>
+    <PaposBoundary key={location.pathname}>
+      <Suspense fallback={<Loading />}><Outlet /></Suspense>
+    </PaposBoundary>
+  </ActiveCallProvider>;
+}
 function Loading() { return <div role="status" className="h-screen-safe flex items-center justify-center">A carregar a KOSOLOLA…</div>; }
 function PaposRuntime() {
   usePaposViewport();
@@ -60,7 +68,7 @@ function PaposRuntime() {
     <PaposBoundary><Suspense fallback={<Loading />}><Routes>
       <Route path="/login" element={<PaposLogin />} /><Route path="/welcome" element={<Navigate to="/login" replace />} />
       <Route path="/install" element={<PaposInstall />} />
-      <Route element={<PaposGate><ActiveCallProvider><Outlet /></ActiveCallProvider></PaposGate>}>
+      <Route element={<PaposGate><PaposCallLayout /></PaposGate>}>
       <Route path="/" element={<Navigate to="/papos" replace />} />
       <Route element={<PaposConversations />}>
       <Route path="/papos" element={null} />

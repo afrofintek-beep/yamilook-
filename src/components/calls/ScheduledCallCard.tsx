@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { ScheduleCallSheet } from './ScheduleCallSheet';
+const ScheduleCallSheet = lazy(() => import('./ScheduleCallSheet').then(m => ({ default: m.ScheduleCallSheet })));
 import { useScheduledCalls } from '@/features/scheduled-calls/useScheduledCalls';
 import { type ScheduledCall, copyInvitation, shareInvitation } from '@/features/scheduled-calls/api';
 
@@ -37,6 +37,6 @@ export function ScheduledCallCard({call}:{call:ScheduledCall;onJoin?:()=>void;on
    {call.series_id&&<Button disabled={busy} onClick={()=>void run(()=>cancel(call.id,true),'Ocorrências futuras canceladas')}>Esta e as seguintes</Button>}
    <Button variant="outline" disabled={busy} onClick={()=>setConfirm(false)}>Voltar</Button></div>
   </div>}
-  <ScheduleCallSheet open={editing} onOpenChange={setEditing} existingCall={call}/>
+  {editing && <Suspense fallback={<p role="status">A carregar agendamento…</p>}><ScheduleCallSheet open={editing} onOpenChange={setEditing} existingCall={call}/></Suspense>}
  </article>;
 }
