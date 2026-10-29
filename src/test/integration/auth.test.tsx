@@ -350,7 +350,7 @@ describe('Authentication Flow', () => {
       await waitFor(() => {
         expect(mockNavigate).toHaveBeenCalledWith('/onboarding');
         expect(mockSupabaseClient.auth.signUp).toHaveBeenCalledWith(expect.objectContaining({
-          options: { data: expect.objectContaining({ access_code: inviteCode.trim().toUpperCase() }) },
+          options: { emailRedirectTo: 'https://www.yamilook.com/onboarding', data: expect.objectContaining({ access_code: inviteCode.trim().toUpperCase() }) },
         }));
       });
     });
