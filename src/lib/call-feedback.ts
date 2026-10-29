@@ -16,7 +16,7 @@ export function callOutcomeMessage(status: string, reason?: string | null) {
  * Never waits for an autoplay permission prompt; visual feedback remains available. */
 let stopCurrent: (() => void) | null = null;
 export function stopCallTone() { stopCurrent?.(); stopCurrent = null; }
-export function playCallTone(kind: 'busy' | 'ringback' | 'ended'): () => void {
+export function playCallTone(kind: 'busy' | 'ringback' | 'ended' | 'declined'): () => void {
   stopCallTone();
   const nodes = new Set<OscillatorNode>();
   let timer: ReturnType<typeof setInterval> | undefined;
@@ -34,7 +34,7 @@ export function playCallTone(kind: 'busy' | 'ringback' | 'ended'): () => void {
     const audio = getSharedAudioContext();
     const pulse = () => {
       if (stopped || audio.state !== 'running') return;
-      const duration = kind === 'busy' ? 0.45 : kind === 'ringback' ? 1 : 0.18;
+      const duration = (kind === 'busy' || kind === 'declined') ? 0.45 : kind === 'ringback' ? 1 : 0.18;
       const gain = audio.createGain(); gain.connect(audio.destination);
       gain.gain.setValueAtTime(0.07, audio.currentTime);
       gain.gain.setValueAtTime(0.07, audio.currentTime + duration - 0.03);
@@ -44,10 +44,19 @@ export function playCallTone(kind: 'busy' | 'ringback' | 'ended'): () => void {
       node.onended = () => { nodes.delete(node); node.disconnect(); gain.disconnect(); };
       node.start(); node.stop(audio.currentTime + duration);
     };
-    // Resume only within the current gesture allowance; late resumes cannot restart a cancelled tone.
-    if (audio.state !== 'running') void audio.resume().then(pulse).catch(() => {}); else pulse();
-    if (kind !== 'ended') timer = setInterval(pulse, kind === 'busy' ? 900 : 4000);
-    if (kind !== 'ringback') ending = setTimeout(stop, kind === 'busy' ? 2600 : 300);
+    const begin = () => {
+      if (stopped || audio.state !== 'running') return;
+      clearTimeout(ending);
+      pulse();
+      if (kind !== 'ended') timer = setInterval(pulse, kind === 'ringback' ? 4000 : 900);
+      if (kind !== 'ringback') ending = setTimeout(stop, kind === 'ended' ? 300 : 2600);
+    };
+    // Start the audible duration after resume, not while iOS is restoring audio.
+    // A pending resume expires and can never restart a cancelled/replaced tone.
+    if (audio.state !== 'running') {
+      ending = setTimeout(stop, 5000);
+      void audio.resume().then(begin).catch(stop);
+    } else begin();
   } catch { stop(); }
   return stop;
 }

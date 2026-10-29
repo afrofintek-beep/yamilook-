@@ -221,7 +221,7 @@ export function useLiveKitCall() {
         const ch = supabase.channel(`livekit-call-${id}`).on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'calls', filter: `id=eq.${id}` }, p => listener({ status: String(p.new.status), end_reason: typeof p.new.end_reason === 'string' ? p.new.end_reason : null })).subscribe();
         return () => { void supabase.removeChannel(ch); };
       },
-      onEnded: outcome => { if (callRef.current === id) { release(); setState(s => ({ ...s, lastError: callOutcomeMessage(outcome.status, outcome.end_reason) })); } },
+      onEnded: outcome => { if (callRef.current === id) { release(); setState(s => ({ ...s, callStatus: outcome.status === 'declined' || outcome.end_reason === 'declined' ? 'declined' : 'ended', lastError: callOutcomeMessage(outcome.status, outcome.end_reason) })); } },
     });
   }, [state.callId, release]);
   useEffect(() => () => releaseRef.current(), [user?.id]);

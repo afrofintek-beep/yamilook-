@@ -172,3 +172,13 @@ it('keeps voice working if camera permission is denied', async () => {
   expect(result.current.state.callStatus).toBe('ringing');
   expect(m.rooms[0].localParticipant.isMicrophoneEnabled).toBe(true);
 });
+
+it('preserves remote rejection after releasing media so the caller receives rejection feedback', async () => {
+  const { result } = renderHook(useLiveKitCall);
+  await act(async () => { await result.current.initiateCall('other', 'voice'); });
+  act(() => (m.release as any)?.({ status: 'declined', end_reason: 'declined' }));
+  expect(m.stop).toHaveBeenCalled();
+  expect(result.current.state.callId).toBeNull();
+  expect(result.current.state.callStatus).toBe('declined');
+  expect(result.current.state.lastError).toBe('Chamada recusada.');
+});

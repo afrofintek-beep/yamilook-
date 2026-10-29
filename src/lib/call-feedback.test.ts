@@ -30,3 +30,25 @@ it('keeps busy, unavailable and terminal outcomes distinct', () => {
   expect(callOutcomeMessage('declined')).toBe('Chamada recusada.');
   expect(callOutcomeMessage('ended','cancelled')).toBe('Chamada cancelada.');
 });
+
+it('plays the full rejection pattern after a delayed audio resume', async () => {
+  m.state = 'suspended';
+  let resume!: () => void;
+  m.resume.mockReturnValue(new Promise<void>(resolve => { resume = resolve; }));
+  playCallTone('declined');
+  vi.advanceTimersByTime(1000);
+  expect(m.nodes).toHaveLength(0);
+  m.state = 'running'; resume(); await Promise.resolve();
+  vi.advanceTimersByTime(3000);
+  expect(m.nodes).toHaveLength(3);
+  vi.advanceTimersByTime(10000);
+  expect(m.nodes).toHaveLength(3);
+});
+it('does not play stale rejection feedback after resume times out', async () => {
+  m.state = 'suspended';
+  let resume!: () => void;
+  m.resume.mockReturnValue(new Promise<void>(resolve => { resume = resolve; }));
+  playCallTone('declined'); vi.advanceTimersByTime(6000);
+  m.state = 'running'; resume(); await Promise.resolve();
+  expect(m.nodes).toHaveLength(0);
+});
