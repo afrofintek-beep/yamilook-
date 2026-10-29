@@ -40,3 +40,6 @@ verify_jwt = true
 
 [functions.send-user-invitation]
 verify_jwt = true
+
+[functions.academia-learning]
+verify_jwt = false

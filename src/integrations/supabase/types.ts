@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      academia_goals: {
+        Row: { id: string; learner_id: string; mentor_id: string; title: string; context: string; plan: string; closure_reason: string; status: string; created_at: string; updated_at: string }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      academia_challenges: {
+        Row: { id: string; goal_id: string; position: number; title: string; instructions: string; skill: string; status: string; created_at: string }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      academia_submissions: {
+        Row: { id: string; challenge_id: string; content: string; evidence_url: string | null; status: string; feedback: string; created_at: string; reviewed_at: string | null }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      academia_learning_audit: {
+        Row: { id: string; goal_id: string; actor_id: string; action: string; entity_id: string; created_at: string }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
       academia_reservations: {
         Row: {
           created_at: string
@@ -6379,6 +6403,8 @@ export type Database = {
       }
     }
     Functions: {
+      academia_learning_progress: { Args: { p_goals: string[] }; Returns: { goal_id: string; total: number; approved: number }[] }
+      academia_learning_action: { Args: { p_action: string; p_goal?: string; p_payload?: Json }; Returns: string }
       my_attributed_storage_usage: {
         Args: Record<PropertyKey, never>
         Returns: Json
