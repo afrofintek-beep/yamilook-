@@ -1,3 +1,4 @@
+import { getYamilookPublicUrl } from '@/lib/public-site';
 import { captureReferralCode, getReferralCode, clearReferralCode } from '@/lib/referral';
 import { buildInvitationSignupMetadata, createRegisterSchema, hasInviteCodeInSearch, accessCodeSchema, type RegisterFormValues } from '@/lib/invitation-registration';
 import { useState, useEffect, useRef, useMemo } from 'react';
@@ -129,6 +130,7 @@ export function RegisterForm() {
         email: values.email.trim().toLowerCase(),
         password: values.password,
         options: {
+          emailRedirectTo: getYamilookPublicUrl('/onboarding'),
           data: {
             ...buildInvitationSignupMetadata(isInvitationSignup, values.accessCode, values.displayName, values.username),
           },
