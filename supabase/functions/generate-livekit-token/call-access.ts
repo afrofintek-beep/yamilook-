@@ -4,6 +4,6 @@ export function canJoinCall(userId: string, call: {
 } | null, member: { status: string } | null): boolean {
   return !!call && !!member &&
     [call.initiator_id, call.caller_id, call.callee_id].includes(userId) &&
-    ['ringing', 'ongoing'].includes(call.status) &&
+    ['ringing', 'connecting', 'ongoing'].includes(call.status) &&
     ['ringing', 'connected'].includes(member.status);
 }

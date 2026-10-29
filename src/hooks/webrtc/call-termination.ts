@@ -1,4 +1,6 @@
-const terminalCallStatuses = new Set(['ended', 'declined', 'missed', 'failed']);
+export type CallTermination = { status: string; end_reason?: string | null };
+type CallUpdate = string | CallTermination;
+const terminalCallStatuses = new Set(['ended', 'declined', 'missed', 'failed', 'cancelled']);
 
 /** Release local devices before any network request (including a hung request). */
 export async function finishCallLocallyFirst(
@@ -12,17 +14,19 @@ export async function finishCallLocallyFirst(
 
 /** Realtime is an optimization; polling/resume also reconcile the authoritative row. */
 export function watchCallTermination({ read, subscribe, onEnded, intervalMs = 2000 }: {
-  read: () => Promise<string | null>;
-  subscribe: (listener: (status: string) => void) => () => void;
-  onEnded: () => void;
+  read: () => Promise<CallUpdate | null>;
+  subscribe: (listener: (status: CallUpdate) => void) => () => void;
+  onEnded: (outcome: CallTermination) => void;
   intervalMs?: number;
 }) {
   let stopped = false;
   let busy = false;
-  const accept = (status: string | null) => {
+  const accept = (update: CallUpdate | null) => {
+    const outcome = typeof update === 'string' ? { status: update } : update;
+    const status = outcome?.status;
     if (!stopped && status && terminalCallStatuses.has(status)) {
       stopped = true;
-      onEnded();
+      onEnded(outcome!);
     }
   };
   const poll = async () => {

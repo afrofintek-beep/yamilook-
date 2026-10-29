@@ -63,3 +63,10 @@ describe('call termination', () => {
     expect(onEnded).not.toHaveBeenCalled();
   });
 });
+
+it('retains the terminal reason and handles cancellation exactly once', () => {
+  const ended=vi.fn();let receive!: (value: any) => void;
+  const stop=watchCallTermination({read:async()=>null, subscribe:listener=>{receive=listener;return vi.fn();},onEnded:ended});
+  receive({status:'ended',end_reason:'no_answer'});receive({status:'ended',end_reason:'completed'});
+  expect(ended).toHaveBeenCalledOnce();expect(ended).toHaveBeenCalledWith({status:'ended',end_reason:'no_answer'});stop();
+});

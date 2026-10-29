@@ -7,6 +7,7 @@ import { watchCallTermination } from './webrtc/call-termination';
 import { INITIAL_STATE, type CallState } from './webrtc/types';
 import { VirtualBackgroundProcessor, DEFAULT_EFFECTS, effectsActive, type BgMode, type EffectsConfig } from '@/lib/virtualBackground';
 import { registerCallMedia } from '@/lib/call-media';
+import { callOutcomeMessage } from '@/lib/call-feedback';
 import { toast } from '@/hooks/use-toast';
 
 /** LiveKit owns transport, ICE/TURN, congestion control and reconnection.
@@ -61,7 +62,7 @@ export function useLiveKitCall() {
     release();
     setState(s => ({ ...s, callStatus: 'failed', lastError: message }));
     if (id) void supabase.from('calls').update({ status: 'failed', ended_at: new Date().toISOString(), end_reason: 'transport_failed' })
-      .eq('id', id).in('status', ['ringing', 'ongoing']).then(({ error }) => {
+      .eq('id', id).in('status', ['ringing', 'connecting', 'ongoing']).then(({ error }) => {
         if (error) console.error('[LiveKitCall] Persist failure:', error.message);
       });
   }, [release]);
@@ -130,7 +131,14 @@ export function useLiveKitCall() {
       .on(RoomEvent.Disconnected, () => { if (roomRef.current === room) fail('A ligação foi interrompida. Tenta novamente.'); });
     setState(s => ({ ...s, callId: id, callType: type, targetUserId: target, isInitiator: initiator,
       callStatus: initiator ? 'ringing' : 'connecting', connectionState: 'connecting', lastError: null }));
-    deadline.current = setTimeout(() => { if (roomRef.current === room) fail('Não foi possível estabelecer a chamada.'); }, 60_000);
+    deadline.current = setTimeout(async () => {
+      if (roomRef.current !== room) return;
+      if (!initiator) { fail('Não foi possível estabelecer a chamada.'); return; }
+      const { data: ended, error: timeoutError } = await supabase.rpc('finish_direct_call', { p_call_id: id, p_outcome: 'no_answer' });
+      if (roomRef.current !== room) return;
+      if (timeoutError) { fail('Não foi possível confirmar a resposta. Tenta novamente.'); return; }
+      if (ended) { releaseRef.current(); setState(s => ({ ...s, lastError: 'Sem resposta.' })); }
+    }, 60_000);
     await room.connect(data.url, data.token);
     if (roomRef.current !== room || generation.current !== epoch) { await room.disconnect(); throw new Error('Chamada cancelada.'); }
     await room.localParticipant.setMicrophoneEnabled(true);
@@ -148,10 +156,11 @@ export function useLiveKitCall() {
     busy.current = true;
     const epoch = ++generation.current;
     let id: string | null = null;
+    setState(s => ({ ...s, callStatus: 'initiating', isInitiator: true, callType: type, targetUserId: target, lastError: null }));
     try {
       id = await lifecycleRef.current.createCallInDB(target, type, conversationId, 'livekit');
       if (generation.current !== epoch) {
-        await lifecycleRef.current.endCallInDB(id, user.id);
+        await supabase.rpc('finish_direct_call', { p_call_id: id, p_outcome: 'cancelled' });
         throw new Error('Chamada cancelada.');
       }
       callRef.current = id;
@@ -168,14 +177,20 @@ export function useLiveKitCall() {
     if (busy.current || roomRef.current) throw new Error('Já existe uma chamada em curso.');
     busy.current = true;
     const epoch = ++generation.current;
-    callRef.current = id;
     try {
+      const { data: claimed, error: claimError } = await supabase.rpc('claim_direct_call', { p_call_id: id });
+      if (generation.current !== epoch) {
+        if (claimed) await supabase.rpc('finish_direct_call', { p_call_id: id, p_outcome: 'completed' });
+        return;
+      }
+      if (claimError || !claimed) throw new Error('A chamada já terminou ou foi atendida noutro dispositivo.');
+      callRef.current = id;
       await connect(id, type, target, false, epoch);
       if (generation.current !== epoch) return;
       // Only persist acceptance after the transport and local microphone are ready.
       const { data: accepted, error: acceptError } = await supabase.from('calls')
         .update({ status: 'ongoing', started_at: new Date().toISOString() })
-        .eq('id', id).in('status', ['ringing', 'ongoing']).select('id').maybeSingle();
+        .eq('id', id).eq('status', 'connecting').select('id').maybeSingle();
       if (acceptError || !accepted) throw new Error('A chamada já terminou ou não pode ser atendida.');
       if (generation.current !== epoch) return;
       const { data: joined, error: joinError } = await supabase.from('call_participants')
@@ -192,7 +207,7 @@ export function useLiveKitCall() {
     const id = callRef.current;
     release();
     if (id && user) {
-      try { await lifecycleRef.current.endCallInDB(id, user.id); }
+      try { const { error } = await supabase.rpc('finish_direct_call', { p_call_id: id, p_outcome: 'completed' }); if (error) throw error; }
       catch { toast({ title: 'Chamada terminada neste dispositivo', description: 'Não foi possível confirmar o encerramento remoto.', variant: 'destructive' }); }
     }
   }, [release, user]);
@@ -201,12 +216,12 @@ export function useLiveKitCall() {
     if (!state.callId) return;
     const id = state.callId;
     return watchCallTermination({
-      read: async () => { const { data, error } = await supabase.from('calls').select('status').eq('id', id).maybeSingle(); if (error) throw error; return data?.status || null; },
+      read: async () => { const { data, error } = await supabase.from('calls').select('status,end_reason').eq('id', id).maybeSingle(); if (error) throw error; return data || null; },
       subscribe: listener => {
-        const ch = supabase.channel(`livekit-call-${id}`).on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'calls', filter: `id=eq.${id}` }, p => listener(String(p.new.status))).subscribe();
+        const ch = supabase.channel(`livekit-call-${id}`).on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'calls', filter: `id=eq.${id}` }, p => listener({ status: String(p.new.status), end_reason: typeof p.new.end_reason === 'string' ? p.new.end_reason : null })).subscribe();
         return () => { void supabase.removeChannel(ch); };
       },
-      onEnded: () => { if (callRef.current === id) release(); },
+      onEnded: outcome => { if (callRef.current === id) { release(); setState(s => ({ ...s, lastError: callOutcomeMessage(outcome.status, outcome.end_reason) })); } },
     });
   }, [state.callId, release]);
   useEffect(() => () => releaseRef.current(), [user?.id]);
@@ -233,9 +248,12 @@ export function useLiveKitCall() {
   }, [refresh, user]);
   const toggleScreenShare = useCallback(async () => {
     const room = roomRef.current; if (!room) return;
-    try { await room.localParticipant.setScreenShareEnabled(!room.localParticipant.isScreenShareEnabled); refresh(room); }
+    try {
+      await room.localParticipant.setScreenShareEnabled(!room.localParticipant.isScreenShareEnabled); refresh(room);
+      if (callRef.current && user) await lifecycleRef.current.updateMediaStatus(callRef.current, user.id, undefined, undefined, room.localParticipant.isScreenShareEnabled);
+    }
     catch { toast({ title: 'Partilha de ecrã indisponível', variant: 'destructive' }); }
-  }, [refresh]);
+  }, [refresh, user]);
   const flipCamera = useCallback(async () => {
     const room = roomRef.current;
     const track = room?.localParticipant.getTrackPublication(sdkRef.current!.Track.Source.Camera)?.videoTrack;
@@ -277,7 +295,12 @@ export function useLiveKitCall() {
   }, []);
   return {
     state, initiateCall, answerCall, endCall, toggleMute, toggleVideo, toggleScreenShare, flipCamera,
-    declineCall: async (id: string, _target: string) => { if (user) await lifecycleRef.current.declineCallInDB(id, user.id); },
+    declineCall: async (id: string, _target: string) => {
+      if (!user) return;
+      const { data, error } = await supabase.rpc('finish_direct_call', { p_call_id: id, p_outcome: 'declined' });
+      if (error) throw error;
+      if (!data) throw new Error('A chamada já terminou ou foi atendida.');
+    },
     markUserInteracted: () => { void roomRef.current?.startAudio(); },
     setVirtualBackground: (background: BgMode) => applyEffects({ background }),
     setCallEffects: applyEffects, setAudioProcessing,

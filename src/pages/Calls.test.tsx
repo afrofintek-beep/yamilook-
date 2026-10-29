@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, expect, it, vi } from 'vitest';
 import Calls from './Calls';
@@ -19,7 +19,7 @@ vi.mock('@/hooks/useCalls', () => ({ useCalls: () => ({
 afterEach(() => { cleanup(); vi.clearAllMocks(); });
 it.each([['page', Calls], ['tab', CallsTabContent]] as const)('%s renders incomplete history without crashing or mounting the closed scheduler', async (_, Component) => {
   render(<MemoryRouter><Component /></MemoryRouter>);
-  expect(await screen.findByText('Contacto teste')).toBeVisible();
+  await waitFor(() => expect(screen.getByText('Contacto teste')).toBeVisible());
   expect(screen.getByText('Data indisponível')).toBeVisible();
   expect(mocks.schedule).not.toHaveBeenCalled();
 });

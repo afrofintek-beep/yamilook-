@@ -7,6 +7,9 @@ import { useCallTransport } from '@/hooks/useCallTransport';
 import type { BgMode, EffectsConfig } from '@/lib/virtualBackground';
 import { useCalls } from '@/hooks/useCalls';
 import { useToast } from '@/hooks/use-toast';
+import { callErrorCode, playCallTone, stopCallTone } from '@/lib/call-feedback';
+import { unlockCallAudio } from '@/lib/audio-context';
+import { Button } from '@/components/ui/button';
 import { logger } from '@/lib/logger';
 
 // Lazy load the heavy IncomingCallOverlay component
@@ -96,6 +99,9 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
   const { toast } = useToast();
   const [isInCall, setIsInCall] = useState(false);
   const [currentCallId, setCurrentCallId] = useState<string | null>(null);
+  const [starting, setStarting] = useState(false);
+  const startEpoch = useRef(0);
+  const startingRef = useRef(false);
   const answeringCallRef = useRef<string | null>(null);
   const { incomingCall, setIncomingCall } = useCalls({ loadHistory: false });
   
@@ -120,11 +126,20 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
   } = webRTC;
 
   useEffect(() => {
+    if (webRTCState.isInitiator && webRTCState.callStatus === 'ringing') return playCallTone('ringback');
+  }, [webRTCState.isInitiator, webRTCState.callStatus]);
+  useEffect(() => () => { startEpoch.current++; stopCallTone(); }, []);
+
+  useEffect(() => {
     if (!currentCallId || !['idle', 'ended', 'declined', 'failed'].includes(webRTCState.callStatus)) return;
     // A failed transport may still be running ICE recovery. Leave only after cleanup.
     if (webRTCState.callStatus === 'failed' && webRTCState.callId) return;
     if (webRTCState.callStatus === 'failed') {
       toast({ title: 'Não foi possível estabelecer a chamada', description: webRTCState.lastError || 'Verifica a ligação e tenta novamente.', variant: 'destructive' });
+    }
+    if ((webRTCState.callStatus === 'ended' && webRTCState.lastError) || webRTCState.callStatus === 'declined') {
+      playCallTone('ended');
+      toast({ title: webRTCState.callStatus === 'declined' ? 'Chamada recusada.' : webRTCState.lastError || 'Chamada terminada.' });
     }
     setIsInCall(false);
     setCurrentCallId(null);
@@ -153,23 +168,39 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
       return;
     }
 
-    // Silently proceed — no permission toast
-
+    if (startingRef.current) return;
+    const epoch = ++startEpoch.current;
+    startingRef.current = true; setStarting(true);
+    unlockCallAudio(); markUserInteracted();
     try {
       const callId = await initiateCall(contactId, type, conversationId);
+      if (epoch !== startEpoch.current) return;
       setCurrentCallId(callId);
       setIsInCall(true);
       navigate(`/call/${callId}`);
     } catch (err) {
-      const message = formatCallError(err);
+      if (epoch !== startEpoch.current) return;
+      const code = callErrorCode(err);
+      if (code === 'callee_busy') {
+        playCallTone('busy');
+        toast({ title: 'Ocupado', description: 'Este contacto está noutra chamada. Tenta novamente mais tarde.' });
+        return;
+      }
+      if (code === 'caller_busy') {
+        toast({ title: 'Já tens uma chamada em curso', description: 'Termina a chamada no outro dispositivo antes de iniciar uma nova.' });
+        return;
+      }
+      const message = code === 'call_unavailable' ? 'Não é possível ligar a este contacto.' : formatCallError(err);
       logger.error('Failed to start call', 'ActiveCallProvider', err);
       toast({
         title: 'Não foi possível iniciar a chamada',
         description: message,
         variant: 'destructive',
       });
+    } finally {
+      if (epoch === startEpoch.current) { startingRef.current = false; setStarting(false); }
     }
-  }, [initiateCall, navigate, toast]);
+  }, [initiateCall, navigate, toast, markUserInteracted]);
 
   const joinCall = useCallback(async (callId: string, callType: 'voice' | 'video', initiatorId: string) => {
     // If we already bootstrapped this call, do nothing.
@@ -204,7 +235,9 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
 
   const endCurrentCall = useCallback(() => {
     logger.debug('Ending current call', 'ActiveCallProvider');
-    endCall();
+    startEpoch.current++; startingRef.current = false; setStarting(false);
+    stopCallTone();
+    void endCall();
     setCurrentCallId(null);
     setIsInCall(false);
   }, [endCall]);
@@ -231,10 +264,14 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
   const handleDeclineCall = useCallback(async () => {
     if (incomingCall) {
       logger.debug('Declining incoming call', 'ActiveCallProvider', incomingCall.id);
-      await declineCall(incomingCall.id, incomingCall.initiator_id);
-      setIncomingCall(null);
+      try {
+        await declineCall(incomingCall.id, incomingCall.initiator_id);
+        setIncomingCall(null);
+      } catch (err) {
+        toast({ title: 'Não foi possível recusar a chamada', description: formatCallError(err), variant: 'destructive' });
+      }
     }
-  }, [incomingCall, declineCall, setIncomingCall]);
+  }, [incomingCall, declineCall, setIncomingCall, toast]);
 
   // Memoize context value to prevent unnecessary re-renders of consumers
   const contextValue = useMemo<ActiveCallContextType>(() => ({
@@ -261,6 +298,10 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
   return (
     <ActiveCallContext.Provider value={contextValue}>
       {children}
+      {starting && <div role="dialog" aria-modal="true" aria-label="A iniciar chamada" className="fixed inset-0 z-[190] bg-background/95 flex flex-col items-center justify-center gap-5 p-6">
+        <p role="status">{webRTCState.callStatus === 'ringing' ? 'A chamar…' : 'A preparar a chamada…'}</p>
+        <Button variant="destructive" onClick={endCurrentCall}>Cancelar chamada</Button>
+      </div>}
       <ScheduledCallNotices />
       
       {/* Incoming call overlay - lazy loaded */}

@@ -52,6 +52,7 @@ export interface CallHistory {
   ended_at: string | null;
   duration_seconds: number | null;
   is_group_call: boolean;
+  end_reason?: string | null;
   caller_id: string | null;
   callee_id: string | null;
   initiator_id: string;
@@ -174,7 +175,7 @@ export function useCalls({ loadHistory = true }: { loadHistory?: boolean } = {})
           call_id,
           calls (
             id, type, status, started_at, ended_at, duration_seconds,
-            is_group_call, caller_id, callee_id, initiator_id
+            is_group_call, caller_id, callee_id, initiator_id, end_reason
           )
         `)
         .eq('user_id', user.id)
@@ -294,7 +295,7 @@ export function useCalls({ loadHistory = true }: { loadHistory?: boolean } = {})
         .eq('id', incomingCall.id)
         .maybeSingle();
 
-      if (!data || ['ended', 'declined', 'failed', 'cancelled'].includes(data.status)) {
+      if (!data || ['ended', 'declined', 'failed', 'cancelled', 'missed', 'connecting', 'ongoing'].includes(data.status)) {
         logger.debug('Active incoming call is no longer ringing - clearing', 'useCalls', data?.status);
         setIncomingCall(null);
       }
@@ -314,7 +315,7 @@ export function useCalls({ loadHistory = true }: { loadHistory?: boolean } = {})
         (payload) => {
           const newStatus = (payload.new as Partial<Tables<'calls'>>)?.status;
           logger.debug('Incoming call status changed', 'useCalls', newStatus);
-          if (newStatus && ['ended', 'declined', 'failed', 'cancelled'].includes(newStatus)) {
+          if (newStatus && ['ended', 'declined', 'failed', 'cancelled', 'missed', 'connecting', 'ongoing'].includes(newStatus)) {
             logger.debug('Clearing incoming call - caller hung up', 'useCalls');
             setIncomingCall(null);
           }

@@ -6614,6 +6614,14 @@ export type Database = {
         Args: { p_code: string; p_user_id: string }
         Returns: boolean
       }
+      claim_direct_call: {
+        Args: { p_call_id: string }
+        Returns: boolean
+      }
+      finish_direct_call: {
+        Args: { p_call_id: string; p_outcome: string }
+        Returns: boolean
+      }
       create_call: {
         Args: {
           p_call_type?: string
