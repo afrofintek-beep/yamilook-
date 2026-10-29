@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { lazy, Suspense, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useActiveCall } from '@/components/calls/ActiveCallProvider';
 import { useTranslation } from 'react-i18next';
@@ -33,7 +33,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useCalls, CallHistory, ScheduledCall } from '@/hooks/useCalls';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { ScheduleCallSheet } from '@/components/calls/ScheduleCallSheet';
+const ScheduleCallSheet = lazy(() => import('@/components/calls/ScheduleCallSheet').then(m => ({ default: m.ScheduleCallSheet })));
 import { ScheduledCallCard } from '@/components/calls/ScheduledCallCard';
 import { VoicemailRecorder } from '@/components/calls/VoicemailRecorder';
 import { OnlineStatus, formatLastSeen } from '@/components/ui/OnlineStatus';
@@ -114,6 +114,7 @@ export default function Calls() {
   const formatCallTime = (dateStr: string | null) => {
     if (!dateStr) return '';
     const date = new Date(dateStr);
+    if (!Number.isFinite(date.getTime())) return '';
     if (isToday(date)) {
       return format(date, 'h:mm a');
     } else if (isYesterday(date)) {
@@ -149,7 +150,10 @@ export default function Calls() {
 
   const groupedCalls = filteredHistory.reduce((groups, call) => {
     const date = call.started_at || call.ended_at;
-    if (!date) return groups;
+    if (!date || !Number.isFinite(new Date(date).getTime())) {
+      (groups['Data indisponível'] ??= []).push(call);
+      return groups;
+    }
     
     const dateKey = isToday(new Date(date)) 
       ? 'Today' 
@@ -508,7 +512,7 @@ export default function Calls() {
       </button>
 
       {/* Schedule Call Sheet */}
-      <ScheduleCallSheet open={scheduleOpen} onOpenChange={setScheduleOpen} />
+      {scheduleOpen && <Suspense fallback={<p role="status">A carregar agendamento…</p>}><ScheduleCallSheet open={scheduleOpen} onOpenChange={setScheduleOpen} /></Suspense>}
 
       {/* Voicemail Recorder */}
       {selectedContact && (

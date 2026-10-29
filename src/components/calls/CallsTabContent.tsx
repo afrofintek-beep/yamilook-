@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from 'react';
+import { lazy, Suspense, useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { 
@@ -20,7 +20,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
 import { useCalls, CallHistory } from '@/hooks/useCalls';
-import { ScheduleCallSheet } from '@/components/calls/ScheduleCallSheet';
+const ScheduleCallSheet = lazy(() => import('@/components/calls/ScheduleCallSheet').then(m => ({ default: m.ScheduleCallSheet })));
 import { ScheduledCallCard } from '@/components/calls/ScheduledCallCard';
 import { VoicemailRecorder } from '@/components/calls/VoicemailRecorder';
 import { OnlineStatus } from '@/components/ui/OnlineStatus';
@@ -93,6 +93,7 @@ export function CallsTabContent({ onStartCall }: CallsTabContentProps) {
   const formatCallTime = (dateStr: string | null) => {
     if (!dateStr) return '';
     const date = new Date(dateStr);
+    if (!Number.isFinite(date.getTime())) return '';
     if (isToday(date)) {
       return format(date, 'h:mm a');
     } else if (isYesterday(date)) {
@@ -130,7 +131,10 @@ export function CallsTabContent({ onStartCall }: CallsTabContentProps) {
 
   const groupedCalls = filteredHistory.reduce((groups, call) => {
     const date = call.started_at || call.ended_at;
-    if (!date) return groups;
+    if (!date || !Number.isFinite(new Date(date).getTime())) {
+      (groups['Data indisponível'] ??= []).push(call);
+      return groups;
+    }
     
     const dateKey = isToday(new Date(date)) 
       ? 'Today' 
@@ -449,7 +453,7 @@ export function CallsTabContent({ onStartCall }: CallsTabContentProps) {
       </Tabs>
 
       {/* Schedule Call Sheet */}
-      <ScheduleCallSheet open={scheduleOpen} onOpenChange={setScheduleOpen} />
+      {scheduleOpen && <Suspense fallback={<p role="status">A carregar agendamento…</p>}><ScheduleCallSheet open={scheduleOpen} onOpenChange={setScheduleOpen} /></Suspense>}
 
       {/* Voicemail Recorder */}
       {selectedContact && (
