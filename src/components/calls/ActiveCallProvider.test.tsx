@@ -95,3 +95,15 @@ it('shows preparation while answering and ignores completion after cancellation'
   expect(mocks.setIncomingCall).not.toHaveBeenCalled();
   expect(screen.queryByRole('dialog', { name: 'A iniciar chamada' })).not.toBeInTheDocument();
 });
+
+it('uses the incoming voice type while the previous transport still says video', async () => {
+  mocks.state = { callStatus: 'ended', callType: 'video' };
+  let finish!: () => void;
+  mocks.answerCall.mockImplementation(() => new Promise<void>(resolve => {finish=resolve;}));
+  render(<MemoryRouter><ActiveCallProvider><Consumer /></ActiveCallProvider></MemoryRouter>);
+  fireEvent.click(await screen.findByText('Atender teste'));
+  const dialog=screen.getByRole('dialog', { name: 'A iniciar chamada' });
+  expect(dialog).toHaveTextContent('Chamada de voz');
+  expect(dialog).not.toHaveTextContent('Videochamada');
+  await act(async () => finish());
+});

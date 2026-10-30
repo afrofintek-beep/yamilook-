@@ -100,6 +100,7 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
   const { toast } = useToast();
   const [isInCall, setIsInCall] = useState(false);
   const [currentCallId, setCurrentCallId] = useState<string | null>(null);
+  const [setupCallType, setSetupCallType] = useState<'voice' | 'video'>('voice');
   const [starting, setStarting] = useState(false);
   const [answering, setAnswering] = useState(false);
   const startEpoch = useRef(0);
@@ -172,6 +173,7 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
 
     if (startingRef.current) return;
     const epoch = ++startEpoch.current;
+    setSetupCallType(type);
     startingRef.current = true; setStarting(true);
     unlockCallAudio(); markUserInteracted();
     try {
@@ -209,6 +211,7 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
     if ((currentCallId === callId && isInCall) || answeringCallRef.current) return;
     answeringCallRef.current = callId;
     const epoch = ++startEpoch.current;
+    setSetupCallType(callType);
     setAnswering(true);
 
     try {
@@ -254,6 +257,7 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
     const call = incomingCall;
     answeringCallRef.current = call.id;
     const epoch = ++startEpoch.current;
+    setSetupCallType(call.type);
     setAnswering(true);
     unlockCallAudio(); markUserInteracted();
     try {
@@ -311,7 +315,7 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
     <ActiveCallContext.Provider value={contextValue}>
       {children}
       {(starting || answering) && <div role="dialog" aria-modal="true" aria-label="A iniciar chamada" className="fixed inset-0 z-[190] bg-background flex flex-col items-center justify-center gap-6 p-6 safe-top">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">{webRTCState.callType === 'video' ? <Video className="h-4 w-4" /> : <Phone className="h-4 w-4" />}<span>{webRTCState.callType === 'video' ? 'Videochamada' : 'Chamada de voz'}</span></div>
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">{setupCallType === 'video' ? <Video className="h-4 w-4" /> : <Phone className="h-4 w-4" />}<span>{setupCallType === 'video' ? 'Videochamada' : 'Chamada de voz'}</span></div>
         <div className="flex h-28 w-28 items-center justify-center rounded-full bg-primary/15"><User className="h-14 w-14 text-primary" /></div>
         <p role="status" aria-live="polite" className="text-xl font-medium">{webRTCState.callStatus === 'ringing' ? 'A chamar…' : 'A ligar…'}</p>
         <p className="max-w-sm text-center text-sm text-muted-foreground">Se for solicitado, autoriza o microfone para continuar.</p>

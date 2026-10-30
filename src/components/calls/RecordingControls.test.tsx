@@ -95,3 +95,15 @@ it('cancels the owned request and releases media when leaving', async () => {
   const view=await mount();await click('Gravar');view.unmount();await tick();
   expect(mocks.api).toHaveBeenCalledWith('call','cancel','rec');expect(mocks.stop).toHaveBeenCalled();
 });
+
+it('clears a failed consent check after polling recovers', async () => {
+  failure='state';await mount();
+  expect(screen.getByRole('alert')).toHaveTextContent('verificar os consentimentos');
+  failure=null;await tick(2000);
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  expect(mocks.start).not.toHaveBeenCalled();
+});
+it('does not clear an action error when background polling succeeds', async () => {
+  failure='request';await mount();await click('Gravar');await tick(2000);
+  expect(screen.getByRole('alert')).toHaveTextContent('concluir o pedido');
+});
