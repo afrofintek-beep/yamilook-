@@ -11,6 +11,7 @@ import { callErrorCode, playCallTone, stopCallTone } from '@/lib/call-feedback';
 import { unlockCallAudio } from '@/lib/audio-context';
 import { Button } from '@/components/ui/button';
 import { logger } from '@/lib/logger';
+import { Phone, PhoneOff, Video, User } from 'lucide-react';
 
 // Lazy load the heavy IncomingCallOverlay component
 const IncomingCallOverlay = lazy(() => import('./IncomingCallOverlay').then(m => ({ default: m.IncomingCallOverlay })));
@@ -309,10 +310,12 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
   return (
     <ActiveCallContext.Provider value={contextValue}>
       {children}
-      {(starting || answering) && <div role="dialog" aria-modal="true" aria-label="A iniciar chamada" className="fixed inset-0 z-[190] bg-background/95 flex flex-col items-center justify-center gap-5 p-6">
-        <p role="status">{webRTCState.callStatus === 'ringing' ? 'A chamar…' : 'A preparar o microfone e a ligação…'}</p>
-        <p className="max-w-sm text-center text-sm text-muted-foreground">Se o dispositivo pedir, permite o acesso ao microfone para falar.</p>
-        <Button variant="destructive" onClick={endCurrentCall}>Cancelar chamada</Button>
+      {(starting || answering) && <div role="dialog" aria-modal="true" aria-label="A iniciar chamada" className="fixed inset-0 z-[190] bg-background flex flex-col items-center justify-center gap-6 p-6 safe-top">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">{webRTCState.callType === 'video' ? <Video className="h-4 w-4" /> : <Phone className="h-4 w-4" />}<span>{webRTCState.callType === 'video' ? 'Videochamada' : 'Chamada de voz'}</span></div>
+        <div className="flex h-28 w-28 items-center justify-center rounded-full bg-primary/15"><User className="h-14 w-14 text-primary" /></div>
+        <p role="status" aria-live="polite" className="text-xl font-medium">{webRTCState.callStatus === 'ringing' ? 'A chamar…' : 'A ligar…'}</p>
+        <p className="max-w-sm text-center text-sm text-muted-foreground">Se for solicitado, autoriza o microfone para continuar.</p>
+        <Button variant="destructive" className="mt-12 h-16 rounded-full px-6 gap-2" onClick={endCurrentCall}><PhoneOff className="h-6 w-6" />Cancelar chamada</Button>
       </div>}
       <ScheduledCallNotices />
       
