@@ -6439,6 +6439,10 @@ export type Database = {
       }
     }
     Functions: {
+      recording_session: {
+        Args: { p_call_id: string; p_action?: string; p_recording_id?: string; p_consent?: boolean; p_metadata?: Json };
+        Returns: Json;
+      };
       admin_topic_action: {
         Args: { p_action: string; p_id?: string; p_ids?: string[]; p_reason?: string }
         Returns: undefined

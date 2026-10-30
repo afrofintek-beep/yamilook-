@@ -1,0 +1,23 @@
+name: Recording consent checks
+on:
+  pull_request:
+    paths:
+      - 'src/components/calls/RecordingControls*'
+      - 'src/features/call-recording/**'
+      - 'src/hooks/useCallRecorder*'
+      - 'supabase/migrations/**'
+      - 'scripts/test-recording-consent.mjs'
+      - '.github/workflows/recording-consent-checks.yml'
+jobs:
+  recording-consent:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx vitest run src/components/calls/RecordingControls.test.tsx src/hooks/useCallRecorder.test.ts
+      - run: node scripts/test-recording-consent.mjs
+      - run: npm run build
