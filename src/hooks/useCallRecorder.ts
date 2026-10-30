@@ -1,4 +1,4 @@
-import { useRef, useCallback } from "react";
+import { useRef, useCallback, useEffect } from "react";
 
 // Records the whole call: composites every video tile onto a canvas and mixes
 // all audio tracks (local mic + each remote) via Web Audio, then records the
@@ -14,6 +14,7 @@ interface RecorderState {
   recorder: MediaRecorder;
   chunks: BlobPart[];
   raf: number;
+  combined: MediaStream;
 }
 
 export function pickMimeType(): string | undefined {
@@ -31,8 +32,12 @@ export function pickMimeType(): string | undefined {
 
 export function useCallRecorder() {
   const stateRef = useRef<RecorderState | null>(null);
+  const stoppingRef = useRef<Promise<Blob | null> | null>(null);
 
   const start = useCallback((localStream: MediaStream | null, remoteStreams: Map<string, MediaStream>): boolean => {
+    if (stateRef.current || stoppingRef.current) return false;
+    let allocatedAudio: AudioContext | null = null;
+    let allocatedStream: MediaStream | null = null;
     try {
       const streams: MediaStream[] = [];
       if (localStream) streams.push(localStream);
@@ -42,7 +47,8 @@ export function useCallRecorder() {
       const W = 1280, H = 720;
       const canvas = document.createElement("canvas");
       canvas.width = W; canvas.height = H;
-      const ctx = canvas.getContext("2d")!;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return false;
 
       // hidden <video> per stream for canvas drawing
       const videos: HTMLVideoElement[] = streams.map((s) => {
@@ -55,6 +61,8 @@ export function useCallRecorder() {
       // audio mixing
       const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       const audioCtx = new AudioCtx();
+      allocatedAudio = audioCtx;
+      void audioCtx.resume().catch(() => {});
       const dest = audioCtx.createMediaStreamDestination();
       for (const s of streams) {
         if (s.getAudioTracks().length > 0) {
@@ -89,40 +97,57 @@ export function useCallRecorder() {
         ...dest.stream.getAudioTracks(),
       ]);
 
+      allocatedStream = combined;
       const chunks: BlobPart[] = [];
       const recorder = new MediaRecorder(combined, pickMimeType() ? { mimeType: pickMimeType() } : undefined);
       recorder.ondataavailable = (e) => { if (e.data && e.data.size > 0) chunks.push(e.data); };
       recorder.start(1000);
 
-      stateRef.current = { canvas, ctx, videos, audioCtx, dest, recorder, chunks, raf: 0 };
+      stateRef.current = { canvas, ctx, videos, audioCtx, dest, recorder, chunks, raf: 0, combined };
       stateRef.current.raf = requestAnimationFrame(drawFrame);
       return true;
     } catch (e) {
+      allocatedStream?.getTracks().forEach(t => t.stop());
+      if (allocatedAudio) void allocatedAudio.close().catch(() => {});
       console.error("[rec] failed to start:", e);
       return false;
     }
   }, []);
 
   const stop = useCallback((): Promise<Blob | null> => {
-    return new Promise((resolve) => {
+    if (stoppingRef.current) return stoppingRef.current;
+    if (!stateRef.current) return Promise.resolve(null);
+    const stopping = new Promise<Blob | null>((resolve) => {
       const st = stateRef.current;
       if (!st) { resolve(null); return; }
+      let finished = false;
+      let timeout: ReturnType<typeof setTimeout> | undefined;
       const finish = () => {
+        if (finished) return;
+        finished = true;
+        clearTimeout(timeout);
         cancelAnimationFrame(st.raf);
         st.videos.forEach((v) => { v.srcObject = null; });
-        try { st.audioCtx.close(); } catch { /* noop */ }
+        st.combined.getTracks().forEach(t => t.stop());
+        void st.audioCtx.close().catch(() => {});
         const blob = st.chunks.length ? new Blob(st.chunks, { type: st.recorder.mimeType || (st.chunks[0] instanceof Blob ? st.chunks[0].type : "") }) : null;
         stateRef.current = null;
         resolve(blob);
       };
       if (st.recorder.state !== "inactive") {
         st.recorder.onstop = finish;
+        st.recorder.onerror = finish;
+        timeout = setTimeout(finish, 3000);
         try { st.recorder.stop(); } catch { finish(); }
       } else {
         finish();
       }
     });
+    stoppingRef.current = stopping.finally(() => { stoppingRef.current = null; });
+    return stoppingRef.current;
   }, []);
+
+  useEffect(() => () => { void stop(); }, [stop]);
 
   const pause = useCallback((paused: boolean) => {
     const st = stateRef.current;

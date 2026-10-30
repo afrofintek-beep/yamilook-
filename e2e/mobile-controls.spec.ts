@@ -18,6 +18,8 @@ async function mockAccount(page: import('@playwright/test').Page) {
     const url = new URL(route.request().url());
     const table = url.pathname.split('/').pop();
     let data: unknown = [];
+    // The recording RPC returns a session object or null, never a table array.
+    if (table === 'recording_session') data = null;
     if (table === 'user') data = { id: me, email: 'test@example.invalid' };
     if (table === 'profiles') data = profile(me);
     if (table === 'public_profiles') data = url.searchParams.get('id')?.startsWith('eq.') ? profile(peer) : [profile(me), profile(peer)];
