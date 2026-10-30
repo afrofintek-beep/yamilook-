@@ -1,3 +1,4 @@
+import { IncomingCallBoundary } from './IncomingCallBoundary';
 import { ScheduledCallNotices } from '@/features/scheduled-calls/ScheduledCallNotices';
 /* @refresh reset */
 import { createContext, useContext, useState, useCallback, ReactNode, lazy, Suspense, useMemo, useEffect, useRef } from 'react';
@@ -325,6 +326,7 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
       
       {/* Incoming call overlay - lazy loaded */}
       {incomingCall && (
+        <IncomingCallBoundary key={incomingCall.id} onAnswer={handleAnswerCall} onDecline={handleDeclineCall}>
         <Suspense fallback={null}>
           <IncomingCallOverlay
             callId={incomingCall.id}
@@ -334,6 +336,7 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
             onDecline={handleDeclineCall}
           />
         </Suspense>
+        </IncomingCallBoundary>
       )}
     </ActiveCallContext.Provider>
   );
