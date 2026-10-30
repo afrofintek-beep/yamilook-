@@ -1,0 +1,102 @@
+[
+  {
+    "version": "20261022133534",
+    "name": "single_use_invitations",
+    "sha256": "5fd811f2968b5bf2ab79c9d5d3f3612c700f83fee2edfff8086649726b2af13d",
+    "replaced": [
+      "20261022150000_single_use_invitations.sql"
+    ]
+  },
+  {
+    "version": "20261022154328",
+    "name": "require_profile_completion",
+    "sha256": "f61a645d455bebd28e6ab0833b08fef235120f097047255a880692abc5300746",
+    "replaced": []
+  },
+  {
+    "version": "20261022173546",
+    "name": "mvp_invitation_permissions",
+    "sha256": "90d612eb22c9c871de72e1121f36284e33ef94dd91cc299c041d130d9b4b4f69",
+    "replaced": [
+      "20261022173238_mvp_invitation_permissions.sql"
+    ]
+  },
+  {
+    "version": "20261022195059",
+    "name": "expiring_online_presence",
+    "sha256": "01edf645ea732e3628bfe40fed2162aa5b25accf467ab9f52753a30af3569d50",
+    "replaced": [
+      "20261022194832_expiring_online_presence.sql"
+    ]
+  },
+  {
+    "version": "20261022233331",
+    "name": "safe_public_profiles_and_presence",
+    "sha256": "7f0067f8aa32b6744a1e8055ddc6d2215740b5f480a7f0fe686ab59a1040d80a",
+    "replaced": [
+      "20261022233052_restrict_private_profile_access.sql"
+    ]
+  },
+  {
+    "version": "20261022233552",
+    "name": "checked_profile_moderation",
+    "sha256": "511a5503fed06d2fd47da3a959881ee583ae28e391f3cbd0fb83cb07456b1a79",
+    "replaced": []
+  },
+  {
+    "version": "20261023001127",
+    "name": "enforce_private_profile_ownership",
+    "sha256": "fe160d6b559511ba4f44e53c4e2b70067a6a5cc222c07f572a756c2673074493",
+    "replaced": [
+      "20261022233226_enforce_private_profile_ownership.sql"
+    ]
+  },
+  {
+    "version": "20261023011037",
+    "name": "academia_video_rooms",
+    "sha256": "81ab86379f3bce147a26f8db7bc4b3043f80f9e31135e43e119f4a5a6c321f0c",
+    "replaced": [
+      "20261023010652_academia_video_rooms.sql"
+    ]
+  },
+  {
+    "version": "20261023091949",
+    "name": "residence_declarations",
+    "sha256": "889cd90c8d8121e2db47642b90628f90be3dd27117d0e85081d72d95fbe87c73",
+    "replaced": [
+      "20261023091949_residence_declarations.sql"
+    ]
+  },
+  {
+    "version": "20261023221547",
+    "name": "papos_visible_history_and_atomic_forwarding",
+    "sha256": "a2f86817fc126cd4173fe4b91d518be74373d51acb6ccb18e7673f62f98807b3",
+    "replaced": [
+      "20261023221547_papos_visible_history_and_atomic_forwarding.sql"
+    ]
+  },
+  {
+    "version": "20261023223852",
+    "name": "papos_video_posters",
+    "sha256": "b649f24d5605edb4202e6ae7eea4977d260fce34c68efb75aee92f53e03c82e1",
+    "replaced": [
+      "20261023223852_papos_video_posters.sql"
+    ]
+  },
+  {
+    "version": "20261024001248",
+    "name": "secure_chat_membership",
+    "sha256": "df3a0516c270f7be705942f8b5b6c741853dda12fdfeb6f68670c3eff397820e",
+    "replaced": [
+      "20261024001248_secure_chat_membership.sql"
+    ]
+  },
+  {
+    "version": "20261025032343",
+    "name": "scheduled_call_workflow",
+    "sha256": "2c0eb52ddb449ed6f9b7ed2c811e83bd3bc012c2575909b4f85e1483c8beed53",
+    "replaced": [
+      "20261025022806_scheduled_call_workflow.sql"
+    ]
+  }
+]

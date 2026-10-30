@@ -30,6 +30,7 @@ export default function AdminAfrolocCertifications() {
   const [filter, setFilter] = useState<StatusFilter>('pending');
   const [rows, setRows] = useState<CertRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [declarations, setDeclarations] = useState<Record<string, {method:string;city:string;neighborhood:string}>>({});
   const [reviewed, setReviewed] = useState<Record<string,boolean>>({});
   const [acting, setActing] = useState<string | null>(null);
@@ -42,7 +43,11 @@ export default function AdminAfrolocCertifications() {
       .limit(100);
     if (filter === 'all') q = q.neq('afroloc_certification_status', 'none');
     else q = q.eq('afroloc_certification_status', filter);
-    const { data } = await q;
+    setLoadError(false);
+    const { data, error } = await q;
+    if (error) {
+      setRows([]);setDeclarations({});setReviewed({});setLoadError(true);setLoading(false);return;
+    }
     setRows((data as CertRow[]) ?? []);
     if (data?.length) {
       const {data:claims}=await supabase.from('residence_declarations' as never).select('user_id, method, city, neighborhood').in('user_id',data.map(p=>p.id));
@@ -88,7 +93,7 @@ export default function AdminAfrolocCertifications() {
         <Alert>
           <ShieldAlert className="h-4 w-4" />
           <AlertDescription className="text-sm">
-            Autoridade/admin — confirma a ligação entre utilizador e endereço antes de certificar. Um código introduzido ou uma leitura GPS, por si só, não provam residência.
+            Revisão manual local da YAMILOOK. Não substitui o certificado emitido pelo AFROLOC. Autoridade/admin — confirma a ligação entre utilizador e endereço antes de certificar. Um código introduzido ou uma leitura GPS, por si só, não provam residência.
           </AlertDescription>
         </Alert>
 
@@ -103,10 +108,14 @@ export default function AdminAfrolocCertifications() {
 
         {loading && <p className="text-sm text-muted-foreground text-center py-8">A carregar…</p>}
 
-        {!loading && rows.length === 0 && (
+        {!loading && !loadError && rows.length === 0 && (
           <p className="text-sm text-muted-foreground text-center py-8">Sem pedidos.</p>
         )}
 
+        {loadError && <Alert variant="destructive"><AlertDescription>
+          Não foi possível carregar os pedidos. Verifica a ligação e as permissões da conta.
+          <Button variant="outline" className="ml-2" onClick={() => {setLoading(true);void fetchRows();}}>Tentar novamente</Button>
+        </AlertDescription></Alert>}
         <ul className="space-y-3">
           {rows.map((r) => (
             <li key={r.id} className="border rounded-lg p-4 space-y-2">

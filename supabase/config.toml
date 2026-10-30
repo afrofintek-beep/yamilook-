@@ -35,6 +35,11 @@ verify_jwt = false
 [functions.scheduled-call-video]
 verify_jwt = false
 
+# Dedicated endpoints perform their own getUser / partner-key authentication.
+[functions.account-phone]
+verify_jwt = false
+[functions.account-link]
+verify_jwt = false
 [functions.call-push]
 verify_jwt = true
 

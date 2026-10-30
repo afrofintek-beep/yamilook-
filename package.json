@@ -9,7 +9,8 @@
     "build:dev": "vite build --mode development",
     "test": "vitest run",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:account-link": "node --test tests/account-link/*.test.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.1.0",

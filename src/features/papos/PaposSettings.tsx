@@ -1,3 +1,4 @@
+import AuthorizedAfrolocLink from '@/components/account-link/AuthorizedAfrolocLink';
 import CallPushSettings from './CallPushSettings';
 import CallRingtoneSettings from './CallRingtoneSettings';
 import PaposLanguageSelector from './PaposLanguageSelector';
@@ -43,6 +44,7 @@ export default function PaposSettings() {
     <main className="flex-1 overflow-y-auto p-4 space-y-6 max-w-lg w-full mx-auto"><PaposBrand /><p className="text-xs text-muted-foreground">Uma aplicação do ecossistema AFROFINTEK</p>
       <Button asChild variant="outline" className="w-full"><Link to="/profile">{profile?.display_name || 'O meu perfil'}</Link></Button>
       <PaposLanguageSelector />
+      <AuthorizedAfrolocLink />
       <CallRingtoneSettings />
       <CallPushSettings />
       <ConnectedDevices />
