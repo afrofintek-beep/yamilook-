@@ -23,3 +23,13 @@ it('bounds automatic chunk recovery to avoid repeated reload loops', () => {
   expect(screen.getByText(/ficheiros da aplicação/)).toBeVisible();
   expect(recoverApplicationAssets).not.toHaveBeenCalled();
 });
+
+it.each([false, true])('shows the current diagnostic on the first failure, storage blocked=%s', (blocked) => {
+  vi.spyOn(console, 'error').mockImplementation(() => {});
+  sessionStorage.setItem('kosolola-render-diagnostic-v1', JSON.stringify({ category: 'stale-error' }));
+  if (blocked) vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new Error('denied'); });
+  function Broken(): never { throw new Error('Rendered fewer hooks than expected'); }
+  const { container } = render(<PaposBoundary><Broken /></PaposBoundary>);
+  expect(container.querySelector('pre')).toHaveTextContent('hook-order');
+  expect(container.querySelector('pre')).not.toHaveTextContent('stale-error');
+});
