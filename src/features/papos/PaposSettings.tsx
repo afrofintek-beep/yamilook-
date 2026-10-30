@@ -1,5 +1,6 @@
 import AuthorizedAfrolocLink from '@/components/account-link/AuthorizedAfrolocLink';
 import CallPushSettings from './CallPushSettings';
+import CallRingtoneSettings from './CallRingtoneSettings';
 import PaposLanguageSelector from './PaposLanguageSelector';
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
@@ -44,6 +45,7 @@ export default function PaposSettings() {
       <Button asChild variant="outline" className="w-full"><Link to="/profile">{profile?.display_name || 'O meu perfil'}</Link></Button>
       <PaposLanguageSelector />
       <AuthorizedAfrolocLink />
+      <CallRingtoneSettings />
       <CallPushSettings />
       <ConnectedDevices />
       <section className="rounded-2xl border p-4 space-y-5"><h2 className="font-semibold">Privacidade</h2>{privacy.map(([key, label]) => <label key={key} className="flex items-center justify-between gap-3 text-sm"><span>{label}</span><Switch checked={profile?.[key] ?? true} disabled={busy} onCheckedChange={value => void change(key, value)} /></label>)}<p className="text-xs text-muted-foreground">Estas preferências são partilhadas com a Yamilook.</p></section>

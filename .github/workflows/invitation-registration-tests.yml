@@ -6,6 +6,19 @@ on:
       - "src/components/auth/RegisterForm.tsx"
       - "src/lib/invitation-registration.ts"
       - "src/lib/invitation-registration.test.ts"
+      - "src/lib/referral.ts"
+      - "src/lib/referral.test.ts"
+      - "src/lib/invite-delivery.ts"
+      - "src/lib/invite-delivery.test.ts"
+      - "src/lib/public-site.ts"
+      - "src/lib/public-site.test.ts"
+      - "src/hooks/useAuth.tsx"
+      - "src/pages/ForgotPassword.tsx"
+      - "src/test/integration/auth.test.tsx"
+      - "supabase/functions/send-user-invitation/**"
+      - "supabase/config.toml"
+      - "src/components/settings/InviteSheet.tsx"
+      - "src/components/settings/InviteSheet.test.tsx"
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/invitation-registration-tests.yml"
@@ -24,4 +37,4 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm install --no-audit --no-fund
-      - run: npm test -- src/lib/invitation-registration.test.ts src/test/integration/auth.test.tsx --reporter=dot
+      - run: npm test -- src/lib/public-site.test.ts src/lib/invitation-registration.test.ts src/lib/referral.test.ts src/lib/invite-delivery.test.ts src/components/settings/InviteSheet.test.tsx src/test/integration/auth.test.tsx --reporter=dot

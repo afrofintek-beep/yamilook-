@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from 'react';
+import { lazy, Suspense, useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { 
@@ -20,7 +20,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
 import { useCalls, CallHistory } from '@/hooks/useCalls';
-import { ScheduleCallSheet } from '@/components/calls/ScheduleCallSheet';
+const ScheduleCallSheet = lazy(() => import('@/components/calls/ScheduleCallSheet').then(m => ({ default: m.ScheduleCallSheet })));
 import { ScheduledCallCard } from '@/components/calls/ScheduledCallCard';
 import { VoicemailRecorder } from '@/components/calls/VoicemailRecorder';
 import { OnlineStatus } from '@/components/ui/OnlineStatus';
@@ -67,7 +67,7 @@ export function CallsTabContent({ onStartCall }: CallsTabContentProps) {
 
   const formatDuration = (seconds: number | null) => {
     if (!seconds || seconds === 0) {
-      return '< 1m';
+      return '0s';
     }
     const hours = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
@@ -93,6 +93,7 @@ export function CallsTabContent({ onStartCall }: CallsTabContentProps) {
   const formatCallTime = (dateStr: string | null) => {
     if (!dateStr) return '';
     const date = new Date(dateStr);
+    if (!Number.isFinite(date.getTime())) return '';
     if (isToday(date)) {
       return format(date, 'h:mm a');
     } else if (isYesterday(date)) {
@@ -102,10 +103,10 @@ export function CallsTabContent({ onStartCall }: CallsTabContentProps) {
   };
 
   const getCallIcon = (call: CallHistory) => {
-    if (call.status === 'missed' || call.status === 'declined') {
+    if (call.status === 'missed' || call.end_reason === 'no_answer' || call.status === 'declined') {
       return <PhoneMissed className="w-4 h-4 text-destructive" />;
     }
-    return call.participants.length > 0 ? (
+    return (call.caller_id || call.initiator_id) === user?.id ? (
       <PhoneOutgoing className="w-4 h-4 text-green-500" />
     ) : (
       <PhoneIncoming className="w-4 h-4 text-primary" />
@@ -123,14 +124,18 @@ export function CallsTabContent({ onStartCall }: CallsTabContentProps) {
 
   const filteredHistory = callHistory.filter(call => {
     if (activeTab === 'missed') {
-      return call.status === 'missed' || call.status === 'declined';
+      return (call.callee_id === user?.id || (!call.callee_id && call.initiator_id !== user?.id))
+        && (call.status === 'missed' || call.end_reason === 'no_answer');
     }
     return true;
   });
 
   const groupedCalls = filteredHistory.reduce((groups, call) => {
     const date = call.started_at || call.ended_at;
-    if (!date) return groups;
+    if (!date || !Number.isFinite(new Date(date).getTime())) {
+      (groups['Data indisponível'] ??= []).push(call);
+      return groups;
+    }
     
     const dateKey = isToday(new Date(date)) 
       ? 'Today' 
@@ -272,7 +277,7 @@ export function CallsTabContent({ onStartCall }: CallsTabContentProps) {
                               {getCallIcon(call)}
                               <span>{call.type === 'video' ? t('calls.videoCall') : t('calls.voiceCall')}</span>
                               <span>•</span>
-                              <span>{formatDuration(call.duration_seconds)}</span>
+                              <span>{call.end_reason === 'no_answer' ? 'Sem resposta' : call.end_reason === 'cancelled' ? 'Cancelada' : call.status === 'declined' ? 'Recusada' : formatDuration(call.duration_seconds)}</span>
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
@@ -280,7 +285,7 @@ export function CallsTabContent({ onStartCall }: CallsTabContentProps) {
                               {formatCallTime(call.started_at)}
                             </span>
                             {/* Voicemail button for missed calls */}
-                            {(call.status === 'missed' || call.status === 'declined') && call.participants[0] && (
+                            {(call.status === 'missed' || call.end_reason === 'no_answer' || call.status === 'declined') && call.participants[0] && (
                               <Button 
                                 variant="ghost" 
                                 size="icon" 
@@ -449,7 +454,7 @@ export function CallsTabContent({ onStartCall }: CallsTabContentProps) {
       </Tabs>
 
       {/* Schedule Call Sheet */}
-      <ScheduleCallSheet open={scheduleOpen} onOpenChange={setScheduleOpen} />
+      {scheduleOpen && <Suspense fallback={<p role="status">A carregar agendamento…</p>}><ScheduleCallSheet open={scheduleOpen} onOpenChange={setScheduleOpen} /></Suspense>}
 
       {/* Voicemail Recorder */}
       {selectedContact && (

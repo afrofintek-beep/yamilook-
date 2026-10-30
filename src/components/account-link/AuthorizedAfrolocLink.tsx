@@ -18,7 +18,13 @@ export default function AuthorizedAfrolocLink() {
    if(error||!data?.ok){setMessage(data?.reason==='phone_required'?'Confirma primeiro o telefone nesta conta.':data?.reason==='address_changed'?'O endereço mudou. Atualiza os dados e autoriza novamente.':'Ligação ou certificado indisponível. Nenhuma certificação foi atribuída.');return;}
    if(action==='begin'){setRequest(data);setMessage('Abre o AFROLOC, entra na tua conta e confirma o destinatário e o endereço.');}
    else if(action==='revoke'){setLinks(v=>v.map(l=>l.id===id?{...l,revoked_at:new Date().toISOString()}:l));setMessage('Ligação revogada.');}
-   else if(data.certified===true)setMessage(`Certificado válido na consulta efetuada agora, até ${new Date(data.expires_at).toLocaleString()}. Não é uma garantia permanente.`);
+   else if(data.certified===true){
+    if(action==='exchange'){
+     setLinks(v=>[{id:id!,code,linked_at:new Date().toISOString(),revoked_at:null},...v.filter(l=>l.id!==id)]);
+     setRequest(null);setConsent(false);
+    }
+    setMessage(`Certificado válido na consulta efetuada agora, até ${new Date(data.expires_at).toLocaleString()}. Não é uma garantia permanente.`);
+   }
   }catch{setMessage('Serviço indisponível. Nenhuma certificação foi atribuída.');}finally{setBusy(false);}
  };
  if(import.meta.env.VITE_ACCOUNT_LINK_V1_ENABLED!=='true')return null;

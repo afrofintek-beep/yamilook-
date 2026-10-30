@@ -1,3 +1,4 @@
+import { canJoinCall } from './call-access.ts';
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import * as jose from "https://deno.land/x/jose@v4.14.4/index.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
@@ -155,11 +156,36 @@ serve(async (req) => {
 
     // --- Access control (authoritative, in the DB). MOKUBICO conversa rooms
     // (mok-*) gate on the chosen-guest list; live rooms gate on banda/approved. ---
+    const isCall = /^call-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(roomName);
+    if (roomName.startsWith('call-') && !isCall) {
+      return new Response(JSON.stringify({ error: 'Invalid call room' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
     const isMokubico = roomName.startsWith('mok-');
-    const { data: access, error: accessError } = await supabase.rpc(
+    let access: { allowed?: boolean; reason?: string; is_host?: boolean; media_enabled?: boolean } | null = null;
+    let accessError: unknown = null;
+    if (isCall) {
+      // Use the caller's JWT and RLS, never a service-role client. Room IDs are
+      // derived from existing calls; the frontend cannot choose other members.
+      const callId = roomName.slice(5);
+      const [callResult, memberResult] = await Promise.all([
+        supabase.from('calls').select('id, status, initiator_id, caller_id, callee_id').eq('id', callId).maybeSingle(),
+        supabase.from('call_participants').select('status').eq('call_id', callId).eq('user_id', userId).maybeSingle(),
+      ]);
+      accessError = callResult.error || memberResult.error;
+      access = {
+        allowed: canJoinCall(userId, callResult.data, memberResult.data),
+        is_host: false, media_enabled: true,
+      };
+    } else {
+      const result = await supabase.rpc(
       isMokubico ? 'can_join_mokubico_room' : 'can_join_live_room',
       { p_room: roomName },
     );
+      access = result.data;
+      accessError = result.error;
+    }
     if (accessError) {
       console.error('can_join_live_room error:', accessError);
       return new Response(
@@ -178,7 +204,7 @@ serve(async (req) => {
     // MOKUBICO conversas are group voice/video, but only when media is enabled
     // (Quintal needs Pro; a free Quintal is text-only → no publishing). Live
     // broadcasts stay host-only.
-    const canPublish = isMokubico ? access.media_enabled === true : dbIsHost;
+    const canPublish = isCall ? true : isMokubico ? access.media_enabled === true : dbIsHost;
 
     // Create grants based on role
     const grants: ClaimGrants = {
@@ -194,7 +220,7 @@ serve(async (req) => {
       },
     };
 
-    const livekitToken = await createLiveKitToken(LIVEKIT_API_KEY, LIVEKIT_API_SECRET, grants);
+    const livekitToken = await createLiveKitToken(LIVEKIT_API_KEY, LIVEKIT_API_SECRET, grants, isCall ? 600 : 6 * 60 * 60);
 
     console.log(`Generated token for ${participantName} (${isHost ? 'host' : 'viewer'}) in room ${sanitizedRoomName} [user: ${userId}]`);
 

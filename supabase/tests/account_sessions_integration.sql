@@ -3,6 +3,8 @@
 create role anon nologin;
 create role authenticated nologin;
 create schema auth;
+-- Match production Supabase grants: RLS may call auth.uid() as authenticated.
+grant usage on schema auth to authenticated;
 create table auth.users (id uuid primary key);
 create table auth.sessions (
   id uuid primary key, user_id uuid not null references auth.users(id),
@@ -19,6 +21,7 @@ create function public.revoke_other_sessions(current_session_id text default nul
 returns void language plpgsql as $$ begin null; end; $$;
 
 \ir ../migrations/20261027001500_secure_multi_device_sessions.sql
+\ir ../migrations/20261027074500_account_session_revocation_realtime.sql
 
 -- These fixtures live only in the temporary CI database.
 insert into auth.users(id) values
@@ -35,6 +38,9 @@ begin
  end if;
  if has_function_privilege('authenticated','public.revoke_other_sessions(text)','execute') then
    raise exception 'Legacy single-session RPC still executable';
+ end if;
+ if has_table_privilege('anon','public.account_session_revocations','select') then
+   raise exception 'Anonymous account can read revocation notifications';
  end if;
  if has_table_privilege('authenticated','public.account_device_sessions','select')
     or has_table_privilege('authenticated','public.account_login_alerts','select') then
@@ -114,6 +120,15 @@ end $$;
 select public.account_revoke_session('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb');
 do $$
 begin
+ if (select count(*) from public.account_session_revocations where session_id='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb')<>1 then
+   raise exception 'Revocation event not created atomically';
+ end if;
+ if not exists (select 1 from public.account_session_revocations where user_id=auth.uid()) then
+   raise exception 'Owner cannot read its own revocation event';
+ end if;
+end $$;
+do $$
+begin
  if jsonb_array_length(public.account_list_sessions())<>1 then
    raise exception 'Targeted revocation did not remove exactly one session';
  end if;
@@ -137,7 +152,8 @@ select set_config('request.jwt.claims',
 do $$
 begin
  if jsonb_array_length(public.account_list_sessions())<>1
-    or jsonb_array_length(public.account_list_login_alerts())<>0 then
+    or jsonb_array_length(public.account_list_login_alerts())<>0
+    or (select count(*) from public.account_session_revocations)<>0 then
    raise exception 'Cross-user session/alert disclosure';
  end if;
 end $$;

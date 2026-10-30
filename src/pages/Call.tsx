@@ -82,20 +82,30 @@ export default function Call() {
         const otherParticipants = user?.id
           ? participantsData.filter((p) => p.user_id !== user.id)
           : participantsData;
+        // A callee may only see their own participant row under RLS. The call
+        // row already identifies both invited parties; do not wait for a stream
+        // to invent an anonymous/Connecting participant.
+        const knownIds = [data.initiator_id, data.caller_id, data.callee_id]
+          .filter((id): id is string => !!id && id !== user?.id);
+        for (const id of new Set(knownIds)) {
+          if (!otherParticipants.some(p => p.user_id === id)) otherParticipants.push({
+            id: `invited-${id}`, user_id: id, is_muted: false,
+            is_video_enabled: data.type === 'video', is_screen_sharing: false,
+            is_hand_raised: false, is_spotlight: false,
+          });
+        }
 
         // Fetch profiles separately
         const userIds = otherParticipants.map(p => p.user_id);
         const { data: profiles } = await supabase
-          .from('public_profiles')
-          .select('id, display_name, avatar_url')
-          .in('id', userIds);
+          .rpc('get_public_profiles_by_ids', { p_ids: userIds });
 
         const participantsWithProfiles = otherParticipants.map((p) => {
           const profile = profiles?.find(prof => prof.id === p.user_id);
           return {
             id: p.id,
             user_id: p.user_id,
-            display_name: profile?.display_name || 'Unknown',
+            display_name: profile?.display_name || 'Participante',
             avatar_url: profile?.avatar_url || null,
             is_muted: p.is_muted,
             is_video_enabled: p.is_video_enabled,

@@ -46,6 +46,7 @@ interface TopicSuggestion {
 
 export function TopicSuggestionsManager() {
   const { user } = useAuth();
+  const [loadError, setLoadError] = useState(false);
   const [suggestions, setSuggestions] = useState<TopicSuggestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<string | null>(null);
@@ -58,6 +59,7 @@ export function TopicSuggestionsManager() {
   }, []);
 
   const fetchSuggestions = async () => {
+    setLoading(true); setLoadError(false);
     try {
       const { data, error } = await supabase
         .from('topic_suggestions')
@@ -89,6 +91,7 @@ export function TopicSuggestionsManager() {
 
       setSuggestions(enrichedSuggestions);
     } catch (error) {
+      setLoadError(true);
       console.error('Error fetching suggestions:', error);
     } finally {
       setLoading(false);
@@ -100,45 +103,9 @@ export function TopicSuggestionsManager() {
 
     setProcessing(suggestion.id);
     try {
-      // Get max display_order
-      const { data: maxOrderData } = await supabase
-        .from('discover_topics')
-        .select('display_order')
-        .order('display_order', { ascending: false })
-        .limit(1)
-        .single();
-
-      const nextOrder = (maxOrderData?.display_order || 0) + 1;
-
-      // Create the topic
-      const { error: topicError } = await supabase
-        .from('discover_topics')
-        .insert({
-          name: suggestion.name,
-          slug: suggestion.slug,
-          display_order: nextOrder,
-          post_count: 0,
-          is_trending: false,
-        });
-
-      if (topicError) {
-        if (topicError.code === '23505') {
-          toast.error('Já existe um tópico com este nome');
-        } else {
-          throw topicError;
-        }
-        return;
-      }
-
-      // Update suggestion status
-      await supabase
-        .from('topic_suggestions')
-        .update({
-          status: 'approved',
-          reviewed_by: user.id,
-          reviewed_at: new Date().toISOString(),
-        })
-        .eq('id', suggestion.id);
+      const { error } = await supabase.rpc('admin_topic_action', { p_action: 'approve', p_id: suggestion.id });
+      if (error) throw error;
+      window.dispatchEvent(new Event('admin-topics-changed'));
 
       toast.success(`Tópico "${suggestion.name}" aprovado e criado!`);
       setSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
@@ -161,15 +128,8 @@ export function TopicSuggestionsManager() {
 
     setProcessing(suggestionToReject.id);
     try {
-      await supabase
-        .from('topic_suggestions')
-        .update({
-          status: 'rejected',
-          reviewed_by: user.id,
-          reviewed_at: new Date().toISOString(),
-          rejection_reason: rejectionReason.trim() || null,
-        })
-        .eq('id', suggestionToReject.id);
+      const { error } = await supabase.rpc('admin_topic_action', { p_action: 'reject', p_id: suggestionToReject.id, p_reason: rejectionReason.trim() });
+      if (error) throw error;
 
       toast.success(`Sugestão "${suggestionToReject.name}" rejeitada`);
       setSuggestions(prev => prev.filter(s => s.id !== suggestionToReject.id));
@@ -207,7 +167,7 @@ export function TopicSuggestionsManager() {
             <div className="flex items-center justify-center py-8">
               <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
             </div>
-          ) : suggestions.length === 0 ? (
+          ) : loadError ? (<div role="alert">Não foi possível carregar sugestões. <Button onClick={fetchSuggestions}>Tentar novamente</Button></div>) : suggestions.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <Lightbulb className="w-12 h-12 mx-auto mb-3 opacity-50" />
               <p>Nenhuma sugestão pendente</p>

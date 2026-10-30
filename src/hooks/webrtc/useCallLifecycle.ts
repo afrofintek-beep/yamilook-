@@ -4,6 +4,7 @@ import { notifyIncomingCall } from '@/lib/call-push';
  * Coordinates between media, peer connections, and signaling
  */
 import { useRef, useCallback } from 'react';
+import type { TablesUpdate } from '@/integrations/supabase/types';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '../useAuth';
 import { getWebRTCConfig } from './types';
@@ -20,7 +21,7 @@ export interface UseCallLifecycleReturn {
   /** Ring timeout ref for clearing */
   ringTimeoutRef: React.MutableRefObject<ReturnType<typeof setTimeout> | null>;
   /** Create call in database */
-  createCallInDB: (targetUserId: string, callType: 'voice' | 'video', conversationId?: string) => Promise<string>;
+  createCallInDB: (targetUserId: string, callType: 'voice' | 'video', conversationId?: string, transport?: 'webrtc' | 'livekit') => Promise<string>;
   /** Update participant status */
   updateParticipantStatus: (callId: string, userId: string, status: string, joinedAt?: boolean) => Promise<void>;
   /** Update call status */
@@ -56,7 +57,8 @@ export function useCallLifecycle(options: UseCallLifecycleOptions): UseCallLifec
   const createCallInDB = useCallback(async (
     targetUserId: string,
     callType: 'voice' | 'video',
-    conversationId?: string
+    conversationId?: string,
+    transport: 'webrtc' | 'livekit' = 'webrtc'
   ): Promise<string> => {
     logger.debug('Creating call in database...', 'CallLifecycle');
 
@@ -76,6 +78,16 @@ export function useCallLifecycle(options: UseCallLifecycleOptions): UseCallLifec
     }
 
     logger.debug('Call created', 'CallLifecycle', callId);
+    if (transport === 'livekit') {
+      // Persist before inviting: updated clients can distinguish existing WebRTC
+      // calls from LiveKit calls without changing the call schema.
+      const { data: marked, error: markError } = await supabase.from('calls')
+        .update({ sdp_offer: { transport: 'livekit-v1' } }).eq('id', callId).select('id').maybeSingle();
+      if (markError || !marked) {
+        await supabase.from('calls').update({ status: 'failed', ended_at: new Date().toISOString() }).eq('id', callId);
+        throw markError || new Error('Não foi possível preparar a chamada.');
+      }
+    }
     void notifyIncomingCall(callId);
     return callId;
   }, []);
@@ -89,7 +101,7 @@ export function useCallLifecycle(options: UseCallLifecycleOptions): UseCallLifec
     status: string,
     joinedAt = false
   ) => {
-    const update: Record<string, unknown> = { status };
+    const update: TablesUpdate<'call_participants'> = { status };
     if (joinedAt) {
       update.joined_at = new Date().toISOString();
     }
@@ -114,7 +126,7 @@ export function useCallLifecycle(options: UseCallLifecycleOptions): UseCallLifec
     endedAt = false,
     endReason?: string
   ) => {
-    const update: Record<string, unknown> = { status };
+    const update: TablesUpdate<'calls'> = { status };
     if (startedAt) {
       update.started_at = new Date().toISOString();
     }
@@ -276,7 +288,7 @@ export function useCallLifecycle(options: UseCallLifecycleOptions): UseCallLifec
     isVideoEnabled?: boolean,
     isScreenSharing?: boolean
   ) => {
-    const update: Record<string, boolean> = {};
+    const update: TablesUpdate<'call_participants'> = {};
     if (isMuted !== undefined) update.is_muted = isMuted;
     if (isVideoEnabled !== undefined) update.is_video_enabled = isVideoEnabled;
     if (isScreenSharing !== undefined) update.is_screen_sharing = isScreenSharing;

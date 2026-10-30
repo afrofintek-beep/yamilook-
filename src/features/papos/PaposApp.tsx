@@ -1,11 +1,11 @@
 import { refreshCallPush } from '@/lib/call-push';
-import { Component, lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
+import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
 import { BrowserRouter, Link, Navigate, Route, Routes, Outlet, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from '@/hooks/useAuth';
 import { AppSurfaceContext } from '@/lib/app-surface';
 import { unlockCallAudio } from '@/lib/audio-context';
-import { recoverApplicationAssets } from '@/lib/app-assets';
+import { PaposBoundary } from './PaposBoundary';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Toaster } from '@/components/ui/toaster';
 import { Toaster as Sonner } from '@/components/ui/sonner';
@@ -37,14 +37,15 @@ export function PaposGate({ children }: { children: ReactNode }) {
   if (!profile.onboarding_completed) return <main className="min-h-screen-safe safe-top p-6 space-y-4"><h1 className="text-2xl font-bold">Conclui a tua conta</h1><p>A tua conta é partilhada com a Yamilook. Conclui os dados pendentes e volta à KOSOLOLA.</p><Button asChild><a href="https://www.yamilook.com/onboarding">Continuar a inscrição</a></Button></main>;
   return <>{children}</>;
 }
-function Loading() { return <div role="status" className="h-screen-safe flex items-center justify-center">A carregar a KOSOLOLA…</div>; }
-class PaposBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
-  state = { failed: false };
-  static getDerivedStateFromError() { return { failed: true }; }
-  render() {
-    return this.state.failed ? <main className="min-h-screen-safe safe-top p-6 space-y-4"><h1 className="text-xl font-bold">Não foi possível abrir esta página</h1><p>Verifica a ligação e tenta novamente. A tua conta mantém-se guardada.</p><Button onClick={() => { void recoverApplicationAssets('/papos-app/').finally(() => window.location.reload()); }}>Recarregar KOSOLOLA</Button></main> : this.props.children;
-  }
+export function PaposCallLayout() {
+  const location = useLocation();
+  return <ActiveCallProvider>
+    <PaposBoundary key={location.pathname}>
+      <Suspense fallback={<Loading />}><Outlet /></Suspense>
+    </PaposBoundary>
+  </ActiveCallProvider>;
 }
+function Loading() { return <div role="status" className="h-screen-safe flex items-center justify-center">A carregar a KOSOLOLA…</div>; }
 function PaposRuntime() {
   usePaposViewport();
   const [updateReady, setUpdateReady] = useState(false);
@@ -56,7 +57,8 @@ function PaposRuntime() {
     return () => document.removeEventListener('visibilitychange', refresh);
   }, [user?.id]);
   useEffect(() => {
-    const unlock = () => { unlockCallAudio(); document.removeEventListener('click', unlock, true); document.removeEventListener('touchstart', unlock, true); document.removeEventListener('keydown', unlock, true); };
+    // Keep gesture recovery available after iOS interrupts audio in the background.
+    const unlock = () => { unlockCallAudio(); };
     document.addEventListener('click', unlock, true); document.addEventListener('touchstart', unlock, true); document.addEventListener('keydown', unlock, true);
     const update = () => setUpdateReady(true); window.addEventListener('papos:update-ready', update);
     return () => { document.removeEventListener('click', unlock, true); document.removeEventListener('touchstart', unlock, true); document.removeEventListener('keydown', unlock, true); window.removeEventListener('papos:update-ready', update); };
@@ -66,7 +68,7 @@ function PaposRuntime() {
     <PaposBoundary><Suspense fallback={<Loading />}><Routes>
       <Route path="/login" element={<PaposLogin />} /><Route path="/welcome" element={<Navigate to="/login" replace />} />
       <Route path="/install" element={<PaposInstall />} />
-      <Route element={<PaposGate><ActiveCallProvider><Outlet /></ActiveCallProvider></PaposGate>}>
+      <Route element={<PaposGate><PaposCallLayout /></PaposGate>}>
       <Route path="/" element={<Navigate to="/papos" replace />} />
       <Route element={<PaposConversations />}>
       <Route path="/papos" element={null} />

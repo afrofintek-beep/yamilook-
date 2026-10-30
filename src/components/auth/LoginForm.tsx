@@ -1,3 +1,4 @@
+import { communityReturn } from '@/features/academia/community-links';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -17,7 +18,7 @@ import {
 } from '@/components/ui/form';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { SocialLoginButtons } from './SocialLoginButtons';
 import { triggerSuccessConfetti } from '@/lib/confetti';
 
@@ -42,6 +43,7 @@ export function LoginForm() {
   const [showDevAccounts, setShowDevAccounts] = useState(false);
   const { signIn } = useAuth();
   const navigate = useNavigate();
+  const returnToCommunity = communityReturn(useLocation().search);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -82,7 +84,7 @@ export function LoginForm() {
       } else {
         triggerSuccessConfetti();
         toast.success(t('auth.welcomeBackMsg'));
-        navigate('/feed');
+        navigate(returnToCommunity || '/feed');
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -303,7 +305,7 @@ export function LoginForm() {
             </div>
           </div>
 
-          <Link to="/register">
+          <Link to={returnToCommunity ? `/register?next=${encodeURIComponent(returnToCommunity)}` : "/register"}>
             <motion.div
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}

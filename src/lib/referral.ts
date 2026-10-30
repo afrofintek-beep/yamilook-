@@ -3,6 +3,8 @@
  * Capturamos o parâmetro assim que aparece e guardamo-lo em localStorage,
  * para sobreviver à navegação até ao momento do registo.
  */
+import { getYamilookPublicUrl } from './public-site';
+
 const KEY = 'yamilook_ref';
 
 /** Lê ?ref= do URL atual e persiste-o. Chamar no arranque das páginas de entrada. */
@@ -35,8 +37,16 @@ export function clearReferralCode(): void {
   }
 }
 
-/** Link de convite pessoal para partilhar. */
+/**
+ * Convites são destinados a utilizadores externos. Nunca incluir o domínio
+ * do ambiente de desenvolvimento ou preview (window.location.origin).
+ * O domínio abaixo está associado ao projeto de produção da YAMILOOK.
+ */
+const PUBLIC_INVITE_URL = getYamilookPublicUrl('/register');
+
+/** Link de convite pessoal para partilhar, sempre no domínio público. */
 export function buildInviteUrl(referralCode: string | null | undefined): string {
-  const base = `${window.location.origin}/register`;
-  return referralCode ? `${base}?ref=${referralCode}` : base;
+  const url = new URL(PUBLIC_INVITE_URL);
+  if (referralCode) url.searchParams.set('ref', referralCode);
+  return url.toString();
 }

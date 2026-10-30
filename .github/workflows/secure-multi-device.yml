@@ -3,11 +3,13 @@ on:
   pull_request:
     paths:
       - 'src/hooks/useAuth.tsx'
+      - 'src/hooks/useAuth.revocation.test.tsx'
       - 'src/lib/account-sessions*'
       - 'src/components/settings/ConnectedDevices*'
       - 'src/features/papos/PaposSettings.tsx'
       - 'src/pages/Settings.tsx'
       - 'supabase/migrations/*secure_multi_device_sessions.sql'
+      - 'supabase/migrations/*account_session_revocation_realtime.sql'
       - 'supabase/tests/account_sessions_integration.sql'
       - '.github/workflows/secure-multi-device.yml'
   workflow_dispatch:
@@ -24,7 +26,7 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Session management, KOSOLOLA logout and auth regression tests
-        run: npx vitest run src/lib/account-sessions.test.ts src/components/settings/ConnectedDevices.test.tsx src/features/papos/PaposLogout.test.tsx
+        run: npx vitest run src/lib/account-sessions.test.ts src/hooks/useAuth.revocation.test.tsx src/components/settings/ConnectedDevices.test.tsx src/features/papos/PaposLogout.test.tsx
       - name: Compile YAMILOOK and KOSOLOLA
         run: npm run build
 
