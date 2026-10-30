@@ -3,6 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useCallRecorder } from '@/hooks/useCallRecorder';
 import { recordingSession, type RecordingAction, type RecordingSession } from './api';
 
+const verificationError = 'Não foi possível verificar os consentimentos. A gravação permanece desactivada até recuperar a ligação.';
+
 const active = (s: RecordingSession | null) => s && ['pending_consent', 'recording', 'paused', 'processing'].includes(s.status);
 
 export function useRecordingSession(callId: string, userId: string | undefined,
@@ -93,6 +95,7 @@ export function useRecordingSession(callId: string, userId: string | undefined,
           owned.current = null;
           setError('A gravação foi interrompida porque o pedido terminou ou os participantes mudaram.');
         }
+        setError(previous => previous === verificationError ? '' : previous);
         setSession(next);
       } catch {
         if (alive && version === revision.current) {
@@ -103,7 +106,7 @@ export function useRecordingSession(callId: string, userId: string | undefined,
             await discard();
             if (id) void recordingSession(callId, 'fail', id).catch(() => {});
           }
-          setError('Não foi possível verificar os consentimentos. A gravação permanece desactivada até recuperar a ligação.');
+          setError(verificationError);
         }
       } finally { reading = false; }
     };
