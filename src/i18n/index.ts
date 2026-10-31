@@ -1,3 +1,4 @@
+import { afrolocLanguages, normalizeAppLanguage } from './afroloc-languages';
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
@@ -5,19 +6,9 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 // Only load Portuguese (default) synchronously, others will be lazy-loaded
 import pt from './locales/pt.json';
 
-export const languages = [
-  { code: 'am', name: 'Amharic', nativeName: 'አማርኛ' },
-  { code: 'ar', name: 'Arabic', nativeName: 'العربية', rtl: true },
-  { code: 'en', name: 'English', nativeName: 'English' },
-  { code: 'fr', name: 'French', nativeName: 'Français' },
-  { code: 'kg', name: 'Kikongo', nativeName: 'Kikongo' },
-  { code: 'kmb', name: 'Kimbundu', nativeName: 'Kimbundu' },
-  { code: 'ln', name: 'Lingala', nativeName: 'Lingála' },
-  { code: 'pt', name: 'Portuguese', nativeName: 'Português AO' },
+export const languages = [...afrolocLanguages,
   { code: 'pt-banda', name: 'Yamilook da Banda', nativeName: 'Yamilook da Banda' },
-  { code: 'sw', name: 'Swahili', nativeName: 'Kiswahili' },
   { code: 'cjk', name: 'Tchokwe', nativeName: 'Tchokwe' },
-  { code: 'umb', name: 'Umbundu', nativeName: 'Umbundu' },
 ];
 
 // Load banda overrides for urban tone
@@ -53,7 +44,13 @@ const loadLanguage = async (lng: string): Promise<{ translation: Record<string, 
     return { translation: deepMerge(pt as Record<string, unknown>, bandaOverrides) };
   }
 
-  switch (lng) {
+  switch (normalizeAppLanguage(lng)) {
+    case 'yo':
+      return { translation: (await import('./locales/yo.json')).default };
+    case 'sn':
+      return { translation: (await import('./locales/sn.json')).default };
+    case 'zu':
+      return { translation: (await import('./locales/zu.json')).default };
     case 'en':
       return { translation: (await import('./locales/en.json')).default };
     case 'kmb':
@@ -86,7 +83,7 @@ i18n
     resources: {
       pt: { translation: pt },
     },
-    fallbackLng: 'pt',
+    fallbackLng: { yo: ['en', 'pt'], sn: ['en', 'pt'], zu: ['en', 'pt'], default: ['pt'] },
     interpolation: {
       escapeValue: false,
     },
@@ -96,20 +93,31 @@ i18n
     },
   });
 
-// Load detected language if it's not Portuguese
-const detectedLng = i18n.language;
-if (detectedLng && detectedLng !== 'pt') {
-  loadLanguage(detectedLng).then((resource) => {
-    i18n.addResourceBundle(detectedLng, 'translation', resource.translation);
-  });
-}
+export default i18n;
 
-// Hook into language change to lazy load
-i18n.on('languageChanged', async (lng) => {
-  if (lng !== 'pt' && !i18n.hasResourceBundle(lng, 'translation')) {
-    const resource = await loadLanguage(lng);
-    i18n.addResourceBundle(lng, 'translation', resource.translation);
+// Load before changing so the first render uses the requested translations.
+let languageRequest = 0;
+export async function changeAppLanguage(language: string) {
+  const request = ++languageRequest;
+  const code = normalizeAppLanguage(language);
+  if (['yo', 'sn', 'zu'].includes(code) && !i18n.hasResourceBundle('en', 'translation')) {
+    i18n.addResourceBundle('en', 'translation', (await loadLanguage('en')).translation);
+  }
+  if (!i18n.hasResourceBundle(code, 'translation')) {
+    i18n.addResourceBundle(code, 'translation', (await loadLanguage(code)).translation);
+  }
+  if (request === languageRequest) await i18n.changeLanguage(code);
+}
+function syncDocumentLanguage(language: string) {
+  const code = normalizeAppLanguage(language);
+  document.documentElement.lang = code;
+  document.documentElement.dir = code === 'ar' ? 'rtl' : 'ltr';
+}
+i18n.on('languageChanged', (language) => {
+  syncDocumentLanguage(language);
+  // Existing Yamilook settings also call i18next directly.
+  if (!i18n.hasResourceBundle(language, 'translation')) {
+    void changeAppLanguage(language).catch(() => { /* Keep the available fallback. */ });
   }
 });
-
-export default i18n;
+void changeAppLanguage(i18n.language || 'pt').then(() => syncDocumentLanguage(i18n.language)).catch(() => { /* Portuguese remains available offline. */ });

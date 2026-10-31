@@ -1,0 +1,25 @@
+name: Academia call stability
+on:
+  pull_request:
+    paths:
+      - 'src/features/academia/**'
+      - 'src/lib/call-update-guard*'
+      - 'src/main.tsx'
+      - '.github/workflows/academia-call-checks.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  calls-and-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Reconnection, update deferral, diagnostics and room regressions
+        run: npx vitest run src/features/academia/hooks/useAcademiaVideo.test.ts src/features/academia/hooks/academia-call-diagnostics.test.ts src/features/academia/routes/AcademiaLiveRoom.test.tsx src/lib/call-update-guard.test.ts
+      - run: npm run build

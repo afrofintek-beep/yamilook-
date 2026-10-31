@@ -17,6 +17,7 @@ import { toast } from '@/hooks/use-toast';
 import { useWebRTCSignaling, EventPayload } from './useWebRTCSignaling';
 import { useICEServers } from './useICEServers';
 
+import { finishCallLocallyFirst, watchCallTermination } from './webrtc/call-termination';
 import { useMediaCapture } from './webrtc/useMediaCapture';
 import { usePeerConnection } from './webrtc/usePeerConnection';
 import { useICECandidateQueue } from './webrtc/useICECandidateQueue';
@@ -82,11 +83,12 @@ export function useWebRTC(options: UseWebRTCOptions = {}) {
     onCallStarted: (callId) => console.log('[WebRTC] Call started:', callId),
     onCallEnded: () => { cleanupCall(); setState(prev => ({ ...prev, callStatus: 'ended' })); },
     onCallFailed: (error) => { cleanupCall(); setState(prev => ({ ...prev, callStatus: 'failed', lastError: error })); },
-    onRingTimeout: (callId) => setState(prev => ({ ...prev, callStatus: 'ended', lastError: 'No answer' })),
+    onRingTimeout: () => { cleanupCallRef.current(); setState(prev => ({ ...prev, callStatus: 'ended', lastError: 'No answer' })); },
   });
 
   // ─── Remote stream handler (writes to ref + state) ───
   const handleRemoteStream = useCallback((peerId: string, stream: MediaStream) => {
+    if (!callIdRef.current) return;
     const existing = remoteStreamsRef.current.get(peerId);
     if (existing && existing.id === stream.id) return;
 
@@ -107,6 +109,7 @@ export function useWebRTC(options: UseWebRTCOptions = {}) {
 
   // ─── Connection state handlers ───
   const handleConnectionStateChange = useCallback((connectionState: RTCPeerConnectionState) => {
+    if (!callIdRef.current) return;
     setState(prev => ({ ...prev, connectionState }));
     if (connectionState === 'connected') {
       lifecycle.clearRingTimeout();
@@ -116,13 +119,6 @@ export function useWebRTC(options: UseWebRTCOptions = {}) {
         callConnectingTimeoutRef.current = null;
       }
       setState(prev => ({ ...prev, callStatus: 'connected' }));
-    } else if (connectionState === 'connecting') {
-      // WebRTC handshake started — clear the "no offer received" timeout
-      // since we clearly got the offer and are now negotiating
-      if (callConnectingTimeoutRef.current) {
-        clearTimeout(callConnectingTimeoutRef.current);
-        callConnectingTimeoutRef.current = null;
-      }
     } else if (connectionState === 'failed') {
       // Recovery ladder in usePeerConnection handles retries; we only update UI status
       // after all recovery attempts are exhausted (it will fire 'failed' again)
@@ -216,6 +212,7 @@ export function useWebRTC(options: UseWebRTCOptions = {}) {
 
   // ─── Cleanup ───
   const cleanupCall = useCallback(() => {
+    callIdRef.current = null;
     lifecycle.clearRingTimeout();
     if (callConnectingTimeoutRef.current) {
       clearTimeout(callConnectingTimeoutRef.current);
@@ -227,7 +224,52 @@ export function useWebRTC(options: UseWebRTCOptions = {}) {
     mediaCapture.stopAllMedia();
     telemetry.logFinalMetrics();
     remoteStreamsRef.current.clear();
+    setState(prev => ({ ...INITIAL_STATE, callStatus: 'ended', lastError: prev.lastError }));
   }, [lifecycle, peerConnection, iceQueue, mediaCapture, telemetry]);
+
+  useEffect(() => {
+    if (!state.callId) return;
+    const id = state.callId;
+    return watchCallTermination({
+      read: async () => {
+        const { data, error } = await supabase.from('calls').select('status').eq('id', id).maybeSingle();
+        if (error) throw error;
+        return data?.status || null;
+      },
+      subscribe: listener => {
+        const channel = supabase.channel(`call-termination-${id}`)
+          .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'calls', filter: `id=eq.${id}` }, payload => listener(String(payload.new.status)))
+          .subscribe();
+        return () => { void supabase.removeChannel(channel); };
+      },
+      onEnded: () => { if (callIdRef.current === id) cleanupCallRef.current(); },
+    });
+  }, [state.callId]);
+
+  // Keep an overall deadline until the transport is actually connected. Offer
+  // receipt and the intermediate "connecting" state do not prove connectivity.
+  const armConnectionTimeout = useCallback((id: string, peerId: string) => {
+    if (callConnectingTimeoutRef.current) clearTimeout(callConnectingTimeoutRef.current);
+    callConnectingTimeoutRef.current = setTimeout(() => {
+      if (callIdRef.current !== id) return;
+      // Cleanup updates React state, so it MUST run outside a state updater.
+      cleanupCallRef.current();
+      setState(prev => ({ ...prev, callStatus: 'failed', lastError: 'Não foi possível ligar ao outro utilizador. Tenta novamente.' }));
+      void Promise.allSettled([
+        sendSignalForCall(id, peerId, 'call-ended'),
+        supabase.from('calls').update({
+          status: 'failed', ended_at: new Date().toISOString(), end_reason: 'connection_timeout',
+        }).eq('id', id).in('status', ['ringing', 'ongoing']),
+      ]).then(results => {
+        for (const result of results) {
+          if (result.status === 'rejected' || result.value === false ||
+              (result.value && typeof result.value === 'object' && 'error' in result.value && result.value.error)) {
+            console.error('[WebRTC] Failed to notify connection timeout', result);
+          }
+        }
+      });
+    }, 60_000); // Allow the peer connection's ICE recovery ladder to run.
+  }, [sendSignalForCall]);
 
   // ─── Apply pending ICE candidates ───
   const applyPendingCandidates = useCallback(async (peerId: string, pc: RTCPeerConnection) => {
@@ -237,12 +279,6 @@ export function useWebRTC(options: UseWebRTCOptions = {}) {
   // ─── Handle incoming offer ───
   const handleOffer = useCallback(async (offer: RTCSessionDescriptionInit, from: string) => {
     console.log('[WebRTC] Received OFFER from:', from);
-
-    // Cancel the "no offer received" timeout — we got the offer
-    if (callConnectingTimeoutRef.current) {
-      clearTimeout(callConnectingTimeoutRef.current);
-      callConnectingTimeoutRef.current = null;
-    }
 
     const pc = peerConnection.getPeerConnection(from);
     if (!pc) { console.error('[WebRTC] No PC for offer from:', from); return; }
@@ -312,6 +348,7 @@ export function useWebRTC(options: UseWebRTCOptions = {}) {
 
   // ─── Handle signaling events ───
   const handleEvent = useCallback((event: EventPayload, from: string) => {
+    if (!callIdRef.current) return;
     switch (event.type) {
       case 'ended':
         telemetry.setCallEndReason('remote_hangup');
@@ -380,6 +417,9 @@ export function useWebRTC(options: UseWebRTCOptions = {}) {
     conversationId?: string
   ): Promise<string> => {
     if (!user) throw new Error('Not authenticated');
+    // Reject impossible destinations before ICE negotiation or asking for microphone/camera.
+    if (!targetUserId?.trim()) throw new Error('Seleciona um contacto para iniciar a chamada.');
+    if (targetUserId === user.id) throw new Error('Não podes iniciar uma chamada para a tua própria conta.');
 
     // Track whether the call was created in DB so we can clean it up on failure
     let createdCallId: string | null = null;
@@ -478,18 +518,7 @@ export function useWebRTC(options: UseWebRTCOptions = {}) {
         localStream: mediaCapture.localStreamRef.current,
       }));
 
-      // 8. Connecting timeout for initiator — if no connection within 30s, fail
-      const connectingTimeout = setTimeout(() => {
-        setState(prev => {
-          if (prev.callStatus === 'ringing' || prev.callStatus === 'connecting') {
-            console.error('[WebRTC] ❌ Initiator connecting timeout');
-            cleanupCall();
-            return { ...prev, callStatus: 'failed', lastError: 'Sem resposta' };
-          }
-          return prev;
-        });
-      }, 30_000);
-      callConnectingTimeoutRef.current = connectingTimeout;
+      armConnectionTimeout(callId, targetUserId);
 
       return callId;
     } catch (error) {
@@ -516,7 +545,7 @@ export function useWebRTC(options: UseWebRTCOptions = {}) {
       setState(prev => ({ ...prev, callStatus: 'failed', lastError: message }));
       throw error;
     }
-  }, [user, ensureIceServersReady, mediaCapture, lifecycle, peerConnection, sendSignalForCall, flushOutgoingIceCandidates, cleanupCall]);
+  }, [user, ensureIceServersReady, mediaCapture, lifecycle, peerConnection, sendSignalForCall, flushOutgoingIceCandidates, cleanupCall, armConnectionTimeout]);
 
   // NOTE: Signal fetching for answer flow is now handled entirely by
   // useWebRTCSignaling (realtime subscription + polling with dedup).
@@ -600,33 +629,14 @@ export function useWebRTC(options: UseWebRTCOptions = {}) {
 
       console.log('[WebRTC] ✅ Call answered — signaling hook will process pending signals');
 
-      // 7. Connecting timeout — if no WebRTC offer received within 15s, fail gracefully
-      // This prevents B from being stuck at "Connecting..." if A failed to send the offer
-      const connectingTimeout = setTimeout(async () => {
-        setState(prev => {
-          if (prev.callStatus === 'connecting' || prev.callStatus === 'ringing') {
-            console.error('[WebRTC] ❌ Callee connecting timeout — no offer received from initiator');
-            cleanupCall();
-            return { ...prev, callStatus: 'failed', lastError: 'Sem resposta do outro utilizador' };
-          }
-          return prev;
-        });
-        // Mark call as failed in DB so initiator side also knows
-        await supabase.from('calls').update({
-          status: 'failed',
-          ended_at: new Date().toISOString(),
-          end_reason: 'no_offer_received',
-        }).eq('id', callId).eq('status', 'ongoing');
-      }, 15_000);
-
-      callConnectingTimeoutRef.current = connectingTimeout;
+      armConnectionTimeout(callId, initiatorId);
     } catch (error) {
       console.error('[WebRTC] Error answering call:', error);
       cleanupCall();
       setState(prev => ({ ...prev, callStatus: 'failed' }));
       throw error;
     }
-  }, [user, ensureIceServersReady, mediaCapture, peerConnection, lifecycle, autoplay, cleanupCall]);
+  }, [user, ensureIceServersReady, mediaCapture, peerConnection, lifecycle, autoplay, cleanupCall, armConnectionTimeout]);
 
   // ─── Decline ───
   const declineCall = useCallback(async (callId: string, initiatorId: string) => {
@@ -637,13 +647,18 @@ export function useWebRTC(options: UseWebRTCOptions = {}) {
 
   // ─── End call ───
   const endCall = useCallback(async () => {
-    if (!state.callId || !user) return;
-    if (state.targetUserId) signaling.sendCallEnded(state.targetUserId);
-    signaling.cleanupSignals();
+    const id = callIdRef.current || state.callId;
+    const target = state.targetUserId;
     telemetry.setCallEndReason('local_hangup');
-    await lifecycle.endCallInDB(state.callId, user.id);
-    cleanupCall();
-    setState(INITIAL_STATE);
+    const results = await finishCallLocallyFirst(
+      () => { cleanupCall(); setState({ ...INITIAL_STATE, remoteStreams: new Map() }); },
+      // Keep the terminal signal available for the other device's polling fallback.
+      async () => { if (id && target && user) return signaling.sendCallEnded(target); },
+      async () => { if (id && user) await lifecycle.endCallInDB(id, user.id); },
+    );
+    if (results.some(result => result.status === 'rejected' || result.value === false)) {
+      toast({ title: 'Chamada terminada neste dispositivo', description: 'Não foi possível confirmar o encerramento no outro dispositivo. Verifica a ligação.', variant: 'destructive' });
+    }
   }, [state.callId, state.targetUserId, user, signaling, lifecycle, cleanupCall, telemetry]);
 
   // ─── Media toggles with DB sync ───

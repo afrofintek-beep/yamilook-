@@ -266,14 +266,14 @@ describe('Feed Page', () => {
     expect(screen.getByText('Muxi')).toBeInTheDocument();
     expect(screen.getByText('Mokubico')).toBeInTheDocument();
     expect(screen.getByText('Academia')).toBeInTheDocument();
-    expect(screen.getByText('Papos')).toBeInTheDocument();
+    expect(screen.getByText('KOSOLOLA')).toBeInTheDocument();
     expect(screen.getByText('Perfil')).toBeInTheDocument();
   });
 
   it('links Papos nav item to the papos route', () => {
     render(<Feed />);
 
-    const paposLink = screen.getByText('Papos').closest('a');
+    const paposLink = screen.getByText('KOSOLOLA').closest('a');
     expect(paposLink).toHaveAttribute('href', '/papos');
   });
 
@@ -312,7 +312,7 @@ describe('Feed Page', () => {
     
     if (buttons && buttons.length >= 3) {
       fireEvent.click(buttons[2]); // Third button should be messages
-      expect(mockNavigate).toHaveBeenCalledWith('/');
+      expect(mockNavigate).toHaveBeenCalledWith('/papos');
     }
   });
 

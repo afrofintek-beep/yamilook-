@@ -7,20 +7,20 @@ const navItems = [
   { to: "/muxi", label: "Muxi", Icon: Flame },
   { to: "/mokubico", label: "Mokubico", Icon: Home },
   { to: "/academia", label: "Academia", Icon: GraduationCap },
-  { to: "/papos", label: "Papos", Icon: MessageCircle },
+  { to: "/papos", label: "KOSOLOLA", Icon: MessageCircle },
   { to: "/perfil", label: "Perfil", Icon: User },
 ];
 
-export default function BottomNav() {
+export default function BottomNav({ layout = 'default' }: { layout?: 'default' | 'feed' }) {
   const surface = useAppSurface();
   const items = surface === 'papos' ? [
-    { to: '/papos', label: 'Papos', Icon: MessageCircle },
+    { to: '/papos', label: 'Conversas', Icon: MessageCircle },
     { to: '/contacts', label: 'Contactos', Icon: Users },
     { to: '/calls', label: 'Chamadas', Icon: Phone },
     { to: '/settings', label: 'Definições', Icon: Settings },
   ] : navItems;
   return createPortal(
-    <nav aria-label="Navegação principal" className="app-bottom-nav fixed bottom-0 left-0 right-0 z-50 h-[calc(5rem+env(safe-area-inset-bottom,0px))] glass-nav">
+    <nav aria-label="Navegação principal" className={`app-bottom-nav fixed bottom-0 left-0 right-0 z-50 h-[calc(5rem+env(safe-area-inset-bottom,0px))] glass-nav ${layout === 'feed' && surface !== 'papos' ? 'feed-primary-nav' : ''}`}>
       <div style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }} className="mx-auto grid h-full max-w-md items-center px-2 pt-1.5 pb-[max(0.5rem,env(safe-area-inset-bottom,0px))]">
         {items.map(({ to, label, Icon }) => (
           <NavLink

@@ -125,7 +125,7 @@ Sessão criada automaticamente
 | `level` | text | Nível: 'default', 'verified_creator', 'founder' |
 | `kumbu_available` | integer | Kumbu disponível para gastar |
 | `kumbu_lifetime` | integer | Kumbu total acumulado (determina rank) |
-| `afroloc_code` | text | Código AfroLoc único (gerado automaticamente) |
+| `afroloc_code` | text | Código de endereço declarado ou legado; não comprova certificação |
 | `profile_theme_color` | text | Cor personalizada do perfil |
 | `show_online_status` | boolean | Mostrar estado online |
 | `show_last_seen` | boolean | Mostrar último acesso |
@@ -323,14 +323,11 @@ supabase.auth.updateUser({ password })
 
 ## 11. Código AfroLoc
 
-Código único gerado automaticamente para cada utilizador:
+O campo `afroloc_code` pode conter um código declarado ou um identificador legado. A sua presença não comprova certificação, residência ou direito de utilização.
 
-```
-Formato: AFRO-[CIDADE]-[BANDA]-[USER_ID_PREFIX]
-Exemplo: AFRO-LUA-TAL-D4A270
-```
+O formato histórico `AFRO-[CIDADE]-[BANDA]-[USER_ID_PREFIX]` não deve ser apresentado como o formato oficial atual do AFROLOC. O código oficial deve ser preservado conforme emitido pela autoridade AFROLOC, sem gerar equivalentes locais.
 
-Gerado pelo trigger `set_afroloc_code()` na criação do perfil.
+A certificação exige evidência autorizada e correspondência com o endereço declarado. A integração automática e as dependências de identidade estão descritas em [Contrato do ecossistema](afrofintek-ecosystem-contract.md).
 
 ---
 

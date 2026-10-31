@@ -35,6 +35,8 @@ interface LiveSession {
 }
 
 export function LiveSessionsManager() {
+  const [loadError, setLoadError] = useState(false);
+  const [confirmAll, setConfirmAll] = useState(false);
   const [sessions, setSessions] = useState<LiveSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [endingSession, setEndingSession] = useState<string | null>(null);
@@ -45,34 +47,25 @@ export function LiveSessionsManager() {
 
   const fetchSessions = useCallback(async () => {
     setLoading(true);
+    setLoadError(false);
     try {
       const { data, error } = await supabase
         .from('live_sessions')
-        .select(`
-          id,
-          title,
-          host_id,
-          status,
-          viewer_count,
-          started_at,
-          created_at,
-          host:public_profiles!live_sessions_host_id_fkey (
-            display_name,
-            avatar_url
-          )
-        `)
+        .select('id, title, host_id, status, viewer_count, started_at, created_at')
         .eq('status', 'live')
         .order('started_at', { ascending: false });
 
       if (error) throw error;
 
-      const formattedSessions = (data || []).map((s) => ({
-        ...s,
-        host: Array.isArray(s.host) ? s.host[0] : s.host,
-      }));
-
+      const ids = [...new Set((data || []).map(s => s.host_id))];
+      const { data: profiles, error: profileError } = ids.length
+        ? await supabase.from('public_profiles').select('id, display_name, avatar_url').in('id', ids)
+        : { data: [], error: null };
+      if (profileError) throw profileError;
+      const formattedSessions = (data || []).map(s => ({ ...s, host: profiles?.find(p => p.id === s.host_id) }));
       setSessions(formattedSessions);
     } catch (error) {
+      setLoadError(true);
       console.error('Error fetching live sessions:', error);
       toast.error('Erro ao carregar sessões');
     } finally {
@@ -93,7 +86,7 @@ export function LiveSessionsManager() {
           status: 'ended',
           ended_at: new Date().toISOString(),
         })
-        .eq('id', session.id);
+        .eq('id', session.id).select('id').single();
 
       if (error) throw error;
 
@@ -113,23 +106,24 @@ export function LiveSessionsManager() {
 
     setLoading(true);
     try {
-      const { error } = await supabase
+      const { data: ended, error } = await supabase
         .from('live_sessions')
         .update({
           status: 'ended',
           ended_at: new Date().toISOString(),
         })
-        .eq('status', 'live');
+        .eq('status', 'live').in('id', sessions.map(s => s.id)).select('id');
 
       if (error) throw error;
 
-      toast.success(`${sessions.length} sessões terminadas`);
-      setSessions([]);
+      toast.success(`${ended?.length ?? 0} sessões terminadas`);
+      await fetchSessions();
     } catch (error) {
       console.error('Error ending all sessions:', error);
       toast.error('Erro ao terminar sessões');
     } finally {
       setLoading(false);
+      setConfirmAll(false);
     }
   };
 
@@ -159,7 +153,7 @@ export function LiveSessionsManager() {
               <Button
                 variant="destructive"
                 size="sm"
-                onClick={handleEndAllSessions}
+                onClick={() => setConfirmAll(true)}
                 disabled={loading}
               >
                 Terminar Todas
@@ -172,7 +166,7 @@ export function LiveSessionsManager() {
             <div className="flex items-center justify-center py-8">
               <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
             </div>
-          ) : sessions.length === 0 ? (
+          ) : loadError ? (<div role="alert">Não foi possível carregar sessões. <Button onClick={fetchSessions}>Tentar novamente</Button></div>) : sessions.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <Radio className="w-10 h-10 mx-auto mb-2 opacity-50" />
               <p>Nenhuma sessão em direto</p>
@@ -242,6 +236,9 @@ export function LiveSessionsManager() {
         </CardContent>
       </Card>
 
+      <AlertDialog open={confirmAll} onOpenChange={setConfirmAll}>
+        <AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Terminar todas as sessões apresentadas?</AlertDialogTitle><AlertDialogDescription>Esta ação termina as transmissões listadas.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction onClick={handleEndAllSessions}>Terminar</AlertDialogAction></AlertDialogFooter></AlertDialogContent>
+      </AlertDialog>
       <AlertDialog
         open={confirmDialog.open}
         onOpenChange={(open) => setConfirmDialog({ open, session: null })}

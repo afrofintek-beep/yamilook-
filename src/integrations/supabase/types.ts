@@ -14,6 +14,79 @@ export type Database = {
   }
   public: {
     Tables: {
+      academia_attendance: {
+        Row: { session_id: string; user_id: string; confirmed_by: string; confirmed_at: string }
+        Insert: { session_id: string; user_id: string; confirmed_by: string; confirmed_at?: string }
+        Update: { session_id?: string; user_id?: string; confirmed_by?: string; confirmed_at?: string }
+        Relationships: []
+      }
+      academia_mentor_audit: {
+        Row: { id: string; mentor_id: string; actor_id: string | null; action: string; reason: string | null; created_at: string }
+        Insert: { id?: string; mentor_id: string; actor_id?: string | null; action: string; reason?: string | null; created_at?: string }
+        Update: { reason?: string | null }
+        Relationships: []
+      }
+
+      academia_communities: {
+        Row: { slug: string; title: string; description: string; position: number; starter_title: string; starter_instructions: string; starter_skill: string }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      academia_cohorts: {
+        Row: { id: string; community_slug: string; mentor_id: string; mentor_name: string; title: string; level: string; language: string; locality: string; requirements: string; plan: string; challenge_title: string; instructions: string; skill: string; capacity: number; seats_taken: number; status: string; created_at: string }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      academia_public_works: {
+        Row: { id: string; community_slug: string; cohort_id: string | null; title: string; skill: string; caption: string; learner_name: string; mentor_name: string; evidence_url: string | null; published: boolean; created_at: string }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      academia_work_sources: {
+        Row: { work_id: string; challenge_id: string; owner_id: string }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      academia_cohort_members: {
+        Row: { id: string; cohort_id: string; learner_id: string; goal_id: string; source_work_id: string | null; created_at: string }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      academia_community_audit: {
+        Row: { id: string; actor_id: string; action: string; cohort_id: string | null; work_id: string | null; created_at: string }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      academia_goals: {
+        Row: { id: string; learner_id: string; mentor_id: string; title: string; context: string; plan: string; closure_reason: string; status: string; created_at: string; updated_at: string }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      academia_challenges: {
+        Row: { id: string; goal_id: string; position: number; title: string; instructions: string; skill: string; status: string; created_at: string }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      academia_submissions: {
+        Row: { id: string; challenge_id: string; content: string; evidence_url: string | null; status: string; feedback: string; created_at: string; reviewed_at: string | null }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      academia_learning_audit: {
+        Row: { id: string; goal_id: string; actor_id: string; action: string; entity_id: string; created_at: string }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
       academia_reservations: {
         Row: {
           created_at: string
@@ -89,6 +162,12 @@ export type Database = {
       }
       academia_sessions: {
         Row: {
+          duration_minutes: number
+          started_at: string | null
+          ended_at: string | null
+          archived_at: string | null
+          deleted_at: string | null
+          cancellation_reason: string | null
           banda_id: string | null
           created_at: string
           description: string | null
@@ -104,6 +183,12 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          duration_minutes?: number
+          started_at?: string | null
+          ended_at?: string | null
+          archived_at?: string | null
+          deleted_at?: string | null
+          cancellation_reason?: string | null
           banda_id?: string | null
           created_at?: string
           description?: string | null
@@ -119,6 +204,12 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          duration_minutes?: number
+          started_at?: string | null
+          ended_at?: string | null
+          archived_at?: string | null
+          deleted_at?: string | null
+          cancellation_reason?: string | null
           banda_id?: string | null
           created_at?: string
           description?: string | null
@@ -2413,6 +2504,8 @@ export type Database = {
       }
       mentor_profiles: {
         Row: {
+          status: string
+          experience: string
           created_at: string
           id: string
           is_verified_mentor: boolean
@@ -2422,6 +2515,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          status?: string
+          experience?: string
           created_at?: string
           id?: string
           is_verified_mentor?: boolean
@@ -2431,6 +2526,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          status?: string
+          experience?: string
           created_at?: string
           id?: string
           is_verified_mentor?: boolean
@@ -6374,6 +6471,41 @@ export type Database = {
         Args: { p_conversation_id: string; p_filename: string }
         Returns: Json
       }
+      academia_save_mentor: { Args: { p_specialty: string; p_bio: string; p_experience: string; p_submit?: boolean }; Returns: Json }
+      academia_manage_mentor: { Args: { p_user: string; p_action: string; p_reason: string }; Returns: Json }
+      academia_admin_mentors: { Args: Record<PropertyKey, never>; Returns: Json }
+      academia_confirm_attendance: { Args: { p_session: string; p_user: string }; Returns: Json }
+      academia_can_review: { Args: { p_session: string }; Returns: boolean }
+      academia_mentor_stats: { Args: { p_ids: string[] }; Returns: { mentor_id: string; rating: number; review_count: number }[] }
+
+      recording_session: {
+        Args: { p_call_id: string; p_action?: string; p_recording_id?: string; p_consent?: boolean; p_metadata?: Json };
+        Returns: Json;
+      };
+      admin_topic_action: {
+        Args: { p_action: string; p_id?: string; p_ids?: string[]; p_reason?: string }
+        Returns: undefined
+      }
+      admin_topic_counts: {
+        Args: Record<PropertyKey, never>
+        Returns: { topic_id: string; post_count: number }[]
+      }
+      academia_community_action: { Args: { p_action: string; p_target?: string; p_payload?: Json }; Returns: string }
+      academia_learning_progress: { Args: { p_goals: string[] }; Returns: { goal_id: string; total: number; approved: number }[] }
+      academia_learning_action: { Args: { p_action: string; p_goal?: string; p_payload?: Json }; Returns: string }
+      my_attributed_storage_usage: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      academia_manage_session: {
+        Args: { p_session: string; p_action: string; p_reason?: string }
+        Returns: Json
+      }
+      academia_my_notices: {
+        Args: Record<PropertyKey, never>
+        Returns: { session_id: string; title: string; reason: string; refunded: number }[]
+      }
+
       create_chat_conversation: {
         Args: { p_participant_ids: string[]; p_group_name?: string | null; p_avatar_url?: string | null }
         Returns: Json
@@ -6524,6 +6656,19 @@ export type Database = {
       consume_mvp_access_code: {
         Args: { p_code: string; p_user_id: string }
         Returns: boolean
+      }
+      claim_direct_call: {
+        Args: { p_call_id: string }
+        Returns: boolean
+      }
+      account_current_session_id: { Args: never; Returns: string }
+      finish_direct_call: {
+        Args: { p_call_id: string; p_outcome: string }
+        Returns: boolean
+      }
+      create_livekit_call: {
+        Args: { p_call_type?: string; p_callee_id: string; p_conversation_id?: string }
+        Returns: string
       }
       create_call: {
         Args: {

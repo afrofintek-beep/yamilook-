@@ -28,6 +28,7 @@ insert into public.conversations values('${AB}'),('${BC}');
 insert into public.conversation_participants(conversation_id,user_id) values('${AB}','${A}'),('${AB}','${B}'),('${BC}','${B}'),('${BC}','${C}');
 insert into storage.buckets values('media','media',true,null);
 create policy old_public_media on storage.objects for select using(bucket_id='media');
+create policy "Authenticated users can view voice messages" on storage.objects for select to authenticated using(bucket_id='voice-messages');
 `);
 await db.exec(await readFile(new URL('../../supabase/migrations/20261024003034_private_chat_attachments.sql',import.meta.url),'utf8'));
 async function asUser(id,sql,args=[]) {
@@ -37,6 +38,10 @@ async function asUser(id,sql,args=[]) {
 }
 let path,ref,messageId;
 test('private attachments authorization',async t=>{
+ await t.test('preparation preserves old client writes and historical audio policy',async()=>{
+  await asUser(A,'insert into public.messages(conversation_id,sender_id,media_url) values($1,$2,$3)',[AB,A,'https://project.supabase.co/storage/v1/object/public/media/u/old.jpg']);
+  assert.equal((await db.query("select count(*)::int n from pg_policies where policyname='Authenticated users can view voice messages'")).rows[0].n,1);
+ });
  await t.test('only a member can reserve an upload',async()=>{
   await assert.rejects(asUser(C,'select public.reserve_chat_attachment($1,$2)',[AB,'bank.pdf']),/Conversation unavailable/);
   const r=(await asUser(A,'select public.reserve_chat_attachment($1,$2) r',[AB,'bank.pdf'])).rows[0].r;

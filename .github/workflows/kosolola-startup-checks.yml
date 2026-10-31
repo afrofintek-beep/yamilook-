@@ -1,0 +1,30 @@
+name: KOSOLOLA startup and call isolation
+on:
+  pull_request:
+    paths:
+      - 'src/features/papos/**'
+      - 'src/components/calls/**'
+      - 'src/pages/Calls*'
+      - 'src/lib/virtualBackground.ts'
+      - 'build/papos-plugin.ts'
+      - '.github/workflows/kosolola-startup-checks.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  startup-and-calls:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      VITE_SUPABASE_URL: https://example.supabase.co
+      VITE_SUPABASE_PUBLISHABLE_KEY: test-key
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx vitest run src/features/papos src/pages/Calls.test.tsx src/hooks/useLiveKitCall.test.tsx src/hooks/useCallTransport.test.tsx src/components/calls src/features/scheduled-calls/ScheduleCallSheet.test.tsx
+      - run: npx tsc --noEmit --project tsconfig.app.json
+      - run: npm run build

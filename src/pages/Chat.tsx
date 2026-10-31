@@ -62,9 +62,11 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
 import { getWallpaperStyles } from '@/components/settings/ChatWallpaperSheet';
 import { formatLastSeen } from '@/components/ui/OnlineStatus';
+import { useAppSurface } from '@/lib/app-surface';
 
 export default function Chat() {
   const navigate = useNavigate();
+  const isKosolola = useAppSurface() === 'papos';
   const { t } = useTranslation();
   const { conversationId } = useParams();
   const [searchParams] = useSearchParams();
@@ -367,7 +369,9 @@ export default function Chat() {
   const handleDelete = async (messageId: string) => {
     const { error } = await deleteMessage(messageId);
     if (error) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      toast({ title: 'Não foi possível apagar a mensagem', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Mensagem apagada' });
     }
   };
 
@@ -490,12 +494,19 @@ export default function Chat() {
       return;
     }
 
+    const failed = new Set<string>();
     for (const id of ownMessages) {
-      await deleteMessage(id);
+      const { error } = await deleteMessage(id);
+      if (error) failed.add(id);
     }
-
-    toast({ title: `${ownMessages.length} mensagem(ns) apagada(s)` });
-    handleCancelSelection();
+    const deleted = ownMessages.length - failed.size;
+    if (failed.size) {
+      setSelectedMessages(failed);
+      toast({ title: `${deleted} apagada(s); ${failed.size} não confirmada(s)`, description: 'As mensagens que falharam continuam selecionadas. Tenta novamente.', variant: 'destructive' });
+    } else {
+      toast({ title: `${deleted} mensagem(ns) apagada(s)` });
+      handleCancelSelection();
+    }
   };
 
   const handleBatchForward = () => {
@@ -553,13 +564,15 @@ export default function Chat() {
   const handleArchive = async () => {
     if (!conversationId || !user) return;
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('conversation_participants')
       .update({ is_archived: true })
       .eq('conversation_id', conversationId)
-      .eq('user_id', user.id);
+      .eq('user_id', user.id)
+      .select('conversation_id')
+      .single();
 
-    if (error) {
+    if (error || !data) {
       toast({ title: 'Não foi possível arquivar a conversa', variant: 'destructive' });
       return;
     }
@@ -568,9 +581,16 @@ export default function Chat() {
   };
 
   return (
-    <div className="fixed inset-0 h-screen-safe bg-background flex flex-col overflow-hidden overscroll-none">
+    <div
+      className="chat-page fixed inset-0 h-screen-safe bg-background flex flex-col overflow-hidden overscroll-none"
+      style={isKosolola ? {
+        top: 'var(--kosolola-top, 0px)',
+        bottom: 'auto',
+        height: 'var(--kosolola-height, 100dvh)',
+      } : undefined}
+    >
       {/* Header */}
-      <header className="relative shrink-0 z-50 glass border-b border-border/50 safe-top">
+      <header className="relative shrink-0 z-50 glass border-b border-border/50 safe-top safe-inline">
         <div className="flex items-center justify-between px-2 py-2">
           {selectionMode ? (
             // Selection mode header
@@ -594,15 +614,15 @@ export default function Chat() {
             </div>
           ) : (
             // Normal header
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" className="rounded-full" onClick={() => navigate(-1)}>
+            <div className="flex min-w-0 flex-1 items-center gap-2">
+              <Button variant="ghost" size="icon" aria-label="Voltar" className="shrink-0 rounded-full" onClick={() => navigate(-1)}>
                 <ChevronLeft className="w-6 h-6" />
               </Button>
               <button
-                className="flex items-center gap-3"
+                className="flex min-w-0 items-center gap-3"
                 onClick={() => headerProfileUserId && navigate(`/profile/${headerProfileUserId}`)}
               >
-                <div className="relative">
+                <div className="relative shrink-0">
                   <Avatar className="w-10 h-10">
                     <AvatarImage src={avatarUrl || ''} />
                     <AvatarFallback className="bg-gradient-primary text-white text-sm">{initials}</AvatarFallback>
@@ -611,8 +631,8 @@ export default function Chat() {
                     <span className="absolute bottom-0 right-0 w-3 h-3 status-online rounded-full border-2 border-background" />
                   )}
                 </div>
-                <div className="text-left">
-                  <h1 className="font-semibold text-base leading-tight">{displayName}</h1>
+                <div className="min-w-0 text-left">
+                  <h1 className="truncate font-semibold text-base leading-tight">{displayName}</h1>
                   <p className="text-xs text-muted-foreground">
                     {typingUsers.length > 0 && otherUserShowTypingIndicators
                       ? t('chat.typing')
@@ -630,7 +650,7 @@ export default function Chat() {
           )}
           
           {!selectionMode && (
-            <div className="flex items-center">
+            <div className="flex shrink-0 items-center">
               <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setSearchOpen(true)}>
                 <Search className="w-5 h-5" />
               </Button>

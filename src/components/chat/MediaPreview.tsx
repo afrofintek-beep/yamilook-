@@ -120,34 +120,35 @@ export function MediaPreview({ url, type, posterUrl, open, onClose }: MediaPrevi
   return (
     <Dialog open={open} onOpenChange={nextOpen => { if (!nextOpen) handleClose(); }}>
       <DialogContent hideCloseButton aria-describedby={undefined}
-        className="w-[calc(100vw-1rem)] max-w-3xl max-h-[calc(100dvh-2rem)] p-0 gap-0 overflow-hidden bg-black border-none text-white">
+        className="flex flex-col min-w-0 left-[calc(50%+(env(safe-area-inset-left,0px)-env(safe-area-inset-right,0px))/2)] top-[calc(50%+(env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))/2)] w-[calc(100%-1rem-env(safe-area-inset-left,0px)-env(safe-area-inset-right,0px))] max-w-3xl h-[calc(100dvh-2rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] max-h-[calc(100dvh-2rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] p-0 gap-0 overflow-hidden bg-black border-none text-white">
         <DialogTitle className="sr-only">{type === 'video' ? 'Reproduzir vídeo' : 'Ver fotografia'}</DialogTitle>
-        <div className="flex items-center justify-between gap-3 px-3 py-2 shrink-0 bg-black">
+        <div className="relative z-10 flex min-w-0 items-center justify-between gap-3 px-3 py-2 shrink-0 bg-black">
           <span className="text-sm">{type === 'video' ? 'Vídeo' : 'Fotografia'}</span>
-          <div className="flex gap-2">
+          <div className="flex shrink-0 gap-2">
             <Button asChild variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-white/20">
               <a href={downloadUrl} download={getFilenameFromUrl(url)} target="_blank" rel="noopener noreferrer" aria-label="Descarregar ficheiro">
                 <Download className="w-5 h-5" />
               </a>
             </Button>
-            <Button variant="ghost" size="icon" aria-label="Fechar pré-visualização"
-              className="h-10 w-10 rounded-full hover:bg-white/20" onClick={handleClose}>
+            <Button variant="ghost" aria-label="Fechar pré-visualização"
+              className="h-11 shrink-0 gap-1 rounded-full px-3 text-white hover:bg-white/20" onClick={handleClose}>
               <X className="w-5 h-5" />
+              <span>Fechar</span>
             </Button>
           </div>
         </div>
-        <div className="relative min-h-36 flex items-center justify-center bg-black">
+        <div className="relative min-h-0 min-w-0 flex-1 flex items-center justify-center overflow-hidden bg-black">
           {type === 'image' ? (
             <img key={`${resolvedUrl}-${retryId}`} src={resolvedUrl} alt="Fotografia"
-              className="max-w-full max-h-[calc(100dvh-10rem)] object-contain" onError={() => void onError()} />
+              className="block min-w-0 w-full h-full max-w-full max-h-full object-contain" onError={() => void onError()} />
           ) : (
             <video key={`${resolvedUrl}-${retryId}`} ref={bindVideo} src={resolvedUrl} poster={resolvedPoster || undefined}
               aria-label="Vídeo da conversa" controls autoPlay playsInline preload="metadata"
-              className="w-full max-h-[calc(100dvh-10rem)] object-contain" onError={() => void onError()} />
+              className="block min-w-0 w-full h-full max-w-full max-h-full object-contain" onError={() => void onError()} />
           )}
         </div>
         {error && (
-          <div role="alert" className="px-4 py-3 text-center text-sm bg-zinc-900">
+          <div role="alert" className="shrink-0 max-h-32 overflow-y-auto px-4 py-3 text-center text-sm bg-zinc-900">
             <p>Não foi possível reproduzir este ficheiro. Tenta novamente ou descarrega-o para abrir no telefone.</p>
             <Button variant="ghost" className="mt-2 hover:bg-white/20" onClick={retry}>
               <RotateCcw className="w-4 h-4 mr-2" />Tentar novamente

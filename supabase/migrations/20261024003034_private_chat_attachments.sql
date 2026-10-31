@@ -1,7 +1,7 @@
 create table public.chat_attachments (
  id uuid primary key default gen_random_uuid(), conversation_id uuid not null references public.conversations(id),
  uploader_id uuid not null, object_path text not null unique, created_at timestamptz not null default now(),
- legacy_bucket text, legacy_path text, legacy_shared boolean not null default false, legacy_quarantined boolean not null default false, unique(legacy_bucket,legacy_path)
+ legacy_bucket text, legacy_path text, legacy_manifest jsonb, legacy_shared boolean not null default false, legacy_quarantined boolean not null default false, unique(legacy_bucket,legacy_path)
 );
 alter table public.chat_attachments enable row level security;
 revoke all on public.chat_attachments from public,anon,authenticated;
@@ -69,8 +69,6 @@ begin
    if not private.can_read_chat_attachment(path) and not private.can_upload_chat_attachment(path) then
     raise exception 'Attachment unavailable' using errcode='42501';
    end if;
-  elsif ref ~ '/storage/v1/object/(public|sign|authenticated)/(media|voice-messages)/' then
-   raise exception 'Public chat uploads are no longer accepted; reload the application' using errcode='42501';
   elsif ref like '%/storage/v1/object/%/chat-attachments/%' then
    raise exception 'Use a private attachment reference' using errcode='42501';
   end if;
@@ -83,9 +81,8 @@ for each row execute function private.check_chat_attachment_references();
 create trigger check_scheduled_chat_attachment_references before insert or update of media_url on public.scheduled_messages
 for each row execute function private.check_chat_attachment_references();
 
--- Legacy private audio no longer has account-wide read permission. New audio uses chat-attachments.
-drop policy if exists "Authenticated users can view voice messages" on storage.objects;
-drop policy if exists "Authenticated users can upload voice messages" on storage.objects;
+-- Preparation only: retain legacy audio policies until hosted validation and cutover.
+-- Existing privacy exposure is NOT remediated by this preparation migration.
 -- Public social files remain in media. Only private chat uploads use the new bucket.
 notify pgrst,'reload schema';
 

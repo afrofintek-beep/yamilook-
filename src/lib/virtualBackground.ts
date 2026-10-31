@@ -1,8 +1,7 @@
-import {
+import type {
   ImageSegmenter,
   FaceLandmarker,
-  FilesetResolver,
-  type ImageSegmenterResult,
+  ImageSegmenterResult,
 } from "@mediapipe/tasks-vision";
 
 // Unified real-time video effects for calls, composited on a canvas and exposed
@@ -142,6 +141,7 @@ export class VirtualBackgroundProcessor {
     if (needsSeg && !this.segmenter && !this.loadingSeg) {
       this.loadingSeg = true;
       try {
+        const { FilesetResolver, ImageSegmenter } = await import("@mediapipe/tasks-vision");
         const vision = await FilesetResolver.forVisionTasks(WASM_ROOT);
         this.segmenter = await ImageSegmenter.createFromOptions(vision, {
           baseOptions: { modelAssetPath: SEG_MODEL, delegate: "GPU" },
@@ -153,6 +153,7 @@ export class VirtualBackgroundProcessor {
     if (needsFace && !this.faceLandmarker && !this.loadingFace) {
       this.loadingFace = true;
       try {
+        const { FilesetResolver, FaceLandmarker } = await import("@mediapipe/tasks-vision");
         const vision = await FilesetResolver.forVisionTasks(WASM_ROOT);
         this.faceLandmarker = await FaceLandmarker.createFromOptions(vision, {
           baseOptions: { modelAssetPath: FACE_MODEL, delegate: "GPU" },

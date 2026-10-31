@@ -1,6 +1,7 @@
 import { isRecentlyOnline } from '@/lib/online-presence';
 import { usePresenceClock } from '@/hooks/usePresenceClock';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { loadAdminPages, matchesAdminUser } from '@/lib/admin-user-search';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
@@ -60,6 +61,7 @@ import { TopicPostManager } from '@/components/admin/TopicPostManager';
 import { TopicSuggestionsManager } from '@/components/admin/TopicSuggestionsManager';
 import { LiveSessionsManager } from '@/components/admin/LiveSessionsManager';
 import { MvpCandidatesManager } from '@/components/admin/MvpCandidatesManager';
+import { FounderInviteAssistant } from '@/components/admin/FounderInviteAssistant';
 
 interface Stats {
   users: number;
@@ -96,12 +98,14 @@ export default function Admin() {
   
   const [stats, setStats] = useState<Stats>({ users: 0, posts: 0, conversations: 0, messages: 0, statuses: 0, contacts: 0 });
   const [users, setUsers] = useState<UserWithRole[]>([]);
-  const [filteredUsers, setFilteredUsers] = useState<UserWithRole[]>([]);
+  const [usersError, setUsersError] = useState(false);
+  const usersRequest = useRef(0);
   const [loadingStats, setLoadingStats] = useState(true);
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [seeding, setSeeding] = useState(false);
   const [clearingData, setClearingData] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [userFilter, setUserFilter] = useState<'all' | 'admins' | 'moderators' | 'online'>('all');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
@@ -130,22 +134,16 @@ export default function Admin() {
     }
   }, [isAdmin]);
 
-  // Filter users based on search
-  useEffect(() => {
-    if (!searchQuery.trim()) {
-      setFilteredUsers(users);
-    } else {
-      const query = searchQuery.toLowerCase();
-      setFilteredUsers(
-        users.filter(
-          (u) =>
-            u.display_name.toLowerCase().includes(query) ||
-            u.username.toLowerCase().includes(query) ||
-            u.email?.toLowerCase().includes(query)
-        )
-      );
-    }
-  }, [searchQuery, users]);
+  const filteredUsers = useMemo(
+    () => users.filter(profile => {
+      const matchesFilter = userFilter === 'all'
+        || (userFilter === 'admins' && profile.isAdmin)
+        || (userFilter === 'moderators' && profile.isModerator)
+        || (userFilter === 'online' && isRecentlyOnline(profile.is_online, profile.last_seen, presenceNow));
+      return matchesFilter && matchesAdminUser(profile, searchQuery);
+    }),
+    [users, searchQuery, userFilter, presenceNow],
+  );
 
   const fetchStats = async () => {
     setLoadingStats(true);
@@ -186,24 +184,26 @@ export default function Admin() {
   }, [isAdmin]);
 
   const fetchUsersWithRoles = async () => {
+    const request = ++usersRequest.current;
     setLoadingUsers(true);
+    setUsersError(false);
     try {
-      // Get all users
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, display_name, username, email, avatar_url, is_online, last_seen, created_at, account_status')
-        .order('created_at', { ascending: false })
-        .limit(100);
-
-      if (profilesError) throw profilesError;
-
-      // Get all admin roles
-      const { data: roles, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('user_id, role')
-        .in('role', ['admin', 'moderator']);
-
-      if (rolesError) throw rolesError;
+      const [profiles, roles] = await Promise.all([
+        loadAdminPages<UserProfile>((from, to) => supabase
+          .from('profiles')
+          .select('id, display_name, username, email, avatar_url, is_online, last_seen, created_at, account_status')
+          .order('created_at', { ascending: false })
+          .order('id', { ascending: true })
+          .range(from, to)),
+        loadAdminPages<{ user_id: string; role: string }>((from, to) => supabase
+          .from('user_roles')
+          .select('user_id, role')
+          .in('role', ['admin', 'moderator'])
+          .order('user_id', { ascending: true })
+          .order('role', { ascending: true })
+          .range(from, to)),
+      ]);
+      if (request !== usersRequest.current) return;
 
       const adminUserIds = new Set(roles?.filter(r => r.role === 'admin').map((r) => r.user_id) || []);
       const modUserIds = new Set(roles?.filter(r => r.role === 'moderator').map((r) => r.user_id) || []);
@@ -215,12 +215,14 @@ export default function Admin() {
       }));
 
       setUsers(usersWithRoles);
-      setFilteredUsers(usersWithRoles);
+
     } catch (error) {
+      if (request !== usersRequest.current) return;
+      setUsersError(true);
       console.error('Error fetching users:', error);
       toast.error('Erro ao carregar utilizadores');
     } finally {
-      setLoadingUsers(false);
+      if (request === usersRequest.current) setLoadingUsers(false);
     }
   };
 
@@ -524,6 +526,9 @@ export default function Admin() {
           </CardContent>
         </Card>
 
+        {/* Founder invitation workflow — uses server-authorized invitation RPC */}
+        <FounderInviteAssistant />
+
         {/* MVP Candidates Manager */}
         <MvpCandidatesManager />
 
@@ -550,31 +555,36 @@ export default function Admin() {
           </TabsList>
 
           <TabsContent value="users" className="mt-4 space-y-4">
-            {/* Quick Stats */}
-            <div className="grid grid-cols-4 gap-2">
-              <Card className="p-3 text-center">
-                <p className="text-lg font-bold">{users.length}</p>
-                <p className="text-xs text-muted-foreground">Total</p>
-              </Card>
-              <Card className="p-3 text-center">
-                <p className="text-lg font-bold text-primary">{adminCount}</p>
-                <p className="text-xs text-muted-foreground">Admins</p>
-              </Card>
-              <Card className="p-3 text-center">
-                <p className="text-lg font-bold text-orange-500">{moderatorCount}</p>
-                <p className="text-xs text-muted-foreground">Mods</p>
-              </Card>
-              <Card className="p-3 text-center">
-                <p className="text-lg font-bold text-green-500">{onlineCount}</p>
-                <p className="text-xs text-muted-foreground">Online</p>
-              </Card>
+            {/* Quick filters — counts always describe the complete directory. */}
+            <div role="group" aria-label="Filtrar utilizadores" className="grid grid-cols-4 gap-2">
+              {([
+                { value: 'all', label: 'Total', name: 'Todos os utilizadores', count: users.length, color: '' },
+                { value: 'admins', label: 'Admins', name: 'Administradores', count: adminCount, color: 'text-primary' },
+                { value: 'moderators', label: 'Mods', name: 'Moderadores', count: moderatorCount, color: 'text-orange-500' },
+                { value: 'online', label: 'Online', name: 'Utilizadores online', count: onlineCount, color: 'text-green-500' },
+              ] as const).map(filter => (
+                <button
+                  key={filter.value}
+                  type="button"
+                  aria-label={filter.name}
+                  aria-pressed={userFilter === filter.value}
+                  aria-controls="admin-user-results"
+                  disabled={loadingUsers || usersError}
+                  onClick={() => setUserFilter(filter.value)}
+                  className={`min-h-20 rounded-xl border bg-card p-3 text-center text-card-foreground shadow-sm transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${userFilter === filter.value ? 'border-primary bg-primary/10 ring-1 ring-primary' : 'border-border'}`}
+                >
+                  <span className={`block text-lg font-bold ${filter.color}`}>{loadingUsers || usersError ? '—' : filter.count}</span>
+                  <span className="block text-xs text-muted-foreground">{filter.label}</span>
+                </button>
+              ))}
             </div>
 
             {/* Search */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Pesquisar utilizadores..."
+                placeholder="Pesquisar nome, @utilizador ou email..."
+                aria-label="Pesquisar utilizadores"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
@@ -582,16 +592,23 @@ export default function Admin() {
             </div>
 
             {/* Users List */}
-            <Card>
+            <Card id="admin-user-results">
               <CardHeader className="pb-2">
                 <CardTitle className="text-base">Gestão de Utilizadores</CardTitle>
-                <CardDescription>{filteredUsers.length} utilizadores encontrados</CardDescription>
+                <CardDescription aria-live="polite">{loadingUsers ? 'A carregar utilizadores...' : usersError ? 'Não foi possível carregar a lista completa.' : `${filteredUsers.length} utilizadores encontrados · ${userFilter === 'admins' ? 'Administradores' : userFilter === 'moderators' ? 'Moderadores' : userFilter === 'online' ? 'Online' : 'Todos'}`}</CardDescription>
               </CardHeader>
               <CardContent className="p-0">
                 {loadingUsers ? (
                   <div className="flex items-center justify-center py-8">
                     <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
                   </div>
+                ) : usersError ? (
+                  <div role="alert" className="p-4 space-y-3">
+                    <p>Erro ao carregar utilizadores. Tenta novamente.</p>
+                    <Button variant="outline" onClick={() => void fetchUsersWithRoles()}>Tentar novamente</Button>
+                  </div>
+                ) : filteredUsers.length === 0 ? (
+                  <p className="p-4 text-sm text-muted-foreground">Nenhum utilizador corresponde aos filtros e à pesquisa.</p>
                 ) : (
                   <div className="divide-y divide-border max-h-[400px] overflow-y-auto">
                     {filteredUsers.map((profile) => (
@@ -743,3 +760,4 @@ export default function Admin() {
     </div>
   );
 }
+

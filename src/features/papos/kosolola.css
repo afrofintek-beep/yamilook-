@@ -1,0 +1,163 @@
+/* Keep the standalone shell anchored; only page/list containers should scroll.
+   Do not disable pinch zoom: users can still magnify content deliberately. */
+html[data-brand="kosolola"] {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+html[data-brand="kosolola"] body {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+html[data-brand="kosolola"] #root {
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  height: 100dvh;
+  min-width: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: none;
+}
+/* iOS zooms focused fields below 16px and can leave the app enlarged after
+   dismissal. Keep the normal viewport without blocking accessible zoom. */
+@media (max-width: 767px) {
+  html[data-brand="kosolola"] input,
+  html[data-brand="kosolola"] textarea,
+  html[data-brand="kosolola"] select {
+    font-size: max(1rem, 16px);
+  }
+}
+
+/* Scoped on html so portals inherit the brand without affecting Yamilook. */
+html[data-brand="kosolola"] {
+  --primary: 182 100% 20.4%;
+  --primary-foreground: 0 0% 100%;
+  --background: 180 14% 96%;
+  --foreground: 200 12% 15%;
+  --card: 0 0% 100%;
+  --card-foreground: 200 12% 15%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 200 12% 15%;
+  --secondary: 180 18% 92%;
+  --secondary-foreground: 182 100% 20.4%;
+  --muted: 180 12% 93%;
+  --muted-foreground: 190 12% 37%;
+  --accent: 37 92% 53%;
+  --accent-foreground: 200 12% 15%;
+  --border: 180 12% 85%;
+  --input: 180 12% 85%;
+  --ring: 182 100% 20.4%;
+  --bubble-sent: 182 100% 20.4%;
+  --bubble-sent-foreground: 0 0% 100%;
+  --bubble-received: 0 0% 100%;
+  --bubble-received-foreground: 200 12% 15%;
+  --gradient-primary: linear-gradient(#006568, #006568);
+  --gradient-surface: linear-gradient(#FFFFFF, #F3F6F6);
+  --shadow-glow: 0 0 20px rgb(0 101 104 / .15);
+  --shadow-glow-accent: 0 0 20px rgb(0 101 104 / .2);
+}
+html.dark[data-brand="kosolola"] {
+  --primary: 180 55% 65%;
+  --primary-foreground: 185 28% 9%;
+  --background: 185 28% 9%;
+  --foreground: 180 15% 96%;
+  --card: 185 22% 13%;
+  --card-foreground: 180 15% 96%;
+  --popover: 185 22% 15%;
+  --popover-foreground: 180 15% 96%;
+  --secondary: 185 18% 18%;
+  --secondary-foreground: 180 15% 96%;
+  --muted: 185 18% 18%;
+  --muted-foreground: 180 12% 70%;
+  --border: 185 16% 25%;
+  --input: 185 16% 25%;
+  --ring: 180 55% 65%;
+  --bubble-sent: 182 100% 20.4%;
+  --bubble-sent-foreground: 0 0% 100%;
+  --bubble-received: 185 18% 18%;
+  --bubble-received-foreground: 180 15% 96%;
+  --gradient-surface: linear-gradient(#18282A, #101C1D);
+}
+
+/* One visible viewport for the shell and the composer, including iOS keyboards. */
+html[data-brand="kosolola"] #root {
+  position: relative;
+  top: var(--kosolola-top, 0px);
+  height: var(--kosolola-height, 100dvh);
+}
+html[data-brand="kosolola"] .h-screen-safe {
+  height: var(--kosolola-height, 100dvh);
+}
+html[data-brand="kosolola"] .min-h-screen-safe {
+  min-height: var(--kosolola-height, 100dvh);
+}
+html[data-brand="kosolola"] .chat-page {
+  top: var(--kosolola-top, 0px);
+  bottom: auto;
+  min-width: 0;
+}
+html[data-brand="kosolola"] .app-bottom-nav {
+  bottom: var(--kosolola-bottom, 0px);
+}
+html[data-brand="kosolola"] .fab-safe-bottom {
+  bottom: calc(var(--kosolola-bottom, 0px) + 5rem + env(safe-area-inset-bottom, 0px) + .75rem);
+}
+.kosolola-conversations {
+  height: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+.kosolola-list, .kosolola-conversation {
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+.kosolola-list {
+  container-type: inline-size;
+}
+@container (max-width: 360px) {
+  .kosolola-list header img[src$="kosolola-icon-192.png"] {
+    display: none;
+  }
+}
+html[data-brand="kosolola"] .chat-page textarea {
+  max-height: min(120px, 30dvh);
+}
+@media (min-width: 1024px) {
+  .kosolola-conversations {
+    --kosolola-sidebar: clamp(320px, 32vw, 420px);
+    display: grid;
+    grid-template-columns: var(--kosolola-sidebar) minmax(0, 1fr);
+  }
+  .kosolola-list {
+    border-inline-end: 1px solid hsl(var(--border));
+  }
+  html[data-brand="kosolola"] .kosolola-conversation .chat-page {
+    position: relative;
+    inset: auto;
+    height: 100%;
+  }
+  html[data-brand="kosolola"]:has(.kosolola-conversations) .app-bottom-nav {
+    width: clamp(320px, 32vw, 420px);
+    left: auto;
+    right: auto;
+    inset-inline-start: 0;
+  }
+  .kosolola-list .fab-safe-bottom {
+    right: auto;
+    inset-inline-start: calc(var(--kosolola-sidebar) - 4.5rem);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kosolola-conversations *, .kosolola-conversations *::before, .kosolola-conversations *::after {
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+  }
+}

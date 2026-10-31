@@ -63,6 +63,8 @@ const statusConfig = {
 };
 
 export function MvpCandidatesManager() {
+  const [loadError, setLoadError] = useState(false);
+  const [sending, setSending] = useState<string | null>(null);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -82,12 +84,14 @@ export function MvpCandidatesManager() {
 
   const fetchCandidates = useCallback(async () => {
     setLoading(true);
+    setLoadError(false);
     const { data, error } = await supabase
       .from("mvp_candidates")
       .select("*")
       .order("created_at", { ascending: false });
 
     if (error) {
+      setLoadError(true);
       toast.error("Erro ao carregar candidatos");
     } else {
       setCandidates((data as Candidate[]) || []);
@@ -187,7 +191,7 @@ O teu código de acesso exclusivo é:
 ${candidate.access_code}
 
 Para criar a tua conta:
-1. Acede a https://yamilook.app/welcome
+1. Acede a https://www.yamilook.com/register
 2. Clica em "Criar conta"
 3. Insere o teu código quando solicitado
 
@@ -197,6 +201,22 @@ Equipa Yamilook 🇦🇴`;
 
     navigator.clipboard.writeText(template);
     toast.success("Template de email copiado!");
+  };
+
+  const sendCandidateEmail = async (candidate: Candidate) => {
+    setSending(candidate.id);
+    try {
+      const { data, error } = await supabase.functions.invoke('send-mvp-candidate-invitation', { body: { candidateId: candidate.id } });
+      if (error || !data?.accepted) throw error || new Error('Delivery failed');
+      toast.success('Email aceite pelo serviço de envio. A entrega depende do destinatário.');
+      await fetchCandidates();
+    } catch {
+      toast.error('Não foi possível enviar o email. Podes copiar a mensagem ou partilhar pelo WhatsApp.');
+    } finally { setSending(null); }
+  };
+  const shareCandidate = (candidate: Candidate) => {
+    const text = `Olá ${candidate.full_name}, a tua candidatura à YAMILOOK foi aprovada!\n\nCria a tua conta em https://www.yamilook.com/register e insere o código ${candidate.access_code}.`;
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
   };
 
   const filtered = candidates.filter((c) => {
@@ -275,7 +295,7 @@ Equipa Yamilook 🇦🇴`;
             <div className="flex items-center justify-center py-8">
               <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
             </div>
-          ) : filtered.length === 0 ? (
+          ) : loadError ? (<div role="alert">Não foi possível carregar candidatos. <Button onClick={fetchCandidates}>Tentar novamente</Button></div>) : filtered.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <Users className="w-10 h-10 mx-auto mb-2 opacity-40" />
               <p className="text-sm">Nenhum candidato encontrado</p>
@@ -378,7 +398,9 @@ Equipa Yamilook 🇦🇴`;
                                   ✓ Utilizado em {new Date(candidate.code_used_at!).toLocaleDateString("pt")}
                                 </p>
                               )}
-                              {!candidate.code_used && (
+                              {!candidate.code_used && (<div className="flex flex-wrap gap-2 mt-2">
+                                <Button size="sm" disabled={sending === candidate.id} onClick={() => sendCandidateEmail(candidate)}>{sending === candidate.id ? 'A enviar…' : 'Enviar email'}</Button>
+                                <Button size="sm" variant="outline" onClick={() => shareCandidate(candidate)}>Partilhar WhatsApp</Button>
                                 <Button
                                   size="sm"
                                   variant="outline"
@@ -387,7 +409,7 @@ Equipa Yamilook 🇦🇴`;
                                 >
                                   <Mail className="w-3 h-3" />
                                   Copiar template de email
-                                </Button>
+                                </Button></div>
                               )}
                             </div>
                           )}

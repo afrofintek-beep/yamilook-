@@ -1,3 +1,4 @@
+import AuthorizedAfrolocLink from '@/components/account-link/AuthorizedAfrolocLink';
 import { genderCtx } from '@/lib/i18n-gender';
 import React, { useState, useCallback } from 'react';
 import { VISIBILITY_OPTIONS } from '@/lib/visibility-options';
@@ -92,12 +93,14 @@ import { languages } from '@/i18n';
 import { InviteSheet } from '@/components/settings/InviteSheet';
 import { supabase } from '@/integrations/supabase/client';
 import { ChangePasswordSheet } from '@/components/settings/ChangePasswordSheet';
+import { ConnectedDevices } from '@/components/settings/ConnectedDevices';
 import { ChatWallpaperSheet } from '@/components/settings/ChatWallpaperSheet';
 import { ArchivedChatsSheet } from '@/components/settings/ArchivedChatsSheet';
 import { TwoFactorSheet } from '@/components/settings/TwoFactorSheet';
 import { BlockedUsersSheet } from '@/components/settings/BlockedUsersSheet';
 import { useMessageNotification } from '@/hooks/useMessageNotification';
 import { SOUND_LABELS, type SoundName } from '@/lib/notification-sounds';
+import { BackupManager } from '@/components/settings/BackupManager';
 
 // Helper function to get flag emoji for language codes
 const getLanguageFlag = (code: string): string => {
@@ -134,15 +137,12 @@ export default function Settings() {
   const [storageOpen, setStorageOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
-  const [exportingData, setExportingData] = useState(false);
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   const [chatWallpaperOpen, setChatWallpaperOpen] = useState(false);
   const [archivedChatsOpen, setArchivedChatsOpen] = useState(false);
   const [twoFactorOpen, setTwoFactorOpen] = useState(false);
+  const [devicesOpen, setDevicesOpen] = useState(false);
   const [blockedUsersOpen, setBlockedUsersOpen] = useState(false);
-  const [lastBackupDate, setLastBackupDate] = useState<string | null>(
-    localStorage.getItem('lastBackupDate')
-  );
 
   const testNotification = useCallback(() => {
     const soundSetting = (settings?.notification_sound || 'default') as SoundName;
@@ -217,78 +217,6 @@ export default function Settings() {
     if (!error) {
       toast({ title: 'Privacy setting updated' });
     }
-  };
-
-  const handleExportData = useCallback(async () => {
-    if (!user) {
-      toast({ 
-        title: t('errors.unauthorized'), 
-        variant: 'destructive' 
-      });
-      return;
-    }
-
-    setExportingData(true);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast({ 
-          title: t('errors.unauthorized'), 
-          variant: 'destructive' 
-        });
-        return;
-      }
-
-      const response = await supabase.functions.invoke('export-user-data');
-
-      if (response.error) {
-        throw new Error(response.error.message);
-      }
-
-      const data = response.data;
-      
-      // Create and download the JSON file
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `yamilook-backup-${new Date().toISOString().split('T')[0]}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
-      // Save backup date
-      const now = new Date().toISOString();
-      localStorage.setItem('lastBackupDate', now);
-      setLastBackupDate(now);
-
-      toast({ 
-        title: t('settings.backupSuccess') || 'Backup completed!',
-        description: t('settings.backupSuccessDesc') || 'Your data has been exported successfully.'
-      });
-    } catch (error) {
-      console.error('Export error:', error);
-      toast({ 
-        title: t('settings.backupFailed') || 'Backup failed',
-        description: t('settings.backupFailedDesc') || 'Failed to export your data. Please try again.',
-        variant: 'destructive'
-      });
-    } finally {
-      setExportingData(false);
-    }
-  }, [user, t, toast]);
-
-  const formatBackupDate = (dateString: string | null) => {
-    if (!dateString) return t('settings.never') || 'Never';
-    const date = new Date(dateString);
-    return date.toLocaleDateString(i18n.language, {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
   };
 
   const SettingItem = React.forwardRef<
@@ -405,10 +333,6 @@ export default function Settings() {
     </motion.div>
   );
 
-  // Storage calculations (mock data)
-  const storageUsed = 2.4; // GB
-  const storageTotal = 5; // GB
-  const storagePercentage = (storageUsed / storageTotal) * 100;
 
   return (
     <div className="h-screen-safe overflow-hidden pb-[env(safe-area-inset-bottom,0px)] bg-background flex flex-col">
@@ -425,6 +349,7 @@ export default function Settings() {
       {/* Content */}
       <ScrollArea className="min-h-0 flex-1 [&_[data-radix-scroll-area-viewport]]:overscroll-y-contain">
         <div className="pb-8">
+          <div className="p-4"><AuthorizedAfrolocLink /></div>
           {/* Profile Section */}
           <motion.button
             initial={{ opacity: 0, y: 10 }}
@@ -593,6 +518,13 @@ export default function Settings() {
             onClick={() => setTwoFactorOpen(true)}
           />
           <SettingItem
+            icon={Smartphone}
+            label="Dispositivos ligados"
+            description="Gerir acessos à YAMILOOK e à KOSOLOLA"
+            delay={0.25}
+            onClick={() => setDevicesOpen(true)}
+          />
+          <SettingItem
             icon={Key}
             label={t('settings.changePassword')}
             delay={0.26}
@@ -637,14 +569,9 @@ export default function Settings() {
           <SettingItem
             icon={Database}
             label={t('settings.storageUsage')}
-            description={`${storageUsed} GB / ${storageTotal} GB`}
+            description="Consultar utilização real (apenas ficheiros atribuídos)"
             delay={0.36}
             onClick={() => setStorageOpen(true)}
-            rightElement={
-              <div className="w-20">
-                <Progress value={storagePercentage} className="h-2" />
-              </div>
-            }
           />
           <SettingItem
             icon={Download}
@@ -1189,85 +1116,14 @@ export default function Settings() {
         </SheetContent>
       </Sheet>
 
-      {/* Storage Sheet */}
+      {/* Secure, user-scoped backup manager shared with KOSOLOLA */}
       <Sheet open={storageOpen} onOpenChange={setStorageOpen}>
         <SheetContent side="right" className="w-full sm:max-w-md h-screen-safe flex flex-col overflow-hidden p-0 pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)]">
           <SheetHeader className="shrink-0 p-4 pr-16 border-b">
             <SheetTitle>{t('settings.storageBackup')}</SheetTitle>
           </SheetHeader>
-          <ScrollArea className="min-h-0 flex-1 [&_[data-radix-scroll-area-viewport]]:overscroll-y-contain">
-            <div className="p-4 space-y-6">
-              {/* Storage usage */}
-              <div className="p-4 rounded-2xl bg-secondary/50">
-                <div className="flex justify-between items-center mb-3">
-                  <span className="font-medium">{t('settings.storageUsed')}</span>
-                  <span className="text-sm text-muted-foreground">{storageUsed} GB / {storageTotal} GB</span>
-                </div>
-                <Progress value={storagePercentage} className="h-3 mb-4" />
-                <div className="grid grid-cols-3 gap-3 text-center text-sm">
-                  <div className="p-2 rounded-xl bg-background">
-                    <p className="font-semibold text-blue-500">1.2 GB</p>
-                    <p className="text-xs text-muted-foreground">{t('settings.photos')}</p>
-                  </div>
-                  <div className="p-2 rounded-xl bg-background">
-                    <p className="font-semibold text-purple-500">0.8 GB</p>
-                    <p className="text-xs text-muted-foreground">{t('settings.videos')}</p>
-                  </div>
-                  <div className="p-2 rounded-xl bg-background">
-                    <p className="font-semibold text-green-500">0.4 GB</p>
-                    <p className="text-xs text-muted-foreground">{t('settings.other')}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Backup */}
-              <div className="space-y-2">
-                <h4 className="text-sm font-medium text-muted-foreground px-1">{t('settings.backup')}</h4>
-                <SettingItem
-                  icon={Download}
-                  label={t('settings.exportData') || 'Export my data'}
-                  description={`${t('settings.lastBackup')}: ${formatBackupDate(lastBackupDate)}`}
-                  onClick={handleExportData}
-                  rightElement={
-                    exportingData ? (
-                      <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                    ) : undefined
-                  }
-                />
-                <SettingItem
-                  icon={Wifi}
-                  label={t('settings.backupWifiOnly')}
-                  rightElement={<Switch checked={true} />}
-                />
-              </div>
-
-              {/* Clear data */}
-              <div className="space-y-2">
-                <h4 className="text-sm font-medium text-muted-foreground px-1">{t('settings.clearData')}</h4>
-                <Button
-                  variant="outline"
-                  className="w-full rounded-xl"
-                  onClick={async () => {
-                    try {
-                      if ('caches' in window) {
-                        const keys = await caches.keys();
-                        await Promise.all(keys.map((k) => caches.delete(k)));
-                      }
-                      if ('serviceWorker' in navigator) {
-                        const regs = await navigator.serviceWorker.getRegistrations();
-                        await Promise.all(regs.map((r) => r.unregister()));
-                      }
-                      toast({ title: t('settings.cacheCleared', 'Cache limpa. A recarregar…') });
-                      setTimeout(() => window.location.reload(), 700);
-                    } catch {
-                      toast({ title: 'Erro ao limpar a cache', variant: 'destructive' });
-                    }
-                  }}
-                >
-                  {t('settings.clearCache')}
-                </Button>
-              </div>
-            </div>
+          <ScrollArea className="min-h-0 flex-1">
+            <div className="p-4"><BackupManager /></div>
           </ScrollArea>
         </SheetContent>
       </Sheet>
@@ -1311,6 +1167,13 @@ export default function Settings() {
               © 2025 Yamilook. All rights reserved.
             </p>
           </div>
+        </SheetContent>
+      </Sheet>
+
+      <Sheet open={devicesOpen} onOpenChange={setDevicesOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto pt-[env(safe-area-inset-top,0px)]">
+          <SheetHeader className="mb-4 pr-8"><SheetTitle>Segurança da conta</SheetTitle></SheetHeader>
+          {devicesOpen && <ConnectedDevices />}
         </SheetContent>
       </Sheet>
 

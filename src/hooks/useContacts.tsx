@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { fetchPublicProfilesBatched } from '@/lib/public-profile-batch';
 import { isRecentlyOnline } from '@/lib/online-presence';
 import { usePresenceClock } from './usePresenceClock';
 import { useAuth } from './useAuth';
@@ -88,10 +89,7 @@ export function useContacts() {
 
       // Batch fetch all profiles at once
       const contactUserIds = contactsData.map(c => c.contact_user_id);
-      const { data: profiles } = await supabase
-        .from('public_profiles')
-        .select('id, display_name, username, avatar_url, bio, is_online, last_seen, status_message')
-        .in('id', contactUserIds);
+      const { data: profiles } = await fetchPublicProfilesBatched(contactUserIds);
 
       const profileMap = new Map<string, Contact['profile']>(
         (profiles ?? [])
@@ -147,10 +145,7 @@ export function useContacts() {
       const userIds = [...new Set(requestsData.flatMap(r => [r.sender_id, r.receiver_id]))];
 
       // Batch fetch all profiles
-      const { data: profiles } = await supabase
-        .from('public_profiles')
-        .select('id, display_name, username, avatar_url, bio')
-        .in('id', userIds);
+      const { data: profiles } = await fetchPublicProfilesBatched(userIds);
 
       const profileMap = new Map<string, FriendRequest['sender_profile']>(
         (profiles ?? [])

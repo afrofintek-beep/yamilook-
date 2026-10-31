@@ -25,7 +25,7 @@ export function ViewOnceMediaBubble({
   const { resolvedUrl } = useResolvedMediaUrl(isOwn || showMedia ? url : '');
 
   const handleView = async () => {
-    if (isViewed || isViewing) return;
+    if (isOwn || isViewed || isViewing) return;
     
     setIsViewing(true);
     setShowMedia(true);
@@ -37,7 +37,21 @@ export function ViewOnceMediaBubble({
     setIsViewing(false);
   };
 
-  if (isViewed && !isOwn) {
+  // Sent media must never call onView or load a preview in the conversation.
+  // isViewed is the current user's receipt, not the recipient's receipt.
+  if (isOwn) {
+    return (
+      <div role="status" className="flex max-w-full items-center gap-3 px-4 py-3 rounded-2xl bg-primary/10">
+        <Lock className="w-5 h-5 shrink-0" />
+        <div className="text-sm">
+          <p>{type === 'image' ? 'Fotografia enviada' : 'Vídeo enviado'}</p>
+          <p className="text-xs text-muted-foreground">Visualização única — apenas para o destinatário</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isViewed) {
     return (
       <div className="flex items-center gap-2 px-4 py-3 rounded-2xl bg-muted/50">
         <EyeOff className="w-5 h-5 text-muted-foreground" />

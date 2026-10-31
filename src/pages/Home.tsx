@@ -1,3 +1,4 @@
+import PaposBrand from '@/features/papos/PaposBrand';
 import { useAppSurface } from '@/lib/app-surface';
 import { useState, useCallback, useEffect } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
@@ -87,16 +88,17 @@ export default function Home() {
   }, []);
 
   const handleBulkArchive = useCallback(async () => {
-    if (selectedIds.size === 0) return;
+    if (!user?.id || selectedIds.size === 0) return;
     
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('conversation_participants')
       .update({ is_archived: true })
       .in('conversation_id', Array.from(selectedIds))
-      .eq('user_id', user?.id);
+      .eq('user_id', user.id)
+      .select('conversation_id');
 
-    if (error) {
-      toast({ title: 'Erro', description: error.message, variant: 'destructive' });
+    if (error || data?.length !== selectedIds.size) {
+      toast({ title: 'Erro', description: error?.message || 'Não foi possível confirmar o arquivo de todas as conversas. Tenta novamente.', variant: 'destructive' });
     } else {
       toast({ title: `${selectedIds.size} conversa(s) arquivada(s)` });
       setSelectionMode(false);
@@ -145,14 +147,17 @@ export default function Home() {
 
   // Swipe action handlers
   const handleArchive = useCallback(async (conversationId: string) => {
-    const { error } = await supabase
+    if (!user?.id) return;
+    const { data, error } = await supabase
       .from('conversation_participants')
       .update({ is_archived: true })
       .eq('conversation_id', conversationId)
-      .eq('user_id', user?.id);
+      .eq('user_id', user.id)
+      .select('conversation_id')
+      .single();
 
-    if (error) {
-      toast({ title: 'Erro', description: error.message, variant: 'destructive' });
+    if (error || !data) {
+      toast({ title: 'Erro', description: error?.message || 'Não foi possível confirmar o arquivo. Tenta novamente.', variant: 'destructive' });
     } else {
       toast({ title: 'Conversa arquivada' });
       refresh();
@@ -209,7 +214,7 @@ export default function Home() {
 
   return (
     <div className="h-screen-safe w-full min-w-0 overflow-hidden pb-[calc(5rem+env(safe-area-inset-bottom,0px))] bg-background flex flex-col">
-      <header className="shrink-0 relative z-50 glass-nav safe-top">
+      <header className="shrink-0 relative z-50 glass-nav safe-top safe-inline">
         <div className="flex items-center justify-between px-4 py-2.5">
           <div className="flex items-center gap-3">
             <button onClick={() => navigate('/profile')} className="focus:outline-none">
@@ -220,7 +225,7 @@ export default function Home() {
                 </AvatarFallback>
               </Avatar>
             </button>
-            <span className="text-base font-bold text-foreground tracking-tight">Papos</span>
+            {surface === 'papos' ? <PaposBrand compact /> : <span className="text-base font-bold text-foreground tracking-tight">KOSOLOLA</span>}
           </div>
           <div className="flex items-center gap-1">
             {!selectionMode && (
@@ -232,7 +237,7 @@ export default function Home() {
                   variant="ghost" 
                   size="icon" 
                   className="rounded-xl h-9 w-9 relative"
-                  aria-label={surface === 'papos' ? 'Instalar Papos' : 'Notificações'}
+                  aria-label={surface === 'papos' ? 'Instalar KOSOLOLA' : 'Notificações'}
                   onClick={() => navigate(surface === 'papos' ? '/install' : '/notifications')}
                 >
                   <Bell className="w-4.5 h-4.5" />
@@ -283,8 +288,6 @@ export default function Home() {
           <div className="absolute bottom-0 left-0 right-0 h-px bg-border/20" />
         </div>
       </header>
-
-      {surface === 'yamilook' && <a href="/papos-app/install" className="shrink-0 px-4 py-2 text-xs text-primary border-b border-border/50">Instalar o Papos como aplicação separada</a>}
 
       {/* Tab Content */}
       <AnimatePresence mode="wait">

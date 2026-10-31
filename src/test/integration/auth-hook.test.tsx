@@ -147,7 +147,7 @@ describe('useAuth Hook', () => {
       email: 'newuser@test.com',
       password: 'Password123!',
       options: {
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo: 'https://www.yamilook.com/onboarding',
         data: { display_name: 'New User', username: 'newuser' },
       },
     });
@@ -272,6 +272,22 @@ describe('useAuth Hook', () => {
     expect(result.current.profile).toBeNull();
   });
 
+  it('does not claim a local sign-out succeeded when the service rejects it', async () => {
+    mockSupabaseClient.auth.getSession.mockResolvedValueOnce({ data: { session: mockSession }, error: null });
+    mockSupabaseClient.from.mockReturnValueOnce({
+      select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(),
+      single: vi.fn().mockResolvedValueOnce({ data: mockProfile, error: null }),
+    });
+    const failure = new Error('Network unavailable');
+    mockSupabaseClient.auth.signOut.mockResolvedValueOnce({ error: failure });
+    const { result } = renderHook(() => useAuth(), { wrapper: createWrapper() });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    await act(async () => { await expect(result.current.signOut('local')).rejects.toBe(failure); });
+    expect(mockSupabaseClient.auth.signOut).toHaveBeenCalledWith({ scope: 'local' });
+    expect(result.current.user?.id).toBe(mockSession.user.id);
+    expect(result.current.session).not.toBeNull();
+  });
+
   it('signInWithSocial initiates OAuth flow', async () => {
     mockSupabaseClient.auth.getSession.mockResolvedValueOnce({
       data: { session: null },
@@ -300,7 +316,7 @@ describe('useAuth Hook', () => {
     expect(mockSupabaseClient.auth.signInWithOAuth).toHaveBeenCalledWith({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/feed`,
+        redirectTo: 'https://www.yamilook.com/feed',
       },
     });
   });

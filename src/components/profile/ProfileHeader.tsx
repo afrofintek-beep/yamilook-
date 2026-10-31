@@ -54,7 +54,7 @@ export function ProfileHeader({
         <Avatar
           className={`w-24 h-24 border-[3px] border-background shadow-xl ${getRingStyle()} transition-all duration-300`}
         >
-          <AvatarImage src={avatarUrl || ''} className="object-cover" />
+          <AvatarImage src={avatarUrl || ''} imageVariantSize={320} className="object-cover" />
           <AvatarFallback className="text-3xl font-bold bg-secondary text-foreground">
             {name[0]?.toUpperCase()}
           </AvatarFallback>

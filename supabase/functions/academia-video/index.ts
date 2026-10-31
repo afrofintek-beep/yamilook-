@@ -26,7 +26,9 @@ serve(async req => {
     }
     if (action==='end') {
       // Closing the server room removes existing participants, not only future joins.
-      const adminToken=await sign({room:roomName,roomAdmin:true},'1m');
+      // DeleteRoom requires roomCreate (roomAdmin only moderates participants).
+      // This credential remains exclusively inside this authenticated backend.
+      const adminToken=await sign({roomCreate:true},'1m');
       const endpoint=url.replace(/^wss:/,'https:').replace(/^ws:/,'http:').replace(/\/$/,'');
       const result=await fetch(`${endpoint}/twirp/livekit.RoomService/DeleteRoom`,{method:'POST',headers:{Authorization:`Bearer ${adminToken}`,'Content-Type':'application/json'},body:JSON.stringify({room:roomName})});
       if (!result.ok && result.status!==404) {

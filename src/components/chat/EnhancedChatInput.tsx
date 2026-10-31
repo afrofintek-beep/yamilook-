@@ -1,3 +1,5 @@
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -73,6 +75,17 @@ export function EnhancedChatInput({
 }: EnhancedChatInputProps) {
   const { t } = useTranslation();
   const [message, setMessage] = useState('');
+  const [locationDraft, setLocationDraft] = useState<string | null>(null);
+  const [locationName, setLocationName] = useState('');
+  const [locationReference, setLocationReference] = useState('');
+  const [afrolocCode, setAfrolocCode] = useState('');
+  const [locating, setLocating] = useState(false);
+  const locationRequest = useRef(0);
+  useEffect(() => {
+    setLocating(false);
+    setLocationDraft(null);
+    return () => { locationRequest.current += 1; };
+  }, [conversationId]);
   const [sending, setSending] = useState(false);
   const sendingRef = useRef(false);
   const [sendError, setSendError] = useState('');
@@ -142,6 +155,38 @@ export function EnhancedChatInput({
       sendingRef.current = false;
       setSending(false);
     }
+  };
+
+  const handleLocation = () => {
+    if (disabled || locating || sendingRef.current) return;
+    setSendError('');
+    if (!navigator.geolocation) {
+      setSendError('Este navegador não permite obter a localização.');
+      return;
+    }
+    const request = ++locationRequest.current;
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        if (request !== locationRequest.current) return;
+        setLocating(false);
+        const location = `📍 https://www.google.com/maps?q=${coords.latitude},${coords.longitude}`;
+        setLocationName('');
+        setLocationReference('');
+        setAfrolocCode('');
+        setLocationDraft(location);
+      },
+      (error) => {
+        if (request !== locationRequest.current) return;
+        setLocating(false);
+        setSendError(error.code === 1
+          ? 'Acesso à localização recusado. Permite a localização nas definições do navegador e tenta novamente.'
+          : error.code === 3
+            ? 'Demorou demasiado a obter a localização. Tenta novamente.'
+            : 'Não foi possível obter a localização. Verifica se a localização está ativa e tenta novamente.');
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
+    );
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -273,6 +318,7 @@ export function EnhancedChatInput({
 
   return (
     <div className="shrink-0 glass border-t border-border/50 safe-bottom relative">
+      {locating && <p role="status" className="px-4 py-2 text-sm">A obter localização…</p>}
       {sendError && <p role="alert" className="px-4 py-2 text-sm text-destructive">{sendError}</p>}
       {/* Sticker Picker */}
       <AnimatePresence>
@@ -396,9 +442,9 @@ export function EnhancedChatInput({
                 {viewOnceEnabled ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
                 {viewOnceEnabled ? 'View once ON' : 'View once'}
               </DropdownMenuItem>
-              <DropdownMenuItem disabled>
+              <DropdownMenuItem onSelect={handleLocation} disabled={disabled || locating || sending}>
                 <MapPin className="w-4 h-4 mr-2" />
-                Location
+                Localização
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -508,6 +554,22 @@ export function EnhancedChatInput({
         </div>
       )}
 
+      <Dialog open={locationDraft !== null} onOpenChange={open => { if (!open) setLocationDraft(null); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>Partilhar localização</DialogTitle><DialogDescription>Acrescenta os detalhes. A localização será colocada na mensagem para confirmares o envio.</DialogDescription></DialogHeader>
+          <label className="space-y-1 text-sm">Nome do local<Input value={locationName} maxLength={100} onChange={e => setLocationName(e.target.value)} placeholder="Ex.: Escritório AFROFINTEK" /></label>
+          <label className="space-y-1 text-sm">Referência ou encontro<Input value={locationReference} maxLength={250} onChange={e => setLocationReference(e.target.value)} placeholder="Ex.: Portão azul · hoje às 14h00" /></label>
+          <label className="space-y-1 text-sm">Código AFROLOC existente (opcional)<Input value={afrolocCode} maxLength={100} onChange={e => setAfrolocCode(e.target.value)} /></label>
+          <p className="text-xs text-muted-foreground">O código é fornecido por ti e não é verificado neste envio. As coordenadas não certificam um endereço.</p>
+          <a className="text-sm underline" href="https://www.afroloc.ao" target="_blank" rel="noopener noreferrer">Abrir AFROLOC para consultar ou registar endereço</a>
+          <Button disabled={disabled || sending} onClick={() => {
+            const details = [locationName.trim(), locationReference.trim(), afrolocCode.trim() ? `AFROLOC (não verificado): ${afrolocCode.trim()}` : '', locationDraft].filter(Boolean).join('\n');
+            setMessage(current => current ? `${current}\n${details}` : details);
+            setLocationDraft(null);
+            requestAnimationFrame(() => textareaRef.current?.focus());
+          }}>Adicionar à mensagem</Button>
+        </DialogContent>
+      </Dialog>
       {/* Schedule Message Sheet */}
       <ScheduleMessageSheet
         open={showScheduleSheet}

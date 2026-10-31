@@ -18,6 +18,21 @@ function Harness({ selectMode = true, initialSelected = false, onSelect = vi.fn(
 }
 
 describe('Papos touch and selection', () => {
+  it('does not turn a touch on Arquivar into a conversation long press', () => {
+    vi.useFakeTimers();
+    const onArchive = vi.fn(), onEnterSelectionMode = vi.fn(), onOpen = vi.fn();
+    render(<SwipeableConversationItem conversation={conversation} currentUserId="me"
+      onClick={onOpen} onArchive={onArchive} onEnterSelectionMode={onEnterSelectionMode} />);
+    const archive = screen.getByText('Arquivar').closest('button')!;
+    fireEvent.touchStart(archive, { touches: [{ clientX: 400, clientY: 50 }] });
+    act(() => { vi.advanceTimersByTime(550); });
+    fireEvent.touchEnd(archive);
+    fireEvent.click(archive);
+    expect(onArchive).toHaveBeenCalledOnce();
+    expect(onEnterSelectionMode).not.toHaveBeenCalled();
+    expect(onOpen).not.toHaveBeenCalled();
+  });
+
   it('toggles once when the conversation is tapped, without opening it', () => {
     const onSelect = vi.fn(), onOpen = vi.fn();
     render(<Harness onSelect={onSelect} onOpen={onOpen} />);

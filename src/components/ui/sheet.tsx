@@ -58,13 +58,15 @@ const SheetContent = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Con
     <SheetPortal>
       <SheetOverlay />
       <SheetPrimitive.Content ref={ref} className={cn(sheetVariants({ side }), className)} {...props}>
-        {children}
         {!hideCloseButton && (
-          <SheetPrimitive.Close className="absolute right-[max(0.5rem,env(safe-area-inset-right,0px))] top-[calc(0.5rem+env(safe-area-inset-top,0px))] z-50 flex h-11 w-11 items-center justify-center rounded-full bg-background/90 opacity-90 ring-offset-background transition-opacity data-[state=open]:bg-secondary hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
+          <div data-modal-close-bar className="sticky top-0 z-50 col-span-full flex min-h-12 shrink-0 justify-end bg-background py-1">
+          <SheetPrimitive.Close aria-label="Close" className="relative flex h-11 shrink-0 items-center justify-center gap-2 rounded-full bg-secondary px-3 text-foreground ring-offset-background hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
             <X className="h-4 w-4" />
-            <span className="sr-only">Close</span>
+            <span>Fechar</span>
           </SheetPrimitive.Close>
+          </div>
         )}
+        {children}
       </SheetPrimitive.Content>
     </SheetPortal>
   ),

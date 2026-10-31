@@ -1,0 +1,32 @@
+name: KOSOLOLA chat checks
+
+on:
+  pull_request:
+    paths:
+      - 'src/components/calls/CallChatPanel.tsx'
+      - 'src/components/calls/CallChatPanel.test.tsx'
+      - 'src/components/calls/VideoCall.tsx'
+      - 'src/pages/Chat.tsx'
+      - 'src/hooks/useWebRTC.tsx'
+      - 'src/hooks/useAuth.tsx'
+      - 'src/hooks/useAuth.revocation.test.tsx'
+      - 'src/hooks/useChat.tsx'
+      - 'src/hooks/useChat.refresh.test.tsx'
+      - '.github/workflows/kosolola-chat-checks.yml'
+  workflow_dispatch:
+
+jobs:
+  chat-and-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Direct chat and iOS viewport regression tests
+        run: npx vitest run src/components/calls/CallChatPanel.test.tsx src/features/papos/usePaposViewport.test.ts src/hooks/useAuth.revocation.test.tsx src/hooks/useChat.refresh.test.tsx
+      - name: Build both Yamilook and KOSOLOLA
+        run: npm run build

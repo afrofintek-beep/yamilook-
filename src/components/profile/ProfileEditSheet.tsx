@@ -47,6 +47,7 @@ interface ProfileData {
   username: string;
   avatar_url: string | null;
   bio: string | null;
+  gender?: 'male' | 'female' | 'other' | 'prefer_not_to_say' | null;
   status_message: string | null;
   profile_theme_color: string;
   show_last_seen: boolean;

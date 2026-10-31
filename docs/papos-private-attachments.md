@@ -1,57 +1,94 @@
-# Private chat attachments — rollout
+# Private chat attachments — staged rollout
 
-This change is prepared for deployment after `private_chat_attachments` is applied.
-It must not be merged to production before the database functions and storage policies
-exist. It does not implement E2EE or repair the other audit findings.
+## Release status
 
-## Model
+Preparation only. Do not merge/deploy the client until the exact SQL migration is
+verified in the target project and hosted Storage authorization tests pass. Do not
+claim historical privacy remediation complete after preparation. Existing public
+URLs and legacy audio permissions remain until a separately reviewed cutover.
+The original all-in-one legacy mover has been removed: its recovery and public
+reference inventory were not sufficient for production quarantine.
 
-- `chat-attachments` is private with a 100 MB object limit. New images, videos, documents,
-  audio and video covers use server-reserved paths and immutable registry entries.
-- Messages store `chat-attachment://...` references, never signed bearer URLs. Components
-  request five-minute signed URLs through Storage RLS. Links already issued may remain
-  usable until their expiry; downloaded copies cannot be revoked.
-- Only the uploader can upload the reserved object, while still a conversation member.
-  Before sending, only that uploader can read the pending upload for one hour.
-- Sent objects require a live, non-deleted/non-expired message visible to the requesting
-  participant. Authorized forwarding creates another such reference in its destination.
-- Message and scheduled-message triggers prevent claiming someone else's known path.
-  Public local media URLs are rejected in new chat attachment writes, including old clients.
-- Clients cannot edit the registry or update/move/delete private Storage objects.
-- Public Ritmos/feed uploads retain the public `media` bucket. No blanket privacy change
-  is made to that bucket. Historical voice uploads are no longer readable account-wide.
+## Database preparation
 
-## Legacy migration
+`20261024003034_private_chat_attachments.sql` creates the private 100 MB bucket,
+registry, reservation RPC, participant read/upload policies and private-reference
+validation. It intentionally retains old client URL writes and historical audio
+policies during transition. It does not modify existing messages, memberships or
+public media objects. The registry is service-only and now includes a recovery
+manifest. This migration was confirmed absent in production before revision;
+never replay or edit an already-applied version on another environment.
 
-The temporary maintenance function has disabled placeholders in the repository. Deployment
-requires a freshly generated high-entropy bearer capability whose SHA-256 hash and short
-expiry are injected into the deployment only. Do not commit tokens or create a permanent
-public maintenance endpoint. Replace the function with a disabled handler immediately
-after the run; never relax user-facing authorization to invoke maintenance.
+Before applying, verify prerequisite schemas/tables/columns and inspect all
+Storage policies for broad permissive rules. Verify migration history and the
+actual deployed definitions afterward; reconcile version with the repository
+filename using the repository migration-history workflow. Do not mark applied
+based only on a tool acknowledgement.
 
-The function reads attachment metadata and URL-reference fields only. It copies local
-chat files to private storage, rewrites exact message/scheduled-message references and
-moves originals to a private recovery location rather than deleting them. Registry legacy
-fields support resuming partially completed work. It returns counts, never file paths,
-message contents or credentials. Files referenced elsewhere as public content retain their
-public original, and this exception must be reported explicitly. Missing source files
-are reported rather than fabricated or silently discarded. Previously distributed links
-and cached copies cannot be guaranteed to disappear instantly.
+## Private authorization
 
-The migration must be followed by read-only checks: bucket privacy, object policies,
-remaining legacy references, quarantine/shared/missing counts, and unauthenticated
-denials for private objects and old quarantined URLs. Verify a public feed sample remains
-accessible. Do not download real private attachments to a developer workspace for tests.
+New messages use stable chat-attachment references and five-minute signed URLs.
+Only the reserving participant uploads; existing visible messages authorize
+participants to read and forward. Removed participants cannot obtain new links
+through that conversation. Previously issued bearer URLs remain usable until
+expiry. This is not E2EE or immediate URL revocation.
 
-## Validation performed before rollout
+## Historical preparation (no cutover)
 
-`tests/security/chat-attachments.test.mjs` exercises real PostgreSQL roles/RLS in isolated
-PGlite with synthetic A/B/C users: reservations, upload ownership, pending visibility,
-member/external reads, path-claim denial, forwarding, removal/expiry, registry privileges,
-anonymous denial and preservation of the public social bucket. It is a minimal schema,
-not a full hosted Storage integration or a production penetration test.
+The maintenance endpoint remains disabled by deployment placeholders. When
+hosted validation has passed, inject a fresh high-entropy capability hash and
+short expiry for a controlled run, then disable the endpoint again.
 
-Run with the tooling described in `papos-membership-security.md`. Client tests cover private
-reference handling, five-minute signing, denials, media rendering and existing chat flows.
-The public upload path is intentionally retained for social content. No production
-migration or legacy file move should be assumed complete merely because tests pass.
+- `mode: inventory` reads keyset-paginated message metadata until an empty page
+  and returns counts only. It performs no writes.
+- `mode: prepare`, with one explicit `bucket` and `path`, re-inventories and
+  prepares that candidate only. Requests for cutover or other modes fail.
+- A unique legacy source registry row is reserved before any copy. Retries reuse
+  that identity instead of creating orphan destinations.
+- Copy to the private destination and a private recovery location. SHA-256 and
+  byte length of both copies must match the source, then re-read the source to
+  detect concurrent changes. Verification occurs in the maintenance runtime;
+  private contents never go to the developer workspace or response.
+- Save the exact message table/id/column/original-value references, checksums,
+  length and recovery path in the service-only manifest. A failed manifest write
+  can be retried; existing destinations must match and are never overwritten.
+- Missing sources and mismatched copies fail closed. Existing quarantine records
+  require manual recovery review. No move/delete or message rewrite is available.
+
+Originals are retained, including every public MUXI reference. Preparation does
+not make historically public objects private. The public-reference RPC is not
+used to authorize deletion: its column-based inventory is insufficient for that.
+
+## Remaining cutover gates
+
+1. Test hosted Storage using synthetic A/B/C users and anonymous requests: upload,
+   signing/download, foreign-path claiming, removal, hidden/expired/deleted
+   messages, recovery-path denial and signed URL expiry. Check public MUXI samples.
+2. Rehearse restoration using synthetic data and the exact per-reference manifest.
+   No production history rewrite until this passes.
+3. Implement complete paginated public-reference discovery, including supported
+   JSON/relative paths; freeze relevant writes or otherwise coordinate concurrent
+   public/chat references for the cutover window. Revalidate every candidate.
+4. After the compatible frontend is validated, rewrite references transactionally
+   with compare-and-set checks against the manifest. Do not overwrite concurrent
+   edits. Introduce durable per-object state and reconcile Storage/DB boundaries.
+5. Only quarantine verified, unshared originals. Preserve shared public objects
+   and report residual exposure explicitly. Replace broad legacy audio reads
+   with participant-scoped access before declaring remediation complete.
+6. Retain private recovery data through an agreed recovery period; never roll back
+   by making the new bucket public. Disable maintenance after the run.
+
+## Authentication incident
+
+Administrative reads work; that does not verify the apply_migration confirmation
+continuation. Invalid or expired requestState is a connector/protocol failure,
+not evidence of invalid SQL. Do not bypass confirmation or change SQL to evade
+it. Obtain a supported connection/continuation repair and inspect verifier logs
+through support if needed. No migration retry is justified before technical gates.
+
+## Local verification
+
+Run client tests with Vitest. `chat-legacy-prepare.test.ts` covers interrupted
+manifest writes, idempotent retries, corruption, missing and changed sources.
+`tests/security/chat-attachments.test.mjs` runs PostgreSQL roles/RLS in PGlite,
+including old-client compatibility. These do not replace hosted Storage tests.

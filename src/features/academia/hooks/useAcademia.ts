@@ -21,6 +21,8 @@ export interface AcademiaSession {
   priceCoins: number;
   status: string;
   scheduledAt: string;
+  archivedAt?: string | null;
+  cancellationReason?: string | null;
 }
 
 const QUERY_KEY = ['academia-sessions'];
@@ -78,6 +80,8 @@ export function useAcademiaSessions() {
           isPremium: (s.price_coins ?? 0) > 0,
           priceCoins: s.price_coins ?? 0,
           status: s.status,
+          archivedAt: s.archived_at,
+          cancellationReason: s.cancellation_reason,
           scheduledAt: s.scheduled_at,
         };
       });
@@ -97,6 +101,7 @@ export function useCreateAcademiaSession() {
       spots: number;
       priceCoins: number;
       scheduledAt: string;
+      durationMinutes?: number;
     }) => {
       if (!user) throw new Error('Not authenticated');
 
@@ -109,6 +114,7 @@ export function useCreateAcademiaSession() {
         spots_left: input.spots,
         price_coins: input.priceCoins,
         scheduled_at: input.scheduledAt,
+        duration_minutes: input.durationMinutes ?? 60,
         status: 'scheduled',
       });
 
@@ -159,6 +165,8 @@ export function useSubmitAcademiaReview() {
       // Refresh the mentor's aggregate rating and any session views.
       queryClient.invalidateQueries({ queryKey: MENTORS_QUERY_KEY });
       queryClient.invalidateQueries({ queryKey: ['mentor-profile', variables.mentorId] });
+      queryClient.invalidateQueries({ queryKey: ['mentor-reviews', variables.mentorId] });
+      queryClient.invalidateQueries({ queryKey: ['mentor-stats', variables.mentorId] });
       queryClient.invalidateQueries({ queryKey: ['academia-session', variables.sessionId] });
     },
   });
@@ -170,19 +178,20 @@ export function useAcademiaMentors() {
     queryFn: async (): Promise<MentorCardProps[]> => {
       const { data: mentorProfiles, error } = await supabase
         .from('mentor_profiles')
-        .select('*');
+        .select('*').eq('status', 'active');
 
       if (error) throw error;
       if (!mentorProfiles?.length) return [];
 
       const userIds = mentorProfiles.map((m) => m.user_id);
 
-      const [{ data: profiles }, { data: reviews }, { data: sessions }] = await Promise.all([
+      const [{ data: profiles, error: profileError }, { data: reviews, error: reviewError }, { data: sessions, error: sessionError }] = await Promise.all([
         supabase.rpc('get_public_profiles_by_ids', { p_ids: userIds }),
-        supabase.from('academia_reviews').select('mentor_id, rating').in('mentor_id', userIds),
+        supabase.rpc('academia_mentor_stats', { p_ids: userIds }),
         supabase.from('academia_sessions').select('mentor_id').in('mentor_id', userIds),
       ]);
 
+      if (profileError || reviewError || sessionError) throw profileError || reviewError || sessionError;
       const profileMap: Record<string, { name: string; avatar?: string }> = {};
       if (profiles) {
         for (const p of profiles) {
@@ -197,8 +206,8 @@ export function useAcademiaMentors() {
       if (reviews) {
         for (const r of reviews) {
           const agg = ratingAgg[r.mentor_id] ?? { sum: 0, count: 0 };
-          agg.sum += r.rating;
-          agg.count += 1;
+          agg.sum = Number(r.rating) * Number(r.review_count);
+          agg.count = Number(r.review_count);
           ratingAgg[r.mentor_id] = agg;
         }
       }
@@ -253,14 +262,12 @@ export function useBecomeMentor() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (input: { specialty: string; mentorBio: string }) => {
+    mutationFn: async (input: { specialty: string; mentorBio: string; experience: string }) => {
       if (!user) throw new Error('Not authenticated');
 
-      const { error } = await supabase.from('mentor_profiles').insert({
-        user_id: user.id,
-        specialty: input.specialty,
-        mentor_bio: input.mentorBio || null,
-        is_verified_mentor: false,
+      const { error } = await supabase.rpc('academia_save_mentor', {
+        p_specialty: input.specialty, p_bio: input.mentorBio,
+        p_experience: input.experience, p_submit: true,
       });
 
       if (error) throw error;
@@ -268,6 +275,37 @@ export function useBecomeMentor() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: MENTORS_QUERY_KEY });
       queryClient.invalidateQueries({ queryKey: [...IS_MENTOR_QUERY_KEY, user?.id] });
+    },
+  });
+}
+
+export function useManageAcademiaSession() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ sessionId, action, reason }: { sessionId: string; action: string; reason?: string }) => {
+      const { data, error } = await supabase.rpc('academia_manage_session', {
+        p_session: sessionId, p_action: action, p_reason: reason,
+      });
+      if (error) throw error;
+      if (!(data as { ok?: boolean })?.ok) throw new Error('Não foi possível gerir a sessão.');
+    },
+    onSuccess: () => {
+      for (const key of ['academia-sessions', 'academia-session', 'academia-reservation', 'academia-notices', 'kumbu-ledger']) {
+        void client.invalidateQueries({ queryKey: [key] });
+      }
+    },
+  });
+}
+
+export function useAcademiaNotices() {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ['academia-notices', user?.id], enabled: !!user,
+    staleTime: 30_000, refetchOnWindowFocus: true,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('academia_my_notices');
+      if (error) throw error;
+      return data ?? [];
     },
   });
 }

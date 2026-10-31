@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { authorizedPaymentWebhook, settledPaymentStatus } from './validation.ts';
 
 // AppyPay calls this endpoint when a charge settles. verify_jwt is disabled
 // (see config.toml) — AppyPay has no Supabase JWT. We authenticate the call with
@@ -13,8 +14,6 @@ serve(async (req) => {
 
   try {
     const raw = await req.text();
-    // Log the first real payloads so we can confirm AppyPay's exact field names.
-    console.log("appypay-webhook payload:", raw.slice(0, 2000));
 
     // deno-lint-ignore no-explicit-any
     let payload: any = {};
@@ -22,14 +21,18 @@ serve(async (req) => {
 
     // --- authenticate the caller via the shared token (header / query / body) ---
     const expected = Deno.env.get("APPYPAY_WEBHOOK_TOKEN");
-    if (expected) {
+    if (!expected) {
+      console.error('Payment webhook authentication is not configured');
+      return jr({ error: 'webhook_unavailable' }, 503);
+    }
+    {
       const provided =
         req.headers.get("x-yamilook-token") ??
         new URL(req.url).searchParams.get("token") ??
         payload["x-yamilook-token"] ??
         payload.token ??
         "";
-      if (provided !== expected) return jr({ error: "unauthorized" }, 401);
+      if (!authorizedPaymentWebhook(expected, provided)) return jr({ error: "unauthorized" }, 401);
     }
 
     const url = Deno.env.get("SUPABASE_URL")!;
@@ -52,9 +55,7 @@ serve(async (req) => {
     // that must NOT credit; the paid webhook (code 100) arrives when it's paid.
     const rs = (payload.responseStatus ?? {}) as Record<string, unknown>;
     const statusStr = String(rs.status ?? payload.status ?? "").toLowerCase();
-    const code = Number(rs.code ?? NaN);
-    const paid = code === 100 ||
-      ["success", "successful", "paid", "completed", "settled", "approved"].some((s) => statusStr.includes(s));
+    const paid = settledPaymentStatus(rs, payload.status);
     if (!paid) return jr({ ok: true, ignored: statusStr || String(rs.code ?? "unknown") });
 
     const { data: purchase } = await admin

@@ -1,4 +1,5 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useLayoutEffect, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { 
@@ -23,8 +24,12 @@ import { WaitingRoomPanel } from './WaitingRoomPanel';
 import { BreakoutRoomsPanel } from './BreakoutRoomsPanel';
 import { HostControlsPanel } from './HostControlsPanel';
 import { cn } from '@/lib/utils';
+import { CallChatPanel } from './CallChatPanel';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
+import { useToast } from '@/hooks/use-toast';
 
 interface VideoCallProps {
+  conversationId?: string | null;
   callId: string;
   callType: 'voice' | 'video';
   participants: Array<{
@@ -45,6 +50,7 @@ interface VideoCallProps {
 }
 
 export function VideoCall({ 
+  conversationId,
   callId, 
   callType, 
   participants, 
@@ -52,17 +58,31 @@ export function VideoCall({
   isGroupCall = false,
   isHost = false,
 }: VideoCallProps) {
+  const callViewportRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const viewport = window.visualViewport;
+    const fit = () => {
+      if (viewport && Math.abs(viewport.scale - 1) > 0.01) return;
+      const root = callViewportRef.current;
+      if (root) { root.style.height = `${viewport?.height ?? window.innerHeight}px`; root.style.top = `${viewport?.offsetTop ?? 0}px`; }
+    };
+    fit(); viewport?.addEventListener('resize', fit); viewport?.addEventListener('scroll', fit); window.addEventListener('resize', fit);
+    return () => { viewport?.removeEventListener('resize', fit); viewport?.removeEventListener('scroll', fit); window.removeEventListener('resize', fit); };
+  }, []);
   const localVideoRef = useRef<HTMLVideoElement>(null);
+  const callChatInputRef = useRef<HTMLTextAreaElement>(null);
   const { t } = useTranslation();
+  const { toast } = useToast();
   const [isPipMode, setIsPipMode] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
-  const [showChat, setShowChat] = useState(false);
+  const [showChat, setShowChat] = useState(true);
+  // Keep the composer mounted after first opening so drafts survive switching back to the call.
+  const [chatOpenedOnce, setChatOpenedOnce] = useState(true);
   const [showParticipants, setShowParticipants] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
+  const [handRaised, setHandRaised] = useState(false);
   const [showBackgrounds, setShowBackgrounds] = useState(false);
   const [showEffects, setShowEffects] = useState(false);
-  const [showCaptions, setShowCaptions] = useState(false);
   const [showHostControls, setShowHostControls] = useState(false);
   const [showWaitingRoom, setShowWaitingRoom] = useState(false);
   const [showBreakoutRooms, setShowBreakoutRooms] = useState(false);
@@ -103,12 +123,31 @@ export function VideoCall({
 
   // Toggle fullscreen
   const toggleFullscreen = async () => {
-    if (!document.fullscreenElement) {
-      await document.documentElement.requestFullscreen();
-      setIsFullscreen(true);
-    } else {
-      await document.exitFullscreen();
-      setIsFullscreen(false);
+    try {
+      if (!document.fullscreenElement) {
+        if (!document.documentElement.requestFullscreen) throw new Error('unsupported');
+        await document.documentElement.requestFullscreen();
+      } else {
+        await document.exitFullscreen();
+      }
+      setIsFullscreen(!!document.fullscreenElement);
+    } catch {
+      toast({ title: 'Ecrã inteiro indisponível', description: 'O navegador não permitiu abrir o ecrã inteiro.', variant: 'destructive' });
+    }
+  };
+
+  useEffect(() => {
+    const update = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', update);
+    return () => document.removeEventListener('fullscreenchange', update);
+  }, []);
+
+  const toggleHand = async () => {
+    try {
+      await raiseHand(!handRaised);
+      setHandRaised(value => !value);
+    } catch {
+      toast({ title: 'Não foi possível atualizar a mão levantada', variant: 'destructive' });
     }
   };
 
@@ -137,6 +176,8 @@ export function VideoCall({
 
   // Auto-hide controls
   useEffect(() => {
+    // Keep essential controls available on touch devices without hover/mousemove.
+    if (window.matchMedia('(pointer: coarse)').matches) return;
     let timeout: ReturnType<typeof setTimeout>;
     const handleMouseMove = () => {
       setShowControls(true);
@@ -156,17 +197,37 @@ export function VideoCall({
     onEndCall();
   };
 
+  const openCallChat = () => {
+    // Mount and focus in the same tap: iOS otherwise declines to open its keyboard.
+    flushSync(() => {
+      setChatOpenedOnce(true);
+      setShowChat(true);
+    });
+    callChatInputRef.current?.focus({ preventScroll: true });
+  };
+
   // Debug: Log state for troubleshooting
   console.log('[VideoCall] callStatus:', state.callStatus, 'localStream:', !!state.localStream, 'isMuted:', state.isMuted, 'isVideoEnabled:', state.isVideoEnabled);
   
   return (
-    <div 
+    <div ref={callViewportRef}
+      data-testid="call-layout"
       className={cn(
-        "relative w-full h-screen bg-black overflow-hidden",
+        "fixed inset-x-0 top-0 z-50 flex flex-col w-full bg-black overflow-hidden",
         isFullscreen && "fixed inset-0 z-50"
       )}
+      style={{ height: "var(--kosolola-height, 100dvh)" }}
     >
+      <header className="shrink-0 flex items-center justify-between gap-2 px-3 pb-2 pt-[calc(env(safe-area-inset-top,0px)+0.5rem)]">
+      <Button variant="secondary" className="min-h-11" onClick={openCallChat}>
+        <MessageSquare className="h-4 w-4 mr-2" />Escrever mensagem
+      </Button>
+      <span role="status" className="rounded-full bg-black/70 px-3 py-1 text-sm text-white">
+        {(state.callStatus === 'connected' && state.connectionState === 'connected') ? 'Ligada' : state.callStatus === 'ringing' ? 'A chamar…' : state.lastError || 'A estabelecer ligação…'}
+      </span>
+      </header>
       {/* Main Video Grid */}
+      <section data-testid="call-stage" className="relative min-h-0 flex-1 basis-0 overflow-hidden">
       <ParticipantGrid
         participants={participants}
         localStream={state.localStream}
@@ -181,7 +242,7 @@ export function VideoCall({
         <motion.div
           drag
           dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
-          className="absolute bottom-24 right-4 w-48 h-36 rounded-2xl overflow-hidden shadow-2xl border-2 border-white/20 z-20"
+          className="absolute right-3 top-3 w-20 h-24 rounded-2xl overflow-hidden shadow-2xl border-2 border-white/20 z-20"
         >
           <video
             ref={localVideoRef}
@@ -206,6 +267,20 @@ export function VideoCall({
             </div>
           )}
         </motion.div>
+      )}
+
+      {/* Anchor recording controls to the media stage, below the header. */}
+      <RecordingControls callId={callId} participants={participants} />
+      </section>
+      {chatOpenedOnce && (
+        <CallChatPanel
+          inline
+          conversationId={conversationId}
+          contactId={!isGroupCall && participants.length === 1 ? participants[0].user_id : undefined}
+          open={showChat}
+          inputRef={callChatInputRef}
+          onClose={() => setShowChat(false)}
+        />
       )}
 
       {/* Active Reactions */}
@@ -233,43 +308,45 @@ export function VideoCall({
         </div>
       )}
 
-      {/* Live Captions */}
-      {showCaptions && (
-        <LiveCaptions callId={callId} />
-      )}
+      <Sheet open={showParticipants} onOpenChange={setShowParticipants}>
+        <SheetContent className="safe-top overflow-y-auto">
+          <SheetHeader className="pr-12 py-4">
+            <SheetTitle>Participantes ({participants.length + 1})</SheetTitle>
+            <SheetDescription>Pessoas nesta chamada</SheetDescription>
+          </SheetHeader>
+          <ul className="space-y-3">
+            <li>Tu — {state.isMuted ? 'microfone desligado' : 'microfone ligado'}</li>
+            {participants.map(participant => <li key={participant.user_id} className="rounded-xl border p-3">
+              <p className="font-medium">{participant.display_name}</p>
+              <p className="text-sm text-muted-foreground">{participant.is_muted ? 'Microfone desligado' : 'Microfone ligado'}{participant.is_hand_raised ? ' · Mão levantada' : ''}</p>
+            </li>)}
+          </ul>
+        </SheetContent>
+      </Sheet>
 
       {/* Call Controls */}
       <AnimatePresence>
         {showControls && (
           <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 50 }}
-            className="absolute bottom-0 left-0 right-0 z-30"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            data-testid="call-controls" className="relative shrink-0 z-30"
           >
-            <div className="bg-gradient-to-t from-black/80 to-transparent p-6">
-              {/* Call Status */}
-              <div className="text-center mb-4">
-                <span className="text-white/70 text-sm">
-                {(state.callStatus === 'connected' || state.remoteStreams.size > 0 || state.connectionState === 'connected' || (participants.length > 0 && participants.some(p => p.is_video_enabled)))
-                    ? t('calls.statusConnected')
-                    : (state.callStatus === 'ringing' || state.callStatus === 'initiating')
-                    ? t('calls.statusCalling')
-                    : t('calls.statusConnecting')}
-                </span>
-              </div>
-
+            <div className="bg-black p-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))]">
               {/* Main Controls */}
-              <div className="flex items-center justify-center gap-3">
+              <div className="flex flex-wrap items-center justify-center gap-2">
                 {/* Mute */}
                 <Button
                   variant="outline"
                   size="icon"
                   className={cn(
-                    "h-14 w-14 rounded-full border-white/20 bg-white/10 hover:bg-white/20",
+                    "h-11 w-11 shrink-0 rounded-full border-white/20 bg-white/10 hover:bg-white/20",
                     state.isMuted && "bg-red-500 hover:bg-red-600 border-red-500"
                   )}
                   onClick={toggleMute}
+                  aria-label={state.isMuted ? 'Ligar microfone' : 'Desligar microfone'}
+                  aria-pressed={state.isMuted}
                 >
                   {state.isMuted ? (
                     <MicOff className="h-6 w-6 text-white" />
@@ -284,10 +361,11 @@ export function VideoCall({
                     variant="outline"
                     size="icon"
                     className={cn(
-                      "h-14 w-14 rounded-full border-white/20 bg-white/10 hover:bg-white/20",
+                      "h-11 w-11 shrink-0 rounded-full border-white/20 bg-white/10 hover:bg-white/20",
                       !state.isVideoEnabled && "bg-red-500 hover:bg-red-600 border-red-500"
                     )}
                     onClick={toggleVideo}
+                    aria-label={state.isVideoEnabled ? 'Desligar câmara' : 'Ligar câmara'}
                   >
                     {state.isVideoEnabled ? (
                       <Video className="h-6 w-6 text-white" />
@@ -297,24 +375,12 @@ export function VideoCall({
                   </Button>
                 )}
 
-                {/* Screen Share */}
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className={cn(
-                    "h-14 w-14 rounded-full border-white/20 bg-white/10 hover:bg-white/20",
-                    state.isScreenSharing && "bg-primary hover:bg-primary/90 border-primary"
-                  )}
-                  onClick={toggleScreenShare}
-                >
-                  <MonitorUp className="h-6 w-6 text-white" />
-                </Button>
-
                 {/* End Call */}
                 <Button
                   size="icon"
-                  className="h-14 w-14 rounded-full bg-red-500 hover:bg-red-600"
+                  className="h-11 w-11 shrink-0 rounded-full bg-red-500 hover:bg-red-600"
                   onClick={handleEndCall}
+                  aria-label="Desligar chamada"
                 >
                   <Phone className="h-6 w-6 text-white rotate-135" />
                 </Button>
@@ -324,36 +390,30 @@ export function VideoCall({
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-14 w-14 rounded-full border-white/20 bg-white/10 hover:bg-white/20"
+                    className="h-11 w-11 shrink-0 rounded-full border-white/20 bg-white/10 hover:bg-white/20"
                     onClick={flipCamera}
+                    aria-label="Trocar câmara"
                   >
                     <FlipHorizontal2 className="h-6 w-6 text-white" />
                   </Button>
                 )}
 
-                {/* Raise Hand */}
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-14 w-14 rounded-full border-white/20 bg-white/10 hover:bg-white/20"
-                  onClick={() => raiseHand(true)}
-                >
-                  <Hand className="h-6 w-6 text-white" />
-                </Button>
+                <CallReactions inline onReaction={handleReaction} />
 
                 {/* More Options */}
                 <Button
                   variant="outline"
                   size="icon"
-                  className="h-14 w-14 rounded-full border-white/20 bg-white/10 hover:bg-white/20"
-                  onClick={() => setShowSettings(!showSettings)}
+                  className="h-11 w-11 shrink-0 rounded-full border-white/20 bg-white/10 hover:bg-white/20"
+                  onClick={() => setShowEffects(true)}
+                  aria-label="Definições da chamada"
                 >
                   <MoreVertical className="h-6 w-6 text-white" />
                 </Button>
               </div>
 
               {/* Secondary Controls */}
-                <div className="flex items-center justify-center gap-4 mt-4">
+                <div className="flex items-center gap-2 mt-2 overflow-x-auto [&>button]:shrink-0">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -368,10 +428,38 @@ export function VideoCall({
                   variant="ghost"
                   size="sm"
                   className="text-white/70 hover:text-white hover:bg-white/10"
-                  onClick={() => setShowChat(!showChat)}
+                  onClick={() => showChat ? setShowChat(false) : openCallChat()}
                 >
                   <MessageSquare className="h-4 w-4 mr-2" />
                   {t('calls.chat')}
+                </Button>
+
+                {/* Screen Share */}
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className={cn(
+                    "h-11 w-11 shrink-0 rounded-full border-white/20 bg-white/10 hover:bg-white/20",
+                    state.isScreenSharing && "bg-primary hover:bg-primary/90 border-primary"
+                  )}
+                  onClick={toggleScreenShare}
+                  disabled={!state.isScreenSharing && !navigator.mediaDevices?.getDisplayMedia}
+                  aria-label={state.isScreenSharing ? 'Parar partilha de ecrã' : 'Partilhar ecrã'}
+                  title={!navigator.mediaDevices?.getDisplayMedia ? 'Partilha de ecrã não suportada neste navegador' : undefined}
+                >
+                  <MonitorUp className="h-6 w-6 text-white" />
+                </Button>
+
+                {/* Raise Hand */}
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-11 w-11 shrink-0 rounded-full border-white/20 bg-white/10 hover:bg-white/20"
+                  onClick={toggleHand}
+                  aria-label={handRaised ? 'Baixar a mão' : 'Levantar a mão'}
+                  aria-pressed={handRaised}
+                >
+                  <Hand className="h-6 w-6 text-white" />
                 </Button>
 
                 {/* Host Controls Button - Only visible to hosts in group calls */}
@@ -431,9 +519,11 @@ export function VideoCall({
                   size="sm"
                   className={cn(
                     "text-white/70 hover:text-white hover:bg-white/10",
-                    showCaptions && "text-primary"
+                    "opacity-50"
                   )}
-                  onClick={() => setShowCaptions(!showCaptions)}
+                  disabled
+                  aria-label="Legendas indisponíveis"
+                  title="A transcrição de chamadas ainda não está implementada"
                 >
                   CC
                 </Button>
@@ -443,6 +533,8 @@ export function VideoCall({
                   size="icon"
                   className="text-white/70 hover:text-white hover:bg-white/10"
                   onClick={toggleFullscreen}
+                  disabled={!document.fullscreenEnabled}
+                  aria-label={isFullscreen ? 'Sair do ecrã inteiro' : 'Abrir ecrã inteiro'}
                 >
                   {isFullscreen ? (
                     <Minimize2 className="h-4 w-4" />
@@ -457,7 +549,7 @@ export function VideoCall({
       </AnimatePresence>
 
       {/* Reactions Bar */}
-      <CallReactions onReaction={handleReaction} />
+
 
       {/* Virtual Background Picker */}
       {showBackgrounds && (
@@ -473,8 +565,7 @@ export function VideoCall({
         <CallEffects onClose={() => setShowEffects(false)} />
       )}
 
-      {/* Recording Controls */}
-      <RecordingControls callId={callId} participants={participants} />
+
 
       {/* Host Controls Panel */}
       <HostControlsPanel

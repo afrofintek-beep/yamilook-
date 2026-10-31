@@ -1,3 +1,4 @@
+import { communityReturn } from './features/academia/community-links';
 import { recoverApplicationAssets } from '@/lib/app-assets';
 import { getSharedAudioContext } from '@/lib/audio-context';
 import { useState, useEffect, Suspense, lazy, Component } from "react";
@@ -15,6 +16,7 @@ import { GlobalMessageNotifier } from "@/components/GlobalMessageNotifier";
 import { GlobalLiveInviteNotifier } from "@/components/GlobalLiveInviteNotifier";
 import { KumbuEarnNotifier } from "@/components/KumbuEarnNotifier";
 import ThemeSync from "@/components/ThemeSync";
+import { AutomaticAccountBackup } from "@/components/AutomaticAccountBackup";
 
 
 // Lazy load the ActiveCallProvider since it imports heavy WebRTC hooks
@@ -34,6 +36,7 @@ const Contacts = lazy(() => import("./pages/Contacts"));
 const Chat = lazy(() => import("./pages/Chat"));
 const Settings = lazy(() => import("./pages/Settings"));
 const Calls = lazy(() => import("./pages/Calls"));
+const ScheduledCallRoom = lazy(() => import('@/features/scheduled-calls/ScheduledCallRoom'));
 const Call = lazy(() => import("./pages/Call"));
 const Status = lazy(() => import("./pages/Status"));
 const Feed = lazy(() => import("./pages/Feed"));
@@ -78,6 +81,11 @@ const AcademiaHome = lazy(() => import("./features/academia/routes/AcademiaHome"
 const AcademiaCreateSession = lazy(() => import("./features/academia/routes/AcademiaCreateSession"));
 const AcademiaSession = lazy(() => import("./features/academia/routes/AcademiaSession"));
 const MentorProfileScreen = lazy(() => import("./features/academia/routes/MentorProfileScreen"));
+const AcademiaCommunities = lazy(() => import('./features/academia/routes/AcademiaCommunities'));
+const AcademiaCohort = lazy(() => import('./features/academia/routes/AcademiaCohort'));
+const AcademiaPublicWork = lazy(() => import('./features/academia/routes/AcademiaPublicWork'));
+const AcademiaLearning = lazy(() => import('./features/academia/routes/AcademiaLearning'));
+const AcademiaLearningGoal = lazy(() => import('./features/academia/routes/AcademiaLearningGoal'));
 const AcademiaLiveRoom = lazy(() => import("./features/academia/routes/AcademiaLiveRoom"));
 
 // Kumbu (monetização)
@@ -90,6 +98,7 @@ const AdminMonetization = lazy(() => import("./features/kumbu/routes/AdminMoneti
 const AdminApplications = lazy(() => import("./features/kumbu/routes/AdminApplications"));
 const AdminAfrolocCertifications = lazy(() => import("./features/kumbu/routes/AdminAfrolocCertifications"));
 const AdminPayoutsPage = lazy(() => import("./features/kumbu/routes/AdminPayouts"));
+const AdminMentors = lazy(() => import("./pages/AdminMentors"));
 const AdminBilling = lazy(() => import("./pages/AdminBilling"));
 
 // Minimal loading fallback (ultra fast perception)
@@ -180,7 +189,7 @@ class LazyLoadErrorBoundary extends Component<
           </div>
           <h2 className="text-lg font-semibold text-foreground">Erro ao carregar a página</h2>
           <p className="text-sm text-muted-foreground max-w-xs">
-            Houve um problema de rede ao carregar. Tenta novamente.
+            Não foi possível apresentar esta página. Tenta novamente ou recarrega a aplicação.
           </p>
           <div className="flex gap-3">
             <button
@@ -217,7 +226,7 @@ const queryClient = new QueryClient({
 });
 
 function ProtectedRoute({ children, skipOnboardingCheck }: { children: React.ReactNode; skipOnboardingCheck?: boolean }) {
-  const { user, profile, loading } = useAuth();
+  const { user, profile, loading, profileError, refreshProfile, signOut } = useAuth();
   
   if (loading) {
     return (
@@ -233,7 +242,23 @@ function ProtectedRoute({ children, skipOnboardingCheck }: { children: React.Rea
 
   // Do not expose protected content while the profile is still being fetched.
   if (!skipOnboardingCheck && !profile) {
-    return <div role="status" className="min-h-screen flex items-center justify-center">A carregar perfil…</div>;
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-6 text-center">
+        <p role={profileError ? 'alert' : 'status'}>
+          {profileError ? 'Não foi possível carregar o perfil. Verifique a ligação e tente novamente.' : 'A carregar perfil…'}
+        </p>
+        {profileError && (
+          <>
+            <button type="button" onClick={() => void refreshProfile()} className="rounded-lg bg-primary px-5 py-3 text-primary-foreground">
+              Tentar novamente
+            </button>
+            <button type="button" onClick={() => void signOut('local')} className="rounded-lg px-5 py-2 underline">
+              Iniciar sessão novamente
+            </button>
+          </>
+        )}
+      </div>
+    );
   }
 
   // Redirect to onboarding if not completed (except on the onboarding page itself)
@@ -246,6 +271,7 @@ function ProtectedRoute({ children, skipOnboardingCheck }: { children: React.Rea
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
+  const location = useLocation();
   
   if (loading) {
     return (
@@ -256,7 +282,7 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   }
   
   if (user) {
-    return <Navigate to="/feed" replace />;
+    return <Navigate to={communityReturn(location.search) || "/feed"} replace />;
   }
   
   return <>{children}</>;
@@ -278,6 +304,7 @@ function AnimatedRoutes() {
           <Route path="/chat/:conversationId" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
           <Route path="/calls" element={<ProtectedRoute><Calls /></ProtectedRoute>} />
+          <Route path="/scheduled-call/:sessionId" element={<ProtectedRoute><ScheduledCallRoom /></ProtectedRoute>} />
           <Route path="/call/:callId" element={<ProtectedRoute><Call /></ProtectedRoute>} />
           <Route path="/status" element={<ProtectedRoute><Status /></ProtectedRoute>} />
           <Route path="/feed" element={<ProtectedRoute><Feed /></ProtectedRoute>} />
@@ -285,6 +312,12 @@ function AnimatedRoutes() {
           <Route path="/mokubico" element={<ProtectedRoute><MokubHome /></ProtectedRoute>} />
           <Route path="/academia" element={<ProtectedRoute><AcademiaHome /></ProtectedRoute>} />
           <Route path="/academia/create" element={<ProtectedRoute><AcademiaCreateSession /></ProtectedRoute>} />
+          <Route path="/academia/comunidades" element={<AcademiaCommunities />} />
+          <Route path="/academia/comunidades/:slug" element={<AcademiaCommunities />} />
+          <Route path="/academia/comunidades/:slug/turmas/:cohortId" element={<AcademiaCohort />} />
+          <Route path="/academia/trabalhos/:workId" element={<AcademiaPublicWork />} />
+          <Route path="/academia/percursos" element={<ProtectedRoute><AcademiaLearning /></ProtectedRoute>} />
+          <Route path="/academia/percursos/:goalId" element={<ProtectedRoute><AcademiaLearningGoal /></ProtectedRoute>} />
           <Route path="/academia/live/:sessionId" element={<ProtectedRoute><AcademiaLiveRoom /></ProtectedRoute>} />
           <Route path="/academia/mentor/:mentorId" element={<ProtectedRoute><MentorProfileScreen /></ProtectedRoute>} />
           <Route path="/academia/:sessionId" element={<ProtectedRoute><AcademiaSession /></ProtectedRoute>} />
@@ -313,6 +346,7 @@ function AnimatedRoutes() {
           <Route path="/admin/applications" element={<ProtectedRoute><AdminApplications /></ProtectedRoute>} />
           <Route path="/admin/afroloc-certifications" element={<ProtectedRoute><AdminAfrolocCertifications /></ProtectedRoute>} />
           <Route path="/admin/payouts" element={<ProtectedRoute><AdminPayoutsPage /></ProtectedRoute>} />
+          <Route path="/admin/mentors" element={<ProtectedRoute><AdminMentors /></ProtectedRoute>} />
           <Route path="/admin/billing" element={<ProtectedRoute><AdminBilling /></ProtectedRoute>} />
           <Route path="/moderation" element={<ProtectedRoute><Moderation /></ProtectedRoute>} />
           <Route path="/advertising" element={<ProtectedRoute><Advertising /></ProtectedRoute>} />
@@ -409,6 +443,7 @@ function AppContent() {
       <GlobalLiveInviteNotifier />
       <KumbuEarnNotifier />
       <ThemeSync />
+      <AutomaticAccountBackup />
       <ActiveCallProvider>
         <AnimatedRoutes />
       </ActiveCallProvider>

@@ -1,3 +1,9 @@
+import { MentorSettings } from '../components/MentorSettings';
+import { useAuth } from '@/hooks/useAuth';
+import { useAdmin } from '@/hooks/useAdmin';
+import { SessionManagement } from '../components/SessionManagement';
+import { sessionMatches, type SessionFilter } from '../session-management';
+import { useAcademiaNotices } from '../hooks/useAcademia';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, GraduationCap, Sparkles, TrendingUp } from 'lucide-react';
@@ -31,6 +37,11 @@ import { motion } from 'framer-motion';
 
 export default function AcademiaHome() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { isAdmin } = useAdmin();
+  const { data: notices = [] } = useAcademiaNotices();
+  const [mine, setMine] = useState(false);
+  const [filter, setFilter] = useState<SessionFilter>('upcoming');
   const [tab, setTab] = useState('all');
   const { data: sessions = [], isLoading, isError, refetch, isFetching } = useAcademiaSessions();
   const { data: mentors = [], isLoading: mentorsLoading } = useAcademiaMentors();
@@ -40,6 +51,7 @@ export default function AcademiaHome() {
   const [mentorSheetOpen, setMentorSheetOpen] = useState(false);
   const [specialty, setSpecialty] = useState('');
   const [mentorBio, setMentorBio] = useState('');
+  const [experience, setExperience] = useState('');
 
   const handleBecomeMentor = () => {
     if (!specialty.trim()) {
@@ -47,10 +59,10 @@ export default function AcademiaHome() {
       return;
     }
     becomeMentor.mutate(
-      { specialty: specialty.trim(), mentorBio: mentorBio.trim() },
+      { specialty: specialty.trim(), mentorBio: mentorBio.trim(), experience: experience.trim() },
       {
         onSuccess: () => {
-          toast.success('Bem-vindo(a) à academia como mentor!');
+          toast.success('Candidatura enviada para análise.');
           setMentorSheetOpen(false);
           setSpecialty('');
           setMentorBio('');
@@ -62,13 +74,14 @@ export default function AcademiaHome() {
     );
   };
 
-  const liveSessions = sessions.filter((s) => s.status === 'live');
+  const liveSessions = sessions.filter((s) => s.status === 'live' && !s.archivedAt);
+  const visibleSessions = sessions.filter(s => (mine ? (s.mentorId === user?.id || isAdmin) : true) && sessionMatches(s, filter));
 
   const filtered = tab === 'all'
-    ? sessions
+    ? visibleSessions
     : tab === 'free'
-      ? sessions.filter((s) => !s.isPremium)
-      : sessions.filter((s) => s.isPremium);
+      ? visibleSessions.filter((s) => !s.isPremium)
+      : visibleSessions.filter((s) => s.isPremium);
 
   return (
     <div className="flex flex-col h-screen-safe overflow-hidden bg-background pb-[calc(5rem+env(safe-area-inset-bottom,0px))]">
@@ -89,6 +102,18 @@ export default function AcademiaHome() {
       </header>
 
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain space-y-6 pt-4">
+        {notices.length > 0 && <section className="mx-4 space-y-2" aria-label="Avisos da Academia">
+          {notices.map(n => <div key={n.session_id} role="status" className="rounded-xl border p-3 text-sm">
+            <p className="font-semibold">Sessão cancelada: {n.title}</p><p>{n.reason}</p>
+            {n.refunded > 0 && <p>Foram devolvidos {n.refunded} Kumbu.</p>}
+            <Button variant="link" onClick={() => navigate(`/academia/${n.session_id}`)}>Ver sessão</Button>
+          </div>)}
+        </section>}
+        <section className="mx-4 rounded-2xl border border-primary/20 bg-primary/5 p-4 space-y-2">
+          <h2 className="font-semibold">Aprender, fazer e mostrar resultados</h2>
+          <p className="text-sm text-muted-foreground">Transforma um objetivo num plano com o mentor. Entrega desafios e acompanha o teu progresso.</p>
+          <div className="flex flex-wrap gap-2"><Button onClick={() => navigate('/academia/comunidades')}>Descobrir comunidades e desafios</Button><Button variant="outline" onClick={() => navigate('/academia/percursos')}>Explorar os meus percursos</Button></div>
+        </section>
         {/* Hero section */}
         <motion.section
           initial={{ opacity: 0, y: 15 }}
@@ -184,6 +209,8 @@ export default function AcademiaHome() {
           </motion.section>
         )}
 
+        {isMentor && <MentorSettings />}
+        {isAdmin && <Button variant="outline" onClick={() => navigate('/admin/mentors')}>Gestão de Mentores</Button>}
         {/* Mentors carousel */}
         <motion.section
           initial={{ opacity: 0, y: 12 }}
@@ -217,7 +244,7 @@ export default function AcademiaHome() {
                   onClick={() => setMentorSheetOpen(true)}
                 >
                   <Plus className="h-3.5 w-3.5" />
-                  Torna-te mentor
+                  Candidatar-me a mentor
                 </Button>
               )}
             </div>
@@ -240,7 +267,7 @@ export default function AcademiaHome() {
                 onClick={() => setMentorSheetOpen(true)}
               >
                 <Plus className="h-3.5 w-3.5" />
-                Torna-te mentor
+                Candidatar-me a mentor
               </Button>
             </div>
           )}
@@ -253,9 +280,17 @@ export default function AcademiaHome() {
           transition={{ delay: 0.3, duration: 0.4 }}
           className="px-4 pb-4"
         >
+          <div className="mb-3 flex flex-wrap gap-2">
+            <Button variant={!mine ? 'default' : 'outline'} onClick={() => setMine(false)}>Explorar sessões</Button>
+            {user && <Button variant={mine ? 'default' : 'outline'} onClick={() => setMine(true)}>{isAdmin ? 'Gerir sessões' : 'As minhas sessões'}</Button>}
+          </div>
+          {<div className="mb-3 flex flex-wrap gap-2" aria-label="Filtrar sessões">
+            {([['upcoming', 'Próximas'], ['past', 'Passadas'], ['cancelled', 'Canceladas'], ['archived', 'Arquivadas']] as const).map(([value, label]) =>
+              <Button key={value} size="sm" variant={filter === value ? 'default' : 'outline'} aria-pressed={filter === value} onClick={() => setFilter(value)}>{label}</Button>)}
+          </div>}
           <Tabs value={tab} onValueChange={setTab}>
             <TabsList className="w-full rounded-xl h-10">
-              <TabsTrigger value="all" className="rounded-lg text-xs flex-1">{ACADEMIA_COPY.tabAll}</TabsTrigger>
+              <TabsTrigger value="all" className="rounded-lg text-xs flex-1">Todos os preços</TabsTrigger>
               <TabsTrigger value="free" className="rounded-lg text-xs flex-1">{ACADEMIA_COPY.tabFree}</TabsTrigger>
               <TabsTrigger value="premium" className="rounded-lg text-xs flex-1">{ACADEMIA_COPY.tabPremium}</TabsTrigger>
             </TabsList>
@@ -268,8 +303,9 @@ export default function AcademiaHome() {
                 </div>
               )}
               {!isLoading && filtered.map((s) => (
+                <div key={s.id}>
+                {(s.mentorId === user?.id || isAdmin) && <div className="flex justify-end"><SessionManagement session={s} /></div>}
                 <SessionCard
-                  key={s.id}
                   id={s.id}
                   title={s.title}
                   mentorName={s.mentorName}
@@ -289,6 +325,7 @@ export default function AcademiaHome() {
                       : `/academia/${s.id}`
                   )}
                 />
+                </div>
               ))}
               {!isLoading && filtered.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-16 text-center gap-3">
@@ -304,11 +341,11 @@ export default function AcademiaHome() {
       </div>
 
       <Sheet open={mentorSheetOpen} onOpenChange={setMentorSheetOpen}>
-        <SheetContent side="bottom" className="rounded-t-2xl">
+        <SheetContent side="bottom" className="max-h-[90dvh] overflow-y-auto rounded-t-2xl">
           <SheetHeader className="text-left">
-            <SheetTitle>Torna-te mentor</SheetTitle>
+            <SheetTitle>Candidatar-me a mentor</SheetTitle>
             <SheetDescription>
-              Partilha o teu talento e cria sessões para a tua banda.
+              Apresenta a tua experiência. Poderás criar sessões após aprovação.
             </SheetDescription>
           </SheetHeader>
 
@@ -316,7 +353,7 @@ export default function AcademiaHome() {
             <div className="space-y-1.5">
               <Label htmlFor="mentor-specialty" className="text-xs">Especialidade</Label>
               <Input
-                id="mentor-specialty"
+                id="mentor-specialty" maxLength={120}
                 value={specialty}
                 onChange={(e) => setSpecialty(e.target.value)}
                 placeholder="Ex.: Música, Fotografia, Negócios"
@@ -324,9 +361,9 @@ export default function AcademiaHome() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="mentor-bio" className="text-xs">Bio (opcional)</Label>
+              <Label htmlFor="mentor-bio" className="text-xs">Biografia</Label>
               <Textarea
-                id="mentor-bio"
+                id="mentor-bio" maxLength={2000}
                 value={mentorBio}
                 onChange={(e) => setMentorBio(e.target.value)}
                 placeholder="Conta um pouco sobre a tua experiência..."
@@ -336,11 +373,15 @@ export default function AcademiaHome() {
             </div>
           </div>
 
+          <div className="space-y-2 pb-4">
+            <Label htmlFor="mentor-experience">Experiência</Label>
+            <Textarea id="mentor-experience" maxLength={2000} value={experience} onChange={e => setExperience(e.target.value)} placeholder="Experiência prática, formação e trabalhos realizados" />
+          </div>
           <SheetFooter>
             <Button
               className="w-full rounded-full"
               onClick={handleBecomeMentor}
-              disabled={becomeMentor.isPending}
+              disabled={becomeMentor.isPending || specialty.trim().length < 2 || mentorBio.trim().length < 10 || experience.trim().length < 10}
             >
               {becomeMentor.isPending ? 'A processar...' : 'Confirmar'}
             </Button>

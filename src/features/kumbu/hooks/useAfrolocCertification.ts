@@ -41,12 +41,15 @@ export function useAfrolocCertification() {
   };
 
   /**
-   * Auto-verify against the AFROLOC partner API (by phone). On success the
-   * profile is certified server-side; we then refresh it locally.
+   * Request verification after the user consents. The server currently returns
+   * integration_pending until the official partner contract is validated.
    */
   const verifyWithAfroloc = async (): Promise<{ certified: boolean; reason?: string }> => {
-    const { data, error } = await supabase.functions.invoke('afroloc-verify');
-    if (error) return { certified: false, reason: 'error' };
+    const { data, error } = await supabase.functions.invoke('afroloc-verify', { body: { consent: true, code: afrolocCode } });
+    if (error) {
+      const failure = await error.context?.json?.().catch(() => null);
+      return { certified: false, reason: failure?.reason ?? 'verification_unavailable' };
+    }
     const res = (data ?? {}) as { certified?: boolean; reason?: string };
     if (res.certified) await refreshProfile();
     return { certified: !!res.certified, reason: res.reason };

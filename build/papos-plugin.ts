@@ -1,3 +1,4 @@
+import { callPushWorker } from './call-push-worker';
 import { createHash } from 'node:crypto';
 import type { Plugin } from 'vite';
 
@@ -22,7 +23,9 @@ export function paposApplication(): Plugin {
         if (files.has(name)) return;
         files.add(name); const chunk = bundle[name];
         if (chunk?.type === 'chunk') {
-          [...chunk.imports, ...chunk.dynamicImports].forEach(visit);
+          // Install only the entry and static dependencies. Optional routes/media
+          // are cached when used, rather than competing with the first screen.
+          chunk.imports.forEach(visit);
           chunk.viteMetadata?.importedCss.forEach(file => files.add(file));
           chunk.viteMetadata?.importedAssets.forEach(file => files.add(file));
         }
@@ -31,7 +34,7 @@ export function paposApplication(): Plugin {
       const version = createHash('sha256').update([...files].sort().map(name => {
         const item = bundle[name]; return name + (item?.type === 'chunk' ? item.code : item?.type === 'asset' ? String(item.source) : '');
       }).join('\n')).digest('hex').slice(0, 16);
-      const assets = [...files].map(name => '/' + name).concat(['/papos-app/icon-192.png', '/papos-app/icon-512.png']);
+      const assets = [...files].map(name => '/' + name).concat(['/papos-app/kosolola-icon-192.png', '/papos-app/kosolola-icon-512.png']);
       this.emitFile({ type: 'asset', fileName: 'papos-app/sw.js', source: `
 const PREFIX='papos-app-assets-', CACHE=PREFIX+'${version}', SHELL='/papos-app/index.html';
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(${JSON.stringify(assets)})).then(()=>self.skipWaiting()));});
@@ -42,9 +45,10 @@ self.addEventListener('fetch',event=>{
  if(request.mode==='navigate'&&url.pathname.startsWith('/papos-app/')){
   event.respondWith(fetch(request).then(response=>{if(!response.ok)throw new Error('Unavailable');return response;}).catch(async()=>{const cache=await caches.open(CACHE);return(await cache.match(SHELL))||Response.error();}));return;
  }
- if(!url.pathname.startsWith('/assets/')&&!/^\\/papos-app\\/icon-(192|512)\\.png$/.test(url.pathname))return;
- event.respondWith((async()=>{const names=(await caches.keys()).filter(name=>name.startsWith(PREFIX));for(const name of names){const cached=await(await caches.open(name)).match(request);if(cached)return cached;}return fetch(request);})());
-});` });
+ if(!url.pathname.startsWith('/assets/')&&!/^\\/papos-app\\/kosolola-icon-(192|512)\\.png$/.test(url.pathname))return;
+ event.respondWith((async()=>{const names=(await caches.keys()).filter(name=>name.startsWith(PREFIX));for(const name of names){const cached=await(await caches.open(name)).match(request);if(cached)return cached;}const response=await fetch(request);if(response.ok&&url.pathname.startsWith('/assets/')&&!url.search){const cache=await caches.open(CACHE);try{await cache.put(request,response.clone());}catch{/* A full cache must not block loading a route. */}}return response;})());
+});
+${callPushWorker}` });
     },
   };
 }

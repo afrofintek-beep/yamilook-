@@ -125,6 +125,7 @@ export function CreateTopicDialog({
 
       if (imageFile) {
         imageUrl = await uploadImage();
+        if (!imageUrl) throw new Error("Image upload failed");
       }
 
       const slug = generateSlug(name);

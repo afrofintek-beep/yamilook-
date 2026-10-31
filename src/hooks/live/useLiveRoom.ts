@@ -51,9 +51,9 @@ async function connectWithRetry(room: Room, url: string, token: string): Promise
  * `setEnabled` helper. All are probed defensively at runtime, hence optional.
  */
 interface ToggleableTrack {
-  setEnabled?: (enabled: boolean) => Promise<void> | void;
-  mute?: () => Promise<void> | void;
-  unmute?: () => Promise<void> | void;
+  setEnabled?: (enabled: boolean) => unknown;
+  mute?: () => unknown;
+  unmute?: () => unknown;
 }
 
 export function useLiveStream(): UseLiveStreamReturn {
@@ -81,6 +81,30 @@ export function useLiveStream(): UseLiveStreamReturn {
 
   useEffect(() => { isHostRef.current = isHost; }, [isHost]);
   useEffect(() => { return () => { roomRef.current?.disconnect(); }; }, []);
+
+  // Observe administrative termination, including after a missed realtime event.
+  useEffect(() => {
+    const id = currentSession?.id;
+    if (!id || !room) return;
+    let active = true;
+    const terminate = () => {
+      if (!active || sessionIdRef.current !== id) return;
+      sessionIdRef.current = null;
+      void room.disconnect();
+      setCurrentSession(null);
+    };
+    const check = async () => {
+      const { data, error } = await supabase.from('live_sessions').select('status').eq('id', id).maybeSingle();
+      if (!error && data?.status === 'ended') terminate();
+    };
+    const channel = supabase.channel(`live-admin-status:${id}`)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'live_sessions', filter: `id=eq.${id}` }, payload => {
+        if (payload.new.status === 'ended') terminate();
+      }).subscribe();
+    void check();
+    const timer = window.setInterval(check, 15000);
+    return () => { active = false; clearInterval(timer); void supabase.removeChannel(channel); };
+  }, [currentSession?.id, room]);
 
   // Sub-hooks
   const { liveSessions, loading: sessionsLoading, fetchLiveSessions } = useLiveSessions();

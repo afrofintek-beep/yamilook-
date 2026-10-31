@@ -125,13 +125,15 @@ export function CreateStatusSheet({ open, onOpenChange }: CreateStatusSheetProps
     setIsSubmitting(true);
 
     try {
-      await createStatus(statusType, {
+      const created = await createStatus(statusType, {
         content: statusType === 'text' ? textContent : undefined,
         mediaFile: selectedFile || undefined,
         background: statusType === 'text' ? selectedBackground : undefined,
         caption: caption || undefined,
         privacy,
       });
+
+      if (!created?.id) throw new Error('Status was not saved');
 
       toast({
         title: t('status.statusPosted'),
@@ -166,7 +168,8 @@ export function CreateStatusSheet({ open, onOpenChange }: CreateStatusSheetProps
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-[90vh] rounded-t-3xl p-0">
+      <SheetContent side="bottom" className="flex h-[90dvh] max-h-[calc(100dvh-env(safe-area-inset-top,0px))] flex-col gap-0 overflow-hidden rounded-t-3xl p-0">
+        {statusType && <SheetTitle className="sr-only">{t('status.createStatus')}</SheetTitle>}
         <AnimatePresence mode="wait">
           {!statusType ? (
             <motion.div
@@ -174,7 +177,7 @@ export function CreateStatusSheet({ open, onOpenChange }: CreateStatusSheetProps
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="flex flex-col h-full"
+              className="flex min-h-0 flex-1 flex-col overflow-y-auto"
             >
               <SheetHeader className="p-4 border-b">
                 <SheetTitle>{t('status.createStatus')}</SheetTitle>
@@ -185,11 +188,11 @@ export function CreateStatusSheet({ open, onOpenChange }: CreateStatusSheetProps
                   {t('status.whatToShare')}
                 </p>
                 
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-3 gap-2">
                   <motion.button
                     whileTap={{ scale: 0.95 }}
                     onClick={() => cameraInputRef.current?.click()}
-                    className="flex flex-col items-center gap-3 p-6 rounded-2xl bg-gradient-primary text-white"
+                    className="flex flex-col items-center gap-3 min-w-0 px-2 py-6 rounded-2xl bg-gradient-primary text-white"
                   >
                     <Camera className="w-8 h-8" />
                     <span className="font-medium">{t('status.camera')}</span>
@@ -198,7 +201,7 @@ export function CreateStatusSheet({ open, onOpenChange }: CreateStatusSheetProps
                   <motion.button
                     whileTap={{ scale: 0.95 }}
                     onClick={() => fileInputRef.current?.click()}
-                    className="flex flex-col items-center gap-3 p-6 rounded-2xl bg-secondary"
+                    className="flex flex-col items-center gap-3 min-w-0 px-2 py-6 rounded-2xl bg-secondary"
                   >
                     <Image className="w-8 h-8" />
                     <span className="font-medium">{t('status.gallery')}</span>
@@ -207,7 +210,7 @@ export function CreateStatusSheet({ open, onOpenChange }: CreateStatusSheetProps
                   <motion.button
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setStatusType('text')}
-                    className="flex flex-col items-center gap-3 p-6 rounded-2xl bg-secondary"
+                    className="flex flex-col items-center gap-3 min-w-0 px-2 py-6 rounded-2xl bg-secondary"
                   >
                     <Type className="w-8 h-8" />
                     <span className="font-medium">{t('status.text')}</span>
@@ -243,7 +246,7 @@ export function CreateStatusSheet({ open, onOpenChange }: CreateStatusSheetProps
               initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -50 }}
-              className="flex flex-col h-full"
+              className="flex min-h-0 flex-1 flex-col overflow-y-auto"
             >
               {/* Preview */}
               <div 
@@ -284,11 +287,11 @@ export function CreateStatusSheet({ open, onOpenChange }: CreateStatusSheetProps
               </div>
 
               {/* Actions */}
-              <div className="p-4 border-t bg-background space-y-4">
-                <div className="flex items-center gap-4">
+              <div className="shrink-0 p-4 pb-[max(1rem,env(safe-area-inset-bottom,0px))] border-t bg-background space-y-4">
+                <div className="flex flex-wrap items-center gap-3">
                   <Label className="text-sm">{t('status.whoCanSee')}</Label>
                   <Select value={privacy} onValueChange={(v) => setPrivacy(v as typeof privacy)}>
-                    <SelectTrigger className="w-40">
+                    <SelectTrigger className="h-11 w-full min-[400px]:w-44">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent position="popper" className="z-[9999]" sideOffset={4}>
@@ -344,7 +347,7 @@ export function CreateStatusSheet({ open, onOpenChange }: CreateStatusSheetProps
               initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -50 }}
-              className="flex flex-col h-full overflow-hidden"
+              className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
             >
               {/* Preview */}
               <div className="flex-1 min-h-0 bg-black relative flex items-center justify-center overflow-hidden">
@@ -352,13 +355,14 @@ export function CreateStatusSheet({ open, onOpenChange }: CreateStatusSheetProps
                   <img 
                     src={filePreview || ''} 
                     alt="Preview" 
-                    className="max-w-full max-h-full object-contain"
+                    className="h-full w-full min-h-0 object-contain"
                   />
                 ) : (
                   <video
                     src={filePreview || ''}
-                    className="max-w-full max-h-full object-contain"
+                    className="h-full w-full min-h-0 object-contain"
                     controls
+                    playsInline
                     autoPlay
                     muted
                   />
@@ -370,13 +374,14 @@ export function CreateStatusSheet({ open, onOpenChange }: CreateStatusSheetProps
                   size="icon"
                   className="absolute top-4 left-4 text-white hover:bg-white/20 z-10"
                   onClick={resetToTypeSelection}
+                  aria-label="Escolher outra foto ou vídeo"
                 >
                   <X className="w-5 h-5" />
                 </Button>
               </div>
 
               {/* Caption & settings - fixed at bottom */}
-              <div className="flex-shrink-0 p-4 border-t bg-background space-y-4">
+              <div className="max-h-[45%] shrink-0 overflow-y-auto p-4 border-t bg-background space-y-3">
                 <Input
                   placeholder={t('status.addCaption')}
                   value={caption}
@@ -384,10 +389,10 @@ export function CreateStatusSheet({ open, onOpenChange }: CreateStatusSheetProps
                   className="rounded-xl"
                 />
 
-                <div className="flex items-center gap-4">
+                <div className="flex flex-wrap items-center gap-3">
                   <Label className="text-sm">{t('status.whoCanSee')}</Label>
                   <Select value={privacy} onValueChange={(v) => setPrivacy(v as typeof privacy)}>
-                    <SelectTrigger className="w-40">
+                    <SelectTrigger className="h-11 w-full min-[400px]:w-44">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent position="popper" className="z-[9999]" sideOffset={4}>
@@ -419,10 +424,12 @@ export function CreateStatusSheet({ open, onOpenChange }: CreateStatusSheetProps
                   </Select>
                 </div>
 
+              </div>
+              <div className="shrink-0 border-t bg-background px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom,0px))]">
                 <Button
-                  className="w-full rounded-xl bg-gradient-primary text-white"
+                  className="h-12 w-full rounded-xl bg-gradient-primary text-white"
                   onClick={handleSubmit}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || !selectedFile}
                 >
                   {isSubmitting ? t('status.posting') : t('status.postStatus')}
                 </Button>

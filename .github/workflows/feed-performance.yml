@@ -1,0 +1,86 @@
+name: Feed performance regression
+on:
+  pull_request:
+    paths:
+      - 'src/hooks/useCalls.tsx'
+      - 'src/components/calls/ActiveCallProvider.tsx'
+      - 'src/components/ui/avatar.tsx'
+      - 'src/components/feed/MediaCarousel.tsx'
+      - 'src/components/feed/MediaCarousel.test.tsx'
+      - 'src/components/feed/PostCard.tsx'
+      - 'src/lib/avatar-source.ts'
+      - 'src/lib/avatar-source.test.ts'
+      - 'src/components/feed/FeedDiagnostics.test.ts'
+      - 'src/lib/call-history.ts'
+      - 'src/lib/call-history.test.ts'
+      - 'src/lib/incoming-call-polling.ts'
+      - 'src/lib/incoming-call-polling.test.ts'
+      - 'src/lib/image-delivery.ts'
+      - 'src/lib/image-delivery.test.ts'
+      - 'vite.config.ts'
+      - 'src/hooks/usePosts.tsx'
+      - 'src/hooks/useStatus.tsx'
+      - 'src/hooks/useContacts.tsx'
+      - 'src/hooks/useOnlineStatus.tsx'
+      - 'src/hooks/useChat.tsx'
+      - 'src/lib/public-profile-batch.ts'
+      - 'src/lib/public-profile-batch.test.ts'
+      - 'src/pages/Feed.tsx'
+      - 'src/components/feed/FeedDiagnostics.tsx'
+      - 'e2e/feed-responsive.spec.ts'
+      - '.github/workflows/feed-performance.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'src/hooks/useCalls.tsx'
+      - 'src/components/calls/ActiveCallProvider.tsx'
+      - 'src/components/ui/avatar.tsx'
+      - 'src/components/feed/MediaCarousel.tsx'
+      - 'src/components/feed/MediaCarousel.test.tsx'
+      - 'src/components/feed/PostCard.tsx'
+      - 'src/lib/avatar-source.ts'
+      - 'src/lib/avatar-source.test.ts'
+      - 'src/lib/call-history.ts'
+      - 'src/lib/call-history.test.ts'
+      - 'src/lib/incoming-call-polling.ts'
+      - 'src/lib/incoming-call-polling.test.ts'
+      - 'src/lib/image-delivery.ts'
+      - 'src/lib/image-delivery.test.ts'
+      - 'vite.config.ts'
+      - 'src/hooks/usePosts.tsx'
+      - 'src/hooks/useStatus.tsx'
+      - 'src/hooks/useContacts.tsx'
+      - 'src/hooks/useOnlineStatus.tsx'
+      - 'src/hooks/useChat.tsx'
+      - 'src/lib/public-profile-batch.ts'
+      - 'src/lib/public-profile-batch.test.ts'
+      - 'src/pages/Feed.tsx'
+      - 'src/components/feed/FeedDiagnostics.tsx'
+      - 'e2e/feed-responsive.spec.ts'
+      - '.github/workflows/feed-performance.yml'
+permissions:
+  contents: read
+jobs:
+  feed-regression:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      VITE_SUPABASE_URL: http://127.0.0.1:54321
+      VITE_SUPABASE_PUBLISHABLE_KEY: test-only
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm test
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test e2e/feed-responsive.spec.ts --project=chromium
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: feed-performance-failures
+          path: test-results/
+          retention-days: 7

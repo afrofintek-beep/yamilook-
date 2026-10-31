@@ -6,6 +6,9 @@ verify_jwt = false
 [functions.generate-livekit-token]
 verify_jwt = false
 
+[functions.reconcile-direct-calls]
+verify_jwt = false
+
 [functions.fetch-gifs]
 verify_jwt = false
 
@@ -30,4 +33,21 @@ verify_jwt = false
 [functions.moderate-content]
 verify_jwt = false
 [functions.academia-video]
+verify_jwt = false
+
+[functions.scheduled-call-video]
+verify_jwt = false
+
+# Dedicated endpoints perform their own getUser / partner-key authentication.
+[functions.account-phone]
+verify_jwt = false
+[functions.account-link]
+verify_jwt = false
+[functions.call-push]
+verify_jwt = true
+
+[functions.send-user-invitation]
+verify_jwt = true
+
+[functions.academia-learning]
 verify_jwt = false

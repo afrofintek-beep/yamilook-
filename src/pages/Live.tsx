@@ -107,7 +107,15 @@ export default function Live() {
       // Join failed — if it's an access issue on an existing live, offer to
       // request entry instead of bouncing back.
       const { data } = await supabase.rpc('live_session_access_info', { p_session_id: sessionId });
-      const info = data as LiveAccessInfo | null;
+      const info: LiveAccessInfo | null = data && typeof data === 'object' && !Array.isArray(data)
+        && typeof data.exists === 'boolean' ? {
+          exists: data.exists,
+          has_access: data.has_access === true,
+          status: typeof data.status === 'string' ? data.status : undefined,
+          host_name: typeof data.host_name === 'string' ? data.host_name : undefined,
+          title: typeof data.title === 'string' ? data.title : undefined,
+          request_status: typeof data.request_status === 'string' ? data.request_status : null,
+        } : null;
       // Only offer the request gate for a live session the user can't access —
       // not for ended sessions or ones that don't exist.
       if (info?.exists && info.has_access === false && info.status === 'live') {

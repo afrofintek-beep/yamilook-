@@ -1,0 +1,46 @@
+name: Direct call lifecycle
+on:
+  pull_request:
+    paths:
+      - 'src/hooks/useLiveKitCall*'
+      - 'src/hooks/useCallTransport*'
+      - 'src/hooks/useCalls.tsx'
+      - 'src/hooks/webrtc/call-termination*'
+      - 'src/lib/call-feedback*'
+      - 'src/lib/call-setup-failure*'
+      - 'src/components/calls/**'
+      - 'src/pages/Calls*'
+      - 'supabase/functions/generate-livekit-token/**'
+      - 'supabase/migrations/*direct_call_busy_feedback.sql'
+      - 'supabase/migrations/*security_*sql'
+      - 'supabase/migrations/*atomic_livekit_call_invitation.sql'
+      - 'supabase/functions/reconcile-direct-calls/**'
+      - 'supabase/functions/appypay-webhook/**'
+      - 'src/lib/direct-call-reconciliation*'
+      - 'src/lib/payment-webhook-security*'
+      - 'scripts/test-security-containment.mjs'
+      - 'scripts/test-direct-call-lifecycle.mjs'
+      - '.github/workflows/direct-call-lifecycle-checks.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  calls:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      VITE_SUPABASE_URL: https://example.supabase.co
+      VITE_SUPABASE_PUBLISHABLE_KEY: test-key
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: node scripts/test-direct-call-lifecycle.mjs
+      - run: node scripts/test-security-containment.mjs
+      - run: node scripts/test-reconcile-direct-calls.mjs
+      - run: npx vitest run src/lib/payment-webhook-security.test.ts src/lib/direct-call-reconciliation.test.ts
+      - run: npx vitest run src/hooks/useLiveKitCall.test.tsx src/hooks/useCallTransport.test.tsx src/hooks/webrtc/call-termination.test.ts src/lib/call-feedback.test.ts src/lib/call-setup-failure.test.ts src/components/calls src/features/papos src/pages/Calls.test.tsx src/hooks/useRingtone.test.tsx
+      - run: npm run build

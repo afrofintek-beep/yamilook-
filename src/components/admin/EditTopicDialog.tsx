@@ -150,6 +150,7 @@ export function EditTopicDialog({
 
       if (imageFile) {
         imageUrl = await uploadImage();
+        if (!imageUrl) throw new Error("Image upload failed");
       }
 
       const slug = generateSlug(name);
@@ -163,7 +164,7 @@ export function EditTopicDialog({
           image_url: imageUrl,
           is_trending: isTrending,
         })
-        .eq('id', topic.id);
+        .eq('id', topic.id).select('id').single();
 
       if (error) {
         if (error.code === '23505') {

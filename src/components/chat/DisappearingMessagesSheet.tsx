@@ -17,7 +17,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -66,13 +65,15 @@ export function DisappearingMessagesSheet({
   const handleSave = async () => {
     setSaving(true);
     
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('conversations')
       .update({ disappearing_messages_duration: selectedDuration })
-      .eq('id', conversationId);
+      .eq('id', conversationId)
+      .select('id, disappearing_messages_duration')
+      .single();
 
-    if (error) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    if (error || !data || data.disappearing_messages_duration !== selectedDuration) {
+      toast({ title: 'Não foi possível guardar', description: error?.message || 'A duração não foi confirmada. Tenta novamente.', variant: 'destructive' });
     } else {
       toast({ title: selectedDuration ? 'Disappearing messages enabled' : 'Disappearing messages disabled' });
       onOpenChange(false);
@@ -121,12 +122,11 @@ export function DisappearingMessagesSheet({
           <div className="flex items-center gap-3">
             <Eye className="w-5 h-5 text-muted-foreground" />
             <div className="flex-1">
-              <p className="font-medium text-sm">View Once Media</p>
+              <p className="font-medium text-sm">Como enviar para ver uma vez</p>
               <p className="text-xs text-muted-foreground">
-                Photos and videos can only be viewed once
+                Esta definição é escolhida por anexo. Fecha esta janela, toca no clipe da conversa, ativa “View once” e depois escolhe “Photo or Video”. Não altera fotografias ou vídeos já enviados.
               </p>
             </div>
-            <Switch />
           </div>
         </div>
 
@@ -151,7 +151,7 @@ export function DisappearingMessagesSheet({
       Disappearing Messages
     </span>
   );
-  const description = 'When enabled, new messages will disappear after the selected time.';
+  const description = 'Aplica-se apenas às mensagens enviadas depois de guardar. O prazo conta a partir do envio; as mensagens anteriores mantêm-se. A opção mínima é 24 horas.';
 
   // WhatsApp/Instagram pattern: compact centered dialog on desktop, bottom sheet
   // on mobile.

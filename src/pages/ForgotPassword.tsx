@@ -1,3 +1,4 @@
+import { getYamilookPublicUrl } from '@/lib/public-site';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -37,7 +38,7 @@ export default function ForgotPassword() {
     setIsLoading(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: getYamilookPublicUrl('/reset-password'),
       });
 
       if (error) {
