@@ -147,7 +147,7 @@ describe('useAuth Hook', () => {
       email: 'newuser@test.com',
       password: 'Password123!',
       options: {
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo: 'https://www.yamilook.com/onboarding',
         data: { display_name: 'New User', username: 'newuser' },
       },
     });
@@ -316,7 +316,7 @@ describe('useAuth Hook', () => {
     expect(mockSupabaseClient.auth.signInWithOAuth).toHaveBeenCalledWith({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/feed`,
+        redirectTo: 'https://www.yamilook.com/feed',
       },
     });
   });
