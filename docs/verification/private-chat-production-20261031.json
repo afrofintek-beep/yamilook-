@@ -1,0 +1,462 @@
+{
+  "initial_objects": 59,
+  "initial_references": 60,
+  "batch_count": 20,
+  "batch_max_objects": 3,
+  "counts": {
+    "missing": 25,
+    "converted": 33,
+    "shared_conversations_requires_review": 1
+  },
+  "results": [
+    {
+      "key": "087d9beb5573231ca7cd8ebc4deb917231e80745f2a15f6c590e2a2157c586bb",
+      "status": "missing",
+      "references": 1
+    },
+    {
+      "key": "09480e344cdfe79c08436be3fbe85c7e2bf177fc41e0b9b8ac754341dfe0dbae",
+      "status": "missing",
+      "references": 1
+    },
+    {
+      "key": "0f190e8124b65a308e5d52ef6ad6f4e866de9260306cdc1e0bfcf888bc91ea20",
+      "status": "missing",
+      "references": 1
+    },
+    {
+      "key": "13dd2b193d608dd7c1e95fcb91b7400b32f2753955d9b36b13e882d34f6955c1",
+      "status": "converted",
+      "references": 1,
+      "shared_public": false,
+      "original_retained": true,
+      "recovery_verified": true,
+      "anonymous_denied": true
+    },
+    {
+      "key": "14716b07f1644bcf3274077905f3e256cb6ecb4b1ed36c49fd091eb4f74f8bae",
+      "status": "missing",
+      "references": 1
+    },
+    {
+      "key": "16e4379c695ce80e19a3b0f1a2a0f85fc14b748d026279417fc05e6d9d552b18",
+      "status": "missing",
+      "references": 1
+    },
+    {
+      "key": "16f247524e040a1d33e68004c2b96695841a2ced84fccbfb32c63a145c6ff06c",
+      "status": "converted",
+      "references": 1,
+      "shared_public": false,
+      "original_retained": true,
+      "recovery_verified": true,
+      "anonymous_denied": true
+    },
+    {
+      "key": "18148fd6d11a33b9190625f44d2a57e97d3896471ae9eaa15a79754afac533d7",
+      "status": "converted",
+      "references": 1,
+      "shared_public": false,
+      "original_retained": true,
+      "recovery_verified": true,
+      "anonymous_denied": true
+    },
+    {
+      "key": "1d77d85760e52ccaad66966e4fa40d9575cdb802c67e6012014807882c21b433",
+      "status": "converted",
+      "references": 1,
+      "shared_public": false,
+      "original_retained": true,
+      "recovery_verified": true,
+      "anonymous_denied": true
+    },
+    {
+      "key": "23806479db5eaf935de4fe114d30b5ef90ec0db4d7cb663b15c16f4a0c93c89d",
+      "status": "converted",
+      "references": 1,
+      "shared_public": false,
+      "original_retained": true,
+      "recovery_verified": true,
+      "anonymous_denied": true
+    },
+    {
+      "key": "2392dc964d2dfa8b338ca8931913cb10b9d38a2df6d6a9b0a9954d6fdf5775de",
+      "status": "missing",
+      "references": 1
+    },
+    {
+      "key": "2ce2a4375acc7a809cae76deeef62ae0be240f894cc4886241add32076238e78",
+      "status": "converted",
+      "references": 1,
+      "shared_public": false,
+      "original_retained": true,
+      "recovery_verified": true,
+      "anonymous_denied": true
+    },
+    {
+      "key": "2d239f6a01705decd90c4e6a325ce6cd0377245076a08f38a0d3695f272636b9",
+      "status": "missing",
+      "references": 1
+    },
+    {
+      "key": "31b4c6a210895f8f47a3af87a5d6d5f0f2c677a9b1fc97007108fd909304c5d3",
+      "status": "missing",
+      "references": 1
+    },
+    {
+      "key": "32953f3f4bd02b8b04929480de5360021165e7e2c602217f9658e58b5731b209",
+      "status": "missing",
+      "references": 1
+    },
+    {
+      "key": "36de30719df23ec6e5c12f8999c59613b3fca7d065ea06d389506ec96b92cdc2",
+      "status": "missing",
+      "references": 1
+    },
+    {
+      "key": "3a586085060d73303df805de31cae2bb798c428578b97dcac15d83e6be7aa74e",
+      "status": "converted",
+      "references": 1,
+      "shared_public": false,
+      "original_retained": true,
+      "recovery_verified": true,
+      "anonymous_denied": true
+    },
+    {
+      "key": "45f1378123d9558fcb10c202defb1269e3ecfcc8f50de99b7c1acc332040f7ed",
+      "status": "missing",
+      "references": 1
+    },
+    {
+      "key": "4623cd6ddb2e03a1301b35bbb3bb957ec6a02ae6ae40e148a6f062373fd1fbe0",
+      "status": "shared_conversations_requires_review",
+      "references": 2
+    },
+    {
+      "key": "489b5522e8334d84cac8b3b3421ed5b6e0db6a64e4f39a9b7252fe81648fe069",
+      "status": "converted",
+      "references": 1,
+      "shared_public": false,
+      "original_retained": true,
+      "recovery_verified": true,
+      "anonymous_denied": true
+    },
+    {
+      "key": "4bf5060fceba4a664660a02c5a3396c6a59e93548216335506731d8204c90fda",
+      "status": "converted",
+      "references": 1,
+      "shared_public": false,
+      "original_retained": true,
+      "recovery_verified": true,
+      "anonymous_denied": true
+    },
+    {
+      "key": "50eb2733bd90a9334b6fb167b729cba955a7f6db2b9c179fb11fc5933c4ef351",
+      "status": "converted",
+      "references": 1,
+      "shared_public": false,
+      "original_retained": true,
+      "recovery_verified": true,
+      "anonymous_denied": true
+    },
+    {
+      "key": "546de94d02a25929f405aeee729bee7f0d8042d25522172e69cfa6d33d5a9ff5",
+      "status": "converted",
+      "references": 1,
+      "shared_public": false,
+      "original_retained": true,
+      "recovery_verified": true,
+      "anonymous_denied": true
+    },
+    {
+      "key": "54b4c774fb9a1eafd38c8832f0e1e7f6b98f17506bb04e67cc5643b50d99440d",
+      "status": "missing",
+      "references": 1
+    },
+    {
+      "key": "5768ce2029946231679aa0d0def56b5c9204ddb966cf6ea9a1757c7546f3f86c",
+      "status": "converted",
+      "references": 1,
+      "shared_public": false,
+      "original_retained": true,
+      "recovery_verified": true,
+      "anonymous_denied": true
+    },
+    {
+      "key": "59534c5304abd21542e02432b5674b2f509e966612af724403e658993d5e8c27",
+      "status": "converted",
+      "references": 1,
+      "shared_public": false,
+      "original_retained": true,
+      "recovery_verified": true,
+      "anonymous_denied": true
+    },
+    {
+      "key": "5cb3a6d6645c456297326b976981ffb1746011bb45d42c12c3d92b5a30d61b2f",
+      "status": "missing",
+      "references": 1
+    },
+    {
+      "key": "5d9f8a5bfcd51a698bce83e658e113dd259c5e29d70fd30fac8227434ad55c1a",
+      "status": "converted",
+      "references": 1,
+      "shared_public": false,
+      "original_retained": true,
+      "recovery_verified": true,
+      "anonymous_denied": true
+    },
+    {
+      "key": "6206847352250a63951fd08db8e53835950e66e76a99cdb9b923a09d6a6d200e",
+      "status": "missing",
+      "references": 1
+    },
+    {
+      "key": "656014b1afb1c98442e28af0bdf7b545d852d9061be5de147f496033424d749e",
+      "status": "converted",
+      "references": 1,
+      "shared_public": false,
+      "original_retained": true,
+      "recovery_verified": true,
+      "anonymous_denied": true
+    },
+    {
+      "key": "664902893103208040bc83d0bdb30a7e00f1a56ab8b18e9f16e15d68cf3fb626",
+      "status": "converted",
+      "references": 1,
+      "shared_public": false,
+      "original_retained": true,
+      "recovery_verified": true,
+      "anonymous_denied": true
+    },
+    {
+      "key": "6865d8fbc316fd3f81ce858e019c8cc114a4f75da91b23c41ab46aaa9e4f8b58",
+      "status": "converted",
+      "references": 1,
+      "shared_public": false,
+      "original_retained": true,
+      "recovery_verified": true,
+      "anonymous_denied": true
+    },
+    {
+      "key": "69409ca702a084cd7c2cc3e0e41cce8e5d3a23e9608ba7c6e8c813ef99c099ce",
+      "status": "converted",
+      "references": 1,
+      "shared_public": false,
+      "original_retained": true,
+      "recovery_verified": true,
+      "anonymous_denied": true
+    },
+    {
+      "key": "6a347d24022e5d0dc78c23c088782cd5e23b6c52b7adbe91abb9e9b9658e630d",
+      "status": "converted",
+      "references": 1,
+      "shared_public": false,
+      "original_retained": true,
+      "recovery_verified": true,
+      "anonymous_denied": true
+    },
+    {
+      "key": "6f07bda9038adf246433afb8dc398c4f6b26ffb927302e02cda0943d96425669",
+      "status": "missing",
+      "references": 1
+    },
+    {
+      "key": "706e305263c741706e752ff8d9ea915c26bc0f2e83eace0e2e86f50a046340f3",
+      "status": "missing",
+      "references": 1
+    },
+    {
+      "key": "76a7d5750c5964bb3aad1c15e28e4fba95d2fdb7a3f40f7f34a3f5bd63fc0b6e",
+      "status": "missing",
+      "references": 1
+    },
+    {
+      "key": "7b7843d450d3884fd21e7376b0d1f8bfdf26f562d21b19e989561763f9ed5d0c",
+      "status": "converted",
+      "references": 1,
+      "shared_public": false,
+      "original_retained": true,
+      "recovery_verified": true,
+      "anonymous_denied": true
+    },
+    {
+      "key": "82dfcb6f8a2774f4fe68a442c1eeba90c9164b1ae3758ffa0d14dc94203f4449",
+      "status": "missing",
+      "references": 1
+    },
+    {
+      "key": "87e5b5ce28046083e5874fa5ff815da13df951eec78690370903ad8ff864b8b3",
+      "status": "converted",
+      "references": 1,
+      "shared_public": false,
+      "original_retained": true,
+      "recovery_verified": true,
+      "anonymous_denied": true
+    },
+    {
+      "key": "8ec37b68fa2556cf29e7f2523abb4e78e0eedc1a5ad1a03ee726d8a10f43f046",
+      "status": "converted",
+      "references": 1,
+      "shared_public": false,
+      "original_retained": true,
+      "recovery_verified": true,
+      "anonymous_denied": true
+    },
+    {
+      "key": "92b971db303f010ff804a39934924f37bfa325962f72c5a96b00ad354172e77e",
+      "status": "converted",
+      "references": 1,
+      "shared_public": false,
+      "original_retained": true,
+      "recovery_verified": true,
+      "anonymous_denied": true
+    },
+    {
+      "key": "a0a0eb3917f00868f20a336b68caf54e94adeb53672b40d435f4bf7780152e3a",
+      "status": "converted",
+      "references": 1,
+      "shared_public": false,
+      "original_retained": true,
+      "recovery_verified": true,
+      "anonymous_denied": true
+    },
+    {
+      "key": "a5897970cce1845f1e13e1af9385ebfc49d5a613ee6b7806613cfeb7da9009f5",
+      "status": "converted",
+      "references": 1,
+      "shared_public": false,
+      "original_retained": true,
+      "recovery_verified": true,
+      "anonymous_denied": true
+    },
+    {
+      "key": "ac1c7980ee4c058c12df80e58c9db7878d0b2e382d7286e5246fe69eca9665da",
+      "status": "missing",
+      "references": 1
+    },
+    {
+      "key": "b268e544e2d9b36e90225888c5e5a277a84d3f19f4e2ce8bf7142bd9f1900773",
+      "status": "converted",
+      "references": 1,
+      "shared_public": false,
+      "original_retained": true,
+      "recovery_verified": true,
+      "anonymous_denied": true
+    },
+    {
+      "key": "b9aa145f28d3885c435b2edff5bf37a192fa489a8c62e642b71380de749c0163",
+      "status": "missing",
+      "references": 1
+    },
+    {
+      "key": "bb7f27e74f6f37ffa17498aab59abb9a849a3e32cd3d17dffb526b85f4676260",
+      "status": "missing",
+      "references": 1
+    },
+    {
+      "key": "c86d0266f85479128781bf886a9e790fba5be5790f27a16890b6483dceac829a",
+      "status": "missing",
+      "references": 1
+    },
+    {
+      "key": "c9ec5623cecfe32449431f8c745ed5076db0e69ea5e6589f417eee6fc8fa989d",
+      "status": "converted",
+      "references": 1,
+      "shared_public": false,
+      "original_retained": true,
+      "recovery_verified": true,
+      "anonymous_denied": true
+    },
+    {
+      "key": "d403a681a636666b9469b79da1d26ced53e4e532a06ba51dfb8591ef7b45fa33",
+      "status": "converted",
+      "references": 1,
+      "shared_public": false,
+      "original_retained": true,
+      "recovery_verified": true,
+      "anonymous_denied": true
+    },
+    {
+      "key": "d4c5e18ae355ca6ce3db1ceb6e6048c9b6171c2aba3582c7171f145f7b6f4ca0",
+      "status": "missing",
+      "references": 1
+    },
+    {
+      "key": "d7d5c19214abb82fe5bc45abbb507a09e649b0b0eb801a61c9e5d5a7a8b92bbe",
+      "status": "missing",
+      "references": 1
+    },
+    {
+      "key": "dd7c7b91952f24a6303efe9229295312af2be37bf3c02afa44e64762547186ad",
+      "status": "converted",
+      "references": 1,
+      "shared_public": false,
+      "original_retained": true,
+      "recovery_verified": true,
+      "anonymous_denied": true
+    },
+    {
+      "key": "e2215d007fc99db24b9c9890db25f57b03402323e6afd1fa22fe673678be8f57",
+      "status": "missing",
+      "references": 1
+    },
+    {
+      "key": "e47b7871a6eb2262ea90eb64a163e86601688d5b3383845cbda4b40ffb4291f0",
+      "status": "converted",
+      "references": 1,
+      "shared_public": false,
+      "original_retained": true,
+      "recovery_verified": true,
+      "anonymous_denied": true
+    },
+    {
+      "key": "e7f2bce1c34ec360b9e86b71c2b555d6bd187d9154ecbd662f49555582809eb2",
+      "status": "converted",
+      "references": 1,
+      "shared_public": false,
+      "original_retained": true,
+      "recovery_verified": true,
+      "anonymous_denied": true
+    },
+    {
+      "key": "ea9ea90718a38924fcfd28131e90dbdf1b68060e241c7488cecdc9e6dc12d379",
+      "status": "converted",
+      "references": 1,
+      "shared_public": false,
+      "original_retained": true,
+      "recovery_verified": true,
+      "anonymous_denied": true
+    },
+    {
+      "key": "fe04009c131f70fcc58098ac74b3c3f576f2a8c7daa5b00d64360ee6e1e20b5a",
+      "status": "converted",
+      "references": 1,
+      "shared_public": false,
+      "original_retained": true,
+      "recovery_verified": true,
+      "anonymous_denied": true
+    }
+  ],
+  "production_commit": "ac2b49b0a0d31713f851080670e8a38bbbc4b6f8",
+  "deployment": "dpl_7PEoKvHcBZJKamc6BZvepxus6hck",
+  "maintenance_disabled_version": 3,
+  "muxi_sample_http_status": 200,
+  "independent_sql_verification": {
+    "buckets": {
+      "media": 134,
+      "voice-messages": 3,
+      "chat-attachments": 66
+    },
+    "missing_private": 0,
+    "registry_states": {
+      "references_private": 33
+    },
+    "invalid_manifest": 0,
+    "missing_recovery": 0,
+    "missing_originals": 0,
+    "legacy_message_refs": 27,
+    "private_message_refs": 33,
+    "private_bucket_public": false,
+    "cross_conversation_private_refs": 0
+  }
+}
