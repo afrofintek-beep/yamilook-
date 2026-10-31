@@ -1,3 +1,4 @@
+import { SessionAttendance } from '../components/SessionAttendance';
 import { useAdmin } from '@/hooks/useAdmin';
 import { SessionManagement } from '../components/SessionManagement';
 import { useState } from 'react';
@@ -70,6 +71,15 @@ export default function AcademiaSession() {
     },
   });
 
+  const { data: canReview = false } = useQuery({
+    queryKey: ['academia-can-review', sessionId, user?.id], enabled: !!sessionId && !!user,
+    refetchOnWindowFocus: true, staleTime: 0,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('academia_can_review', { p_session: sessionId! });
+      if (error) throw error;
+      return data === true;
+    },
+  });
   // Check if user already reserved
   const { data: myReservation } = useQuery({
     queryKey: ['academia-reservation', sessionId, user?.id],
@@ -323,7 +333,7 @@ export default function AcademiaSession() {
                 {ACADEMIA_COPY.sessionEndedInfo}
               </AlertDescription>
             </Alert>
-            {!isMentor && (
+            {!isMentor && canReview && (
               <Button
                 variant="outline"
                 className="w-full rounded-full mt-3"
@@ -354,6 +364,7 @@ export default function AcademiaSession() {
         </div>
       </div>
 
+      {(isMentor || isAdmin) && ['live', 'ended', 'completed'].includes(session.status) && <SessionAttendance sessionId={session.id} />}
       {(isMentor || isAdmin) && <div className="flex justify-end px-4"><SessionManagement session={session} /></div>}
       {session.cancellationReason && <Alert className="mx-4 w-auto"><AlertDescription>Sessão cancelada: {session.cancellationReason}</AlertDescription></Alert>}
       {!session.archivedAt && ((!isEnded && !isRegistrationClosed) || (isMentor && !['completed','cancelled'].includes(session.status))) && (
@@ -401,7 +412,7 @@ export default function AcademiaSession() {
         onOpenChange={setReviewOpen}
         onSubmit={(rating, comment) => {
           if (!sessionId) return;
-          if (user?.id === session.mentorId) {
+          if (user?.id === session.mentorId || !canReview) {
             toast.error('Não podes avaliar a tua própria sessão.');
             setReviewOpen(false);
             return;

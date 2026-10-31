@@ -1,3 +1,4 @@
+vi.mock('../components/MentorSettings', () => ({ MentorSettings: () => null }));
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { type ReactNode } from 'react';
 import { MemoryRouter } from 'react-router-dom';

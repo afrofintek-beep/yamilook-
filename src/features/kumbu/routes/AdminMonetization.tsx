@@ -10,6 +10,7 @@ export default function AdminMonetization() {
   const navigate = useNavigate();
 
   const links = [
+    { label: 'Gestão de Mentores', icon: Users, path: '/admin/mentors' },
     { label: 'Mokubico Pro — Faturação', icon: Crown, path: '/admin/billing' },
     { label: 'Candidaturas de Criadores', icon: Users, path: '/admin/applications' },
     { label: 'Certificações AFROLOC', icon: ShieldCheck, path: '/admin/afroloc-certifications' },

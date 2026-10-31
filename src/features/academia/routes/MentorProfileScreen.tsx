@@ -1,3 +1,4 @@
+import { mentorStatus } from '../hooks/useMentorGovernance';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, CheckCircle2, Star, GraduationCap, Calendar, Users } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -37,6 +38,7 @@ export default function MentorProfileScreen() {
         specialty: mentorProfile?.specialty || '',
         mentorBio: mentorProfile?.mentor_bio,
         isVerifiedMentor: mentorProfile?.is_verified_mentor ?? false,
+        status: mentorProfile?.status,
       };
     },
   });
@@ -107,13 +109,19 @@ export default function MentorProfileScreen() {
     },
   });
 
-  // Computed stats
+  const { data: stats } = useQuery({
+    queryKey: ['mentor-stats', mentorId], enabled: !!mentorId,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('academia_mentor_stats', { p_ids: [mentorId!] });
+      if (error) throw error;
+      return data?.[0] ?? { rating: 0, review_count: 0 };
+    },
+  });
   const totalSessions = sessions.length;
-  const avgRating = reviews.length > 0
-    ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
-    : 0;
+  const avgRating = Number(stats?.rating ?? 0);
+  const reviewCount = Number(stats?.review_count ?? 0);
   const upcomingSessions = sessions.filter((s) => s.status === 'scheduled');
-  const pastSessions = sessions.filter((s) => s.status === 'ended');
+  const pastSessions = sessions.filter((s) => ['ended', 'completed'].includes(s.status));
 
   if (isLoading) {
     return (
@@ -184,6 +192,7 @@ export default function MentorProfileScreen() {
             Ver perfil na Yamilook
           </Link>
 
+          {mentor.status && <p className="text-sm text-muted-foreground">{mentorStatus[mentor.status] ?? mentor.status}</p>}
           {mentor.mentorBio && (
             <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">{mentor.mentorBio}</p>
           )}
@@ -207,7 +216,7 @@ export default function MentorProfileScreen() {
               </div>
               <div className="flex flex-col items-center py-3 gap-0.5">
                 <Users className="h-4 w-4 text-primary mb-1" />
-                <span className="text-base font-bold text-foreground">{reviews.length}</span>
+                <span className="text-base font-bold text-foreground">{reviewCount}</span>
                 <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Reviews</span>
               </div>
             </div>
@@ -275,8 +284,9 @@ export default function MentorProfileScreen() {
         {/* Reviews */}
         <section>
           <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-            Avaliações ({reviews.length})
+            Avaliações ({reviewCount})
           </h2>
+          {reviewCount > 20 && <p className="text-xs text-muted-foreground">A mostrar as 20 avaliações mais recentes. A média inclui todas.</p>}
           {reviews.length === 0 ? (
             <p className="text-center text-sm text-muted-foreground py-8">
               Ainda sem avaliações.

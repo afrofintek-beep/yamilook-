@@ -13,6 +13,8 @@ on:
       - 'supabase/migrations/*academia_communities.sql'
       - 'scripts/test-academia-learning.mjs'
       - 'scripts/test-academia-communities.mjs'
+      - 'e2e/mentor-governance.spec.ts'
+      - 'src/pages/AdminMentors*'
       - 'e2e/academia-learning.spec.ts'
       - 'e2e/academia-communities.spec.ts'
       - 'playwright.academia.config.ts'
