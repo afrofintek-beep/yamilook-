@@ -149,6 +149,9 @@ export type Database = {
       }
       academia_sessions: {
         Row: {
+          duration_minutes: number
+          started_at: string | null
+          ended_at: string | null
           archived_at: string | null
           deleted_at: string | null
           cancellation_reason: string | null
@@ -167,6 +170,9 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          duration_minutes?: number
+          started_at?: string | null
+          ended_at?: string | null
           archived_at?: string | null
           deleted_at?: string | null
           cancellation_reason?: string | null
@@ -185,6 +191,9 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          duration_minutes?: number
+          started_at?: string | null
+          ended_at?: string | null
           archived_at?: string | null
           deleted_at?: string | null
           cancellation_reason?: string | null

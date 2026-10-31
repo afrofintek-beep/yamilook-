@@ -10,6 +10,7 @@ import { VideoTrack } from '@/components/live/VideoTrack';
 import { AudioTrack } from '@/components/live/AudioTrack';
 import { EmptyStateBack } from '@/components/common/EmptyStateBack';
 import { downloadAcademiaDiagnostics } from '../hooks/academia-call-diagnostics';
+import { SessionClock } from '../components/SessionClock';
 import { requestAcademiaVideo, useAcademiaVideo } from '../hooks/useAcademiaVideo';
 
 function ParticipantTile({participant,local}:{participant:Participant;local:boolean}) {
@@ -53,7 +54,9 @@ export default function AcademiaLiveRoom() {
       <Button variant="ghost" size="icon" aria-label="Sair da sala" onClick={exit}><ArrowLeft /></Button>
       <h1 className="min-w-0 flex-1 truncate font-semibold">{session.title}</h1>
       <span className="text-xs shrink-0">{closed?'Encerrada':video.connection===ConnectionState.Connected?'Ligado':video.connection===ConnectionState.Reconnecting?'A religar…':'Academia'}</span>
-    </div></header>
+    </div>
+      <SessionClock session={session} isMentor={isMentor} onUpdated={async()=>{await refetch();}} />
+    </header>
     <section className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 space-y-4">
       {error && <p role="status" className="text-sm text-muted-foreground">Não foi possível atualizar os dados da sessão. A tentar novamente…</p>}
       {(video.error||endError) && <p role="alert" className="rounded-xl border border-destructive p-3 text-sm">{endError||video.error}<Button variant="outline" className="mt-2 block" onClick={downloadAcademiaDiagnostics}>Descarregar diagnóstico</Button>{video.error.includes('Inicia sessão novamente') && <Button className="mt-3 block" onClick={async()=>{video.leave();await supabase.auth.signOut({scope:'local'});navigate('/login');}}>Entrar novamente</Button>}</p>}

@@ -47,6 +47,7 @@ export default function AcademiaCreateSession() {
   const [format, setFormat] = useState<string>('grupo');
   const [spots, setSpots] = useState('20');
   const [priceCoins, setPriceCoins] = useState('0');
+  const [durationMinutes, setDurationMinutes] = useState('60');
   const [datetime, setDatetime] = useState(defaultDatetimeLocal);
 
   const createMutation = useCreateAcademiaSession();
@@ -110,6 +111,7 @@ export default function AcademiaCreateSession() {
         spots: Number(spots) || 20,
         priceCoins: price,
         scheduledAt: new Date(datetime).toISOString(),
+        durationMinutes: Number(durationMinutes),
       },
       {
         onSuccess: () => {
@@ -332,6 +334,11 @@ export default function AcademiaCreateSession() {
                   )}
 
                   <div className="space-y-2">
+                    <Label htmlFor="duration">Duração prevista</Label>
+                    <select id="duration" value={durationMinutes} onChange={e=>setDurationMinutes(e.target.value)} className="w-full rounded-lg border border-border bg-background p-3">
+                      {[30,45,60,90,120].map(minutes=><option key={minutes} value={minutes}>{minutes} minutos</option>)}
+                    </select>
+                    <p className="text-xs text-muted-foreground">O tempo começa ao iniciar a sala. O fim da duração prevista não encerra a sessão nem gera cobrança automática.</p>
                     <Label htmlFor="datetime" className="text-xs flex items-center gap-1.5">
                       <Calendar className="h-3.5 w-3.5 text-primary" />
                       Agendar <span className="text-muted-foreground font-normal">(data e hora)</span>
