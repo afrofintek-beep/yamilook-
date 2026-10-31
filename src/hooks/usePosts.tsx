@@ -81,6 +81,9 @@ export interface Topic {
 
 export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?: boolean; loadDiscovery?: boolean } = {}) {
   const { user } = useAuth();
+  // Auth refreshes replace the User object even when the account is unchanged.
+  // Depend on identity so a token refresh cannot reload page one mid-scroll.
+  const userId = user?.id;
   // Único por instância do hook para que montagens concorrentes não colidam no
   // mesmo tópico do canal realtime do Supabase (que lança "cannot add
   // postgres_changes callbacks ... after subscribe()").
@@ -100,10 +103,11 @@ export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?:
   const loadingMoreRef = useRef(false);
   const feedCursorRef = useRef<string | null>(null); // created_at of the last loaded post
   const contactIdsRef = useRef<string[]>([]);
-  const feedPaginatedRef = useRef(false); // true once the user has scrolled past page 1
   const [newPostsCount, setNewPostsCount] = useState(0);
   const newestCreatedAtRef = useRef<string | null>(null); // created_at of the top post
-  const userIdRef = useRef<string | null>(null);
+  const realtimeVersionsRef = useRef(new Map<string, number>());
+  const feedPostsRef = useRef(feedPosts);
+  feedPostsRef.current = feedPosts;
 
   // Batch fetch posts with user data, likes, saves, reaction counts, and topics
   const fetchPostsWithDetails = async (posts: Tables<'posts'>[], onProfilesReady?: (posts: PostWithUser[]) => void): Promise<PostWithUser[]> => {
@@ -144,8 +148,8 @@ export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?:
     const [reactionsResponse, postTopicsResponse, likesResult, savedResult] = await Promise.all([
       supabase.from('post_likes').select('post_id, reaction_type').in('post_id', postIds),
       supabase.from('post_topics').select('post_id, topic_id').in('post_id', postIds),
-      user ? supabase.from('post_likes').select('post_id, reaction_type').in('post_id', postIds).eq('user_id', user.id) : Promise.resolve({ data: [] }),
-      user ? supabase.from('saved_posts').select('post_id').in('post_id', postIds).eq('user_id', user.id) : Promise.resolve({ data: [] }),
+      userId ? supabase.from('post_likes').select('post_id, reaction_type').in('post_id', postIds).eq('user_id', userId) : Promise.resolve({ data: [] }),
+      userId ? supabase.from('saved_posts').select('post_id').in('post_id', postIds).eq('user_id', userId) : Promise.resolve({ data: [] }),
     ]);
     const allReactions = reactionsResponse.data;
     const postTopicsData = postTopicsResponse.data;
@@ -190,7 +194,7 @@ export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?:
       }
     });
 
-    if (user) {
+    if (userId) {
       likesResult.data?.forEach(l => {
         const normalized = normalizeReactionType(l.reaction_type);
         if (normalized) likesMap.set(l.post_id, normalized);
@@ -211,17 +215,19 @@ export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?:
   // A single in-flight first page per signed-in user avoids StrictMode and
   // overlapping refresh duplicates. Failed requests never leave a spinner stuck.
   const fetchFeedPosts = useCallback(async () => {
-    if (!user) { setLoading(false); return; }
-    if (pendingFeedRef.current?.userId === user.id) return pendingFeedRef.current.promise;
+    if (!userId) { setLoading(false); return; }
+    if (pendingFeedRef.current?.userId === userId) return pendingFeedRef.current.promise;
     const generation = ++feedGenerationRef.current;
+    loadingMoreRef.current = false;
+    setLoadingMoreFeed(false);
     const active = () => feedGenerationRef.current === generation;
     const request = (async () => {
       if (active()) setFeedError(false);
       try {
         const { data: contacts, error: contactsError } = await supabase
-          .from('contacts').select('contact_user_id').eq('user_id', user.id);
+          .from('contacts').select('contact_user_id').eq('user_id', userId);
         if (contactsError) throw contactsError;
-        const contactIds = [...new Set([...(contacts || []).map(c => c.contact_user_id), user.id])];
+        const contactIds = [...new Set([...(contacts || []).map(c => c.contact_user_id), userId])];
         const { data, error: postsError } = await supabase
           .from('posts').select('*')
           .or('user_id.in.(' + contactIds.join(',') + '),privacy.eq.everyone')
@@ -231,10 +237,8 @@ export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?:
         if (!active()) return;
         const posts = data || [];
         contactIdsRef.current = contactIds;
-        userIdRef.current = user.id;
         feedCursorRef.current = posts.length ? posts[posts.length - 1].created_at : null;
         newestCreatedAtRef.current = posts.length ? posts[0].created_at : null;
-        feedPaginatedRef.current = false;
         paginationFailedRef.current = false;
         setLoadMoreError(false);
         setNewPostsCount(0);
@@ -263,19 +267,20 @@ export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?:
         if (active()) setLoading(false);
       }
     })();
-    pendingFeedRef.current = { userId: user.id, promise: request };
+    pendingFeedRef.current = { userId, promise: request };
     try { await request; }
     finally {
       if (pendingFeedRef.current?.promise === request) pendingFeedRef.current = null;
     }
-  }, [user]);
+  }, [userId]);
 
   // Load the next page (posts older than the current cursor) and append.
   const loadMoreFeedPosts = useCallback(async () => {
-    if (!user || loadingMoreRef.current || !feedCursorRef.current || paginationFailedRef.current) return;
+    if (!userId || pendingFeedRef.current || loadingMoreRef.current || !feedCursorRef.current || paginationFailedRef.current) return;
+    const generation = feedGenerationRef.current;
+    const active = () => feedGenerationRef.current === generation;
     setLoadMoreError(false);
     loadingMoreRef.current = true;
-    feedPaginatedRef.current = true;
     setLoadingMoreFeed(true);
     try {
       const { data, error } = await supabase
@@ -287,11 +292,13 @@ export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?:
         .limit(FEED_PAGE_SIZE);
 
       if (error) throw error;
+      if (!active()) return;
       const posts = data || [];
       setHasMoreFeed(posts.length === FEED_PAGE_SIZE);
       if (posts.length) {
         feedCursorRef.current = posts[posts.length - 1].created_at;
         const enriched = await fetchPostsWithDetails(posts);
+        if (!active()) return;
         setFeedPosts(prev => {
           const seen = new Set(prev.map(p => p.id));
           return [...prev, ...enriched.filter(p => !seen.has(p.id))];
@@ -299,13 +306,16 @@ export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?:
       }
     } catch (error) {
       console.error('Unable to load next page', error);
+      if (!active()) return;
       paginationFailedRef.current = true;
       setLoadMoreError(true);
     } finally {
-      loadingMoreRef.current = false;
-      setLoadingMoreFeed(false);
+      if (active()) {
+        loadingMoreRef.current = false;
+        setLoadingMoreFeed(false);
+      }
     }
-  }, [user]);
+  }, [userId]);
 
   const retryLoadMorePosts = useCallback(() => {
     paginationFailedRef.current = false;
@@ -325,7 +335,7 @@ export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?:
       const postsWithUsers = await fetchPostsWithDetails(posts);
       setDiscoverPosts(postsWithUsers);
     }
-  }, [user]);
+  }, [userId]);
 
   // Fetch topics
   const fetchTopics = useCallback(async () => {
@@ -350,7 +360,7 @@ export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?:
       privacy?: 'everyone' | 'contacts' | 'close_friends' | 'only_me';
     }
   ) => {
-    if (!user) return null;
+    if (!userId) return null;
 
     const mediaUrls: string[] = [];
 
@@ -358,7 +368,7 @@ export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?:
       for (const originalFile of options.mediaFiles) {
         const file = await preparePostImage(originalFile);
         const fileExt = file.name.split('.').pop();
-        const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+        const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
 
         console.log('[createPost] Uploading file:', file.name, 'size:', file.size, 'type:', file.type);
 
@@ -385,7 +395,7 @@ export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?:
     const { data, error } = await supabase
       .from('posts')
       .insert({
-        user_id: user.id,
+        user_id: userId,
         type,
         content: options.content,
         media_urls: mediaUrls,
@@ -402,24 +412,24 @@ export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?:
 
     await fetchFeedPosts();
     return data;
-  }, [user, fetchFeedPosts]);
+  }, [userId, fetchFeedPosts]);
 
   // Delete post
   const deletePost = useCallback(async (postId: string) => {
-    if (!user) return;
+    if (!userId) return;
 
     await supabase
       .from('posts')
       .delete()
       .eq('id', postId)
-      .eq('user_id', user.id);
+      .eq('user_id', userId);
 
     await fetchFeedPosts();
-  }, [user, fetchFeedPosts]);
+  }, [userId, fetchFeedPosts]);
 
   // Like/unlike post
   const toggleLike = useCallback(async (postId: string, reactionType: string = 'sankofa') => {
-    if (!user) return;
+    if (!userId) return;
 
     const normalizedIncoming = normalizeReactionType(reactionType) || reactionType;
 
@@ -427,7 +437,7 @@ export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?:
       .from('post_likes')
       .select('id, reaction_type')
       .eq('post_id', postId)
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .maybeSingle();
 
     const existingNormalized = existing ? (normalizeReactionType(existing.reaction_type) || existing.reaction_type) : null;
@@ -457,7 +467,7 @@ export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?:
           .from('post_likes')
           .delete()
           .eq('post_id', postId)
-          .eq('user_id', user.id);
+          .eq('user_id', userId);
 
         // Update local state - removed reaction
         setFeedPosts(prev => prev.map(p =>
@@ -488,7 +498,7 @@ export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?:
           .from('post_likes')
           .update({ reaction_type: normalizedIncoming })
           .eq('post_id', postId)
-          .eq('user_id', user.id);
+          .eq('user_id', userId);
 
         // Update local state - changed reaction (decrement old, increment new)
         setFeedPosts(prev => prev.map(p =>
@@ -518,7 +528,7 @@ export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?:
         .from('post_likes')
         .insert({
           post_id: postId,
-          user_id: user.id,
+          user_id: userId,
           reaction_type: normalizedIncoming,
         });
 
@@ -546,11 +556,11 @@ export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?:
           : p
       ));
     }
-  }, [user]);
+  }, [userId]);
 
   // Save/unsave post (optimistic update first, then DB)
   const toggleSave = useCallback(async (postId: string) => {
-    if (!user) return;
+    if (!userId) return;
 
     // Optimistic: flip is_saved immediately so UI reacts instantly
     const flipSaved = (posts: PostWithUser[]) =>
@@ -563,7 +573,7 @@ export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?:
         .from('saved_posts')
         .select('id')
         .eq('post_id', postId)
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .maybeSingle();
 
       if (existing) {
@@ -571,12 +581,12 @@ export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?:
           .from('saved_posts')
           .delete()
           .eq('post_id', postId)
-          .eq('user_id', user.id);
+          .eq('user_id', userId);
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from('saved_posts')
-          .insert({ post_id: postId, user_id: user.id });
+          .insert({ post_id: postId, user_id: userId });
         if (error) throw error;
       }
     } catch (err) {
@@ -585,7 +595,7 @@ export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?:
       setFeedPosts(flipSaved);
       setDiscoverPosts(flipSaved);
     }
-  }, [user]);
+  }, [userId]);
 
   // Get comments for a post
   const getComments = useCallback(async (postId: string): Promise<Comment[]> => {
@@ -607,11 +617,11 @@ export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?:
         .from('comment_reactions')
         .select('comment_id, reaction_type')
         .in('comment_id', commentIds),
-      user ? supabase
+      userId ? supabase
         .from('comment_reactions')
         .select('comment_id, reaction_type')
         .in('comment_id', commentIds)
-        .eq('user_id', user.id) : Promise.resolve({ data: [] }),
+        .eq('user_id', userId) : Promise.resolve({ data: [] }),
     ]);
 
     const profileMap = new Map(profilesResult.data?.map(p => [p.id, p]) || []);
@@ -650,17 +660,17 @@ export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?:
       ...comment,
       replies: replies.filter(r => r.parent_comment_id === comment.id),
     }));
-  }, [user]);
+  }, [userId]);
 
   // Add comment
   const addComment = useCallback(async (postId: string, content: string, parentCommentId?: string) => {
-    if (!user) return null;
+    if (!userId) return null;
 
     const { data, error } = await supabase
       .from('post_comments')
       .insert({
         post_id: postId,
-        user_id: user.id,
+        user_id: userId,
         content,
         parent_comment_id: parentCommentId,
       })
@@ -680,17 +690,17 @@ export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?:
     setDiscoverPosts(updateCount);
 
     return data;
-  }, [user]);
+  }, [userId]);
 
   // Delete comment
   const deleteComment = useCallback(async (commentId: string, postId: string) => {
-    if (!user) return;
+    if (!userId) return;
 
     await supabase
       .from('post_comments')
       .delete()
       .eq('id', commentId)
-      .eq('user_id', user.id);
+      .eq('user_id', userId);
 
     // Update local comment count
     const updateCount = (posts: PostWithUser[]) =>
@@ -698,17 +708,17 @@ export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?:
 
     setFeedPosts(updateCount);
     setDiscoverPosts(updateCount);
-  }, [user]);
+  }, [userId]);
 
   // Toggle comment reaction
   const toggleCommentReaction = useCallback(async (commentId: string, reactionType: string) => {
-    if (!user) return { action: 'none' as const, reactionType: null };
+    if (!userId) return { action: 'none' as const, reactionType: null };
 
     const { data: existing } = await supabase
       .from('comment_reactions')
       .select('id, reaction_type')
       .eq('comment_id', commentId)
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .maybeSingle();
 
     if (existing) {
@@ -718,7 +728,7 @@ export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?:
           .from('comment_reactions')
           .delete()
           .eq('comment_id', commentId)
-          .eq('user_id', user.id);
+          .eq('user_id', userId);
         return { action: 'removed' as const, reactionType: null, previousType: existing.reaction_type };
       } else {
         // Update reaction
@@ -726,7 +736,7 @@ export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?:
           .from('comment_reactions')
           .update({ reaction_type: reactionType })
           .eq('comment_id', commentId)
-          .eq('user_id', user.id);
+          .eq('user_id', userId);
         return { action: 'updated' as const, reactionType, previousType: existing.reaction_type };
       }
     } else {
@@ -735,19 +745,19 @@ export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?:
         .from('comment_reactions')
         .insert({
           comment_id: commentId,
-          user_id: user.id,
+          user_id: userId,
           reaction_type: reactionType,
         });
       return { action: 'added' as const, reactionType };
     }
-  }, [user]);
+  }, [userId]);
 
   // Update post
   const updatePost = useCallback(async (
     postId: string,
     updates: { content?: string; location?: string; privacy?: 'everyone' | 'contacts' | 'close_friends' | 'only_me' }
   ) => {
-    if (!user) return null;
+    if (!userId) return null;
 
     // Only include defined fields to avoid nullifying existing values
     const payload: Record<string, unknown> = {};
@@ -759,7 +769,7 @@ export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?:
       .from('posts')
       .update(payload)
       .eq('id', postId)
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .select()
       .single();
 
@@ -775,21 +785,21 @@ export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?:
     setDiscoverPosts(updateLocal);
 
     return data;
-  }, [user]);
+  }, [userId]);
 
   // Share post
   const sharePost = useCallback(async (postId: string, shareType: 'repost' | 'quote' | 'message', quoteContent?: string) => {
-    if (!user) return;
+    if (!userId) return;
 
     await supabase
       .from('post_shares')
       .insert({
         post_id: postId,
-        user_id: user.id,
+        user_id: userId,
         share_type: shareType,
         quote_content: quoteContent,
       });
-  }, [user]);
+  }, [userId]);
 
   // Get user posts
   const getUserPosts = useCallback(async (userId: string): Promise<PostWithUser[]> => {
@@ -803,16 +813,16 @@ export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?:
     if (!posts) return [];
 
     return fetchPostsWithDetails(posts);
-  }, [user]);
+  }, [userId]);
 
   // Get saved posts
   const getSavedPosts = useCallback(async (): Promise<PostWithUser[]> => {
-    if (!user) return [];
+    if (!userId) return [];
 
     const { data: saved } = await supabase
       .from('saved_posts')
       .select('post_id')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
     if (!saved?.length) return [];
@@ -825,7 +835,7 @@ export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?:
     if (!posts) return [];
 
     return fetchPostsWithDetails(posts);
-  }, [user]);
+  }, [userId]);
 
   // Get posts by topic
   const getPostsByTopic = useCallback(async (topicId: string): Promise<PostWithUser[]> => {
@@ -850,7 +860,29 @@ export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?:
     if (!posts) return [];
 
     return fetchPostsWithDetails(posts);
-  }, [user]);
+  }, [userId]);
+
+  // A different account must never inherit posts or late responses from the old one.
+  useEffect(() => {
+    setFeedPosts([]);
+    setDiscoverPosts([]);
+    setNewPostsCount(0);
+    setLoading(Boolean(userId));
+    setFeedError(false);
+    setLoadMoreError(false);
+    setHasMoreFeed(true);
+    feedCursorRef.current = null;
+    contactIdsRef.current = [];
+    newestCreatedAtRef.current = null;
+    realtimeVersionsRef.current.clear();
+    paginationFailedRef.current = false;
+    loadingMoreRef.current = false;
+    setLoadingMoreFeed(false);
+    return () => {
+      ++feedGenerationRef.current;
+      pendingFeedRef.current = null;
+    };
+  }, [userId]);
 
   // Initial fetch
   useEffect(() => {
@@ -871,21 +903,48 @@ export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?:
         'postgres_changes',
         { event: '*', schema: 'public', table: 'posts' },
         (payload: RealtimePostgresChangesPayload<Tables<'posts'>>) => {
-          // A qualifying new post from someone else → surface a "new posts" pill
+          // A qualifying new post from any author → surface a "new posts" pill
           // instead of silently replacing the feed (keeps the scroll position).
           if (payload.eventType === 'INSERT') {
             const p = payload.new;
             const qualifies = p.privacy === 'everyone' || contactIdsRef.current.includes(p.user_id);
-            const isOwn = p.user_id === userIdRef.current;
             const isNewer = !newestCreatedAtRef.current || p.created_at > newestCreatedAtRef.current;
-            if (qualifies && !isOwn && isNewer) {
+            if (qualifies && isNewer) {
               setNewPostsCount(c => c + 1);
               if (loadDiscovery) fetchDiscoverPosts();
               return;
             }
           }
-          // Edits/deletes (or own posts): refresh page 1 while not paginated.
-          if (!feedPaginatedRef.current) fetchFeedPosts();
+          // Apply changes in place. Refetching page one here can remove the
+          // post being read and discard pages loaded by infinite scrolling.
+          if (payload.eventType === 'UPDATE') {
+            const updated = payload.new;
+            const version = (realtimeVersionsRef.current.get(updated.id) ?? 0) + 1;
+            realtimeVersionsRef.current.set(updated.id, version);
+            const generation = feedGenerationRef.current;
+            const existing = feedPostsRef.current.find(post => post.id === updated.id);
+            setFeedPosts(previous => previous.flatMap(post => {
+              if (post.id !== updated.id) return [post];
+              // Remove another author's post if its audience changes; only a
+              // subsequent authorized fetch may make it visible again.
+              if (updated.user_id !== userId && updated.privacy !== post.privacy) return [];
+              return [{ ...post, ...updated, type: updated.type as PostWithUser['type'],
+                privacy: updated.privacy as PostWithUser['privacy'], media_urls: updated.media_urls || [] }];
+            }));
+            // Refresh reactions/bookmarks for this card only, without replacing
+            // the list. A later event or refresh invalidates this enrichment.
+            if (existing && (updated.user_id === userId || updated.privacy === existing.privacy)) {
+              void fetchPostsWithDetails([updated]).then(([detailed]) => {
+                if (!detailed || feedGenerationRef.current !== generation ||
+                    realtimeVersionsRef.current.get(updated.id) !== version) return;
+                setFeedPosts(previous => previous.map(post => post.id === updated.id ? detailed : post));
+              }).catch(error => console.error('Unable to update post details', error));
+            }
+          } else if (payload.eventType === 'DELETE') {
+            const id = payload.old.id;
+            if (id) realtimeVersionsRef.current.set(id, (realtimeVersionsRef.current.get(id) ?? 0) + 1);
+            setFeedPosts(previous => previous.filter(post => post.id !== payload.old.id));
+          }
           if (loadDiscovery) fetchDiscoverPosts();
         }
       )
@@ -894,7 +953,7 @@ export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?:
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [autoLoad, loadDiscovery, fetchFeedPosts, fetchDiscoverPosts]);
+  }, [autoLoad, loadDiscovery, userId, fetchFeedPosts, fetchDiscoverPosts]);
 
   return {
     feedPosts,

@@ -284,3 +284,42 @@ test('opt-in device report downloads sanitized timings without breaking mobile l
   expect(raw).not.toContain('Publicação');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
+
+test('desktop preserves the reading position and loaded pages after renewing the session', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await mockAccount(page, true);
+  let firstPageReads = 0;
+  page.on('request', request => {
+    const url = new URL(request.url());
+    if (url.pathname === '/rest/v1/posts' && !url.searchParams.has('created_at')) firstPageReads++;
+  });
+  await page.goto('/muxi');
+  await expect(page.locator('article')).toHaveCount(20);
+  const viewport = page.locator('.feed-scroll > [data-radix-scroll-area-viewport]');
+  await viewport.evaluate(el => { el.scrollTop = el.scrollHeight; });
+  await expect(page.locator('article')).toHaveCount(25);
+  await page.locator('article').nth(22).scrollIntoViewIfNeeded();
+  await page.waitForLoadState('networkidle');
+  const scrollBefore = await viewport.evaluate(el => el.scrollTop);
+  const readsBefore = firstPageReads;
+  expect(scrollBefore).toBeGreaterThan(1000);
+  await page.route('**/auth/v1/token*', async route => {
+    await route.fulfill({ json: {
+      access_token: btoa('{}') + '.' + btoa(JSON.stringify({ sub: me, exp: Math.floor(Date.now() / 1000) + 7200 })) + '.signature',
+      refresh_token: 'renewed-test-only', expires_in: 7200, token_type: 'bearer',
+      user: { id: me, email: 'test@example.invalid' },
+    } });
+  });
+  // Exercise the real auth provider and TOKEN_REFRESHED callback using mock API data.
+  await page.evaluate(async () => {
+    const modulePath = '/src/integrations/supabase/client.ts';
+    const { supabase } = await import(/* @vite-ignore */ modulePath);
+    const { error } = await supabase.auth.refreshSession();
+    if (error) throw error;
+  });
+  await page.waitForLoadState('networkidle');
+  await expect(page.locator('article')).toHaveCount(25);
+  await expect(page.locator('article').nth(22)).toBeInViewport();
+  expect(Math.abs(await viewport.evaluate(el => el.scrollTop) - scrollBefore)).toBeLessThanOrEqual(2);
+  expect(firstPageReads).toBe(readsBefore);
+});
