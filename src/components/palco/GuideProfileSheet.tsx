@@ -53,7 +53,7 @@ export function GuideProfileSheet({
         .update({
           display_name: formData.display_name,
           bio: formData.bio,
-          location: formData.location,
+          city: formData.location,
         })
         .eq('id', user.id);
 

@@ -4,7 +4,7 @@ import { fetchPublicProfilesBatched } from '@/lib/public-profile-batch';
 import { preparePostImage } from '@/lib/post-image';
 import { useAuth } from './useAuth';
 import { ReactionCounts, createEmptyReactionCounts, normalizeReactionType } from '@/lib/reactions';
-import type { Tables } from '@/integrations/supabase/types';
+import type { Tables, TablesUpdate } from '@/integrations/supabase/types';
 import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
 const FEED_PAGE_SIZE = 20;
@@ -760,7 +760,7 @@ export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?:
     if (!userId) return null;
 
     // Only include defined fields to avoid nullifying existing values
-    const payload: Record<string, unknown> = {};
+    const payload: TablesUpdate<'posts'> = {};
     if (updates.content !== undefined) payload.content = updates.content;
     if (updates.location !== undefined) payload.location = updates.location;
     if (updates.privacy !== undefined) payload.privacy = updates.privacy;

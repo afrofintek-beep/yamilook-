@@ -51,9 +51,9 @@ async function connectWithRetry(room: Room, url: string, token: string): Promise
  * `setEnabled` helper. All are probed defensively at runtime, hence optional.
  */
 interface ToggleableTrack {
-  setEnabled?: (enabled: boolean) => Promise<void> | void;
-  mute?: () => Promise<void> | void;
-  unmute?: () => Promise<void> | void;
+  setEnabled?: (enabled: boolean) => unknown;
+  mute?: () => unknown;
+  unmute?: () => unknown;
 }
 
 export function useLiveStream(): UseLiveStreamReturn {

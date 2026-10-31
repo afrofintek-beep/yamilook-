@@ -6,6 +6,9 @@ verify_jwt = false
 [functions.generate-livekit-token]
 verify_jwt = false
 
+[functions.reconcile-direct-calls]
+verify_jwt = false
+
 [functions.fetch-gifs]
 verify_jwt = false
 

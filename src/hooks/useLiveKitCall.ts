@@ -10,6 +10,8 @@ import { registerCallMedia } from '@/lib/call-media';
 import { callOutcomeMessage } from '@/lib/call-feedback';
 import { callSetupFailure } from '@/lib/call-setup-failure';
 import { toast } from '@/hooks/use-toast';
+import { holdCallUpdates } from '@/lib/call-update-guard';
+import { reconcileDirectCalls } from '@/lib/direct-call-reconciliation';
 
 /** LiveKit owns transport, ICE/TURN, congestion control and reconnection.
  * The existing authenticated call rows still own invitations, history and hangup.
@@ -24,9 +26,11 @@ export function useLiveKitCall() {
   const generation = useRef(0);
   const busy = useRef(false);
   const microphoneRef = useRef<MediaStreamTrack | null>(null);
+  const microphonePublished = useRef(false);
   const setupStage = useRef('microphone');
   const deadline = useRef<ReturnType<typeof setTimeout>>();
   const peerDeadline = useRef<ReturnType<typeof setTimeout>>();
+  const releaseUpdate = useRef<(() => void) | null>(null);
   const processor = useRef<VirtualBackgroundProcessor | null>(null);
   const rawCamera = useRef<MediaStreamTrack | null>(null);
   const effects = useRef<EffectsConfig>({ ...DEFAULT_EFFECTS });
@@ -51,6 +55,7 @@ export function useLiveKitCall() {
     rawCamera.current = null;
     microphoneRef.current?.stop();
     microphoneRef.current = null;
+    microphonePublished.current = false;
     effects.current = { ...DEFAULT_EFFECTS };
     const room = roomRef.current;
     roomRef.current = null;
@@ -58,6 +63,7 @@ export function useLiveKitCall() {
     room?.localParticipant.trackPublications.forEach(p => p.track?.stop());
     room?.removeAllListeners();
     void room?.disconnect();
+    releaseUpdate.current?.(); releaseUpdate.current = null;
     setState({ ...INITIAL_STATE, remoteStreams: new Map(), callStatus: 'ended' });
   }, []);
   releaseRef.current = release;
@@ -109,7 +115,7 @@ export function useLiveKitCall() {
     }));
     const peerHasMedia = [...room.remoteParticipants.values()].some(p =>
       [...p.trackPublications.values()].some(pub => pub.isSubscribed && pub.track));
-    if (peerHasMedia && room.state === ConnectionState.Connected) {
+    if (peerHasMedia && microphonePublished.current && room.state === ConnectionState.Connected) {
       clearTimeout(deadline.current);
       clearTimeout(peerDeadline.current);
       lifecycleRef.current.clearRingTimeout();
@@ -121,6 +127,7 @@ export function useLiveKitCall() {
     setupStage.current = 'token';
     const { data, error } = await supabase.functions.invoke('generate-livekit-token', {
       body: { roomName: `call-${id}`, participantName: profile?.display_name || 'Utilizador', participantIdentity: user!.id },
+      timeout: 15_000,
     });
     if (generation.current !== epoch) throw new Error('Chamada cancelada.');
     if (error || !data?.token || !data?.url) throw new Error('Não foi possível obter acesso seguro à chamada.');
@@ -161,7 +168,15 @@ export function useLiveKitCall() {
       const { data: ended, error: timeoutError } = await supabase.rpc('finish_direct_call', { p_call_id: id, p_outcome: 'no_answer' });
       if (roomRef.current !== room) return;
       if (timeoutError) { fail('Não foi possível confirmar a resposta. Tenta novamente.'); return; }
-      if (ended) { releaseRef.current(); setState(s => ({ ...s, lastError: 'Sem resposta.' })); }
+      if (ended) { releaseRef.current(); setState(s => ({ ...s, lastError: 'Sem resposta.' })); return; }
+      if ([...room.remoteParticipants.values()].some(p =>
+        [...p.trackPublications.values()].some(pub => pub.isSubscribed && pub.track))) { refresh(room); return; }
+      // An answer may have won the timeout race without delivering media yet.
+      // Give media a separate bounded deadline instead of waiting indefinitely.
+      setState(s => ({ ...s, callStatus: 'connecting', lastError: 'A aguardar áudio e vídeo do outro participante…' }));
+      deadline.current = setTimeout(() => {
+        if (roomRef.current === room) fail('Não foi possível receber áudio ou vídeo. Tenta novamente.', 'media_timeout');
+      }, 30_000);
     }, 60_000);
     setupStage.current = 'room_connect';
     await room.connect(data.url, data.token);
@@ -171,6 +186,12 @@ export function useLiveKitCall() {
     if (!microphone || microphone.readyState === 'ended') throw new DOMException('Microfone indisponível.', 'NotReadableError');
     // Publish the already authorised track; do not capture a second microphone.
     await room.localParticipant.publishTrack(microphone, { source: sdk.Track.Source.Microphone });
+    if (roomRef.current !== room || generation.current !== epoch) {
+      room.localParticipant.trackPublications.forEach(p => p.track?.stop());
+      await room.disconnect(); throw new Error('Chamada cancelada.');
+    }
+    microphonePublished.current = true;
+    refresh(room);
     if (type === 'video') {
       setupStage.current = 'camera';
       try { await room.localParticipant.setCameraEnabled(true); }
@@ -184,6 +205,7 @@ export function useLiveKitCall() {
     if (!user || !target || target === user.id) throw new Error('Selecciona outro contacto para iniciar a chamada.');
     if (busy.current || roomRef.current) throw new Error('Já existe uma chamada em curso.');
     busy.current = true;
+    releaseUpdate.current = holdCallUpdates();
     const epoch = ++generation.current;
     let id: string | null = null;
     setState(s => ({ ...s, callStatus: 'initiating', isInitiator: true, callType: type, targetUserId: target, lastError: null }));
@@ -209,6 +231,7 @@ export function useLiveKitCall() {
     if (!user) throw new Error('Inicia sessão.');
     if (busy.current || roomRef.current) throw new Error('Já existe uma chamada em curso.');
     busy.current = true;
+    releaseUpdate.current = holdCallUpdates();
     const epoch = ++generation.current;
     try {
       setupStage.current = 'claim';
@@ -243,7 +266,11 @@ export function useLiveKitCall() {
     const id = callRef.current;
     release();
     if (id && user) {
-      try { const { error } = await supabase.rpc('finish_direct_call', { p_call_id: id, p_outcome: 'completed' }); if (error) throw error; }
+      try {
+        const { error } = await supabase.rpc('finish_direct_call', { p_call_id: id, p_outcome: 'completed' });
+        if (error) throw error;
+        void reconcileDirectCalls({ callId: id });
+      }
       catch { toast({ title: 'Chamada terminada neste dispositivo', description: 'Não foi possível confirmar o encerramento remoto.', variant: 'destructive' }); }
     }
   }, [release, user]);
@@ -260,7 +287,19 @@ export function useLiveKitCall() {
       onEnded: outcome => { if (callRef.current === id) { release(); setState(s => ({ ...s, callStatus: outcome.status === 'declined' || outcome.end_reason === 'declined' ? 'declined' : 'ended', lastError: callOutcomeMessage(outcome.status, outcome.end_reason) })); } },
     });
   }, [state.callId, release]);
-  useEffect(() => () => releaseRef.current(), [user?.id]);
+  useEffect(() => () => {
+    const id = callRef.current;
+    releaseRef.current();
+    if (id) void supabase.rpc('finish_direct_call', { p_call_id: id, p_outcome: 'completed' })
+      .then(({ error }) => { if (!error) void reconcileDirectCalls({ callId: id }); });
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!state.callId) return;
+    const id = state.callId;
+    const timer = setInterval(() => { void reconcileDirectCalls({ callId: id }); }, 60_000);
+    return () => clearInterval(timer);
+  }, [state.callId]);
 
   const toggleMute = useCallback(async () => {
     const room = roomRef.current; if (!room) return;

@@ -2,6 +2,8 @@ import { act, cleanup, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { useLiveKitCall } from './useLiveKitCall';
 import { canJoinCall } from '../../supabase/functions/generate-livekit-token/call-access';
+import { deferCallUpdate } from '@/lib/call-update-guard';
+vi.mock('@/lib/direct-call-reconciliation', () => ({ reconcileDirectCalls: vi.fn().mockResolvedValue(undefined) }));
 const m = vi.hoisted(() => ({ update: vi.fn(), capture: vi.fn(), micStop: vi.fn(), media: vi.fn(), rpc: vi.fn(), invoke: vi.fn(), create: vi.fn(), end: vi.fn(), stop: vi.fn(), rooms: [] as any[], release: undefined as undefined | (() => void) }));
 vi.mock('./useAuth', () => ({ useAuth: () => ({ user: { id: 'me' }, profile: { display_name: 'Me' } }) }));
 vi.mock('./webrtc/useCallLifecycle', () => ({ useCallLifecycle: () => ({ createCallInDB: m.create, endCallInDB: m.end, clearRingTimeout: vi.fn(), updateMediaStatus: m.media, updateParticipantStatus: vi.fn(), updateCallStatus: vi.fn(), raiseHand: vi.fn(), sendReaction: vi.fn() }) }));
@@ -125,6 +127,31 @@ it('releases hardware on unmount', async () => {
   const { result, unmount } = renderHook(useLiveKitCall);
   await act(async () => { await result.current.initiateCall('other', 'voice'); });
   unmount(); expect(m.stop).toHaveBeenCalled(); expect(m.rooms[0].disconnect).toHaveBeenCalled();
+  expect(m.rpc).toHaveBeenCalledWith('finish_direct_call',{p_call_id:'call-id',p_outcome:'completed'});
+});
+
+it('bounds the media wait when the server reports an answered call without remote tracks', async () => {
+  vi.useFakeTimers(); m.rpc.mockResolvedValue({data:false,error:null});
+  const {result}=renderHook(useLiveKitCall);
+  await act(async()=>{await result.current.initiateCall('other','voice');});
+  await act(async()=>{vi.advanceTimersByTime(60_000);});
+  expect(result.current.state.callStatus).toBe('connecting');
+  act(()=>vi.advanceTimersByTime(30_000));
+  expect(result.current.state.callStatus).toBe('failed');
+  expect(result.current.state.lastError).toContain('receber áudio ou vídeo');
+  expect(m.stop).toHaveBeenCalled();
+});
+
+it('defers destructive updates while microphone permission is pending', async()=>{
+  vi.useFakeTimers();
+  let allow!: (value: unknown)=>void;
+  m.capture.mockReturnValue(new Promise(resolve=>{allow=resolve;}));
+  const {result}=renderHook(useLiveKitCall);
+  let pending!:Promise<unknown>;
+  act(()=>{pending=result.current.initiateCall('other','voice').catch(e=>e);});
+  const update=vi.fn();deferCallUpdate(update);expect(update).not.toHaveBeenCalled();
+  await act(async()=>{await result.current.endCall();allow({getTracks:()=>[{stop:m.micStop}]});await pending;vi.runOnlyPendingTimers();});
+  expect(update).toHaveBeenCalledOnce();expect(m.create).not.toHaveBeenCalled();
 });
 
 it('reports server busy without requesting a token or opening media', async () => {

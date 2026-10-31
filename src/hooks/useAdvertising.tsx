@@ -289,9 +289,10 @@ export function useAdvertising() {
 
   // Update advertisement
   const updateAdvertisement = async (adId: string, updates: Partial<Advertisement>) => {
+    const { business: _business, ...patch } = updates;
     const { data, error } = await supabase
       .from('advertisements')
-      .update(updates)
+      .update(patch)
       .eq('id', adId)
       .select()
       .single();

@@ -6631,9 +6631,14 @@ export type Database = {
         Args: { p_call_id: string }
         Returns: boolean
       }
+      account_current_session_id: { Args: never; Returns: string }
       finish_direct_call: {
         Args: { p_call_id: string; p_outcome: string }
         Returns: boolean
+      }
+      create_livekit_call: {
+        Args: { p_call_type?: string; p_callee_id: string; p_conversation_id?: string }
+        Returns: string
       }
       create_call: {
         Args: {

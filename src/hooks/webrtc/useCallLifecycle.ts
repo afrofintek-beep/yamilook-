@@ -1,4 +1,5 @@
 import { notifyIncomingCall } from '@/lib/call-push';
+import { reconcileDirectCalls } from '@/lib/direct-call-reconciliation';
 /**
  * useCallLifecycle - Manages call lifecycle (initiate, answer, decline, end)
  * Coordinates between media, peer connections, and signaling
@@ -62,7 +63,9 @@ export function useCallLifecycle(options: UseCallLifecycleOptions): UseCallLifec
   ): Promise<string> => {
     logger.debug('Creating call in database...', 'CallLifecycle');
 
-    const { data: callId, error } = await supabase.rpc('create_call', {
+    // Verify abandoned rooms on the server before the atomic busy check.
+    if (transport === 'livekit') await reconcileDirectCalls({ calleeId: targetUserId });
+    const { data: callId, error } = await supabase.rpc(transport === 'livekit' ? 'create_livekit_call' : 'create_call', {
       p_callee_id: targetUserId,
       p_call_type: callType,
       p_conversation_id: conversationId ?? null,
@@ -78,16 +81,6 @@ export function useCallLifecycle(options: UseCallLifecycleOptions): UseCallLifec
     }
 
     logger.debug('Call created', 'CallLifecycle', callId);
-    if (transport === 'livekit') {
-      // Persist before inviting: updated clients can distinguish existing WebRTC
-      // calls from LiveKit calls without changing the call schema.
-      const { data: marked, error: markError } = await supabase.from('calls')
-        .update({ sdp_offer: { transport: 'livekit-v1' } }).eq('id', callId).select('id').maybeSingle();
-      if (markError || !marked) {
-        await supabase.from('calls').update({ status: 'failed', ended_at: new Date().toISOString() }).eq('id', callId);
-        throw markError || new Error('Não foi possível preparar a chamada.');
-      }
-    }
     void notifyIncomingCall(callId);
     return callId;
   }, []);
