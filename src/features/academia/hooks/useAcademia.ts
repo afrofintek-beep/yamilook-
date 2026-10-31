@@ -101,6 +101,7 @@ export function useCreateAcademiaSession() {
       spots: number;
       priceCoins: number;
       scheduledAt: string;
+      durationMinutes?: number;
     }) => {
       if (!user) throw new Error('Not authenticated');
 
@@ -113,6 +114,7 @@ export function useCreateAcademiaSession() {
         spots_left: input.spots,
         price_coins: input.priceCoins,
         scheduled_at: input.scheduledAt,
+        duration_minutes: input.durationMinutes ?? 60,
         status: 'scheduled',
       });
 
