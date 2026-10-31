@@ -12,6 +12,10 @@ on:
       - 'src/integrations/supabase/types.ts'
       - 'supabase/migrations/*account_backups.sql'
       - '.github/workflows/account-backups.yml'
+      - 'scripts/test-account-security.mjs'
+      - 'supabase/migrations/*account_session_revocation_realtime.sql'
+      - 'supabase/migrations/*secure_multi_device_sessions.sql'
+      - 'supabase/tests/account_sessions_integration.sql'
   workflow_dispatch:
 
 permissions:
@@ -32,6 +36,8 @@ jobs:
       - run: npm ci --ignore-scripts --no-audit
       - name: Build
         run: npm run build
+      - name: PostgreSQL backup and session isolation
+        run: node scripts/test-account-security.mjs
       - name: Backup security tests
         run: npx vitest run src/lib/account-backup.test.ts
       - name: Check TypeScript diagnostics in modified application files

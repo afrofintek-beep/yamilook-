@@ -21,7 +21,7 @@ create function public.revoke_other_sessions(current_session_id text default nul
 returns void language plpgsql as $$ begin null; end; $$;
 
 \ir ../migrations/20261027001500_secure_multi_device_sessions.sql
-\ir ../migrations/20261027074500_account_session_revocation_realtime.sql
+\ir ../migrations/20261031214240_account_session_revocation_realtime.sql
 
 -- These fixtures live only in the temporary CI database.
 insert into auth.users(id) values

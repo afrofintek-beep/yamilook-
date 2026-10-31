@@ -114,5 +114,21 @@
     "replaced": [
       "20261031205527_chat_attachment_reference_cutover.sql"
     ]
+  },
+  {
+    "version": "20261031214240",
+    "name": "account_session_revocation_realtime",
+    "sha256": "d2009445e171c3e8c2797f0a63010d1b9d881a5ff4050fac4d3f865449ac8892",
+    "replaced": [
+      "20261027074500_account_session_revocation_realtime.sql"
+    ]
+  },
+  {
+    "version": "20261031214253",
+    "name": "account_backups",
+    "sha256": "7a9bc4a11179e899ad120e6bde7d8d1cab0d76655c7a001f2a2a64e127cda1a9",
+    "replaced": [
+      "20261027062000_account_backups.sql"
+    ]
   }
 ]
