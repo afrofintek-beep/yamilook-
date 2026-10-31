@@ -30,7 +30,7 @@ insert into storage.buckets values('media','media',true,null);
 create policy old_public_media on storage.objects for select using(bucket_id='media');
 create policy "Authenticated users can view voice messages" on storage.objects for select to authenticated using(bucket_id='voice-messages');
 `);
-await db.exec(await readFile(new URL('../../supabase/migrations/20261024003034_private_chat_attachments.sql',import.meta.url),'utf8'));
+await db.exec(await readFile(new URL('../../supabase/migrations/20261031204722_private_chat_attachments.sql',import.meta.url),'utf8'));
 async function asUser(id,sql,args=[]) {
  await db.exec('set role authenticated');
  try{await db.query("select set_config('request.jwt.claim.sub',$1,false)",[id]);return await db.query(sql,args);}

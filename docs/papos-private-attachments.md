@@ -2,8 +2,9 @@
 
 ## Release status
 
-Preparation only. Do not merge/deploy the client until the exact SQL migration is
-verified in the target project and hosted Storage authorization tests pass. Do not
+Preparation migration applied and verified in production on 2026-10-31. Hosted
+Storage authorization and synthetic object recovery passed; see
+`docs/verification/private-chat-storage-20261031.md`. Frontend remains unpublished. Do not
 claim historical privacy remediation complete after preparation. Existing public
 URLs and legacy audio permissions remain until a separately reviewed cutover.
 The original all-in-one legacy mover has been removed: its recovery and public
@@ -11,13 +12,14 @@ reference inventory were not sufficient for production quarantine.
 
 ## Database preparation
 
-`20261024003034_private_chat_attachments.sql` creates the private 100 MB bucket,
+`20261031204722_private_chat_attachments.sql` creates the private 100 MB bucket,
 registry, reservation RPC, participant read/upload policies and private-reference
 validation. It intentionally retains old client URL writes and historical audio
 policies during transition. It does not modify existing messages, memberships or
 public media objects. The registry is service-only and now includes a recovery
-manifest. This migration was confirmed absent in production before revision;
-never replay or edit an already-applied version on another environment.
+manifest. The migration is now recorded at server version 20261031204722, with the exact
+stored SQL preserved under that filename. Do not replay the former 20261024003034
+filename or edit the applied version.
 
 Before applying, verify prerequisite schemas/tables/columns and inspect all
 Storage policies for broad permissive rules. Verify migration history and the
@@ -61,11 +63,12 @@ used to authorize deletion: its column-based inventory is insufficient for that.
 
 ## Remaining cutover gates
 
-1. Test hosted Storage using synthetic A/B/C users and anonymous requests: upload,
+1. COMPLETED for this revision: hosted Storage using synthetic A/B/C users and anonymous requests: upload,
    signing/download, foreign-path claiming, removal, hidden/expired/deleted
    messages, recovery-path denial and signed URL expiry. Check public MUXI samples.
-2. Rehearse restoration using synthetic data and the exact per-reference manifest.
-   No production history rewrite until this passes.
+2. Object restoration passed with synthetic data and preserved references.
+   A future transactional message-reference cutover/reversal still needs its own
+   rehearsal before any production history rewrite.
 3. Implement complete paginated public-reference discovery, including supported
    JSON/relative paths; freeze relevant writes or otherwise coordinate concurrent
    public/chat references for the cutover window. Revalidate every candidate.
@@ -80,8 +83,9 @@ used to authorize deletion: its column-based inventory is insufficient for that.
 
 ## Authentication incident
 
-Administrative reads work; that does not verify the apply_migration confirmation
-continuation. Invalid or expired requestState is a connector/protocol failure,
+The revised preparation migration succeeded through apply_migration and was
+independently read back on 2026-10-31. The earlier Invalid or expired requestState
+was not reproduced in this attempt; this does not establish its root cause. It is a connector/protocol failure,
 not evidence of invalid SQL. Do not bypass confirmation or change SQL to evade
 it. Obtain a supported connection/continuation repair and inspect verifier logs
 through support if needed. No migration retry is justified before technical gates.
