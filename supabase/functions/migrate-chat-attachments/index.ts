@@ -1,8 +1,9 @@
-// Preparation only. Never rewrites message references or moves/deletes originals.
+// Staged maintenance. Never moves/deletes originals. Reference changes are atomic.
 // Deploy with a short-lived capability only after hosted Storage validation.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.90.1';
 import { localStorageObject, objectKey } from './plan.ts';
 import { prepareObject } from './prepare.ts';
+import { transitionReferences } from './transition.ts';
 const TOKEN_HASH = '__TOKEN_SHA256__';
 const EXPIRES = Number('__EXPIRES_AT__');
 const json = (value: unknown, status=200) => new Response(JSON.stringify(value), { status, headers: { 'Content-Type':'application/json','Cache-Control':'no-store' } });
@@ -13,9 +14,10 @@ Deno.serve(async req => {
   if (digest!==TOKEN_HASH) return json({error:'Unauthorized'},401);
   try {
     const body=await req.json();
-    if (!['inventory','prepare'].includes(body.mode)) return json({error:'Use inventory or prepare; cutover is disabled'},400);
+    if (!['inventory','prepare','cutover','rollback'].includes(body.mode)) return json({error:'Invalid maintenance mode'},400);
     const url=Deno.env.get('SUPABASE_URL')!;
     const admin=createClient(url,Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,{auth:{persistSession:false,autoRefreshToken:false}});
+    if(body.mode==='cutover'||body.mode==='rollback') return json(await transitionReferences(admin,body.id,body.mode));
     // One explicit object per prepare request bounds work. Repeated requests reuse its registry.
     const jobs=new Map<string,any>();
     for(const table of ['messages','scheduled_messages']) {
@@ -37,10 +39,10 @@ Deno.serve(async req => {
         after=rows[rows.length-1].id;
       }
     }
-    if(body.mode==='inventory') return json({candidates:jobs.size,mode:'inventory',mutations:0,cutover_enabled:false});
+    if(body.mode==='inventory') return json({candidates:jobs.size,mode:'inventory',mutations:0,cutover_enabled:true});
     const job=jobs.get(`${body.bucket}/${body.path}`);
     if(!job) return json({error:'Candidate unavailable'},404);
     const result=await prepareObject(admin,job);
-    return json({...result,cutover_enabled:false});
-  } catch { return json({error:'Preparation failed; originals and message references retained'},500); }
+    return json({...result,cutover_enabled:true});
+  } catch { return json({error:'Maintenance failed; originals retained; inspect reference state before retry'},500); }
 });

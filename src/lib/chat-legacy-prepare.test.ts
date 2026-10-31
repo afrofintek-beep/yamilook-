@@ -13,7 +13,7 @@ function fixture() {
  })},from:()=>({
   select:()=>({eq:()=>({eq:()=>({maybeSingle:async()=>({data:row,error:null})})})}),
   insert:(data:any)=>({select:()=>({single:async()=>{row=data;return {data:row,error:null};}})}),
-  update:(data:any)=>({eq:async()=>{if(failManifest)return {error:new Error('interrupted')};row={...row,...data};return {error:null};}}),
+  update:(data:any)=>{const q:any={eq:()=>q,is:()=>q,select:()=>q,maybeSingle:async()=>{if(failManifest)return {error:new Error('interrupted')};row={...row,...data};return {data:{id:row.id},error:null};}};return q;},
  })};
  return {admin,job,objects,row:()=>row,interrupt:()=>{failManifest=true},resume:()=>{failManifest=false},corrupt:()=>{corrupt=true}};
 }
@@ -38,3 +38,5 @@ it('detects changed source on retry without overwriting verified private copies'
  await expect(prepareObject(f.admin,f.job)).rejects.toThrow('verification');
  expect(await f.objects.get(`chat-attachments/${f.row().object_path}`)!.text()).toBe('original');
 });
+
+it('cannot overwrite a manifest after references have been cut over',async()=>{const f=fixture();await prepareObject(f.admin,f.job);f.row().legacy_manifest.state='references_private';await expect(prepareObject(f.admin,f.job)).rejects.toThrow('Rollback references');});

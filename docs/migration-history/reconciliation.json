@@ -106,5 +106,13 @@
     "replaced": [
       "20261024003034_private_chat_attachments.sql"
     ]
+  },
+  {
+    "version": "20261031205637",
+    "name": "chat_attachment_reference_cutover",
+    "sha256": "058c3de289e473197522c33e9193b5797914a4028437586070571f6bc5a2708a",
+    "replaced": [
+      "20261031205527_chat_attachment_reference_cutover.sql"
+    ]
   }
 ]

@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.90.1';
 import { prepareObject } from '../migrate-chat-attachments/prepare.ts';
+import { transitionReferences } from '../migrate-chat-attachments/transition.ts';
 const HASH='__HASH__', EXPIRY=Number('__EXPIRY__'), RUN='__RUN__';
 let busy=false;
 const answer=(x:unknown,status=200)=>new Response(JSON.stringify(x),{status,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}});
@@ -49,12 +50,41 @@ Deno.serve(async req=>{
   stage='prepare_recovery';const legacy=`${users[0]}/storage-drill-${RUN}.txt`;publicPaths.push(legacy);await must(admin.storage.from('media').upload(legacy,content));
   const oldUrl=`${url}/storage/v1/object/public/media/${legacy}`;
   const oldMsg=await must(a.from('messages').insert({conversation_id:conv.id,sender_id:users[0],message_type:'file',media_url:oldUrl}).select('id').single());
-  const job={bucket:'media',path:legacy,conversation:conv.id,uploader:users[0],refs:[{table:'messages',id:oldMsg.id,column:'media_url',value:oldUrl}]};
+  const second=await must(a.from('messages').insert({conversation_id:conv.id,sender_id:users[0],message_type:'file',media_url:oldUrl}).select('id').single());
+  const scheduled=await must(admin.from('scheduled_messages').insert({conversation_id:conv.id,sender_id:users[0],media_url:oldUrl,scheduled_for:'2099-01-01T00:00:00Z'}).select('id').single());
+  const job={bucket:'media',path:legacy,conversation:conv.id,uploader:users[0],refs:[{table:'messages',id:oldMsg.id,column:'media_url',value:oldUrl},{table:'messages',id:second.id,column:'media_url',value:oldUrl},{table:'scheduled_messages',id:scheduled.id,column:'media_url',value:oldUrl}]};
   await prepareObject(admin,job);await prepareObject(admin,job);
   const record=await must(admin.from('chat_attachments').select('*').eq('legacy_bucket','media').eq('legacy_path',legacy).single());privatePaths.push(record.object_path,record.legacy_manifest.recovery_path);
   check('preparation preserves original public access',(await fetch(oldUrl)).ok);
   check('preparation keeps original reference',(await must(admin.from('messages').select('media_url').eq('id',oldMsg.id).single())).media_url===oldUrl);
   check('recovery copy denied to member',!await readable(a,record.legacy_manifest.recovery_path));check('recovery copy denied to external',!await readable(c,record.legacy_manifest.recovery_path));check('recovery copy denied to anonymous',!await readable(anon,record.legacy_manifest.recovery_path));
+
+  stage='reference_cutover';
+  check('user cannot invoke maintenance RPC',!!(await a.rpc('chat_attachment_reference_transition',{p_id:record.id,p_action:'cutover',p_sha256:record.legacy_manifest.sha256})).error);
+  await must(admin.from('profiles').update({avatar_url:oldUrl}).eq('id',users[0]));
+  await must(admin.from('messages').update({media_url:'synthetic-concurrent-edit'}).eq('id',second.id));
+  let conflict=false;try{await transitionReferences(admin,record.id,'cutover');}catch{conflict=true;}
+  check('concurrent edit aborts cutover',conflict);
+  check('failed transaction leaves first reference unchanged',(await must(admin.from('messages').select('media_url').eq('id',oldMsg.id).single())).media_url===oldUrl);
+  check('failed transaction preserves concurrent edit',(await must(admin.from('messages').select('media_url').eq('id',second.id).single())).media_url==='synthetic-concurrent-edit');
+  await must(admin.from('messages').update({media_url:oldUrl}).eq('id',second.id));
+  const transition=await transitionReferences(admin,record.id,'cutover');
+  check('atomic cutover rewrites all three references',transition.changed===3);
+  check('public inventory detects synthetic public profile reference',transition.public_matches.some((x:any)=>x.table==='profiles'&&x.column==='avatar_url'));
+  check('cutover keeps shared public original',(await fetch(oldUrl)).ok);
+  check('cutover private object accessible to participant',await readable(a,record.object_path));
+  check('cutover private object denied to external',!await readable(c,record.object_path));
+  check('scheduled reference transferred',(await must(admin.from('scheduled_messages').select('media_url').eq('id',scheduled.id).single())).media_url==='chat-attachment://'+record.object_path);
+  check('cutover retry is inert',(await transitionReferences(admin,record.id,'cutover')).changed===0);
+  await must(admin.from('messages').update({media_url:'synthetic-newer-edit'}).eq('id',second.id));
+  conflict=false;try{await transitionReferences(admin,record.id,'rollback');}catch{conflict=true;}
+  check('rollback rejects concurrent edit',conflict);
+  check('failed rollback retains private reference',(await must(admin.from('messages').select('media_url').eq('id',oldMsg.id).single())).media_url==='chat-attachment://'+record.object_path);
+  await must(admin.from('messages').update({media_url:'chat-attachment://'+record.object_path}).eq('id',second.id));
+  check('rollback restores all three references',(await transitionReferences(admin,record.id,'rollback')).changed===3);
+  check('rollback restores exact original message URL',(await must(admin.from('messages').select('media_url').eq('id',oldMsg.id).single())).media_url===oldUrl);
+  check('rollback restores scheduled message URL',(await must(admin.from('scheduled_messages').select('media_url').eq('id',scheduled.id).single())).media_url===oldUrl);
+  check('rollback retry is inert',(await transitionReferences(admin,record.id,'rollback')).changed===0);
   // Simulate loss only of our disposable synthetic original, then restore via Storage API.
   stage='restore';await must(admin.storage.from('media').remove([legacy]));await must(admin.storage.from('chat-attachments').copy(record.legacy_manifest.recovery_path,legacy,{destinationBucket:'media'}));
   const restored=await must(admin.storage.from('media').download(legacy));check('restoration exact bytes',await restored.text()===await content.text());
@@ -70,7 +100,7 @@ Deno.serve(async req=>{
   if(conversations.length){const r=await admin.from('chat_attachments').select('id,object_path,legacy_bucket').in('conversation_id',conversations);for(const x of r.data||[]){privatePaths.push(x.object_path);if(x.legacy_bucket)privatePaths.push(`legacy-recovery/${x.id}/original`);}}
   if(privatePaths.length)await clean('private objects',admin.storage.from('chat-attachments').remove([...new Set(privatePaths)]));
   if(publicPaths.length)await clean('public test objects',admin.storage.from('media').remove(publicPaths));
-  if(conversations.length){await clean('messages',admin.from('messages').delete().in('conversation_id',conversations));await clean('registry',admin.from('chat_attachments').delete().in('conversation_id',conversations));await clean('participants',admin.from('conversation_participants').delete().in('conversation_id',conversations));await clean('conversations',admin.from('conversations').delete().in('id',conversations));}
+  if(conversations.length){await clean('scheduled',admin.from('scheduled_messages').delete().in('conversation_id',conversations));await clean('messages',admin.from('messages').delete().in('conversation_id',conversations));await clean('registry',admin.from('chat_attachments').delete().in('conversation_id',conversations));await clean('participants',admin.from('conversation_participants').delete().in('conversation_id',conversations));await clean('conversations',admin.from('conversations').delete().in('id',conversations));}
   if(candidates.length)await clean('candidates',admin.from('mvp_candidates').delete().in('id',candidates));
   for(const id of users)await clean('synthetic user',admin.auth.admin.deleteUser(id));
   if(users.length){await clean('synthetic settings',admin.from('user_settings').delete().in('user_id',users));await clean('synthetic profiles',admin.from('profiles').delete().in('id',users));}

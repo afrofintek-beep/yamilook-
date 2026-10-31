@@ -1,98 +1,76 @@
 # Private chat attachments — staged rollout
 
-## Release status
+## Verified status
 
-Preparation migration applied and verified in production on 2026-10-31. Hosted
-Storage authorization and synthetic object recovery passed; see
-`docs/verification/private-chat-storage-20261031.md`. Frontend remains unpublished. Do not
-claim historical privacy remediation complete after preparation. Existing public
-URLs and legacy audio permissions remain until a separately reviewed cutover.
-The original all-in-one legacy mover has been removed: its recovery and public
-reference inventory were not sufficient for production quarantine.
+Preparation applied as `20261031204722_private_chat_attachments.sql`.
+Atomic reference transition/reversal applied as
+`20261031205637_chat_attachment_reference_cutover.sql`.
+Both succeeded through the normal connector and were independently read back.
+The exact stored SQL and actual server versions are preserved in the repository.
+The earlier requestState error did not recur; its root cause remains unknown.
+Do not replay the superseded timestamps or alter applied SQL.
 
-## Database preparation
+Hosted Storage authorization, object recovery and reference cutover/reversal passed
+with synthetic data (25 checks in the initial run; 42 in the expanded run). See
+`docs/verification/private-chat-storage-20261031.md` and
+`docs/verification/private-chat-cutover-20261031.md` plus JSON receipts.
+Frontend remains unpublished. No real historical message or file was migrated.
 
-`20261031204722_private_chat_attachments.sql` creates the private 100 MB bucket,
-registry, reservation RPC, participant read/upload policies and private-reference
-validation. It intentionally retains old client URL writes and historical audio
-policies during transition. It does not modify existing messages, memberships or
-public media objects. The registry is service-only and now includes a recovery
-manifest. The migration is now recorded at server version 20261031204722, with the exact
-stored SQL preserved under that filename. Do not replay the former 20261024003034
-filename or edit the applied version.
+## Access model
 
-Before applying, verify prerequisite schemas/tables/columns and inspect all
-Storage policies for broad permissive rules. Verify migration history and the
-actual deployed definitions afterward; reconcile version with the repository
-filename using the repository migration-history workflow. Do not mark applied
-based only on a tool acknowledgement.
+New chat uploads use a private 100 MB bucket and immutable registry paths, storing
+`chat-attachment://` references. Participants obtain five-minute signed URLs after
+message visibility checks. Outsiders and anonymous callers cannot download or sign.
+Hidden/deleted/expired messages and removed membership deny new access. Already
+issued bearer links remain valid until expiry. This is not E2EE or instant revocation.
+Recovery objects have no client read policy. Registry/manifests are service-only.
 
-## Private authorization
+Preparation retains old-client URL writes and historical voice permissions during
+transition. Legacy privacy exposure is NOT fully remediated by these migrations.
+The public social `media` bucket stays public.
 
-New messages use stable chat-attachment references and five-minute signed URLs.
-Only the reserving participant uploads; existing visible messages authorize
-participants to read and forward. Removed participants cannot obtain new links
-through that conversation. Previously issued bearer URLs remain usable until
-expiry. This is not E2EE or immediate URL revocation.
+## Controlled maintenance
 
-## Historical preparation (no cutover)
+The endpoint is disabled by placeholders in source. Deploy only with a fresh
+high-entropy capability hash and short expiry; disable it immediately after the run.
+Never commit capabilities or return private paths/content/credentials in receipts.
 
-The maintenance endpoint remains disabled by deployment placeholders. When
-hosted validation has passed, inject a fresh high-entropy capability hash and
-short expiry for a controlled run, then disable the endpoint again.
+- `inventory`: keyset-paginated metadata scan until empty; counts only, no writes.
+- `prepare` with one source bucket/path: reserve identity before copying; verify
+  source, private and recovery copy using SHA-256 and byte count; preserve exact
+  table/id/column/original-value references in the manifest. Originals stay intact.
+  Missing/corrupt/changed files fail closed. Conditional save prevents concurrent
+  cutover from being overwritten by a preparing worker.
+- `cutover` with one registry ID: reverify all three objects, run diagnostic public
+  reference inventory, then atomically switch manifest references. A concurrent
+  user edit aborts the whole transaction. Use only after compatible frontend release.
+- `rollback` with one registry ID: reverify objects and restore exact manifest URLs
+  atomically, refusing to overwrite subsequent edits. Retry is inert after success.
+  Prepare again after rollback only when a new reviewed attempt is intended.
 
-- `mode: inventory` reads keyset-paginated message metadata until an empty page
-  and returns counts only. It performs no writes.
-- `mode: prepare`, with one explicit `bucket` and `path`, re-inventories and
-  prepares that candidate only. Requests for cutover or other modes fail.
-- A unique legacy source registry row is reserved before any copy. Retries reuse
-  that identity instead of creating orphan destinations.
-- Copy to the private destination and a private recovery location. SHA-256 and
-  byte length of both copies must match the source, then re-read the source to
-  detect concurrent changes. Verification occurs in the maintenance runtime;
-  private contents never go to the developer workspace or response.
-- Save the exact message table/id/column/original-value references, checksums,
-  length and recovery path in the service-only manifest. A failed manifest write
-  can be retried; existing destinations must match and are never overwritten.
-- Missing sources and mismatched copies fail closed. Existing quarantine records
-  require manual recovery review. No move/delete or message rewrite is available.
+Public inventory covers string/array/JSON columns of public base tables, independent
+of API row caps and column naming. Matches can include conservative false positives.
+Zero matches never authorize quarantine. Originals are ALWAYS retained by this
+implementation; no Storage move/delete is exposed by the maintenance endpoint.
 
-Originals are retained, including every public MUXI reference. Preparation does
-not make historically public objects private. The public-reference RPC is not
-used to authorize deletion: its column-based inventory is insufficient for that.
+## Before conversion of real history
 
-## Remaining cutover gates
+1. Publish and verify the compatible frontend. New private uploads and existing
+   public/voice URLs must remain readable to authorized users during transition.
+2. Inventory and prepare in bounded batches; report missing files explicitly.
+   Reverify copies immediately before reference transitions and retain manifests.
+3. Run reference transitions with compare-and-set checks. Stop on conflicts and
+   investigate rather than overwriting newer user edits.
+4. Verify participant/outsider/anonymous access and public MUXI samples; reconcile
+   prepared/converted/rolled-back counts. Disable maintenance after the run.
+5. A separate reviewed design is required before withdrawing public originals or
+   broad legacy audio reads. Coordinate concurrent public writes, preserve shared
+   MUXI originals and retain tested recovery copies. Never roll back by making the
+   private bucket public. Do not claim privacy remediation while old URLs persist.
 
-1. COMPLETED for this revision: hosted Storage using synthetic A/B/C users and anonymous requests: upload,
-   signing/download, foreign-path claiming, removal, hidden/expired/deleted
-   messages, recovery-path denial and signed URL expiry. Check public MUXI samples.
-2. Object restoration passed with synthetic data and preserved references.
-   A future transactional message-reference cutover/reversal still needs its own
-   rehearsal before any production history rewrite.
-3. Implement complete paginated public-reference discovery, including supported
-   JSON/relative paths; freeze relevant writes or otherwise coordinate concurrent
-   public/chat references for the cutover window. Revalidate every candidate.
-4. After the compatible frontend is validated, rewrite references transactionally
-   with compare-and-set checks against the manifest. Do not overwrite concurrent
-   edits. Introduce durable per-object state and reconcile Storage/DB boundaries.
-5. Only quarantine verified, unshared originals. Preserve shared public objects
-   and report residual exposure explicitly. Replace broad legacy audio reads
-   with participant-scoped access before declaring remediation complete.
-6. Retain private recovery data through an agreed recovery period; never roll back
-   by making the new bucket public. Disable maintenance after the run.
+## Validation limits
 
-## Authentication incident
-
-The revised preparation migration succeeded through apply_migration and was
-independently read back on 2026-10-31. The earlier Invalid or expired requestState
-was not reproduced in this attempt; this does not establish its root cause. It is a connector/protocol failure,
-not evidence of invalid SQL. Do not bypass confirmation or change SQL to evade
-it. Obtain a supported connection/continuation repair and inspect verifier logs
-through support if needed. No migration retry is justified before technical gates.
-
-## Local verification
-
-Run client tests with Vitest. `chat-legacy-prepare.test.ts` covers interrupted
-manifest writes, idempotent retries, corruption, missing and changed sources.
-`tests/security/chat-attachments.test.mjs` runs PostgreSQL roles/RLS in PGlite,
-including old-client compatibility. These do not replace hosted Storage tests.
+Synthetic hosted tests prove the exercised operations, not every historical object.
+Signed URL expiry used a shortened two-second link; a separately issued 300-second
+link confirmed bearer behavior after removal. Public MUXI validation sampled one
+existing object. Full historical quarantine is not implemented or authorized here.

@@ -24,6 +24,7 @@ export async function prepareObject(admin: any,job: any) {
     if(saveError) throw new Error('Registry conflict; retry inventory');
     attachment=data;
   }
+  if(attachment.legacy_manifest?.state==='references_private') throw new Error('Rollback references before preparing again');
   if(attachment.legacy_quarantined) throw new Error('Requires manual recovery review');
   const original=await read(admin,job.bucket,job.path);
   const hash=await checksum(original);
@@ -37,10 +38,12 @@ export async function prepareObject(admin: any,job: any) {
     void copyError;
   }
   if(await checksum(await read(admin,job.bucket,job.path))!==hash) throw new Error('Source changed during preparation');
-  const {error:manifestError}=await admin.from('chat_attachments').update({legacy_manifest:{
+  let save=admin.from('chat_attachments').update({legacy_manifest:{
     state:'prepared',sha256:hash,bytes:original.size,recovery_path:recovery,
     references:job.refs,verified_at:new Date().toISOString(),original_retained:true,
   }}).eq('id',attachment.id);
-  if(manifestError) throw new Error('Manifest write failed; safe to retry');
+  save=attachment.legacy_manifest?.state ? save.eq('legacy_manifest->>state',attachment.legacy_manifest.state) : save.is('legacy_manifest',null);
+  const {data:saved,error:manifestError}=await save.select('id').maybeSingle();
+  if(manifestError||!saved) throw new Error('Manifest write failed; safe to retry');
   return {prepared:1,original_retained:true,references_changed:0};
 }
