@@ -1,3 +1,5 @@
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -73,10 +75,15 @@ export function EnhancedChatInput({
 }: EnhancedChatInputProps) {
   const { t } = useTranslation();
   const [message, setMessage] = useState('');
+  const [locationDraft, setLocationDraft] = useState<string | null>(null);
+  const [locationName, setLocationName] = useState('');
+  const [locationReference, setLocationReference] = useState('');
+  const [afrolocCode, setAfrolocCode] = useState('');
   const [locating, setLocating] = useState(false);
   const locationRequest = useRef(0);
   useEffect(() => {
     setLocating(false);
+    setLocationDraft(null);
     return () => { locationRequest.current += 1; };
   }, [conversationId]);
   const [sending, setSending] = useState(false);
@@ -164,8 +171,10 @@ export function EnhancedChatInput({
         if (request !== locationRequest.current) return;
         setLocating(false);
         const location = `📍 https://www.google.com/maps?q=${coords.latitude},${coords.longitude}`;
-        setMessage(current => current ? `${current}\n${location}` : location);
-        textareaRef.current?.focus();
+        setLocationName('');
+        setLocationReference('');
+        setAfrolocCode('');
+        setLocationDraft(location);
       },
       (error) => {
         if (request !== locationRequest.current) return;
@@ -545,6 +554,22 @@ export function EnhancedChatInput({
         </div>
       )}
 
+      <Dialog open={locationDraft !== null} onOpenChange={open => { if (!open) setLocationDraft(null); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>Partilhar localização</DialogTitle><DialogDescription>Acrescenta os detalhes. A localização será colocada na mensagem para confirmares o envio.</DialogDescription></DialogHeader>
+          <label className="space-y-1 text-sm">Nome do local<Input value={locationName} maxLength={100} onChange={e => setLocationName(e.target.value)} placeholder="Ex.: Escritório AFROFINTEK" /></label>
+          <label className="space-y-1 text-sm">Referência ou encontro<Input value={locationReference} maxLength={250} onChange={e => setLocationReference(e.target.value)} placeholder="Ex.: Portão azul · hoje às 14h00" /></label>
+          <label className="space-y-1 text-sm">Código AFROLOC existente (opcional)<Input value={afrolocCode} maxLength={100} onChange={e => setAfrolocCode(e.target.value)} /></label>
+          <p className="text-xs text-muted-foreground">O código é fornecido por ti e não é verificado neste envio. As coordenadas não certificam um endereço.</p>
+          <a className="text-sm underline" href="https://www.afroloc.ao" target="_blank" rel="noopener noreferrer">Abrir AFROLOC para consultar ou registar endereço</a>
+          <Button disabled={disabled || sending} onClick={() => {
+            const details = [locationName.trim(), locationReference.trim(), afrolocCode.trim() ? `AFROLOC (não verificado): ${afrolocCode.trim()}` : '', locationDraft].filter(Boolean).join('\n');
+            setMessage(current => current ? `${current}\n${details}` : details);
+            setLocationDraft(null);
+            requestAnimationFrame(() => textareaRef.current?.focus());
+          }}>Adicionar à mensagem</Button>
+        </DialogContent>
+      </Dialog>
       {/* Schedule Message Sheet */}
       <ScheduleMessageSheet
         open={showScheduleSheet}

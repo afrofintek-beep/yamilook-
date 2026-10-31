@@ -1,3 +1,5 @@
+import { LocationCard } from './LocationCard';
+import { parseChatLocation } from '@/lib/chat-location';
 import { useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
@@ -340,12 +342,15 @@ export function EnhancedMessageBubble({
             📎 {message.content || 'File'}
           </a>
         );
-      default:
+      default: {
+        const location = parseChatLocation(message.content);
+        if (location && message.message_type === 'text') return <LocationCard location={location} />;
         return (
           <p className="text-sm whitespace-pre-wrap break-words">
             {message.content ? parseFormattedText(message.content) : null}
           </p>
         );
+      }
     }
   };
 
