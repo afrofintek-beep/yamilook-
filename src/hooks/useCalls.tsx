@@ -8,6 +8,7 @@ import { logger } from '@/lib/logger';
 import { fetchPublicProfilesBatched } from '@/lib/public-profile-batch';
 import { attachCallParticipants } from '@/lib/call-history';
 import { shouldPollIncomingCall } from '@/lib/incoming-call-polling';
+import { reconcileDirectCalls } from '@/lib/direct-call-reconciliation';
 import { useScheduledCalls } from '@/features/scheduled-calls/useScheduledCalls';
 export type { ScheduledCall } from '@/features/scheduled-calls/api';
 
@@ -276,11 +277,8 @@ export function useCalls({ loadHistory = true }: { loadHistory?: boolean } = {})
   // Run periodic cleanup of stuck calls on mount
   useEffect(() => {
     if (!user) return;
-    // Trigger cleanup once on mount (no need to await)
-    supabase.rpc('cleanup_stuck_calls').then(({ data, error }) => {
-      if (error) logger.warn('Cleanup error', 'useCalls', error.message);
-      else if (data > 0) logger.debug('Cleaned up stuck calls', 'useCalls', data);
-    });
+    // Room presence is authoritative. A long/hidden call is not a stuck call.
+    void reconcileDirectCalls();
   }, [user]);
 
   // Watch the active incoming call record - clear it if A hangs up before B answers

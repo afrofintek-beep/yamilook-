@@ -1,4 +1,5 @@
 import { refreshCallPush } from '@/lib/call-push';
+import { deferCallUpdate } from '@/lib/call-update-guard';
 import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
 import { BrowserRouter, Link, Navigate, Route, Routes, Outlet, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -64,7 +65,7 @@ function PaposRuntime() {
     return () => { document.removeEventListener('click', unlock, true); document.removeEventListener('touchstart', unlock, true); document.removeEventListener('keydown', unlock, true); window.removeEventListener('papos:update-ready', update); };
   }, []);
   return <><OnlineStatusTracker /><GlobalMessageNotifier /><ThemeSync />
-    {updateReady && <aside className="fixed top-0 safe-top inset-x-0 z-[200] p-3 bg-primary text-primary-foreground flex items-center justify-between gap-3"><span className="text-sm">Nova versão da KOSOLOLA disponível.</span><Button variant="outline" onClick={() => window.location.reload()}>Atualizar</Button></aside>}
+    {updateReady && <aside className="fixed top-0 safe-top inset-x-0 z-[200] p-3 bg-primary text-primary-foreground flex items-center justify-between gap-3"><span className="text-sm">Nova versão disponível. Durante uma chamada, a atualização aguarda o seu fim.</span><Button variant="outline" onClick={() => deferCallUpdate(() => window.location.reload())}>Atualizar</Button></aside>}
     <PaposBoundary><Suspense fallback={<Loading />}><Routes>
       <Route path="/login" element={<PaposLogin />} /><Route path="/welcome" element={<Navigate to="/login" replace />} />
       <Route path="/install" element={<PaposInstall />} />

@@ -6635,6 +6635,10 @@ export type Database = {
         Args: { p_call_id: string; p_outcome: string }
         Returns: boolean
       }
+      create_livekit_call: {
+        Args: { p_call_type?: string; p_callee_id: string; p_conversation_id?: string }
+        Returns: string
+      }
       create_call: {
         Args: {
           p_call_type?: string

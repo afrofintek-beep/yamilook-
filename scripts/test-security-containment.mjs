@@ -1,0 +1,76 @@
+// Synthetic PostgreSQL only: exercise real grants, RLS and triggers as API roles.
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+import { PGlite } from '@electric-sql/pglite';
+const db=new PGlite();let count=0;
+const a='10000000-0000-4000-8000-000000000001',b='10000000-0000-4000-8000-000000000002',c='10000000-0000-4000-8000-000000000003';
+const check=(v,label)=>{assert.ok(v,label);count++;console.log('PASS',label);};
+const as=async(id,role='authenticated')=>{await db.exec('reset role');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[id||'']);await db.exec('set role '+role);};
+const denied=async(fn,label)=>{await assert.rejects(fn,e=>['42501','P0001'].includes(e.code));count++;console.log('PASS denies',label);};
+const migration=suffix=>fs.readFileSync('supabase/migrations/'+fs.readdirSync('supabase/migrations').find(x=>x.endsWith(suffix)),'utf8');
+try{
+ await db.exec(`create role anon;create role authenticated;create role service_role;
+ create schema auth;grant usage on schema auth to anon,authenticated,service_role;
+ create function auth.uid() returns uuid language sql as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
+ create table auth.users(id uuid primary key);create table conversations(id uuid primary key);
+ create table contacts(user_id uuid,contact_user_id uuid,is_blocked boolean);
+ create table fulfillment_effects(name text);
+ create function fulfill_credit_purchase(uuid,text) returns void language sql security definer as $$insert into fulfillment_effects values('credit')$$;
+ create function fulfill_kumbu_purchase(uuid,text) returns void language sql security definer as $$insert into fulfillment_effects values('kumbu')$$;
+ create function fulfill_pro_subscription(uuid,text) returns void language sql security definer as $$insert into fulfillment_effects values('pro')$$;`);
+ const schema=fs.readFileSync('supabase/migrations/20260110032750_1027a5bb-8adb-4f5b-8bc9-c50a464b17c9.sql','utf8');
+ await db.exec(schema.slice(0,schema.indexOf('-- Create call recordings table')));
+ await db.exec(`alter table calls add caller_id uuid,add callee_id uuid,add call_type text,add sdp_offer jsonb;
+ create table call_signals(id uuid primary key default gen_random_uuid(),call_id uuid references calls(id),from_user_id uuid,to_user_id uuid,signal_type text,payload jsonb,processed boolean default false);
+ create function is_call_initiator(p_call_id uuid,p_user_id uuid default auth.uid()) returns boolean language sql stable security definer set search_path=public as $$select exists(select 1 from calls where id=p_call_id and initiator_id=p_user_id)$$;
+ alter table calls enable row level security;alter table call_participants enable row level security;alter table call_signals enable row level security;
+ grant select,insert,update on calls,call_participants,call_signals to authenticated;
+ create policy "Users can join as participant" on call_participants for insert with check(user_id=auth.uid());
+ create policy "Initiator can insert participants" on call_participants for insert with check(is_call_initiator(call_id,auth.uid()));
+ create policy "Users can view own participation" on call_participants for select using(user_id=auth.uid());
+ create policy "Initiators can view participants" on call_participants for select using(is_call_initiator(call_id,auth.uid()));
+ create policy "Users can update own participation" on call_participants for update using(user_id=auth.uid());
+ create policy "Initiators can update participants" on call_participants for update using(is_call_initiator(call_id,auth.uid()));
+ create policy "Users can insert their own signals" on call_signals for insert with check(from_user_id=auth.uid());
+ create policy signal_read on call_signals for select using(to_user_id=auth.uid() or from_user_id=auth.uid());
+ create policy signal_update on call_signals for update using(to_user_id=auth.uid());`);
+ await db.exec(migration('_direct_call_busy_feedback.sql'));
+ await db.exec(migration('_security_financial_fulfillment_acl.sql'));
+ await db.exec(migration('_security_call_membership_containment.sql'));
+ await db.exec(migration('_atomic_livekit_call_invitation.sql'));
+ await db.exec(`create policy call_read on calls for select using(is_call_participant(id,auth.uid()));
+ create policy call_update on calls for update using(is_call_participant(id,auth.uid()));`);
+ await db.query('insert into auth.users values($1),($2),($3)',[a,b,c]);
+ for(const fn of ['fulfill_credit_purchase','fulfill_kumbu_purchase','fulfill_pro_subscription']){
+   for(const role of ['anon','authenticated']){await as(role==='anon'?null:c,role);await denied(()=>db.query(`select ${fn}($1,null)`,[a]),role+' '+fn);}
+   await as(null,'service_role');await db.query(`select ${fn}($1,null)`,[a]);check(true,'backend retains '+fn);
+ }
+ await db.exec('reset role');check((await db.query('select count(*)::int n from fulfillment_effects')).rows[0].n===3,'only backend can cause fulfillment effects');
+ await as(a);const id=(await db.query("select create_livekit_call($1,'voice',null) id",[b])).rows[0].id;
+ check((await db.query('select sdp_offer from calls where id=$1',[id])).rows[0].sdp_offer.transport==='livekit-v1','transport marked before invitation is visible');
+ check((await db.query('select * from calls where id=$1',[id])).rows.length===1,'caller can read invitation');
+ await as(b);check((await db.query('select * from calls where id=$1',[id])).rows.length===1,'callee can read invitation');
+ await as(c);check((await db.query('select * from calls where id=$1',[id])).rows.length===0,'outsider cannot read call');
+ await denied(()=>db.query("insert into call_participants(call_id,user_id,role,status) values($1,$2,'host','connected')",[id,c]),'outsider self invitation');
+ await db.exec('reset role');await db.query("insert into call_participants(call_id,user_id,status) values($1,$2,'connected')",[id,c]);
+ await as(c);check((await db.query('select * from calls where id=$1',[id])).rows.length===0,'historical forged membership does not expose direct call');
+ check((await db.query("update calls set status='failed' where id=$1 returning id",[id])).rows.length===0,'historical forged membership cannot mutate direct call');
+ await denied(()=>db.query("insert into call_signals(call_id,from_user_id,to_user_id,signal_type,payload) values($1,$2,$3,'offer','{}')",[id,c,b]),'outsider signal');
+ await as(a);await denied(()=>db.query("insert into call_participants(call_id,user_id,status) values($1,$2,'connected')",[id,c]),'third party added to direct call');
+ await denied(()=>db.query('update calls set callee_id=$1 where id=$2',[c,id]),'callee reassignment');
+ await db.query("insert into call_signals(call_id,from_user_id,to_user_id,signal_type,payload) values($1,$2,$3,'offer','{}')",[id,a,b]);check(true,'invited caller can signal callee');
+ await as(b);await denied(()=>db.query("update call_participants set role='host' where call_id=$1 and user_id=$2",[id,b]),'self promotion');
+ await db.query('update call_participants set is_muted=true where call_id=$1 and user_id=$2',[id,b]);check(true,'callee can update media');
+ await db.query('update call_signals set processed=true where call_id=$1',[id]);check(true,'callee can acknowledge signal');
+ await denied(()=>db.query('update call_signals set to_user_id=$1 where call_id=$2',[c,id]),'signal reassignment');
+ check((await db.query('select claim_direct_call($1) ok',[id])).rows[0].ok,'invited callee can claim answer');
+ check((await db.query("select finish_direct_call($1,'completed') ok",[id])).rows[0].ok,'invited callee can finish');
+ await db.exec('reset role');const group=(await db.query("insert into calls(initiator_id,caller_id,is_group_call,status) values($1,$1,true,'ongoing') returning id",[a])).rows[0].id;
+ await as(c);await denied(()=>db.query("insert into call_participants(call_id,user_id,status) values($1,$2,'connected')",[group,c]),'group self invitation');
+ await as(a);await db.query("insert into call_participants(call_id,user_id,status) values($1,$2,'connected')",[group,b]);check(true,'group initiator can invite');
+ await as(b);check((await db.query('select * from calls where id=$1',[group])).rows.length===1,'invited group member can read');
+ await db.exec('reset role');await db.query("update calls set updated_at=now()-interval '5 hours' where id=$1",[group]);
+ await as(a);await db.query('select cleanup_stuck_calls()');
+ check((await db.query('select status from calls where id=$1',[group])).rows[0].status==='ongoing','legacy cleanup never expires ongoing media from row age');
+ console.log(`${count} security containment checks passed`);
+}finally{await db.close();}
