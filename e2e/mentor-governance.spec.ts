@@ -37,7 +37,7 @@ test('mobile administrator approves, verifies and suspends with recorded reasons
     await expect(page.getByRole('dialog')).toHaveCount(0);
     expect(decisions.at(-1)).toEqual({ p_user: mentorId, p_action: action, p_reason: reason });
   }
-  await expect(page.getByText('Suspenso', { exact: true })).toBeVisible();
+  await expect(page.locator('section').getByText('Suspenso', { exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Reactivar' })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({ path: 'test-results/mentor-governance-mobile.png', fullPage: true });

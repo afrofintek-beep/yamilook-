@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
-  ArrowLeft, Loader2, ShieldAlert, Users, TrendingUp, Clock, Search, Crown, X,
+  ArrowLeft, Loader2, ShieldAlert, Users, TrendingUp, Clock, Search, Crown, X, BadgeCheck,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
