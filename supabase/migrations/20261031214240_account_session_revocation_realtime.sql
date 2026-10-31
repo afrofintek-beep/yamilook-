@@ -15,7 +15,6 @@ alter table public.account_session_revocations enable row level security;
 revoke all on public.account_session_revocations from public, anon, authenticated;
 grant select on public.account_session_revocations to authenticated;
 
-drop policy if exists account_session_revocations_owner_read on public.account_session_revocations;
 create policy account_session_revocations_owner_read
   on public.account_session_revocations
   for select
