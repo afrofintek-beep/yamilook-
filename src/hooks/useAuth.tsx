@@ -3,6 +3,7 @@ import { clearLegacyPrivateCache } from '@/lib/private-cache';
 import { useState, useEffect, createContext, useContext, ReactNode, useRef, useCallback } from 'react';
 import { User, Session, AuthError, Provider } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import type { TablesUpdate } from '@/integrations/supabase/types';
 import { logger } from '@/lib/logger';
 import { recordDevice } from '@/lib/device';
 import { registerCurrentSession, listLoginAlerts, acknowledgeLoginAlerts, isRevokedSessionError } from '@/lib/account-sessions';
@@ -55,7 +56,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signInWithSocial: (provider: SocialProvider) => Promise<{ error: AuthError | null }>;
   signOut: (scope?: 'global' | 'local') => Promise<void>;
-  updateProfile: (updates: Partial<Profile>) => Promise<{ error: Error | null }>;
+  updateProfile: (updates: TablesUpdate<'profiles'>) => Promise<{ error: Error | null }>;
   refreshProfile: () => Promise<void>;
   /** Optimistically patch the in-memory profile without a DB write. Use for
    *  instant UI feedback; reconcile with refreshProfile()/realtime after. */
@@ -423,7 +424,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setProfile(null);
   };
 
-  const updateProfile = async (updates: Partial<Profile>) => {
+  const updateProfile = async (updates: TablesUpdate<'profiles'>) => {
     if (!user) {
       return { error: new Error('No user logged in') };
     }

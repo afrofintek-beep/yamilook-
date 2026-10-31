@@ -19,8 +19,12 @@ export default function PaposProfile() {
     refetchOnMount: 'always',
     refetchOnWindowFocus: 'always',
     queryFn: async () => {
-      const result = await supabase.from(own ? 'profiles' : 'public_profiles')
-        .select('id,display_name,username,avatar_url,bio').eq('id', targetId!).maybeSingle();
+      // Keep the two typed relations separate; a table/view union loses the
+      // common result shape in the generated PostgREST overloads.
+      const fields = 'id,display_name,username,avatar_url,bio';
+      const result = own
+        ? await supabase.from('profiles').select(fields).eq('id', targetId!).maybeSingle()
+        : await supabase.from('public_profiles').select(fields).eq('id', targetId!).maybeSingle();
       if (result.error) throw result.error;
       return result.data;
     },

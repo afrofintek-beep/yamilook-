@@ -6631,6 +6631,7 @@ export type Database = {
         Args: { p_call_id: string }
         Returns: boolean
       }
+      account_current_session_id: { Args: never; Returns: string }
       finish_direct_call: {
         Args: { p_call_id: string; p_outcome: string }
         Returns: boolean

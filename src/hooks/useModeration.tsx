@@ -1,7 +1,7 @@
 import { updateModeratedProfile } from '@/lib/profile-moderation';
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import type { Enums } from '@/integrations/supabase/types';
+import type { Enums, Json } from '@/integrations/supabase/types';
 import { useAuth } from './useAuth';
 import { toast } from 'sonner';
 
@@ -174,7 +174,7 @@ export function useModeration() {
     targetId: string,
     reason?: string,
     reportId?: string,
-    details?: Record<string, unknown>
+    details?: Json
   ) => {
     if (!user) return;
 
