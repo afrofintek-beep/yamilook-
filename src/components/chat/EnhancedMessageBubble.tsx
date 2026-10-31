@@ -1,3 +1,4 @@
+import { ChatMediaLink } from './PrivateMediaElements';
 import { LocationCard } from './LocationCard';
 import { parseChatLocation } from '@/lib/chat-location';
 import { useState, useRef, useCallback } from 'react';
@@ -333,14 +334,14 @@ export function EnhancedMessageBubble({
         );
       case 'file':
         return (
-          <a
+          <ChatMediaLink
             href={message.media_url || ''}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 text-sm underline"
           >
             📎 {message.content || 'File'}
-          </a>
+          </ChatMediaLink>
         );
       default: {
         const location = parseChatLocation(message.content);

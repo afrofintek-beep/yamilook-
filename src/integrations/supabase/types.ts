@@ -6467,6 +6467,10 @@ export type Database = {
       }
     }
     Functions: {
+      reserve_chat_attachment: {
+        Args: { p_conversation_id: string; p_filename: string }
+        Returns: Json
+      }
       academia_save_mentor: { Args: { p_specialty: string; p_bio: string; p_experience: string; p_submit?: boolean }; Returns: Json }
       academia_manage_mentor: { Args: { p_user: string; p_action: string; p_reason: string }; Returns: Json }
       academia_admin_mentors: { Args: Record<PropertyKey, never>; Returns: Json }

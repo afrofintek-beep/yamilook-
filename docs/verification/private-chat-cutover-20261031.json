@@ -1,0 +1,175 @@
+{
+  "run": "0773a025fd71570a",
+  "checks": [
+    {
+      "name": "external reservation denied",
+      "passed": true
+    },
+    {
+      "name": "other participant cannot upload reservation",
+      "passed": true
+    },
+    {
+      "name": "pending upload readable by owner",
+      "passed": true
+    },
+    {
+      "name": "pending upload denied to recipient",
+      "passed": true
+    },
+    {
+      "name": "participant downloads exact bytes",
+      "passed": true
+    },
+    {
+      "name": "external authenticated download denied",
+      "passed": true
+    },
+    {
+      "name": "anonymous download denied",
+      "passed": true
+    },
+    {
+      "name": "external signing denied",
+      "passed": true
+    },
+    {
+      "name": "anonymous signing denied",
+      "passed": true
+    },
+    {
+      "name": "public route denied",
+      "passed": true
+    },
+    {
+      "name": "participant signed URL downloads",
+      "passed": true
+    },
+    {
+      "name": "expired signed URL denied",
+      "passed": true
+    },
+    {
+      "name": "hidden message denies new download",
+      "passed": true
+    },
+    {
+      "name": "expired message denies download",
+      "passed": true
+    },
+    {
+      "name": "deleted message denies download",
+      "passed": true
+    },
+    {
+      "name": "removed participant denied",
+      "passed": true
+    },
+    {
+      "name": "issued URL remains bearer until expiry",
+      "passed": true
+    },
+    {
+      "name": "preparation preserves original public access",
+      "passed": true
+    },
+    {
+      "name": "preparation keeps original reference",
+      "passed": true
+    },
+    {
+      "name": "recovery copy denied to member",
+      "passed": true
+    },
+    {
+      "name": "recovery copy denied to external",
+      "passed": true
+    },
+    {
+      "name": "recovery copy denied to anonymous",
+      "passed": true
+    },
+    {
+      "name": "user cannot invoke maintenance RPC",
+      "passed": true
+    },
+    {
+      "name": "concurrent edit aborts cutover",
+      "passed": true
+    },
+    {
+      "name": "failed transaction leaves first reference unchanged",
+      "passed": true
+    },
+    {
+      "name": "failed transaction preserves concurrent edit",
+      "passed": true
+    },
+    {
+      "name": "atomic cutover rewrites all three references",
+      "passed": true
+    },
+    {
+      "name": "public inventory detects synthetic public profile reference",
+      "passed": true
+    },
+    {
+      "name": "cutover keeps shared public original",
+      "passed": true
+    },
+    {
+      "name": "cutover private object accessible to participant",
+      "passed": true
+    },
+    {
+      "name": "cutover private object denied to external",
+      "passed": true
+    },
+    {
+      "name": "scheduled reference transferred",
+      "passed": true
+    },
+    {
+      "name": "cutover retry is inert",
+      "passed": true
+    },
+    {
+      "name": "rollback rejects concurrent edit",
+      "passed": true
+    },
+    {
+      "name": "failed rollback retains private reference",
+      "passed": true
+    },
+    {
+      "name": "rollback restores all three references",
+      "passed": true
+    },
+    {
+      "name": "rollback restores exact original message URL",
+      "passed": true
+    },
+    {
+      "name": "rollback restores scheduled message URL",
+      "passed": true
+    },
+    {
+      "name": "rollback retry is inert",
+      "passed": true
+    },
+    {
+      "name": "restoration exact bytes",
+      "passed": true
+    },
+    {
+      "name": "restored original URL works",
+      "passed": true
+    },
+    {
+      "name": "existing MUXI public sample accessible",
+      "passed": true
+    }
+  ],
+  "failure": null,
+  "cleanupErrors": []
+}
