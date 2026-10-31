@@ -14,6 +14,19 @@ export type Database = {
   }
   public: {
     Tables: {
+      academia_attendance: {
+        Row: { session_id: string; user_id: string; confirmed_by: string; confirmed_at: string }
+        Insert: { session_id: string; user_id: string; confirmed_by: string; confirmed_at?: string }
+        Update: { session_id?: string; user_id?: string; confirmed_by?: string; confirmed_at?: string }
+        Relationships: []
+      }
+      academia_mentor_audit: {
+        Row: { id: string; mentor_id: string; actor_id: string | null; action: string; reason: string | null; created_at: string }
+        Insert: { id?: string; mentor_id: string; actor_id?: string | null; action: string; reason?: string | null; created_at?: string }
+        Update: { reason?: string | null }
+        Relationships: []
+      }
+
       academia_communities: {
         Row: { slug: string; title: string; description: string; position: number; starter_title: string; starter_instructions: string; starter_skill: string }
         Insert: never
@@ -2491,6 +2504,8 @@ export type Database = {
       }
       mentor_profiles: {
         Row: {
+          status: string
+          experience: string
           created_at: string
           id: string
           is_verified_mentor: boolean
@@ -2500,6 +2515,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          status?: string
+          experience?: string
           created_at?: string
           id?: string
           is_verified_mentor?: boolean
@@ -2509,6 +2526,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          status?: string
+          experience?: string
           created_at?: string
           id?: string
           is_verified_mentor?: boolean
@@ -6448,6 +6467,13 @@ export type Database = {
       }
     }
     Functions: {
+      academia_save_mentor: { Args: { p_specialty: string; p_bio: string; p_experience: string; p_submit?: boolean }; Returns: Json }
+      academia_manage_mentor: { Args: { p_user: string; p_action: string; p_reason: string }; Returns: Json }
+      academia_admin_mentors: { Args: Record<PropertyKey, never>; Returns: Json }
+      academia_confirm_attendance: { Args: { p_session: string; p_user: string }; Returns: Json }
+      academia_can_review: { Args: { p_session: string }; Returns: boolean }
+      academia_mentor_stats: { Args: { p_ids: string[] }; Returns: { mentor_id: string; rating: number; review_count: number }[] }
+
       recording_session: {
         Args: { p_call_id: string; p_action?: string; p_recording_id?: string; p_consent?: boolean; p_metadata?: Json };
         Returns: Json;

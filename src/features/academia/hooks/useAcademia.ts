@@ -165,6 +165,8 @@ export function useSubmitAcademiaReview() {
       // Refresh the mentor's aggregate rating and any session views.
       queryClient.invalidateQueries({ queryKey: MENTORS_QUERY_KEY });
       queryClient.invalidateQueries({ queryKey: ['mentor-profile', variables.mentorId] });
+      queryClient.invalidateQueries({ queryKey: ['mentor-reviews', variables.mentorId] });
+      queryClient.invalidateQueries({ queryKey: ['mentor-stats', variables.mentorId] });
       queryClient.invalidateQueries({ queryKey: ['academia-session', variables.sessionId] });
     },
   });
@@ -176,19 +178,20 @@ export function useAcademiaMentors() {
     queryFn: async (): Promise<MentorCardProps[]> => {
       const { data: mentorProfiles, error } = await supabase
         .from('mentor_profiles')
-        .select('*');
+        .select('*').eq('status', 'active');
 
       if (error) throw error;
       if (!mentorProfiles?.length) return [];
 
       const userIds = mentorProfiles.map((m) => m.user_id);
 
-      const [{ data: profiles }, { data: reviews }, { data: sessions }] = await Promise.all([
+      const [{ data: profiles, error: profileError }, { data: reviews, error: reviewError }, { data: sessions, error: sessionError }] = await Promise.all([
         supabase.rpc('get_public_profiles_by_ids', { p_ids: userIds }),
-        supabase.from('academia_reviews').select('mentor_id, rating').in('mentor_id', userIds),
+        supabase.rpc('academia_mentor_stats', { p_ids: userIds }),
         supabase.from('academia_sessions').select('mentor_id').in('mentor_id', userIds),
       ]);
 
+      if (profileError || reviewError || sessionError) throw profileError || reviewError || sessionError;
       const profileMap: Record<string, { name: string; avatar?: string }> = {};
       if (profiles) {
         for (const p of profiles) {
@@ -203,8 +206,8 @@ export function useAcademiaMentors() {
       if (reviews) {
         for (const r of reviews) {
           const agg = ratingAgg[r.mentor_id] ?? { sum: 0, count: 0 };
-          agg.sum += r.rating;
-          agg.count += 1;
+          agg.sum = Number(r.rating) * Number(r.review_count);
+          agg.count = Number(r.review_count);
           ratingAgg[r.mentor_id] = agg;
         }
       }
@@ -259,14 +262,12 @@ export function useBecomeMentor() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (input: { specialty: string; mentorBio: string }) => {
+    mutationFn: async (input: { specialty: string; mentorBio: string; experience: string }) => {
       if (!user) throw new Error('Not authenticated');
 
-      const { error } = await supabase.from('mentor_profiles').insert({
-        user_id: user.id,
-        specialty: input.specialty,
-        mentor_bio: input.mentorBio || null,
-        is_verified_mentor: false,
+      const { error } = await supabase.rpc('academia_save_mentor', {
+        p_specialty: input.specialty, p_bio: input.mentorBio,
+        p_experience: input.experience, p_submit: true,
       });
 
       if (error) throw error;

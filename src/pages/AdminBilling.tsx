@@ -8,7 +8,6 @@ import { Switch } from '@/components/ui/switch';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   ArrowLeft, Loader2, ShieldAlert, Users, TrendingUp, Clock, Search, Crown, X,
-  GraduationCap, BadgeCheck,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -26,7 +25,6 @@ interface Config {
 interface Overview { active: number; expiring_7d: number; monthly_price: number; est_mrr: number; }
 interface ProUser { id: string; display_name: string; username: string; plan_expires_at: string | null; }
 interface Found { id: string; display_name: string; username: string; kyc_verified?: boolean; }
-interface Mentor { user_id: string; display_name: string; username: string; specialty: string | null; is_verified_mentor: boolean; }
 
 const fmtKz = (n: number) => `${n.toLocaleString('pt-PT')} Kz`;
 const fmtDate = (iso: string | null) =>
@@ -42,7 +40,6 @@ export default function AdminBilling() {
   const [cfg, setCfg] = useState<Config | null>(null);
   const [overview, setOverview] = useState<Overview | null>(null);
   const [subs, setSubs] = useState<ProUser[]>([]);
-  const [mentors, setMentors] = useState<Mentor[]>([]);
 
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Found[]>([]);
@@ -59,16 +56,14 @@ export default function AdminBilling() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [{ data: c }, { data: ov }, { data: ls }, { data: ms }] = await Promise.all([
+    const [{ data: c }, { data: ov }, { data: ls }] = await Promise.all([
       supabase.from('billing_config').select('*').eq('id', 1).maybeSingle(),
       supabase.rpc('admin_billing_overview'),
       supabase.rpc('admin_list_pro_users'),
-      supabase.rpc('admin_list_mentors'),
     ]);
     if (c) setCfg(c as Config);
     if (ov) setOverview(ov as unknown as Overview);
     setSubs((ls as ProUser[]) ?? []);
-    setMentors((ms as Mentor[]) ?? []);
     setLoading(false);
   }, []);
   useEffect(() => { if (isAdmin) load(); }, [isAdmin, load]);
@@ -155,20 +150,6 @@ export default function AdminBilling() {
       setResults((rs) => rs.map((r) => (r.id === userId ? { ...r, kyc_verified: verified } : r)));
     } catch {
       toast.error('Não foi possível atualizar o KYC.');
-    } finally {
-      setBusyId(null);
-    }
-  };
-
-  const toggleMentor = async (userId: string, verified: boolean) => {
-    setBusyId(userId);
-    try {
-      const { error } = await supabase.rpc('admin_set_mentor_verified', { p_user: userId, p_verified: verified });
-      if (error) throw error;
-      toast.success(verified ? 'Mentor verificado.' : 'Verificação retirada.');
-      await load();
-    } catch {
-      toast.error('Não foi possível atualizar o mentor.');
     } finally {
       setBusyId(null);
     }
@@ -328,42 +309,7 @@ export default function AdminBilling() {
           </CardContent>
         </Card>
 
-        {/* Verificação de mentores (Academia) */}
-        <Card className="border-none shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2">
-              <GraduationCap className="w-4 h-4" /> Mentores da Academia
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <p className="text-[11px] text-muted-foreground">
-              Só mentores verificados podem cobrar pelas sessões.
-            </p>
-            {mentors.length === 0 && <p className="text-sm text-muted-foreground text-center py-2">Sem mentores.</p>}
-            {mentors.map((m) => (
-              <div key={m.user_id} className="flex items-center gap-2 py-1.5 border-b border-border last:border-0">
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium truncate flex items-center gap-1">
-                    {m.display_name}
-                    {m.is_verified_mentor && <BadgeCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" />}
-                  </div>
-                  <div className="text-[11px] text-muted-foreground truncate">{m.specialty || `@${m.username}`}</div>
-                </div>
-                <Button
-                  size="sm"
-                  variant={m.is_verified_mentor ? 'ghost' : 'default'}
-                  className="h-8"
-                  disabled={busyId === m.user_id}
-                  onClick={() => toggleMentor(m.user_id, !m.is_verified_mentor)}
-                >
-                  {busyId === m.user_id
-                    ? <Loader2 className="w-4 h-4 animate-spin" />
-                    : m.is_verified_mentor ? 'Retirar' : 'Verificar'}
-                </Button>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+        <Button variant="outline" onClick={() => navigate('/admin/mentors')}>Gestão de Mentores</Button>
       </main>
     </div>
   );

@@ -1,3 +1,4 @@
+import { useMyMentor } from '../hooks/useMentorGovernance';
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, GraduationCap, AlertTriangle, ChevronRight, Type, FileText, LayoutGrid, Coins, Calendar, Users, Crown, Check } from 'lucide-react';
@@ -51,6 +52,7 @@ export default function AcademiaCreateSession() {
   const [datetime, setDatetime] = useState(defaultDatetimeLocal);
 
   const createMutation = useCreateAcademiaSession();
+  const mentor = useMyMentor();
   const { isCertified } = useAfrolocCertification();
   const price = Number(priceCoins) || 0;
 
@@ -99,6 +101,9 @@ export default function AcademiaCreateSession() {
   };
 
   const handleSubmit = () => {
+    if (mentor.data?.status !== 'active' || (price > 0 && !mentor.data.is_verified_mentor)) {
+      toast.error('Aprovação necessária; para cobrar, precisas também da verificação de mentor.'); return;
+    }
     if (!datetimeValid) {
       toast.error('Escolhe uma data e hora futuras para a sessão.');
       return;
@@ -144,6 +149,10 @@ export default function AcademiaCreateSession() {
 
   const goNext = () => { setDirection(1); handleNext(); };
   const goBack = () => { setDirection(-1); handleBack(); };
+
+  if (mentor.isLoading) return <p className="p-6">A verificar o perfil de mentor…</p>;
+  if (mentor.isError) return <div className="p-6"><p>Não foi possível verificar o perfil.</p><Button onClick={() => mentor.refetch()}>Tentar novamente</Button></div>;
+  if (mentor.data?.status !== 'active') return <div className="p-6 space-y-4"><h1 className="font-semibold">Aprovação de mentor necessária</h1><p>Apresenta ou completa a candidatura na Academia. As sessões existentes mantêm o histórico.</p><Button onClick={() => navigate('/academia')}>Ir à Academia</Button></div>;
 
   return (
     <div className="flex flex-col h-screen-safe overflow-hidden bg-background">
@@ -316,12 +325,13 @@ export default function AcademiaCreateSession() {
                     </Label>
                     <Input
                       id="price"
+                      disabled={!mentor.data.is_verified_mentor}
                       type="number"
                       min={0}
                       value={priceCoins}
                       onChange={(e) => setPriceCoins(e.target.value)}
                     />
-                    <p className="text-[10px] text-muted-foreground/50">0 = sessão gratuita</p>
+                    <p className="text-[10px] text-muted-foreground/50">0 = sessão gratuita. Só mentores verificados podem cobrar.</p>
                   </div>
 
                   {price > 0 && !isCertified && (

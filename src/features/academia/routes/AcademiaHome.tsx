@@ -1,3 +1,4 @@
+import { MentorSettings } from '../components/MentorSettings';
 import { useAuth } from '@/hooks/useAuth';
 import { useAdmin } from '@/hooks/useAdmin';
 import { SessionManagement } from '../components/SessionManagement';
@@ -50,6 +51,7 @@ export default function AcademiaHome() {
   const [mentorSheetOpen, setMentorSheetOpen] = useState(false);
   const [specialty, setSpecialty] = useState('');
   const [mentorBio, setMentorBio] = useState('');
+  const [experience, setExperience] = useState('');
 
   const handleBecomeMentor = () => {
     if (!specialty.trim()) {
@@ -57,10 +59,10 @@ export default function AcademiaHome() {
       return;
     }
     becomeMentor.mutate(
-      { specialty: specialty.trim(), mentorBio: mentorBio.trim() },
+      { specialty: specialty.trim(), mentorBio: mentorBio.trim(), experience: experience.trim() },
       {
         onSuccess: () => {
-          toast.success('Bem-vindo(a) à academia como mentor!');
+          toast.success('Candidatura enviada para análise.');
           setMentorSheetOpen(false);
           setSpecialty('');
           setMentorBio('');
@@ -207,6 +209,8 @@ export default function AcademiaHome() {
           </motion.section>
         )}
 
+        {isMentor && <MentorSettings />}
+        {isAdmin && <Button variant="outline" onClick={() => navigate('/admin/mentors')}>Gestão de Mentores</Button>}
         {/* Mentors carousel */}
         <motion.section
           initial={{ opacity: 0, y: 12 }}
@@ -240,7 +244,7 @@ export default function AcademiaHome() {
                   onClick={() => setMentorSheetOpen(true)}
                 >
                   <Plus className="h-3.5 w-3.5" />
-                  Torna-te mentor
+                  Candidatar-me a mentor
                 </Button>
               )}
             </div>
@@ -263,7 +267,7 @@ export default function AcademiaHome() {
                 onClick={() => setMentorSheetOpen(true)}
               >
                 <Plus className="h-3.5 w-3.5" />
-                Torna-te mentor
+                Candidatar-me a mentor
               </Button>
             </div>
           )}
@@ -337,11 +341,11 @@ export default function AcademiaHome() {
       </div>
 
       <Sheet open={mentorSheetOpen} onOpenChange={setMentorSheetOpen}>
-        <SheetContent side="bottom" className="rounded-t-2xl">
+        <SheetContent side="bottom" className="max-h-[90dvh] overflow-y-auto rounded-t-2xl">
           <SheetHeader className="text-left">
-            <SheetTitle>Torna-te mentor</SheetTitle>
+            <SheetTitle>Candidatar-me a mentor</SheetTitle>
             <SheetDescription>
-              Partilha o teu talento e cria sessões para a tua banda.
+              Apresenta a tua experiência. Poderás criar sessões após aprovação.
             </SheetDescription>
           </SheetHeader>
 
@@ -349,7 +353,7 @@ export default function AcademiaHome() {
             <div className="space-y-1.5">
               <Label htmlFor="mentor-specialty" className="text-xs">Especialidade</Label>
               <Input
-                id="mentor-specialty"
+                id="mentor-specialty" maxLength={120}
                 value={specialty}
                 onChange={(e) => setSpecialty(e.target.value)}
                 placeholder="Ex.: Música, Fotografia, Negócios"
@@ -357,9 +361,9 @@ export default function AcademiaHome() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="mentor-bio" className="text-xs">Bio (opcional)</Label>
+              <Label htmlFor="mentor-bio" className="text-xs">Biografia</Label>
               <Textarea
-                id="mentor-bio"
+                id="mentor-bio" maxLength={2000}
                 value={mentorBio}
                 onChange={(e) => setMentorBio(e.target.value)}
                 placeholder="Conta um pouco sobre a tua experiência..."
@@ -369,11 +373,15 @@ export default function AcademiaHome() {
             </div>
           </div>
 
+          <div className="space-y-2 pb-4">
+            <Label htmlFor="mentor-experience">Experiência</Label>
+            <Textarea id="mentor-experience" maxLength={2000} value={experience} onChange={e => setExperience(e.target.value)} placeholder="Experiência prática, formação e trabalhos realizados" />
+          </div>
           <SheetFooter>
             <Button
               className="w-full rounded-full"
               onClick={handleBecomeMentor}
-              disabled={becomeMentor.isPending}
+              disabled={becomeMentor.isPending || specialty.trim().length < 2 || mentorBio.trim().length < 10 || experience.trim().length < 10}
             >
               {becomeMentor.isPending ? 'A processar...' : 'Confirmar'}
             </Button>
