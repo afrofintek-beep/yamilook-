@@ -39,7 +39,7 @@ describe('remote revocation classification', () => {
   it('detects server-revoked JWT sessions', async () => {
     const { isRevokedSessionError } = await import('./account-sessions');
     expect(isRevokedSessionError({ code: '28000', status: 401 })).toBe(true);
-    expect(isRevokedSessionError({ code: 'PGRST301' })).toBe(true);
+    expect(isRevokedSessionError({ code: 'PGRST301' })).toBe(false);
   });
   it('does not sign out for offline, permissions, or absent migrations', async () => {
     const { isRevokedSessionError } = await import('./account-sessions');

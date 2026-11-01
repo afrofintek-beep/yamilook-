@@ -15,12 +15,11 @@ const controls = vi.hoisted(() => ({
 
 vi.mock('@/lib/private-cache', () => ({ clearLegacyPrivateCache: vi.fn().mockResolvedValue(undefined) }));
 vi.mock('@/lib/device', () => ({ recordDevice: vi.fn().mockResolvedValue(undefined) }));
-vi.mock('@/lib/account-sessions', () => ({
+vi.mock('@/lib/account-sessions', async (importOriginal) => ({
+  ...await importOriginal<typeof import('@/lib/account-sessions')>(),
   registerCurrentSession: vi.fn().mockResolvedValue(undefined),
   listLoginAlerts: vi.fn().mockResolvedValue([]),
   acknowledgeLoginAlerts: vi.fn().mockResolvedValue(undefined),
-  isRevokedSessionError: (error?: { code?: string } | null) =>
-    error?.code === '28000' || error?.code === 'PGRST301',
 }));
 vi.mock('sonner', () => ({ toast: { warning: vi.fn() } }));
 vi.mock('@/integrations/supabase/client', () => ({
@@ -106,9 +105,9 @@ describe('realtime session revocation', () => {
     await waitFor(() => expect(controls.signOut).toHaveBeenCalledWith({ scope: 'local' }));
   });
 
-  it('does not end a legitimate session for connectivity errors', async () => {
+  it.each(['PGRST301', 'PGRST202'])('does not end a legitimate session for %s', async (code) => {
     await mount();
-    controls.rpc.mockResolvedValue({ data: null, error: { code: 'PGRST202', status: 404 } });
+    controls.rpc.mockResolvedValue({ data: null, error: { code, status: code === 'PGRST301' ? 401 : 404 } });
     await act(async () => controls.revocationEvent?.());
     expect(screen.getByText('Conta activa')).toBeInTheDocument();
     expect(controls.signOut).not.toHaveBeenCalled();
