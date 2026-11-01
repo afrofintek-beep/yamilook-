@@ -9,6 +9,7 @@ afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 beforeEach(() => { rpc.mockReset(); invoke.mockReset(); invoke.mockResolvedValue({ data: { ok: true }, error: null }); rpc.mockImplementation((name: string) => Promise.resolve({ data: name === 'can_issue_user_invitation' ? true : { code }, error: null })); });
 const show = () => render(<InviteSheet open onOpenChange={() => {}} />);
 const generate = async () => {
+  fireEvent.click(await screen.findByText('Convidar um email específico'));
   fireEvent.change(await screen.findByLabelText('Email da pessoa convidada'), { target: { value: 'new@example.com' } });
   fireEvent.click(screen.getByRole('button', { name: 'Gerar código único' }));
   await screen.findByLabelText('Código único de convite');
@@ -70,7 +71,7 @@ describe('Unique invitations', () => {
     show(); await generate();
     expect(rpc).toHaveBeenCalledWith('issue_user_invitation', { p_email: 'new@example.com' });
     fireEvent.click(screen.getByRole('button', { name: 'Copiar código' }));
-    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('copia manualmente'));
+    await waitFor(() => expect(screen.getByRole('status', { name: 'Estado do convite por email' })).toHaveTextContent('copia manualmente'));
     expect(screen.getByLabelText('Código único de convite')).toHaveValue(code);
     expect(screen.getByLabelText('Link de convite')).toHaveValue(`https://www.yamilook.com/register?ref=${code}`);
   });
@@ -92,13 +93,13 @@ describe('Unique invitations', () => {
     await waitFor(() => expect(invoke).toHaveBeenCalledWith('send-user-invitation', {
       body: { email: 'new@example.com', code },
     }));
-    expect(screen.getByRole('status')).toHaveTextContent('aceitou o convite para envio');
+    expect(screen.getByRole('status', { name: 'Estado do convite por email' })).toHaveTextContent('aceitou o convite para envio');
   });
   it('offers manual email if the automatic service is not configured', async () => {
     invoke.mockResolvedValue({ data: { error: 'email_not_configured' }, error: null });
     show(); await generate();
     fireEvent.click(screen.getByRole('button', { name: 'Enviar por email' }));
-    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('ainda não está configurado'));
+    await waitFor(() => expect(screen.getByRole('status', { name: 'Estado do convite por email' })).toHaveTextContent('ainda não está configurado'));
     expect(screen.getByRole('link', { name: 'Preparar email manual' })).toBeInTheDocument();
   });
   it('hides the old invitation when the recipient changes', async () => {
@@ -109,9 +110,10 @@ describe('Unique invitations', () => {
   it('never exposes a code if the server rejects generation', async () => {
     rpc.mockImplementation((name: string) => Promise.resolve(name === 'can_issue_user_invitation' ? { data: true, error: null } : { data: null, error: { code: 'P0001', message: 'Este email já tem conta. Usa a opção de entrar.', details: null, hint: null } }));
     show();
+    fireEvent.click(await screen.findByText('Convidar um email específico'));
     fireEvent.change(await screen.findByLabelText('Email da pessoa convidada'), { target: { value: 'old@example.com' } });
     fireEvent.click(screen.getByRole('button', { name: 'Gerar código único' }));
-    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Este email já tem conta. Usa a opção de entrar.'));
+    await waitFor(() => expect(screen.getByRole('status', { name: 'Estado do convite por email' })).toHaveTextContent('Este email já tem conta. Usa a opção de entrar.'));
     expect(screen.queryByLabelText('Código único de convite')).not.toBeInTheDocument();
   });
 });
