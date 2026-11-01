@@ -19,11 +19,20 @@ for (const width of [320, 390]) {
     await page.reload();
     await expect(select).toHaveValue('fr');
     await expect(page.getByLabel('Mot de passe', { exact: true })).toBeVisible();
+    for (const language of ['en','fr','pt','ar','am','sw','ln','yo','sn','zu','kmb','umb','kg']) {
+      await select.selectOption(language);
+      await expect(page.locator('html')).toHaveAttribute('lang', language);
+      await expect(page.locator('html')).toHaveAttribute('dir', language === 'ar' ? 'rtl' : 'ltr');
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    }
     await select.selectOption('yo');
     await expect(page.getByRole('button', { name: 'Wọle · KOSOLOLA' })).toBeVisible();
     await select.selectOption('ar');
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await page.reload();
+    await expect(select).toHaveValue('ar');
+    await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
     await select.selectOption('pt');
     await expect(page.locator('html')).toHaveAttribute('dir', 'ltr');
     await expect(page.getByRole('button', { name: 'Entrar na KOSOLOLA' })).toBeVisible();

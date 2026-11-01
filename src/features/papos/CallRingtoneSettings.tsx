@@ -23,7 +23,7 @@ export default function CallRingtoneSettings() {
     try {
       const result = await updateSettings(updates);
       if (result.error) throw result.error;
-    } catch { setError('Não foi possível guardar o toque. Tenta novamente.'); }
+    } catch { setError('kosolola.ringtoneSaveError'); }
     finally { setSaving(false); }
   };
   return <section className="rounded-2xl border p-4 space-y-4" aria-labelledby="call-ringtone-title">
@@ -54,8 +54,8 @@ export default function CallRingtoneSettings() {
     </div>
     {(!enabled || volume === 0 || pattern === 'silent') && <p role="status" className="text-sm">{t('kosolola.silentTone')}</p>}
     {loading && <p role="status" className="text-sm">{t('kosolola.loadingTones')}</p>}
-    {!loading && !settings && <p role="alert" className="text-sm">Não foi possível carregar as preferências. Volta a abrir as Definições.</p>}
-    {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-    <p className="text-xs text-muted-foreground">O teste dura três segundos. Ajusta também o volume do telefone. Este toque é usado com a aplicação aberta; fora dela, ativa os alertas de chamadas abaixo.</p>
+    {!loading && !settings && <p role="alert" className="text-sm">{t('kosolola.preferencesLoadError')}</p>}
+    {error && <p role="alert" className="text-sm text-destructive">{t(error)}</p>}
+    <p className="text-xs text-muted-foreground">{t('kosolola.ringtoneHelp')}</p>
   </section>;
 }

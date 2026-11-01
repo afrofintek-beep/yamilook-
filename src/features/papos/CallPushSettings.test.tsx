@@ -15,7 +15,7 @@ it('explains loading instead of displaying an inert activation button', () => {
   expect(screen.getByRole('button', { name: 'A verificar…' })).toBeDisabled();
 });
 it('recovers from a failed check without leaving settings', async () => {
-  check.mockRejectedValueOnce(new Error('A verificação dos alertas demorou demasiado.'));
+  check.mockRejectedValueOnce(new Error('A verificação dos alertas demorou demasiado. Verifica a ligação e toca em Tentar novamente.'));
   render(<CallPushSettings />);
   expect(await screen.findByRole('alert')).toHaveTextContent('demorou demasiado');
   fireEvent.click(screen.getByRole('button', { name: 'Tentar novamente' }));
@@ -48,9 +48,9 @@ it('gives a retry for missing server configuration', async () => {
   expect(screen.getByRole('button', { name: 'Ativar alertas de chamadas' })).toBeDisabled();
 });
 it('explains iPhone installation instead of offering a misleading activation', async () => {
-  check.mockResolvedValue({ ...ready, supported: false, publicKey: null, message: 'Abre a KOSOLOLA pelo ícone no ecrã principal.' });
+  check.mockResolvedValue({ ...ready, supported: false, publicKey: null, message: 'No iPhone ou iPad, usa Partilhar → Adicionar ao ecrã principal e abre a KOSOLOLA pelo ícone para ativar os alertas.' });
   render(<CallPushSettings />);
-  expect(await screen.findByText(/Abre a KOSOLOLA pelo ícone/)).toBeInTheDocument();
+  expect(await screen.findByText(/abre a KOSOLOLA pelo ícone/)).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Ativar alertas de chamadas' })).toBeDisabled();
 });
 it('ignores stale status from a previous account', async () => {
