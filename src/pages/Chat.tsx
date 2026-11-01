@@ -251,12 +251,15 @@ export default function Chat() {
   // Get pinned messages
   const pinnedMessages = messages.filter((m) => pinnedIds.has(m.id));
 
-  // Fetch highlights
+  // Highlights depend on message membership, not typing, receipts or profiles.
+  const highlightedMessageIdsKey = JSON.stringify(messages.map(message => message.id));
   useEffect(() => {
+    let cancelled = false;
     const fetchHighlights = async () => {
-      if (!user || !conversationId) return;
+      setHighlights({});
+      if (!user?.id || !conversationId) return;
       
-      const messageIds = messages.map((m) => m.id);
+      const messageIds: string[] = JSON.parse(highlightedMessageIdsKey);
       if (messageIds.length === 0) return;
 
       const { data } = await supabase
@@ -269,11 +272,12 @@ export default function Chat() {
       (data || []).forEach((h) => {
         highlightsMap[h.message_id] = { color: h.color, label: h.label || undefined };
       });
-      setHighlights(highlightsMap);
+      if (!cancelled) setHighlights(highlightsMap);
     };
 
     fetchHighlights();
-  }, [messages, user, conversationId]);
+    return () => { cancelled = true; };
+  }, [highlightedMessageIdsKey, user?.id, conversationId]);
 
   // Scroll to highlighted message from search
   useEffect(() => {

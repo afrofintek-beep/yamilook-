@@ -1,9 +1,8 @@
-import { useEffect, useReducer } from 'react';
+import { useEffect, useMemo, useReducer } from 'react';
 
 /** Re-render at expiry even when no new database/realtime event arrives. */
 export function useMessageExpiry<T extends { expires_at?: string | null }>(messages: T[]): T[] {
   const [revision, refresh] = useReducer(value => value + 1, 0);
-  const now = Date.now();
   useEffect(() => {
     const future = messages.map(message => Date.parse(message.expires_at || ''))
       .filter(expiry => Number.isFinite(expiry) && expiry > Date.now());
@@ -18,5 +17,11 @@ export function useMessageExpiry<T extends { expires_at?: string | null }>(messa
       window.removeEventListener('pageshow', resume);
     };
   }, [messages, revision]);
-  return messages.filter(message => !message.expires_at || Date.parse(message.expires_at) > now);
+  // Keep the list stable between actual message/expiry changes. Consumers use
+  // this list in effects; a fresh array on every render caused a highlights
+  // request -> setState -> render -> request loop in the chat screen.
+  return useMemo(() => {
+    const now = Date.now();
+    return messages.filter(message => !message.expires_at || Date.parse(message.expires_at) > now);
+  }, [messages, revision]);
 }

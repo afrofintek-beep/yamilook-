@@ -1,6 +1,7 @@
 import { deleteChatMessage } from '@/lib/delete-chat-message';
 import { createChatConversation } from '@/lib/chat-conversations';
 import { useMessageExpiry } from './useMessageExpiry';
+import { useMessageRecovery } from './useMessageRecovery';
 import { orderConversations } from '@/lib/chat-conversations';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -258,6 +259,14 @@ export function useMessages(conversationId: string | null) {
   const { notifyMessage } = useMessageNotification();
   const [messages, setMessages] = useState<Message[]>([]);
   const unexpiredMessages = useMessageExpiry(messages);
+  const messagesRef = useRef(messages);
+  messagesRef.current = messages;
+  const fetchVersionRef = useRef(0);
+  const pendingMessageIdsRef = useRef(new Set<string>());
+  const readRequestedRef = useRef(false);
+  const scope = `${userId}:${conversationId}`;
+  const scopeRef = useRef(scope);
+  scopeRef.current = scope;
   const [reactions, setReactions] = useState<Record<string, Reaction[]>>({});
   const [starredIds, setStarredIds] = useState<Set<string>>(new Set());
   const [pinnedIds, setPinnedIds] = useState<Set<string>>(new Set());
@@ -286,6 +295,11 @@ export function useMessages(conversationId: string | null) {
       return;
     }
 
+    if (markRead) readRequestedRef.current = true;
+    const version = ++fetchVersionRef.current;
+    const isCurrent = () => version === fetchVersionRef.current && scopeRef.current === scope;
+    const messagesAtStart = new Map(messagesRef.current.map(message => [message.id, message]));
+    const pendingAtStart = new Set(pendingMessageIdsRef.current);
     try {
       // The visible_messages view enforces membership and cleared history.
       // These reads are independent, so avoid a serial network round trip.
@@ -296,6 +310,7 @@ export function useMessages(conversationId: string | null) {
           .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
           .order('created_at', { ascending: true }),
       ]);
+      if (!isCurrent()) return;
       if (participationResult.error) throw participationResult.error;
       historyCutoffRef.current = participationResult.data.history_cleared_at;
       setHistoryClearedAt(participationResult.data.history_cleared_at);
@@ -303,123 +318,30 @@ export function useMessages(conversationId: string | null) {
 
       if (error) throw error;
 
-      if (!messagesData?.length) {
-        setMessages([]);
-        setReactions({});
-        setStarredIds(new Set());
-        setPinnedIds(new Set());
-        setLoading(false);
-        return;
-      }
-
-      const messageIds = messagesData.map(m => m.id);
-      const senderIds = [...new Set(messagesData.map(m => m.sender_id))];
-      const replyToIds = messagesData.filter(m => m.reply_to_id).map(m => m.reply_to_id!);
-
-      // Batch fetch profiles, reactions, starred, pinned, reply messages, and view-once views in parallel
-      const [profilesResult, reactionsResult, starredResult, pinnedResult, replyMessagesResult, viewOnceResult] = await Promise.all([
-        fetchPublicProfilesBatched(senderIds),
-        supabase
-          .from('message_reactions')
-          .select('*')
-          .in('message_id', messageIds),
-        supabase
-          .from('starred_messages')
-          .select('message_id')
-          .eq('user_id', userId)
-          .in('message_id', messageIds),
-        supabase
-          .from('pinned_messages')
-          .select('message_id')
-          .eq('conversation_id', conversationId),
-        replyToIds.length > 0
-          ? supabase
-              .from('visible_messages')
-              .select('id, content, message_type, sender_id')
-              .in('id', replyToIds)
-          : Promise.resolve({ data: [] }),
-        supabase
-          .from('view_once_views')
-          .select('message_id')
-          .eq('user_id', userId)
-          .in('message_id', messageIds),
-      ]);
-
-      const profileMap = new Map<string | null, PublicProfile>((profilesResult.data ?? []).map((p) => [p.id, p]));
-      const replyMessages = replyMessagesResult.data || [];
-      const replyMessageMap = new Map(replyMessages.map(m => [m.id, m]));
-
-      // Fetch profiles for reply senders if not already fetched
-      const replySenderIds = [...new Set(replyMessages.map(m => m.sender_id).filter(id => !profileMap.has(id)))];
-      if (replySenderIds.length > 0) {
-        const { data: replyProfiles } = await fetchPublicProfilesBatched(replySenderIds);
-        (replyProfiles ?? []).forEach((p) => profileMap.set(p.id, p));
-      }
-
-      // Build messages with profiles
-      const messagesWithProfiles = messagesData.map(msg => {
-        let replyTo = undefined;
-        if (msg.reply_to_id) {
-          const replyMsg = replyMessageMap.get(msg.reply_to_id);
-          if (replyMsg) {
-            const replyProfile = profileMap.get(replyMsg.sender_id);
-            replyTo = { ...replyMsg, sender_profile: messageProfile(replyProfile) };
-          }
-        }
-        return {
-          ...msg,
-          sender_profile: messageProfile(profileMap.get(msg.sender_id)),
-          reply_to: replyTo,
-        };
-      });
-
-      // Merge server messages with any local optimistic state (e.g. keep local blob: URL until upload finishes)
-      setMessages((prev) => {
-        const prevById = new Map(prev.map((m) => [m.id, m] as const));
-
-        return messagesWithProfiles.map((m) => {
-          const prevMsg = prevById.get(m.id);
-          if (!prevMsg) return m;
-
-          const prevMedia = typeof prevMsg.media_url === 'string' ? prevMsg.media_url : null;
-          const keepLocalBlob =
-            (!m.media_url || m.media_url === '') &&
-            !!prevMedia &&
-            prevMedia.startsWith('blob:') &&
-            m.message_type === 'voice';
-
-          return {
-            ...m,
-            media_url: keepLocalBlob ? prevMedia : m.media_url,
-            // keep any enriched fields if they exist
-            sender_profile: m.sender_profile ?? prevMsg.sender_profile,
-            reply_to: m.reply_to ?? prevMsg.reply_to,
-          };
+      // Render authorized text immediately; profiles/reactions are enrichment.
+      // Preserve events/optimistic sends that arrived after this fetch began.
+      setMessages(prev => {
+        const previous = new Map(prev.map(message => [message.id, message]));
+        const rows = (messagesData || []).map(row => {
+          const local = previous.get(row.id);
+          if (local && local !== messagesAtStart.get(row.id)) return local;
+          const keepBlob = !row.media_url && local?.media_url?.startsWith('blob:');
+          return { ...row, media_url: keepBlob ? local.media_url : row.media_url,
+            sender_profile: local?.sender_profile, reply_to: local?.reply_to };
         });
+        const fetchedIds = new Set(rows.map(row => row.id));
+        return [...rows, ...prev.filter(message => !fetchedIds.has(message.id) &&
+          (message !== messagesAtStart.get(message.id) || pendingAtStart.has(message.id) ||
+            pendingMessageIdsRef.current.has(message.id)))]
+          .sort((a, b) => a.created_at.localeCompare(b.created_at) || a.id.localeCompare(b.id));
       });
-
-      // Build reactions map
-      const reactionsMap: Record<string, Reaction[]> = {};
-      (reactionsResult.data || []).forEach((r) => {
-        if (!reactionsMap[r.message_id]) reactionsMap[r.message_id] = [];
-        const existing = reactionsMap[r.message_id].find((e) => e.emoji === r.emoji);
-        if (existing) {
-          existing.count++;
-          existing.users.push(r.user_id);
-        } else {
-          reactionsMap[r.message_id].push({ emoji: r.emoji, count: 1, users: [r.user_id] });
-        }
-      });
-      setReactions(reactionsMap);
-
-      setStarredIds(new Set((starredResult.data || []).map((s) => s.message_id)));
-      setPinnedIds(new Set((pinnedResult.data || []).map((p) => p.message_id)));
-      setViewOnceViewedIds(new Set((viewOnceResult.data || []).map((v) => v.message_id)));
+      setLoading(false);
 
       // Mark as read — only on an explicit open/refresh, not on incidental
       // refetches (e.g. a reaction elsewhere), which would wrongly clear the
       // unread badge.
-      if (markRead) {
+      if (readRequestedRef.current) {
+        readRequestedRef.current = false;
         void supabase
           .from('conversation_participants')
           .update({ last_read_at: new Date().toISOString() })
@@ -428,22 +350,132 @@ export function useMessages(conversationId: string | null) {
           .then(({ error }) => { if (error) console.error('Error marking messages read:', error); },
             error => console.error('Error marking messages read:', error));
       }
+
+      if (!messagesData?.length) {
+        setReactions({});
+        setStarredIds(new Set());
+        setPinnedIds(new Set());
+        setLoading(false);
+        return;
+      }
+
+      // Optional enrichment must not hold the recovery probe open. A slow
+      // avatar request cannot prevent the next missed message being recovered.
+      void (async () => {
+        const messageIds = messagesData.map(m => m.id);
+        const senderIds = [...new Set(messagesData.map(m => m.sender_id))];
+        const replyToIds = messagesData.filter(m => m.reply_to_id).map(m => m.reply_to_id!);
+
+        // Batch fetch profiles, reactions, starred, pinned, reply messages, and view-once views in parallel
+        const [profilesResult, reactionsResult, starredResult, pinnedResult, replyMessagesResult, viewOnceResult] = await Promise.all([
+          fetchPublicProfilesBatched(senderIds),
+          supabase
+            .from('message_reactions')
+            .select('*')
+            .in('message_id', messageIds),
+          supabase
+            .from('starred_messages')
+            .select('message_id')
+            .eq('user_id', userId)
+            .in('message_id', messageIds),
+          supabase
+            .from('pinned_messages')
+            .select('message_id')
+            .eq('conversation_id', conversationId),
+          replyToIds.length > 0
+            ? supabase
+                .from('visible_messages')
+                .select('id, content, message_type, sender_id')
+                .in('id', replyToIds)
+            : Promise.resolve({ data: [] }),
+          supabase
+            .from('view_once_views')
+            .select('message_id')
+            .eq('user_id', userId)
+            .in('message_id', messageIds),
+        ]);
+
+        const profileMap = new Map<string | null, PublicProfile>((profilesResult.data ?? []).map((p) => [p.id, p]));
+        const replyMessages = replyMessagesResult.data || [];
+        const replyMessageMap = new Map(replyMessages.map(m => [m.id, m]));
+
+        // Fetch profiles for reply senders if not already fetched
+        const replySenderIds = [...new Set(replyMessages.map(m => m.sender_id).filter(id => !profileMap.has(id)))];
+        if (replySenderIds.length > 0) {
+          const { data: replyProfiles } = await fetchPublicProfilesBatched(replySenderIds);
+          (replyProfiles ?? []).forEach((p) => profileMap.set(p.id, p));
+        }
+
+        // Build messages with profiles
+        const messagesWithProfiles = messagesData.map(msg => {
+          let replyTo = undefined;
+          if (msg.reply_to_id) {
+            const replyMsg = replyMessageMap.get(msg.reply_to_id);
+            if (replyMsg) {
+              const replyProfile = profileMap.get(replyMsg.sender_id);
+              replyTo = { ...replyMsg, sender_profile: messageProfile(replyProfile) };
+            }
+          }
+          return {
+            ...msg,
+            sender_profile: messageProfile(profileMap.get(msg.sender_id)),
+            reply_to: replyTo,
+          };
+        });
+
+        if (!isCurrent()) return;
+        const enriched = new Map(messagesWithProfiles.map(message => [message.id, message]));
+        // Enrichment must never roll back a newer realtime edit or remove a new message.
+        setMessages(prev => prev.map(message => {
+          const details = enriched.get(message.id);
+          return details ? { ...message,
+            sender_profile: details.sender_profile ?? message.sender_profile,
+            reply_to: details.reply_to ?? message.reply_to } : message;
+        }));
+
+        // Build reactions map
+        const reactionsMap: Record<string, Reaction[]> = {};
+        (reactionsResult.data || []).forEach((r) => {
+          if (!reactionsMap[r.message_id]) reactionsMap[r.message_id] = [];
+          const existing = reactionsMap[r.message_id].find((e) => e.emoji === r.emoji);
+          if (existing) {
+            existing.count++;
+            existing.users.push(r.user_id);
+          } else {
+            reactionsMap[r.message_id].push({ emoji: r.emoji, count: 1, users: [r.user_id] });
+          }
+        });
+        setReactions(reactionsMap);
+
+        setStarredIds(new Set((starredResult.data || []).map((s) => s.message_id)));
+        setPinnedIds(new Set((pinnedResult.data || []).map((p) => p.message_id)));
+        setViewOnceViewedIds(new Set((viewOnceResult.data || []).map((v) => v.message_id)));
+      })().catch(error => console.error('Error enriching chat history:', error));
     } catch (err) {
       console.error('Error fetching messages:', err);
     } finally {
-      setLoading(false);
+      if (isCurrent()) setLoading(false);
     }
-  }, [conversationId, userId]);
+  }, [conversationId, userId, scope]);
+
+  useMessageRecovery(conversationId, userId, messages, fetchMessages);
 
   useEffect(() => {
+    let active = true;
+    let participationChannel: RealtimeChannel | undefined;
     historyCutoffRef.current = null;
+    pendingMessageIdsRef.current.clear();
+    readRequestedRef.current = false;
+    setMessages([]);
     setHistoryClearedAt(null);
     fetchMessages();
 
     if (conversationId && user) {
-      channelRef.current = supabase
-        .channel(`messages-${conversationId}-${instanceIdRef.current}`)
+      // A missing publication for participant receipts must not break message delivery.
+      participationChannel = supabase
+        .channel(`message-participants-${conversationId}-${instanceIdRef.current}`)
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'conversation_participants', filter: `conversation_id=eq.${conversationId}` }, payload => {
+          if (!active) return;
           const row = payload.new as { user_id?: string; history_cleared_at?: string | null };
           // last_read_at updates are acknowledgements, not history changes.
           // Compare with our known cutoff: payload.old may contain only an id.
@@ -453,12 +485,16 @@ export function useMessages(conversationId: string | null) {
             void fetchMessages(false);
           }
         })
+        .subscribe();
+      channelRef.current = supabase
+        .channel(`messages-${conversationId}-${instanceIdRef.current}`)
         .on('postgres_changes', {
           event: 'INSERT',
           schema: 'public',
           table: 'messages',
           filter: `conversation_id=eq.${conversationId}`,
         }, async (payload: RealtimePostgresChangesPayload<Tables<'messages'>>) => {
+          if (!active) return;
           const newMessage = payload.new as Message;
           if (historyCutoffRef.current && newMessage.created_at <= historyCutoffRef.current) return;
 
@@ -505,12 +541,18 @@ export function useMessages(conversationId: string | null) {
             return;
           }
           
-          // For other users' messages, fetch profile (non-blocking pattern)
-          const { data: profile } = await fetchPublicProfileById(newMessage.sender_id);
-
+          // Deliver the text before any optional profile request completes.
           setMessages((prev) => prev.some(message => message.id === newMessage.id)
             ? prev
-            : [...prev, { ...newMessage, sender_profile: messageProfile(profile) }]);
+            : [...prev, { ...newMessage, sender_profile: prev.find(message =>
+                message.sender_id === newMessage.sender_id)?.sender_profile }]
+                .sort((a, b) => a.created_at.localeCompare(b.created_at) || a.id.localeCompare(b.id)));
+          setTypingUsers(prev => prev.filter(typing => typing.user_id !== newMessage.sender_id));
+          void fetchPublicProfileById(newMessage.sender_id).then(({ data: profile }) => {
+            if (!active || !profile) return;
+            setMessages(prev => prev.map(message => message.id === newMessage.id
+              ? { ...message, sender_profile: messageProfile(profile) } : message));
+          }).catch(error => console.error('Error enriching received message:', error));
 
           // Trigger notification sound/vibration for incoming messages
           notifyMessage();
@@ -520,12 +562,16 @@ export function useMessages(conversationId: string | null) {
             .from('conversation_participants')
             .update({ last_read_at: new Date().toISOString() })
             .eq('conversation_id', conversationId)
-            .eq('user_id', user.id);
+            .eq('user_id', user.id)
+            .then(({ error }) => { if (error) console.error('Error marking conversation read:', error); },
+              error => console.error('Error marking conversation read:', error));
 
           // Append this reader to read_by atomically (server-side jsonb append,
           // de-duplicated) so group receipts accumulate and the value stays a
           // real array the UI can read.
-          void supabase.rpc('mark_message_read', { p_message_id: newMessage.id });
+          void supabase.rpc('mark_message_read', { p_message_id: newMessage.id })
+            .then(({ error }) => { if (error) console.error('Error marking message read:', error); },
+              error => console.error('Error marking message read:', error));
         })
         .on('postgres_changes', {
           event: 'UPDATE',
@@ -533,6 +579,7 @@ export function useMessages(conversationId: string | null) {
           table: 'messages',
           filter: `conversation_id=eq.${conversationId}`,
         }, (payload: RealtimePostgresChangesPayload<Tables<'messages'>>) => {
+          if (!active) return;
           const updatedMessage = payload.new as Message;
           // Merge all updated fields (e.g. media_url after voice upload), but keep enriched joins
           setMessages((prev) =>
@@ -619,10 +666,17 @@ export function useMessages(conversationId: string | null) {
             });
           });
         })
-        .subscribe();
+        .subscribe(status => {
+          // Catch writes between the initial read and the subscription, and
+          // messages missed while Safari suspended the socket.
+          if (active && status === 'SUBSCRIBED') void fetchMessages(false);
+        });
     }
 
     return () => {
+      active = false;
+      fetchVersionRef.current++;
+      if (participationChannel) supabase.removeChannel(participationChannel);
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
       }
@@ -788,6 +842,7 @@ export function useMessages(conversationId: string | null) {
       },
     };
 
+    pendingMessageIdsRef.current.add(messageId);
     setMessages((prev) => [...prev, optimisticMessage]);
 
     const isBlobUrl = !!mediaUrl && mediaUrl.startsWith('blob:');
@@ -807,6 +862,8 @@ export function useMessages(conversationId: string | null) {
         duration_seconds: durationSeconds || null,
         is_view_once: isViewOnce || false,
       });
+
+    pendingMessageIdsRef.current.delete(messageId);
 
     // Clear typing indicator via broadcast (immediate) 
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
