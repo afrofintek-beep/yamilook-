@@ -284,6 +284,7 @@ export function useCalls({ loadHistory = true }: { loadHistory?: boolean } = {})
   // Watch the active incoming call record - clear it if A hangs up before B answers
   useEffect(() => {
     if (!incomingCall) return;
+    let disposed = false;
 
     // Poll the call status every 2s as a fallback (Realtime may be slow)
     const intervalId = setInterval(async () => {
@@ -293,15 +294,18 @@ export function useCalls({ loadHistory = true }: { loadHistory?: boolean } = {})
         .eq('id', incomingCall.id)
         .maybeSingle();
 
+      if (disposed) return;
       if (!data || ['ended', 'declined', 'failed', 'cancelled', 'missed', 'connecting', 'ongoing'].includes(data.status)) {
         logger.debug('Active incoming call is no longer ringing - clearing', 'useCalls', data?.status);
         setIncomingCall(null);
       }
     }, 2000);
 
-    // Subscribe via Realtime for instant clearing
+    // Supabase reuses a channel with the same topic. The global call listener
+    // and the history page can both watch this call, so each effect needs its
+    // own topic, including when a previous asynchronous unsubscribe is pending.
     const channel = supabase
-      .channel(`call-status-watch-${incomingCall.id}`)
+      .channel(`call-status-watch-${incomingCall.id}-${crypto.randomUUID()}`)
       .on(
         'postgres_changes',
         {
@@ -311,6 +315,7 @@ export function useCalls({ loadHistory = true }: { loadHistory?: boolean } = {})
           filter: `id=eq.${incomingCall.id}`,
         },
         (payload) => {
+          if (disposed) return;
           const newStatus = (payload.new as Partial<Tables<'calls'>>)?.status;
           logger.debug('Incoming call status changed', 'useCalls', newStatus);
           if (newStatus && ['ended', 'declined', 'failed', 'cancelled', 'missed', 'connecting', 'ongoing'].includes(newStatus)) {
@@ -322,6 +327,7 @@ export function useCalls({ loadHistory = true }: { loadHistory?: boolean } = {})
       .subscribe();
 
     return () => {
+      disposed = true;
       clearInterval(intervalId);
       supabase.removeChannel(channel);
     };
