@@ -81,7 +81,13 @@ it('pauses, resumes and uploads the actual MP4 before completing', async () => {
 it('reports upload failure without claiming the recording was saved', async () => {
   await mount();await click('Gravar');state={...state!,consents:[]};await tick(2000);mocks.upload.mockResolvedValue({error:new Error('storage')});
   await click('Parar e guardar gravação');await tick(2000);
-  expect(screen.queryByText('Gravação guardada.')).not.toBeInTheDocument();expect(screen.getByRole('alert')).toHaveTextContent('Não foi possível guardar');
+  expect(screen.queryByText('Gravação guardada.')).not.toBeInTheDocument();expect(screen.getByRole('alert')).toHaveTextContent('Não foi possível enviar');
+  expect(screen.getByRole('button', {name:'Descarregar gravação'})).toBeEnabled();
+  mocks.upload.mockResolvedValue({error:null});
+  await click('Tentar guardar novamente');
+  expect(screen.getByText('Gravação guardada.')).toBeInTheDocument();
+  expect(mocks.stop).toHaveBeenCalledTimes(1);
+  expect(mocks.upload.mock.calls[0][1]).toBe(mocks.upload.mock.calls[1][1]);
 });
 it('stops capture if consent state cannot be verified after connection loss', async () => {
   await mount();await click('Gravar');state={...state!,consents:[]};await tick(2000);failure='state';await tick(2000);

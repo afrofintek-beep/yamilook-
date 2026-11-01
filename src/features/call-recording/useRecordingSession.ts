@@ -13,6 +13,8 @@ export function useRecordingSession(callId: string, userId: string | undefined,
   const recorder = useCallRecorder();
   const [session, setSession] = useState<RecordingSession | null>(null);
   const [busy, setBusy] = useState(false);
+  const [retryAvailable, setRetryAvailable] = useState(false);
+  const pendingFile = useRef<{ id: string; blob: Blob; uploaded: boolean; duration: number } | null>(null);
   const [error, setError] = useState('');
   const [duration, setDuration] = useState(0);
   const [localRecording, setLocalRecording] = useState(false);
@@ -166,40 +168,90 @@ export function useRecordingSession(callId: string, userId: string | undefined,
     return () => clearInterval(timer);
   }, [localRecording, session?.status]);
 
+  const save = async () => {
+    const file = pendingFile.current;
+    if (!file || working.current) return;
+    working.current = true;
+    revision.current++;
+    setBusy(true);
+    setError('');
+    let stage = 'preparar';
+    try {
+      const state = await recordingSession(callId);
+      if (state?.id !== file.id) throw new Error('recording_changed');
+      if (state.status === 'recording' || state.status === 'paused') {
+        await recordingSession(callId, 'stop', file.id);
+      } else if (state.status !== 'processing' && state.status !== 'completed') {
+        throw new Error('recording_closed');
+      }
+      const path = `${callId}/${file.id}.${file.blob.type.includes('mp4') ? 'mp4' : 'webm'}`;
+      if (state.status !== 'completed') {
+        stage = 'enviar';
+        if (!file.uploaded) {
+          const { error } = await supabase.storage.from('call-recordings').upload(path, file.blob,
+            { contentType: file.blob.type || 'video/webm', upsert: false });
+          if (error) throw error;
+          file.uploaded = true;
+        }
+        stage = 'confirmar';
+        const next = await recordingSession(callId, 'complete', file.id, undefined, {
+          storage_path: path, file_size_bytes: file.blob.size, duration_seconds: file.duration,
+        });
+        if (mounted.current) setSession(next);
+      } else if (mounted.current) setSession(state);
+      pendingFile.current = null;
+      owned.current = null;
+      setRetryAvailable(false);
+    } catch (cause) {
+      // Keep media in this tab; never log tokens, participant data or media.
+      const code = typeof cause === 'object' && cause && 'code' in cause ? String(cause.code) : 'unknown';
+      console.warn('[recording-save]', { stage, code });
+      if (mounted.current) {
+        setRetryAvailable(true);
+        setError(`Não foi possível ${stage} a gravação. O ficheiro está disponível nesta página. Tente novamente ou descarregue antes de sair.`);
+      }
+    } finally {
+      working.current = false;
+      if (mounted.current) setBusy(false);
+    }
+  };
+
+  const download = () => {
+    const file = pendingFile.current;
+    if (!file) return;
+    const url = URL.createObjectURL(file.blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `gravacao-${file.id}.${file.blob.type.includes('mp4') ? 'mp4' : 'webm'}`;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  };
+
   const stop = async () => {
     if (working.current || !session || owned.current !== session.id || !capturing.current) return;
     working.current = true;
     revision.current++;
     setBusy(true);
     setError('');
-    const id = session.id;
     capturing.current = false;
     setLocalRecording(false);
-    const mediaResult = recorderRef.current.stop();
-    try {
-      await recordingSession(callId, 'stop', id);
-      const blob = await mediaResult;
-      if (!blob?.size) throw new Error('empty_recording');
-      const path = `${callId}/${id}.${blob.type.includes('mp4') ? 'mp4' : 'webm'}`;
-      const { error: uploadError } = await supabase.storage.from('call-recordings')
-        .upload(path, blob, { contentType: blob.type || 'video/webm', upsert: false });
-      if (uploadError) throw uploadError;
-      const next = await recordingSession(callId, 'complete', id, undefined, {
-        storage_path: path, file_size_bytes: blob.size, duration_seconds: duration,
-      });
-      if (mounted.current) setSession(next);
-    } catch {
-      await discard();
-      void recordingSession(callId, 'fail', id).catch(() => {});
-      if (mounted.current) setError('Não foi possível guardar a gravação.');
-    } finally {
+    const blob = await recorderRef.current.stop();
+    if (blob?.size) {
+      pendingFile.current = { id: session.id, blob, uploaded: false, duration };
+      working.current = false;
+      await save();
+    } else {
+      void recordingSession(callId, 'fail', session.id).catch(() => {});
       owned.current = null;
       working.current = false;
-      if (mounted.current) setBusy(false);
+      if (mounted.current) {
+        setBusy(false);
+        setError('O navegador não entregou dados da gravação. Não foi criado um ficheiro.');
+      }
     }
   };
 
-  return { session, busy, error, duration, localRecording, hasActiveSession: !!active(session),
+  return { session, busy, error, duration, localRecording, retryAvailable, retrySave: save, download, hasActiveSession: !!active(session),
     request: () => run('request'), respond: (answer: boolean) => run('respond', session?.id, answer),
     cancel: () => run('cancel', session?.id),
     togglePause: () => run(session?.status === 'paused' ? 'resume' : 'pause', session?.id), stop };

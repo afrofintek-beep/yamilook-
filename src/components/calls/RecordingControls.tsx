@@ -20,6 +20,11 @@ export function RecordingControls({ callId, participants }: { callId: string; pa
   const elapsed = `${Math.floor(duration / 60).toString().padStart(2, '0')}:${(duration % 60).toString().padStart(2, '0')}`;
   const errorMessage = error && <p role="alert" className="text-sm text-destructive">{error}</p>;
   return <>
+    {recording.retryAvailable && <div className="px-3 pb-2">
+      {errorMessage}
+      <Button disabled={busy} onClick={recording.retrySave}>Tentar guardar novamente</Button>
+      <Button variant="outline" onClick={recording.download}>Descarregar gravação</Button>
+    </div>}
     {!recording.hasActiveSession && <div className="shrink-0 px-3 pb-2">
       <Button variant="outline" size="sm" disabled={busy || webRTCState.callStatus !== 'connected'} onClick={recording.request}>
         <Circle className="h-4 w-4 mr-2 text-red-500" />{busy ? 'A preparar…' : 'Gravar'}
