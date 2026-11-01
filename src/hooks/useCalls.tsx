@@ -1,3 +1,4 @@
+import { useCachedList } from './useCachedList';
 /* @refresh reset */
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -69,10 +70,10 @@ export function useCalls({ loadHistory = true }: { loadHistory?: boolean } = {})
   const userId = user?.id;
   const [incomingCall, setIncomingCall] = useState<Call | null>(null);
   const incomingCallRef = useRef<Call | null>(null);
-  const [callHistory, setCallHistory] = useState<CallHistory[]>([]);
+  const { items: callHistory, setItems: setCallHistory, loading, setLoading } = useCachedList<CallHistory>(userId, 'calls');
   const scheduling = useScheduledCalls();
   const scheduledCalls = scheduling.scheduledCalls;
-  const [loading, setLoading] = useState(true);
+
 
   // Keep a ref so effects don't need to re-subscribe when incomingCall changes
   useEffect(() => {
@@ -166,7 +167,7 @@ export function useCalls({ loadHistory = true }: { loadHistory?: boolean } = {})
   // Do not fetch history for the app-wide incoming-call listener. The calls page
   // opts into this read; realtime incoming call handling always remains active.
   const fetchCallHistory = useCallback(async () => {
-    if (!user) return;
+    if (!userId) { setLoading(false); return; }
     try {
       const { data: participations, error } = await supabase
         .from('call_participants')
@@ -177,7 +178,7 @@ export function useCalls({ loadHistory = true }: { loadHistory?: boolean } = {})
             is_group_call, caller_id, callee_id, initiator_id, end_reason
           )
         `)
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .order('created_at', { ascending: false })
         .limit(50);
       if (error) throw error;
@@ -196,12 +197,12 @@ export function useCalls({ loadHistory = true }: { loadHistory?: boolean } = {})
         .from('call_participants')
         .select('call_id, user_id')
         .in('call_id', callIds)
-        .neq('user_id', user.id);
+        .neq('user_id', userId);
       if (participantError) throw participantError;
 
       const participantIds = participants?.map(participant => participant.user_id) ?? [];
       const fallbackIds = callRecords.flatMap(call => {
-        const otherId = call.caller_id === user.id ? call.callee_id : call.caller_id;
+        const otherId = call.caller_id === userId ? call.callee_id : call.caller_id;
         return otherId ? [otherId] : [];
       });
       const { data: profiles, error: profilesError } =
@@ -209,14 +210,14 @@ export function useCalls({ loadHistory = true }: { loadHistory?: boolean } = {})
       if (profilesError) throw profilesError;
 
       setCallHistory(attachCallParticipants(
-        callRecords, participants ?? [], profiles ?? [], user.id
+        callRecords, participants ?? [], profiles ?? [], userId
       ) as CallHistory[]);
     } catch (error) {
       logger.error('Error fetching call history', 'useCalls', error);
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [userId, setCallHistory, setLoading]);
 
   const updateRsvp = scheduling.rsvp;
   const cancelScheduledCall = scheduling.cancel;

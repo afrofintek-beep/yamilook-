@@ -1,3 +1,4 @@
+import { useCachedList } from './useCachedList';
 import { deleteChatMessage } from '@/lib/delete-chat-message';
 import { createChatConversation } from '@/lib/chat-conversations';
 import { useMessageExpiry } from './useMessageExpiry';
@@ -108,8 +109,8 @@ interface TypingUser {
 export function useConversations() {
   const { user } = useAuth();
   const userId = user?.id;
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { items: conversations, setItems: setConversations, loading, setLoading } = useCachedList<Conversation>(userId, 'conversations');
+
   const channelRef = useRef<RealtimeChannel | null>(null);
   // Unique per hook instance so concurrent mounts don't collide on the same
   // Supabase realtime channel topic (which throws "cannot add postgres_changes
@@ -214,7 +215,7 @@ export function useConversations() {
     } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, [userId, setConversations, setLoading]);
 
   useEffect(() => {
     fetchConversations();

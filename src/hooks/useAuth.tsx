@@ -1,3 +1,4 @@
+import { clearListCache } from '@/lib/list-cache';
 import { getYamilookPublicUrl } from '@/lib/public-site';
 import { clearLegacyPrivateCache } from '@/lib/private-cache';
 import { useState, useEffect, createContext, useContext, ReactNode, useRef, useCallback } from 'react';
@@ -156,6 +157,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const applySession = (nextSession: Session | null) => {
       const previousUserId = sessionRef.current?.user.id;
       const nextUserId = nextSession?.user.id;
+      if (!nextUserId || (previousUserId && previousUserId !== nextUserId)) clearListCache();
       sessionRef.current = nextSession;
       userRef.current = nextSession?.user ?? null;
       setSession(nextSession);
@@ -406,6 +408,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { disableCallPush } = await import('@/lib/call-push');
       await disableCallPush();
     }
+    clearListCache();
     await clearLegacyPrivateCache();
     const { error } = await supabase.auth.signOut({ scope });
     
