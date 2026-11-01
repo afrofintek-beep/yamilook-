@@ -20,7 +20,7 @@ export function RecordingControls({ callId, participants }: { callId: string; pa
   const elapsed = `${Math.floor(duration / 60).toString().padStart(2, '0')}:${(duration % 60).toString().padStart(2, '0')}`;
   const errorMessage = error && <p role="alert" className="text-sm text-destructive">{error}</p>;
   return <>
-    {!recording.hasActiveSession && <div className="absolute top-4 left-4 z-20 max-w-[80%]">
+    {!recording.hasActiveSession && <div className="shrink-0 px-3 pb-2">
       <Button variant="outline" size="sm" disabled={busy || webRTCState.callStatus !== 'connected'} onClick={recording.request}>
         <Circle className="h-4 w-4 mr-2 text-red-500" />{busy ? 'A preparar…' : 'Gravar'}
       </Button>
@@ -28,20 +28,25 @@ export function RecordingControls({ callId, participants }: { callId: string; pa
       {session?.status === 'completed' && <p role="status">Gravação guardada.</p>}
       {session?.status === 'stopped' && <p role="status">Pedido de gravação terminado.</p>}
     </div>}
-    {active && <div role="status" className="absolute top-4 left-1/2 -translate-x-1/2 flex items-center gap-2 rounded-full bg-red-600 px-3 py-2 text-white z-30">
-      <Circle className="h-3 w-3 fill-current" />
-      <span>{session.status === 'paused' ? 'Gravação em pausa' : 'A gravar'}</span>
-      {recording.localRecording && <>
-        <span>{elapsed}</span>
-        <Button variant="ghost" size="icon" disabled={busy} aria-label={session.status === 'paused' ? 'Retomar gravação' : 'Pausar gravação'} onClick={recording.togglePause}>
-          {session.status === 'paused' ? <Play /> : <Pause />}
-        </Button>
-        <Button variant="ghost" size="icon" disabled={busy} aria-label="Parar e guardar gravação" onClick={recording.stop}><Square /></Button>
-      </>}
+    {active && <div className="shrink-0 self-center max-w-full px-2 pb-2">
+      <div role="status" className="flex h-11 w-max max-w-full flex-nowrap items-center gap-1 rounded-full bg-red-600 pl-3 pr-1 text-sm text-white whitespace-nowrap">
+        <Circle aria-hidden="true" className="h-2.5 w-2.5 shrink-0 fill-current" />
+        <span>{session.status === 'paused' ? 'Em pausa' : 'A gravar'}</span>
+        {recording.localRecording && <>
+          <span aria-hidden="true">·</span>
+          <span className="tabular-nums">{elapsed}</span>
+          <span aria-hidden="true">·</span>
+          <Button variant="ghost" size="icon" className="h-11 w-11 shrink-0 rounded-full hover:bg-white/15 hover:text-white" disabled={busy} aria-label={session.status === 'paused' ? 'Retomar gravação' : 'Pausar gravação'} onClick={recording.togglePause}>
+            {session.status === 'paused' ? <Play /> : <Pause />}
+          </Button>
+          <span aria-hidden="true">·</span>
+          <Button variant="ghost" size="icon" className="h-11 w-11 shrink-0 rounded-full hover:bg-white/15 hover:text-white" disabled={busy} aria-label="Parar e guardar gravação" onClick={recording.stop}><Square /></Button>
+        </>}
+      </div>
       {errorMessage}
     </div>}
-    {session?.status === 'processing' && <p role="status" className="absolute top-4 left-4 z-20">A guardar gravação…</p>}
-    {consented && <p role="status" className="absolute top-4 left-4 z-20">Consentimento guardado. A aguardar os restantes participantes.</p>}
+    {session?.status === 'processing' && <p role="status" className="shrink-0 px-3 pb-2 text-white">A guardar gravação…</p>}
+    {consented && <p role="status" className="shrink-0 px-3 pb-2 text-white">Consentimento guardado. A aguardar os restantes participantes.</p>}
     <Dialog open={!!pending && initiator} onOpenChange={open => { if (!open && !busy) void recording.cancel(); }}>
       <DialogContent onEscapeKeyDown={e => { if (busy) e.preventDefault(); }} onPointerDownOutside={e => e.preventDefault()}>
         <DialogHeader><DialogTitle>Autorização para gravar</DialogTitle>

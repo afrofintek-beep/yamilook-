@@ -71,9 +71,10 @@ it('uses one transport-backed status while reconnecting',()=>{
   expect(screen.queryByText('Ligada')).not.toBeInTheDocument();
 });
 
-it('keeps recording controls inside the media stage rather than over the header', () => {
+it('keeps recording controls outside the media stage to avoid covering thumbnails', () => {
   setup();
-  expect(screen.getByTestId('call-stage')).toContainElement(screen.getByRole('button', { name: 'Gravar chamada' }));
+  expect(screen.getByTestId('call-stage')).not.toContainElement(screen.getByRole('button', { name: 'Gravar chamada' }));
+  expect(screen.getByTestId('call-layout')).toContainElement(screen.getByRole('button', { name: 'Gravar chamada' }));
   expect(screen.getByTestId('call-stage')).not.toContainElement(screen.getByRole('button', { name: 'Mensagem' }));
 });
 
