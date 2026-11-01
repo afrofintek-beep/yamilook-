@@ -49,7 +49,7 @@ it('allows lowering a raised hand',async()=>{
 });
 it('opens chat, backgrounds and effects while preserving the call media',()=>{
   setup();
-  fireEvent.click(screen.getByRole('button',{name:'Escrever mensagem'}));
+  fireEvent.click(screen.getByRole('button',{name:'Mensagem'}));
   expect(screen.getByText('Papo aberto')).toBeVisible();
   fireEvent.click(screen.getByRole('button',{name:'Fundos'}));
   expect(screen.getByText('Fundos abertos')).toBeVisible();
@@ -74,7 +74,7 @@ it('uses one transport-backed status while reconnecting',()=>{
 it('keeps recording controls inside the media stage rather than over the header', () => {
   setup();
   expect(screen.getByTestId('call-stage')).toContainElement(screen.getByRole('button', { name: 'Gravar chamada' }));
-  expect(screen.getByTestId('call-stage')).not.toContainElement(screen.getByRole('button', { name: 'Escrever mensagem' }));
+  expect(screen.getByTestId('call-stage')).not.toContainElement(screen.getByRole('button', { name: 'Mensagem' }));
 });
 
 it('swaps self view on tap without replacing the video element', () => {
