@@ -223,6 +223,8 @@ export function VideoCall({
         {(state.callStatus === 'connected' && state.connectionState === 'connected') ? 'Ligada' : state.callStatus === 'ringing' ? 'A chamar…' : state.lastError || 'A estabelecer ligação…'}
       </span>
       </header>
+      {/* Keep recording controls outside the stage so neither video thumbnail is covered. */}
+      <RecordingControls callId={callId} participants={participants} />
       {/* Main Video Grid */}
       <section data-testid="call-stage" className="relative min-h-0 flex-1 basis-0 overflow-hidden">
       <div data-testid="remote-call-view" className={enlargeSelf && !state.isScreenSharing ? "absolute right-3 top-3 w-24 h-28 z-20 rounded-2xl overflow-hidden border-2 border-white/20" : "w-full h-full"}>
@@ -273,8 +275,6 @@ export function VideoCall({
         </button>
       )}
 
-      {/* Anchor recording controls to the media stage, below the header. */}
-      <RecordingControls callId={callId} participants={participants} />
       </section>
       {chatOpenedOnce && (
         <CallChatPanel
