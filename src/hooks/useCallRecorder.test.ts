@@ -15,7 +15,7 @@ describe('call recording formats', () => {
 import { act, renderHook, cleanup } from '@testing-library/react';
 import { useCallRecorder } from './useCallRecorder';
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
-it('mixes both audio sources, stops once, and releases only recording-owned tracks', async () => {
+it.each([0, 3500])('preserves media delivered after %i ms and releases only recording-owned tracks', async (delay) => {
   const micStop=vi.fn(), videoStop=vi.fn(), mixStop=vi.fn(), close=vi.fn().mockResolvedValue(undefined), connect=vi.fn();
   class Stream {
     constructor(public tracks: {kind:string;stop:()=>void}[]) {}
@@ -34,7 +34,7 @@ it('mixes both audio sources, stops once, and releases only recording-owned trac
     static isTypeSupported(t:string){return t==='video/mp4';}
     mimeType='video/mp4';state='inactive';onstop?:()=>void;ondataavailable?:(e:{data:Blob})=>void;
     start(){this.state='recording';}
-    stop(){stop();this.state='inactive';queueMicrotask(()=>{this.ondataavailable?.({data:new Blob(['audio/video'])});this.onstop?.();});}
+    stop(){stop();this.state='inactive';setTimeout(()=>{this.ondataavailable?.({data:new Blob(['audio/video'])});this.onstop?.();}, delay);}
     pause(){this.state='paused';} resume(){this.state='recording';}
   }
   vi.stubGlobal('MediaStream',Stream);vi.stubGlobal('AudioContext',Audio);vi.stubGlobal('MediaRecorder',Recorder);

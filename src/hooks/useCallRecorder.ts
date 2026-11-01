@@ -130,7 +130,8 @@ export function useCallRecorder() {
       if (st.recorder.state !== "inactive") {
         st.recorder.onstop = finish;
         st.recorder.onerror = finish;
-        timeout = setTimeout(finish, 3000);
+        // Allow delayed Safari dataavailable delivery before releasing the encoder.
+        timeout = setTimeout(finish, 30000);
         try { st.recorder.stop(); } catch { finish(); }
       } else {
         finish();
