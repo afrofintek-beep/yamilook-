@@ -151,7 +151,7 @@ export function useConversations() {
       }
 
       // Reuse the current user's participation above; fetch the remaining data in parallel
-      const [conversationsResult, allParticipantsResult, lastMessagesResult] = await Promise.all([
+      const [conversationsResult, allParticipantsResult, summariesResult] = await Promise.all([
         supabase
           .from('conversations')
           .select('*')
@@ -161,19 +161,15 @@ export function useConversations() {
           .from('conversation_participants')
           .select('conversation_id, user_id')
           .in('conversation_id', conversationIds),
-        supabase
-          .from('visible_messages')
-          .select('*')
-          .in('conversation_id', conversationIds)
-          .order('created_at', { ascending: false }),
+        supabase.rpc('chat_inbox_summaries', { p_conversation_ids: conversationIds }),
       ]);
 
-      for (const result of [conversationsResult, allParticipantsResult, lastMessagesResult]) {
+      for (const result of [conversationsResult, allParticipantsResult, summariesResult]) {
         if (result.error) throw result.error;
       }
       const conversationsData = conversationsResult.data || [];
       const allParticipants = allParticipantsResult.data || [];
-      const allMessages = lastMessagesResult.data || [];
+      const summaries = new Map((summariesResult.data ?? []).map(row => [row.conversation_id, row]));
       const userParticipations = participations || [];
 
       // Get unique participant user IDs and fetch all profiles
@@ -194,45 +190,19 @@ export function useConversations() {
         });
       });
 
-      // Get last message per conversation
-      const lastMessageByConv = new Map<string, typeof allMessages[0]>();
-      allMessages.forEach(msg => {
-        if (!lastMessageByConv.has(msg.conversation_id)) {
-          lastMessageByConv.set(msg.conversation_id, msg);
-        }
-      });
-
-      // Get user's last_read_at + pin/mute state per conversation (these live on
-      // the current user's conversation_participants row, not on conversations).
-      const lastReadByConv = new Map<string, string | null>();
+      // Pin and mute state belong to the current user's participation.
       const pinnedByConv = new Map<string, boolean>();
       const mutedByConv = new Map<string, boolean>();
       userParticipations.forEach(p => {
-        lastReadByConv.set(p.conversation_id, p.last_read_at);
         pinnedByConv.set(p.conversation_id, p.is_pinned ?? false);
         mutedByConv.set(p.conversation_id, p.is_muted ?? false);
-      });
-
-      // Calculate unread counts
-      const unreadCounts = new Map<string, number>();
-      conversationIds.forEach(convId => {
-        const lastRead = lastReadByConv.get(convId);
-        let count = 0;
-        allMessages.forEach(msg => {
-          if (msg.conversation_id === convId && msg.sender_id !== userId && !msg.is_deleted) {
-            if (!lastRead || new Date(msg.created_at) > new Date(lastRead)) {
-              count++;
-            }
-          }
-        });
-        unreadCounts.set(convId, count);
       });
 
       const enrichedConversations = conversationsData.map(conv => ({
         ...conv,
         participants: participantsByConv.get(conv.id) || [],
-        last_message: lastMessageByConv.get(conv.id),
-        unread_count: unreadCounts.get(conv.id) || 0,
+        last_message: (summaries.get(conv.id)?.last_message as unknown as Message | null) ?? undefined,
+        unread_count: Number(summaries.get(conv.id)?.unread_count ?? 0),
         is_pinned: pinnedByConv.get(conv.id) ?? false,
         is_muted: mutedByConv.get(conv.id) ?? false,
       }));

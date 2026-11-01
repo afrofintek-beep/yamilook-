@@ -12,6 +12,7 @@ vi.mock('./useAuth', () => ({ useAuth: () => ({ user: m.user }) }));
 vi.mock('./useMessageNotification', () => ({ useMessageNotification: () => ({ notifyMessage: vi.fn() }) }));
 vi.mock('@/lib/public-profile-batch', () => ({ fetchPublicProfilesBatched: vi.fn().mockResolvedValue({ data: [] }), fetchPublicProfileById: vi.fn() }));
 vi.mock('@/integrations/supabase/client', () => ({ supabase: {
+  rpc: vi.fn().mockResolvedValue({ data: [{ conversation_id: 'chat', last_message: null, unread_count: 0 }], error: null }),
   from: (table: string) => {
     let updating = false;
     const q: Record<string, (...args: unknown[]) => unknown> = {};
@@ -79,6 +80,7 @@ it('reuses participation data and keeps conversation subscriptions stable on tok
   const { result, rerender } = renderHook(useConversations);
   await waitFor(() => expect(result.current.loading).toBe(false));
   expect(m.reads.mock.calls.filter(([table]) => table === 'conversation_participants')).toHaveLength(2);
+  expect(m.reads).not.toHaveBeenCalledWith('visible_messages');
   const subscriptions = m.channels.length;
   m.reads.mockClear(); m.user = { id: 'me' }; rerender();
   await act(async () => {});
