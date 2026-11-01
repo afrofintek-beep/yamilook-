@@ -18,6 +18,7 @@ export interface CallState {
   isVideoEnabled: boolean;
   isScreenSharing: boolean;
   screenStream: MediaStream | null;
+  remoteScreenStreams?: Map<string, MediaStream>;
   connectionState: RTCPeerConnectionState;
   callStatus: 'idle' | 'initiating' | 'ringing' | 'connecting' | 'connected' | 'ended' | 'failed' | 'declined';
   targetUserId: string | null;

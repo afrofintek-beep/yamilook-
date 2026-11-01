@@ -21,3 +21,15 @@ export function attachCallVideo(stream: MediaStream, element: HTMLVideoElement):
     catch (error) { logger.warn('Video already detached', 'CallMedia', error); }
   };
 }
+
+export function sameTracks(a: readonly MediaStreamTrack[], b: readonly MediaStreamTrack[]) {
+  return a.length === b.length && a.every((track, index) => track === b[index]);
+}
+
+/** Reuse unchanged streams, but publish a new snapshot when tracks are replaced. */
+export function reconcileCallStream(previous: MediaStream | undefined, tracks: readonly Track[]) {
+  const mediaTracks = tracks.map(track => track.mediaStreamTrack);
+  const stream = previous && sameTracks(previous.getTracks(), mediaTracks) ? previous : new MediaStream(mediaTracks);
+  registerCallMedia(stream, tracks);
+  return stream;
+}

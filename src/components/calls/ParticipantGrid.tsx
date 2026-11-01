@@ -1,5 +1,5 @@
 import React from 'react';
-import { CallRemoteMedia } from './CallRemoteMedia';
+import { CallRemoteMedia, CallVideoOnly } from './CallRemoteMedia';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { MicOff, Hand, Pin } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -22,6 +22,7 @@ interface ParticipantGridProps {
   localStream: MediaStream | null;
   remoteStreams: Map<string, MediaStream>;
   screenStream: MediaStream | null;
+  remoteScreenStreams?: Map<string, MediaStream>;
   isScreenSharing: boolean;
   callType: 'voice' | 'video';
   onSelectParticipant?: () => void;
@@ -33,6 +34,7 @@ export function ParticipantGrid({
   localStream,
   remoteStreams,
   screenStream,
+  remoteScreenStreams,
   isScreenSharing,
   callType,
   onSelectParticipant,
@@ -110,40 +112,11 @@ export function ParticipantGrid({
   const spotlightParticipant = allParticipants.find(p => p.user_id === selectedUserId)
     ?? allParticipants.find(p => p.is_spotlight);
 
-  // Screen sharing takes priority
-  if (isScreenSharing && screenStream) {
-    return (
-      <div className="w-full h-full flex flex-col">
-        {/* Main screen share view */}
-        <div className="flex-1 relative">
-          <video
-            autoPlay
-            playsInline
-            className="w-full h-full object-contain bg-black"
-            ref={(el) => {
-              if (el) el.srcObject = screenStream;
-            }}
-          />
-          <div className="absolute top-4 left-4 bg-black/50 px-3 py-1 rounded-full text-white text-sm">
-            Screen Sharing
-          </div>
-        </div>
-        
-        {/* Participant strip at bottom */}
-        <div className="h-24 bg-background/50 flex items-center gap-2 px-4 overflow-x-auto">
-          {allParticipants.map(participant => (
-            <ParticipantThumbnail
-              key={participant.id}
-              participant={participant}
-              stream={remoteStreams.get(participant.user_id)}
-              callType={callType}
-              isSmall
-            />
-          ))}
-        </div>
-      </div>
-    );
-  }
+  // Screen video is separate from cameras; participant tiles stay mounted below it.
+  const sharedScreen = remoteScreenStreams?.values().next().value ?? (isScreenSharing ? screenStream : null);
+  const hasScreen = !!sharedScreen;
+  const hasFocus = hasScreen || (!!spotlightParticipant && allParticipants.length > 1);
+  const columns = Math.max(1, hasScreen ? allParticipants.length : allParticipants.length - 1);
 
   // Standard grid view
   // For 1-on-1 calls, skip grid padding so the remote video fills the entire screen
@@ -152,9 +125,13 @@ export function ParticipantGrid({
   return (
     <div className={cn(
       "relative w-full h-full grid",
-      spotlightParticipant && !isSingleRemote ? "grid-cols-1 grid-rows-[minmax(0,1fr)_6rem] gap-1" : isSingleRemote ? "grid-cols-1" : cn("gap-1 p-2", getGridClass())
-    )} style={spotlightParticipant && !isSingleRemote ? { gridTemplateColumns: `repeat(${allParticipants.length - 1}, minmax(0, 1fr))` } : undefined}>
-      {selectedUserId && !isSingleRemote && (
+      hasFocus ? "grid-cols-1 grid-rows-[minmax(0,1fr)_6rem] gap-1" : isSingleRemote ? "grid-cols-1" : cn("gap-1 p-2", getGridClass())
+    )} style={hasFocus ? { gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` } : undefined}>
+      {sharedScreen && <div key="shared-screen" data-testid="shared-screen" className="relative min-h-0 min-w-0 row-start-1 bg-black" style={{ gridColumn: `1 / ${columns + 1}` }}>
+        <CallVideoOnly stream={sharedScreen} contain />
+        <span className="absolute left-3 top-3 rounded-full bg-black/60 px-3 py-1 text-sm text-white">Ecrã partilhado</span>
+      </div>}
+      {selectedUserId && !isSingleRemote && !hasScreen && (
         <button type="button" onClick={() => setSelectedUserId(null)} className="absolute left-3 bottom-28 z-20 rounded-full bg-black/70 px-3 py-2 text-sm text-white">
           Ver todos
         </button>
@@ -162,8 +139,8 @@ export function ParticipantGrid({
       {/* Remote participants (from DB + stream-only) */}
       {allParticipants.map(participant => (
         <div key={participant.user_id}
-          className={cn("relative min-h-0 min-w-0", spotlightParticipant && !isSingleRemote && (participant.user_id === spotlightParticipant.user_id ? "row-start-1 col-start-1" : "row-start-2"))}
-          style={spotlightParticipant && !isSingleRemote ? { gridColumn: participant.user_id === spotlightParticipant.user_id ? `1 / ${allParticipants.length}` : undefined } : undefined}
+          className={cn("relative min-h-0 min-w-0", hasFocus && (!hasScreen && participant.user_id === spotlightParticipant?.user_id ? "row-start-1 col-start-1" : "row-start-2"))}
+          style={hasFocus && !hasScreen && participant.user_id === spotlightParticipant?.user_id ? { gridColumn: `1 / ${columns + 1}` } : undefined}
         >
           <ParticipantTile
             participant={participant}
@@ -176,7 +153,7 @@ export function ParticipantGrid({
       ))}
       
       {/* Local user (if only one, show full screen) */}
-      {allParticipants.length === 0 && localStream && callType === 'video' && (
+      {!hasScreen && allParticipants.length === 0 && localStream && callType === 'video' && (
         <div className="relative w-full h-full bg-muted overflow-hidden">
           <video
             autoPlay
@@ -278,44 +255,6 @@ function ParticipantTile({ participant, stream, callType, isSpotlight, onSelect 
 
       {/* Speaking indicator */}
       <div className="absolute inset-0 border-4 border-transparent rounded-lg pointer-events-none" />
-    </div>
-  );
-}
-
-interface ParticipantThumbnailProps {
-  participant: Participant;
-  stream?: MediaStream;
-  callType: 'voice' | 'video';
-  isSmall?: boolean;
-}
-
-function ParticipantThumbnail({ participant, stream, callType, isSmall }: ParticipantThumbnailProps) {
-  // Check if stream has active video track - don't rely only on database state
-  const hasVideoTrack = stream?.getVideoTracks().some(track => track.enabled && track.readyState === 'live');
-  const showVideo = !!stream && !!hasVideoTrack;
-  const hasStream = !!stream;
-
-  return (
-    <div className="relative w-20 h-16 flex-shrink-0 rounded-lg overflow-hidden bg-muted">
-      {/* Always render video/audio element if we have a stream */}
-      {hasStream && <CallRemoteMedia stream={stream!} showVideo={showVideo} />}
-      
-      {!showVideo && (
-        <div className="w-full h-full flex items-center justify-center">
-          <Avatar className="h-10 w-10">
-            <AvatarImage src={participant.avatar_url || undefined} />
-            <AvatarFallback className="text-xs">
-              {participant.display_name.charAt(0).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-        </div>
-      )}
-
-      {participant.is_muted && (
-        <div className="absolute bottom-1 right-1 p-0.5 rounded-full bg-red-500">
-          <MicOff className="h-2 w-2 text-white" />
-        </div>
-      )}
     </div>
   );
 }

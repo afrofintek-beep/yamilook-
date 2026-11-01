@@ -27,7 +27,7 @@ it('mixes both audio sources, stops once, and releases only recording-owned trac
   class Audio {
     close=close; resume=vi.fn().mockResolvedValue(undefined);
     createMediaStreamDestination(){return {stream:mixed};}
-    createMediaStreamSource(){return {connect};}
+    createMediaStreamSource(){return {connect, disconnect: vi.fn()};}
   }
   const stop=vi.fn();
   class Recorder {
@@ -46,6 +46,10 @@ it('mixes both audio sources, stops once, and releases only recording-owned trac
   const {result,unmount}=renderHook(()=>useCallRecorder());
   expect(result.current.start(local,new Map([['remote',remote]]))).toBe(true);
   expect(connect).toHaveBeenCalledTimes(2);
+  result.current.pause(true);
+  expect(result.current.update(local, new Map([['remote', new Stream([{kind:'audio',stop:micStop}]) as unknown as MediaStream]]))).toBe(true);
+  expect(connect).toHaveBeenCalledTimes(3);
+  result.current.pause(false);
   expect(result.current.start(local,new Map())).toBe(false);
   let blob: Blob|null=null;
   await act(async()=>{const first=result.current.stop();expect(result.current.stop()).toBe(first);blob=await first;});

@@ -1,4 +1,5 @@
 import { useRef, useCallback, useEffect } from "react";
+import { CallRecordingInputs } from "@/lib/call-recording-inputs";
 
 // Records the whole call: composites every video tile onto a canvas and mixes
 // all audio tracks (local mic + each remote) via Web Audio, then records the
@@ -8,7 +9,7 @@ import { useRef, useCallback, useEffect } from "react";
 interface RecorderState {
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
-  videos: HTMLVideoElement[];
+  inputs: CallRecordingInputs;
   audioCtx: AudioContext;
   dest: MediaStreamAudioDestinationNode;
   recorder: MediaRecorder;
@@ -34,10 +35,11 @@ export function useCallRecorder() {
   const stateRef = useRef<RecorderState | null>(null);
   const stoppingRef = useRef<Promise<Blob | null> | null>(null);
 
-  const start = useCallback((localStream: MediaStream | null, remoteStreams: Map<string, MediaStream>): boolean => {
+  const start = useCallback((localStream: MediaStream | null, remoteStreams: Map<string, MediaStream>, localScreen: MediaStream | null = null, remoteScreens: Map<string, MediaStream> = new Map()): boolean => {
     if (stateRef.current || stoppingRef.current) return false;
     let allocatedAudio: AudioContext | null = null;
     let allocatedStream: MediaStream | null = null;
+    let allocatedInputs: CallRecordingInputs | null = null;
     try {
       const streams: MediaStream[] = [];
       if (localStream) streams.push(localStream);
@@ -50,29 +52,19 @@ export function useCallRecorder() {
       const ctx = canvas.getContext("2d");
       if (!ctx) return false;
 
-      // hidden <video> per stream for canvas drawing
-      const videos: HTMLVideoElement[] = streams.map((s) => {
-        const v = document.createElement("video");
-        v.muted = true; v.playsInline = true; v.srcObject = s;
-        v.play().catch(() => {});
-        return v;
-      });
-
       // audio mixing
       const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       const audioCtx = new AudioCtx();
       allocatedAudio = audioCtx;
       void audioCtx.resume().catch(() => {});
       const dest = audioCtx.createMediaStreamDestination();
-      for (const s of streams) {
-        if (s.getAudioTracks().length > 0) {
-          try { audioCtx.createMediaStreamSource(s).connect(dest); } catch { /* skip */ }
-        }
-      }
+      const inputs = new CallRecordingInputs(audioCtx, dest, remoteStreams.keys());
+      allocatedInputs = inputs;
+      inputs.sync(localStream, remoteStreams, localScreen, remoteScreens);
 
       // grid layout
       const drawFrame = () => {
-        const active = videos.filter((v) => v.readyState >= 2 && v.videoWidth > 0);
+        const active = inputs.videos.filter((v) => v.readyState >= 2 && v.videoWidth > 0);
         ctx.fillStyle = "#000";
         ctx.fillRect(0, 0, W, H);
         const n = Math.max(1, active.length);
@@ -103,10 +95,11 @@ export function useCallRecorder() {
       recorder.ondataavailable = (e) => { if (e.data && e.data.size > 0) chunks.push(e.data); };
       recorder.start(1000);
 
-      stateRef.current = { canvas, ctx, videos, audioCtx, dest, recorder, chunks, raf: 0, combined };
+      stateRef.current = { canvas, ctx, inputs, audioCtx, dest, recorder, chunks, raf: 0, combined };
       stateRef.current.raf = requestAnimationFrame(drawFrame);
       return true;
     } catch (e) {
+      allocatedInputs?.dispose();
       allocatedStream?.getTracks().forEach(t => t.stop());
       if (allocatedAudio) void allocatedAudio.close().catch(() => {});
       console.error("[rec] failed to start:", e);
@@ -127,7 +120,7 @@ export function useCallRecorder() {
         finished = true;
         clearTimeout(timeout);
         cancelAnimationFrame(st.raf);
-        st.videos.forEach((v) => { v.srcObject = null; });
+        st.inputs.dispose();
         st.combined.getTracks().forEach(t => t.stop());
         void st.audioCtx.close().catch(() => {});
         const blob = st.chunks.length ? new Blob(st.chunks, { type: st.recorder.mimeType || (st.chunks[0] instanceof Blob ? st.chunks[0].type : "") }) : null;
@@ -152,8 +145,16 @@ export function useCallRecorder() {
   const pause = useCallback((paused: boolean) => {
     const st = stateRef.current;
     if (!st) return;
-    try { paused ? st.recorder.pause() : st.recorder.resume(); } catch { /* noop */ }
+    try { if (paused) st.recorder.pause(); else st.recorder.resume(); } catch { /* noop */ }
   }, []);
 
-  return { start, stop, pause };
+  const update = useCallback((local: MediaStream | null, remote: Map<string, MediaStream>,
+    localScreen: MediaStream | null = null, remoteScreens: Map<string, MediaStream> = new Map()): boolean => {
+    const st = stateRef.current;
+    if (!st || stoppingRef.current) return true;
+    try { st.inputs.sync(local, remote, localScreen, remoteScreens); return true; }
+    catch { return false; }
+  }, []);
+
+  return { start, stop, pause, update };
 }

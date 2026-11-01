@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
 import { ParticipantGrid } from './ParticipantGrid';
-vi.mock('./CallRemoteMedia', () => ({ CallRemoteMedia: () => <video data-testid="remote-media" /> }));
+vi.mock('./CallRemoteMedia', () => ({ CallRemoteMedia: () => <video data-testid="remote-media" />, CallVideoOnly: () => <video data-testid="screen-video" /> }));
 afterEach(cleanup);
 const people = ['Ana', 'Jessica', 'Tony'].map(name => ({ id: name, user_id: name, display_name: name, avatar_url: null, is_muted: false, is_video_enabled: true, is_screen_sharing: false, is_hand_raised: false, is_spotlight: false }));
 const stream = { getVideoTracks: () => [], getAudioTracks: () => [] } as unknown as MediaStream;
@@ -30,4 +30,15 @@ it('lets stream-only participants be enlarged before metadata arrives', () => {
   render(<ParticipantGrid {...props} participants={[]} remoteStreams={new Map([['new', stream]])} />);
   fireEvent.click(screen.getByRole('button', { name: 'Ampliar Participante' }));
   expect(screen.getByRole('button', { name: 'Ampliar Participante' })).toHaveAttribute('aria-pressed', 'true');
+});
+
+it('shows a remote screen and keeps participant media mounted when sharing starts and stops', () => {
+  const { rerender } = render(<ParticipantGrid {...props} />);
+  const media = screen.getAllByTestId('remote-media');
+  rerender(<ParticipantGrid {...props} remoteScreenStreams={new Map([['Jessica', stream]])} />);
+  expect(screen.getByTestId('shared-screen')).toContainElement(screen.getByTestId('screen-video'));
+  screen.getAllByTestId('remote-media').forEach((element, i) => expect(element).toBe(media[i]));
+  rerender(<ParticipantGrid {...props} />);
+  expect(screen.queryByTestId('shared-screen')).not.toBeInTheDocument();
+  screen.getAllByTestId('remote-media').forEach((element, i) => expect(element).toBe(media[i]));
 });

@@ -4,6 +4,10 @@ on:
     paths:
       - 'src/hooks/useLiveKitCall*'
       - 'src/hooks/useCallTransport*'
+      - 'src/hooks/useCallRecorder*'
+      - 'src/lib/call-media*'
+      - 'src/lib/call-recording-inputs*'
+      - 'src/features/call-recording/**'
       - 'src/hooks/useCalls.tsx'
       - 'src/hooks/webrtc/call-termination*'
       - 'src/lib/call-feedback*'
@@ -43,4 +47,5 @@ jobs:
       - run: node scripts/test-reconcile-direct-calls.mjs
       - run: npx vitest run src/lib/payment-webhook-security.test.ts src/lib/direct-call-reconciliation.test.ts
       - run: npx vitest run src/hooks/useLiveKitCall.test.tsx src/hooks/useCallTransport.test.tsx src/hooks/webrtc/call-termination.test.ts src/lib/call-feedback.test.ts src/lib/call-setup-failure.test.ts src/components/calls src/features/papos src/pages/Calls.test.tsx src/hooks/useRingtone.test.tsx
+      - run: npx vitest run src/hooks/useCallRecorder.test.ts src/lib/call-recording-inputs.test.ts
       - run: npm run build
