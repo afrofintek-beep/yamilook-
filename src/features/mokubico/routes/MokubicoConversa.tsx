@@ -11,6 +11,7 @@ import { ArrowLeft, Loader2, Lock, Mic, MicOff, Send, PhoneOff, Users, Check, Ch
 import { cn } from '@/lib/utils';
 import { VideoTrack } from '@/components/live/VideoTrack';
 import { useMokubicoRoom } from '../hooks/useMokubicoRoom';
+import { useEndConversa } from '../hooks/useMokubicoConversas';
 import { toast } from 'sonner';
 
 interface ConversaInfo {
@@ -26,6 +27,8 @@ export default function MokubicoConversa() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const endMutation = useEndConversa();
+  const endingRef = useRef(false);
   const [state, setState] = useState<'loading' | 'ok' | 'denied'>('loading');
   const [conversa, setConversa] = useState<ConversaInfo | null>(null);
   const [text, setText] = useState('');
@@ -62,11 +65,18 @@ export default function MokubicoConversa() {
   const send = () => { room.sendMessage(text); setText(''); };
 
   const endConversa = async () => {
-    if (!id) return;
-    await supabase.from('mokubico_conversas').update({ status: 'ended', ended_at: new Date().toISOString() }).eq('id', id);
-    room.leave();
-    toast.success('Conversa terminada.');
-    navigate(`/mokubico/${conversa?.space ?? ''}`);
+    if (!id || !isHost || endingRef.current) return;
+    endingRef.current = true;
+    try {
+      await endMutation.mutateAsync(id);
+      room.leave();
+      toast.success('Conversa terminada.');
+      navigate(`/mokubico/${conversa?.space ?? ''}`);
+    } catch {
+      toast.error('Não foi possível terminar a conversa. Tenta novamente.');
+    } finally {
+      endingRef.current = false;
+    }
   };
 
   const leave = () => { room.leave(); navigate(`/mokubico/${conversa?.space ?? ''}`); };
@@ -113,7 +123,9 @@ export default function MokubicoConversa() {
           </p>
         </div>
         {isHost && !ended && (
-          <Button size="sm" variant="destructive" className="rounded-full h-8" onClick={endConversa}>Terminar</Button>
+          <Button size="sm" variant="destructive" className="rounded-full h-8" onClick={endConversa} disabled={endMutation.isPending}>
+            {endMutation.isPending ? 'A terminar…' : 'Terminar'}
+          </Button>
         )}
       </header>
 
