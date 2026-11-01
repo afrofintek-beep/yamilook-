@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatDistanceToNow } from 'date-fns';
 import { MoreHorizontal, Trash2, Send } from 'lucide-react';
@@ -205,15 +206,26 @@ export function CommentsSheet({ open, onOpenChange, post }: CommentsSheetProps) 
       animate={{ opacity: 1, y: 0 }}
       className={cn("flex gap-3", isReply && "ml-12")}
     >
+      <Link
+        to={`/profile/${comment.user_id}`}
+        onClick={() => onOpenChange(false)}
+        aria-label={comment.user.display_name || comment.user.username}
+        className="flex-shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
       <Avatar className={cn("flex-shrink-0", isReply ? "w-8 h-8" : "w-10 h-10")}>
         <AvatarImage src={comment.user.avatar_url || ''} />
         <AvatarFallback className="bg-gradient-primary text-white text-xs">
           {comment.user.display_name?.[0]?.toUpperCase() || '?'}
         </AvatarFallback>
       </Avatar>
+      </Link>
       <div className="flex-1 min-w-0">
         <div className="bg-secondary/50 rounded-2xl px-4 py-2">
-          <p className="font-semibold text-sm">{comment.user.display_name}</p>
+          <Link
+            to={`/profile/${comment.user_id}`}
+            onClick={() => onOpenChange(false)}
+            className="block w-fit font-semibold text-sm hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >{comment.user.display_name || comment.user.username}</Link>
           <p className="text-sm">{comment.content}</p>
         </div>
         <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
