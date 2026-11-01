@@ -105,6 +105,23 @@ export default function Admin() {
   const [seeding, setSeeding] = useState(false);
   const [clearingData, setClearingData] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState('users');
+  const [focusUsers, setFocusUsers] = useState(false);
+  const usersSection = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!focusUsers) return;
+    usersSection.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    usersSection.current?.querySelector<HTMLInputElement>('input')?.focus({ preventScroll: true });
+    setFocusUsers(false);
+  }, [focusUsers]);
+
+  const openUsers = () => {
+    setActiveTab('users');
+    setUserFilter('all');
+    setSearchQuery('');
+    setFocusUsers(true);
+  };
   const [userFilter, setUserFilter] = useState<'all' | 'admins' | 'moderators' | 'online'>('all');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -384,12 +401,12 @@ export default function Admin() {
   }
 
   const statCards = [
-    { label: 'Utilizadores', value: stats.users, icon: Users, color: 'text-blue-500' },
-    { label: 'Posts', value: stats.posts, icon: FileText, color: 'text-green-500' },
-    { label: 'Conversas', value: stats.conversations, icon: MessageSquare, color: 'text-purple-500' },
-    { label: 'Mensagens', value: stats.messages, icon: MessageSquare, color: 'text-orange-500' },
-    { label: 'Statuses', value: stats.statuses, icon: Clock, color: 'text-pink-500' },
-    { label: 'Links', value: stats.contacts, icon: UserPlus, color: 'text-cyan-500' },
+    { label: 'Utilizadores', action: openUsers, hint: 'Gerir utilizadores', value: stats.users, icon: Users, color: 'text-blue-500' },
+    { label: 'Posts', action: () => navigate('/muxi'), hint: 'Abrir Muxi', value: stats.posts, icon: FileText, color: 'text-green-500' },
+    { label: 'Conversas', action: () => navigate('/papos'), hint: 'As minhas conversas', value: stats.conversations, icon: MessageSquare, color: 'text-purple-500' },
+    { label: 'Mensagens', action: () => navigate('/papos'), hint: 'As minhas mensagens', value: stats.messages, icon: MessageSquare, color: 'text-orange-500' },
+    { label: 'Statuses', action: () => navigate('/status'), hint: 'Ver estados', value: stats.statuses, icon: Clock, color: 'text-pink-500' },
+    { label: 'Links', action: () => navigate('/contacts'), hint: 'Os meus contactos', value: stats.contacts, icon: UserPlus, color: 'text-cyan-500' },
   ];
 
   const adminCount = users.filter((u) => u.isAdmin).length;
@@ -436,8 +453,13 @@ export default function Admin() {
           animate={{ opacity: 1, y: 0 }}
         >
           {statCards.map((stat) => (
-            <Card key={stat.label} className="relative overflow-hidden">
-              <CardContent className="p-4">
+            <button
+              key={stat.label}
+              type="button"
+              onClick={stat.action}
+              aria-label={`${stat.label}: ${stat.hint}`}
+              className="relative w-full overflow-hidden rounded-xl border border-border bg-card p-4 text-left text-card-foreground shadow-sm transition-colors hover:bg-accent active:bg-accent/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-2xl font-bold">
@@ -447,8 +469,10 @@ export default function Admin() {
                   </div>
                   <stat.icon className={`w-8 h-8 ${stat.color} opacity-50`} />
                 </div>
-              </CardContent>
-            </Card>
+                <span className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
+                  {stat.hint}<ChevronRight className="h-3 w-3" aria-hidden="true" />
+                </span>
+            </button>
           ))}
         </motion.div>
 
@@ -542,7 +566,8 @@ export default function Admin() {
         <TopicPostManager />
 
         {/* Users Tab */}
-        <Tabs defaultValue="users">
+        <div ref={usersSection} className="scroll-mt-20">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="w-full">
             <TabsTrigger value="users" className="flex-1 gap-2">
               <Users className="w-4 h-4" />
@@ -735,6 +760,7 @@ export default function Admin() {
             </Card>
           </TabsContent>
         </Tabs>
+        </div>
       </div>
 
       {/* Confirmation Dialog */}
