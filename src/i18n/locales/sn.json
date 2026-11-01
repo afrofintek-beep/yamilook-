@@ -11,6 +11,36 @@
     "privacyPolicy": "Mutemo weZvakavanzika"
   },
   "settings": {
-    "language": "Mutauro"
+    "language": "Mutauro",
+    "title": "Zvirongwa",
+    "privacy": "Zvakavanzika nekuchengeteka",
+    "showOnlineStatus": "Ratidza kana ndiri pamhepo",
+    "showLastSeen": "Ratidza nguva yandakapedzisira kuva pamhepo",
+    "readReceipts": "Zvisimbiso zvekuverenga",
+    "blockedUsers": "Vanhu vakavharwa",
+    "logOut": "Buda"
+  },
+  "kosolola": {
+    "back": "Dzokera kuhurukuro",
+    "ecosystem": "Chishandiso chiri muhurongwa hweAFROFINTEK",
+    "myProfile": "Nhoroondo yangu",
+    "typing": "Ratidza pandinenge ndichinyora",
+    "shared": "Zvaunosarudza izvi zvinoshandiswawo paYamilook.",
+    "archived": "Hurukuro dzakachengetwa",
+    "install": "Kuisa uye kupinda",
+    "openYamilook": "Vhura Yamilook",
+    "logoutError": "Hatina kukwanisa kusimbisa kubuda. Edza zvakare.",
+    "saveError": "Hatina kukwanisa kuchengetedza",
+    "languageError": "Hatina kukwanisa kurodha mutauro uyu. Edza zvakare.",
+    "incomplete": "Shanduro dzichiri kupedziswa. Mamwe mashoko ari muChirungu kana chiPutukezi.",
+    "ringtoneTitle": "Kurira kwefoni",
+    "incomingSound": "Ruzha rwenhare dzinopinda",
+    "chooseRingtone": "Sarudza kurira",
+    "defaultTone": "Yakagara yaiswa",
+    "ringtoneVolume": "Kukwirira kwekurira",
+    "testTone": "Edza kurira",
+    "stopTest": "Misa kuedza",
+    "silentTone": "Kurira kwakanyarara.",
+    "loadingTones": "Kurira kuri kurodhwa…"
   }
 }

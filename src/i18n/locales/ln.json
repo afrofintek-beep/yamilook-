@@ -434,5 +434,28 @@
     "minutesAgo": "{{count}} min eleki",
     "hoursAgo": "{{count}} ngonga eleki",
     "daysAgo": "{{count}} mokolo eleki"
+  },
+  "kosolola": {
+    "back": "Zonga na masolo",
+    "ecosystem": "Application moko ya ebongiseli AFROFINTEK",
+    "myProfile": "Profil na ngai",
+    "typing": "Lakisa ntango nazali kokoma",
+    "shared": "Maponi oyo esalelamaka mpe na Yamilook.",
+    "archived": "Masolo oyo ebombami",
+    "install": "Installation mpe kokɔta",
+    "openYamilook": "Fungola Yamilook",
+    "logoutError": "Tokoki te kondimisa ete obimi. Meka lisusu.",
+    "saveError": "Tokoki te kobomba",
+    "languageError": "Tokoki te kotya monɔkɔ oyo. Meka lisusu.",
+    "incomplete": "Mabongoli ezali kokoba. Makomi mosusu emonisami na Lingelesi to na Lipoto.",
+    "ringtoneTitle": "Mongongo ya kobenga",
+    "incomingSound": "Mongongo mpo na kobengama",
+    "chooseRingtone": "Pona mongongo",
+    "defaultTone": "Ya ebandeli",
+    "ringtoneVolume": "Bokasi ya mongongo",
+    "testTone": "Meka mongongo",
+    "stopTest": "Tika komeka",
+    "silentTone": "Mongongo ekangami.",
+    "loadingTones": "Kokotisa mingongo…"
   }
 }

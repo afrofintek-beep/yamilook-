@@ -764,5 +764,28 @@
     "random": "Aleatório",
     "viewAll": "Ver todas as transmissões",
     "currentlyLive": "{{count}} em direto"
+  },
+  "kosolola": {
+    "back": "Voltar às conversas",
+    "ecosystem": "Uma aplicação do ecossistema AFROFINTEK",
+    "myProfile": "O meu perfil",
+    "typing": "Mostrar quando estou a escrever",
+    "shared": "Estas preferências são partilhadas com a Yamilook.",
+    "archived": "Conversas arquivadas",
+    "install": "Instalação e acesso",
+    "openYamilook": "Abrir Yamilook",
+    "logoutError": "Não foi possível confirmar a saída. Tenta novamente.",
+    "saveError": "Não foi possível guardar",
+    "languageError": "Não foi possível carregar este idioma. Tenta novamente.",
+    "incomplete": "As traduções estão a ser completadas. Alguns textos aparecem em inglês ou português.",
+    "ringtoneTitle": "Toque das chamadas",
+    "incomingSound": "Som nas chamadas recebidas",
+    "chooseRingtone": "Escolher toque",
+    "defaultTone": "Padrão",
+    "ringtoneVolume": "Volume do toque",
+    "testTone": "Testar toque",
+    "stopTest": "Parar teste",
+    "silentTone": "O toque está silencioso.",
+    "loadingTones": "A carregar os toques…"
   }
 }

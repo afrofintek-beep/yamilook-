@@ -436,5 +436,28 @@
     "minutesAgo": "ከ{{count}} ደቂቃ በፊት",
     "hoursAgo": "ከ{{count}} ሰአት በፊት",
     "daysAgo": "ከ{{count}} ቀን በፊት"
+  },
+  "kosolola": {
+    "back": "ወደ ውይይቶች ተመለስ",
+    "ecosystem": "የAFROFINTEK ሥነ ምህዳር አካል የሆነ መተግበሪያ",
+    "myProfile": "የእኔ መገለጫ",
+    "typing": "እየጻፍኩ መሆኔን አሳይ",
+    "shared": "እነዚህ ምርጫዎች ከYamilook ጋር ይጋራሉ።",
+    "archived": "በማህደር የተቀመጡ ውይይቶች",
+    "install": "መጫን እና መዳረስ",
+    "openYamilook": "Yamilook ክፈት",
+    "logoutError": "መውጣትዎን ማረጋገጥ አልተቻለም። እንደገና ይሞክሩ።",
+    "saveError": "ማስቀመጥ አልተቻለም",
+    "languageError": "ይህን ቋንቋ መጫን አልተቻለም። እንደገና ይሞክሩ።",
+    "incomplete": "ትርጉሞች እየተሟሉ ነው። አንዳንድ ጽሑፎች በእንግሊዝኛ ወይም በፖርቱጋልኛ ይታያሉ።",
+    "ringtoneTitle": "የጥሪ ድምጽ",
+    "incomingSound": "ለገቢ ጥሪዎች ድምጽ",
+    "chooseRingtone": "የጥሪ ድምጽ ምረጥ",
+    "defaultTone": "ነባሪ",
+    "ringtoneVolume": "የጥሪ ድምጽ መጠን",
+    "testTone": "የጥሪ ድምጽ ሞክር",
+    "stopTest": "ሙከራውን አቁም",
+    "silentTone": "የጥሪ ድምጹ ጸጥ ብሏል።",
+    "loadingTones": "የጥሪ ድምጾች በመጫን ላይ…"
   }
 }

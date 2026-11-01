@@ -9,6 +9,36 @@
     "signingIn": "Iyalayisha..."
   },
   "settings": {
-    "language": "Ulimi"
+    "language": "Ulimi",
+    "title": "Izilungiselelo",
+    "privacy": "Ubumfihlo nokuphepha",
+    "showOnlineStatus": "Bonisa uma ngiku-inthanethi",
+    "showLastSeen": "Bonisa ukuthi ngigcine nini ukuba ku-inthanethi",
+    "readReceipts": "Iziqinisekiso zokufunda",
+    "blockedUsers": "Abantu abavinjiwe",
+    "logOut": "Phuma"
+  },
+  "kosolola": {
+    "back": "Buyela ezingxoxweni",
+    "ecosystem": "Uhlelo lokusebenza oluyingxenye ye-AFROFINTEK",
+    "myProfile": "Iphrofayela yami",
+    "typing": "Bonisa lapho ngibhala",
+    "shared": "Lezi zinketho zisetshenziswa naku-Yamilook.",
+    "archived": "Izingxoxo ezigciniwe",
+    "install": "Ukufaka nokufinyelela",
+    "openYamilook": "Vula i-Yamilook",
+    "logoutError": "Asikwazanga ukuqinisekisa ukuphuma. Zama futhi.",
+    "saveError": "Asikwazanga ukulondoloza",
+    "languageError": "Asikwazanga ukulayisha lolu limi. Zama futhi.",
+    "incomplete": "Ukuhumusha kusaqhubeka. Eminye imibhalo iboniswa ngesiNgisi noma ngesiPutukezi.",
+    "ringtoneTitle": "Ithoni yocingo",
+    "incomingSound": "Umsindo wezingcingo ezingenayo",
+    "chooseRingtone": "Khetha ithoni",
+    "defaultTone": "Okuzenzakalelayo",
+    "ringtoneVolume": "Ivolumu yethoni",
+    "testTone": "Hlola ithoni",
+    "stopTest": "Misa ukuhlola",
+    "silentTone": "Ithoni ithulisiwe.",
+    "loadingTones": "Kulayishwa amathoni…"
   }
 }

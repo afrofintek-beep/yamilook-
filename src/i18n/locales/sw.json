@@ -437,5 +437,28 @@
     "minutesAgo": "dakika {{count}} zilizopita",
     "hoursAgo": "saa {{count}} zilizopita",
     "daysAgo": "siku {{count}} zilizopita"
+  },
+  "kosolola": {
+    "back": "Rudi kwenye mazungumzo",
+    "ecosystem": "Programu katika mfumo wa AFROFINTEK",
+    "myProfile": "Wasifu wangu",
+    "typing": "Onyesha ninapoandika",
+    "shared": "Mapendeleo haya yanashirikiwa na Yamilook.",
+    "archived": "Mazungumzo yaliyohifadhiwa",
+    "install": "Usakinishaji na ufikiaji",
+    "openYamilook": "Fungua Yamilook",
+    "logoutError": "Imeshindikana kuthibitisha kutoka kwenye akaunti. Jaribu tena.",
+    "saveError": "Imeshindikana kuhifadhi",
+    "languageError": "Imeshindikana kupakia lugha hii. Jaribu tena.",
+    "incomplete": "Tafsiri zinaendelea kukamilishwa. Baadhi ya maandishi yanaonyeshwa kwa Kiingereza au Kireno.",
+    "ringtoneTitle": "Mlio wa simu",
+    "incomingSound": "Sauti ya simu zinazoingia",
+    "chooseRingtone": "Chagua mlio",
+    "defaultTone": "Chaguo-msingi",
+    "ringtoneVolume": "Kiwango cha sauti ya mlio",
+    "testTone": "Jaribu mlio",
+    "stopTest": "Simamisha jaribio",
+    "silentTone": "Mlio umenyamazishwa.",
+    "loadingTones": "Inapakia milio…"
   }
 }

@@ -22,7 +22,7 @@ export default function PaposLanguageSelector() {
       className="block min-h-12 w-full min-w-0 rounded-xl border border-input bg-background px-3 text-base text-foreground">
       {afrolocLanguages.map(language => <option key={language.code} value={language.code} lang={language.code}>{language.nativeName}</option>)}
     </select>
-    {error && <p role="alert" lang="en" className="text-sm text-destructive">Could not load this language. Please try again.</p>}
-    {!['pt', 'pt-banda'].includes(current) && <p lang="en" className="text-xs text-muted-foreground">Translations are being completed. Some text is shown in English or Portuguese.</p>}
+    {error && <p role="alert" className="text-sm text-destructive">{t('kosolola.languageError')}</p>}
+    {!['pt', 'pt-banda'].includes(current) && <p className="text-xs text-muted-foreground">{t('kosolola.incomplete')}</p>}
   </div>;
 }

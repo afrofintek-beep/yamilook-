@@ -11,6 +11,36 @@
     "privacyPolicy": "Ilana Asiri"
   },
   "settings": {
-    "language": "Ede"
+    "language": "Ede",
+    "title": "Ètò",
+    "privacy": "Àṣírí àti ààbò",
+    "showOnlineStatus": "Fi hàn pé mo wà lórí ayélujára",
+    "showLastSeen": "Fi ìgbà ìkẹyìn tí mo wà lórí ayélujára hàn",
+    "readReceipts": "Ìmúdájú kíkà",
+    "blockedUsers": "Àwọn ẹni tí a dènà",
+    "logOut": "Jáde"
+  },
+  "kosolola": {
+    "back": "Padà sí àwọn ìjíròrò",
+    "ecosystem": "Ohun èlò kan nínú àjọ AFROFINTEK",
+    "myProfile": "Àkọsílẹ̀ mi",
+    "typing": "Fi hàn nígbà tí mo bá ń kọ̀wé",
+    "shared": "A pín àwọn àṣàyàn wọ̀nyí pẹ̀lú Yamilook.",
+    "archived": "Àwọn ìjíròrò tí a fi pamọ́",
+    "install": "Fífi sori ẹrọ àti ìwọlé",
+    "openYamilook": "Ṣí Yamilook",
+    "logoutError": "A kò lè jẹ́rìí ìjáde. Jọ̀wọ́ tún gbìyànjú.",
+    "saveError": "A kò lè fi pamọ́",
+    "languageError": "A kò lè gbé èdè yìí wọlé. Jọ̀wọ́ tún gbìyànjú.",
+    "incomplete": "Àwọn ìtumọ̀ ṣì ń lọ lọ́wọ́. Àwọn ọ̀rọ̀ kan wà ní Gẹ̀ẹ́sì tàbí Pọ́túgí.",
+    "ringtoneTitle": "Ohùn ìpè",
+    "incomingSound": "Ohùn fún ìpè tó ń wọlé",
+    "chooseRingtone": "Yan ohùn ìpè",
+    "defaultTone": "Àiyípadà",
+    "ringtoneVolume": "Ìwọ̀n ohùn ìpè",
+    "testTone": "Dán ohùn ìpè wò",
+    "stopTest": "Dá ìdánwò dúró",
+    "silentTone": "Ohùn ìpè wà ní ìdákẹ́jẹ.",
+    "loadingTones": "Ń gbé àwọn ohùn ìpè wọlé…"
   }
 }
