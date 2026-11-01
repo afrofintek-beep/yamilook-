@@ -105,12 +105,16 @@ export function useLiveSpaces() {
   return useQuery({
     queryKey: ['mokubico-live-spaces', user?.id],
     enabled: !!user,
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: 'always',
     refetchInterval: 30_000,
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('mokubico_conversas')
         .select('space')
         .eq('status', 'live');
+      if (error) throw error;
       const liveSet = new Set<string>();
       for (const c of data ?? []) if (c.space) liveSet.add(c.space);
       return liveSet;

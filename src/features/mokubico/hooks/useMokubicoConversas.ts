@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -19,6 +19,10 @@ export function useSpaceConversas(space: string) {
   return useQuery({
     queryKey: ['mokubico-conversas', space, user?.id],
     enabled: !!user,
+    // Live state must not inherit the feed's five-minute freshness window.
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: 'always',
     refetchInterval: 15_000,
     queryFn: async () => {
       const { data, error } = await supabase
@@ -28,7 +32,8 @@ export function useSpaceConversas(space: string) {
         .eq('status', 'live')
         .order('started_at', { ascending: false })
         .limit(30);
-      if (error || !data?.length) return [] as Conversa[];
+      if (error) throw error;
+      if (!data?.length) return [] as Conversa[];
 
       const hostIds = [...new Set(data.map((c) => c.host_id))];
       const { data: profiles } = await supabase.rpc('get_public_profiles_by_ids', { p_ids: hostIds });
@@ -43,6 +48,43 @@ export function useSpaceConversas(space: string) {
         roomName: c.livekit_room_name,
         isHost: c.host_id === user!.id,
       }));
+    },
+  });
+}
+
+/** Confirm the write before removing a conversa from the live lists. */
+export function useEndConversa() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      if (!user) throw new Error('Not authenticated');
+      const { data, error } = await supabase
+        .from('mokubico_conversas')
+        .update({ status: 'ended', ended_at: new Date().toISOString() })
+        .eq('id', id)
+        .eq('host_id', user.id)
+        .select('id')
+        .single();
+      if (error) throw error;
+      // A write blocked by RLS can affect no rows. Do not report success.
+      if (!data) throw new Error('Não foi possível confirmar o encerramento.');
+      return data.id;
+    },
+    onSuccess: async (id) => {
+      // An older in-flight read must not put the ended room back into cache.
+      await Promise.all([
+        queryClient.cancelQueries({ queryKey: ['mokubico-conversas'] }),
+        queryClient.cancelQueries({ queryKey: ['mokubico-live-spaces'] }),
+      ]);
+      queryClient.setQueriesData<Conversa[]>(
+        { queryKey: ['mokubico-conversas'] },
+        (previous) => previous?.filter((conversa) => conversa.id !== id),
+      );
+      void queryClient.invalidateQueries({ queryKey: ['mokubico-conversas'] });
+      // A space may contain other live rooms: fetch the badge state afresh.
+      void queryClient.resetQueries({ queryKey: ['mokubico-live-spaces'] });
     },
   });
 }
