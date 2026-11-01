@@ -138,6 +138,17 @@ describe('CommentsSheet', () => {
     mockGetComments.mockResolvedValue(mockComments);
   });
 
+  it('links author avatars and names to profiles, including replies, and closes the sheet', async () => {
+    render(<CommentsSheet {...defaultProps} />);
+    for (const [name, id] of [['Commenter One', 'user-1'], ['Commenter Two', 'user-2'], ['Reply User', 'user-3']]) {
+      const links = await screen.findAllByRole('link', { name });
+      expect(links).toHaveLength(2);
+      for (const link of links) expect(link).toHaveAttribute('href', `/profile/${id}`);
+    }
+    fireEvent.click(screen.getAllByRole('link', { name: 'Reply User' })[0]);
+    expect(defaultProps.onOpenChange).toHaveBeenCalledWith(false);
+  });
+
   it('renders when open', async () => {
     render(<CommentsSheet {...defaultProps} />);
     
