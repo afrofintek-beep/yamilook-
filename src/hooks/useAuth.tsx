@@ -253,12 +253,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const entries = await listLoginAlerts();
         const unread = entries.filter(event => event.unread).slice(0, 10);
         if (disposed || !unread.length) return;
-        for (const event of unread) {
-          securityToast.warning('Novo acesso à sua conta', {
-            description: `${event.device_label} · ${event.app_surface === 'kosolola' ? 'KOSOLOLA' : 'YAMILOOK'}`,
-            duration: 12000,
-          });
-        }
+        const event = unread[0];
+        securityToast.warning(unread.length === 1
+          ? 'Novo acesso à sua conta'
+          : `${unread.length} novos acessos à sua conta`, {
+          id: `account-login-alert-${user.id}`,
+          description: `${event.device_label} · ${event.app_surface === 'kosolola' ? 'KOSOLOLA' : 'YAMILOOK'}`,
+          duration: 3000,
+          closeButton: true,
+          dismissible: true,
+        });
         await acknowledgeLoginAlerts(unread.map(event => event.id));
       } catch {
         // Offline or not migrated yet; retry without disrupting signed-in users.
