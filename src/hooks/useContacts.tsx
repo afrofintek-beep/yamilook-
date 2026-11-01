@@ -1,3 +1,4 @@
+import { useCachedList } from './useCachedList';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { fetchPublicProfilesBatched } from '@/lib/public-profile-batch';
@@ -58,9 +59,9 @@ export function useContacts() {
   const loadVersion = useRef(0);
   const accountRef = useRef(userId);
   accountRef.current = userId;
-  const [contacts, setContacts] = useState<Contact[]>([]);
+  const { items: contacts, setItems: setContacts, loading, setLoading } = useCachedList<Contact>(userId, 'contacts');
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
-  const [loading, setLoading] = useState(true);
+
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -126,7 +127,7 @@ export function useContacts() {
     } catch (err) {
       if (accountRef.current === userId) setError(err instanceof Error ? err.message : String(err));
     }
-  }, [userId]);
+  }, [userId, setContacts]);
 
   const fetchFriendRequests = useCallback(async () => {
     if (!userId) return;
@@ -240,12 +241,10 @@ export function useContacts() {
     // Existing contacts must not wait for friendship repair or pending requests.
     try { await fetchContacts(); }
     finally { if (version === loadVersion.current) setLoading(false); }
-  }, [userId, fetchContacts]);
+  }, [userId, fetchContacts, setContacts, setLoading]);
   useEffect(() => {
     let disposed = false;
-    setContacts([]);
     setFriendRequests([]);
-    setLoading(true);
     void loadData();
     void fetchFriendRequests();
     void syncContactsFromAcceptedFriendRequests().then(changed => {
