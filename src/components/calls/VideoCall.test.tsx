@@ -76,3 +76,17 @@ it('keeps recording controls inside the media stage rather than over the header'
   expect(screen.getByTestId('call-stage')).toContainElement(screen.getByRole('button', { name: 'Gravar chamada' }));
   expect(screen.getByTestId('call-stage')).not.toContainElement(screen.getByRole('button', { name: 'Escrever mensagem' }));
 });
+
+it('swaps self view on tap without replacing the video element', () => {
+  setup();
+  const preview = screen.getByRole('button', { name: 'Ampliar o meu vídeo' });
+  const video = preview.querySelector('video');
+  fireEvent.click(preview);
+  expect(screen.getByRole('button', { name: 'Reduzir o meu vídeo' })).toHaveAttribute('aria-pressed', 'true');
+  expect(screen.getByTestId('remote-call-view')).toHaveClass('absolute');
+  expect(screen.getByRole('button', { name: 'Reduzir o meu vídeo' }).querySelector('video')).toBe(video);
+  fireEvent.click(screen.getByRole('button', { name: 'Reduzir o meu vídeo' }));
+  expect(screen.getByTestId('remote-call-view')).not.toHaveClass('absolute');
+  expect(controls.endCall).not.toHaveBeenCalled();
+  expect(controls.toggleVideo).not.toHaveBeenCalled();
+});

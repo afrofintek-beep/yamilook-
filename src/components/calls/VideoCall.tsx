@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useLayoutEffect, useState } from 'react';
+import React, { useRef, useEffect, useLayoutEffect, useState, useCallback } from 'react';
 import { flushSync } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -69,10 +69,12 @@ export function VideoCall({
     fit(); viewport?.addEventListener('resize', fit); viewport?.addEventListener('scroll', fit); window.addEventListener('resize', fit);
     return () => { viewport?.removeEventListener('resize', fit); viewport?.removeEventListener('scroll', fit); window.removeEventListener('resize', fit); };
   }, []);
-  const localVideoRef = useRef<HTMLVideoElement>(null);
+  const localVideoRef = useRef<HTMLVideoElement | null>(null);
   const callChatInputRef = useRef<HTMLTextAreaElement>(null);
   const { t } = useTranslation();
   const { toast } = useToast();
+  const [enlargeSelf, setEnlargeSelf] = useState(false);
+  useEffect(() => setEnlargeSelf(false), [callId]);
   const [isPipMode, setIsPipMode] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
@@ -114,11 +116,9 @@ export function VideoCall({
     checkHostStatus();
   }, [checkIsHost]);
 
-  // Attach local stream to video element
-  useEffect(() => {
-    if (localVideoRef.current && state.localStream) {
-      localVideoRef.current.srcObject = state.localStream;
-    }
+  const attachLocalVideo = useCallback((element: HTMLVideoElement | null) => {
+    localVideoRef.current = element;
+    if (element) element.srcObject = state.localStream;
   }, [state.localStream]);
 
   // Toggle fullscreen
@@ -228,7 +228,10 @@ export function VideoCall({
       </header>
       {/* Main Video Grid */}
       <section data-testid="call-stage" className="relative min-h-0 flex-1 basis-0 overflow-hidden">
+      <div data-testid="remote-call-view" className={enlargeSelf && !state.isScreenSharing ? "absolute right-3 top-3 w-24 h-28 z-20 rounded-2xl overflow-hidden border-2 border-white/20" : "w-full h-full"}>
       <ParticipantGrid
+        key={callId}
+        onSelectParticipant={() => setEnlargeSelf(false)}
         participants={participants}
         localStream={state.localStream}
         remoteStreams={state.remoteStreams}
@@ -236,16 +239,20 @@ export function VideoCall({
         isScreenSharing={state.isScreenSharing}
         callType={callType}
       />
+      </div>
 
       {/* Local Video (Picture-in-Picture style) */}
       {callType === 'video' && !state.isScreenSharing && (participants.length > 0 || state.remoteStreams.size > 0) && (
-        <motion.div
-          drag
-          dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
-          className="absolute right-3 top-3 w-20 h-24 rounded-2xl overflow-hidden shadow-2xl border-2 border-white/20 z-20"
+        <button
+          type="button"
+          aria-label={enlargeSelf ? 'Reduzir o meu vídeo' : 'Ampliar o meu vídeo'}
+          aria-pressed={enlargeSelf}
+          onClick={() => setEnlargeSelf(value => !value)}
+          className={cn("absolute overflow-hidden bg-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-white",
+            enlargeSelf ? "inset-0 z-10" : "right-3 top-3 w-20 h-24 rounded-2xl shadow-2xl border-2 border-white/20 z-20")}
         >
           <video
-            ref={localVideoRef}
+            ref={attachLocalVideo}
             autoPlay
             muted
             playsInline
@@ -266,7 +273,7 @@ export function VideoCall({
               <MicOff className="h-3 w-3 text-destructive-foreground" />
             </div>
           )}
-        </motion.div>
+        </button>
       )}
 
       {/* Anchor recording controls to the media stage, below the header. */}
