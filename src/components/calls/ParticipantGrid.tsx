@@ -24,7 +24,9 @@ interface ParticipantGridProps {
   screenStream: MediaStream | null;
   isScreenSharing: boolean;
   callType: 'voice' | 'video';
+  onSelectParticipant?: () => void;
 }
+
 
 export function ParticipantGrid({
   participants,
@@ -33,7 +35,9 @@ export function ParticipantGrid({
   screenStream,
   isScreenSharing,
   callType,
+  onSelectParticipant,
 }: ParticipantGridProps) {
+  const [selectedUserId, setSelectedUserId] = React.useState<string | null>(null);
   // CRITICAL: Merge database participants with any streams we have
   // This ensures we show video/audio even if DB hasn't synced yet
   const participantUserIds = new Set(participants.map(p => p.user_id));
@@ -53,6 +57,16 @@ export function ParticipantGrid({
   }));
   
   const allParticipants = [...participants, ...streamOnlyParticipants];
+
+  React.useEffect(() => {
+    if (selectedUserId && !participants.some(p => p.user_id === selectedUserId) && !remoteStreams.has(selectedUserId)) {
+      setSelectedUserId(null);
+    }
+  }, [participants, remoteStreams, selectedUserId]);
+  const selectParticipant = (userId: string) => {
+    setSelectedUserId(userId);
+    onSelectParticipant?.();
+  };
 
   // Debug logging - MUST be before any conditional returns
   React.useEffect(() => {
@@ -93,7 +107,8 @@ export function ParticipantGrid({
   };
 
   // Get spotlight participant if any
-  const spotlightParticipant = allParticipants.find(p => p.is_spotlight);
+  const spotlightParticipant = allParticipants.find(p => p.user_id === selectedUserId)
+    ?? allParticipants.find(p => p.is_spotlight);
 
   // Screen sharing takes priority
   if (isScreenSharing && screenStream) {
@@ -130,53 +145,34 @@ export function ParticipantGrid({
     );
   }
 
-  // Spotlight view
-  if (spotlightParticipant) {
-    return (
-      <div className="w-full h-full flex flex-col">
-        {/* Main spotlight view */}
-        <div className="flex-1 relative">
-          <ParticipantTile
-            participant={spotlightParticipant}
-            stream={remoteStreams.get(spotlightParticipant.user_id)}
-            callType={callType}
-            isSpotlight
-          />
-        </div>
-        
-        {/* Other participants strip */}
-        <div className="h-24 bg-background/50 flex items-center gap-2 px-4 overflow-x-auto">
-          {allParticipants.filter(p => !p.is_spotlight).map(participant => (
-            <ParticipantThumbnail
-              key={participant.id}
-              participant={participant}
-              stream={remoteStreams.get(participant.user_id)}
-              callType={callType}
-              isSmall
-            />
-          ))}
-        </div>
-      </div>
-    );
-  }
-
   // Standard grid view
   // For 1-on-1 calls, skip grid padding so the remote video fills the entire screen
   const isSingleRemote = allParticipants.length === 1;
 
   return (
     <div className={cn(
-      "w-full h-full grid",
-      isSingleRemote ? "grid-cols-1" : cn("gap-1 p-2", getGridClass())
-    )}>
+      "relative w-full h-full grid",
+      spotlightParticipant && !isSingleRemote ? "grid-cols-1 grid-rows-[minmax(0,1fr)_6rem] gap-1" : isSingleRemote ? "grid-cols-1" : cn("gap-1 p-2", getGridClass())
+    )} style={spotlightParticipant && !isSingleRemote ? { gridTemplateColumns: `repeat(${allParticipants.length - 1}, minmax(0, 1fr))` } : undefined}>
+      {selectedUserId && !isSingleRemote && (
+        <button type="button" onClick={() => setSelectedUserId(null)} className="absolute left-3 bottom-28 z-20 rounded-full bg-black/70 px-3 py-2 text-sm text-white">
+          Ver todos
+        </button>
+      )}
       {/* Remote participants (from DB + stream-only) */}
       {allParticipants.map(participant => (
-        <ParticipantTile
-          key={participant.id}
-          participant={participant}
-          stream={remoteStreams.get(participant.user_id)}
-          callType={callType}
-        />
+        <div key={participant.user_id}
+          className={cn("relative min-h-0 min-w-0", spotlightParticipant && !isSingleRemote && (participant.user_id === spotlightParticipant.user_id ? "row-start-1 col-start-1" : "row-start-2"))}
+          style={spotlightParticipant && !isSingleRemote ? { gridColumn: participant.user_id === spotlightParticipant.user_id ? `1 / ${allParticipants.length}` : undefined } : undefined}
+        >
+          <ParticipantTile
+            participant={participant}
+            stream={remoteStreams.get(participant.user_id)}
+            callType={callType}
+            isSpotlight={participant.user_id === spotlightParticipant?.user_id}
+            onSelect={() => selectParticipant(participant.user_id)}
+          />
+        </div>
       ))}
       
       {/* Local user (if only one, show full screen) */}
@@ -205,9 +201,10 @@ interface ParticipantTileProps {
   stream?: MediaStream;
   callType: 'voice' | 'video';
   isSpotlight?: boolean;
+  onSelect?: () => void;
 }
 
-function ParticipantTile({ participant, stream, callType, isSpotlight }: ParticipantTileProps) {
+function ParticipantTile({ participant, stream, callType, isSpotlight, onSelect }: ParticipantTileProps) {
   // Check if stream has active video track - don't rely only on database state
   const hasVideoTrack = stream?.getVideoTracks().some(track => track.enabled && track.readyState === 'live');
   const hasAudioTrack = stream?.getAudioTracks().some(track => track.enabled);
@@ -248,6 +245,11 @@ function ParticipantTile({ participant, stream, callType, isSpotlight }: Partici
         </div>
       )}
 
+      <button type="button" onClick={onSelect}
+        aria-label={`Ampliar ${participant.display_name}`}
+        aria-pressed={!!isSpotlight}
+        className="absolute inset-0 z-10 rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
+      />
       {/* Participant info overlay */}
       <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/60 to-transparent">
         <div className="flex items-center justify-between">
