@@ -2,6 +2,7 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import { ActiveCallProvider, useActiveCallRequired } from './ActiveCallProvider';
+import { unlockCallAudio } from '@/lib/audio-context';
 const mocks = vi.hoisted(() => ({
   state: { callStatus: 'connecting' } as any, start: vi.fn(), end: vi.fn(), tone: vi.fn(), answerCall: vi.fn(), toast: vi.fn(), setIncomingCall: vi.fn(),
   incomingCall: { id: 'call', type: 'voice', initiator_id: 'caller' },
@@ -19,7 +20,16 @@ function Consumer() {
   const { joinCall, startCall } = useActiveCallRequired();
   return <><button onClick={() => void joinCall('call', 'voice', 'caller')}>Entrar teste</button><button onClick={() => void startCall('other', 'voice')}>Ligar teste</button></>;
 }
-afterEach(() => { cleanup(); mocks.state = { callStatus: 'connecting' }; vi.clearAllMocks(); });
+afterEach(() => { cleanup(); mocks.state = { callStatus: 'connecting' }; vi.clearAllMocks(); vi.unstubAllGlobals(); });
+it('starts joining immediately even if the browser audio context cannot resume yet', async () => {
+  vi.stubGlobal('AudioContext', class { resume = () => new Promise(() => {}); close = vi.fn(); });
+  mocks.answerCall.mockResolvedValue(undefined);
+  render(<MemoryRouter><ActiveCallProvider><Consumer /></ActiveCallProvider></MemoryRouter>);
+  await act(async () => fireEvent.click(screen.getByText('Entrar teste')));
+  expect(unlockCallAudio).toHaveBeenCalledOnce();
+  expect(mocks.answerCall).toHaveBeenCalledWith('call', 'voice', 'caller');
+  expect(screen.queryByRole('dialog', { name: 'A iniciar chamada' })).not.toBeInTheDocument();
+});
 it('answers once when repeated taps and a room join overlap', async () => {
   let finish!: () => void;
   mocks.answerCall.mockImplementation(() => new Promise<void>(resolve => { finish = resolve; }));

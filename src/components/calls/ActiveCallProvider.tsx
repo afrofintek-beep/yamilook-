@@ -214,16 +214,9 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
     const epoch = ++startEpoch.current;
     setSetupCallType(callType);
     setAnswering(true);
+    unlockCallAudio(); markUserInteracted();
 
     try {
-      // iOS Safari gesture unlock: play a silent audio context on the user tap
-      // so subsequent media playback is not blocked by autoplay policy.
-      try {
-        const ctx = new AudioContext();
-        await ctx.resume();
-        ctx.close();
-      } catch { /* non-fatal */ }
-
       // Answering a call requires user media; if this fails, show a clear toast.
       await answerCall(callId, callType, initiatorId);
       if (epoch !== startEpoch.current) return;
@@ -242,7 +235,7 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
       if (epoch === startEpoch.current) setAnswering(false);
       if (answeringCallRef.current === callId) answeringCallRef.current = null;
     }
-  }, [answerCall, currentCallId, isInCall, toast]);
+  }, [answerCall, currentCallId, isInCall, toast, markUserInteracted]);
 
   const endCurrentCall = useCallback(() => {
     logger.debug('Ending current call', 'ActiveCallProvider');
