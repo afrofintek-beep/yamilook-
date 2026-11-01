@@ -452,5 +452,28 @@
     "minutesAgo": "il y a {{count}} min",
     "hoursAgo": "il y a {{count}}h",
     "daysAgo": "il y a {{count}}j"
+  },
+  "kosolola": {
+    "back": "Retour aux conversations",
+    "ecosystem": "Une application de l’écosystème AFROFINTEK",
+    "myProfile": "Mon profil",
+    "typing": "Afficher quand je saisis un message",
+    "shared": "Ces préférences sont partagées avec Yamilook.",
+    "archived": "Conversations archivées",
+    "install": "Installation et accès",
+    "openYamilook": "Ouvrir Yamilook",
+    "logoutError": "Impossible de confirmer la déconnexion. Réessayez.",
+    "saveError": "Impossible d’enregistrer",
+    "languageError": "Impossible de charger cette langue. Réessayez.",
+    "incomplete": "Les traductions sont en cours. Certains textes apparaissent en anglais ou en portugais.",
+    "ringtoneTitle": "Sonnerie des appels",
+    "incomingSound": "Son des appels entrants",
+    "chooseRingtone": "Choisir une sonnerie",
+    "defaultTone": "Par défaut",
+    "ringtoneVolume": "Volume de la sonnerie",
+    "testTone": "Tester la sonnerie",
+    "stopTest": "Arrêter le test",
+    "silentTone": "La sonnerie est silencieuse.",
+    "loadingTones": "Chargement des sonneries…"
   }
 }

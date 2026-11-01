@@ -21,7 +21,7 @@ describe('AFROLOC language selection', () => {
     await waitFor(() => expect(i18n.language).toBe('yo'));
     expect(i18n.t('auth.login')).toBe('Wọle');
     expect(localStorage.setItem).toHaveBeenCalledWith('i18nextLng', 'yo');
-    expect(screen.getByText(/Translations are being completed/)).toBeInTheDocument();
+    expect(screen.getByText(/Àwọn ìtumọ̀ ṣì ń lọ lọ́wọ́/)).toBeInTheDocument();
     expect(i18n.t('auth.enterCredentials')).toBe('Enter your details to continue');
   });
   it('updates and restores document direction', async () => {

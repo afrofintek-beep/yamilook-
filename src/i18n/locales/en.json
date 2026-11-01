@@ -607,5 +607,28 @@
     "friends": "Friends",
     "closeFriends": "Close friends",
     "onlyMe": "Only me"
+  },
+  "kosolola": {
+    "back": "Back to chats",
+    "ecosystem": "An application in the AFROFINTEK ecosystem",
+    "myProfile": "My profile",
+    "typing": "Show when I am typing",
+    "shared": "These preferences are shared with Yamilook.",
+    "archived": "Archived chats",
+    "install": "Installation and access",
+    "openYamilook": "Open Yamilook",
+    "logoutError": "Could not confirm sign-out. Please try again.",
+    "saveError": "Could not save",
+    "languageError": "Could not load this language. Please try again.",
+    "incomplete": "Translations are being completed. Some text is shown in English or Portuguese.",
+    "ringtoneTitle": "Call ringtone",
+    "incomingSound": "Sound for incoming calls",
+    "chooseRingtone": "Choose ringtone",
+    "defaultTone": "Default",
+    "ringtoneVolume": "Ringtone volume",
+    "testTone": "Test ringtone",
+    "stopTest": "Stop test",
+    "silentTone": "The ringtone is silent.",
+    "loadingTones": "Loading ringtones…"
   }
 }

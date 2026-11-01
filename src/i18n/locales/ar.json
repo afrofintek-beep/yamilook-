@@ -434,5 +434,28 @@
     "minutesAgo": "منذ {{count}} دقيقة",
     "hoursAgo": "منذ {{count}} ساعة",
     "daysAgo": "منذ {{count}} يوم"
+  },
+  "kosolola": {
+    "back": "العودة إلى المحادثات",
+    "ecosystem": "تطبيق ضمن منظومة AFROFINTEK",
+    "myProfile": "ملفي الشخصي",
+    "typing": "إظهار أنني أكتب",
+    "shared": "تتم مشاركة هذه التفضيلات مع Yamilook.",
+    "archived": "المحادثات المؤرشفة",
+    "install": "التثبيت والوصول",
+    "openYamilook": "فتح Yamilook",
+    "logoutError": "تعذر تأكيد تسجيل الخروج. حاول مرة أخرى.",
+    "saveError": "تعذر الحفظ",
+    "languageError": "تعذر تحميل هذه اللغة. حاول مرة أخرى.",
+    "incomplete": "الترجمات قيد الاستكمال. تظهر بعض النصوص بالإنجليزية أو البرتغالية.",
+    "ringtoneTitle": "نغمة المكالمات",
+    "incomingSound": "صوت المكالمات الواردة",
+    "chooseRingtone": "اختيار النغمة",
+    "defaultTone": "الافتراضية",
+    "ringtoneVolume": "مستوى صوت النغمة",
+    "testTone": "اختبار النغمة",
+    "stopTest": "إيقاف الاختبار",
+    "silentTone": "النغمة صامتة.",
+    "loadingTones": "جارٍ تحميل النغمات…"
   }
 }
