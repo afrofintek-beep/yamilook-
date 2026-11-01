@@ -58,8 +58,8 @@ export async function acknowledgeLoginAlerts(ids: string[]): Promise<void> {
   if (ids.length) await accountRpc<number>('account_acknowledge_login_alerts', { p_alert_ids: ids });
 }
 
-/** Only terminate on an explicit invalid/revoked session response. Network
- * failures and pending DB migrations must not log out the user. */
+/** Only the session RPC can confirm revocation (28000). PGRST301 is a
+ * JWT validation failure, including expiry, and does not prove revocation. */
 export function isRevokedSessionError(error: { code?: string; status?: number } | null | undefined): boolean {
-  return error?.code === '28000' || error?.code === 'PGRST301';
+  return error?.code === '28000';
 }
