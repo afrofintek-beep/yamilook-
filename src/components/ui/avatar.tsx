@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useCachedAvatar } from "@/hooks/useCachedAvatar";
 import * as AvatarPrimitive from "@radix-ui/react-avatar";
 
 import { cn } from "@/lib/utils";
@@ -24,7 +25,7 @@ type VariantAvatarImageProps = React.ComponentPropsWithoutRef<typeof AvatarPrimi
 const AvatarImage = React.forwardRef<
   React.ElementRef<typeof AvatarPrimitive.Image>,
   VariantAvatarImageProps
->(({ className, src, onError, onLoad, imageVariantSize, ...props }, ref) => {
+>(({ className, src, onError, onLoad, imageVariantSize, onLoadingStatusChange, ...props }, ref) => {
   const [failedSrc, setFailedSrc] = React.useState<string | null>(null);
   const variant = imageVariantSize
     ? { width: imageVariantSize, height: imageVariantSize, resize: 'cover' as const, quality: 78 }
@@ -32,13 +33,24 @@ const AvatarImage = React.forwardRef<
   const optimized = variant ? optimizedPublicImageUrl(src, variant) : src;
   const usingVariant = Boolean(variant && optimized && optimized !== src && failedSrc !== src);
 
+  const cachedAvatar = useCachedAvatar(usingVariant ? optimized : src);
+
   return (
     <AvatarPrimitive.Image
       loading="lazy"
       decoding="async"
       {...props}
       ref={ref}
-      src={usingVariant ? optimized : src}
+      key={`${src || ""}:${cachedAvatar.retry}`}
+      src={cachedAvatar.src}
+      onLoadingStatusChange={status => {
+        if (status === "loaded") cachedAvatar.loaded();
+        if (status === "error") {
+          cachedAvatar.failed();
+          if (usingVariant && src) setFailedSrc(src);
+        }
+        onLoadingStatusChange?.(status);
+      }}
       data-image-delivery={imageVariantSize ? (usingVariant ? 'variant'
         : optimized !== src && failedSrc === src ? 'fallback' : 'original') : undefined}
       className={cn("aspect-square h-full w-full object-cover", className)}
