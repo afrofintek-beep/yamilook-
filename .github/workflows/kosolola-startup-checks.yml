@@ -7,6 +7,11 @@ on:
       - 'src/pages/Calls*'
       - 'src/lib/virtualBackground.ts'
       - 'build/papos-plugin.ts'
+      - 'src/papos-main.tsx'
+      - 'src/lib/asset-load-error*'
+      - 'src/lib/render-diagnostic*'
+      - 'e2e/asset-recovery.spec.ts'
+      - 'playwright.assets.config.ts'
       - '.github/workflows/kosolola-startup-checks.yml'
   workflow_dispatch:
 permissions:
@@ -27,4 +32,6 @@ jobs:
       - run: npm ci
       - run: npx vitest run src/features/papos src/pages/Calls.test.tsx src/hooks/useLiveKitCall.test.tsx src/hooks/useCallTransport.test.tsx src/components/calls src/features/scheduled-calls/ScheduleCallSheet.test.tsx
       - run: npx tsc --noEmit --project tsconfig.app.json
-      - run: npm run build
+      - run: npx vitest run src/lib/asset-load-error.test.ts src/lib/render-diagnostic.test.ts src/lib/call-update-guard.test.ts
+      - run: npx playwright install --with-deps webkit
+      - run: npx playwright test -c playwright.assets.config.ts

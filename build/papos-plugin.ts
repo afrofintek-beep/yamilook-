@@ -37,6 +37,13 @@ export function paposApplication(): Plugin {
       const assets = [...files].map(name => '/' + name).concat(['/papos-app/kosolola-icon-192.png', '/papos-app/kosolola-icon-512.png']);
       this.emitFile({ type: 'asset', fileName: 'papos-app/sw.js', source: `
 const PREFIX='papos-app-assets-', CACHE=PREFIX+'${version}', SHELL='/papos-app/index.html';
+function validAsset(response,url){
+ if(!response||!response.ok)return false;
+ const type=(response.headers.get('Content-Type')||'').split(';')[0].trim().toLowerCase();
+ if(/\\.m?js$/.test(url.pathname))return /^(text|application)\\/(javascript|ecmascript)$/.test(type);
+ if(/\\.css$/.test(url.pathname))return type==='text/css';
+ return type!=='text/html';
+}
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(${JSON.stringify(assets)})).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',event=>{event.waitUntil((async()=>{const names=(await caches.keys()).filter(name=>name.startsWith(PREFIX));const keep=new Set([CACHE,...names.filter(name=>name!==CACHE).slice(-1)]);await Promise.all(names.filter(name=>!keep.has(name)).map(name=>caches.delete(name)));await self.clients.claim();})());});
 self.addEventListener('fetch',event=>{
@@ -46,7 +53,7 @@ self.addEventListener('fetch',event=>{
   event.respondWith(fetch(request).then(response=>{if(!response.ok)throw new Error('Unavailable');return response;}).catch(async()=>{const cache=await caches.open(CACHE);return(await cache.match(SHELL))||Response.error();}));return;
  }
  if(!url.pathname.startsWith('/assets/')&&!/^\\/papos-app\\/kosolola-icon-(192|512)\\.png$/.test(url.pathname))return;
- event.respondWith((async()=>{const names=(await caches.keys()).filter(name=>name.startsWith(PREFIX));for(const name of names){const cached=await(await caches.open(name)).match(request);if(cached)return cached;}const response=await fetch(request);if(response.ok&&url.pathname.startsWith('/assets/')&&!url.search){const cache=await caches.open(CACHE);try{await cache.put(request,response.clone());}catch{/* A full cache must not block loading a route. */}}return response;})());
+ event.respondWith((async()=>{const names=(await caches.keys()).filter(name=>name.startsWith(PREFIX));for(const name of names){const cache=await caches.open(name);const cached=await cache.match(request);if(validAsset(cached,url))return cached;if(cached)try{await cache.delete(request);}catch{/* Ignore cache maintenance failure. */}}const response=await fetch(request);if(validAsset(response,url)&&url.pathname.startsWith('/assets/')&&!url.search){const cache=await caches.open(CACHE);try{await cache.put(request,response.clone());}catch{/* A full cache must not block loading a route. */}}return response;})());
 });
 ${callPushWorker}` });
     },

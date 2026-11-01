@@ -15,6 +15,15 @@ it('distinguishes hook and update failures without retaining exception text', ()
  expect(renderDiagnostic(new Error('Maximum update depth exceeded'), '').category).toBe('update-loop');
 });
 
+it.each([
+ "'text/html' is not a valid JavaScript MIME type.",
+ 'Unable to preload CSS for /assets/Chat.css?private=secret',
+])('classifies module loading failure without retaining its text: %s', message => {
+ const result = renderDiagnostic({ name: 'TypeError', message }, '');
+ expect(result.category).toBe('asset-load');
+ expect(JSON.stringify(result)).not.toMatch(/secret|private|text\/html/);
+});
+
 it('retains safe Safari component locations when the exception has no stack', () => {
  const result = renderDiagnostic({ name: 'TypeError', message: 'private contact' }, '\nAb@https://example.com/assets/ActiveCallProvider-abc.js:14:727\n@https://example.com/assets/vendor-react-def.js:24:10');
  expect(result.frames).toEqual(['ActiveCallProvider-abc.js:14:727', 'vendor-react-def.js:24:10']);
