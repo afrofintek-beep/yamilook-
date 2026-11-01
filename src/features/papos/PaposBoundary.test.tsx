@@ -2,6 +2,7 @@ import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
 import { PaposBoundary } from './PaposBoundary';
 import { recoverApplicationAssets } from '@/lib/app-assets';
+import { holdCallUpdates } from '@/lib/call-update-guard';
 vi.mock('@/lib/app-assets', () => ({ recoverApplicationAssets: vi.fn().mockResolvedValue(undefined) }));
 vi.mock('@/lib/logger', () => ({ logger: { error: vi.fn() } }));
 afterEach(() => { cleanup(); vi.restoreAllMocks(); sessionStorage.clear(); });
@@ -22,6 +23,21 @@ it('bounds automatic chunk recovery to avoid repeated reload loops', () => {
   render(<PaposBoundary><Page /></PaposBoundary>);
   expect(screen.getByText(/ficheiros da aplicação/)).toBeVisible();
   expect(recoverApplicationAssets).not.toHaveBeenCalled();
+});
+
+it('recognises Safari module MIME errors and waits for an active call before recovery', async () => {
+  vi.spyOn(console, 'error').mockImplementation(() => {});
+  vi.useFakeTimers();
+  const release = holdCallUpdates();
+  function Page(): never { throw new TypeError("'text/html' is not a valid JavaScript MIME type."); }
+  try {
+    render(<PaposBoundary><Page /></PaposBoundary>);
+    expect(screen.getByText(/ficheiros da aplicação/)).toBeVisible();
+    expect(recoverApplicationAssets).not.toHaveBeenCalled();
+    release();
+    await vi.runAllTimersAsync();
+    expect(recoverApplicationAssets).toHaveBeenCalledOnce();
+  } finally { release(); vi.useRealTimers(); }
 });
 
 it.each([false, true])('shows the current diagnostic on the first failure, storage blocked=%s', (blocked) => {

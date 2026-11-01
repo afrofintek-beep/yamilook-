@@ -18,7 +18,7 @@ function worker() {
   generate.call({emitFile:(file:{source:string})=>{source=file.source;}} as unknown as PluginContext,{},bundle,false);
   const handlers:Record<string,(event:unknown)=>void>={};
   const fetch=vi.fn().mockRejectedValue(new Error('offline'));
-  const cache={addAll:vi.fn().mockResolvedValue(undefined),match:vi.fn().mockResolvedValue({shell:'Papos'}),put:vi.fn().mockResolvedValue(undefined)};
+  const cache={addAll:vi.fn().mockResolvedValue(undefined),match:vi.fn().mockResolvedValue({shell:'Papos'}),put:vi.fn().mockResolvedValue(undefined),delete:vi.fn().mockResolvedValue(true)};
   const caches={open:vi.fn().mockResolvedValue(cache),keys:vi.fn().mockResolvedValue([]),delete:vi.fn()};
   runInNewContext(source,{self:{location:{origin:'https://example.com'},addEventListener:(name:string,handler:(event:unknown)=>void)=>{handlers[name]=handler;},skipWaiting:vi.fn(),clients:{claim:vi.fn()}},caches,fetch,URL,Response:{error:()=>({error:true})}});
   return {source,handlers,fetch,cache,caches};
@@ -46,7 +46,7 @@ describe('Papos independent installation contract',()=>{
 
 it('caches a requested optional route and serves it offline on the next request', async () => {
   const sw=worker();
-  const response={ok:true,clone:()=>({cached:'route'})};
+  const response={ok:true,headers:new Headers({'Content-Type':'text/javascript'}),clone:()=>({cached:'route'})};
   sw.fetch.mockResolvedValue(response);
   const request={method:'GET',url:'https://example.com/assets/chat.js',mode:'cors'};
   let result!:Promise<unknown>;
@@ -54,15 +54,39 @@ it('caches a requested optional route and serves it offline on the next request'
   send();expect(await result).toBe(response);
   expect(sw.cache.put).toHaveBeenCalledWith(request,{cached:'route'});
   sw.caches.keys.mockResolvedValue(['papos-app-assets-current']);
-  sw.cache.match.mockResolvedValue({cached:'route'});
+  sw.cache.match.mockResolvedValue({...response,cached:'route'});
   sw.fetch.mockRejectedValue(new Error('offline'));
-  send();expect(await result).toEqual({cached:'route'});
+  send();expect(await result).toMatchObject({cached:'route'});
   expect(sw.fetch).toHaveBeenCalledTimes(1);
 });
 it('still loads a route when the cache quota is exhausted', async () => {
-  const sw=worker();const response={ok:true,clone:()=>({})};
+  const sw=worker();const response={ok:true,headers:new Headers({'Content-Type':'text/javascript'}),clone:()=>({})};
   sw.fetch.mockResolvedValue(response);sw.cache.put.mockRejectedValue(new Error('quota'));
   let result!:Promise<unknown>;
   sw.handlers.fetch({request:{method:'GET',url:'https://example.com/assets/chat.js',mode:'cors'},respondWith:(value:Promise<unknown>)=>{result=value;}});
   expect(await result).toBe(response);
+});
+
+it.each(['chat.js', 'chat.css'])('never caches an HTML fallback for %s', async file => {
+  const sw=worker();
+  const response={ok:true,headers:new Headers({'Content-Type':'text/html; charset=utf-8'}),clone:()=>({html:true})};
+  sw.fetch.mockResolvedValue(response);
+  let result!:Promise<unknown>;
+  sw.handlers.fetch({request:{method:'GET',url:`https://example.com/assets/${file}`,mode:'cors'},respondWith:(value:Promise<unknown>)=>{result=value;}});
+  await result;
+  expect(sw.cache.put).not.toHaveBeenCalled();
+});
+
+it('discards a previously cached HTML fallback and fetches valid JavaScript', async () => {
+  const sw=worker();
+  sw.caches.keys.mockResolvedValue(['papos-app-assets-old']);
+  sw.cache.match.mockResolvedValue({ok:true,headers:new Headers({'Content-Type':'text/html'})});
+  const response={ok:true,headers:new Headers({'Content-Type':'application/javascript'}),clone:()=>({js:true})};
+  sw.fetch.mockResolvedValue(response);
+  const request={method:'GET',url:'https://example.com/assets/chat.js',mode:'cors'};
+  let result!:Promise<unknown>;
+  sw.handlers.fetch({request,respondWith:(value:Promise<unknown>)=>{result=value;}});
+  expect(await result).toBe(response);
+  expect(sw.cache.delete).toHaveBeenCalledWith(request);
+  expect(sw.cache.put).toHaveBeenCalledWith(request,{js:true});
 });

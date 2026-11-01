@@ -7,6 +7,8 @@ import './features/papos/kosolola.css';
 import { captureAppInstallPrompt } from '@/lib/app-install';
 import { clearLegacyPrivateCache } from '@/lib/private-cache';
 import PaposApp from './features/papos/PaposApp';
+import { trackAssetLoadErrors } from '@/lib/asset-load-error';
+trackAssetLoadErrors();
 captureAppInstallPrompt();
 void clearLegacyPrivateCache();
 

@@ -1,4 +1,5 @@
 /** Local, bounded diagnostics: no account IDs, messages, media or query strings. */
+import { isApplicationAssetError } from './asset-load-error';
 const key = 'kosolola-render-diagnostic-v1';
 export function renderDiagnostic(error: unknown, componentStack: string | null | undefined) {
   const detail = error && typeof error === 'object' ? error as Record<string, unknown> : {};
@@ -8,7 +9,7 @@ export function renderDiagnostic(error: unknown, componentStack: string | null |
   const reactCode = /Minified React error #(\d{1,4})\b/.exec(message)?.[1];
   const category = /maximum update depth/i.test(message) || reactCode === '185' ? 'update-loop'
     : /rendered (more|fewer) hooks|change in the order of hooks/i.test(message) || ['300', '310', '311'].includes(reactCode || '') ? 'hook-order'
-    : /loading chunk|dynamically imported module|importing a module script failed/i.test(message) ? 'asset-load'
+    : isApplicationAssetError(error) ? 'asset-load'
     : 'render-exception';
   const reason = /cannot add postgres_changes.*after subscribe|subscribe.*only.*once/i.test(message) ? 'subscription-reused'
     : reactCode ? `react-${reactCode}` : 'unclassified';
