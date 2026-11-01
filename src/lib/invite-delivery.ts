@@ -3,7 +3,7 @@ import { buildInviteUrl } from './referral';
 /** Common invitation wording for user-initiated WhatsApp and email shares. */
 export function invitationMessage(recipientEmail: string, code: string): string {
   const url = buildInviteUrl(code);
-  return `Foste convidado(a) para a YAMILOOK!\n\nAbre este link para te registares: ${url}\n\nO convite é pessoal e de utilização única. Regista-te com o email ${recipientEmail}.`;
+  return `Foste convidado(a) para a YAMILOOK!\n\nAbre este link para te registares: ${url}\n\nO convite é pessoal e de utilização única. ${recipientEmail ? `Regista-te com o email ${recipientEmail}.` : 'Indica o teu email ao registar-te. O convite é válido durante 7 dias.'}`;
 }
 
 /** WhatsApp opens the compose window; the sender still confirms the recipient and taps Send. */

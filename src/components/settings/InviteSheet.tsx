@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { ContactInviteActions } from './ContactInviteActions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetClose, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -168,8 +169,11 @@ export function InviteSheet({ open, onOpenChange, isAdmin = false }: InviteSheet
           </div>
         </SheetHeader>
         <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain break-words px-6 pt-4 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]">
-          <SheetDescription>Gera um código único para o email da pessoa convidada. Só pode ser usado uma vez. Depois de o gerar, escolhe enviar por email ou partilhar pelo WhatsApp.</SheetDescription>
+          <SheetDescription>Convida alguém pelos contactos do telemóvel, por WhatsApp ou email. Cada convite só pode ser utilizado por uma pessoa.</SheetDescription>
         {allowed ? <>
+        {open && <ContactInviteActions key={userId} />}
+        <details className="mt-6 border-t pt-4">
+        <summary className="cursor-pointer font-medium">Convidar um email específico</summary>
         <form className="space-y-3 mt-6" onSubmit={(event) => { event.preventDefault(); void issue(); }}>
           <label htmlFor="invite-email" className="block font-medium">Email da pessoa convidada</label>
           <Input id="invite-email" type="email" autoCapitalize="none" autoCorrect="off" required value={email} disabled={issuing}
@@ -206,8 +210,9 @@ export function InviteSheet({ open, onOpenChange, isAdmin = false }: InviteSheet
         ) : (
           <p className="mt-6">Os convites destinam-se a pessoas que ainda não têm conta na Yamilook.</p>
         )}
+        </details>
         </> : <p className="mt-6">No MVP, apenas o administrador e as pessoas por ele autorizadas podem enviar convites.</p>}
-        <p className="text-sm text-muted-foreground mt-4" role="status">{status}</p>
+        <p className="text-sm text-muted-foreground mt-4" role="status" aria-label="Estado do convite por email">{status}</p>
         {isAdmin && <section className="mt-8 space-y-3 border-t pt-4">
           <h3 className="font-semibold">Pessoas autorizadas a convidar</h3>
           <p className="text-sm text-muted-foreground">Autoriza uma conta existente. Esta permissão não dá acesso à administração.</p>
