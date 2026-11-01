@@ -1,4 +1,5 @@
 import { act, cleanup, renderHook } from '@testing-library/react';
+import { StrictMode, type ReactNode } from 'react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { useCalls, type Call } from './useCalls';
 
@@ -8,7 +9,6 @@ const m = vi.hoisted(() => ({
   poll: vi.fn(),
 }));
 vi.mock('./useAuth', () => ({ useAuth: () => ({ user: m.user }) }));
-vi.mock('./useIncomingCallSignals', () => ({ useIncomingCallSignals: vi.fn() }));
 vi.mock('@/features/scheduled-calls/useScheduledCalls', () => ({ useScheduledCalls: () => ({ scheduledCalls: [] }) }));
 vi.mock('@/lib/direct-call-reconciliation', () => ({ reconcileDirectCalls: vi.fn() }));
 vi.mock('@/integrations/supabase/client', () => ({ supabase: {
@@ -34,7 +34,7 @@ vi.mock('@/integrations/supabase/client', () => ({ supabase: {
 } }));
 const call = (id: string) => ({ id, status: 'ringing', type: 'voice', initiator_id: 'caller' } as Call);
 const watchers = () => [...m.channels.values()].filter(channel => channel.name.startsWith('call-status-watch-'));
-beforeEach(() => { m.channels.clear(); m.removed.mockClear(); m.poll.mockReset().mockResolvedValue({ data: { status: 'ringing' }, error: null }); vi.useFakeTimers(); });
+beforeEach(() => { m.user = { id: 'me' }; m.channels.clear(); m.removed.mockClear(); m.poll.mockReset().mockResolvedValue({ data: { status: 'ringing' }, error: null }); vi.useFakeTimers(); });
 afterEach(() => { cleanup(); vi.useRealTimers(); });
 
 it('lets the global listener and history page watch the same call without sharing a subscribed channel', async () => {
@@ -67,4 +67,24 @@ it('ignores a late status poll from a previous call', async () => {
   await act(async () => result.current.setIncomingCall(call('new-call')));
   await act(async () => resolve({ data: { status: 'ended' }, error: null }));
   expect(result.current.incomingCall?.id).toBe('new-call');
+});
+
+it('keeps the incoming listener subscribed when the same account refreshes its session', async () => {
+  const { result, rerender } = renderHook(() => useCalls({ loadHistory: false }));
+  await act(async () => result.current.setIncomingCall(call('ringing-call')));
+  const channels = [...m.channels.keys()];
+  m.user = { id: 'me' };
+  rerender();
+  expect([...m.channels.keys()]).toEqual(channels);
+  expect(m.removed).not.toHaveBeenCalled();
+  expect(result.current.incomingCall?.id).toBe('ringing-call');
+});
+
+it('can restart incoming detection before the previous effect has unsubscribed', () => {
+  const wrapper = ({ children }: { children: ReactNode }) => <StrictMode>{children}</StrictMode>;
+  const { result } = renderHook(() => useCalls({ loadHistory: false }), { wrapper });
+  expect(result.current).toBeDefined();
+  const listeners = [...m.channels.values()].filter(channel => channel.name.startsWith('incoming-calls-'));
+  expect(listeners).toHaveLength(2);
+  expect(m.removed).toHaveBeenCalledWith(listeners[0]);
 });

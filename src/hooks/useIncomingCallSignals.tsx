@@ -23,22 +23,20 @@ interface UseIncomingCallSignalsProps {
  */
 export function useIncomingCallSignals({ onOfferReceived }: UseIncomingCallSignalsProps) {
   const { user } = useAuth();
+  const userId = user?.id;
   const processedOffers = useRef<Set<string>>(new Set());
   const onOfferReceivedRef = useRef(onOfferReceived);
-  // Stable channel suffix to prevent recreating channels on every render
-  const channelSuffixRef = useRef<string>(`${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);
 
   // Keep callback ref updated without triggering effect re-runs
   onOfferReceivedRef.current = onOfferReceived;
 
   useEffect(() => {
-    if (!user?.id) {
+    if (!userId) {
       return;
     }
 
-    const userId = user.id;
-    // Use stable suffix to prevent duplicate subscriptions
-    const channelName = `incoming-offers-${userId}-${channelSuffixRef.current}`;
+    let disposed = false;
+    const channelName = `incoming-offers-${userId}-${crypto.randomUUID()}`;
     // Subscribe silently in production
 
     // Subscribe to all call_signals sent TO this user
@@ -53,6 +51,7 @@ export function useIncomingCallSignals({ onOfferReceived }: UseIncomingCallSigna
           table: 'call_signals',
         },
         (payload) => {
+          if (disposed) return;
           const signal = payload.new as Tables<'call_signals'>;
           
           // Client-side filter: only process signals for this user
@@ -96,6 +95,7 @@ export function useIncomingCallSignals({ onOfferReceived }: UseIncomingCallSigna
         }
       )
       .subscribe((status, err) => {
+        if (disposed) return;
         logger.debug('📡 Subscription status', 'IncomingCallSignals', status);
 
         if (err) {
@@ -132,6 +132,7 @@ export function useIncomingCallSignals({ onOfferReceived }: UseIncomingCallSigna
           .gte('created_at', twoMinutesAgo)
           .order('created_at', { ascending: true });
 
+        if (disposed) return;
         if (error) {
           logger.error('❌ Error fetching pending offers', 'IncomingCallSignals', error);
           return;
@@ -175,10 +176,11 @@ export function useIncomingCallSignals({ onOfferReceived }: UseIncomingCallSigna
     };
 
     return () => {
+      disposed = true;
       logger.debug('🔌 Unsubscribing from Realtime channel', 'IncomingCallSignals', channelName);
       supabase.removeChannel(channel);
     };
-  }, [user?.id]);
+  }, [userId]);
 
   // Cleanup old processed offers periodically
   useEffect(() => {

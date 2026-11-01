@@ -7,6 +7,9 @@ import { VitePWA } from "vite-plugin-pwa";
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   base: "/",
+  define: {
+    'import.meta.env.APP_BUILD_ID': JSON.stringify(/^[a-f0-9]{40}$/i.test(process.env.VERCEL_GIT_COMMIT_SHA || '') ? process.env.VERCEL_GIT_COMMIT_SHA!.slice(0, 12) : 'development'),
+  },
   server: {
     host: "::",
     port: 8080,

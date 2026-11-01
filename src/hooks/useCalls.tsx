@@ -66,11 +66,9 @@ export interface CallHistory {
 
 export function useCalls({ loadHistory = true }: { loadHistory?: boolean } = {}) {
   const { user } = useAuth();
+  const userId = user?.id;
   const [incomingCall, setIncomingCall] = useState<Call | null>(null);
   const incomingCallRef = useRef<Call | null>(null);
-  // Per-instance suffix so multiple mounted useCalls() (ActiveCallProvider,
-  // CallsTabContent, Calls page…) don't collide on one shared realtime topic.
-  const instanceIdRef = useRef(Math.random().toString(36).slice(2));
   const [callHistory, setCallHistory] = useState<CallHistory[]>([]);
   const scheduling = useScheduledCalls();
   const scheduledCalls = scheduling.scheduledCalls;
@@ -335,8 +333,9 @@ export function useCalls({ loadHistory = true }: { loadHistory?: boolean } = {})
 
   // Listen for incoming calls with fallback polling for reliability
   useEffect(() => {
-    if (!user) return;
+    if (!userId) return;
 
+    let disposed = false;
     let pollIntervalId: ReturnType<typeof setInterval> | null = null;
     let channelRemoved = false;
     let channelHealthy = false;
@@ -349,7 +348,7 @@ export function useCalls({ loadHistory = true }: { loadHistory?: boolean } = {})
 
     const checkForRingingCall = async () => {
       // Don't poll if we already have an incoming call displayed (handled by the watcher above)
-      if (incomingCallRef.current || checkInFlight) return;
+      if (disposed || incomingCallRef.current || checkInFlight) return;
       checkInFlight = true;
       lastPollAt = Date.now();
 
@@ -357,12 +356,13 @@ export function useCalls({ loadHistory = true }: { loadHistory?: boolean } = {})
         const { data: participant, error } = await supabase
           .from('call_participants')
           .select('call_id, status, created_at')
-          .eq('user_id', user.id)
+          .eq('user_id', userId)
           .eq('status', 'ringing')
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle();
 
+        if (disposed) return;
         if (error) {
           logger.error('Error polling for ringing calls', 'useCalls', error);
           return;
@@ -380,7 +380,7 @@ export function useCalls({ loadHistory = true }: { loadHistory?: boolean } = {})
               .from('call_participants')
               .update({ status: 'declined', left_at: new Date().toISOString() })
               .eq('call_id', participant.call_id)
-              .eq('user_id', user.id)
+              .eq('user_id', userId)
               .eq('status', 'ringing'),
             supabase
               .from('calls')
@@ -398,6 +398,7 @@ export function useCalls({ loadHistory = true }: { loadHistory?: boolean } = {})
           .eq('id', participant.call_id)
           .maybeSingle();
         
+        if (disposed) return;
         if (!callCheck || callCheck.status !== 'ringing') {
           logger.debug('Call is no longer ringing, skipping', 'useCalls', participant.call_id);
           return;
@@ -411,7 +412,7 @@ export function useCalls({ loadHistory = true }: { loadHistory?: boolean } = {})
           .eq('id', participant.call_id)
           .maybeSingle();
 
-        if (call && call.status === 'ringing') {
+        if (!disposed && call && call.status === 'ringing') {
           logger.debug('Setting incoming call from poll', 'useCalls', call.id);
           setIncomingCall(call as Call);
         }
@@ -448,16 +449,18 @@ export function useCalls({ loadHistory = true }: { loadHistory?: boolean } = {})
 
     // Also subscribe to Realtime for faster detection when available
     const channel = supabase
-      .channel(`incoming-calls-${user.id}-${instanceIdRef.current}`)
+      // Each effect owns its topic, even before an old unsubscribe completes.
+      .channel(`incoming-calls-${userId}-${crypto.randomUUID()}`)
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
           table: 'call_participants',
-          filter: `user_id=eq.${user.id}`,
+          filter: `user_id=eq.${userId}`,
         },
         async (payload) => {
+          if (disposed) return;
           logger.debug('Realtime event', 'useCalls', { eventType: payload.eventType, new: payload.new });
           const participant = payload.new as CallParticipant;
 
@@ -474,7 +477,7 @@ export function useCalls({ loadHistory = true }: { loadHistory?: boolean } = {})
               .eq('id', participant.call_id)
               .maybeSingle();
 
-            if (call && call.status === 'ringing') {
+            if (!disposed && call && call.status === 'ringing') {
               logger.debug('Setting incoming call from Realtime', 'useCalls', call.id);
               setIncomingCall(call as Call);
             }
@@ -488,6 +491,7 @@ export function useCalls({ loadHistory = true }: { loadHistory?: boolean } = {})
         }
       )
       .subscribe((status, err) => {
+        if (disposed) return;
         const errMsg = err
           ? (err instanceof Error ? err.message : String(err))
           : '';
@@ -511,6 +515,7 @@ export function useCalls({ loadHistory = true }: { loadHistory?: boolean } = {})
       });
 
     return () => {
+      disposed = true;
       navigator.serviceWorker?.removeEventListener('message', onPushClick);
       document.removeEventListener('visibilitychange', onVisibilityChange);
       window.removeEventListener('online', onOnline);
@@ -521,7 +526,9 @@ export function useCalls({ loadHistory = true }: { loadHistory?: boolean } = {})
         supabase.removeChannel(channel);
       }
     };
-  }, [user]);
+  // Token refresh creates a new user object for the same account. It must not
+  // tear down the incoming listener or compete with its pending unsubscribe.
+  }, [userId]);
 
   // The app-wide call listener only needs signaling; history is opened on demand.
   useEffect(() => {

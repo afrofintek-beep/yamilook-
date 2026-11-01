@@ -14,12 +14,11 @@ import { useLocation } from 'react-router-dom';
 export function GlobalMessageNotifier() {
   const location = useLocation();
   const { user } = useAuth();
+  const userId = user?.id;
   const { notifyMessage, triggerVibration } = useMessageNotification();
   const messageChannelRef = useRef<RealtimeChannel | null>(null);
   const typingChannelRef = useRef<RealtimeChannel | null>(null);
   const participatingConversationsRef = useRef<Set<string>>(new Set());
-  // Único por instância para não colidir no mesmo tópico do canal realtime.
-  const instanceIdRef = useRef(Math.random().toString(36).slice(2));
 
   // Track which conversations the user is currently viewing
   // to avoid notifying when already watching the typing happen
@@ -36,16 +35,19 @@ export function GlobalMessageNotifier() {
   }, []);
 
   useEffect(() => {
-    if (!user) return;
+    if (!userId) return;
+    let disposed = false;
+    const subscriptionId = crypto.randomUUID();
+    participatingConversationsRef.current = new Set();
 
     // Fetch all conversation IDs the user participates in
     const fetchConversations = async () => {
       const { data } = await supabase
         .from('conversation_participants')
         .select('conversation_id')
-        .eq('user_id', user.id);
+        .eq('user_id', userId);
 
-      if (data) {
+      if (!disposed && data) {
         participatingConversationsRef.current = new Set(data.map(d => d.conversation_id));
       }
     };
@@ -54,7 +56,7 @@ export function GlobalMessageNotifier() {
 
     // ── 1. Listen for new messages ──────────────────────────────
     const messageChannel = supabase
-      .channel(`global-message-notifications-${instanceIdRef.current}`)
+      .channel(`global-message-notifications-${subscriptionId}`)
       .on(
         'postgres_changes',
         {
@@ -63,12 +65,13 @@ export function GlobalMessageNotifier() {
           table: 'messages',
         },
         (payload) => {
+          if (disposed) return;
           const newMessage = payload.new as { sender_id: string; conversation_id: string };
 
           // Only notify for messages from OTHER users, in conversations we participate in,
           // AND only when we are NOT already viewing that conversation
           if (
-            newMessage.sender_id !== user.id &&
+            newMessage.sender_id !== userId &&
             participatingConversationsRef.current.has(newMessage.conversation_id) &&
             !isViewingConversation(newMessage.conversation_id)
           ) {
@@ -84,17 +87,18 @@ export function GlobalMessageNotifier() {
     // We listen to both INSERT and UPDATE because upsert generates UPDATE
     // when the record already exists (same user typing again).
     const handleTypingEvent = (payload: RealtimePostgresChangesPayload<Tables<'typing_indicators'>>) => {
+      if (disposed) return;
       const indicator = ('new' in payload ? payload.new : null) || ('old' in payload ? payload.old : null);
-      const userId = (indicator as Partial<Tables<'typing_indicators'>> | null)?.user_id;
+      const senderId = (indicator as Partial<Tables<'typing_indicators'>> | null)?.user_id;
       const conversationId = (indicator as Partial<Tables<'typing_indicators'>> | null)?.conversation_id;
-      if (!userId || !conversationId) return;
+      if (!senderId || !conversationId) return;
 
       // Only notify if:
       // - The typer is someone else
       // - We participate in that conversation
       // - We are NOT currently viewing that conversation
       if (
-        userId !== user.id &&
+        senderId !== userId &&
         participatingConversationsRef.current.has(conversationId) &&
         !isViewingConversation(conversationId)
       ) {
@@ -103,7 +107,7 @@ export function GlobalMessageNotifier() {
     };
 
     const typingChannel = supabase
-      .channel(`global-typing-notifications-${instanceIdRef.current}`)
+      .channel(`global-typing-notifications-${subscriptionId}`)
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'typing_indicators' },
@@ -119,6 +123,7 @@ export function GlobalMessageNotifier() {
     typingChannelRef.current = typingChannel;
 
     return () => {
+      disposed = true;
       if (messageChannelRef.current) {
         supabase.removeChannel(messageChannelRef.current);
         messageChannelRef.current = null;
@@ -128,25 +133,26 @@ export function GlobalMessageNotifier() {
         typingChannelRef.current = null;
       }
     };
-  }, [user, notifyMessage, notifyTyping, isViewingConversation]);
+  }, [userId, notifyMessage, notifyTyping, isViewingConversation]);
 
   // Refresh conversation list periodically (new groups, etc.)
   useEffect(() => {
-    if (!user) return;
+    if (!userId) return;
+    let disposed = false;
 
     const interval = setInterval(async () => {
       const { data } = await supabase
         .from('conversation_participants')
         .select('conversation_id')
-        .eq('user_id', user.id);
+        .eq('user_id', userId);
 
-      if (data) {
+      if (!disposed && data) {
         participatingConversationsRef.current = new Set(data.map(d => d.conversation_id));
       }
     }, 60_000);
 
-    return () => clearInterval(interval);
-  }, [user]);
+    return () => { disposed = true; clearInterval(interval); };
+  }, [userId]);
 
   return null;
 }

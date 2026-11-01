@@ -14,3 +14,27 @@ it('distinguishes hook and update failures without retaining exception text', ()
  expect(renderDiagnostic(new Error('Rendered fewer hooks than expected'), '').category).toBe('hook-order');
  expect(renderDiagnostic(new Error('Maximum update depth exceeded'), '').category).toBe('update-loop');
 });
+
+it('retains safe Safari component locations when the exception has no stack', () => {
+ const result = renderDiagnostic({ name: 'TypeError', message: 'private contact' }, '\nAb@https://example.com/assets/ActiveCallProvider-abc.js:14:727\n@https://example.com/assets/vendor-react-def.js:24:10');
+ expect(result.frames).toEqual(['ActiveCallProvider-abc.js:14:727', 'vendor-react-def.js:24:10']);
+ expect(result.components).toEqual(['Ab']);
+ expect(result.errorType).toBe('TypeError');
+ expect(result.hasStack).toBe(false);
+ expect(JSON.stringify(result)).not.toMatch(/private|contact|https/);
+});
+
+it('uses a Safari source location while removing its query string', () => {
+ const result = renderDiagnostic({ sourceURL: 'https://example.com/assets/Calls-abc.js?token=secret', line: 14, column: 727 }, '');
+ expect(result.frames).toEqual(['Calls-abc.js:14:727']);
+ expect(JSON.stringify(result)).not.toMatch(/https|token|secret/);
+});
+
+it('identifies minified React and channel failures without copying error messages', () => {
+ expect(renderDiagnostic(new Error('Minified React error #185; private URL'), '').category).toBe('update-loop');
+ expect(renderDiagnostic(new Error('Minified React error #310; private URL'), '').category).toBe('hook-order');
+ const result = renderDiagnostic({ message: 'cannot add postgres_changes callbacks after subscribe() secret' }, '');
+ expect(result.reason).toBe('subscription-reused');
+ expect(JSON.stringify(result)).not.toContain('secret');
+ expect(renderDiagnostic(null, '').reason).toBe('unclassified');
+});
