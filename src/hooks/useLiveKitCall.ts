@@ -6,7 +6,7 @@ import { useCallLifecycle } from './webrtc/useCallLifecycle';
 import { watchCallTermination } from './webrtc/call-termination';
 import { INITIAL_STATE, type CallState } from './webrtc/types';
 import { VirtualBackgroundProcessor, DEFAULT_EFFECTS, effectsActive, type BgMode, type EffectsConfig } from '@/lib/virtualBackground';
-import { registerCallMedia } from '@/lib/call-media';
+import { reconcileCallStream } from '@/lib/call-media';
 import { callOutcomeMessage } from '@/lib/call-feedback';
 import { callSetupFailure } from '@/lib/call-setup-failure';
 import { toast } from '@/hooks/use-toast';
@@ -20,6 +20,7 @@ import { reconcileDirectCalls } from '@/lib/direct-call-reconciliation';
 export function useLiveKitCall() {
   const { user, profile } = useAuth();
   const [state, setState] = useState<CallState>({ ...INITIAL_STATE });
+  const streams = useRef(new Map<string, MediaStream>());
   const roomRef = useRef<Room | null>(null);
   const sdkRef = useRef<typeof import('livekit-client')>();
   const callRef = useRef<string | null>(null);
@@ -44,6 +45,7 @@ export function useLiveKitCall() {
 
   const release = useCallback(() => {
     generation.current++;
+    streams.current.clear();
     callRef.current = null;
     busy.current = false;
     clearTimeout(deadline.current);
@@ -98,20 +100,33 @@ export function useLiveKitCall() {
   const refresh = useCallback((room: Room) => {
     if (roomRef.current !== room) return;
     const { Track, ConnectionState } = sdkRef.current!;
-    const streamFor = (p: Participant) => new MediaStream([...p.trackPublications.values()]
-      .filter(pub => pub.track && !pub.isMuted).map(pub => pub.track!.mediaStreamTrack));
+    const used = new Set<string>();
+    const streamFor = (key: string, p: Participant, screen = false) => {
+      used.add(key);
+      const tracks = [...p.trackPublications.values()]
+        .filter(pub => pub.track && !pub.isMuted && (screen
+          ? pub.source === Track.Source.ScreenShare
+          : pub.source !== Track.Source.ScreenShare))
+        .map(pub => pub.track!);
+      const stream = reconcileCallStream(streams.current.get(key), tracks);
+      streams.current.set(key, stream);
+      return stream;
+    };
     const remote = new Map<string, MediaStream>();
+    const remoteScreens = new Map<string, MediaStream>();
     room.remoteParticipants.forEach(p => {
-      const stream = streamFor(p);
-      registerCallMedia(stream, [...p.trackPublications.values()].filter(pub => pub.track && !pub.isMuted).map(pub => pub.track!));
-      remote.set(p.identity, stream);
+      remote.set(p.identity, streamFor(`remote:${p.identity}`, p));
+      const screen = streamFor(`screen:${p.identity}`, p, true);
+      if (screen.getVideoTracks().length) remoteScreens.set(p.identity, screen);
     });
     const local = room.localParticipant;
-    setState(s => ({ ...s, localStream: streamFor(local), remoteStreams: remote,
+    const localStream = streamFor('local', local);
+    const localScreen = streamFor('local-screen', local, true);
+    for (const key of streams.current.keys()) if (!used.has(key)) streams.current.delete(key);
+    setState(s => ({ ...s, localStream, remoteStreams: remote, remoteScreenStreams: remoteScreens,
       isMuted: !local.isMicrophoneEnabled, isVideoEnabled: local.isCameraEnabled,
       isScreenSharing: local.isScreenShareEnabled,
-      screenStream: local.getTrackPublication(Track.Source.ScreenShare)?.track
-        ? new MediaStream([local.getTrackPublication(Track.Source.ScreenShare)!.track!.mediaStreamTrack]) : null,
+      screenStream: localScreen.getVideoTracks().length ? localScreen : null,
     }));
     const peerHasMedia = [...room.remoteParticipants.values()].some(p =>
       [...p.trackPublications.values()].some(pub => pub.isSubscribed && pub.track));

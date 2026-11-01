@@ -2,12 +2,12 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { RecordingControls } from './RecordingControls';
 import type { RecordingSession } from '@/features/call-recording/api';
-const mocks = vi.hoisted(() => ({ api: vi.fn(), start: vi.fn(), stop: vi.fn(), pause: vi.fn(), upload: vi.fn(), userId: 'me' }));
+const mocks = vi.hoisted(() => ({ api: vi.fn(), start: vi.fn(), stop: vi.fn(), pause: vi.fn(), update: vi.fn(), upload: vi.fn(), userId: 'me' }));
 vi.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: { id: mocks.userId } }) }));
 vi.mock('./ActiveCallProvider', () => ({ useActiveCallRequired: () => ({ webRTCState: {
   callStatus: 'connected', localStream: { id: 'local' }, remoteStreams: new Map([['other', { id: 'remote' }]]),
 } }) }));
-vi.mock('@/hooks/useCallRecorder', () => ({ useCallRecorder: () => ({ start: mocks.start, stop: mocks.stop, pause: mocks.pause }) }));
+vi.mock('@/hooks/useCallRecorder', () => ({ useCallRecorder: () => ({ start: mocks.start, stop: mocks.stop, pause: mocks.pause, update: mocks.update }) }));
 vi.mock('@/features/call-recording/api', () => ({ recordingSession: mocks.api }));
 vi.mock('@/integrations/supabase/client', () => ({ supabase: { storage: { from: () => ({ upload: mocks.upload }) } } }));
 let state: RecordingSession | null;
@@ -19,6 +19,7 @@ const mount = async () => { const view = render(<RecordingControls callId="call"
 const click = async (name: string) => { fireEvent.click(screen.getByRole('button', { name })); await tick(); };
 beforeEach(() => {
   vi.useFakeTimers();vi.clearAllMocks();state=null;failure=null;mocks.userId='me';
+  mocks.update.mockReturnValue(true);
   mocks.start.mockReturnValue(true);mocks.stop.mockResolvedValue(new Blob(['recording'], { type: 'video/mp4' }));mocks.upload.mockResolvedValue({error:null});
   mocks.api.mockImplementation(async (_call, action='state', _id, answer) => {
     if (failure === action) throw new Error('network');
@@ -106,4 +107,21 @@ it('clears a failed consent check after polling recovers', async () => {
 it('does not clear an action error when background polling succeeds', async () => {
   failure='request';await mount();await click('Gravar');await tick(2000);
   expect(screen.getByRole('alert')).toHaveTextContent('concluir o pedido');
+});
+
+it('updates media while paused without starting a second recorder or resuming it', async () => {
+  await mount();await click('Gravar');state={...state!,consents:[]};await tick(2000);
+  await click('Pausar gravação');
+  mocks.update.mockClear();await tick(2000);
+  expect(mocks.update).toHaveBeenCalled();
+  expect(mocks.start).toHaveBeenCalledOnce();
+  expect(mocks.pause).toHaveBeenCalledTimes(1);
+  expect(mocks.pause).toHaveBeenLastCalledWith(true);
+});
+it('stops and marks the recording failed when replacement media cannot be attached', async () => {
+  await mount();await click('Gravar');state={...state!,consents:[]};await tick(2000);
+  mocks.update.mockReturnValue(false);await tick(2000);
+  expect(mocks.stop).toHaveBeenCalled();
+  expect(mocks.api).toHaveBeenCalledWith('call','fail','rec');
+  expect(mocks.upload).not.toHaveBeenCalled();
 });

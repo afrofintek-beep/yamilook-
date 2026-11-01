@@ -9,7 +9,7 @@ interface Participant { id: string; user_id: string; display_name: string }
 export function RecordingControls({ callId, participants }: { callId: string; participants: Participant[] }) {
   const { user } = useAuth();
   const { webRTCState } = useActiveCallRequired();
-  const recording = useRecordingSession(callId, user?.id, webRTCState.localStream, webRTCState.remoteStreams);
+  const recording = useRecordingSession(callId, user?.id, webRTCState.localStream, webRTCState.remoteStreams, webRTCState.screenStream, webRTCState.remoteScreenStreams);
   const { session, busy, error, duration } = recording;
   const initiator = session?.initiated_by === user?.id;
   const pending = session?.status === 'pending_consent' && Date.parse(session.deadline) > Date.now();

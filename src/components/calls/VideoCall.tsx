@@ -107,6 +107,8 @@ export function VideoCall({
     endCall,
   } = useActiveCallRequired();
 
+  const hasSharedScreen = state.isScreenSharing || !!state.remoteScreenStreams?.size;
+
   // Check if user is host
   useEffect(() => {
     const checkHostStatus = async () => {
@@ -227,7 +229,7 @@ export function VideoCall({
       <RecordingControls callId={callId} participants={participants} />
       {/* Main Video Grid */}
       <section data-testid="call-stage" className="relative min-h-0 flex-1 basis-0 overflow-hidden">
-      <div data-testid="remote-call-view" className={enlargeSelf && !state.isScreenSharing ? "absolute right-3 top-3 w-24 h-28 z-20 rounded-2xl overflow-hidden border-2 border-white/20" : "w-full h-full"}>
+      <div data-testid="remote-call-view" className={enlargeSelf && !hasSharedScreen ? "absolute right-3 top-3 w-24 h-28 z-20 rounded-2xl overflow-hidden border-2 border-white/20" : "w-full h-full"}>
       <ParticipantGrid
         key={callId}
         onSelectParticipant={() => setEnlargeSelf(false)}
@@ -235,13 +237,14 @@ export function VideoCall({
         localStream={state.localStream}
         remoteStreams={state.remoteStreams}
         screenStream={state.screenStream}
+        remoteScreenStreams={state.remoteScreenStreams}
         isScreenSharing={state.isScreenSharing}
         callType={callType}
       />
       </div>
 
       {/* Local Video (Picture-in-Picture style) */}
-      {callType === 'video' && !state.isScreenSharing && (participants.length > 0 || state.remoteStreams.size > 0) && (
+      {callType === 'video' && !hasSharedScreen && (participants.length > 0 || state.remoteStreams.size > 0) && (
         <button
           type="button"
           aria-label={enlargeSelf ? 'Reduzir o meu vídeo' : 'Ampliar o meu vídeo'}

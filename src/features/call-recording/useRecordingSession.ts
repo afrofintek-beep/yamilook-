@@ -8,15 +8,16 @@ const verificationError = 'Não foi possível verificar os consentimentos. A gra
 const active = (s: RecordingSession | null) => s && ['pending_consent', 'recording', 'paused', 'processing'].includes(s.status);
 
 export function useRecordingSession(callId: string, userId: string | undefined,
-  localStream: MediaStream | null, remoteStreams: Map<string, MediaStream>) {
+  localStream: MediaStream | null, remoteStreams: Map<string, MediaStream>,
+  localScreen: MediaStream | null = null, remoteScreens?: Map<string, MediaStream>) {
   const recorder = useCallRecorder();
   const [session, setSession] = useState<RecordingSession | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [duration, setDuration] = useState(0);
   const [localRecording, setLocalRecording] = useState(false);
-  const media = useRef({ localStream, remoteStreams });
-  media.current = { localStream, remoteStreams };
+  const media = useRef({ localStream, remoteStreams, localScreen, remoteScreens });
+  media.current = { localStream, remoteStreams, localScreen, remoteScreens };
   const recorderRef = useRef(recorder);
   recorderRef.current = recorder;
   const owned = useRef<string | null>(null);
@@ -46,7 +47,7 @@ export function useRecordingSession(callId: string, userId: string | undefined,
       if (action === 'request' && next) owned.current = next.id;
       if (action === 'start' && next?.status === 'recording') {
         const streams = media.current;
-        if (!recorderRef.current.start(streams.localStream, streams.remoteStreams)) {
+        if (!recorderRef.current.start(streams.localStream, streams.remoteStreams, streams.localScreen, streams.remoteScreens)) {
           await recordingSession(callId, 'fail', next.id);
           owned.current = null;
           setSession(null);
@@ -76,6 +77,17 @@ export function useRecordingSession(callId: string, userId: string | undefined,
       if (mounted.current) setBusy(false);
     }
   }, [callId, discard]);
+
+  useEffect(() => {
+    if (!capturing.current || !owned.current) return;
+    if (!recorderRef.current.update(localStream, remoteStreams, localScreen, remoteScreens)) {
+      const id = owned.current;
+      owned.current = null;
+      void discard();
+      void recordingSession(callId, 'fail', id).catch(() => {});
+      setError('A gravação foi interrompida porque não foi possível actualizar o áudio ou vídeo.');
+    }
+  }, [callId, localStream, remoteStreams, localScreen, remoteScreens, discard]);
 
   // A database snapshot on mount, reconnect and every two seconds recovers lost
   // Realtime notifications. Never let a stale read overwrite a mutation response.

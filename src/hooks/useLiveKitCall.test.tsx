@@ -32,7 +32,7 @@ beforeEach(() => {
   m.create.mockResolvedValue('call-id'); m.end.mockResolvedValue(undefined);
   Object.defineProperty(navigator, 'mediaDevices', { configurable: true, value: { getUserMedia: m.capture } });
   m.capture.mockResolvedValue({ getAudioTracks: () => [{ kind: 'audio', readyState: 'live', stop: m.micStop }], getTracks: () => [{ kind: 'audio', stop: m.micStop }] });
-  vi.stubGlobal('MediaStream', class { constructor(public tracks: any[]) {} });
+  vi.stubGlobal('MediaStream', class { constructor(public tracks: any[]) {} getTracks() { return this.tracks; } getVideoTracks() { return this.tracks.filter(t => t.kind === 'video'); } getAudioTracks() { return this.tracks.filter(t => t.kind === 'audio'); } });
 });
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.useRealTimers(); });
 it('does not report a room with only the caller as a connected call', async () => {
@@ -254,4 +254,34 @@ it('records the failing transport stage without recording an error message', asy
   expect(result.current.state.lastError).toContain('Não foi possível abrir o microfone');
   expect(m.invoke).not.toHaveBeenCalled();
   expect(m.update).toHaveBeenCalledWith(expect.objectContaining({ end_reason: 'transport_failed:microphone:NotReadableError' }));
+});
+
+it('keeps remote streams stable when only the local camera changes', async () => {
+  const { result } = renderHook(useLiveKitCall);
+  await act(async () => { await result.current.initiateCall('other', 'voice'); });
+  const room = m.rooms[0];
+  room.remoteParticipants.set('other', { identity: 'other', trackPublications: new Map([['audio', { isSubscribed: true, track: { kind: 'audio', mediaStreamTrack: { kind: 'audio' } } }]]) });
+  act(() => room.emit('TrackSubscribed'));
+  const before = result.current.state.remoteStreams.get('other');
+  await act(async () => { await result.current.toggleVideo(); });
+  expect(result.current.state.remoteStreams.get('other')).toBe(before);
+});
+it('separates remote screen video from camera without claiming local sharing', async () => {
+  const { result } = renderHook(useLiveKitCall);
+  await act(async () => { await result.current.initiateCall('other', 'video'); });
+  const room = m.rooms[0];
+  const camera = { kind: 'video', id: 'camera' };
+  const screen = { kind: 'video', id: 'screen' };
+  const publications = new Map([
+    ['camera', { source: 'camera', isSubscribed: true, track: { kind: 'video', mediaStreamTrack: camera } }],
+    ['screen', { source: 'screen', isSubscribed: true, track: { kind: 'video', mediaStreamTrack: screen } }],
+  ]);
+  room.remoteParticipants.set('other', { identity: 'other', trackPublications: publications });
+  act(() => room.emit('TrackSubscribed'));
+  expect(result.current.state.remoteScreenStreams?.get('other')?.getVideoTracks()).toEqual([screen]);
+  expect(result.current.state.remoteStreams.get('other')?.getVideoTracks()).toEqual([camera]);
+  expect(result.current.state.isScreenSharing).toBe(false);
+  publications.delete('screen');
+  act(() => room.emit('TrackUnsubscribed'));
+  expect(result.current.state.remoteScreenStreams?.size).toBe(0);
 });
