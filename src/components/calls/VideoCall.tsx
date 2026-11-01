@@ -218,10 +218,7 @@ export function VideoCall({
       )}
       style={{ height: "var(--kosolola-height, 100dvh)" }}
     >
-      <header className="shrink-0 flex items-center justify-between gap-2 px-3 pb-2 pt-[calc(env(safe-area-inset-top,0px)+0.5rem)]">
-      <Button variant="secondary" className="min-h-11" onClick={openCallChat}>
-        <MessageSquare className="h-4 w-4 mr-2" />Escrever mensagem
-      </Button>
+      <header className="shrink-0 flex items-center justify-end gap-2 px-3 pb-2 pt-[calc(env(safe-area-inset-top,0px)+0.5rem)]">
       <span role="status" className="rounded-full bg-black/70 px-3 py-1 text-sm text-white">
         {(state.callStatus === 'connected' && state.connectionState === 'connected') ? 'Ligada' : state.callStatus === 'ringing' ? 'A chamar…' : state.lastError || 'A estabelecer ligação…'}
       </span>
