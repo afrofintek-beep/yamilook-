@@ -6467,6 +6467,11 @@ export type Database = {
       }
     }
     Functions: {
+      chat_inbox_summaries: {
+        Args: { p_conversation_ids: string[] }
+        Returns: { conversation_id: string; last_message: Json | null; unread_count: number }[]
+      }
+
       reserve_chat_attachment: {
         Args: { p_conversation_id: string; p_filename: string }
         Returns: Json

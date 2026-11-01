@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { fetchPublicProfilesBatched } from '@/lib/public-profile-batch';
 import { isRecentlyOnline } from '@/lib/online-presence';
@@ -54,6 +54,10 @@ interface FriendRequest {
 export function useContacts() {
   const now = usePresenceClock();
   const { user } = useAuth();
+  const userId = user?.id;
+  const loadVersion = useRef(0);
+  const accountRef = useRef(userId);
+  accountRef.current = userId;
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -71,15 +75,16 @@ export function useContacts() {
   }, [user?.id]);
 
   const fetchContacts = useCallback(async () => {
-    if (!user) return;
+    if (!userId) return;
 
     try {
       const { data: contactsData, error: contactsError } = await supabase
         .from('contacts')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
+      if (accountRef.current !== userId) return;
       if (contactsError) throw contactsError;
 
       if (!contactsData?.length) {
@@ -117,23 +122,24 @@ export function useContacts() {
         profile: profileMap.get(contact.contact_user_id) || undefined,
       }));
 
-      setContacts(contactsWithProfiles);
+      if (accountRef.current === userId) setContacts(contactsWithProfiles);
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      if (accountRef.current === userId) setError(err instanceof Error ? err.message : String(err));
     }
-  }, [user]);
+  }, [userId]);
 
   const fetchFriendRequests = useCallback(async () => {
-    if (!user) return;
+    if (!userId) return;
 
     try {
       const { data: requestsData, error: requestsError } = await supabase
         .from('friend_requests')
         .select('*')
-        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+        .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
         .eq('status', 'pending')
         .order('created_at', { ascending: false });
 
+      if (accountRef.current !== userId) return;
       if (requestsError) throw requestsError;
 
       if (!requestsData?.length) {
@@ -169,29 +175,29 @@ export function useContacts() {
         receiver_profile: profileMap.get(request.receiver_id) || undefined,
       }));
 
-      setFriendRequests(requestsWithProfiles);
+      if (accountRef.current === userId) setFriendRequests(requestsWithProfiles);
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      if (accountRef.current === userId) setError(err instanceof Error ? err.message : String(err));
     }
-  }, [user]);
+  }, [userId]);
 
   const syncContactsFromAcceptedFriendRequests = useCallback(async () => {
-    if (!user) return;
+    if (!userId) return;
 
     const { data: accepted, error: acceptedError } = await supabase
       .from('friend_requests')
       .select('sender_id, receiver_id')
-      .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+      .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
       .eq('status', 'accepted');
 
     if (acceptedError) {
       console.error('Failed to load accepted friend requests:', acceptedError);
-      return;
+      return false;
     }
 
     const otherIds = Array.from(
       new Set(
-        (accepted || []).map((r) => (r.sender_id === user.id ? r.receiver_id : r.sender_id))
+        (accepted || []).map((r) => (r.sender_id === userId ? r.receiver_id : r.sender_id))
       )
     ).filter(Boolean);
 
@@ -201,7 +207,7 @@ export function useContacts() {
     const { data: existingContacts, error: existingContactsError } = await supabase
       .from('contacts')
       .select('contact_user_id')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .in('contact_user_id', otherIds);
 
     if (existingContactsError) {
@@ -217,24 +223,36 @@ export function useContacts() {
     const { error: upsertError } = await supabase
       .from('contacts')
       .upsert(
-        missing.map((id) => ({ user_id: user.id, contact_user_id: id })),
+        missing.map((id) => ({ user_id: userId, contact_user_id: id })),
         { onConflict: 'user_id,contact_user_id', ignoreDuplicates: true }
       );
 
     if (upsertError) {
       console.error('Failed to sync contacts from friendships:', upsertError);
     }
-  }, [user]);
+    return !upsertError;
+  }, [userId]);
 
   const loadData = useCallback(async () => {
-    setLoading(true);
-    await syncContactsFromAcceptedFriendRequests();
-    await Promise.all([fetchContacts(), fetchFriendRequests()]);
-    setLoading(false);
-  }, [fetchContacts, fetchFriendRequests, syncContactsFromAcceptedFriendRequests]);
+    const version = ++loadVersion.current;
+    setError(null);
+    if (!userId) { setContacts([]); setFriendRequests([]); setLoading(false); return; }
+    // Existing contacts must not wait for friendship repair or pending requests.
+    try { await fetchContacts(); }
+    finally { if (version === loadVersion.current) setLoading(false); }
+  }, [userId, fetchContacts]);
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    let disposed = false;
+    setContacts([]);
+    setFriendRequests([]);
+    setLoading(true);
+    void loadData();
+    void fetchFriendRequests();
+    void syncContactsFromAcceptedFriendRequests().then(changed => {
+      if (changed && !disposed) void fetchContacts();
+    }).catch(() => { /* Repair can be retried on the next visit. */ });
+    return () => { disposed = true; ++loadVersion.current; };
+  }, [loadData, fetchContacts, fetchFriendRequests, syncContactsFromAcceptedFriendRequests]);
 
   type FriendRequestLite = Pick<FriendRequest, 'id' | 'sender_id' | 'receiver_id' | 'status'>;
 
@@ -287,7 +305,7 @@ export function useContacts() {
       .eq('receiver_id', request.sender_id)
       .eq('status', 'pending');
 
-    await loadData();
+    await Promise.all([loadData(), fetchFriendRequests()]);
     return { error: null };
   };
 
