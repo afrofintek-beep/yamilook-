@@ -371,12 +371,12 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
       <SheetContent
         side="bottom"
         hideCloseButton
-        className="h-[90vh] max-h-[90dvh] rounded-t-3xl p-0 bg-card flex flex-col overflow-hidden"
+        className="h-[90vh] max-h-[90dvh] rounded-t-3xl p-0 bg-card flex flex-col gap-0 overflow-hidden"
         onInteractOutside={(e) => { if (editingVideoIndex !== null || editorGuardRef.current) e.preventDefault(); }}
         onPointerDownOutside={(e) => { if (editingVideoIndex !== null || editorGuardRef.current) e.preventDefault(); }}
         onEscapeKeyDown={(e) => { if (editingVideoIndex !== null || editorGuardRef.current) e.preventDefault(); }}
       >
-        <SheetHeader data-testid="muxi-publish-header" className="shrink-0 px-4 py-2 border-b border-border flex-row items-center justify-between gap-2">
+        <SheetHeader data-testid="muxi-publish-header" className="shrink-0 px-4 py-2 border-b border-border flex-row space-y-0 items-center justify-between gap-2">
           <Button variant="ghost" size="sm" className="shrink-0 min-h-11" onClick={() => onOpenChange(false)}>
             {t('feed.cancel')}
           </Button>
