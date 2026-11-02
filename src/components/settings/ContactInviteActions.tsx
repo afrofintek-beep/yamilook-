@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { useAppSurface } from '@/lib/app-surface';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { Copy, Mail, MessageCircle, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -16,6 +17,7 @@ const client = supabase as unknown as SupabaseClient<{
 
 /** A fresh instance is mounted per sheet opening/account; retries reuse the request ID. */
 export function ContactInviteActions() {
+  const brand = useAppSurface() === 'papos' ? 'KOSOLOLA' : 'YAMILOOK';
   const requestId = useRef<string>();
   const busy = useRef(false);
   const [pending, setPending] = useState(false);
@@ -54,7 +56,7 @@ export function ContactInviteActions() {
     if (!invite) return;
     try {
       // Called directly from a click, without awaiting token creation (iOS activation).
-      await navigator.share({ title: 'Convite para a YAMILOOK', text: invitationMessage('', invite.code), url });
+      await navigator.share({ title: `Convite para a ${brand}`, text: invitationMessage('', invite.code, brand), url });
       setStatus('Partilha concluída na aplicação escolhida. A entrega não está confirmada.');
     } catch (error) {
       if ((error as { name?: string })?.name !== 'AbortError') {
@@ -70,8 +72,8 @@ export function ContactInviteActions() {
       <Button variant="outline" className="w-full" disabled={pending} onClick={() => void prepare('copy')}><Copy className="mr-2 h-4 w-4" />Criar ligação de convite</Button>
       {pending && <p role="status">A preparar convite…</p>}
     </> : <>
-      <Button variant={channel === 'whatsapp' ? 'default' : 'outline'} className="w-full" asChild><a href={buildWhatsAppInviteUrl('', invite.code)} target="_blank" rel="noopener noreferrer"><MessageCircle className="mr-2 h-4 w-4" />Escolher contacto no WhatsApp</a></Button>
-      <Button variant={channel === 'email' ? 'default' : 'outline'} className="w-full" asChild><a href={buildEmailInviteDraftUrl('', invite.code)}><Mail className="mr-2 h-4 w-4" />Escolher contacto no email</a></Button>
+      <Button variant={channel === 'whatsapp' ? 'default' : 'outline'} className="w-full" asChild><a href={buildWhatsAppInviteUrl('', invite.code, brand)} target="_blank" rel="noopener noreferrer"><MessageCircle className="mr-2 h-4 w-4" />Escolher contacto no WhatsApp</a></Button>
+      <Button variant={channel === 'email' ? 'default' : 'outline'} className="w-full" asChild><a href={buildEmailInviteDraftUrl('', invite.code, brand)}><Mail className="mr-2 h-4 w-4" />Escolher contacto no email</a></Button>
       {typeof navigator.share === 'function' && <Button variant="outline" className="w-full" onClick={() => void share()}><Share2 className="mr-2 h-4 w-4" />Partilhar pelo telemóvel</Button>}
       <Button variant={channel === 'copy' ? 'default' : 'outline'} className="w-full" onClick={() => void copy()}><Copy className="mr-2 h-4 w-4" />Copiar ligação</Button>
       <label className="block text-sm" htmlFor="contact-invite-link">Ligação para o teu contacto</label>

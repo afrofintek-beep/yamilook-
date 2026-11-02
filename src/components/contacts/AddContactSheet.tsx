@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Search, UserPlus, Loader2, MailPlus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useAppSurface } from '@/lib/app-surface';
 import { InviteSheet } from '@/components/settings/InviteSheet';
 import {
   Sheet,
@@ -39,6 +40,7 @@ export function AddContactSheet({
   existingContactIds,
   pendingRequestIds,
 }: AddContactSheetProps) {
+  const brand = useAppSurface() === 'papos' ? 'KOSOLOLA' : 'Yamilook';
   const { toast } = useToast();
   const { i18n } = useTranslation();
   const pt = i18n.language.toLowerCase().startsWith('pt');
@@ -193,12 +195,12 @@ export function AddContactSheet({
                 searchQuery.trim() ? (
                   <div className="text-center py-12 text-muted-foreground">
                     <p>{pt ? 'Nenhum utilizador encontrado' : 'No users found'}</p>
-                    <p className="text-sm">{pt ? 'Tenta outra pesquisa ou convida a pessoa para a Yamilook.' : 'Try another search or invite the person to Yamilook.'}</p>
+                    <p className="text-sm">{pt ? `Tenta outra pesquisa ou convida a pessoa para a ${brand}.` : `Try another search or invite the person to ${brand}.`}</p>
                   </div>
                 ) : (
                   <div className="text-center py-12 text-muted-foreground">
                     <Search className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                    <p>{pt ? 'Pesquisa utilizadores da Yamilook' : 'Search Yamilook users to add'}</p>
+                    <p>{pt ? `Pesquisa utilizadores da ${brand}` : `Search ${brand} users to add`}</p>
                   </div>
                 )
               ) : (
@@ -252,12 +254,12 @@ export function AddContactSheet({
               )}
             </div>
             <div className="border-t border-border/40 pt-4 space-y-2">
-              <p className="text-sm text-muted-foreground">{pt ? 'A pessoa ainda não está na Yamilook?' : 'Not on Yamilook yet?'}</p>
+              <p className="text-sm text-muted-foreground">{pt ? `A pessoa ainda não está na ${brand}?` : `Not on ${brand} yet?`}</p>
               <Button variant="outline" className="w-full min-h-11 rounded-xl" onClick={beginInvitation}>
                 <MailPlus className="w-4 h-4 mr-2" />
-                {pt ? 'Convidar para a Yamilook' : 'Invite to Yamilook'}
+                {pt ? `Convidar para a ${brand}` : `Invite to ${brand}`}
               </Button>
-              <p className="text-xs text-muted-foreground">{pt ? 'O convite utiliza o registo e as permissões já existentes.' : 'Invitations use existing registration and permissions.'}</p>
+              <p className="text-xs text-muted-foreground">{pt ? 'Escolhe um contacto no WhatsApp ou email, sem indicar previamente o seu email.' : 'Choose a WhatsApp or email contact without entering their email first.'}</p>
             </div>
           </div>
         )}

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useAppSurface } from '@/lib/app-surface';
 import { ContactInviteActions } from './ContactInviteActions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,6 +41,8 @@ interface InviteSheetProps {
 }
 
 export function InviteSheet({ open, onOpenChange, isAdmin = false }: InviteSheetProps) {
+  const isKosolola = useAppSurface() === 'papos';
+  const brand = isKosolola ? 'KOSOLOLA' : 'YAMILOOK';
   const [viewportStyle, setViewportStyle] = useState<{ top: number; height: number }>();
   useEffect(() => {
     if (!open) return;
@@ -162,14 +165,14 @@ export function InviteSheet({ open, onOpenChange, isAdmin = false }: InviteSheet
       <SheetContent side="right" hideCloseButton style={viewportStyle} className="w-full max-w-full sm:max-w-md h-screen-safe flex flex-col overflow-hidden p-0 pt-[env(safe-area-inset-top,0px)] [&_input]:text-base md:[&_input]:text-sm">
         <SheetHeader className="shrink-0 border-b pl-6 pr-[max(0.5rem,env(safe-area-inset-right,0px))] py-2">
           <div className="flex items-center justify-between gap-3 text-left">
-            <SheetTitle className="min-w-0">Convidar para o Yamilook</SheetTitle>
+            <SheetTitle className="min-w-0">{isKosolola ? 'Convidar para a KOSOLOLA' : 'Convidar para o Yamilook'}</SheetTitle>
             <SheetClose aria-label="Fechar convites" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
               <X className="h-5 w-5" aria-hidden="true" />
             </SheetClose>
           </div>
         </SheetHeader>
         <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain break-words px-6 pt-4 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]">
-          <SheetDescription>Convida alguém pelos contactos do telemóvel, por WhatsApp ou email. Cada convite só pode ser utilizado por uma pessoa.</SheetDescription>
+          <SheetDescription>Convida alguém pelos contactos do telemóvel, por WhatsApp ou email. Cada convite só pode ser utilizado por uma pessoa.{isKosolola && ' O registo é feito na Yamilook, com a mesma conta para entrar na KOSOLOLA.'}</SheetDescription>
         {allowed ? <>
         {open && <ContactInviteActions key={userId} />}
         <details className="mt-6 border-t pt-4">
@@ -197,12 +200,12 @@ export function InviteSheet({ open, onOpenChange, isAdmin = false }: InviteSheet
                 {sendingEmail ? 'A enviar email…' : 'Enviar por email'}
               </Button>
               <Button variant="outline" className="w-full" asChild>
-                <a href={buildWhatsAppInviteUrl(issuedFor, code)} target="_blank" rel="noopener noreferrer">
+                <a href={buildWhatsAppInviteUrl(issuedFor, code, brand)} target="_blank" rel="noopener noreferrer">
                   Partilhar pelo WhatsApp
                 </a>
               </Button>
               <Button variant="ghost" className="w-full" asChild>
-                <a href={buildEmailInviteDraftUrl(issuedFor, code)}>Preparar email manual</a>
+                <a href={buildEmailInviteDraftUrl(issuedFor, code, brand)}>Preparar email manual</a>
               </Button>
               <p className="text-xs text-muted-foreground">No WhatsApp e no email manual, confirma o destinatário e o envio na aplicação escolhida.</p>
             </div>

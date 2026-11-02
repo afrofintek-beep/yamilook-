@@ -8,7 +8,7 @@ import { PaposGate } from './PaposApp';
 import { AppSurfaceContext } from '@/lib/app-surface';
 const { auth } = vi.hoisted(()=>({auth:{user:null as null|{id:string},profile:null as null|{display_name:string,onboarding_completed:boolean},loading:false,signOut:vi.fn(),signIn:vi.fn(),updateProfile:vi.fn(),refreshProfile:vi.fn()}}));
 vi.mock('@/hooks/useAuth',()=>({useAuth:()=>auth,AuthProvider:({children}:{children:React.ReactNode})=>children}));
-vi.mock('@/integrations/supabase/client',()=>({supabase:{}}));
+vi.mock('@/integrations/supabase/client',()=>({supabase:{rpc:vi.fn((name: string)=>Promise.resolve({data:name === 'can_issue_user_invitation' ? true : [],error:null}))}}));
 vi.mock('@/components/settings/ArchivedChatsSheet',()=>({ArchivedChatsSheet:()=>null}));
 vi.mock('@/components/settings/BlockedUsersSheet',()=>({BlockedUsersSheet:()=>null}));
 beforeEach(()=>{
@@ -49,4 +49,11 @@ it('shows a failed sign-out without claiming success',async()=>{
 it('returns from settings to conversations without signing out',async()=>{
   setup();fireEvent.click(screen.getByRole('link',{name:'Voltar às conversas'}));
   expect(await screen.findByText('Histórico privado')).toBeInTheDocument();expect(auth.signOut).not.toHaveBeenCalled();
+});
+
+it('opens contact invitations directly from KOSOLOLA settings',async()=>{
+  setup();fireEvent.click(screen.getByRole('button',{name:'Convidar amigos'}));
+  expect(await screen.findByRole('dialog',{name:'Convidar para a KOSOLOLA'})).toBeInTheDocument();
+  expect(await screen.findByRole('button',{name:'Convidar pelo WhatsApp'})).toBeInTheDocument();
+  expect(screen.getByRole('button',{name:'Convidar por email'})).toBeInTheDocument();
 });

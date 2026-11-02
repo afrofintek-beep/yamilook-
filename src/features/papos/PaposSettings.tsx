@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import BottomNav from '@/components/BottomNav';
+import { InviteSheet } from '@/components/settings/InviteSheet';
 import { ArchivedChatsSheet } from '@/components/settings/ArchivedChatsSheet';
 import { BlockedUsersSheet } from '@/components/settings/BlockedUsersSheet';
 import PaposBrand from './PaposBrand';
@@ -19,6 +20,7 @@ import { BackupManager } from '@/components/settings/BackupManager';
 export default function PaposSettings() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const [inviteOpen, setInviteOpen] = useState(false);
   const [logoutError, setLogoutError] = useState('');
   const { profile, updateProfile, signOut } = useAuth(); const { toast } = useToast(); const navigate = useNavigate();
   const [archived, setArchived] = useState(false); const [blocked, setBlocked] = useState(false); const [busy, setBusy] = useState(false);
@@ -45,6 +47,7 @@ export default function PaposSettings() {
     <header className="safe-top shrink-0 border-b p-4"><Button asChild variant="ghost"><Link to="/papos">{t('kosolola.back')}</Link></Button><h1 className="text-xl font-bold">{t('settings.title')}</h1></header>
     <main className="flex-1 overflow-y-auto p-4 space-y-6 max-w-lg w-full mx-auto"><PaposBrand /><p className="text-xs text-muted-foreground">{t('kosolola.ecosystem')}</p>
       <Button asChild variant="outline" className="w-full"><Link to="/profile">{profile?.display_name || t('kosolola.myProfile')}</Link></Button>
+      <Button variant="outline" className="w-full" onClick={() => setInviteOpen(true)}>{t('settings.inviteFriends', { defaultValue: 'Convidar amigos' })}</Button>
       <PaposLanguageSelector />
       <AuthorizedAfrolocLink />
       <CallRingtoneSettings />
@@ -56,5 +59,5 @@ export default function PaposSettings() {
       <p className="text-xs text-muted-foreground">Terminar sessão sai apenas desta instalação da KOSOLOLA. As conversas ficam guardadas na tua conta.</p>
       {logoutError && <p role="alert" className="text-sm text-destructive">{logoutError}</p>}
       <Button variant="outline" className="w-full" disabled={busy} onClick={() => void leave()}>{t('settings.logOut')}</Button>
-    </main><ArchivedChatsSheet open={archived} onOpenChange={setArchived} /><BlockedUsersSheet open={blocked} onOpenChange={setBlocked} /><BottomNav /></div>;
+    </main><InviteSheet open={inviteOpen} onOpenChange={setInviteOpen} /><ArchivedChatsSheet open={archived} onOpenChange={setArchived} /><BlockedUsersSheet open={blocked} onOpenChange={setBlocked} /><BottomNav /></div>;
 }
