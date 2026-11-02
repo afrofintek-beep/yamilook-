@@ -24,7 +24,7 @@ afterEach(() => { cleanup(); vi.useRealTimers(); });
 it('recovers a missed insert with a bounded probe without marking history read', async () => {
   const refresh = vi.fn().mockResolvedValue(undefined);
   renderHook(() => useMessageRecovery('chat', 'me', [], refresh));
-  await act(async () => { await vi.advanceTimersByTimeAsync(5000); });
+  await act(async () => { await vi.advanceTimersByTimeAsync(15000); });
   expect(m.from).toHaveBeenCalledWith('visible_messages');
   expect(refresh).toHaveBeenCalledExactlyOnceWith(false);
 });
@@ -32,7 +32,7 @@ it('recovers a missed insert with a bounded probe without marking history read',
 it('does not reload history when the newest message is already present', async () => {
   const refresh = vi.fn();
   renderHook(() => useMessageRecovery('chat', 'me', [{ id: 'new', updated_at: 'now' }], refresh));
-  await act(async () => { await vi.advanceTimersByTimeAsync(15000); });
+  await act(async () => { await vi.advanceTimersByTimeAsync(45000); });
   expect(m.query).toHaveBeenCalledTimes(3);
   expect(refresh).not.toHaveBeenCalled();
 });

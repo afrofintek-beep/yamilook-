@@ -1,4 +1,5 @@
 import { clearAvatarCache } from './avatar-cache';
+import { clearChatHotCache } from './chat-hot-cache';
 /** Bounded UI snapshots only. Server authorization remains mandatory for actions. */
 const PREFIX = 'kosolola:list:v1:';
 const MAX_AGE = 60 * 60 * 1000;
@@ -38,6 +39,7 @@ export function writeListCache(key: string, items: unknown[]) {
 }
 export function clearListCache() {
   clearAvatarCache();
+  clearChatHotCache();
   ++epoch; // Invalidate pending writes, including responses after sign-out.
   memory.clear();
   try {

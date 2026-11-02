@@ -89,6 +89,11 @@ export default function Chat() {
     pinnedIds,
     viewOnceViewedIds,
     loading,
+    hasOlderMessages,
+    loadingOlder,
+    loadOlderMessages,
+    loadError,
+    refresh: refreshMessages,
     typingUsers,
     sendMessage,
     updateMessageMediaUrl,
@@ -101,6 +106,14 @@ export default function Chat() {
     markViewOnce,
     historyClearedAt, setHistoryCleared,
   } = useMessages(conversationId || null);
+
+  const [slowInitialLoad, setSlowInitialLoad] = useState(false);
+  useEffect(() => {
+    if (!loading) { setSlowInitialLoad(false); return; }
+    setSlowInitialLoad(false);
+    const timer = window.setTimeout(() => setSlowInitialLoad(true), 6500);
+    return () => window.clearTimeout(timer);
+  }, [loading, conversationId, user?.id]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesViewportRef = useRef<HTMLDivElement>(null);
@@ -341,6 +354,17 @@ export default function Chat() {
       scrollChatToEnd(messagesViewportRef.current, 'smooth');
     }
   }, [messages, autoScroll, highlightMessageId, loading]);
+
+  const handleLoadEarlier = async () => {
+    setAutoScroll(false);
+    const viewport = messagesViewportRef.current;
+    const heightBefore = viewport?.scrollHeight ?? 0;
+    const topBefore = viewport?.scrollTop ?? 0;
+    await loadOlderMessages();
+    requestAnimationFrame(() => {
+      if (viewport && heightBefore) viewport.scrollTop = topBefore + viewport.scrollHeight - heightBefore;
+    });
+  };
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
@@ -798,7 +822,24 @@ export default function Chat() {
         onScroll={handleScroll}
         style={wallpaperStyles}
       >
-        {loading ? (
+        {!loading && hasOlderMessages && (
+          <div className="flex justify-center px-3 pb-3">
+            <Button variant="outline" size="sm" disabled={loadingOlder}
+              onClick={() => void handleLoadEarlier()}>
+              {loadingOlder ? 'A carregar mensagens anteriores…' : 'Carregar mensagens anteriores'}
+            </Button>
+          </div>
+        )}
+        {loadError && !loading && messages.length === 0 ? (
+          <div role="alert" className="mx-4 space-y-3 rounded-xl border border-border bg-background/85 p-4 text-sm">
+            <p>Não foi possível sincronizar esta conversa. Verifica a ligação e tenta novamente.</p>
+            <Button variant="outline" size="sm" onClick={() => void refreshMessages()}>Tentar novamente</Button>
+          </div>
+        ) : loading && slowInitialLoad ? (
+          <div role="status" className="mx-4 rounded-xl border border-border bg-background/85 p-4 text-sm text-muted-foreground">
+            A ligação está lenta. Estamos a sincronizar esta conversa; o histórico surgirá assim que o servidor responder.
+          </div>
+        ) : loading ? (
           <div className="space-y-4 px-4">
             {[...Array(5)].map((_, i) => (
               <div key={i} className={`flex gap-2 ${i % 2 === 0 ? 'justify-start' : 'justify-end'}`}>
