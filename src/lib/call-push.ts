@@ -1,3 +1,4 @@
+import i18n from '@/i18n';
 import { supabase } from '@/integrations/supabase/client';
 const OWNER = 'kosolola-push-owner';
 export function callPushSupport() {
@@ -5,10 +6,10 @@ export function callPushSupport() {
     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   const standalone = (navigator as Navigator & { standalone?: boolean }).standalone === true ||
     window.matchMedia?.('(display-mode: standalone)').matches === true;
-  if (ios && !standalone) return { supported: false, message: 'No iPhone ou iPad, usa Partilhar → Adicionar ao ecrã principal e abre a KOSOLOLA pelo ícone para ativar os alertas.' };
-  if (!window.isSecureContext) return { supported: false, message: 'Abre a KOSOLOLA através de uma ligação HTTPS para ativar os alertas.' };
+  if (ios && !standalone) return { supported: false, message: i18n.t('settingsScreen.text47') };
+  if (!window.isSecureContext) return { supported: false, message: i18n.t('settingsScreen.text48') };
   if (!('serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window)) {
-    return { supported: false, message: ios ? 'Atualiza o iPhone ou iPad para iOS 16.4 ou posterior e abre a KOSOLOLA pelo ícone no ecrã principal.' : 'Este navegador não suporta alertas de chamadas. Usa um navegador atualizado com suporte a notificações.' };
+    return { supported: false, message: ios ? i18n.t('settingsScreen.text49') : i18n.t('settingsScreen.text50') };
   }
   return { supported: true, message: null };
 }
@@ -17,13 +18,13 @@ export function pushAvailable() {
 }
 async function api(body: Record<string, unknown>, signal?: AbortSignal) {
   const { data, error } = await supabase.functions.invoke('call-push', { body, ...(signal ? { signal } : {}) });
-  if (error || data?.error) throw new Error('Não foi possível contactar o serviço de alertas. Tenta novamente.');
+  if (error || data?.error) throw new Error(i18n.t('settingsScreen.text51'));
   return data;
 }
 async function registration() {
   // Never wait indefinitely for navigator.serviceWorker.ready, or use Yamilook's worker.
   const reg = await navigator.serviceWorker.getRegistration('/papos-app/');
-  if (!reg?.active || new URL(reg.scope).pathname !== '/papos-app/') throw new Error('Atualiza a KOSOLOLA e volta a tentar.');
+  if (!reg?.active || new URL(reg.scope).pathname !== '/papos-app/') throw new Error(i18n.t('settingsScreen.text52'));
   return reg;
 }
 export async function enableCallPush(userId: string, publicKey: string) {
@@ -31,7 +32,7 @@ export async function enableCallPush(userId: string, publicKey: string) {
   if (!support.supported) throw new Error(support.message!);
   // Permission must be requested directly from the user's tap, before network awaits.
   const permission = await Notification.requestPermission();
-  if (permission !== 'granted') throw new Error('Autoriza as notificações nas definições do dispositivo para receber alertas.');
+  if (permission !== 'granted') throw new Error(i18n.t('settingsScreen.text53'));
   const reg = await registration();
   let subscription = await reg.pushManager.getSubscription();
   if (subscription && localStorage.getItem(OWNER) !== userId) {
@@ -52,7 +53,7 @@ export async function disableCallPush() {
   if (subscription) {
     // Local unsubscribe prevents delivery even if the network is unavailable.
     const removed = await subscription.unsubscribe();
-    if (!removed && await reg.pushManager.getSubscription()) throw new Error('Não foi possível desativar os alertas neste dispositivo.');
+    if (!removed && await reg.pushManager.getSubscription()) throw new Error(i18n.t('settingsScreen.text54'));
     await api({ action: 'remove', endpoint: subscription.endpoint }).catch(() => {});
   }
   for (const notice of await reg.getNotifications()) notice.close();
@@ -75,7 +76,7 @@ export async function callPushStatus(userId: string) {
       })(),
       new Promise<never>((_, reject) => {
         timer = setTimeout(() => {
-          reject(new Error('A verificação dos alertas demorou demasiado. Verifica a ligação e toca em Tentar novamente.'));
+          reject(new Error(i18n.t('settingsScreen.text55')));
           controller.abort();
         }, 12000);
       }),
@@ -96,3 +97,4 @@ export async function notifyIncomingCall(callId: string) {
   try { await api({ action: 'send', callId }); }
   catch { console.warn('Alerta push indisponível; a chamada continua na aplicação.'); }
 }
+

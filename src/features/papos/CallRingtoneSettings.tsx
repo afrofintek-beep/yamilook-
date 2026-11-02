@@ -1,3 +1,4 @@
+import i18n from '@/i18n';
 import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -23,7 +24,7 @@ export default function CallRingtoneSettings() {
     try {
       const result = await updateSettings(updates);
       if (result.error) throw result.error;
-    } catch { setError('Não foi possível guardar o toque. Tenta novamente.'); }
+    } catch { setError(i18n.t('settingsScreen.text11')); }
     finally { setSaving(false); }
   };
   return <section className="rounded-2xl border p-4 space-y-4" aria-labelledby="call-ringtone-title">
@@ -37,9 +38,9 @@ export default function CallRingtoneSettings() {
       <select id="call-ringtone-pattern" className="w-full min-h-11 rounded-xl border bg-background px-3 text-base"
         value={pattern} disabled={loading || saving || !settings || !enabled}
         onChange={event => void save({ ringtone_pattern: event.target.value })}>
-        <option value="default">{t('kosolola.defaultTone')}</option><option value="classic">{t('settings.patternClassic', { defaultValue: 'Clássico' })}</option>
-        <option value="modern">{t('settings.patternModern', { defaultValue: 'Moderno' })}</option><option value="gentle">{t('settings.patternGentle', { defaultValue: 'Suave' })}</option>
-        <option value="urgent">{t('settings.patternUrgent', { defaultValue: 'Urgente' })}</option><option value="silent">{t('settings.patternSilent', { defaultValue: 'Silencioso' })}</option>
+        <option value="default">{t('kosolola.defaultTone')}</option><option value="classic">{t('settings.patternClassic', { defaultValue: i18n.t('settingsScreen.text6') })}</option>
+        <option value="modern">{t('settings.patternModern', { defaultValue: i18n.t('settingsScreen.text7') })}</option><option value="gentle">{t('settings.patternGentle', { defaultValue: i18n.t('settingsScreen.text8') })}</option>
+        <option value="urgent">{t('settings.patternUrgent', { defaultValue: i18n.t('settingsScreen.text9') })}</option><option value="silent">{t('settings.patternSilent', { defaultValue: i18n.t('settingsScreen.text10') })}</option>
       </select>
     </div>
     <label className="block space-y-2 text-sm" htmlFor="call-ringtone-volume">
@@ -54,8 +55,9 @@ export default function CallRingtoneSettings() {
     </div>
     {(!enabled || volume === 0 || pattern === 'silent') && <p role="status" className="text-sm">{t('kosolola.silentTone')}</p>}
     {loading && <p role="status" className="text-sm">{t('kosolola.loadingTones')}</p>}
-    {!loading && !settings && <p role="alert" className="text-sm">Não foi possível carregar as preferências. Volta a abrir as Definições.</p>}
+    {!loading && !settings && <p role="alert" className="text-sm">{i18n.t('settingsScreen.text12')}</p>}
     {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-    <p className="text-xs text-muted-foreground">O teste dura três segundos. Ajusta também o volume do telefone. Este toque é usado com a aplicação aberta; fora dela, ativa os alertas de chamadas abaixo.</p>
+    <p className="text-xs text-muted-foreground">{i18n.t('settingsScreen.text13')}</p>
   </section>;
 }
+

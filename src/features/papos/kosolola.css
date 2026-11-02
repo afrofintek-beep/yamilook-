@@ -104,7 +104,9 @@ html[data-brand="kosolola"] .chat-page {
   min-width: 0;
 }
 html[data-brand="kosolola"] .app-bottom-nav {
-  bottom: var(--kosolola-bottom, 0px);
+  /* Anchor once to the measured visible viewport, including standalone iOS. */
+  top: calc(var(--kosolola-top, 0px) + var(--kosolola-height, 100dvh) - 5rem - env(safe-area-inset-bottom, 0px));
+  bottom: auto;
 }
 html[data-brand="kosolola"] .fab-safe-bottom {
   bottom: calc(var(--kosolola-bottom, 0px) + 5rem + env(safe-area-inset-bottom, 0px) + .75rem);
@@ -161,3 +163,4 @@ html[data-brand="kosolola"] .chat-page textarea {
     transition-duration: .01ms !important;
   }
 }
+
