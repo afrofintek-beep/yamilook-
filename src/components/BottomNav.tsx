@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+import i18n from '@/i18n';
 import { useAppSurface } from "@/lib/app-surface";
 import { createPortal } from "react-dom";
 import { NavLink } from "react-router-dom";
@@ -12,15 +14,16 @@ const navItems = [
 ];
 
 export default function BottomNav({ layout = 'default' }: { layout?: 'default' | 'feed' }) {
+  useTranslation();
   const surface = useAppSurface();
   const items = surface === 'papos' ? [
-    { to: '/papos', label: 'Conversas', Icon: MessageCircle },
-    { to: '/contacts', label: 'Contactos', Icon: Users },
-    { to: '/calls', label: 'Chamadas', Icon: Phone },
-    { to: '/settings', label: 'Definições', Icon: Settings },
+    { to: '/papos', label: i18n.t('settingsScreen.text1'), Icon: MessageCircle },
+    { to: '/contacts', label: i18n.t('settingsScreen.text2'), Icon: Users },
+    { to: '/calls', label: i18n.t('settingsScreen.text3'), Icon: Phone },
+    { to: '/settings', label: i18n.t('settingsScreen.text4'), Icon: Settings },
   ] : navItems;
   return createPortal(
-    <nav aria-label="Navegação principal" className={`app-bottom-nav fixed bottom-0 left-0 right-0 z-50 h-[calc(5rem+env(safe-area-inset-bottom,0px))] glass-nav ${layout === 'feed' && surface !== 'papos' ? 'feed-primary-nav' : ''}`}>
+    <nav aria-label={i18n.t('settingsScreen.text5')} className={`app-bottom-nav fixed bottom-0 left-0 right-0 z-50 h-[calc(5rem+env(safe-area-inset-bottom,0px))] glass-nav ${layout === 'feed' && surface !== 'papos' ? 'feed-primary-nav' : ''}`}>
       <div style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }} className="mx-auto grid h-full max-w-md items-center px-2 pt-1.5 pb-[max(0.5rem,env(safe-area-inset-bottom,0px))]">
         {items.map(({ to, label, Icon }) => (
           <NavLink
@@ -53,3 +56,4 @@ export default function BottomNav({ layout = 'default' }: { layout?: 'default' |
     document.body,
   );
 }
+
