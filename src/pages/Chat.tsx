@@ -105,6 +105,14 @@ export default function Chat() {
     historyClearedAt, setHistoryCleared,
   } = useMessages(conversationId || null);
 
+  const [slowInitialLoad, setSlowInitialLoad] = useState(false);
+  useEffect(() => {
+    if (!loading) { setSlowInitialLoad(false); return; }
+    setSlowInitialLoad(false);
+    const timer = window.setTimeout(() => setSlowInitialLoad(true), 6500);
+    return () => window.clearTimeout(timer);
+  }, [loading, conversationId, user?.id]);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesViewportRef = useRef<HTMLDivElement>(null);
   const highlightRef = useRef<HTMLDivElement>(null);
@@ -820,7 +828,11 @@ export default function Chat() {
             </Button>
           </div>
         )}
-        {loading ? (
+        {loading && slowInitialLoad ? (
+          <div role="status" className="mx-4 rounded-xl border border-border bg-background/85 p-4 text-sm text-muted-foreground">
+            A ligação está lenta. Estamos a sincronizar esta conversa; o histórico surgirá assim que o servidor responder.
+          </div>
+        ) : loading ? (
           <div className="space-y-4 px-4">
             {[...Array(5)].map((_, i) => (
               <div key={i} className={`flex gap-2 ${i % 2 === 0 ? 'justify-start' : 'justify-end'}`}>
