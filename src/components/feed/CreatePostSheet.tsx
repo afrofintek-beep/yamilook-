@@ -1,5 +1,5 @@
 import { genderCtx } from '@/lib/i18n-gender';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -45,6 +45,7 @@ import { TopicSelector } from './TopicSelector';
 import { VideoEditor } from './VideoEditor';
 import { supabase } from '@/integrations/supabase/client';
 import { snapToGrid } from '@/lib/geo-privacy';
+import { isHeicImage, preparePostImage } from '@/lib/post-image';
 
 // African-inspired emoji set for Yamilook
 const AFRICAN_EMOJIS = [
@@ -88,6 +89,13 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
   const [privacy, setPrivacy] = useState<'everyone' | 'contacts' | 'close_friends' | 'only_me'>('contacts');
   const [location, setLocation] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPreparingFiles, setIsPreparingFiles] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState('');
+  const previewUrlsRef = useRef<string[]>([]);
+  useEffect(() => () => {
+    previewUrlsRef.current.forEach(url => URL.revokeObjectURL(url));
+    previewUrlsRef.current = [];
+  }, []);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
@@ -202,8 +210,11 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.currentTarget.files || []);
+    // Allow the same photo to be selected again after removal or an error.
+    e.currentTarget.value = '';
+    if (!files.length || isPreparingFiles || isSubmitting) return;
     if (files.length + selectedFiles.length > 10) {
       toast({
         title: t('feed.tooManyFiles'),
@@ -213,23 +224,46 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
       return;
     }
 
-    setSelectedFiles(prev => [...prev, ...files]);
-
-    files.forEach(file => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFilePreviews(prev => [...prev, reader.result as string]);
-      };
-      reader.readAsDataURL(file);
-    });
+    setIsPreparingFiles(true);
+    try {
+      // Decode HEIC before preview: the uploaded and displayed file must agree.
+      const prepared = await Promise.all(files.map(file =>
+        isHeicImage(file) ? preparePostImage(file) : file
+      ));
+      const previews = prepared.map(file => URL.createObjectURL(file));
+      previewUrlsRef.current.push(...previews);
+      setSelectedFiles(prev => [...prev, ...prepared]);
+      setFilePreviews(prev => [...prev, ...previews]);
+    } catch (error) {
+      toast({
+        title: t('feed.failedToPost'),
+        description: error instanceof Error ? error.message : t('feed.errorPosting'),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsPreparingFiles(false);
+    }
   };
 
   const removeFile = (index: number) => {
+    const preview = filePreviews[index];
+    if (preview) {
+      URL.revokeObjectURL(preview);
+      previewUrlsRef.current = previewUrlsRef.current.filter(url => url !== preview);
+    }
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
     setFilePreviews(prev => prev.filter((_, i) => i !== index));
   };
 
+  const clearFiles = () => {
+    previewUrlsRef.current.forEach(url => URL.revokeObjectURL(url));
+    previewUrlsRef.current = [];
+    setSelectedFiles([]);
+    setFilePreviews([]);
+  };
+
   const handleSubmit = async () => {
+    if (isSubmitting || isPreparingFiles) return;
     if (!content.trim() && selectedFiles.length === 0) {
       toast({
         title: t('feed.emptyPost'),
@@ -240,6 +274,7 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
     }
 
     setIsSubmitting(true);
+    setUploadProgress(t('feed.posting'));
 
     try {
       // AI content moderation check
@@ -274,7 +309,24 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
         mediaFiles: selectedFiles.length > 0 ? selectedFiles : undefined,
         location: location || undefined,
         privacy,
+        onUploadProgress: (stage, current, total) => {
+          if (stage === 'saving') {
+            setUploadProgress(t('feed.savingPost', { defaultValue: 'A guardar publicação…' }));
+          } else if (stage === 'preparing') {
+            setUploadProgress(t('feed.preparingMedia', { defaultValue: 'A preparar fotografia…' }));
+          } else {
+            setUploadProgress(t('feed.uploadingMedia', {
+              defaultValue: 'A enviar fotografia {{current}}/{{total}}…',
+              current,
+              total,
+            }));
+          }
+        },
       });
+
+      if (!newPost?.id) {
+        throw new Error(t('feed.errorPosting'));
+      }
 
       // Associate topics with the post
       if (newPost && selectedTopics.length > 0) {
@@ -295,8 +347,7 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
 
       // Reset form
       setContent('');
-      setSelectedFiles([]);
-      setFilePreviews([]);
+      clearFiles();
       setLocation('');
       setPrivacy('contacts');
       setSelectedTopics([]);
@@ -304,11 +355,12 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
     } catch (error) {
       toast({
         title: t('feed.failedToPost'),
-        description: t('feed.errorPosting'),
+        description: error instanceof Error && error.message ? error.message : t('feed.errorPosting'),
         variant: 'destructive',
       });
     } finally {
       setIsSubmitting(false);
+      setUploadProgress('');
     }
   };
 
@@ -318,27 +370,33 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="bottom"
-        className="h-[85vh] rounded-t-3xl p-0 bg-card"
+        hideCloseButton
+        className="h-[90vh] max-h-[90dvh] rounded-t-3xl p-0 bg-card flex flex-col overflow-hidden"
         onInteractOutside={(e) => { if (editingVideoIndex !== null || editorGuardRef.current) e.preventDefault(); }}
         onPointerDownOutside={(e) => { if (editingVideoIndex !== null || editorGuardRef.current) e.preventDefault(); }}
         onEscapeKeyDown={(e) => { if (editingVideoIndex !== null || editorGuardRef.current) e.preventDefault(); }}
       >
-        <SheetHeader className="p-4 border-b border-border flex-row items-center justify-between">
-          <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
+        <SheetHeader className="shrink-0 px-4 py-2 border-b border-border flex-row items-center justify-between gap-2">
+          <Button variant="ghost" size="sm" className="shrink-0 min-h-11" onClick={() => onOpenChange(false)}>
             {t('feed.cancel')}
           </Button>
-          <SheetTitle className="text-foreground">{t('feed.createPost')}</SheetTitle>
+          <SheetTitle className="min-w-0 flex-1 truncate text-center text-sm sm:text-lg text-foreground">{t('feed.createPost')}</SheetTitle>
           <Button 
             size="sm" 
-            className="bg-primary text-primary-foreground rounded-full px-4"
-            disabled={!canPost || isSubmitting}
+            className="bg-primary text-primary-foreground rounded-full px-4 min-h-11 shrink-0"
+            disabled={!canPost || isSubmitting || isPreparingFiles}
             onClick={handleSubmit}
           >
-            {isSubmitting ? t('feed.posting') : t('feed.post')}
+            {isSubmitting ? t('feed.posting') : isPreparingFiles ? t('feed.preparingMedia', { defaultValue: 'A preparar…' }) : t('feed.post')}
           </Button>
         </SheetHeader>
+        {(isPreparingFiles || isSubmitting) && (
+          <p role="status" aria-live="polite" className="shrink-0 px-4 py-1 text-xs text-muted-foreground">
+            {isPreparingFiles ? t('feed.preparingMedia', { defaultValue: 'A preparar fotografia…' }) : uploadProgress}
+          </p>
+        )}
 
-        <ScrollArea className="h-[calc(85vh-140px)]">
+        <ScrollArea className="flex-1 min-h-0 w-full">
           <div className="p-4 space-y-4">
             {/* User info */}
             <div className="flex items-center gap-3">
@@ -384,8 +442,7 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
               placeholder={t('feed.createPlaceholder', 'O que se passa na tua banda?')}
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              className="min-h-[120px] resize-none border-none text-lg p-0 focus-visible:ring-0"
-              autoFocus
+              className="min-h-[76px] sm:min-h-[100px] resize-none border-none text-lg p-0 focus-visible:ring-0"
             />
 
             {/* File previews */}
@@ -403,12 +460,12 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
                   )}
                 >
                   {filePreviews.map((preview, index) => (
-                    <div key={index} className="relative aspect-square rounded-xl overflow-hidden">
+                    <div key={index} className="relative h-[min(35vh,300px)] max-h-[35dvh] rounded-xl overflow-hidden bg-black/5">
                     {selectedFiles[index]?.type.startsWith('video') ? (
                         <div className="relative w-full h-full">
                           <video
                             src={`${preview}#t=0.1`}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-contain"
                             preload="metadata"
                             playsInline
                           />
@@ -431,13 +488,13 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
                         <img
                           src={preview}
                           alt=""
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-contain"
                         />
                       )}
                       <Button
                         variant="secondary"
                         size="icon"
-                        className="absolute top-2 right-2 w-6 h-6 rounded-full"
+                        className="absolute top-2 right-2 w-11 h-11 rounded-full bg-background/90"
                         onClick={() => removeFile(index)}
                       >
                         <X className="w-4 h-4" />
@@ -469,7 +526,7 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
         </ScrollArea>
 
         {/* Bottom actions */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t bg-background safe-bottom">
+        <div className="relative shrink-0 px-4 py-2 border-t bg-background safe-bottom">
           <div className="flex items-center gap-2" data-testid="post-action-buttons">
             <Button 
               variant="ghost" 
@@ -558,13 +615,15 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
         <VideoEditor
           file={selectedFiles[editingVideoIndex]}
           onSave={(editedFile) => {
-            // Replace the file and preview
+            const previous = filePreviews[editingVideoIndex];
+            if (previous) {
+              URL.revokeObjectURL(previous);
+              previewUrlsRef.current = previewUrlsRef.current.filter(url => url !== previous);
+            }
+            const preview = URL.createObjectURL(editedFile);
+            previewUrlsRef.current.push(preview);
             setSelectedFiles(prev => prev.map((f, i) => i === editingVideoIndex ? editedFile : f));
-            const reader = new FileReader();
-            reader.onloadend = () => {
-              setFilePreviews(prev => prev.map((p, i) => i === editingVideoIndex ? (reader.result as string) : p));
-            };
-            reader.readAsDataURL(editedFile);
+            setFilePreviews(prev => prev.map((p, i) => i === editingVideoIndex ? preview : p));
             closeVideoEditor();
           }}
           onCancel={closeVideoEditor}
