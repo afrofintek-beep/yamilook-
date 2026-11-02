@@ -465,11 +465,25 @@ export function useMessages(conversationId: string | null) {
             reactionsMap[r.message_id].push({ emoji: r.emoji, count: 1, users: [r.user_id] });
           }
         });
-        setReactions(reactionsMap);
+        // Keep metadata for older, explicitly loaded pages during a refresh
+        // of the latest 60; refresh only the current page's decorations.
+        setReactions(previous => ({
+          ...Object.fromEntries(Object.entries(previous).filter(([id]) => olderLoadedIdsRef.current.has(id))),
+          ...reactionsMap,
+        }));
 
-        setStarredIds(new Set((starredResult.data || []).map((s) => s.message_id)));
-        setPinnedIds(new Set((pinnedResult.data || []).map((p) => p.message_id)));
-        setViewOnceViewedIds(new Set((viewOnceResult.data || []).map((v) => v.message_id)));
+        setStarredIds(previous => new Set([
+          ...Array.from(previous).filter(id => olderLoadedIdsRef.current.has(id)),
+          ...(starredResult.data || []).map(s => s.message_id),
+        ]));
+        setPinnedIds(previous => new Set([
+          ...Array.from(previous).filter(id => olderLoadedIdsRef.current.has(id)),
+          ...(pinnedResult.data || []).map(p => p.message_id),
+        ]));
+        setViewOnceViewedIds(previous => new Set([
+          ...Array.from(previous).filter(id => olderLoadedIdsRef.current.has(id)),
+          ...(viewOnceResult.data || []).map(v => v.message_id),
+        ]));
       })().catch(error => console.error('Error enriching chat history:', error));
     } catch (err) {
       console.error('Error fetching messages:', err);
@@ -1057,6 +1071,7 @@ export function useMessages(conversationId: string | null) {
     const { error } = await deleteChatMessage(messageId, user.id);
 
     if (!error) {
+      if (userId && conversationId) clearChatHotCache(userId, conversationId);
       setMessages((prev) => prev.map((m) => (m.id === messageId ? { ...m, is_deleted: true, content: null } : m)));
     }
     return { error: error ? new Error(error.message) : null };
