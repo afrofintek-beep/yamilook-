@@ -76,7 +76,9 @@ test('feed adapts across mobile, tablet, desktop and rotation without losing scr
     buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/nN8AAAAASUVORK5CYII=', 'base64'),
   });
   await expect(composer.getByTestId('muxi-photo-preview')).toBeVisible();
-  await expect(composer.getByRole('button', {name: 'Publicar'})).toBeInViewport();
+  const publish = composer.getByTestId('muxi-publish-button');
+  await expect(publish).toBeEnabled();
+  await expect(publish).toBeInViewport();
 });
 
 
