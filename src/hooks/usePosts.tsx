@@ -358,15 +358,18 @@ export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?:
       mediaFiles?: File[];
       location?: string;
       privacy?: 'everyone' | 'contacts' | 'close_friends' | 'only_me';
+      onUploadProgress?: (stage: 'preparing' | 'uploading' | 'saving', current: number, total: number) => void;
     }
   ) => {
-    if (!userId) return null;
+    if (!userId) throw new Error('A sessão expirou. Entre novamente para publicar.');
 
     const mediaUrls: string[] = [];
 
     if (options.mediaFiles?.length) {
-      for (const originalFile of options.mediaFiles) {
+      for (const [index, originalFile] of options.mediaFiles.entries()) {
+        options.onUploadProgress?.('preparing', index + 1, options.mediaFiles.length);
         const file = await preparePostImage(originalFile);
+        options.onUploadProgress?.('uploading', index + 1, options.mediaFiles.length);
         const fileExt = file.name.split('.').pop();
         const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
 
@@ -392,6 +395,7 @@ export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?:
       }
     }
 
+    options.onUploadProgress?.('saving', options.mediaFiles?.length ?? 0, options.mediaFiles?.length ?? 0);
     const { data, error } = await supabase
       .from('posts')
       .insert({
@@ -405,12 +409,13 @@ export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?:
       .select()
       .single();
 
-    if (error) {
+    if (error || !data?.id) {
       console.error('Create post error:', error);
-      return null;
+      throw new Error('Não foi possível guardar a publicação. A fotografia foi mantida para nova tentativa.');
     }
 
-    await fetchFeedPosts();
+    // Acknowledgement is based on the saved row, not a subsequent feed refresh.
+    void fetchFeedPosts().catch((refreshError) => console.warn('Feed refresh after post:', refreshError));
     return data;
   }, [userId, fetchFeedPosts]);
 

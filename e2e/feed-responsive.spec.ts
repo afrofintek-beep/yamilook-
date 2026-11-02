@@ -66,7 +66,19 @@ test('feed adapts across mobile, tablet, desktop and rotation without losing scr
     if (size.width === 320 || size.width === 1440) await page.screenshot({path: test.info().outputPath(`feed-${size.width}.png`)});
   }
   await page.getByRole('button', {name: 'Criar publicação', exact: true}).click();
-  await expect(page.getByRole('dialog')).toBeVisible();
+  const composer = page.getByRole('dialog');
+  await expect(composer).toBeVisible();
+  // Regression: a portrait photo must not push the Publish action off-screen.
+  await page.setViewportSize({ width: 390, height: 844 });
+  await composer.locator('input[type="file"]').setInputFiles({
+    name: 'portrait.png',
+    mimeType: 'image/png',
+    buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/nN8AAAAASUVORK5CYII=', 'base64'),
+  });
+  await expect(composer.getByTestId('muxi-photo-preview')).toBeVisible();
+  const publish = composer.getByTestId('muxi-publish-button');
+  await expect(publish).toBeEnabled();
+  await expect(publish).toBeInViewport();
 });
 
 

@@ -224,28 +224,19 @@ describe('Feed Page', () => {
     expect(screen.getByText('Criar publicação')).toBeInTheDocument();
   });
 
-  it('renders FAB (floating action button) for creating posts', () => {
-    const { container } = render(<Feed />);
-    
-    // FAB should be a fixed button with Plus icon
-    const fab = container.querySelector('button.fixed');
-    expect(fab).toBeInTheDocument();
+  it('renders the accessible create-post control in the feed header', () => {
+    render(<Feed />);
+    const createButton = screen.getByRole('button', { name: 'Criar publicação' });
+    expect(createButton).toBeInTheDocument();
+    expect(createButton.closest('header')).toBeInTheDocument();
   });
 
-  it('opens create post sheet when FAB is clicked', async () => {
+  it('opens create post sheet when the header create control is clicked', async () => {
     render(<Feed />);
-    
-    // Find the FAB by its fixed position class
-    const fab = document.querySelector('button.fixed');
-    expect(fab).toBeInTheDocument();
-    
-    if (fab) {
-      fireEvent.click(fab);
-      
-      await waitFor(() => {
-        expect(screen.getByTestId('create-post-sheet')).toBeInTheDocument();
-      });
-    }
+    fireEvent.click(screen.getByRole('button', { name: 'Criar publicação' }));
+    await waitFor(() => {
+      expect(screen.getByTestId('create-post-sheet')).toBeInTheDocument();
+    });
   });
 
   it('opens create post sheet from empty state button', async () => {
@@ -291,29 +282,16 @@ describe('Feed Page', () => {
     expect(perfilLink).toHaveAttribute('href', '/perfil');
   });
 
-  it('navigates to discover when the header search icon is clicked', () => {
-    const { container } = render(<Feed />);
-
-    // The header has three icon buttons: live, search, messages.
-    const header = container.querySelector('header');
-    const buttons = header?.querySelectorAll('button');
-    // The second button is the search icon (navigates to /discover).
-    fireEvent.click(buttons![1]);
-
+  it('navigates to discover when the accessible search control is clicked', () => {
+    render(<Feed />);
+    fireEvent.click(screen.getByRole('button', { name: 'Pesquisar' }));
     expect(mockNavigate).toHaveBeenCalledWith('/discover');
   });
 
-  it('navigates to messages when message icon is clicked', () => {
-    const { container } = render(<Feed />);
-    
-    // Find buttons in header
-    const header = container.querySelector('header');
-    const buttons = header?.querySelectorAll('button');
-    
-    if (buttons && buttons.length >= 3) {
-      fireEvent.click(buttons[2]); // Third button should be messages
-      expect(mockNavigate).toHaveBeenCalledWith('/papos');
-    }
+  it('navigates to messages when the accessible conversations control is clicked', () => {
+    render(<Feed />);
+    fireEvent.click(screen.getByRole('button', { name: 'Abrir conversas' }));
+    expect(mockNavigate).toHaveBeenCalledWith('/papos');
   });
 
   it('renders correct number of posts', async () => {
