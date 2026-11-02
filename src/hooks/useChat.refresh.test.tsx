@@ -6,6 +6,7 @@ type Filter = { table?: string; event?: string };
 type Channel = { handlers: { filter: Filter; callback: (payload: Change) => void }[]; on: (event: string, filter: Filter, callback: (payload: Change) => void) => Channel; status?: (status: string) => void; subscribe: (callback?: (status: string) => void) => Channel };
 const m = vi.hoisted(() => ({
   listMode: false, messages: [] as Record<string, unknown>[], holdReceipt: false,
+  holdMessages: false, releaseMessages: null as null | (() => void), queryStart: vi.fn(),
   user: { id: 'me' }, reads: vi.fn(), channels: [] as Channel[], profile: vi.fn(), profiles: vi.fn(),
 }));
 vi.mock('./useAuth', () => ({ useAuth: () => ({ user: m.user }) }));
@@ -16,14 +17,22 @@ vi.mock('@/integrations/supabase/client', () => ({ supabase: {
   from: (table: string) => {
     let updating = false;
     const q: Record<string, (...args: unknown[]) => unknown> = {};
-    for (const method of ['select', 'eq', 'or', 'order', 'in', 'update']) q[method] = () => q;
+    for (const method of ['select', 'eq', 'or', 'order', 'in', 'update', 'lt']) q[method] = () => q;
+    q.limit = (size: number) => { if (table === 'visible_messages') m.queryStart('limit', size); return q; };
     q.update = () => { updating = true; return q; };
     const result = () => {
       m.reads(table);
       return { data: table === 'conversation_participants' ? (m.listMode ? [{ conversation_id: 'chat', is_archived: false, user_id: 'me' }] : { history_cleared_at: null }) : table === 'visible_messages' ? m.messages : [], error: null };
     };
     q.single = async () => result();
-    q.then = (resolve: (value: unknown) => unknown) => updating && m.holdReceipt ? new Promise(() => {}) : Promise.resolve(result()).then(resolve);
+    q.then = (resolve: (value: unknown) => unknown) => {
+      if (updating && m.holdReceipt) return new Promise(() => {});
+      if (table === 'visible_messages' && m.holdMessages) {
+        m.queryStart('visible_messages');
+        return new Promise<void>(done => { m.releaseMessages = done; }).then(() => resolve(result()));
+      }
+      return Promise.resolve(result()).then(resolve);
+    };
     return q;
   },
   channel: () => {
@@ -32,7 +41,7 @@ vi.mock('@/integrations/supabase/client', () => ({ supabase: {
   },
   removeChannel: vi.fn(),
 } }));
-beforeEach(() => { m.listMode = false; m.messages = []; m.holdReceipt = false; m.reads.mockClear(); m.channels.length = 0; m.user = { id: 'me' }; m.profile.mockReset().mockResolvedValue({ data: null }); m.profiles.mockReset().mockResolvedValue({ data: [] }); });
+beforeEach(() => { m.listMode = false; m.messages = []; m.holdReceipt = false; m.holdMessages = false; m.releaseMessages = null; m.queryStart.mockClear(); m.reads.mockClear(); m.channels.length = 0; m.user = { id: 'me' }; m.profile.mockReset().mockResolvedValue({ data: null }); m.profiles.mockReset().mockResolvedValue({ data: [] }); });
 afterEach(cleanup);
 it('does not reload history or resubscribe when the same user receives a refreshed auth object', async () => {
   const { rerender } = renderHook(() => useMessages('chat'));
@@ -158,4 +167,24 @@ it('ignores old conversation profile completions and subscription events after s
     oldInsert({ new: incoming('late-old') });
   });
   expect(result.current.messages).toEqual([]);
+});
+
+it('bounds the initial history page and makes older history explicit', async () => {
+  m.messages = [incoming('latest')];
+  const { result } = renderHook(() => useMessages('chat'));
+  await waitFor(() => expect(result.current.loading).toBe(false));
+  expect(m.queryStart).toHaveBeenCalledWith('limit', 60);
+  expect(result.current.messages[0].id).toBe('latest');
+});
+
+it('coalesces subscription and recovery reads while the initial history request is pending', async () => {
+  m.holdMessages = true;
+  const { result } = renderHook(() => useMessages('chat'));
+  await waitFor(() => expect(m.queryStart).toHaveBeenCalledWith('visible_messages'));
+  const channel = m.channels.find(ch => ch.handlers.some(h => h.filter.table === 'messages'))!;
+  await act(async () => { channel.status?.('SUBSCRIBED'); });
+  expect(m.queryStart.mock.calls.filter(([event]) => event === 'visible_messages')).toHaveLength(1);
+  m.holdMessages = false;
+  await act(async () => { m.releaseMessages?.(); });
+  await waitFor(() => expect(result.current.loading).toBe(false));
 });
