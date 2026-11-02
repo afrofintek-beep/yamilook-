@@ -258,6 +258,8 @@
     "clearChat": "Clear chat"
   },
   "feed": {
+    "reactionCount_one": "{{count}} reaction",
+    "reactionCount_other": "{{count}} reactions",
     "title": "Muxi",
     "createPost": "Create post",
     "whatsOnMind": "What's on your mind?",

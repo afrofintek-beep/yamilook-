@@ -296,6 +296,8 @@
     "clearChat": "Limpar conversa"
   },
   "feed": {
+    "reactionCount_one": "{{count}} reação",
+    "reactionCount_other": "{{count}} reações",
     "title": "Muxi",
     "createPost": "Criar publicação",
     "createPlaceholder": "O que se passa na tua vizinhança?",

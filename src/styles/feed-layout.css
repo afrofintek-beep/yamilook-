@@ -82,3 +82,16 @@
 @media (prefers-reduced-motion: reduce) {
   .feed-shell *, .feed-primary-nav * { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
 }
+
+/* Shared mobile viewport rules for Safari, Chrome and installed web apps. */
+.feed-logo > div { width: 76px !important; }
+.feed-shell .feed-photo {
+  min-height: 0 !important;
+  max-height: 48vh !important;
+  max-height: 48svh !important;
+  height: auto;
+}
+@media (min-width: 1024px) {
+  .feed-logo > div { width: 100px !important; }
+  .feed-shell .feed-photo { max-height: 70vh !important; }
+}

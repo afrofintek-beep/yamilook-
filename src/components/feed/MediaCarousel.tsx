@@ -1,4 +1,6 @@
 import { useState, useRef, useCallback, useEffect, ReactNode } from 'react';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { imageFitsVariant, optimizedPublicImageUrl, type PublicImageVariant } from '@/lib/image-delivery';
 
@@ -114,13 +116,15 @@ function MediaImage({ src, priority }: { src: string; priority: boolean }) {
           event.currentTarget.naturalWidth, event.currentTarget.naturalHeight, selected
         )) fallbackToOriginal();
       }}
-      className="w-full object-contain"
+      className="feed-photo w-full object-contain"
       style={{ maxHeight: '70vh', minHeight: '200px' }}
     />
   );
 }
 
 export function MediaCarousel({ urls, priority = false, onDoubleTap, likeOverlay }: MediaCarouselProps) {
+  const { t } = useTranslation();
+  const [expandedImage, setExpandedImage] = useState<string | null>(null);
   const validUrls = urls.filter((u) => u && u.trim() !== '');
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -151,7 +155,9 @@ export function MediaCarousel({ urls, priority = false, onDoubleTap, likeOverlay
                 <VideoItem src={url} isActive={i === activeIndex} />
               </div>
             ) : (
-              <MediaImage src={url} priority={priority && i === 0} />
+              <button type="button" className="block w-full" aria-label={t('feed.openImage', 'Abrir imagem completa')} onClick={() => setExpandedImage(url)}>
+                <MediaImage src={url} priority={priority && i === 0} />
+              </button>
             )}
           </div>
         ))}
@@ -183,6 +189,12 @@ export function MediaCarousel({ urls, priority = false, onDoubleTap, likeOverlay
         </div>
       )}
 
+      <Dialog open={!!expandedImage} onOpenChange={open => { if (!open) setExpandedImage(null); }}>
+        <DialogContent className="max-w-5xl p-2">
+          <DialogTitle className="sr-only">{t('feed.openImage', 'Abrir imagem completa')}</DialogTitle>
+          {expandedImage && <img src={expandedImage} alt="" className="w-full object-contain" style={{ maxHeight: '80dvh' }} />}
+        </DialogContent>
+      </Dialog>
       {/* Like overlay */}
       {likeOverlay}
     </div>

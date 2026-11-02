@@ -122,9 +122,12 @@ export default function Feed() {
       {new URLSearchParams(window.location.search).get('diagnostico') === '1' && <Suspense fallback={null}><FeedDiagnostics /></Suspense>}
       {/* Header - Clean, minimal */}
       <header className="relative z-50 shrink-0 bg-card border-b border-border safe-top safe-inline">
-        <div className="flex items-center justify-between px-4 py-2 mx-auto w-full max-w-[1440px]">
-          <YamilookLogo size="sm" showTagline={false} animate={false} bgClassName="bg-card" />
-          <div className="flex items-center gap-1">
+        <div className="flex items-center justify-between px-3 py-1 mx-auto w-full max-w-[1440px]">
+          <YamilookLogo className="feed-logo" size="sm" showTagline={false} animate={false} bgClassName="bg-card" />
+          <div className="flex items-center gap-0">
+            <Button size="icon" aria-label="Criar publicação" className="h-11 w-11 rounded-full shrink-0" onClick={() => handleCreateOpenChange(true)}>
+              <Plus className="w-5 h-5" />
+            </Button>
             <LivePreviewTooltip activeStreams={activeStreams} hasActiveStreams={hasActiveStreams}>
               <div className="relative">
                 <Button 
@@ -264,17 +267,6 @@ export default function Feed() {
           </aside>
         </div>
       </ScrollArea>
-
-      {/* FAB - Amber for action */}
-      <motion.button 
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        aria-label="Criar publicação"
-        className="feed-create fixed z-40 bottom-[calc(5.5rem+env(safe-area-inset-bottom,0px))] right-6 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center"
-        onClick={() => handleCreateOpenChange(true)}
-      >
-        <Plus className="w-6 h-6" />
-      </motion.button>
 
       <BottomNav layout="feed" />
 
