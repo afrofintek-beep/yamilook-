@@ -30,6 +30,10 @@ interface ResponsiveModalProps {
   className?: string;
   /** Padding is applied by default; set false when the child manages its own. */
   padded?: boolean;
+  /** Use a custom close control inside the modal body. */
+  hideCloseButton?: boolean;
+  /** Optional scrim strength for a specific modal. */
+  overlayClassName?: string;
 }
 
 /**
@@ -46,6 +50,8 @@ export function ResponsiveModal({
   children,
   className,
   padded = true,
+  hideCloseButton = false,
+  overlayClassName,
 }: ResponsiveModalProps) {
   const isMobile = useIsMobile();
 
@@ -71,6 +77,8 @@ export function ResponsiveModal({
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent
           side="bottom"
+          hideCloseButton={hideCloseButton}
+          overlayClassName={overlayClassName}
           className={cn('h-auto max-h-[90vh] overflow-y-auto rounded-t-3xl', !padded && 'p-0', className)}
         >
           {header(SheetTitle, SheetDescription, SheetHeader)}
@@ -82,7 +90,7 @@ export function ResponsiveModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={cn('max-w-md', !padded && 'p-0', className)}>
+      <DialogContent hideCloseButton={hideCloseButton} overlayClassName={overlayClassName} className={cn('max-w-md', !padded && 'p-0', className)}>
         {header(DialogTitle, DialogDescription, DialogHeader)}
         {children}
       </DialogContent>

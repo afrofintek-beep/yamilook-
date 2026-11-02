@@ -7,6 +7,9 @@ on:
       - 'src/components/calls/CallChatPanel.test.tsx'
       - 'src/components/calls/VideoCall.tsx'
       - 'src/pages/Chat.tsx'
+      - 'src/components/chat/MessageActionsSheet.tsx'
+      - 'src/components/chat/MessageActionsSheet.test.tsx'
+      - 'src/components/chat/EnhancedMessageBubble.tsx'
       - 'src/hooks/useWebRTC.tsx'
       - 'src/hooks/useAuth.tsx'
       - 'src/hooks/useAuth.revocation.test.tsx'
@@ -30,7 +33,7 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Direct chat and iOS viewport regression tests
-        run: npx vitest run src/components/calls/CallChatPanel.test.tsx src/features/papos/usePaposViewport.test.ts src/hooks/useAuth.revocation.test.tsx src/hooks/useChat.refresh.test.tsx src/hooks/useContacts.loading.test.tsx
+        run: npx vitest run src/components/chat/MessageActionsSheet.test.tsx src/components/chat/EnhancedMessageBubble.test.tsx src/components/calls/CallChatPanel.test.tsx src/features/papos/usePaposViewport.test.ts src/hooks/useAuth.revocation.test.tsx src/hooks/useChat.refresh.test.tsx src/hooks/useContacts.loading.test.tsx
       - name: Verify inbox summaries and access boundaries
         run: node scripts/test-chat-inbox-summaries.mjs
       - name: Build both Yamilook and KOSOLOLA

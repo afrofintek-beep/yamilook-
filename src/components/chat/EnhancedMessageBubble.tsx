@@ -643,6 +643,10 @@ export function EnhancedMessageBubble({
         open={showActionsSheet}
         onOpenChange={setShowActionsSheet}
         messageContent={message.content || undefined}
+        messageType={message.message_type}
+        mediaUrl={message.media_url}
+        thumbnailUrl={message.thumbnail_url}
+        isViewOnce={message.is_view_once}
         isOwn={isOwn}
         isStarred={isStarred}
         isPinned={isPinned}

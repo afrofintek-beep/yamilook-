@@ -476,6 +476,13 @@
     "testTone": "Tester la sonnerie",
     "stopTest": "Arrêter le test",
     "silentTone": "La sonnerie est silencieuse.",
-    "loadingTones": "Chargement des sonneries…"
+    "loadingTones": "Chargement des sonneries…",
+    "reactionMeanings": {
+      "sankofa": "Un amour qui garde la mémoire du passé et le respecte.",
+      "ubuntu": "La solidarité et l'humanité partagée (« Je suis parce que nous sommes »).",
+      "djembe": "Le rythme, la célébration et l'énergie collective.",
+      "shango": "Une colère justifiée et une indignation morale face à l'injustice.",
+      "eish": "Une fatigue sincère ou un mécontentement."
+    }
   }
 }

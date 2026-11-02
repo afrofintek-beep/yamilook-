@@ -631,6 +631,13 @@
     "testTone": "Test ringtone",
     "stopTest": "Stop test",
     "silentTone": "The ringtone is silent.",
-    "loadingTones": "Loading ringtones…"
+    "loadingTones": "Loading ringtones…",
+    "reactionMeanings": {
+      "sankofa": "Love with memory and respect for what came before.",
+      "ubuntu": "Solidarity and shared humanity (“I am because we are”).",
+      "djembe": "Rhythm, celebration and collective energy.",
+      "shango": "Justified anger and moral indignation.",
+      "eish": "Honest exhaustion or dissatisfaction."
+    }
   }
 }
