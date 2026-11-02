@@ -1,4 +1,5 @@
 import { useCachedList } from './useCachedList';
+import { readChatHotCache, saveChatHotCache, clearChatHotCache } from '@/lib/chat-hot-cache';
 import { deleteChatMessage } from '@/lib/delete-chat-message';
 import { createChatConversation } from '@/lib/chat-conversations';
 import { useMessageExpiry } from './useMessageExpiry';
@@ -258,11 +259,18 @@ export function useMessages(conversationId: string | null) {
   const { user } = useAuth();
   const userId = user?.id;
   const { notifyMessage } = useMessageNotification();
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>(() =>
+    userId && conversationId ? readChatHotCache<Message>(userId, conversationId) : []);
+  const [renderedScope, setRenderedScope] = useState(`${userId}:${conversationId}`);
+  const [hasOlderMessages, setHasOlderMessages] = useState(false);
+  const [loadingOlder, setLoadingOlder] = useState(false);
+  const olderCursorRef = useRef<string | null>(null);
+  const olderLoadedIdsRef = useRef(new Set<string>());
   const unexpiredMessages = useMessageExpiry(messages);
   const messagesRef = useRef(messages);
   messagesRef.current = messages;
   const fetchVersionRef = useRef(0);
+  const fetchInFlightRef = useRef<{ scope: string; promise: Promise<void> } | null>(null);
   const pendingMessageIdsRef = useRef(new Set<string>());
   const readRequestedRef = useRef(false);
   const scope = `${userId}:${conversationId}`;
@@ -272,7 +280,8 @@ export function useMessages(conversationId: string | null) {
   const [starredIds, setStarredIds] = useState<Set<string>>(new Set());
   const [pinnedIds, setPinnedIds] = useState<Set<string>>(new Set());
   const [viewOnceViewedIds, setViewOnceViewedIds] = useState<Set<string>>(new Set());
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => !(userId && conversationId &&
+    readChatHotCache<Message>(userId, conversationId).length > 0));
   const [typingUsers, setTypingUsers] = useState<TypingUser[]>([]);
   const channelRef = useRef<RealtimeChannel | null>(null);
   // Unique per hook instance to avoid realtime channel-topic collisions when
@@ -289,14 +298,18 @@ export function useMessages(conversationId: string | null) {
   // Per-user timeouts to auto-clear stale typing states
   const typingUserTimeoutsRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
-  const fetchMessages = useCallback(async (markRead = true) => {
+  const fetchMessages = useCallback((markRead = true): Promise<void> => {
     if (!conversationId || !userId) {
       setMessages([]);
       setLoading(false);
-      return;
+      return Promise.resolve();
     }
 
     if (markRead) readRequestedRef.current = true;
+    // Realtime subscription, recovery and initial open can overlap. Never
+    // supersede a slow first read with another identical request.
+    if (fetchInFlightRef.current?.scope === scope) return fetchInFlightRef.current.promise;
+    const request = (async () => {
     const version = ++fetchVersionRef.current;
     const isCurrent = () => version === fetchVersionRef.current && scopeRef.current === scope;
     const messagesAtStart = new Map(messagesRef.current.map(message => [message.id, message]));
@@ -309,7 +322,8 @@ export function useMessages(conversationId: string | null) {
           .eq('conversation_id', conversationId).eq('user_id', userId).single(),
         supabase.from('visible_messages').select('*').eq('conversation_id', conversationId)
           .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
-          .order('created_at', { ascending: true }),
+          .order('created_at', { ascending: false })
+          .limit(60),
       ]);
       if (!isCurrent()) return;
       if (participationResult.error) throw participationResult.error;
@@ -318,12 +332,16 @@ export function useMessages(conversationId: string | null) {
       const { data: messagesData, error } = messagesResult;
 
       if (error) throw error;
+      const visiblePage = (messagesData || []).slice().reverse();
+      olderCursorRef.current = visiblePage[0]?.created_at ?? null;
+      setHasOlderMessages(visiblePage.length === 60);
+      saveChatHotCache(userId, conversationId, visiblePage);
 
       // Render authorized text immediately; profiles/reactions are enrichment.
       // Preserve events/optimistic sends that arrived after this fetch began.
       setMessages(prev => {
         const previous = new Map(prev.map(message => [message.id, message]));
-        const rows = (messagesData || []).map(row => {
+        const rows = visiblePage.map(row => {
           const local = previous.get(row.id);
           if (local && local !== messagesAtStart.get(row.id)) return local;
           const keepBlob = !row.media_url && local?.media_url?.startsWith('blob:');
@@ -333,7 +351,8 @@ export function useMessages(conversationId: string | null) {
         const fetchedIds = new Set(rows.map(row => row.id));
         return [...rows, ...prev.filter(message => !fetchedIds.has(message.id) &&
           (message !== messagesAtStart.get(message.id) || pendingAtStart.has(message.id) ||
-            pendingMessageIdsRef.current.has(message.id)))]
+            pendingMessageIdsRef.current.has(message.id) ||
+            olderLoadedIdsRef.current.has(message.id)))]
           .sort((a, b) => a.created_at.localeCompare(b.created_at) || a.id.localeCompare(b.id));
       });
       setLoading(false);
@@ -352,7 +371,7 @@ export function useMessages(conversationId: string | null) {
             error => console.error('Error marking messages read:', error));
       }
 
-      if (!messagesData?.length) {
+      if (!visiblePage.length) {
         setReactions({});
         setStarredIds(new Set());
         setPinnedIds(new Set());
@@ -363,9 +382,9 @@ export function useMessages(conversationId: string | null) {
       // Optional enrichment must not hold the recovery probe open. A slow
       // avatar request cannot prevent the next missed message being recovered.
       void (async () => {
-        const messageIds = messagesData.map(m => m.id);
-        const senderIds = [...new Set(messagesData.map(m => m.sender_id))];
-        const replyToIds = messagesData.filter(m => m.reply_to_id).map(m => m.reply_to_id!);
+        const messageIds = visiblePage.map(m => m.id);
+        const senderIds = [...new Set(visiblePage.map(m => m.sender_id))];
+        const replyToIds = visiblePage.filter(m => m.reply_to_id).map(m => m.reply_to_id!);
 
         // Batch fetch profiles, reactions, starred, pinned, reply messages, and view-once views in parallel
         const [profilesResult, reactionsResult, starredResult, pinnedResult, replyMessagesResult, viewOnceResult] = await Promise.all([
@@ -408,7 +427,7 @@ export function useMessages(conversationId: string | null) {
         }
 
         // Build messages with profiles
-        const messagesWithProfiles = messagesData.map(msg => {
+        const messagesWithProfiles = visiblePage.map(msg => {
           let replyTo = undefined;
           if (msg.reply_to_id) {
             const replyMsg = replyMessageMap.get(msg.reply_to_id);
@@ -454,9 +473,23 @@ export function useMessages(conversationId: string | null) {
       })().catch(error => console.error('Error enriching chat history:', error));
     } catch (err) {
       console.error('Error fetching messages:', err);
+      // A revoked membership is not an offline state. Never keep displaying
+      // a hot snapshot if the server explicitly denies access.
+      const code = (err as { code?: string })?.code;
+      if (isCurrent() && ['42501', 'PGRST116', '403'].includes(code || '')) {
+        clearChatHotCache(userId, conversationId);
+        setMessages([]);
+        setHasOlderMessages(false);
+      }
     } finally {
       if (isCurrent()) setLoading(false);
     }
+    })();
+    const tracked = request.finally(() => {
+      if (fetchInFlightRef.current?.promise === tracked) fetchInFlightRef.current = null;
+    });
+    fetchInFlightRef.current = { scope, promise: tracked };
+    return tracked;
   }, [conversationId, userId, scope]);
 
   useMessageRecovery(conversationId, userId, messages, fetchMessages);
@@ -467,9 +500,20 @@ export function useMessages(conversationId: string | null) {
     historyCutoffRef.current = null;
     pendingMessageIdsRef.current.clear();
     readRequestedRef.current = false;
-    setMessages([]);
+    const cached = conversationId && userId ? readChatHotCache<Message>(userId, conversationId) : [];
+    setRenderedScope(scope);
+    setMessages(cached);
+    setReactions({});
+    setStarredIds(new Set());
+    setPinnedIds(new Set());
+    setViewOnceViewedIds(new Set());
+    olderLoadedIdsRef.current.clear();
+    olderCursorRef.current = null;
+    setHasOlderMessages(false);
+    setLoadingOlder(false);
+    setLoading(cached.length === 0);
     setHistoryClearedAt(null);
-    fetchMessages();
+    void fetchMessages();
 
     if (conversationId && user) {
       // A missing publication for participant receipts must not break message delivery.
@@ -683,7 +727,7 @@ export function useMessages(conversationId: string | null) {
       }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [conversationId, fetchMessages, user?.id]);
+  }, [conversationId, fetchMessages, user?.id, scope]);
 
   // --- Broadcast-based typing indicator (low-latency, no WAL delay) ---
   useEffect(() => {
@@ -1107,6 +1151,68 @@ export function useMessages(conversationId: string | null) {
     return { error: error ? new Error(error.message) : null };
   };
 
+  const loadOlderMessages = async () => {
+    if (!userId || !conversationId || loadingOlder || !hasOlderMessages) return;
+    const cursor = olderCursorRef.current;
+    if (!cursor) return;
+    const requestedScope = scope;
+    setLoadingOlder(true);
+    try {
+      const { data, error } = await supabase.from('visible_messages').select('*')
+        .eq('conversation_id', conversationId)
+        .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
+        .lt('created_at', cursor)
+        .order('created_at', { ascending: false })
+        .limit(60);
+      if (error) throw error;
+      if (scopeRef.current !== requestedScope) return;
+      const page = (data || []).slice().reverse();
+      olderCursorRef.current = page[0]?.created_at ?? cursor;
+      setHasOlderMessages(page.length === 60);
+      if (!page.length) return;
+      page.forEach(msg => olderLoadedIdsRef.current.add(msg.id));
+      setMessages(previous => {
+        const merged = new Map(previous.map(message => [message.id, message]));
+        page.forEach(message => { if (!merged.has(message.id)) merged.set(message.id, message); });
+        return Array.from(merged.values()).sort((a, b) =>
+          a.created_at.localeCompare(b.created_at) || a.id.localeCompare(b.id));
+      });
+      // Older message decorations load after text so they do not stall paging.
+      void (async () => {
+        const ids = page.map(row => row.id);
+        const [profiles, starred, pinned, reactionsData, viewed] = await Promise.all([
+          fetchPublicProfilesBatched([...new Set(page.map(m => m.sender_id))]),
+          supabase.from('starred_messages').select('message_id').eq('user_id', userId).in('message_id', ids),
+          supabase.from('pinned_messages').select('message_id').eq('conversation_id', conversationId).in('message_id', ids),
+          supabase.from('message_reactions').select('*').in('message_id', ids),
+          supabase.from('view_once_views').select('message_id').eq('user_id', userId).in('message_id', ids),
+        ]);
+        if (scopeRef.current !== requestedScope) return;
+        const profileMap = new Map((profiles.data ?? []).map(profile => [profile.id, profile]));
+        setMessages(prev => prev.map(msg => ids.includes(msg.id) ?
+          { ...msg, sender_profile: messageProfile(profileMap.get(msg.sender_id)) } : msg));
+        setStarredIds(prev => new Set([...prev, ...(starred.data || []).map(row => row.message_id)]));
+        setPinnedIds(prev => new Set([...prev, ...(pinned.data || []).map(row => row.message_id)]));
+        setViewOnceViewedIds(prev => new Set([...prev, ...(viewed.data || []).map(row => row.message_id)]));
+        setReactions(prev => {
+          const next = { ...prev };
+          for (const row of (reactionsData.data || [])) {
+            const list = next[row.message_id] || [];
+            const reaction = list.find(item => item.emoji === row.emoji);
+            if (reaction) { reaction.count++; reaction.users.push(row.user_id); }
+            else list.push({ emoji: row.emoji, count: 1, users: [row.user_id] });
+            next[row.message_id] = list;
+          }
+          return next;
+        });
+      })().catch(err => console.error('Error enriching older messages:', err));
+    } catch (err) {
+      console.error('Error loading earlier messages:', err);
+    } finally {
+      if (scopeRef.current === requestedScope) setLoadingOlder(false);
+    }
+  };
+
   const setHistoryCleared = async (restore = false) => {
     if (!conversationId) throw new Error('Conversa indisponível');
     const { data, error } = await supabase.rpc('set_chat_history_cleared', {
@@ -1116,18 +1222,23 @@ export function useMessages(conversationId: string | null) {
     if (error) throw error;
     historyCutoffRef.current = data;
     setHistoryClearedAt(data);
+    if (userId && conversationId) clearChatHotCache(userId, conversationId);
+    olderLoadedIdsRef.current.clear();
     if (data) setMessages(previous => previous.filter(message => message.created_at > data));
     await fetchMessages(false);
   };
 
   return {
     historyClearedAt, setHistoryCleared,
-    messages: unexpiredMessages,
+    messages: renderedScope === scope ? unexpiredMessages : [],
     reactions,
     starredIds,
     pinnedIds,
     viewOnceViewedIds,
-    loading,
+    loading: renderedScope === scope ? loading : true,
+    hasOlderMessages: renderedScope === scope && hasOlderMessages,
+    loadingOlder,
+    loadOlderMessages,
     typingUsers,
     sendMessage,
     updateMessageMediaUrl,
