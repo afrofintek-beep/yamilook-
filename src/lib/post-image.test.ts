@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { preparePostImage } from './post-image';
+import { isHeicImage, preparePostImage } from './post-image';
 const drawImage = vi.fn();
 let output: Blob | null;
 class FakeImage {
@@ -38,6 +38,24 @@ describe('post image upload optimization', () => {
     expect(await preparePostImage(file)).toBe(file);
     output = new Blob([new Uint8Array(600_000)], { type: 'image/webp' });
     expect(await preparePostImage(file)).toBe(file);
+  });
+  it('recognizes HEIC/HEIF iPhone photos even with missing MIME type', () => {
+    expect(isHeicImage(new File(['heic'], 'AFIS.HEIC'))).toBe(true);
+    expect(isHeicImage(new File(['heif'], 'photo', { type: 'image/heif' }))).toBe(true);
+    expect(isHeicImage(photo())).toBe(false);
+  });
+  it('converts decodable HEIC/HEIF to JPEG for preview and upload', async () => {
+    output = new Blob(['jpeg-bytes'], { type: 'image/jpeg' });
+    const file = new File(['original-heic'], 'AFIS.HEIC', { type: 'image/heic' });
+    const result = await preparePostImage(file);
+    expect(result.name).toBe('AFIS.jpg');
+    expect(result.type).toBe('image/jpeg');
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:test');
+  });
+  it('rejects a HEIC file the browser cannot convert instead of uploading it', async () => {
+    output = null;
+    await expect(preparePostImage(new File(['heic'], 'AFIS.heic', { type: 'image/heic' })))
+      .rejects.toThrow(/JPEG/);
   });
   it('supports browsers that encode PNG instead of WebP', async () => {
     output = new Blob(['png'], { type: 'image/png' });
