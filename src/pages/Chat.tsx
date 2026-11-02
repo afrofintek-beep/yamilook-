@@ -92,6 +92,8 @@ export default function Chat() {
     hasOlderMessages,
     loadingOlder,
     loadOlderMessages,
+    loadError,
+    refresh: refreshMessages,
     typingUsers,
     sendMessage,
     updateMessageMediaUrl,
@@ -828,7 +830,12 @@ export default function Chat() {
             </Button>
           </div>
         )}
-        {loading && slowInitialLoad ? (
+        {loadError && !loading && messages.length === 0 ? (
+          <div role="alert" className="mx-4 space-y-3 rounded-xl border border-border bg-background/85 p-4 text-sm">
+            <p>Não foi possível sincronizar esta conversa. Verifica a ligação e tenta novamente.</p>
+            <Button variant="outline" size="sm" onClick={() => void refreshMessages()}>Tentar novamente</Button>
+          </div>
+        ) : loading && slowInitialLoad ? (
           <div role="status" className="mx-4 rounded-xl border border-border bg-background/85 p-4 text-sm text-muted-foreground">
             A ligação está lenta. Estamos a sincronizar esta conversa; o histórico surgirá assim que o servidor responder.
           </div>
