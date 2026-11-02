@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AFRICAN_REACTIONS, AfricanReactionType, getReaction } from '@/lib/reactions';
 import { cn } from '@/lib/utils';
@@ -11,6 +12,7 @@ interface ReactionPickerProps {
 }
 
 export function ReactionPicker({ onSelect, onClose, position = 'top', myReaction = null }: ReactionPickerProps) {
+  const { t } = useTranslation();
   const [hoveredReaction, setHoveredReaction] = useState<string | null>(null);
   const hoveredData = hoveredReaction ? getReaction(hoveredReaction) : null;
 
@@ -63,7 +65,7 @@ export function ReactionPicker({ onSelect, onClose, position = 'top', myReaction
                 "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 myReaction === reaction.type && "bg-secondary scale-110"
               )}
-              aria-label={`${reaction.label}: ${reaction.meaning}`}
+              aria-label={`${reaction.label}: ${t(`kosolola.reactionMeanings.${reaction.type}`, { fallbackLng: 'pt' })}`}
             >
               <span role="img" aria-hidden="true">{reaction.icon}</span>
             </button>
@@ -86,7 +88,7 @@ export function ReactionPicker({ onSelect, onClose, position = 'top', myReaction
                   {hoveredData.label}
                 </p>
                 <p className="text-xs text-muted-foreground max-w-[180px]">
-                  {hoveredData.meaning}
+                  {t(`kosolola.reactionMeanings.${hoveredData.type}`, { fallbackLng: 'pt' })}
                 </p>
               </div>
             </motion.div>
