@@ -35,7 +35,7 @@ export function useMessageRecovery(
         pending = false;
       }
     };
-    const timer = window.setInterval(() => { void probe(); }, 5000);
+    const timer = window.setInterval(() => { void probe(); }, 15_000);
     const resume = () => { void probe(); };
     window.addEventListener('online', resume);
     window.addEventListener('pageshow', resume);
