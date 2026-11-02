@@ -19,7 +19,6 @@ export interface CachedChatMessage {
   is_deleted?: boolean | null;
   media_url?: string | null;
   thumbnail_url?: string | null;
-  [key: string]: unknown;
 }
 
 const snapshots = new Map<string, { expiresAt: number; rows: CachedChatMessage[] }>();
