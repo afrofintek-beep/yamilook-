@@ -89,6 +89,9 @@ export default function Chat() {
     pinnedIds,
     viewOnceViewedIds,
     loading,
+    hasOlderMessages,
+    loadingOlder,
+    loadOlderMessages,
     typingUsers,
     sendMessage,
     updateMessageMediaUrl,
@@ -341,6 +344,17 @@ export default function Chat() {
       scrollChatToEnd(messagesViewportRef.current, 'smooth');
     }
   }, [messages, autoScroll, highlightMessageId, loading]);
+
+  const handleLoadEarlier = async () => {
+    setAutoScroll(false);
+    const viewport = messagesViewportRef.current;
+    const heightBefore = viewport?.scrollHeight ?? 0;
+    const topBefore = viewport?.scrollTop ?? 0;
+    await loadOlderMessages();
+    requestAnimationFrame(() => {
+      if (viewport && heightBefore) viewport.scrollTop = topBefore + viewport.scrollHeight - heightBefore;
+    });
+  };
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
@@ -798,6 +812,14 @@ export default function Chat() {
         onScroll={handleScroll}
         style={wallpaperStyles}
       >
+        {!loading && hasOlderMessages && (
+          <div className="flex justify-center px-3 pb-3">
+            <Button variant="outline" size="sm" disabled={loadingOlder}
+              onClick={() => void handleLoadEarlier()}>
+              {loadingOlder ? 'A carregar mensagens anteriores…' : 'Carregar mensagens anteriores'}
+            </Button>
+          </div>
+        )}
         {loading ? (
           <div className="space-y-4 px-4">
             {[...Array(5)].map((_, i) => (
