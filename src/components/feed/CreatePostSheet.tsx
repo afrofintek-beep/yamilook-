@@ -382,6 +382,7 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
           </Button>
           <SheetTitle className="min-w-0 flex-1 truncate text-center text-sm sm:text-lg text-foreground">{t('feed.createPost')}</SheetTitle>
           <Button 
+            data-testid="muxi-publish-button"
             size="sm" 
             className="bg-primary text-primary-foreground rounded-full px-4 min-h-11 shrink-0"
             disabled={!canPost || isSubmitting || isPreparingFiles}
