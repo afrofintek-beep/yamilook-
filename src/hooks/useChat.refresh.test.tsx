@@ -1,4 +1,5 @@
 import { act, cleanup, renderHook, waitFor } from '@testing-library/react';
+import { StrictMode } from 'react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { useMessages, useConversations } from './useChat';
 import { clearChatHotCache } from '@/lib/chat-hot-cache';
@@ -188,4 +189,16 @@ it('coalesces subscription and recovery reads while the initial history request 
   m.holdMessages = false;
   await act(async () => { m.releaseMessages?.(); });
   await waitFor(() => expect(result.current.loading).toBe(false));
+});
+
+it('restarts an invalidated first history read after React StrictMode effect replay', async () => {
+  m.holdMessages = true;
+  m.messages = [incoming('survives-replay')];
+  const { result } = renderHook(() => useMessages('chat'), { wrapper: StrictMode });
+  await waitFor(() => expect(m.queryStart.mock.calls.filter(([event]) =>
+    event === 'visible_messages')).toHaveLength(2));
+  m.holdMessages = false;
+  await act(async () => { m.releaseMessages?.(); });
+  await waitFor(() => expect(result.current.loading).toBe(false));
+  expect(result.current.messages.map(message => message.id)).toContain('survives-replay');
 });
