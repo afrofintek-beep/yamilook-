@@ -1,5 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { AppSurfaceContext } from '@/lib/app-surface';
 import { ContactInviteActions } from './ContactInviteActions';
 const { rpc } = vi.hoisted(() => ({ rpc: vi.fn() }));
 vi.mock('@/integrations/supabase/client', () => ({ supabase: { rpc } }));
@@ -11,6 +12,17 @@ const prepare = async (name = 'Convidar pelo WhatsApp') => {
   await screen.findByLabelText('Ligação para o teu contacto');
 };
 describe('device contact invitations', () => {
+  it('brands WhatsApp and email invitations for KOSOLOLA while using shared registration', async () => {
+    render(<AppSurfaceContext.Provider value="papos"><ContactInviteActions /></AppSurfaceContext.Provider>);
+    await prepare();
+    const whatsapp = new URL(screen.getByRole('link', { name: 'Escolher contacto no WhatsApp' }).getAttribute('href')!);
+    expect(whatsapp.searchParams.get('text')).toContain('para a KOSOLOLA!');
+    expect(whatsapp.searchParams.get('text')).toContain('https://www.yamilook.com/register?ref=' + invite.code);
+    expect(whatsapp.searchParams.get('text')).toContain('https://www.kosolola.com');
+    const email = decodeURIComponent(screen.getByRole('link', { name: 'Escolher contacto no email' }).getAttribute('href')!);
+    expect(email).toContain('subject=O teu convite para a KOSOLOLA');
+    expect(email).toMatch(/^mailto:\?subject=/);
+  });
   it('issues without email and opens WhatsApp with a unique link', async () => {
     render(<ContactInviteActions />);
     expect(rpc).not.toHaveBeenCalled();
