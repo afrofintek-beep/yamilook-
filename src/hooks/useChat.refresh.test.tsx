@@ -1,6 +1,7 @@
 import { act, cleanup, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { useMessages, useConversations } from './useChat';
+import { clearChatHotCache } from '@/lib/chat-hot-cache';
 type Change = { old?: Record<string, unknown>; new: Record<string, unknown> };
 type Filter = { table?: string; event?: string };
 type Channel = { handlers: { filter: Filter; callback: (payload: Change) => void }[]; on: (event: string, filter: Filter, callback: (payload: Change) => void) => Channel; status?: (status: string) => void; subscribe: (callback?: (status: string) => void) => Channel };
@@ -41,7 +42,7 @@ vi.mock('@/integrations/supabase/client', () => ({ supabase: {
   },
   removeChannel: vi.fn(),
 } }));
-beforeEach(() => { m.listMode = false; m.messages = []; m.holdReceipt = false; m.holdMessages = false; m.releaseMessages = null; m.queryStart.mockClear(); m.reads.mockClear(); m.channels.length = 0; m.user = { id: 'me' }; m.profile.mockReset().mockResolvedValue({ data: null }); m.profiles.mockReset().mockResolvedValue({ data: [] }); });
+beforeEach(() => { clearChatHotCache(); m.listMode = false; m.messages = []; m.holdReceipt = false; m.holdMessages = false; m.releaseMessages = null; m.queryStart.mockClear(); m.reads.mockClear(); m.channels.length = 0; m.user = { id: 'me' }; m.profile.mockReset().mockResolvedValue({ data: null }); m.profiles.mockReset().mockResolvedValue({ data: [] }); });
 afterEach(cleanup);
 it('does not reload history or resubscribe when the same user receives a refreshed auth object', async () => {
   const { rerender } = renderHook(() => useMessages('chat'));
