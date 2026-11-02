@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { changeAppLanguage } from '@/i18n';
 import { MessageActionsSheet } from './MessageActionsSheet';
 
 vi.mock('@/components/ui/responsive-modal', () => ({
@@ -15,7 +16,8 @@ vi.mock('./MediaPreview', () => ({
   }),
 }));
 
-afterEach(() => { cleanup(); vi.restoreAllMocks(); });
+beforeEach(async () => { await changeAppLanguage('pt'); });
+afterEach(async () => { cleanup(); vi.restoreAllMocks(); await changeAppLanguage('pt'); });
 
 function makeProps(overrides: Record<string, unknown> = {}) {
   return {
@@ -42,9 +44,26 @@ describe('KOSOLOLA compact message actions', () => {
     render(<MessageActionsSheet {...props} />);
     expect(screen.getByRole('group', { name: 'Reações africanas' }).querySelectorAll('button')).toHaveLength(5);
     fireEvent.click(screen.getByRole('button', { name: 'O que significam?' }));
-    expect(screen.getByText(/Love with memory and respect/)).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /Ubuntu: Solidarity/ }));
+    expect(screen.getByText(/Amor com memória e respeito/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Ubuntu: Solidariedade e humanidade/ }));
     await waitFor(() => expect(props.onReact).toHaveBeenCalledWith('ubuntu'));
+  });
+
+  it('follows the selected language in both descriptions and accessible reaction labels', async () => {
+    const props = makeProps();
+    const view = render(<MessageActionsSheet {...props} />);
+    fireEvent.click(screen.getByRole('button', { name: 'O que significam?' }));
+    expect(screen.getByText(/Indignação justa perante a injustiça/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Eish: Cansaço sincero/ })).toBeInTheDocument();
+
+    await changeAppLanguage('en');
+    await waitFor(() => expect(screen.getByText(/Justified anger and moral indignation/)).toBeInTheDocument());
+    expect(screen.getByRole('button', { name: /Eish: Honest exhaustion/ })).toBeInTheDocument();
+
+    await changeAppLanguage('fr');
+    await waitFor(() => expect(screen.getByText(/Une colère justifiée/)).toBeInTheDocument());
+    expect(screen.getByRole('button', { name: /Ubuntu: La solidarité/ })).toBeInTheDocument();
+    view.unmount();
   });
 
   it('displays a private-safe attachment summary rather than a generated filename', () => {
