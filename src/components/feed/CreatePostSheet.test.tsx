@@ -179,22 +179,19 @@ describe('CreatePostSheet', () => {
     });
   });
 
-  it('shows loading state while submitting', async () => {
-    mockCreatePost.mockImplementationOnce(() => 
-      new Promise(resolve => setTimeout(resolve, 100))
-    );
-    
+  it('keeps a visible progress status until saving finishes', async () => {
+    let complete!: (result: { id: string }) => void;
+    mockCreatePost.mockImplementationOnce(() => new Promise(resolve => {
+      complete = resolve;
+    }));
     render(<CreatePostSheet {...defaultProps} />);
-    
     const textarea = screen.getByPlaceholderText("O que se passa na tua vizinhança?");
     fireEvent.change(textarea, { target: { value: 'Test post' } });
-    
-    const publishButton = screen.getByText('Publicar');
-    fireEvent.click(publishButton);
-    
-    await waitFor(() => {
-      expect(screen.getByText('A publicar...')).toBeInTheDocument();
-    });
+    fireEvent.click(screen.getByText('Publicar'));
+    await waitFor(() => expect(mockCreatePost).toHaveBeenCalled());
+    expect(screen.getByRole('status')).toHaveTextContent('A publicar...');
+    complete({ id: 'saved' });
+    await waitFor(() => expect(defaultProps.onOpenChange).toHaveBeenCalledWith(false));
   });
 
   it('shows error toast when submission fails', async () => {
