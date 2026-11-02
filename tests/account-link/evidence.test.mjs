@@ -12,11 +12,17 @@ test('rejects expired, malformed, future-issued and stale observations',()=>{
 });
 
 test('rejects revoked or ambiguous lifecycle evidence even with certified=true',()=>{
- for(const patch of [{version:undefined},{version:2},{status:'revoked'},{status:undefined},{revoked_at:new Date(now-1).toISOString()},{revoked_at:undefined},{relationship:'resident'},{relationship:undefined}])
+ for(const patch of [{version:undefined},{version:2},{status:'revoked'},{status:undefined},{revoked_at:new Date(now-1).toISOString()},{revoked_at:undefined},{relationship:'witness'},{relationship:undefined}])
   assert.equal(validEvidence({...valid,...patch},expected,now),false);
 });
 test('rejects impossible chronology, unbounded validity and timezone-free dates',()=>{
  for(const patch of [{checked_at:new Date(now-2000).toISOString()},{expires_at:new Date(now+91*86400000).toISOString()},{issued_at:'2026-01-01'},{checked_at:new Date(now).toISOString().replace('Z','')}])
   assert.equal(validEvidence({...valid,...patch},expected,now),false);
  assert.equal(validEvidence(valid,expected,NaN),false);
+});
+
+test('accepts current resident evidence with the same exact binding and lifecycle checks',()=>{
+ const resident={...valid,relationship:'resident'};
+ assert.equal(validEvidence(resident,expected,now),true);
+ for(const patch of [{revoked_at:new Date(now).toISOString()},{code:'OTHER'},{subject:'other'},{checked_at:new Date(now-31000).toISOString()},{expires_at:new Date(now).toISOString()}])assert.equal(validEvidence({...resident,...patch},expected,now),false);
 });

@@ -12,7 +12,7 @@ export function validEvidence(
     /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|[+-]\d{2}:\d{2})$/.test(v) ? Date.parse(v) : NaN;
   const issued = time(e.issued_at), expires = time(e.expires_at), checked = time(e.checked_at);
   return e.ok === true && e.certified === true && e.version === 1 &&
-    e.status === 'active' && e.revoked_at === null && e.relationship === 'owner' &&
+    e.status === 'active' && e.revoked_at === null && (e.relationship === 'owner' || e.relationship === 'resident') &&
     e.issuer === 'afroloc.ao' && e.audience === 'yamilook' &&
     e.subject === expected.subject && e.code === expected.code && e.link_id === expected.linkId &&
     typeof e.evidence_id === 'string' &&
