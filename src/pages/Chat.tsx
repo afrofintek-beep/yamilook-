@@ -20,6 +20,7 @@ import {
   Clock,
   Archive,
   CheckSquare,
+  Highlighter,
   Link2,
   Users,
 } from 'lucide-react';
@@ -63,6 +64,7 @@ import type { Tables } from '@/integrations/supabase/types';
 import { getWallpaperStyles } from '@/components/settings/ChatWallpaperSheet';
 import { formatLastSeen } from '@/components/ui/OnlineStatus';
 import { useAppSurface } from '@/lib/app-surface';
+import { mediaCaption } from '@/lib/chat-media';
 
 export default function Chat() {
   const navigate = useNavigate();
@@ -114,6 +116,12 @@ export default function Chat() {
   const [scheduledMessagesOpen, setScheduledMessagesOpen] = useState(false);
   const [disappearingOpen, setDisappearingOpen] = useState(false);
   const [highlights, setHighlights] = useState<Record<string, { color: string; label?: string }>>({});
+  const [collectionsOpen, setCollectionsOpen] = useState(false);
+  const [collectionTab, setCollectionTab] = useState<'highlights' | 'starred'>('highlights');
+  const [collectionSearch, setCollectionSearch] = useState('');
+  const [collectionColor, setCollectionColor] = useState('');
+  const [collectionType, setCollectionType] = useState('all');
+  const [collectionDate, setCollectionDate] = useState('');
   
   // Multi-select state
   const [selectionMode, setSelectionMode] = useState(false);
@@ -278,6 +286,36 @@ export default function Chat() {
     fetchHighlights();
     return () => { cancelled = true; };
   }, [highlightedMessageIdsKey, user?.id, conversationId]);
+
+  // The collection is intentionally limited to messages already loaded in this
+  // conversation. It never searches or exposes other participants' conversations.
+  const collectionMessages = messages.filter(message => {
+    if (message.is_deleted) return false;
+    if (collectionTab === 'starred') return starredIds.has(message.id);
+    const mark = highlights[message.id];
+    if (!mark || (collectionColor && mark.color !== collectionColor)) return false;
+    if (collectionType !== 'all') {
+      const type = message.message_type;
+      if (collectionType === 'text' && type !== 'text') return false;
+      if (collectionType === 'media' && type !== 'image' && type !== 'video') return false;
+      if (collectionType === 'file' && type !== 'file' && type !== 'voice') return false;
+    }
+    if (collectionDate && message.created_at.slice(0, 10) !== collectionDate) return false;
+    if (collectionSearch.trim()) {
+      const caption = message.is_view_once ? '' : (mediaCaption(message.content, message.media_url) || '');
+      if (!`${mark.label || ''} ${caption}`.toLocaleLowerCase().includes(collectionSearch.trim().toLocaleLowerCase())) return false;
+    }
+    return true;
+  }).slice().sort((a, b) => b.created_at.localeCompare(a.created_at));
+
+  const showCollection = (tab: 'highlights' | 'starred') => {
+    setCollectionTab(tab);
+    setCollectionSearch('');
+    setCollectionColor('');
+    setCollectionType('all');
+    setCollectionDate('');
+    setCollectionsOpen(true);
+  };
 
   // Scroll to highlighted message from search
   useEffect(() => {
@@ -693,9 +731,13 @@ export default function Chat() {
                     <Clock className="w-4 h-4 mr-2" />
                     {t('chat.scheduledMessages') || 'Scheduled messages'}
                   </DropdownMenuItem>
-                  <DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => showCollection('starred')}>
                     <Star className="w-4 h-4 mr-2" />
-                    {t('chat.starredMessages') || 'Starred messages'}
+                    {t('chat.starredMessages') || 'Mensagens com estrela'}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => showCollection('highlights')}>
+                    <Highlighter className="w-4 h-4 mr-2" />
+                    Destaques
                   </DropdownMenuItem>
                   {isGroup && (
                     <>
@@ -893,6 +935,84 @@ export default function Chat() {
                 </button>
               ))}
             </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Personal highlights and starred messages, scoped to the current conversation. */}
+      <Sheet open={collectionsOpen} onOpenChange={setCollectionsOpen}>
+        <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md">
+          <SheetHeader>
+            <SheetTitle>{collectionTab === 'highlights' ? 'Destaques' : 'Mensagens com estrela'}</SheetTitle>
+          </SheetHeader>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Mensagens já carregadas desta conversa. Os destaques e as estrelas são pessoais.
+          </p>
+          <div className="mt-4 flex gap-2" role="group" aria-label="Tipo de mensagens guardadas">
+            <Button size="sm" variant={collectionTab === 'highlights' ? 'default' : 'outline'}
+              onClick={() => showCollection('highlights')}>Destaques</Button>
+            <Button size="sm" variant={collectionTab === 'starred' ? 'default' : 'outline'}
+              onClick={() => showCollection('starred')}>Estrelas</Button>
+          </div>
+          {collectionTab === 'highlights' && (
+            <div className="mt-3 space-y-2">
+              <Input aria-label="Pesquisar destaques" placeholder="Pesquisar etiqueta ou mensagem"
+                value={collectionSearch} onChange={e => setCollectionSearch(e.target.value)}
+                className="h-11 text-base" />
+              <div className="flex flex-wrap gap-2" role="group" aria-label="Filtrar por cor">
+                {[['', 'Todas'], ['yellow', 'Amarelo'], ['blue', 'Azul'], ['green', 'Verde'], ['pink', 'Rosa'], ['orange', 'Laranja'], ['purple', 'Roxo']].map(([color, label]) => (
+                  <button type="button" key={color || 'all'} aria-pressed={collectionColor === color}
+                    onClick={() => setCollectionColor(color)}
+                    className={`min-h-9 rounded-full border px-3 text-xs ${collectionColor === color ? 'border-primary bg-primary/10 text-foreground' : 'border-border text-muted-foreground'}`}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <select aria-label="Tipo de conteúdo" value={collectionType} onChange={e => setCollectionType(e.target.value)}
+                  className="h-11 min-w-0 rounded-md border border-input bg-background px-2 text-base text-foreground">
+                  <option value="all">Todos os tipos</option>
+                  <option value="text">Texto</option>
+                  <option value="media">Fotos e vídeos</option>
+                  <option value="file">Ficheiros e áudio</option>
+                </select>
+                <input type="date" aria-label="Filtrar por data" value={collectionDate}
+                  onChange={e => setCollectionDate(e.target.value)}
+                  className="h-11 min-w-0 rounded-md border border-input bg-background px-2 text-base text-foreground" />
+              </div>
+            </div>
+          )}
+          <div className="mt-4 space-y-2 pb-8">
+            {collectionMessages.length === 0 && (
+              <p className="py-8 text-center text-sm text-muted-foreground">Não há mensagens guardadas com estes filtros.</p>
+            )}
+            {collectionMessages.map(message => {
+              const mark = highlights[message.id];
+              const summary = message.is_view_once ? 'Conteúdo de visualização única'
+                : message.message_type === 'image' || message.message_type === 'video'
+                ? mediaCaption(message.content, message.media_url) || (message.message_type === 'image' ? 'Fotografia' : 'Vídeo')
+                : message.content || (message.message_type === 'voice' ? 'Mensagem de voz' : 'Ficheiro');
+              return (
+                <button type="button" key={message.id} onClick={() => {
+                  setCollectionsOpen(false);
+                  navigate(`/chat/${conversationId}?highlight=${message.id}`);
+                }} className="block w-full rounded-xl border border-border bg-secondary/30 p-3 text-left hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring">
+                  <div className="flex items-center justify-between gap-2">
+                    {collectionTab === 'highlights' && mark && (
+                      <span className="inline-flex items-center gap-1 text-xs font-medium text-foreground">
+                        <Highlighter aria-hidden="true" className="h-3 w-3" />
+                        {mark.label || 'Sem etiqueta'} · {mark.color}
+                      </span>
+                    )}
+                    {collectionTab === 'starred' && <Star aria-hidden="true" className="h-3 w-3 text-amber-500" />}
+                    <time className="ml-auto shrink-0 text-xs text-muted-foreground" dateTime={message.created_at}>
+                      {new Date(message.created_at).toLocaleDateString()}
+                    </time>
+                  </div>
+                  <p className="mt-1 line-clamp-2 break-words text-sm text-foreground">{summary}</p>
+                </button>
+              );
+            })}
           </div>
         </SheetContent>
       </Sheet>
