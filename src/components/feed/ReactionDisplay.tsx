@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { 
   AFRICAN_REACTIONS, 
@@ -31,6 +32,7 @@ export function ReactionDisplay({
   size = 'md',
   className,
 }: ReactionDisplayProps) {
+  const { t } = useTranslation();
   const [showSubtotals, setShowSubtotals] = useState(false);
   const total = getTotalReactions(counts);
   const topReactions = getTopReactions(counts, 3);
@@ -67,14 +69,16 @@ export function ReactionDisplay({
       onClick={handleToggleSubtotals}
       role="button"
       aria-expanded={showSubtotals}
-      aria-label={`${total} reactions. Tap to ${showSubtotals ? 'hide' : 'show'} breakdown`}
+      tabIndex={0}
+      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setShowSubtotals(v => !v); } }}
+      aria-label={t('feed.reactionCount', { count: total })}
     >
       {!showSubtotals ? (
         // Collapsed view: only total number
         <>
           {showTotal && total > 0 && (
             <span className="text-muted-foreground">
-              {total} {total === 1 ? 'reaction' : 'reactions'}
+              {t('feed.reactionCount', { count: total })}
             </span>
           )}
         </>

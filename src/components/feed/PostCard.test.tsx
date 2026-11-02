@@ -121,7 +121,7 @@ describe('PostCard', () => {
 
   it('renders reactions total', () => {
     render(<PostCard post={mockPost} />);
-    expect(screen.getByText(/10 reactions/i)).toBeInTheDocument();
+    expect(screen.getByText(/10 reações/i)).toBeInTheDocument();
   });
 
   it('renders comments count', () => {
@@ -290,7 +290,7 @@ describe('PostCard', () => {
   it('displays relative time for post creation', () => {
     render(<PostCard post={mockPost} />);
     // Should show something like "less than a minute ago" or similar
-    const timeText = screen.getByText(/ago|just now/i);
+    const timeText = screen.getByText(/há|menos de um minuto/i);
     expect(timeText).toBeInTheDocument();
   });
 

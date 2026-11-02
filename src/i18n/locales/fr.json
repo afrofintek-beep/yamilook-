@@ -198,6 +198,8 @@
     "clearChat": "Effacer la conversation"
   },
   "feed": {
+    "reactionCount_one": "{{count}} réaction",
+    "reactionCount_other": "{{count}} réactions",
     "title": "Fil",
     "createPost": "Créer une publication",
     "whatsOnMind": "Qu'avez-vous en tête?",

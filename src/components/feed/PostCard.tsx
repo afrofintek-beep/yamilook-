@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatDistanceToNow } from 'date-fns';
+import { pt, enUS, fr, ar } from 'date-fns/locale';
 import {
   MessageCircle,
   Share2,
@@ -63,7 +64,8 @@ interface PostCardProps {
 
 export const PostCard = memo(function PostCard({ mediaPriority = false, post, onCommentClick, isArchived, onToggleArchive }: PostCardProps) {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const dateLocale = ({ pt, en: enUS, fr, ar } as Record<string, typeof pt>)[(i18n.resolvedLanguage || i18n.language || 'pt').split('-')[0]] || pt;
   const { user, profile: currentProfile } = useAuth();
   const { toggleLike, toggleSave, deletePost, sharePost, updatePost } = usePosts({ autoLoad: false });
   const { toast } = useToast();
@@ -240,7 +242,7 @@ export const PostCard = memo(function PostCard({ mediaPriority = false, post, on
           <div className="min-w-0 flex-1">
             <p className="font-semibold text-sm truncate">{post.user.display_name}</p>
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <span className="flex-shrink-0">{formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}</span>
+              <span className="flex-shrink-0">{formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: dateLocale })}</span>
               {post.location && (
                 <>
                   <span>•</span>
@@ -360,8 +362,8 @@ export const PostCard = memo(function PostCard({ mediaPriority = false, post, on
       )}
 
       {/* Actions */}
-      <div className="flex items-center justify-between px-4 py-3">
-        <div className="flex items-center gap-4">
+      <div className="flex items-center justify-between px-3 py-1">
+        <div className="flex items-center gap-2">
           {/* Reaction button with African reactions */}
           <div 
             className="relative"
@@ -371,7 +373,9 @@ export const PostCard = memo(function PostCard({ mediaPriority = false, post, on
             <Button 
               variant="ghost" 
               size="sm"
-              className="gap-2 px-2"
+              className="gap-2 px-2 min-h-11 min-w-11"
+              aria-pressed={!!localLiked}
+              aria-label={t('feed.react', 'Reagir')}
               onTouchStart={handleTouchStart}
               onTouchEnd={handleTouchEnd}
               onTouchCancel={handleTouchCancel}
@@ -416,7 +420,8 @@ export const PostCard = memo(function PostCard({ mediaPriority = false, post, on
           <Button 
             variant="ghost" 
             size="sm"
-            className="gap-2 px-2"
+            className="gap-2 px-2 min-h-11 min-w-11"
+            aria-label={t('feed.comments', 'Comentários')}
             onClick={onCommentClick}
           >
             <MessageCircle className="w-5 h-5" />
@@ -427,7 +432,7 @@ export const PostCard = memo(function PostCard({ mediaPriority = false, post, on
           <Button 
             variant="ghost" 
             size="sm"
-            className="gap-2 px-2"
+            className="gap-2 px-2 min-h-11 min-w-11"
             onClick={handleShare}
           >
             <Send className="w-5 h-5" />
@@ -438,7 +443,7 @@ export const PostCard = memo(function PostCard({ mediaPriority = false, post, on
         <Button 
           variant="ghost" 
           size="sm"
-          className="px-2"
+          className="px-2 min-h-11 min-w-11"
           onClick={handleSave}
         >
           <Bookmark className={cn("w-5 h-5", localSaved && "fill-current")} />
