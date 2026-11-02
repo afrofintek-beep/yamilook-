@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Check, Copy, FileText, Highlighter, Image as ImageIcon, Pin, Reply, Star, Tag, Trash2, Video, Forward, X, Music2 } from 'lucide-react';
 import { ResponsiveModal } from '@/components/ui/responsive-modal';
 import { Button } from '@/components/ui/button';
@@ -73,6 +74,8 @@ export function MessageActionsSheet({
   highlight, onReply, onCopy, onReact, onStar, onPin,
   onForward, onDelete, onHighlight, onRemoveHighlight,
 }: MessageActionsSheetProps) {
+  const { t } = useTranslation();
+  const getMeaning = (type: string) => t(`kosolola.reactionMeanings.${type}`, { fallbackLng: 'pt' });
   const [selectedColor, setSelectedColor] = useState(highlight?.color || '');
   const [highlightLabel, setHighlightLabel] = useState(highlight?.label || '');
   const [showHighlightOptions, setShowHighlightOptions] = useState(false);
@@ -138,8 +141,8 @@ export function MessageActionsSheet({
           {AFRICAN_REACTIONS.map(reaction => (
             <button key={reaction.type} type="button" disabled={busy}
               onClick={() => void handleAction(() => onReact(reaction.type))}
-              aria-label={`${reaction.label}: ${reaction.meaning}`}
-              title={`${reaction.label}: ${reaction.meaning}`}
+              aria-label={`${reaction.label}: ${getMeaning(reaction.type)}`}
+              title={`${reaction.label}: ${getMeaning(reaction.type)}`}
               className="flex min-w-0 min-h-[62px] flex-col items-center justify-center gap-1 rounded-xl hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50">
               <span aria-hidden="true" className="text-[25px] leading-none">{reaction.icon}</span>
               <span className="max-w-full truncate px-0.5 text-[10px] text-foreground">{reaction.label.split(' ')[0]}</span>
@@ -149,7 +152,7 @@ export function MessageActionsSheet({
         {showMeanings && (
           <div className="mt-2 space-y-1 rounded-lg bg-secondary/60 p-2">
             {AFRICAN_REACTIONS.map(r => (
-              <p key={r.type} className="text-xs text-foreground"><strong>{r.label}:</strong> {r.meaning}</p>
+              <p key={r.type} className="text-xs text-foreground"><strong>{r.label}:</strong> {getMeaning(r.type)}</p>
             ))}
           </div>
         )}
