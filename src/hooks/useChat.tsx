@@ -264,6 +264,7 @@ export function useMessages(conversationId: string | null) {
   const [renderedScope, setRenderedScope] = useState(`${userId}:${conversationId}`);
   const [hasOlderMessages, setHasOlderMessages] = useState(false);
   const [loadingOlder, setLoadingOlder] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const olderCursorRef = useRef<string | null>(null);
   const olderLoadedIdsRef = useRef(new Set<string>());
   const unexpiredMessages = useMessageExpiry(messages);
@@ -336,6 +337,7 @@ export function useMessages(conversationId: string | null) {
       olderCursorRef.current = visiblePage[0]?.created_at ?? null;
       setHasOlderMessages(visiblePage.length === 60);
       saveChatHotCache(userId, conversationId, visiblePage);
+      setLoadError(false);
 
       // Render authorized text immediately; profiles/reactions are enrichment.
       // Preserve events/optimistic sends that arrived after this fetch began.
@@ -487,6 +489,7 @@ export function useMessages(conversationId: string | null) {
       })().catch(error => console.error('Error enriching chat history:', error));
     } catch (err) {
       console.error('Error fetching messages:', err);
+      if (isCurrent()) setLoadError(true);
       // A revoked membership is not an offline state. Never keep displaying
       // a hot snapshot if the server explicitly denies access.
       const code = (err as { code?: string })?.code;
@@ -525,6 +528,7 @@ export function useMessages(conversationId: string | null) {
     olderCursorRef.current = null;
     setHasOlderMessages(false);
     setLoadingOlder(false);
+    setLoadError(false);
     setLoading(cached.length === 0);
     setHistoryClearedAt(null);
     void fetchMessages();
@@ -1254,6 +1258,7 @@ export function useMessages(conversationId: string | null) {
     hasOlderMessages: renderedScope === scope && hasOlderMessages,
     loadingOlder,
     loadOlderMessages,
+    loadError: renderedScope === scope && loadError,
     typingUsers,
     sendMessage,
     updateMessageMediaUrl,
