@@ -739,6 +739,9 @@ export function useMessages(conversationId: string | null) {
     return () => {
       active = false;
       fetchVersionRef.current++;
+      // StrictMode replays effect setup after cleanup. The prior request is
+      // invalidated above, so do not reuse its pending promise on the replay.
+      fetchInFlightRef.current = null;
       if (participationChannel) supabase.removeChannel(participationChannel);
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
