@@ -376,7 +376,7 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
         onPointerDownOutside={(e) => { if (editingVideoIndex !== null || editorGuardRef.current) e.preventDefault(); }}
         onEscapeKeyDown={(e) => { if (editingVideoIndex !== null || editorGuardRef.current) e.preventDefault(); }}
       >
-        <SheetHeader className="shrink-0 px-4 py-2 border-b border-border flex-row items-center justify-between gap-2">
+        <SheetHeader data-testid="muxi-publish-header" className="shrink-0 px-4 py-2 border-b border-border flex-row items-center justify-between gap-2">
           <Button variant="ghost" size="sm" className="shrink-0 min-h-11" onClick={() => onOpenChange(false)}>
             {t('feed.cancel')}
           </Button>
@@ -460,7 +460,7 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
                   )}
                 >
                   {filePreviews.map((preview, index) => (
-                    <div key={index} className="relative h-[min(35vh,300px)] max-h-[35dvh] rounded-xl overflow-hidden bg-black/5">
+                    <div key={index} data-testid="muxi-photo-preview" className="relative h-[min(35vh,300px)] max-h-[35dvh] rounded-xl overflow-hidden bg-black/5">
                     {selectedFiles[index]?.type.startsWith('video') ? (
                         <div className="relative w-full h-full">
                           <video
