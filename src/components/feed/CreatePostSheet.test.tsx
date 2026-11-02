@@ -48,6 +48,15 @@ describe('CreatePostSheet', () => {
     mockCreatePost.mockClear();
     mockToast.mockClear();
     defaultProps.onOpenChange.mockClear();
+    let sequence = 0;
+    Object.defineProperty(URL, 'createObjectURL', {
+      configurable: true,
+      value: vi.fn(() => 'blob:muxi-preview-' + (++sequence)),
+    });
+    Object.defineProperty(URL, 'revokeObjectURL', {
+      configurable: true,
+      value: vi.fn(),
+    });
   });
 
   it('renders when open', () => {
@@ -65,9 +74,13 @@ describe('CreatePostSheet', () => {
     expect(screen.getByText('Cancelar')).toBeInTheDocument();
   });
 
-  it('renders publish button', () => {
+  it('renders publish button in the non-scrolling mobile header', () => {
     render(<CreatePostSheet {...defaultProps} />);
-    expect(screen.getByText('Publicar')).toBeInTheDocument();
+    const header = document.body.querySelector('[data-testid="muxi-publish-header"]');
+    expect(header).toHaveClass('shrink-0');
+    expect(header).toContainElement(screen.getByText('Publicar'));
+    // The generic Sheet close control must not consume a second header row.
+    expect(screen.queryByText('Fechar')).not.toBeInTheDocument();
   });
 
   it('publish button is disabled when content is empty', () => {
@@ -203,6 +216,63 @@ describe('CreatePostSheet', () => {
     });
   });
 
+
+  it('keeps the photo and allows retry when the post insert returns null', async () => {
+    mockCreatePost.mockResolvedValueOnce(null).mockResolvedValueOnce({ id: 'saved-on-retry' });
+    render(<CreatePostSheet {...defaultProps} />);
+
+    const input = document.body.querySelector('input[type="file"]') as HTMLInputElement;
+    const photo = new File(['test-photo'], 'afis.jpg', { type: 'image/jpeg' });
+    fireEvent.change(input, { target: { files: [photo] } });
+
+    await waitFor(() => expect(screen.getByText('Publicar')).not.toBeDisabled());
+    expect(document.body.querySelector('[data-testid="muxi-photo-preview"]')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('Publicar'));
+
+    await waitFor(() => expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({
+      title: 'Falha ao publicar',
+      variant: 'destructive',
+    })));
+    expect(defaultProps.onOpenChange).not.toHaveBeenCalled();
+    expect(document.body.querySelector('[data-testid="muxi-photo-preview"]')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText('Publicar'));
+    await waitFor(() => expect(defaultProps.onOpenChange).toHaveBeenCalledWith(false));
+  });
+
+  it('shows a specific upload error without discarding the selected photo', async () => {
+    mockCreatePost.mockRejectedValueOnce(new Error('Falha ao enviar ficheiro: Storage indisponível'));
+    render(<CreatePostSheet {...defaultProps} />);
+    const input = document.body.querySelector('input[type="file"]') as HTMLInputElement;
+    fireEvent.change(input, {
+      target: { files: [new File(['photo'], 'afis.jpg', { type: 'image/jpeg' })] },
+    });
+    await waitFor(() => expect(screen.getByText('Publicar')).not.toBeDisabled());
+    fireEvent.click(screen.getByText('Publicar'));
+    await waitFor(() => expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({
+      description: 'Falha ao enviar ficheiro: Storage indisponível',
+      variant: 'destructive',
+    })));
+    expect(document.body.querySelector('[data-testid="muxi-photo-preview"]')).toBeInTheDocument();
+    expect(defaultProps.onOpenChange).not.toHaveBeenCalled();
+  });
+
+  it('announces upload stages to the user', async () => {
+    mockCreatePost.mockImplementationOnce(async (_type, opts) => {
+      opts.onUploadProgress('uploading', 1, 2);
+      await Promise.resolve();
+      opts.onUploadProgress('saving', 2, 2);
+      return { id: 'saved-post' };
+    });
+    render(<CreatePostSheet {...defaultProps} />);
+    fireEvent.change(screen.getByPlaceholderText("O que se passa na tua vizinhança?"), {
+      target: { value: 'AFIS' },
+    });
+    fireEvent.click(screen.getByText('Publicar'));
+    await waitFor(() => expect(mockCreatePost).toHaveBeenCalled());
+    await waitFor(() => expect(defaultProps.onOpenChange).toHaveBeenCalledWith(false));
+  });
+
   // Set up geolocation + reverse-geocoding so location resolves to "San Francisco, CA".
   const mockGeolocationSuccess = () => {
     Object.defineProperty(navigator, 'geolocation', {
@@ -296,13 +366,10 @@ describe('CreatePostSheet', () => {
     expect(screen.getByText('Tu')).toBeInTheDocument();
   });
 
-  it('has auto focus on textarea', () => {
+  it('does not force the iPhone keyboard open when the composer appears', () => {
     render(<CreatePostSheet {...defaultProps} />);
-    
-    // React's autoFocus prop focuses the element on mount rather than emitting
-    // an `autofocus` HTML attribute, so assert focus instead.
     const textarea = screen.getByPlaceholderText("O que se passa na tua vizinhança?");
-    expect(textarea).toHaveFocus();
+    expect(textarea).not.toHaveAttribute('autofocus');
   });
 
   it('shows privacy options in select', async () => {
