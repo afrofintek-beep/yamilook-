@@ -788,6 +788,13 @@
     "testTone": "Testar toque",
     "stopTest": "Parar teste",
     "silentTone": "O toque está silencioso.",
-    "loadingTones": "A carregar os toques…"
+    "loadingTones": "A carregar os toques…",
+    "reactionMeanings": {
+      "sankofa": "Amor com memória e respeito pelo que veio antes.",
+      "ubuntu": "Solidariedade e humanidade partilhada («Eu sou porque nós somos»).",
+      "djembe": "Ritmo, celebração e energia colectiva.",
+      "shango": "Indignação justa perante a injustiça.",
+      "eish": "Cansaço sincero ou descontentamento."
+    }
   }
 }
