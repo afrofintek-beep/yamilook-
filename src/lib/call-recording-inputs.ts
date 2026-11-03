@@ -17,8 +17,8 @@ export class CallRecordingInputs {
     const streams = [local, localScreen];
     for (const [id, stream] of remote) if (this.allowedRemote.has(id)) streams.push(stream);
     for (const [id, stream] of remoteScreens) if (this.allowedRemote.has(id)) streams.push(stream);
-    const audio = new Set(streams.flatMap(s => s?.getAudioTracks() ?? []).filter(t => t.readyState !== 'ended'));
-    const video = new Set(streams.flatMap(s => s?.getVideoTracks() ?? []).filter(t => t.readyState !== 'ended'));
+    const audio = new Set<MediaStreamTrack>(streams.flatMap(s => s?.getAudioTracks() ?? []).filter(t => t.readyState !== 'ended'));
+    const video = new Set<MediaStreamTrack>(streams.flatMap(s => s?.getVideoTracks() ?? []).filter(t => t.readyState !== 'ended'));
     for (const [track, source] of this.audio) if (!audio.has(track)) {
       source.disconnect(); this.audio.delete(track);
     }
