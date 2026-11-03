@@ -1,15 +1,19 @@
+import { prepareOwnedVideoExport } from '@/lib/owned-video-export';
 import { render, screen, fireEvent, cleanup, act } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import OwnedPostMediaShare from './OwnedPostMediaShare';
 import { getOwnedMediaDescriptor, prepareOwnedPostMedia } from '@/lib/owned-post-media';
 import { canShareVideo, sharePreparedVideo } from '../../../shared/post-video-sharing.mjs';
 
+vi.mock('@/lib/owned-video-export', () => ({ prepareOwnedVideoExport: vi.fn() }));
 vi.mock('@/lib/owned-post-media', () => ({ getOwnedMediaDescriptor: vi.fn(), prepareOwnedPostMedia: vi.fn() }));
 vi.mock('../../../shared/post-video-sharing.mjs', async original => ({ ...await original(), canShareVideo: vi.fn(), sharePreparedVideo: vi.fn() }));
 const urls = ['https://example.test/a.jpg', 'https://example.test/b.mp4'];
 const file = new File(['image'], 'photo.jpg', { type: 'image/jpeg' });
 beforeEach(() => {
   vi.resetAllMocks();
+  URL.createObjectURL = vi.fn(() => 'blob:mp4'); URL.revokeObjectURL = vi.fn();
+  vi.mocked(prepareOwnedVideoExport).mockReturnValue(new Promise(() => {}));
   vi.mocked(prepareOwnedPostMedia).mockResolvedValue(file);
   vi.mocked(canShareVideo).mockReturnValue(true);
   vi.mocked(sharePreparedVideo).mockResolvedValue('shared');
@@ -53,7 +57,7 @@ it('cancels on selection changes and closing, and discards prepared files', asyn
   fireEvent.change(screen.getByRole('combobox'), { target: { value: '1' } });
   expect(screen.queryByRole('button', { name: 'Escolher aplicação' })).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Preparar ficheiro' }));
-  const signal = vi.mocked(prepareOwnedPostMedia).mock.calls.at(-1)[2].signal;
+  const signal = vi.mocked(prepareOwnedVideoExport).mock.calls.at(-1)[2].signal;
   unmount();
   expect(signal.aborted).toBe(true);
 });
@@ -73,4 +77,20 @@ it('keeps download available when native sharing is unsupported', async () => {
   await screen.findByText(/Este navegador/);
   expect(screen.queryByRole('button', { name: 'Escolher aplicação' })).not.toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Descarregar ficheiro' })).toBeEnabled();
+});
+
+for (const action of ['Preparar ficheiro', 'Descarregar ficheiro']) it(`${action} converts video to MP4 and never recommends the incompatible original`, async () => {
+  const mp4 = new File(['mp4'], 'video-yamilook.mp4', { type: 'video/mp4' });
+  vi.mocked(prepareOwnedVideoExport).mockResolvedValue(mp4);
+  render(<OwnedPostMediaShare id="post" mediaUrls={['https://example.test/big.webm']} />);
+  fireEvent.click(screen.getByRole('button', { name: action }));
+  const download = await screen.findByRole('link', { name: 'Guardar vídeo MP4' });
+  expect(download).toHaveAttribute('href', 'blob:mp4');
+  expect(download).toHaveAttribute('download', 'video-yamilook.mp4');
+  expect(prepareOwnedPostMedia).not.toHaveBeenCalled();
+  expect(getOwnedMediaDescriptor).not.toHaveBeenCalled();
+  expect(screen.getByLabelText('Pré-visualização do MP4')).toHaveAttribute('src', 'blob:mp4');
+  fireEvent.click(screen.getByRole('button', { name: 'Escolher aplicação' }));
+  expect(sharePreparedVideo).toHaveBeenCalledWith(mp4);
+  await screen.findByText(/Ficheiro entregue/);
 });
