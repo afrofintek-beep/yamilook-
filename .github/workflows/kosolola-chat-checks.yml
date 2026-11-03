@@ -10,6 +10,11 @@ on:
       - 'src/components/chat/MessageActionsSheet.tsx'
       - 'src/components/chat/MessageActionsSheet.test.tsx'
       - 'src/components/chat/EnhancedMessageBubble.tsx'
+      - 'src/components/chat/MediaPreview*'
+      - 'src/lib/legacy-chat-voice*'
+      - 'src/lib/private-chat-media*'
+      - 'tests/security/*voice*'
+      - 'supabase/migrations/*_kosolola_legacy_voice_permissions.sql'
       - 'src/hooks/useWebRTC.tsx'
       - 'src/hooks/useAuth.tsx'
       - 'src/hooks/useAuth.revocation.test.tsx'
@@ -36,5 +41,9 @@ jobs:
         run: npx vitest run src/components/chat/MessageActionsSheet.test.tsx src/components/chat/EnhancedMessageBubble.test.tsx src/components/calls/CallChatPanel.test.tsx src/features/papos/usePaposViewport.test.ts src/hooks/useAuth.revocation.test.tsx src/hooks/useChat.refresh.test.tsx src/hooks/useContacts.loading.test.tsx
       - name: Verify inbox summaries and access boundaries
         run: node scripts/test-chat-inbox-summaries.mjs
+      - name: Verify attachment authorization, revocation and recovery
+        run: node --test tests/security/legacy-voice-permissions.test.mjs tests/security/chat-attachments.test.mjs tests/security/chat-attachment-cutover.test.mjs
+      - name: Verify private and legacy media resolution
+        run: npx vitest run src/lib/legacy-chat-voice.test.ts src/lib/private-chat-media.test.ts src/components/chat/MediaPreview.test.tsx
       - name: Build both Yamilook and KOSOLOLA
         run: npm run build
