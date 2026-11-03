@@ -63,6 +63,8 @@ interface PostCardProps {
   onToggleArchive?: (postId: string) => void;
 }
 
+const PostShareDialog = lazy(() => import('@/components/sharing/PostShareDialog'));
+
 export const PostCard = memo(function PostCard({ mediaPriority = false, post, onCommentClick, isArchived, onToggleArchive }: PostCardProps) {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
@@ -71,6 +73,7 @@ export const PostCard = memo(function PostCard({ mediaPriority = false, post, on
   const { toggleLike, toggleSave, deletePost, sharePost, updatePost } = usePosts({ autoLoad: false });
   const { toast } = useToast();
   
+  const [showShare, setShowShare] = useState(false);
   const [showReactions, setShowReactions] = useState(false);
   const [showReport, setShowReport] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
@@ -214,6 +217,7 @@ export const PostCard = memo(function PostCard({ mediaPriority = false, post, on
       if (isOwner) { setEditEverOpened(true); setShowEdit(true); }
       return;
     }
+    if (!copyOnly) { setShowShare(true); return; }
     try {
       const result = await sharePostLink(post.id, { title: `${post.user.display_name} — Yamilook`, copyOnly });
       if (result === 'cancelled') return;
@@ -476,6 +480,7 @@ export const PostCard = memo(function PostCard({ mediaPriority = false, post, on
           />
         </Suspense>
       )}
+      {showShare && <Suspense fallback={null}><PostShareDialog id={post.id} open={showShare} onOpenChange={setShowShare} onShared={() => void sharePost(post.id, 'message')} /></Suspense>}
       {/* Edit Sheet */}
       {isOwner && editEverOpened && (
         <Suspense fallback={null}>

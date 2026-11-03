@@ -1,3 +1,5 @@
+import PostSharePreview from '@/components/sharing/PostSharePreview';
+import { sharedPostId } from '../../../shared/share-destinations.mjs';
 import { ChatMediaLink } from './PrivateMediaElements';
 import { LocationCard } from './LocationCard';
 import { parseChatLocation } from '@/lib/chat-location';
@@ -344,6 +346,8 @@ export function EnhancedMessageBubble({
           </ChatMediaLink>
         );
       default: {
+        const postId = message.message_type === 'text' ? sharedPostId(message.content) : null;
+        if (postId) return <PostSharePreview id={postId} interactive={!selectionMode} />;
         const location = parseChatLocation(message.content);
         if (location && message.message_type === 'text') return <LocationCard location={location} />;
         return (
