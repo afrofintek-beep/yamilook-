@@ -11,7 +11,9 @@ const options = (post = row) => ({ url: 'https://example.supabase.co', key: 'pub
 test('public page contains the complete text, video controls and social metadata without JavaScript', async () => {
   const post = await loadPublicPost(id, options());
   const html = renderPublicPost(post);
-  assert.match(html, /<video controls playsinline/);
+  assert.match(html, /<video controls playsinline autoplay muted/);
+  assert.ok(html.indexOf('class="media"') < html.indexOf('class="author"'));
+  assert.match(html, /Ativar som/);
   assert.match(html, /property="og:video"/);
   assert.match(html, /property="og:url" content="https:\/\/www.yamilook.com\/post\//);
   assert.match(html, /Olá &lt;script&gt;/);

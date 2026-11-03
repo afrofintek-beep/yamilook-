@@ -20,3 +20,7 @@ The server function expects the existing `VITE_SUPABASE_URL` and `VITE_SUPABASE_
 - Full Vitest run: 937 passed, 2 failures in pre-existing login validation text expectations; the same two failures were reproduced on unmodified main (63ecd5e).
 - Production anonymous SQL read after migration: 57 public posts visible, zero non-public/hidden posts, internal moderation column inaccessible. The user's specified contacts-only post remained inaccessible until its separately authorized audience change.
 - Anonymous HTTP requests against Supabase confirm public content is readable and the specified restricted post is blocked. Browser review verifies server-rendered public content without a session.
+
+## Direct viewing mode
+
+Shared links now open with the image/video before the author and caption, in a viewport-sized media stage. The first video requests inline autoplay while muted, with native play controls if the browser blocks autoplay. A visible sound toggle enables audio on a user gesture. Only the first item autoplays; other videos remain manually controlled. This applies to both server-rendered links and the SPA fallback, without requesting browser fullscreen automatically.
