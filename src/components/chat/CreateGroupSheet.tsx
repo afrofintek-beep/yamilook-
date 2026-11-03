@@ -1,3 +1,4 @@
+import { useAuth } from '@/hooks/useAuth';
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -36,10 +37,11 @@ interface CreateGroupSheetProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const MAX_GROUP_MEMBERS = 256;
+const MAX_GROUP_MEMBERS = 255;
 
 export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { toast } = useToast();
   const { contacts, loading: contactsLoading } = useContacts();
   const { createConversation } = useConversations();
@@ -80,7 +82,7 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
         if (newSet.size >= MAX_GROUP_MEMBERS) {
           toast({
             title: 'Limite atingido',
-            description: `O grupo pode ter no máximo ${MAX_GROUP_MEMBERS} membros.`,
+            description: `O grupo pode ter no máximo ${MAX_GROUP_MEMBERS + 1} membros.`,
             variant: 'destructive',
           });
           return prev;
@@ -112,10 +114,11 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
   };
 
   const handleCreateGroup = async () => {
+    if (creating || !user) return;
     if (selectedContacts.size < 1) {
       toast({
-        title: 'Seleciona Links',
-        description: 'Precisa de pelo menos 1 Link para criar um grupo.',
+        title: 'Seleciona contactos',
+        description: 'Precisa de pelo menos 1 contacto para criar um grupo.',
         variant: 'destructive',
       });
       return;
@@ -139,12 +142,13 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
       if (groupPhoto) {
         const fileExt = groupPhoto.name.split('.').pop();
         const fileName = `group-${Date.now()}.${fileExt}`;
-        const filePath = `group-avatars/${fileName}`;
+        const filePath = `${user.id}/group-avatars/${fileName}`;
 
         const { error: uploadError } = await supabase.storage
           .from('avatars')
           .upload(filePath, groupPhoto);
 
+        if (uploadError) throw uploadError;
         if (!uploadError) {
           const { data: urlData } = supabase.storage
             .from('avatars')
@@ -246,7 +250,7 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
                       <div className="flex gap-2 p-3 overflow-x-auto">
                         {selectedContactsList.map((contact) => {
                           const displayName =
-                            contact.nickname || contact.profile?.display_name || 'Unknown';
+                            contact.nickname || contact.profile?.display_name || 'Contacto';
                           return (
                             <motion.div
                               key={contact.id}
@@ -287,7 +291,7 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
                     <Input
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Pesquisar Links..."
+                      placeholder="Pesquisar contactos..."
                       className="pl-10 h-12 rounded-xl"
                     />
                   </div>
@@ -302,12 +306,12 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
                   ) : filteredContacts.length === 0 ? (
                     <div className="text-center py-12 text-muted-foreground">
                       {searchQuery ? (
-                        <p>Nenhum Link encontrado</p>
+                        <p>Nenhum contacto encontrado</p>
                       ) : (
                         <>
                           <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                          <p>Sem Links</p>
-                          <p className="text-sm">Adiciona Links primeiro</p>
+                          <p>Sem contactos</p>
+                          <p className="text-sm">Adiciona contactos primeiro</p>
                         </>
                       )}
                     </div>
@@ -315,7 +319,7 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
                     <div className="divide-y divide-border/30">
                       {filteredContacts.map((contact) => {
                         const displayName =
-                          contact.nickname || contact.profile?.display_name || 'Unknown';
+                          contact.nickname || contact.profile?.display_name || 'Contacto';
                         const initials = displayName
                           .split(' ')
                           .map((n) => n[0])

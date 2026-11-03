@@ -1,3 +1,4 @@
+import { GroupConferenceProvider } from '@/features/group-calls/GroupConferenceProvider';
 import { IncomingCallBoundary } from './IncomingCallBoundary';
 import { ScheduledCallNotices } from '@/features/scheduled-calls/ScheduledCallNotices';
 /* @refresh reset */
@@ -307,6 +308,7 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
 
   return (
     <ActiveCallContext.Provider value={contextValue}>
+      <GroupConferenceProvider directBusy={isInCall || starting || answering}>
       {children}
       {(starting || answering) && <div role="dialog" aria-modal="true" aria-label="A iniciar chamada" className="fixed inset-0 z-[190] bg-background flex flex-col items-center justify-center gap-6 p-6 safe-top">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">{setupCallType === 'video' ? <Video className="h-4 w-4" /> : <Phone className="h-4 w-4" />}<span>{setupCallType === 'video' ? 'Videochamada' : 'Chamada de voz'}</span></div>
@@ -331,6 +333,7 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
         </Suspense>
         </IncomingCallBoundary>
       )}
+      </GroupConferenceProvider>
     </ActiveCallContext.Provider>
   );
 }

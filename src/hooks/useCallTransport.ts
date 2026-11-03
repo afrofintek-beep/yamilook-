@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useWebRTC } from './useWebRTC';
 import { useLiveKitCall } from './useLiveKitCall';
 import { supabase } from '@/integrations/supabase/client';
-import { holdCallUpdates } from '@/lib/call-update-guard';
+import { hasActiveCall, holdCallUpdates } from '@/lib/call-update-guard';
 
 /** New direct calls use LiveKit; existing/legacy and group calls retain their
  * original transport. Both hooks remain idle until explicitly selected. */
@@ -23,7 +23,7 @@ export function useCallTransport() {
   }, [active.state.callStatus]);
   useEffect(() => () => { updateHold.current?.(); updateHold.current = null; }, []);
   const assertAvailable = () => {
-    if (pending.current || legacy.state.callId || livekit.state.callId) throw new Error('Já existe uma chamada em curso.');
+    if (pending.current || legacy.state.callId || livekit.state.callId || (hasActiveCall() && !updateHold.current)) throw new Error('Já existe uma chamada em curso.');
   };
   return {
     ...active,

@@ -19,3 +19,5 @@ export function holdCallUpdates() {
     }, 0);
   };
 }
+
+export function hasActiveCall() { return calls.size > 0; }

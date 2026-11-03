@@ -51,3 +51,6 @@ verify_jwt = true
 
 [functions.academia-learning]
 verify_jwt = false
+
+[functions.group-conference]
+verify_jwt = false

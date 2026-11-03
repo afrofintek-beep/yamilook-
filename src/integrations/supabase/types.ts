@@ -6467,6 +6467,11 @@ export type Database = {
       }
     }
     Functions: {
+      group_conference_action: {
+        Args: { p_action: string; p_id?: string; p_payload?: Json }
+        Returns: Json
+      }
+
       chat_inbox_summaries: {
         Args: { p_conversation_ids: string[] }
         Returns: { conversation_id: string; last_message: Json | null; unread_count: number }[]

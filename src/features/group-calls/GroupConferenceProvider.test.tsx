@@ -1,0 +1,30 @@
+import {act,cleanup,fireEvent,render,screen} from '@testing-library/react';
+import {afterEach,expect,it,vi} from 'vitest';
+import {MemoryRouter} from 'react-router-dom';
+import {QueryClient,QueryClientProvider} from '@tanstack/react-query';
+import {GroupConferenceProvider,useGroupConference} from './GroupConferenceProvider';
+const m=vi.hoisted(()=>({join:vi.fn(),leave:vi.fn(),action:vi.fn()}));
+vi.mock('@/hooks/useAuth',()=>({useAuth:()=>({user:{id:'me'}})}));
+vi.mock('@/hooks/useRingtone',()=>({useRingtone:()=>({startRingtone:vi.fn(),stopRingtone:vi.fn()})}));
+vi.mock('react-i18next',()=>({useTranslation:()=>({t:(key:string)=>key})}));
+vi.mock('@/hooks/use-toast',()=>({toast:vi.fn()}));
+vi.mock('@/integrations/supabase/client',()=>({supabase:{channel:()=>{const ch={on:()=>ch,subscribe:()=>ch};return ch;},removeChannel:vi.fn()}}));
+vi.mock('./api',()=>({conferenceAction:m.action,groupCallError:(e:Error)=>e.message}));
+vi.mock('./useConferenceMedia',()=>({useConferenceMedia:()=>({room:null,participants:[],loading:true,join:m.join,leave:m.leave})}));
+vi.mock('./ConferencePicker',()=>({ConferencePicker:({onConfirm}:{onConfirm:(ids:string[])=>Promise<void>})=><button onClick={()=>void onConfirm(['peer'])}>Confirm selected members</button>}));
+vi.mock('./ConferenceRoom',()=>({default:({onLeave}:{onLeave:()=>void})=><button onClick={onLeave}>Cancel connecting conference</button>}));
+function Open(){const c=useGroupConference();return <button onClick={()=>c?.open({conversationId:'group',name:'Test group',type:'voice'})}>Open conference</button>;}
+afterEach(()=>{cleanup();vi.clearAllMocks();});
+it('closes participant selection before waiting on media, keeping cancel accessible',async()=>{
+ m.action.mockImplementation(async(action:string)=>action==='list'?[]:{id:'room',conversation_id:'group',call_type:'voice',created_by:'me'});
+ let finish!:(value:boolean)=>void;m.join.mockImplementation(()=>new Promise(r=>{finish=r;}));m.leave.mockResolvedValue(true);
+ const client=new QueryClient({defaultOptions:{queries:{retry:false}}});
+ render(<MemoryRouter><QueryClientProvider client={client}><GroupConferenceProvider directBusy={false}><Open/></GroupConferenceProvider></QueryClientProvider></MemoryRouter>);
+ fireEvent.click(screen.getByText('Open conference'));
+ fireEvent.click(await screen.findByText('Confirm selected members'));
+ const cancel=await screen.findByText('Cancel connecting conference');
+ expect(screen.queryByText('Confirm selected members')).not.toBeInTheDocument();
+ await act(async()=>fireEvent.click(cancel));
+ expect(m.leave).toHaveBeenCalled();
+ await act(async()=>finish(false));client.clear();
+});
