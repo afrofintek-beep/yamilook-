@@ -59,6 +59,7 @@ export function GroupConferenceProvider({
   const key = ["group-conference-invites", user?.id];
   const refresh = useCallback(() => {
     void qc.invalidateQueries({ queryKey: ["group-conference-invites"] });
+    void qc.invalidateQueries({ queryKey: ["conference-picker"] });
   }, [qc]);
   const { data: invitations = [] } = useQuery({
     queryKey: key,
