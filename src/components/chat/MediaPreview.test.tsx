@@ -1,6 +1,6 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, renderHook, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { MediaPreview, MediaThumbnail } from './MediaPreview';
+import { MediaPreview, MediaThumbnail, useResolvedMediaUrl } from './MediaPreview';
 
 const { createSignedUrl } = vi.hoisted(() => ({ createSignedUrl: vi.fn() }));
 vi.mock('@/integrations/supabase/client', () => ({ supabase: { storage: { from: () => ({ createSignedUrl }) } } }));
@@ -11,6 +11,22 @@ beforeEach(() => {
   vi.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => {});
 });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllEnvs(); });
+
+it.each(['public', 'sign'])('authorizes legacy %s voice before playback, without reusing its bearer URL', async mode => {
+  const legacy = `https://example.supabase.co/storage/v1/object/${mode}/voice-messages/u/voice.webm?token=old`;
+  createSignedUrl.mockResolvedValue({ data: { signedUrl: 'https://example.supabase.co/renewed' }, error: null });
+  const { result } = renderHook(() => useResolvedMediaUrl(legacy));
+  expect(result.current.resolvedUrl).toBeUndefined();
+  await waitFor(() => expect(result.current.resolvedUrl).toBe('https://example.supabase.co/renewed'));
+  expect(createSignedUrl).toHaveBeenCalledWith('u/voice.webm', 300);
+});
+
+it('does not fall back to a legacy voice URL after authorization is denied', async () => {
+  createSignedUrl.mockResolvedValue({ data: null, error: { message: 'denied' } });
+  const { result } = renderHook(() => useResolvedMediaUrl('https://example.supabase.co/storage/v1/object/public/voice-messages/u/voice.webm'));
+  await waitFor(() => expect(result.current.error).toBe(true));
+  expect(result.current.resolvedUrl).toBeUndefined();
+});
 
 it('resolves a private attachment through authorization before displaying it', async () => {
   createSignedUrl.mockResolvedValue({ data: { signedUrl: 'https://example.supabase.co/temporary-private' }, error: null });

@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { videoThumbnailSource } from '@/lib/chat-media';
+import { legacyChatVoicePath } from '@/lib/legacy-chat-voice';
 
 function parseStoragePublicUrl(rawUrl: string): { bucket: string; path: string } | null {
   try {
@@ -24,6 +25,14 @@ function getFilenameFromUrl(rawUrl: string) {
 // Public media already has a CDN URL. Sign only after an actual loading failure
 // (for legacy private objects), rather than replacing every working URL twice.
 export function useResolvedMediaUrl(url: string) {
+  const legacyVoicePath = legacyChatVoicePath(url, import.meta.env.VITE_SUPABASE_URL);
+  const needsAuthorization = !!privateChatPath(url) || !!legacyVoicePath;
+  const authorize = useCallback(async () => {
+    if (!legacyVoicePath) return signPrivateChatMedia(url);
+    const { data, error } = await supabase.storage.from('voice-messages').createSignedUrl(legacyVoicePath, 300);
+    if (error || !data?.signedUrl) throw new Error('Sem acesso ao anexo');
+    return data.signedUrl;
+  }, [url, legacyVoicePath]);
   const [override, setOverride] = useState<{ source: string; url: string } | null>(null);
   const [error, setError] = useState(false);
   const [retryId, setRetryId] = useState(0);
@@ -36,22 +45,22 @@ export function useResolvedMediaUrl(url: string) {
     attemptedRef.current = null;
     setOverride(null);
     setError(false);
-    if (privateChatPath(url)) {
+    if (needsAuthorization) {
       const generation = generationRef.current;
-      void signPrivateChatMedia(url).then(signed => {
+      void authorize().then(signed => {
         if (generation === generationRef.current) setOverride({ source: url, url: signed });
       }).catch(() => { if (generation === generationRef.current) setError(true); });
     }
     return invalidatePending;
-  }, [url, retryId, invalidatePending]);
+  }, [url, retryId, invalidatePending, needsAuthorization, authorize]);
 
   const onError = useCallback(async () => {
-    if (privateChatPath(url)) {
+    if (needsAuthorization) {
       if (attemptedRef.current === url) { setError(true); return; }
       attemptedRef.current = url;
       const generation = generationRef.current;
       try {
-        const signed = await signPrivateChatMedia(url);
+        const signed = await authorize();
         if (generation === generationRef.current) { setOverride({ source: url, url: signed }); setError(false); }
       } catch { if (generation === generationRef.current) setError(true); }
       return;
@@ -69,7 +78,7 @@ export function useResolvedMediaUrl(url: string) {
     } catch {
       if (generation === generationRef.current) setError(true);
     }
-  }, [url]);
+  }, [url, needsAuthorization, authorize]);
 
   const retry = () => {
     invalidatePending();
@@ -79,7 +88,7 @@ export function useResolvedMediaUrl(url: string) {
     setRetryId(value => value + 1);
   };
 
-  return { resolvedUrl: override?.source === url ? override.url : privateChatPath(url) ? undefined : url, error, onError, retry, retryId };
+  return { resolvedUrl: override?.source === url ? override.url : needsAuthorization ? undefined : url, error, onError, retry, retryId };
 }
 
 interface MediaPreviewProps {
