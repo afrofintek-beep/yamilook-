@@ -181,8 +181,8 @@ for (const [width, height, insets] of [
     await reachable(close);
     await reachable(next);
     await expect(next).toBeDisabled();
-    await dialog.getByRole('button', { name: 'Membro 1 @membro1', exact: true }).click();
-    await dialog.getByRole('button', { name: 'Membro 2 @membro2', exact: true }).click();
+    await dialog.getByRole('button', { name: /Membro 1 @membro1$/ }).click();
+    await dialog.getByRole('button', { name: /Membro 2 @membro2$/ }).click();
     await expect(next).toHaveText('Continuar · 2 selecionados');
     await dialog.locator('[data-group-contact-list]').evaluate(el => { el.scrollTop = el.scrollHeight; });
     await reachable(next);
