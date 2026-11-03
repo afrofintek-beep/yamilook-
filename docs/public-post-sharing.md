@@ -32,3 +32,7 @@ KOSOLOLA opens `/papos-app/share/post/:postId`; the existing authentication gate
 Messages contain only the canonical public link, using a stable message UUID across retries to avoid duplicate delivery after a lost acknowledgement. Chat renders exact canonical post links as previews fetched anonymously, without storing author/media snapshots. Opening the card leads to the public viewer. Non-public content is unavailable; external platform previews remain subject to their caches.
 
 Focused tests cover recipient selection, contact creation on confirmation, visibility revalidation, retry identity and server errors. External destination tests cover canonical links, spoofed URL rejection and server-rendered destination order. No real messages are sent by automated tests.
+
+## Site icon
+
+The public viewer explicitly declares the Yamilook PNG favicon and Apple touch icon. The root `/favicon.ico` also packages that same PNG, replacing the inherited Lovable asset for clients that request the conventional path. That path requests cache revalidation; previews already stored by external platforms may retain their previous icon.
