@@ -1,5 +1,5 @@
 import { useAuth } from '@/hooks/useAuth';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useKeyboardViewport } from '@/hooks/useKeyboardViewport';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -14,16 +14,6 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ResponsiveModal } from '@/components/ui/responsive-modal';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -48,17 +38,21 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
   const { contacts, loading: contactsLoading } = useContacts();
   const { createConversation } = useConversations();
 
-  const [step, setStep] = useState<'select' | 'details'>('select');
+  const [step, setStep] = useState<'select' | 'details' | 'created'>('select');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedContacts, setSelectedContacts] = useState<Set<string>>(new Set());
   const [groupName, setGroupName] = useState('');
   const [groupPhoto, setGroupPhoto] = useState<File | null>(null);
   const [groupPhotoPreview, setGroupPhotoPreview] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
-
-  const [createdDialogOpen, setCreatedDialogOpen] = useState(false);
+  const submitting = useRef(false);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const [creationError, setCreationError] = useState<string | null>(null);
   const [createdConversationId, setCreatedConversationId] = useState<string | null>(null);
-  const [createdGroupName, setCreatedGroupName] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (step === 'created') headingRef.current?.focus();
+  }, [step]);
   const filteredContacts = useMemo(() => {
     return contacts.filter((contact) => {
       if (!searchQuery.trim()) return true;
@@ -99,13 +93,10 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        toast({
-          title: 'Ficheiro muito grande',
-          description: 'A foto deve ter no máximo 5MB.',
-          variant: 'destructive',
-        });
+        setCreationError('A foto deve ter no máximo 5MB. Escolhe uma imagem mais pequena.');
         return;
       }
+      setCreationError(null);
       setGroupPhoto(file);
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -116,26 +107,24 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
   };
 
   const handleCreateGroup = async () => {
-    if (creating || !user) return;
+    if (submitting.current || createdConversationId) return;
+    if (!user) {
+      setCreationError('A tua sessão terminou. Inicia sessão para criar o grupo.');
+      return;
+    }
     if (selectedContacts.size < 1) {
-      toast({
-        title: 'Seleciona contactos',
-        description: 'Precisa de pelo menos 1 contacto para criar um grupo.',
-        variant: 'destructive',
-      });
+      setCreationError('Seleciona pelo menos 1 contacto para criar um grupo.');
       return;
     }
 
     if (!groupName.trim()) {
-      toast({
-        title: 'Nome obrigatório',
-        description: 'O grupo precisa de um nome.',
-        variant: 'destructive',
-      });
+      setCreationError('O grupo precisa de um nome.');
       return;
     }
 
+    submitting.current = true;
     setCreating(true);
+    setCreationError(null);
 
     try {
       let avatarUrl: string | null = null;
@@ -150,13 +139,14 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
           .from('avatars')
           .upload(filePath, groupPhoto);
 
-        if (uploadError) throw uploadError;
-        if (!uploadError) {
-          const { data: urlData } = supabase.storage
-            .from('avatars')
-            .getPublicUrl(filePath);
-          avatarUrl = urlData.publicUrl;
+        if (uploadError) {
+          setCreationError('Não foi possível enviar a fotografia. Tenta novamente ou escolhe outra imagem.');
+          return;
         }
+        const { data: urlData } = supabase.storage
+          .from('avatars')
+          .getPublicUrl(filePath);
+        avatarUrl = urlData.publicUrl;
       }
 
       // Create group conversation
@@ -166,38 +156,29 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
         avatarUrl
       );
 
-      if (error) {
-        toast({
-          title: 'Erro',
-          description: error.message,
-          variant: 'destructive',
-        });
-      } else if (data) {
-        setCreatedConversationId(data.id);
-        setCreatedGroupName(groupName.trim());
-        setCreatedDialogOpen(true);
-      }
-    } catch (err) {
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível criar o grupo.',
-        variant: 'destructive',
-      });
+      if (error || !data) throw error || new Error('Resposta inválida');
+      setCreatedConversationId(data.id);
+      // Keep completion inside the existing modal: a second dialog can sit
+      // behind its overlay and leave the user unable to open their new group.
+      setStep('created');
+    } catch {
+      setCreationError('Não foi possível concluir a criação do grupo. Verifica a ligação e tenta novamente.');
     } finally {
+      submitting.current = false;
       setCreating(false);
     }
   };
 
   const resetAndClose = () => {
+    if (submitting.current) return;
     setStep('select');
     setSearchQuery('');
     setSelectedContacts(new Set());
     setGroupName('');
     setGroupPhoto(null);
     setGroupPhotoPreview(null);
-    setCreatedDialogOpen(false);
+    setCreationError(null);
     setCreatedConversationId(null);
-    setCreatedGroupName(null);
     onOpenChange(false);
   };
 
@@ -209,12 +190,7 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
     if (id) navigate(`/chat/${id}`);
   };
 
-  const handleCloseCreatedDialog = () => {
-    resetAndClose();
-  };
-
   return (
-    <>
       <ResponsiveModal
         open={open}
         onOpenChange={resetAndClose}
@@ -226,13 +202,13 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
       >
           <div className="flex shrink-0 items-center gap-2 border-b border-border/50 px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top,0px))]">
             {step === 'details' && (
-              <Button variant="ghost" size="icon" aria-label="Voltar à seleção de contactos" onClick={() => setStep('select')} className="h-11 w-11 shrink-0 rounded-full">
+              <Button variant="ghost" size="icon" disabled={creating} aria-label="Voltar à seleção de contactos" onClick={() => setStep('select')} className="h-11 w-11 shrink-0 rounded-full">
                 <ChevronRight className="h-5 w-5 rotate-180" />
               </Button>
             )}
-            <h2 className="min-w-0 flex-1 text-lg font-semibold">{step === 'select' ? 'Novo Grupo' : 'Detalhes do Grupo'}</h2>
+            <h2 ref={headingRef} tabIndex={-1} className="min-w-0 flex-1 text-lg font-semibold">{step === 'select' ? 'Novo Grupo' : step === 'created' ? 'Grupo criado' : 'Detalhes do Grupo'}</h2>
             {step === 'select' && <Badge variant="secondary" className="shrink-0 font-mono">{selectedContacts.size}/{MAX_GROUP_MEMBERS}</Badge>}
-            <Button variant="ghost" onClick={resetAndClose} className="h-11 shrink-0 gap-1 rounded-full px-2" aria-label="Fechar criação do grupo">
+            <Button variant="ghost" disabled={creating} onClick={resetAndClose} className="h-11 shrink-0 gap-1 rounded-full px-2" aria-label="Fechar criação do grupo">
               <X className="h-4 w-4" /><span>Fechar</span>
             </Button>
           </div>
@@ -392,7 +368,7 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
                   </Button>
                 </div>
               </motion.div>
-            ) : (
+            ) : step === 'details' ? (
               <motion.div
                 key="details"
                 initial={{ opacity: 0, x: 20 }}
@@ -420,6 +396,8 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
                       </div>
                       <input
                         type="file"
+                        aria-label="Foto do grupo"
+                        disabled={creating}
                         accept="image/*"
                         onChange={handlePhotoChange}
                         className="hidden"
@@ -435,6 +413,7 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
                     <label htmlFor="new-group-name" className="text-sm font-medium">Nome do grupo</label>
                     <Input
                       id="new-group-name"
+                      disabled={creating}
                       value={groupName}
                       onChange={(e) => setGroupName(e.target.value.slice(0, 100))}
                       placeholder="Ex: Família, Trabalho, Amigos..."
@@ -481,9 +460,14 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
 
                 {/* Create button */}
                 <div className="shrink-0 border-t border-border/50 bg-background px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))]">
+                  {creationError && (
+                    <p role="alert" className="mb-3 max-h-24 overflow-y-auto text-sm text-destructive">
+                      {creationError}
+                    </p>
+                  )}
                   <Button
                     onClick={handleCreateGroup}
-                    disabled={creating || !groupName.trim()}
+                    disabled={creating || !!createdConversationId || !groupName.trim()}
                     className="w-full h-12 rounded-xl gap-2"
                   >
                     {creating ? (
@@ -500,35 +484,29 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
                   </Button>
                 </div>
               </motion.div>
+            ) : (
+              <motion.div
+                key="created"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex min-h-0 flex-1 flex-col"
+              >
+                <div className="min-h-0 flex-1 overflow-y-auto p-6 text-center">
+                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    <Check className="h-8 w-8" aria-hidden="true" />
+                  </div>
+                  <p>O grupo “{groupName.trim()}” foi criado com {selectedContacts.size + 1} membros.</p>
+                  <p className="mt-2 text-sm text-muted-foreground">Já podes enviar mensagens e iniciar chamadas em grupo.</p>
+                </div>
+                <div className="shrink-0 border-t border-border/50 bg-background px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))]">
+                  <Button onClick={handleOpenCreatedGroup} className="w-full h-12 rounded-xl gap-2">
+                    Abrir grupo
+                    <ChevronRight className="h-5 w-5" />
+                  </Button>
+                </div>
+              </motion.div>
             )}
           </AnimatePresence>
       </ResponsiveModal>
-
-      <AlertDialog
-        open={createdDialogOpen}
-        onOpenChange={(nextOpen) => {
-          setCreatedDialogOpen(nextOpen);
-          if (!nextOpen) resetAndClose();
-        }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Grupo criado</AlertDialogTitle>
-            <AlertDialogDescription>
-              O grupo “{createdGroupName || groupName.trim()}” foi criado com{' '}
-              {selectedContacts.size + 1} membros.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleCloseCreatedDialog}>
-              Fechar
-            </AlertDialogCancel>
-            <AlertDialogAction onClick={handleOpenCreatedGroup}>
-              Abrir grupo
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
   );
 }

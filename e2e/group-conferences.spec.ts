@@ -105,6 +105,126 @@ test("contacts exposes group creation without opening add-contact search", async
   await expect(page.getByRole("dialog", { name: "Novo Grupo" })).toBeVisible();
   await expect(page.getByPlaceholder("Pesquisar contactos...")).toBeVisible();
 });
+
+async function fillGroup(page: import('@playwright/test').Page, withPhoto = false) {
+  await page.goto('/papos-app/contacts');
+  await page.getByRole('button', { name: 'Criar grupo', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Novo Grupo', exact: true });
+  await dialog.getByRole('button', { name: /Membro 1 @membro1$/ }).click();
+  await dialog.getByRole('button', { name: /Membro 2 @membro2$/ }).click();
+  await dialog.getByRole('button', { name: /^Continuar ·/ }).click();
+  await dialog.getByLabel('Nome do grupo', { exact: true }).fill('Novo grupo');
+  if (withPhoto) await dialog.getByLabel('Foto do grupo', { exact: true }).setInputFiles({
+    name: 'grupo.png',
+    mimeType: 'image/png',
+    buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a6x8AAAAASUVORK5CYII=', 'base64'),
+  });
+  return dialog;
+}
+
+for (const desktop of [false, true]) {
+  test(`created group confirmation opens the chat on ${desktop ? 'desktop' : 'mobile'}`, async ({ page }, testInfo) => {
+    if (desktop) await page.setViewportSize({ width: 1280, height: 800 });
+    await setup(page);
+    let uploads = 0;
+    const requests: Record<string, unknown>[] = [];
+    let finish!: () => void;
+    const pending = new Promise<void>(resolve => { finish = resolve; });
+    await page.route('**/storage/v1/object/avatars/**', async route => {
+      uploads++;
+      await route.fulfill({ json: { Key: 'avatars/group.png' } });
+    });
+    await page.route('**/rest/v1/rpc/create_chat_conversation', async route => {
+      requests.push(route.request().postDataJSON());
+      await pending;
+      await route.fulfill({ json: { id: chat, type: 'group', name: 'Novo grupo' } });
+    });
+    const dialog = await fillGroup(page, true);
+    await dialog.getByRole('button', { name: 'Criar Grupo', exact: true }).click();
+    await expect.poll(() => requests.length).toBe(1);
+    await expect(dialog.getByRole('button', { name: 'A criar...' })).toBeDisabled();
+    await expect(dialog.getByLabel('Nome do grupo', { exact: true })).toBeDisabled();
+    await expect(dialog.getByRole('button', { name: 'Fechar criação do grupo' })).toBeDisabled();
+    await expect(dialog.getByRole('button', { name: 'Voltar à seleção de contactos' })).toBeDisabled();
+    await page.keyboard.press('Escape');
+    await expect(dialog).toBeVisible();
+    finish();
+    const heading = dialog.getByRole('heading', { name: 'Grupo criado', exact: true });
+    await expect(heading).toBeVisible();
+    await expect(heading).toBeFocused();
+    await expect(dialog.getByText('O grupo “Novo grupo” foi criado com 3 membros.')).toBeVisible();
+    await expect(page.getByRole('dialog')).toHaveCount(1);
+    await expect(page.getByRole('alertdialog')).toHaveCount(0);
+    await expect(dialog.getByRole('button', { name: 'Criar Grupo', exact: true })).toHaveCount(0);
+    await page.screenshot({ path: testInfo.outputPath('group-created.png') });
+    // An actual pointer click catches overlays intercepting a visible action.
+    await dialog.getByRole('button', { name: 'Abrir grupo', exact: true }).click();
+    await expect(page).toHaveURL(new RegExp(`/papos-app/chat/${chat}$`));
+    await expect(dialog).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Chamada de voz', exact: true })).toBeVisible();
+    expect(uploads).toBe(1);
+    expect(requests).toHaveLength(1);
+    expect(requests[0]).toEqual({
+      p_participant_ids: peers.slice(0, 2),
+      p_group_name: 'Novo grupo',
+      p_avatar_url: expect.stringContaining(`/storage/v1/object/public/avatars/${me}/group-avatars/`),
+    });
+  });
+}
+
+test('creation without a photo can close successfully and start a fresh group', async ({ page }) => {
+  await setup(page);
+  const requests: Record<string, unknown>[] = [];
+  await page.route('**/rest/v1/rpc/create_chat_conversation', async route => {
+    requests.push(route.request().postDataJSON());
+    await route.fulfill({ json: { id: chat, type: 'group', name: 'Novo grupo' } });
+  });
+  const dialog = await fillGroup(page);
+  await dialog.getByRole('button', { name: 'Criar Grupo', exact: true }).click();
+  await expect(dialog.getByRole('button', { name: 'Abrir grupo', exact: true })).toBeVisible();
+  await dialog.getByRole('button', { name: 'Fechar criação do grupo' }).click();
+  await expect(dialog).toHaveCount(0);
+  await page.getByRole('button', { name: 'Criar grupo', exact: true }).click();
+  await expect(dialog.getByRole('button', { name: 'Continuar · 0 selecionados' })).toBeDisabled();
+  await expect(dialog.getByRole('heading', { name: 'Grupo criado' })).toHaveCount(0);
+  expect(requests).toHaveLength(1);
+  expect(requests[0].p_avatar_url).toBeNull();
+});
+
+for (const failure of ['photo', 'conversation']) {
+  test(`${failure} failure is visible in the form and can be retried`, async ({ page }) => {
+    await setup(page);
+    let uploads = 0;
+    let creations = 0;
+    await page.route('**/storage/v1/object/avatars/**', async route => {
+      uploads++;
+      await route.fulfill(uploads === 1
+        ? { status: 500, json: { statusCode: '500', error: 'Upload failed', message: 'Upload failed' } }
+        : { json: { Key: 'avatars/group.png' } });
+    });
+    await page.route('**/rest/v1/rpc/create_chat_conversation', async route => {
+      creations++;
+      await route.fulfill(failure === 'conversation' && creations === 1
+        ? { status: 400, json: { code: 'P0001', message: 'Creation failed' } }
+        : { json: { id: chat, type: 'group', name: 'Novo grupo' } });
+    });
+    const dialog = await fillGroup(page, failure === 'photo');
+    const create = dialog.getByRole('button', { name: 'Criar Grupo', exact: true });
+    await create.click();
+    const error = dialog.getByRole('alert');
+    await expect(error).toContainText(failure === 'photo' ? 'Não foi possível enviar a fotografia' : 'Não foi possível concluir a criação');
+    await expect(error).toBeInViewport();
+    await expect(dialog.getByLabel('Nome do grupo', { exact: true })).toHaveValue('Novo grupo');
+    await expect(dialog.getByText('Tu e mais 2 pessoas')).toBeVisible();
+    await expect(create).toBeEnabled();
+    expect(creations).toBe(failure === 'photo' ? 0 : 1);
+    await create.click();
+    await expect(dialog.getByRole('button', { name: 'Abrir grupo', exact: true })).toBeVisible();
+    await expect(error).toHaveCount(0);
+    expect(creations).toBe(failure === 'photo' ? 1 : 2);
+  });
+}
+
 test("group voice button selects multiple members and enforces seven invitees", async ({
   page,
 }) => {
