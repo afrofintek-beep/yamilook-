@@ -342,4 +342,9 @@ test("conference authorization and lifecycle", async (t) => {
     assert.equal((await action(C, "list")).length, 0);
     assert.equal((await action(C, "detail", next.id)).status, "ended");
   });
+  await t.test("account deletion cleans up conference references", async () => {
+    await db.query("delete from public.profiles where id=$1",[B]);
+    assert.equal((await db.query("select count(*) n from public.group_conference_members where user_id=$1",[B])).rows[0].n,0);
+    assert.equal((await db.query("select count(*) n from public.group_conferences where created_by=$1",[B])).rows[0].n,0);
+  });
 });

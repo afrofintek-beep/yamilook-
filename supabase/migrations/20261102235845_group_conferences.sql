@@ -3,7 +3,7 @@ create schema if not exists private;
 create table public.group_conferences (
  id uuid primary key default gen_random_uuid(),
  conversation_id uuid not null references public.conversations(id) on delete cascade,
- created_by uuid not null references public.profiles(id),
+ created_by uuid not null references public.profiles(id) on delete cascade,
  call_type text not null check(call_type in ('voice','video')),
  status text not null default 'active' check(status in ('active','ended')),
  created_at timestamptz not null default now(),
@@ -14,7 +14,7 @@ create unique index group_conferences_one_active on public.group_conferences(con
 create index group_conferences_creator on public.group_conferences(created_by);
 create table public.group_conference_members (
  conference_id uuid not null references public.group_conferences(id) on delete cascade,
- user_id uuid not null references public.profiles(id),
+ user_id uuid not null references public.profiles(id) on delete cascade,
  status text not null default 'invited' check(status in ('invited','joined','declined','left')),
  device_id uuid,
  lease_until timestamptz,
