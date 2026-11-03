@@ -9,6 +9,13 @@ by two conversations. The public `media` bucket is intentionally unchanged to
 preserve legitimate MUXI content. No files were deleted, moved, overwritten or
 quarantined; no real message references were changed.
 
+Exact historical URL probes additionally found **one previously issued signed
+voice URL still returning HTTP 206 without authentication after the new policy
+was applied**. Its JWT expiry claim is 6 November 2026, 19:51 UTC / 20:51 Luanda.
+The expiry claim was decoded locally without publishing the token; continued
+access up to expiry is a risk, not a promise of future server behavior. Thus 33
+distinct original objects were retrievable through at least one tested route.
+
 ## Reconciliation and public-content classification
 
 The audit reconciled 59 distinct historical candidates / 60 references, using both
@@ -30,6 +37,11 @@ external matches. A separate canonical path comparison against all 135 post rows
 with media at the inventory snapshot also found zero MUXI overlaps. This is a
 database-snapshot finding, not proof against future writes, external links, cached
 pages or backup contents. It does not authorize source deletion.
+
+Among the 135 post rows with media, visibility values were `everyone` (58),
+`contacts` (62) and `only_me` (15), with no hidden rows. Matching checked all three
+groups, not only publicly intended posts. The anonymous MUXI regression sample
+uses `everyone` posts only. This audit does not certify the wider MUXI privacy model.
 
 The JSON evidence contains opaque SHA-256 identifiers of bucket/path, HTTP results
 and counts only. It does not publish private object URLs, bearer tokens, account
@@ -84,10 +96,21 @@ must be verified separately from the database migration.
   conflicting permissive policies and retained originals after conversion.
 - 17 focused frontend tests passed; production build passed for Yamilook and
   KOSOLOLA.
+- The broad local suite first reported 968 passing tests, two timed assertion
+  failures and three suite-import failures caused by missing Supabase test
+  environment variables. All five affected files passed on a focused rerun with
+  a synthetic project URL/key (49 tests). The sharing test also passed unchanged
+  on the baseline commit. This is not a claim that the original full-suite run
+  was green.
 - Live anonymous probes are byte-range requests with no Authorization, API key or
   session cookie. Only status/headers are retained; media contents are not inspected.
 - Database policy checks are distinct from HTTP bearer-link behavior. No physical
   iOS/Android playback or signed-in browser flow is claimed by this audit.
+- Exact historical probes: 59 distinct URLs, 33 × HTTP 206 (32 public media +
+  1 signed voice) and 26 × HTTP 400. Three private live-copy and three recovery-copy
+  public routes each returned HTTP 400. Metadata reconciliation confirms all 33
+  original/private/recovery triples still exist; their bytes were not rehashed in
+  this non-migrating audit.
 
 ## Residual risks and the next infrastructure operation
 
@@ -101,7 +124,7 @@ must be verified separately from the database migration.
    authorization, not use of an already issued URL or bytes previously downloaded.
    The application's 300-second request is not a server-enforced maximum for every
    possible Storage API client. Legacy links issued before this patch may outlive
-   it. Instant revocation requires a server-authorized delivery layer or a separate
+   it; one such live URL is confirmed above. Instant revocation requires a server-authorized delivery layer or a separate
    validated object/key retirement design. View-once consumption and end-to-end
    encryption are not delivered by this patch.
 3. **25 missing sources remain unresolved.** HTTP 400 in a private bucket alone
