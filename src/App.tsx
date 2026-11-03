@@ -1,4 +1,5 @@
 import { communityReturn } from './features/academia/community-links';
+import { AppLoadingScreen } from '@/components/AppStartupBoundary';
 import { recoverApplicationAssets } from '@/lib/app-assets';
 import { getSharedAudioContext } from '@/lib/audio-context';
 import { useState, useEffect, Suspense, lazy, Component } from "react";
@@ -102,22 +103,7 @@ const AdminPayoutsPage = lazy(() => import("./features/kumbu/routes/AdminPayouts
 const AdminMentors = lazy(() => import("./pages/AdminMentors"));
 const AdminBilling = lazy(() => import("./pages/AdminBilling"));
 
-// Minimal loading fallback (ultra fast perception)
-function PageLoader() {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="flex gap-1">
-        {[0, 1, 2].map((i) => (
-          <div
-            key={i}
-            className="w-2 h-2 rounded-full bg-primary animate-pulse"
-            style={{ animationDelay: `${i * 0.15}s` }}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
+const PageLoader = AppLoadingScreen;
 
 // Detects the "stale service worker" state: a returning user's cached app shell
 // references chunk filenames that no longer exist after a new deploy, so the
@@ -163,11 +149,13 @@ class LazyLoadErrorBoundary extends Component<
     // A chunk-load failure on a returning user is almost always a stale service
     // worker pointing at deleted chunks. Auto-recover once (avoid reload loops).
     if (isChunkLoadError(error)) {
-      const last = Number(sessionStorage.getItem(CHUNK_RECOVERY_KEY) || 0);
-      if (Date.now() - last > 20000) {
-        sessionStorage.setItem(CHUNK_RECOVERY_KEY, String(Date.now()));
-        clearCachesAndReload();
-      }
+      try {
+        const last = Number(sessionStorage.getItem(CHUNK_RECOVERY_KEY) || 0);
+        if (Date.now() - last > 20000) {
+          sessionStorage.setItem(CHUNK_RECOVERY_KEY, String(Date.now()));
+          clearCachesAndReload();
+        }
+      } catch { /* Keep the visible retry controls if storage is unavailable. */ }
     }
   }
 
@@ -230,11 +218,7 @@ function ProtectedRoute({ children, skipOnboardingCheck }: { children: React.Rea
   const { user, profile, loading, profileError, refreshProfile, signOut } = useAuth();
   
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="w-12 h-12 rounded-2xl bg-primary animate-pulse" />
-      </div>
-    );
+    return <PageLoader />;
   }
   
   if (!user) {
@@ -275,11 +259,7 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="w-12 h-12 rounded-2xl bg-primary animate-pulse" />
-      </div>
-    );
+    return <PageLoader />;
   }
   
   if (user) {
