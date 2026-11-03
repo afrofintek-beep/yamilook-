@@ -12,6 +12,18 @@ const prepare = async (name = 'Convidar pelo WhatsApp') => {
   await screen.findByLabelText('Ligação para o teu contacto');
 };
 describe('device contact invitations', () => {
+  it('creates one invitation for QR and reuses it when showing it again', async () => {
+    render(<ContactInviteActions />);
+    await prepare('Gerar QR individual');
+    expect(screen.getByLabelText('Convite individual por QR code').querySelector('svg')).toBeTruthy();
+    expect(screen.getByLabelText('Ligação para o teu contacto')).toHaveValue('https://www.yamilook.com/register?ref=' + invite.code);
+    fireEvent.click(screen.getByRole('button', { name: 'Mostrar QR individual' }));
+    expect(rpc).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByRole('button', { name: 'Convidar outra pessoa' }));
+    expect(screen.queryByLabelText('Convite individual por QR code')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Gerar QR individual' })).toBeEnabled();
+  });
+
   it('brands WhatsApp and email invitations for KOSOLOLA while using shared registration', async () => {
     render(<AppSurfaceContext.Provider value="papos"><ContactInviteActions /></AppSurfaceContext.Provider>);
     await prepare();

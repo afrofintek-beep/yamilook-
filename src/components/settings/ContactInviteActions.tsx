@@ -1,14 +1,15 @@
+import { QRCodeSVG } from 'qrcode.react';
 import { useRef, useState } from 'react';
 import { useAppSurface } from '@/lib/app-surface';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { Copy, Mail, MessageCircle, Share2 } from 'lucide-react';
+import { Copy, Mail, MessageCircle, Share2, QrCode } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { buildInviteUrl } from '@/lib/referral';
 import { buildEmailInviteDraftUrl, buildWhatsAppInviteUrl, invitationMessage } from '@/lib/invite-delivery';
 
-type Channel = 'whatsapp' | 'email' | 'copy';
+type Channel = 'whatsapp' | 'email' | 'copy' | 'qr';
 const client = supabase as unknown as SupabaseClient<{
   public: { Tables: {}; Views: {}; Functions: {
     issue_shareable_user_invitation: { Args: { p_request_id: string }; Returns: { code: string; expires_at: string } };
@@ -36,7 +37,7 @@ export function ContactInviteActions() {
       const { data, error } = await client.rpc('issue_shareable_user_invitation', { p_request_id: requestId.current });
       if (error || !data?.code || !data.expires_at) throw error ?? new Error('Invalid invitation');
       setInvite(data);
-      setStatus('Convite pronto. Escolhe o contacto na aplicação e confirma o envio.');
+      setStatus(choice === 'qr' ? 'QR pronto. Mostra-o apenas à pessoa que queres convidar.' : 'Convite pronto. Escolhe o contacto na aplicação e confirma o envio.');
     } catch {
       setStatus('Não foi possível preparar o convite. Tenta novamente.');
     } finally {
@@ -70,8 +71,14 @@ export function ContactInviteActions() {
       <Button className="w-full" disabled={pending} onClick={() => void prepare('whatsapp')}><MessageCircle className="mr-2 h-4 w-4" />Convidar pelo WhatsApp</Button>
       <Button variant="outline" className="w-full" disabled={pending} onClick={() => void prepare('email')}><Mail className="mr-2 h-4 w-4" />Convidar por email</Button>
       <Button variant="outline" className="w-full" disabled={pending} onClick={() => void prepare('copy')}><Copy className="mr-2 h-4 w-4" />Criar ligação de convite</Button>
+      <Button variant="outline" className="w-full" disabled={pending} onClick={() => void prepare('qr')}><QrCode className="mr-2 h-4 w-4" />Gerar QR individual</Button>
       {pending && <p role="status">A preparar convite…</p>}
     </> : <>
+      <Button variant="outline" className="w-full" onClick={() => setChannel('qr')}><QrCode className="mr-2 h-4 w-4" />Mostrar QR individual</Button>
+      {channel === 'qr' && <figure className="space-y-2 text-center" aria-label="Convite individual por QR code">
+        <div className="mx-auto w-fit max-w-full rounded-lg bg-white p-4"><QRCodeSVG value={url} size={240} level="M" marginSize={4} title="Convite individual" style={{ maxWidth: '100%', height: 'auto' }} /></div>
+        <figcaption className="text-sm text-muted-foreground">Lê com a câmara para te registares. Válido para uma pessoa; só fica utilizado após o registo bem-sucedido.</figcaption>
+      </figure>}
       <Button variant={channel === 'whatsapp' ? 'default' : 'outline'} className="w-full" asChild><a href={buildWhatsAppInviteUrl('', invite.code, brand)} target="_blank" rel="noopener noreferrer"><MessageCircle className="mr-2 h-4 w-4" />Escolher contacto no WhatsApp</a></Button>
       <Button variant={channel === 'email' ? 'default' : 'outline'} className="w-full" asChild><a href={buildEmailInviteDraftUrl('', invite.code, brand)}><Mail className="mr-2 h-4 w-4" />Escolher contacto no email</a></Button>
       {typeof navigator.share === 'function' && <Button variant="outline" className="w-full" onClick={() => void share()}><Share2 className="mr-2 h-4 w-4" />Partilhar pelo telemóvel</Button>}
