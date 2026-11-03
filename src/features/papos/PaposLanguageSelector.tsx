@@ -1,6 +1,6 @@
 import { useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { afrolocLanguages, normalizeAppLanguage } from '@/i18n/afroloc-languages';
+import { appLanguages, normalizeAppLanguage } from '@/i18n/afroloc-languages';
 import { changeAppLanguage } from '@/i18n';
 
 export default function PaposLanguageSelector() {
@@ -17,10 +17,10 @@ export default function PaposLanguageSelector() {
   };
   return <div className="space-y-2">
     <label htmlFor={id} className="text-sm font-medium">{t('settings.language', { defaultValue: 'Idioma / Language' })}</label>
-    <select id={id} value={afrolocLanguages.some(l => l.code === current) ? current : 'pt'}
+    <select id={id} value={appLanguages.some(l => l.code === current) ? current : 'pt'}
       disabled={busy} onChange={e => void select(e.target.value)}
       className="block min-h-12 w-full min-w-0 rounded-xl border border-input bg-background px-3 text-base text-foreground">
-      {afrolocLanguages.map(language => <option key={language.code} value={language.code} lang={language.code}>{language.nativeName}</option>)}
+      {appLanguages.map(language => <option key={language.code} value={language.code} lang={language.code}>{language.nativeName}</option>)}
     </select>
     {error && <p role="alert" className="text-sm text-destructive">{t('kosolola.languageError')}</p>}
     {!['pt', 'pt-banda'].includes(current) && <p className="text-xs text-muted-foreground">{t('kosolola.incomplete')}</p>}

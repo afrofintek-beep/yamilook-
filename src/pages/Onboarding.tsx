@@ -6,14 +6,14 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Camera, 
-  User, 
-  ChevronRight, 
+import {
+  Camera,
+  User,
+  ChevronRight,
   ChevronLeft,
-  Sparkles, 
-  Users, 
-  MessageCircle, 
+  Sparkles,
+  Users,
+  MessageCircle,
   Phone,
   Heart,
   Calendar,
@@ -57,45 +57,28 @@ import { loadOnboardingDraft, saveOnboardingDraft, clearOnboardingDraft } from '
  import tourCallsImg from '@/assets/onboarding/tour-calls.jpg';
  import tourGroupsImg from '@/assets/onboarding/tour-groups.jpg';
  import tourStoriesImg from '@/assets/onboarding/tour-stories.jpg';
- 
-const steps = [
-   { id: 'gender', title: 'Quem és tu?', subtitle: 'Vamos conhecer-nos' },
-   { id: 'birthday', title: 'Quando nasceste?', subtitle: 'A tua história começa aqui' },
-   { id: 'banda', title: 'Qual é a tua Banda?', subtitle: 'O mambo começa onde estás' },
-   { id: 'welcome', title: 'Bem-vindo à Banda!', subtitle: 'Já fazes parte da família' },
-   { id: 'avatar', title: 'Mostra a tua cara', subtitle: null as unknown as string },
-   { id: 'bio', title: 'Conta a tua história', subtitle: 'O que te faz único?' },
-   { id: 'tour', title: 'Descobre a Banda', subtitle: 'Tudo o que podes fazer' },
-   { id: 'register', title: 'Cria a tua conta', subtitle: 'Último passo para entrares na banda' },
-];
+
+const steps = ['gender', 'birthday', 'banda', 'welcome', 'avatar', 'bio', 'tour', 'register'].map(id => ({ id }));
 
 // Tour slides with African cultural context and illustrations
 const tourSlides = [
   {
     icon: MessageCircle,
-    title: null as unknown as string, // replaced dynamically via i18n
-    description: 'Mensagens em tempo real, áudios, fotos e vídeos. A banda nunca para de falar.',
     image: tourChatImg,
     bgColor: 'from-sankofa/20 to-sankofa-glow/10',
   },
   {
     icon: Phone,
-    title: 'Chamadas que aproximam',
-    description: null as unknown as string, // replaced dynamically via i18n
     image: tourCallsImg,
     bgColor: 'from-ubuntu/20 to-ubuntu-glow/10',
   },
   {
     icon: Users,
-    title: 'A tua Banda, os teus grupos',
-    description: null as unknown as string, // replaced dynamically via i18n
     image: tourGroupsImg,
     bgColor: 'from-djembe/20 to-djembe-glow/10',
   },
   {
     icon: Sparkles,
-    title: 'Momambos que ficam',
-    description: 'Partilha os teus melhores momentos. A banda quer ver a tua vida.',
     image: tourStoriesImg,
     bgColor: 'from-primary/20 to-primary/10',
   },
@@ -105,7 +88,7 @@ export default function Onboarding() {
   const { user, profile, loading: authLoading, updateProfile, signUp, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const returnToCommunity = communityReturn(useLocation().search);
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   // Track whether the user just completed onboarding in this session
   const justCompletedRef = useRef(false);
@@ -122,22 +105,11 @@ export default function Onboarding() {
   // If user is already authenticated (e.g. came back), skip to appropriate step
   const isAuthenticated = !!user;
 
-  const friends = t('social.friends');
-  // Inject i18n into tour slides that need dynamic text
-  const localizedTourSlides = useMemo(() => {
-    const vars = { friends, closeFriendsGroup: t('social.closeFriendsGroup') };
-    return tourSlides.map((slide, i) => {
-      if (i === 0) return { ...slide, title: t('onboarding.tourChatTitle', vars) };
-      if (i === 1) return { ...slide, description: t('onboarding.tourCallsDesc', vars) };
-      if (i === 2) return { ...slide, description: t('onboarding.tourGroupsDesc', vars) };
-      return slide;
-    });
-  }, [t, friends]);
-
-  // Localized step subtitle for avatar
-  const localizedSteps = useMemo(() =>
-    steps.map(s => s.id === 'avatar' ? { ...s, subtitle: t('onboarding.avatarSubtitle', { friends }) } : s), [t, friends]
-  );
+  const localizedTourSlides = useMemo(() => tourSlides.map((slide, index) => ({
+    ...slide,
+    title: t(['onboardingFlow.tourChat', 'onboardingFlow.tourCalls', 'onboardingFlow.tourGroups', 'onboardingFlow.tourStories'][index]),
+    description: t(['onboardingFlow.tourChatHint', 'onboardingFlow.tourCallsHint', 'onboardingFlow.tourGroupsHint', 'onboardingFlow.tourStoriesHint'][index]),
+  })), [t]);
 
   const [currentStep, setCurrentStep] = useState(0);
   const [tourSlide, setTourSlide] = useState(0);
@@ -233,28 +205,13 @@ export default function Onboarding() {
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 88 }, (_, i) => currentYear - 13 - i);
   const days = Array.from({ length: 31 }, (_, i) => i + 1);
-  const months = [
-    { value: '1', label: 'Janeiro' },
-    { value: '2', label: 'Fevereiro' },
-    { value: '3', label: 'Março' },
-    { value: '4', label: 'Abril' },
-    { value: '5', label: 'Maio' },
-    { value: '6', label: 'Junho' },
-    { value: '7', label: 'Julho' },
-    { value: '8', label: 'Agosto' },
-    { value: '9', label: 'Setembro' },
-    { value: '10', label: 'Outubro' },
-    { value: '11', label: 'Novembro' },
-    { value: '12', label: 'Dezembro' },
-  ];
+  const months = Array.from({ length: 12 }, (_, index) => ({
+    value: String(index + 1),
+    label: new Intl.DateTimeFormat(i18n.resolvedLanguage || i18n.language, { month: 'long', timeZone: 'UTC' }).format(new Date(Date.UTC(2024, index, 1))),
+  }));
 
   // Get personalized greeting based on gender
-  const getGreeting = () => {
-    if (selectedGender === 'female') {
-      return 'Bem-vinda';
-    }
-    return 'Bem-vindo';
-  };
+  const getGreeting = () => t('entry.title');
 
   // Store avatar file locally (upload after registration)
   const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -265,7 +222,7 @@ export default function Onboarding() {
     // Create local preview URL
     const previewUrl = URL.createObjectURL(file);
     setAvatarUrl(previewUrl);
-    toast.success('Foto selecionada!');
+    toast.success(t("onboardingFlow.photoSelected"));
   };
 
   const handleBioSave = () => {
@@ -302,10 +259,10 @@ export default function Onboarding() {
 
   // Password validation
   const passwordRequirements = [
-    { regex: /.{8,}/, label: 'Mínimo 8 caracteres' },
-    { regex: /[A-Z]/, label: 'Uma letra maiúscula' },
-    { regex: /[a-z]/, label: 'Uma letra minúscula' },
-    { regex: /[0-9]/, label: 'Um número' },
+    { regex: /.{8,}/, label: t("auth.minCharacters") },
+    { regex: /[A-Z]/, label: t("auth.uppercase") },
+    { regex: /[a-z]/, label: t("auth.lowercase") },
+    { regex: /[0-9]/, label: t("auth.number") },
   ];
 
   const isPasswordValid = passwordRequirements.every(req => req.regex.test(password));
@@ -317,16 +274,16 @@ export default function Onboarding() {
     if (!isAuthenticated && !isRegisterFormValid) return;
     if (!selectedGender || !birthDay || !birthMonth || !birthYear || !selectedCity ||
         !selectedNeighborhood || (selectedNeighborhood === '__other__' && !customNeighborhood.trim())) {
-      toast.error('Completa o género, a data de nascimento e a tua banda antes de continuar.');
+      toast.error(t("onboardingFlow.missing"));
       return;
     }
 
-    if (!validResidencePlan(residencePlan)) { toast.error('Confirma a opção de endereço para continuar.'); setCurrentStep(2); return; }
+    if (!validResidencePlan(residencePlan)) { toast.error(t("onboardingFlow.addressRequired")); setCurrentStep(2); return; }
 
     let userId = user?.id;
     const code = accessCode.trim().toUpperCase();
     if (!isAuthenticated && !code) {
-      toast.error('Introduz o código de convite de um membro para concluir o registo.');
+      toast.error(t("onboardingFlow.inviteHint"));
       return;
     }
     setIsRegistering(true);
@@ -335,7 +292,7 @@ export default function Onboarding() {
         const { data: validation, error: validationError } = await supabase.rpc('validate_mvp_access_code', { p_code: code });
         const result = validation as { valid?: boolean; error?: string } | null;
         if (validationError || !result?.valid) {
-          toast.error(validationError ? 'Não foi possível validar o convite. Tenta novamente.' : result?.error || 'Código de convite inválido.');
+          toast.error(t('onboardingFlow.invalidInvite'));
           return;
         }
         const { error } = await signUp(email, password, {
@@ -345,7 +302,7 @@ export default function Onboarding() {
         });
 
         if (error) {
-          toast.error(error.message);
+          toast.error(t('publicAuth.retry'));
           setIsRegistering(false);
           return;
         }
@@ -364,7 +321,7 @@ export default function Onboarding() {
         }
 
         if (!session?.user) {
-          toast.success('Conta criada! Confirma o email e entra para retomar a inscrição. O teu progresso ficou guardado neste navegador.');
+          toast.success(t("onboardingFlow.confirmEmail"));
           setIsRegistering(false);
           navigate('/login');
           return;
@@ -427,7 +384,7 @@ export default function Onboarding() {
 
       if (updateError) {
         logger.error('Error saving onboarding profile', 'onboarding', updateError);
-        toast.error('Erro ao guardar perfil. Tenta novamente.');
+        toast.error(t("publicAuth.retry"));
         setIsRegistering(false);
         return;
       }
@@ -439,10 +396,10 @@ export default function Onboarding() {
       await refreshProfile();
 
       triggerCelebrationConfetti();
-      toast.success('Bem-vindo à Banda! 🎉');
+      toast.success(t("auth.accountCreated"));
       navigate(returnToCommunity || '/profile', { replace: true });
     } catch (error) {
-      toast.error('Erro ao criar conta. Tenta novamente.');
+      toast.error(t("publicAuth.retry"));
     } finally {
       setIsRegistering(false);
     }
@@ -459,15 +416,15 @@ export default function Onboarding() {
             className="text-center px-2"
           >
             {/* Illustration */}
-            <motion.div 
+            <motion.div
               className="relative w-40 h-40 mx-auto mb-6 rounded-3xl overflow-hidden shadow-2xl"
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.1, type: 'spring', stiffness: 200 }}
             >
-              <img 
-                src={genderIdentityImg} 
-                alt="Identidade" 
+              <img
+                src={genderIdentityImg}
+                alt={t("onboardingFlow.identity")}
                 className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
@@ -481,55 +438,49 @@ export default function Onboarding() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
-              <h2 className="text-2xl font-bold mb-2 text-foreground">
-                Como te identificas?
-              </h2>
-              <p className="text-muted-foreground mb-6 max-w-sm mx-auto text-sm">
-                Na banda, todos são bem-vindos. Isto personaliza a tua experiência.
-              </p>
+              <h2 className="text-2xl font-bold mb-2 text-foreground">{t("onboardingFlow.identity")}</h2>
+              <p className="text-muted-foreground mb-6 max-w-sm mx-auto text-sm">{t("onboardingFlow.identityHint")}</p>
             </motion.div>
 
             <div className="flex flex-col gap-3 max-w-xs mx-auto">
               <Button
                 variant="outline"
                 className={`h-16 rounded-2xl text-base font-medium transition-all border-2 ${
-                  selectedGender === 'male' 
-                    ? 'border-ubuntu bg-ubuntu/10 text-ubuntu shadow-lg shadow-ubuntu/20' 
+                  selectedGender === 'male'
+                    ? 'border-ubuntu bg-ubuntu/10 text-ubuntu shadow-lg shadow-ubuntu/20'
                     : 'hover:border-ubuntu/50 hover:bg-ubuntu/5'
                 }`}
                 onClick={() => handleGenderSelect('male')}
               >
                 <span className="text-2xl mr-3">👨🏾</span>
-                <span>Masculino</span>
+                <span>{t("onboardingFlow.male")}</span>
               </Button>
               <Button
                 variant="outline"
                 className={`h-16 rounded-2xl text-base font-medium transition-all border-2 ${
-                  selectedGender === 'female' 
-                    ? 'border-sankofa bg-sankofa/10 text-sankofa shadow-lg shadow-sankofa/20' 
+                  selectedGender === 'female'
+                    ? 'border-sankofa bg-sankofa/10 text-sankofa shadow-lg shadow-sankofa/20'
                     : 'hover:border-sankofa/50 hover:bg-sankofa/5'
                 }`}
                 onClick={() => handleGenderSelect('female')}
               >
                 <span className="text-2xl mr-3">👩🏾</span>
-                <span>Feminino</span>
+                <span>{t("onboardingFlow.female")}</span>
               </Button>
               <Button
                 variant="outline"
                 className={`h-16 rounded-2xl text-base font-medium transition-all border-2 ${
-                  selectedGender === 'other' 
-                    ? 'border-djembe bg-djembe/10 text-djembe shadow-lg shadow-djembe/20' 
+                  selectedGender === 'other'
+                    ? 'border-djembe bg-djembe/10 text-djembe shadow-lg shadow-djembe/20'
                     : 'hover:border-djembe/50 hover:bg-djembe/5'
                 }`}
                 onClick={() => handleGenderSelect('other')}
               >
                 <span className="text-2xl mr-3">✨</span>
-                <span>Prefiro não dizer</span>
+                <span>{t("onboardingFlow.preferNotSay")}</span>
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground mt-6">
-              * Campo obrigatório
-            </p>
+            <p className="text-xs text-muted-foreground mt-6">{t("onboardingFlow.required")}</p>
           </motion.div>
         );
 
@@ -542,15 +493,15 @@ export default function Onboarding() {
             className="text-center px-2"
           >
             {/* Illustration */}
-            <motion.div 
+            <motion.div
               className="relative w-40 h-40 mx-auto mb-6 rounded-3xl overflow-hidden shadow-2xl"
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.1, type: 'spring', stiffness: 200 }}
             >
-              <img 
-                src={birthdayCakeImg} 
-                alt="Aniversário" 
+              <img
+                src={birthdayCakeImg}
+                alt={t("onboardingFlow.birthday")}
                 className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
@@ -564,18 +515,14 @@ export default function Onboarding() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
-              <h2 className="text-2xl font-bold mb-2 text-foreground">
-                Quando nasceste?
-              </h2>
-              <p className="text-muted-foreground mb-6 max-w-sm mx-auto text-sm">
-                A banda quer celebrar contigo!
-              </p>
+              <h2 className="text-2xl font-bold mb-2 text-foreground">{t("onboardingFlow.birthday")}</h2>
+              <p className="text-muted-foreground mb-6 max-w-sm mx-auto text-sm">{t("onboardingFlow.birthdayHint")}</p>
             </motion.div>
-            
+
             <div className="flex gap-2 max-w-xs mx-auto mb-6">
               <Select value={birthDay} onValueChange={setBirthDay}>
                 <SelectTrigger className="flex-1 h-14 rounded-2xl border-2 text-base">
-                  <SelectValue placeholder="Dia" />
+                  <SelectValue placeholder={t("onboardingFlow.day")} />
                 </SelectTrigger>
                 <SelectContent>
                   {days.map((day) => (
@@ -585,10 +532,10 @@ export default function Onboarding() {
                   ))}
                 </SelectContent>
               </Select>
-              
+
               <Select value={birthMonth} onValueChange={setBirthMonth}>
                 <SelectTrigger className="flex-[1.5] h-14 rounded-2xl border-2 text-base">
-                  <SelectValue placeholder="Mês" />
+                  <SelectValue placeholder={t("onboardingFlow.month")} />
                 </SelectTrigger>
                 <SelectContent>
                   {months.map((month) => (
@@ -598,10 +545,10 @@ export default function Onboarding() {
                   ))}
                 </SelectContent>
               </Select>
-              
+
               <Select value={birthYear} onValueChange={setBirthYear}>
                 <SelectTrigger className="flex-1 h-14 rounded-2xl border-2 text-base">
-                  <SelectValue placeholder="Ano" />
+                  <SelectValue placeholder={t("onboardingFlow.year")} />
                 </SelectTrigger>
                 <SelectContent>
                   {years.map((year) => (
@@ -619,21 +566,15 @@ export default function Onboarding() {
                 onClick={prevStep}
                 className="h-14 px-6 rounded-2xl border-2"
               >
-                <ChevronLeft className="w-5 h-5 mr-2" />
-                Voltar
-              </Button>
+                <ChevronLeft className="w-5 h-5 mr-2" />{t("common.back")}</Button>
               <Button
                 onClick={handleBirthdaySave}
                 disabled={!birthDay || !birthMonth || !birthYear}
                 className="h-14 px-8 rounded-2xl bg-gradient-primary hover:opacity-90 text-white font-semibold shadow-lg shadow-primary/30"
-              >
-                Continuar
-                <ChevronRight className="w-5 h-5 ml-2" />
+              >{t("onboardingFlow.continue")}<ChevronRight className="w-5 h-5 ml-2" />
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground mt-6 text-center">
-              * Campo obrigatório
-            </p>
+            <p className="text-xs text-muted-foreground mt-6 text-center">{t("onboardingFlow.required")}</p>
           </motion.div>
         );
 
@@ -652,15 +593,15 @@ export default function Onboarding() {
             className="text-center px-2"
           >
             {/* Welcome Illustration */}
-            <motion.div 
+            <motion.div
               className="relative w-48 h-48 mx-auto mb-6 rounded-3xl overflow-hidden shadow-2xl"
               initial={{ scale: 0.8, opacity: 0, rotate: -5 }}
               animate={{ scale: 1, opacity: 1, rotate: 0 }}
               transition={{ delay: 0.1, type: 'spring', stiffness: 200 }}
             >
-              <img 
-                src={welcomeBandaImg} 
-                alt="Bem-vindo à Banda" 
+              <img
+                src={welcomeBandaImg}
+                alt={t("entry.title")}
                 className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
@@ -672,26 +613,24 @@ export default function Onboarding() {
               transition={{ delay: 0.3 }}
             >
               <h2 className="text-3xl font-bold mb-2">
-                <span className="text-gradient-primary">{getGreeting()}</span>, {profile?.display_name || 'Kamba'}!
+                <span className="text-gradient-primary">{getGreeting()}</span>{profile?.display_name ? `, ${profile.display_name}!` : '!'}
               </h2>
-              <p className="text-lg text-muted-foreground mb-2">
-                Já fazes parte da banda.
-              </p>
+              <p className="text-lg text-muted-foreground mb-2">{t("onboardingFlow.welcomeHint")}</p>
               <p className="text-sm text-muted-foreground/80 mb-6 max-w-sm mx-auto">
-                Vamos preparar o teu perfil para que os teus {t('social.friends')} te encontrem.
+                {t('onboardingFlow.profileHint')}
               </p>
             </motion.div>
 
             {/* Community illustration */}
-            <motion.div 
+            <motion.div
               className="w-full max-w-xs mx-auto mb-8 rounded-2xl overflow-hidden shadow-lg"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
             >
-              <img 
-                src={bandaCommunityImg} 
-                alt="Comunidade" 
+              <img
+                src={bandaCommunityImg}
+                alt={t("entry.subtitle")}
                 className="w-full h-32 object-cover"
               />
             </motion.div>
@@ -702,15 +641,11 @@ export default function Onboarding() {
                 onClick={prevStep}
                 className="h-14 px-6 rounded-2xl border-2"
               >
-                <ChevronLeft className="w-5 h-5 mr-2" />
-                Voltar
-              </Button>
+                <ChevronLeft className="w-5 h-5 mr-2" />{t("common.back")}</Button>
               <Button
                 onClick={nextStep}
                 className="h-14 px-8 rounded-2xl bg-gradient-primary hover:opacity-90 text-white font-semibold shadow-lg shadow-primary/30"
-              >
-                Bora lá!
-                <ChevronRight className="w-5 h-5 ml-2" />
+              >{t("onboardingFlow.continue")}<ChevronRight className="w-5 h-5 ml-2" />
               </Button>
             </div>
           </motion.div>
@@ -725,15 +660,15 @@ export default function Onboarding() {
             className="text-center px-2"
           >
             {/* Illustration */}
-            <motion.div 
+            <motion.div
               className="relative w-40 h-40 mx-auto mb-6 rounded-3xl overflow-hidden shadow-2xl"
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.1, type: 'spring', stiffness: 200 }}
             >
-              <img 
-                src={profilePhotoImg} 
-                alt="Foto de perfil" 
+              <img
+                src={profilePhotoImg}
+                alt={t("onboardingFlow.photo")}
                 className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
@@ -747,15 +682,13 @@ export default function Onboarding() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
-              <h2 className="text-2xl font-bold mb-2 text-foreground">
-                Mostra a tua cara
-              </h2>
+              <h2 className="text-2xl font-bold mb-2 text-foreground">{t("onboardingFlow.photo")}</h2>
               <p className="text-muted-foreground mb-6 text-sm">
-                Os teus {t('social.friends')} querem reconhecer-te na banda
+                {t('onboardingFlow.photoHint')}
               </p>
             </motion.div>
 
-            <motion.div 
+            <motion.div
               className="relative w-36 h-36 mx-auto mb-8"
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -784,14 +717,12 @@ export default function Onboarding() {
             </motion.div>
 
             {uploading && (
-              <motion.div 
+              <motion.div
                 className="flex items-center justify-center gap-2 text-primary mb-4"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
               >
-                <RefreshCw className="w-4 h-4 animate-spin" />
-                A carregar foto...
-              </motion.div>
+                <RefreshCw className="w-4 h-4 animate-spin" />{t("onboardingFlow.photoLoading")}</motion.div>
             )}
 
             <div className="flex gap-3 justify-center">
@@ -800,21 +731,15 @@ export default function Onboarding() {
                 onClick={prevStep}
                 className="h-14 px-6 rounded-2xl border-2"
               >
-                <ChevronLeft className="w-5 h-5 mr-2" />
-                Voltar
-              </Button>
+                <ChevronLeft className="w-5 h-5 mr-2" />{t("common.back")}</Button>
               <Button
                 onClick={nextStep}
                 disabled={!avatarUrl}
                 className="h-14 px-8 rounded-2xl bg-gradient-primary hover:opacity-90 text-white font-semibold shadow-lg shadow-primary/30"
-              >
-                Continuar
-                <ChevronRight className="w-5 h-5 ml-2" />
+              >{t("onboardingFlow.continue")}<ChevronRight className="w-5 h-5 ml-2" />
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground mt-6 text-center">
-              * Campo obrigatório
-            </p>
+            <p className="text-xs text-muted-foreground mt-6 text-center">{t("onboardingFlow.required")}</p>
           </motion.div>
         );
 
@@ -827,15 +752,15 @@ export default function Onboarding() {
             className="px-2"
           >
             {/* Illustration */}
-            <motion.div 
+            <motion.div
               className="relative w-40 h-40 mx-auto mb-6 rounded-3xl overflow-hidden shadow-2xl"
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.1, type: 'spring', stiffness: 200 }}
             >
-              <img 
-                src={bioStoryImg} 
-                alt="A tua história" 
+              <img
+                src={bioStoryImg}
+                alt={t("onboardingFlow.bio")}
                 className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
@@ -850,11 +775,9 @@ export default function Onboarding() {
               transition={{ delay: 0.2 }}
               className="text-center"
             >
-              <h2 className="text-2xl font-bold mb-2 text-foreground">
-                Conta a tua história
-              </h2>
+              <h2 className="text-2xl font-bold mb-2 text-foreground">{t("onboardingFlow.bio")}</h2>
               <p className="text-muted-foreground mb-6 text-sm">
-                O que te faz único? Os {t('social.friends')} querem conhecer-te.
+                {t('onboardingFlow.bioHint')}
               </p>
             </motion.div>
 
@@ -866,7 +789,7 @@ export default function Onboarding() {
               <Textarea
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
-                placeholder="Adoro kuduro, matabicho e boas conversas na banda..."
+                placeholder={t("onboardingFlow.bioPlaceholder")}
                 className="min-h-[120px] rounded-2xl bg-secondary/30 border-2 focus:ring-2 focus:ring-primary focus:border-primary resize-none mb-2 text-base"
                 maxLength={150}
               />
@@ -881,20 +804,16 @@ export default function Onboarding() {
                 onClick={prevStep}
                 className="h-14 px-6 rounded-2xl border-2"
               >
-                <ChevronLeft className="w-5 h-5 mr-2" />
-                Voltar
-              </Button>
+                <ChevronLeft className="w-5 h-5 mr-2" />{t("common.back")}</Button>
               <Button
                 onClick={handleBioSave}
                 className="h-14 px-8 rounded-2xl bg-gradient-primary hover:opacity-90 text-white font-semibold shadow-lg shadow-primary/30"
               >
-                {bio.trim() ? 'Continuar' : 'Saltar'}
+                {bio.trim() ? t("onboardingFlow.continue") : t("onboardingFlow.skip")}
                 <ChevronRight className="w-5 h-5 ml-2" />
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground mt-6 text-center">
-              Este campo é opcional
-            </p>
+            <p className="text-xs text-muted-foreground mt-6 text-center">{t("onboardingFlow.optional")}</p>
           </motion.div>
         );
 
@@ -915,9 +834,9 @@ export default function Onboarding() {
               >
                 {/* Tour illustration */}
                 <div className={`relative w-full max-w-xs mx-auto mb-6 rounded-3xl overflow-hidden shadow-2xl bg-gradient-to-br ${localizedTourSlides[tourSlide].bgColor}`}>
-                  <img 
-                    src={localizedTourSlides[tourSlide].image} 
-                    alt={localizedTourSlides[tourSlide].title} 
+                  <img
+                    src={localizedTourSlides[tourSlide].image}
+                    alt={localizedTourSlides[tourSlide].title}
                     className="w-full h-48 object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
@@ -928,12 +847,12 @@ export default function Onboarding() {
                         return <Icon className="w-5 h-5 text-white" />;
                       })()}
                       <span className="text-white/80 text-sm font-medium">
-                        {tourSlide + 1} de {localizedTourSlides.length}
+                        {t('onboardingFlow.step', { current: tourSlide + 1, total: localizedTourSlides.length })}
                       </span>
                     </div>
                   </div>
                 </div>
-                
+
                 <h3 className="text-xl font-bold mb-2 text-foreground">
                   {localizedTourSlides[tourSlide].title}
                 </h3>
@@ -965,15 +884,11 @@ export default function Onboarding() {
                   onClick={() => tourSlide === 0 ? prevStep() : setTourSlide(tourSlide - 1)}
                   className="h-14 px-6 rounded-2xl"
                 >
-                  <ChevronLeft className="w-5 h-5 mr-2" />
-                  Voltar
-                </Button>
+                  <ChevronLeft className="w-5 h-5 mr-2" />{t("common.back")}</Button>
                 <Button
                   onClick={() => setTourSlide(tourSlide + 1)}
                   className="h-14 px-8 rounded-2xl bg-gradient-primary hover:opacity-90 text-white font-semibold shadow-lg shadow-primary/30"
-                >
-                  Próximo
-                  <ChevronRight className="w-5 h-5 ml-2" />
+                >{t("common.next")}<ChevronRight className="w-5 h-5 ml-2" />
                 </Button>
               </div>
             ) : (
@@ -983,15 +898,11 @@ export default function Onboarding() {
                   onClick={() => setTourSlide(tourSlide - 1)}
                   className="h-14 px-6 rounded-2xl"
                 >
-                  <ChevronLeft className="w-5 h-5 mr-2" />
-                  Voltar
-                </Button>
+                  <ChevronLeft className="w-5 h-5 mr-2" />{t("common.back")}</Button>
                 <Button
                   onClick={nextStep}
                   className="h-14 px-8 rounded-2xl bg-gradient-to-r from-ubuntu to-djembe hover:opacity-90 text-white font-semibold shadow-xl shadow-ubuntu/40"
-                >
-                  Continuar
-                  <ChevronRight className="w-5 h-5 ml-2" />
+                >{t("onboardingFlow.continue")}<ChevronRight className="w-5 h-5 ml-2" />
                 </Button>
               </div>
             )}
@@ -1002,12 +913,12 @@ export default function Onboarding() {
         if (isAuthenticated) {
           return (
             <div className="space-y-5 px-4 max-w-sm mx-auto">
-              <h2 className="text-2xl font-bold">Concluir inscrição</h2>
-              <p>Conta: {profile?.display_name || user?.email}</p>
-              <p>Os teus dados de perfil serão guardados para completares a entrada na Banda.</p>
-              <Button variant="outline" onClick={prevStep} disabled={isRegistering}>Voltar</Button>
+              <h2 className="text-2xl font-bold">{t("onboardingFlow.finish")}</h2>
+              <p>{t('onboardingFlow.name')}: {profile?.display_name || user?.email}</p>
+              <p>{t("onboardingFlow.finishHint")}</p>
+              <Button variant="outline" onClick={prevStep} disabled={isRegistering}>{t("common.back")}</Button>
               <Button onClick={handleRegister} disabled={isRegistering}>
-                {isRegistering ? 'A guardar…' : 'Concluir inscrição'}
+                {isRegistering ? t("common.saving") : t("onboardingFlow.finish")}
               </Button>
             </div>
           );
@@ -1028,40 +939,34 @@ export default function Onboarding() {
               <div className="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-br from-primary to-ubuntu flex items-center justify-center shadow-glow mb-4">
                 <Sparkles className="w-10 h-10 text-white" />
               </div>
-              <h2 className="text-2xl font-bold mb-2 text-foreground">
-                Cria a tua conta
-              </h2>
-              <p className="text-muted-foreground text-sm max-w-sm mx-auto">
-                Último passo! Regista-te para entrar na banda.
-              </p>
+              <h2 className="text-2xl font-bold mb-2 text-foreground">{t("auth.createAccount")}</h2>
+              <p className="text-muted-foreground text-sm max-w-sm mx-auto">{t("onboardingFlow.registerHint")}</p>
             </motion.div>
 
             <div className="space-y-4 max-w-xs mx-auto">
               <div>
-                <label htmlFor="onboarding-invite" className="text-sm font-medium text-foreground mb-1.5 block">Código de convite</label>
+                <label htmlFor="onboarding-invite" className="text-sm font-medium text-foreground mb-1.5 block">{t("onboardingFlow.invite")}</label>
                 <Input
                   id="onboarding-invite"
                   value={accessCode}
                   onChange={(event) => setAccessCode(event.target.value.toUpperCase())}
-                  placeholder="Código de um membro ou de acesso MVP"
+                  placeholder={t("onboardingFlow.invitePlaceholder")}
                   autoCapitalize="characters"
                   autoCorrect="off"
                   spellCheck={false}
                   aria-describedby="onboarding-invite-help"
                 />
-                <p id="onboarding-invite-help" className="text-xs text-muted-foreground mt-2">
-                  A inscrição é por convite. Se abriste um link de convite, o código aparece aqui. Caso contrário, pede o código ao membro que te convidou.
-                </p>
+                <p id="onboarding-invite-help" className="text-xs text-muted-foreground mt-2">{t("onboardingFlow.inviteHint")}</p>
               </div>
               {/* Display Name */}
               <div>
-                <label className="text-sm font-medium text-foreground mb-1.5 block">Nome</label>
+                <label className="text-sm font-medium text-foreground mb-1.5 block">{t("onboardingFlow.name")}</label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <Input
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
-                    placeholder="O teu nome"
+                    placeholder={t("auth.displayNamePlaceholder")}
                     className={cn(
                       "pl-10 pr-10 h-12 rounded-xl bg-secondary/50 border-0 focus:ring-2 focus:ring-primary",
                       displayName.length >= 2 && "ring-2 ring-green-500"
@@ -1076,7 +981,7 @@ export default function Onboarding() {
 
               {/* Username */}
               <div>
-                <label className="text-sm font-medium text-foreground mb-1.5 block">Username</label>
+                <label className="text-sm font-medium text-foreground mb-1.5 block">{t("auth.username")}</label>
                 <div className="relative">
                   <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <Input
@@ -1085,7 +990,7 @@ export default function Onboarding() {
                       setUsername(e.target.value);
                       checkUsernameAvailability(e.target.value);
                     }}
-                    placeholder="o_teu_username"
+                    placeholder={t("auth.usernamePlaceholder")}
                     className={cn(
                       "pl-10 pr-10 h-12 rounded-xl bg-secondary/50 border-0 focus:ring-2 focus:ring-primary",
                       usernameAvailable === true && "ring-2 ring-green-500",
@@ -1106,13 +1011,13 @@ export default function Onboarding() {
                   )}
                 </div>
                 {usernameAvailable === false && (
-                  <p className="text-sm text-destructive mt-1">Username já está em uso</p>
+                  <p className="text-sm text-destructive mt-1">{t("auth.usernameTaken")}</p>
                 )}
               </div>
 
               {/* Email */}
               <div>
-                <label className="text-sm font-medium text-foreground mb-1.5 block">Email</label>
+                <label className="text-sm font-medium text-foreground mb-1.5 block">{t("auth.email")}</label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <Input
@@ -1134,7 +1039,7 @@ export default function Onboarding() {
 
               {/* Password */}
               <div>
-                <label className="text-sm font-medium text-foreground mb-1.5 block">Password</label>
+                <label className="text-sm font-medium text-foreground mb-1.5 block">{t("auth.password")}</label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <Input
@@ -1147,6 +1052,7 @@ export default function Onboarding() {
                   />
                   <button
                     type="button"
+                    aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                   >
@@ -1176,9 +1082,7 @@ export default function Onboarding() {
                 className="h-14 px-6 rounded-2xl border-2"
                 disabled={isRegistering}
               >
-                <ChevronLeft className="w-5 h-5 mr-2" />
-                Voltar
-              </Button>
+                <ChevronLeft className="w-5 h-5 mr-2" />{t("common.back")}</Button>
               <Button
                 onClick={handleRegister}
                 disabled={!isRegisterFormValid || !accessCode.trim() || isRegistering}
@@ -1186,30 +1090,21 @@ export default function Onboarding() {
               >
                 {isRegistering ? (
                   <>
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    A criar conta...
-                  </>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />{t("auth.creatingAccount")}</>
                 ) : (
-                  <>
-                    Entrar na Banda
-                    <Sparkles className="w-5 h-5 ml-2" />
+                  <>{t("onboardingFlow.join")}<Sparkles className="w-5 h-5 ml-2" />
                   </>
                 )}
               </Button>
             </div>
 
-            <p className="text-xs text-muted-foreground text-center mt-4">
-              Ao criar conta, aceitas os{' '}
-              <Link to="/terms" className="underline hover:text-foreground">Termos de Serviço</Link>{' '}
-              e a{' '}
-              <Link to="/privacy" className="underline hover:text-foreground">Política de Privacidade</Link>
+            <p className="text-xs text-muted-foreground text-center mt-4">{t("onboardingFlow.accept")}{' '}
+              <Link to="/terms" className="underline hover:text-foreground">{t("auth.termsOfService")}</Link>{' '}{t("auth.and")}{' '}
+              <Link to="/privacy" className="underline hover:text-foreground">{t("auth.privacyPolicy")}</Link>
             </p>
 
-            <p className="text-center text-sm text-muted-foreground mt-4">
-              Já tens conta?{' '}
-              <Link to="/login" className="text-primary font-medium hover:underline">
-                Entrar
-              </Link>
+            <p className="text-center text-sm text-muted-foreground mt-4">{t("auth.haveAccount")}{' '}
+              <Link to="/login" className="text-primary font-medium hover:underline">{t("auth.login")}</Link>
             </p>
           </motion.div>
         );
@@ -1220,7 +1115,7 @@ export default function Onboarding() {
   };
 
   if (authLoading || !draftReady) {
-    return <div role="status" className="min-h-screen flex items-center justify-center">A recuperar inscrição…</div>;
+    return <div role="status" className="min-h-screen flex items-center justify-center">{t("onboardingFlow.resuming")}</div>;
   }
 
   return (
@@ -1236,7 +1131,7 @@ export default function Onboarding() {
       </div>
 
       {/* Yamilook Brand Header */}
-      <motion.div 
+      <motion.div
         className="relative pt-8 pb-4 flex flex-col items-center"
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -1245,7 +1140,8 @@ export default function Onboarding() {
         <Button
           variant="ghost"
           size="icon"
-          className="absolute left-3 top-8 rounded-full"
+          className="self-start ms-3 rounded-full"
+          aria-label={t('common.back')}
           onClick={() => currentStep === 0 ? navigate('/welcome') : prevStep()}
         >
           <ChevronLeft className="w-5 h-5" />
@@ -1254,13 +1150,11 @@ export default function Onboarding() {
         <div className="bg-background">
           <YamilookLogo size="md" showTagline={false} animate={false} />
         </div>
-        <p className="mt-2 text-sm font-medium text-primary/80 tracking-wide">
-          O mambo começa na banda.
-        </p>
+        <p className="mt-2 text-sm font-medium text-primary/80 tracking-wide">{t("entry.subtitle")}</p>
         <div className="mt-3 px-4 py-1.5 rounded-full bg-secondary/50 text-xs font-medium text-muted-foreground">
-          Passo {currentStep + 1} de {steps.length}
+          {t('onboardingFlow.step', { current: currentStep + 1, total: steps.length })}
           {draftReady && <span className="block text-xs mt-1" role="status">
-            {draftSaved ? (resumedDraft ? 'Inscrição retomada. Progresso guardado neste navegador.' : 'Progresso guardado neste navegador.') : draftSaved === false ? 'Não foi possível guardar o progresso neste navegador.' : 'O progresso será guardado enquanto preenches a inscrição.'}
+            {draftSaved ? (resumedDraft ? t("onboardingFlow.resumed") : t("onboardingFlow.saved")) : draftSaved === false ? t("onboardingFlow.notSaved") : t("onboardingFlow.autosave")}
           </span>}
         </div>
       </motion.div>

@@ -47,6 +47,7 @@ export function AuthLayout({ children, title, subtitle, tagline, footerNote, sho
             variant="ghost"
             size="icon"
             onClick={() => backTo ? navigate(backTo) : navigate(-1)}
+            aria-label={t('common.back')}
             className="text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-5 w-5" />

@@ -89,7 +89,7 @@ import { useAdvertising } from '@/hooks/useAdvertising';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { applyTheme, type ThemePref } from '@/lib/theme';
-import { languages } from '@/i18n';
+import { languages, changeAppLanguage } from '@/i18n';
 import { InviteSheet } from '@/components/settings/InviteSheet';
 import { supabase } from '@/integrations/supabase/client';
 import { ChangePasswordSheet } from '@/components/settings/ChangePasswordSheet';
@@ -161,7 +161,8 @@ export default function Settings() {
   }, [settings, playNotificationSound, triggerVibration, toast, isVibrationSupported]);
 
   const handleLanguageChange = async (langCode: string) => {
-    i18n.changeLanguage(langCode);
+    try { await changeAppLanguage(langCode); }
+    catch { toast({ title: t('entry.languageError'), variant: 'destructive' }); return; }
     const { error } = await updateSettings({ language: langCode });
     if (!error) {
       toast({ title: t('settings.languageUpdated') || 'Language updated' });

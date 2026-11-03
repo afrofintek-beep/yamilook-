@@ -5,14 +5,13 @@ import PaposLanguageSelector from './PaposLanguageSelector';
 import { normalizeAppLanguage } from '@/i18n/afroloc-languages';
 
 afterEach(async () => { cleanup(); await act(async () => { await changeAppLanguage('pt'); }); });
-describe('AFROLOC language selection', () => {
-  it('shows exactly the 13 options from the deployed AFROLOC selector', async () => {
+describe('YAMILOOK language rollout', () => {
+  it('shows exactly the ten enabled languages', async () => {
     await changeAppLanguage('pt');
     render(<PaposLanguageSelector />);
     expect(screen.getAllByRole('option').map(option => [option.getAttribute('value'), option.textContent])).toEqual([
       ['en','English'],['fr','Français'],['pt','Português'],['ar','العربية'],['am','አማርኛ'],
       ['sw','Kiswahili'],['ln','Lingála'],['yo','Yorùbá'],['sn','ChiShona'],['zu','isiZulu'],
-      ['kmb','Kimbundu'],['umb','Umbundu'],['kg','Kikongo'],
     ]);
   });
   it('loads Yoruba labels and persists the choice', async () => {
@@ -22,7 +21,7 @@ describe('AFROLOC language selection', () => {
     expect(i18n.t('auth.login')).toBe('Wọle');
     expect(localStorage.setItem).toHaveBeenCalledWith('i18nextLng', 'yo');
     expect(screen.getByText(/Àwọn ìtumọ̀ ṣì ń lọ lọ́wọ́/)).toBeInTheDocument();
-    expect(i18n.t('auth.enterCredentials')).toBe('Enter your details to continue');
+    expect(i18n.t('auth.enterCredentials')).toBe('Tẹ àlàyé rẹ sílẹ̀ láti tẹ̀síwájú');
   });
   it('updates and restores document direction', async () => {
     await changeAppLanguage('ar');

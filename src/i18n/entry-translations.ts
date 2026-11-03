@@ -1,4 +1,4 @@
-// Initial entry menus. Kimbundu, Umbundu and Kikongo copy requires native-speaker review.
+// Public entry menus for the ten rollout languages. Human linguistic review remains recommended.
 export const entryTranslations: Record<string, Record<string, string>> = {
   "en": {
     "chooseLanguage": "Choose your language",
@@ -99,35 +99,5 @@ export const entryTranslations: Record<string, Record<string, string>> = {
     "login": "Ngena",
     "terms": "Imigomo Yesevisi",
     "privacy": "Inqubomgomo Yobumfihlo"
-  },
-  "kmb": {
-    "chooseLanguage": "Sola o ndimi yaku",
-    "title": "Wasangana mu YAMILOOK",
-    "subtitle": "Antu a kieleka. Masangu ma esika yami.",
-    "languageError": "Katusokele kubalula ndimi. Ezeka dingi.",
-    "createAccount": "Kusala konta",
-    "login": "Kwingila",
-    "terms": "Milawu ya Kisalu",
-    "privacy": "Mpandu ya Kiseki"
-  },
-  "umb": {
-    "chooseLanguage": "Sola elimi lyove",
-    "title": "Wasangana ku YAMILOOK",
-    "subtitle": "Ovalantu valikeka. Omakutu oposika yange.",
-    "languageError": "Katwakale okukutulula elimi. Eceka vali.",
-    "createAccount": "Kusala konta",
-    "login": "Okuingila",
-    "terms": "Omilao yondaka",
-    "privacy": "Omilao yosikalu"
-  },
-  "kg": {
-    "chooseLanguage": "Sola ndinga na nge",
-    "title": "Mbote na YAMILOOK",
-    "subtitle": "Bantu ba kieleka. Masolo ma esika yami.",
-    "languageError": "Katulendi soba ndinga ko. Meká diaka.",
-    "createAccount": "Kusadila konta",
-    "login": "Kukota",
-    "terms": "Minsiku mia Kisalu",
-    "privacy": "Minsiku mia Nsweki"
   }
 };

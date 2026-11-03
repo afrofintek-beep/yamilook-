@@ -1,5 +1,5 @@
 import { entryTranslations } from './entry-translations';
-import { afrolocLanguages, normalizeAppLanguage } from './afroloc-languages';
+import { appLanguages, normalizeAppLanguage } from './afroloc-languages';
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
@@ -7,10 +7,7 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 // Only load Portuguese (default) synchronously, others will be lazy-loaded
 import pt from './locales/pt.json';
 
-export const languages = [...afrolocLanguages,
-  { code: 'pt-banda', name: 'Yamilook da Banda', nativeName: 'Yamilook da Banda' },
-  { code: 'cjk', name: 'Tchokwe', nativeName: 'Tchokwe' },
-];
+export const languages = appLanguages;
 
 // Load banda overrides for urban tone
 const loadBandaOverrides = async (): Promise<Record<string, unknown>> => {
@@ -95,6 +92,7 @@ i18n
     },
     detection: {
       order: ['localStorage', 'navigator'],
+      convertDetectedLanguage: normalizeAppLanguage,
       caches: ['localStorage'],
     },
   });

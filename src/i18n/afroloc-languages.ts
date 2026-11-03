@@ -15,9 +15,11 @@ export const afrolocLanguages = [
   { code: 'umb', name: 'Umbundu', nativeName: 'Umbundu' },
   { code: 'kg', name: 'Kikongo', nativeName: 'Kikongo' },
 ];
+// Public rollout: the remaining three ecosystem languages await linguistic review.
+export const appLanguages = afrolocLanguages.filter(language => !['umb', 'kmb', 'kg'].includes(language.code));
 export function normalizeAppLanguage(value: string) {
   const code = value.toLowerCase();
   if (code === 'pt-banda') return code;
   const base = code.split('-')[0];
-  return [...afrolocLanguages.map(l => l.code), 'cjk'].includes(base) ? base : 'pt';
+  return [...appLanguages.map(l => l.code), 'cjk'].includes(base) ? base : 'pt';
 }
