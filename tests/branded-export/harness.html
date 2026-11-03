@@ -1,0 +1,19 @@
+<!doctype html><html><body><button id="export">Export synthetic fixture</button><p id="status">Ready</p><video controls id="preview"></video><a id="download">Download</a><script type="module">
+import { brandVideo } from '/src/lib/branded-video.ts';
+import { brandImage, brandText } from '/src/lib/branded-media.ts';
+document.querySelector('#export').onclick = async () => {
+  const status = document.querySelector('#status');
+  try {
+    const response = await fetch('/tests/branded-export/fixture.mp4');
+    const file = new File([await response.blob()], 'fixture.mp4', {type:'video/mp4'});
+    const identity = {content:'Cerimónia de abertura da AFIS\n' + 'Texto completo 🎉 '.repeat(180), author:{name:'Autor de teste',username:'autor_teste'}};
+    const cards = await brandText(identity);
+    const image = await brandImage(new File([await (await fetch('/yamilook-logo.png')).blob()], 'photo.png', {type:'image/png'}), identity);
+    const video = await brandVideo(file, identity, new AbortController().signal, p => status.textContent = 'Export '+p);
+    const url = URL.createObjectURL(video);
+    document.querySelector('#preview').src = url;
+    const link = document.querySelector('#download'); link.href = url; link.download = video.name;
+    status.textContent = 'PASS '+JSON.stringify({cards:cards.length,image:image.size,video:video.size,type:video.type});
+  } catch(error) { status.textContent = 'FAIL '+error.stack; }
+};
+</script></body></html>

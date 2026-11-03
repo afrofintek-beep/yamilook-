@@ -34,12 +34,21 @@ export async function handleOwnedPostMedia(req, { url, key, fetcher = fetch }) {
     if (!session.ok || !uuid(await session.json())) return json({ error: 'unauthorized' }, 401);
     // User JWT keeps RLS active; an additional ownership filter restricts this
     // export operation even when the viewer is allowed to read somebody's post.
-    const query = new URLSearchParams({ select: 'id,user_id,media_urls,is_hidden', id: `eq.${input.postId}`, user_id: `eq.${user.id}`, is_hidden: 'eq.false', limit: '1' });
+    const query = new URLSearchParams({ select: input.mode === 'branding' ? 'id,user_id,media_urls,is_hidden,content' : 'id,user_id,media_urls,is_hidden', id: `eq.${input.postId}`, user_id: `eq.${user.id}`, is_hidden: 'eq.false', limit: '1' });
     const response = await fetcher(`${base}/rest/v1/posts?${query}`, options);
     if (!response.ok) throw new Error('post_unavailable');
     const rows = await response.json();
     const post = rows?.[0];
     if (!post || post.id.toLowerCase() !== input.postId.toLowerCase() || post.user_id !== user.id || post.is_hidden !== false) return json({ error: 'media_unavailable' }, 404);
+    if (input.mode === 'branding') {
+      const profileQuery = new URLSearchParams({ select: 'id,display_name,username', id: `eq.${user.id}`, limit: '1' });
+      const profileResponse = await fetcher(`${base}/rest/v1/profiles?${profileQuery}`, options);
+      if (!profileResponse.ok) throw new Error('profile_unavailable');
+      const profile = (await profileResponse.json())?.[0];
+      if (profile?.id !== user.id) throw new Error('profile_unavailable');
+      console.info('owned_post_export_authorized', { postId: post.id, userId: user.id });
+      return json({ content: post.content || '', author: { name: profile.display_name?.trim() || 'Autor', username: profile.username?.trim() || '' } });
+    }
     const descriptor = ownedMediaDescriptor(post, input.index, base);
     return descriptor ? json(descriptor) : json({ error: 'media_unavailable' }, 404);
   } catch { return json({ error: 'unavailable' }, 503); }

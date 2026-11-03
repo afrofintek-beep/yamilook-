@@ -1,3 +1,4 @@
+import BrandedPostExport from './BrandedPostExport';
 import PostVideoShare from './PostVideoShare';
 import OwnedPostMediaShare from './OwnedPostMediaShare';
 import { useState } from 'react';
@@ -21,6 +22,7 @@ export default function PostShareDialog({ id, mediaUrls = [], privacy = 'everyon
   };
   return <ResponsiveModal open={open} onOpenChange={onOpenChange} title="Partilhar publicação" description="Escolhe como e onde queres partilhar." className="max-h-[90svh] overflow-y-auto">
     {isOwner && <p className="mb-4 text-sm">Visibilidade na Yamilook: <strong>{audience}</strong>. Enviar um ficheiro mantém esta escolha.</p>}
+    {open && isOwner && <BrandedPostExport id={id} mediaUrls={mediaUrls} onShared={onShared} />}
     {open && (isOwner ? <OwnedPostMediaShare id={id} mediaUrls={mediaUrls} onShared={onShared} /> : isPublic ? <PostVideoShare id={id} mediaUrls={mediaUrls} onShared={onShared} /> : null)}
     {isPublic ? <><h3 className="mb-2 font-semibold">Partilhar ligação</h3>
     <div className="grid gap-2">

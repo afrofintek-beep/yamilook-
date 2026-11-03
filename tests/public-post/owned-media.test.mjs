@@ -116,3 +116,19 @@ test('cancellation stops a stream and never returns the file', async () => {
   await assert.rejects(prepareOwnedMedia(async () => descriptor, { signal: controller.signal, onProgress: () => controller.abort(), fetcher: async () => new Response(stream) }), { name: 'AbortError' });
   assert.equal(cancelled, true);
 });
+
+test('branding returns server-owned text and author, including private text-only posts', async () => {
+  const b = backend({ row: { ...post, media_urls: [], content: 'Private text' } });
+  const response = await invoke(request({ postId: id, index: 0, mode: 'branding', author: 'forged', content: 'forged' }), {
+    fetcher: (target, options) => target.includes('/profiles?') ? Response.json([{ id: userId, display_name: 'Author', username: 'author ' }]) : b.fetcher(target, options),
+  });
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { content: 'Private text', author: { name: 'Author', username: 'author' } });
+});
+test('branding does not expose text for a non-owner or inactive session', async () => {
+  for (const setup of [{ row: { ...post, user_id: sessionId, content: 'secret' } }, { session: null }]) {
+    const response = await invoke(request({ postId: id, index: 0, mode: 'branding' }), backend(setup));
+    assert.ok([401, 404].includes(response.status));
+    assert.ok(!(await response.text()).includes('secret'));
+  }
+});
