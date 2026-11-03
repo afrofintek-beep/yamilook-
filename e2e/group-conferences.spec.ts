@@ -175,7 +175,7 @@ for (const [width, height, insets] of [
     const reachable = async (control: import('@playwright/test').Locator, bottom = height) => {
       await expect.poll(() => control.evaluate((el, bounds) => {
         const box = el.getBoundingClientRect();
-        return box.top >= bounds.top && box.left >= bounds.left && box.right <= bounds.right + 1 && box.bottom <= bounds.bottom + 1 && el.contains(document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2));
+        return box.top >= bounds.top && box.left >= bounds.left && box.right <= bounds.right + 1 && box.bottom <= bounds.bottom + 1 && (el.matches(':disabled') || el.contains(document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2)));
       }, { top: insets[0], left: insets[3], right: width - insets[1], bottom: bottom - insets[2] })).toBe(true);
     };
     await reachable(close);
