@@ -1,3 +1,4 @@
+import { publicSharing } from "./build/public-sharing-plugin";
 import { paposApplication } from "./build/papos-plugin";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
@@ -30,6 +31,7 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
+    publicSharing(),
     VitePWA({
       registerType: "autoUpdate",
       injectRegister: null,

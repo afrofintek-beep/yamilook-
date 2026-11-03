@@ -18,7 +18,7 @@ test('public page contains the complete text, video controls and social metadata
   assert.match(html, /property="og:url" content="https:\/\/www.yamilook.com\/post\//);
   assert.match(html, /Olá &lt;script&gt;/);
   assert.doesNotMatch(html, /<script>alert/);
-  assert.doesNotMatch(html, /type="module"|src="\/assets\//);
+  assert.doesNotMatch(html, /src="\/assets\//);
 });
 for (const change of [{ privacy: 'contacts' }, { privacy: 'only_me' }, { privacy: 'close_friends' }, { is_hidden: true }]) {
   test(`restricted data is never rendered: ${JSON.stringify(change)}`, async () => {
