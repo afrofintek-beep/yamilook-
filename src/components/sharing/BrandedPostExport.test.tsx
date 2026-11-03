@@ -1,9 +1,11 @@
+import { prepareOwnedVideoExport } from '@/lib/owned-video-export';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import BrandedPostExport from './BrandedPostExport';
 import { getExportIdentity, prepareOwnedPostMedia, getOwnedMediaDescriptor } from '@/lib/owned-post-media';
 import { brandImage, brandText } from '@/lib/branded-media';
 import { canShareVideo, sharePreparedVideo } from '../../../shared/post-video-sharing.mjs';
+vi.mock('@/lib/owned-video-export', () => ({ prepareOwnedVideoExport: vi.fn() }));
 vi.mock('@/lib/owned-post-media', () => ({ getExportIdentity: vi.fn(), prepareOwnedPostMedia: vi.fn(), getOwnedMediaDescriptor: vi.fn() }));
 vi.mock('@/lib/branded-media', () => ({ brandImage: vi.fn(), brandText: vi.fn() }));
 vi.mock('../../../shared/post-video-sharing.mjs', () => ({ canShareVideo: vi.fn(), sharePreparedVideo: vi.fn() }));
@@ -60,4 +62,13 @@ it('aborts preparation on unmount and prevents stale output', async () => {
   fireEvent.click(screen.getByText('Preparar cópia com marca'));
   const signal = vi.mocked(getExportIdentity).mock.calls[0][1];
   view.unmount(); expect(signal?.aborted).toBe(true);
+});
+
+it('exports branded video by URL instead of downloading a size-limited File', async () => {
+  vi.mocked(prepareOwnedVideoExport).mockResolvedValue(new File(['mp4'], 'video-yamilook.mp4', { type: 'video/mp4' }));
+  render(<BrandedPostExport id="id" mediaUrls={['https://example.test/large.webm']} />);
+  fireEvent.click(screen.getByText('Preparar cópia com marca'));
+  await screen.findByText('Pré-visualização da cópia');
+  expect(prepareOwnedPostMedia).not.toHaveBeenCalled();
+  expect(prepareOwnedVideoExport).toHaveBeenCalledWith('id', 0, expect.objectContaining({ identity, signal: expect.any(AbortSignal) }));
 });

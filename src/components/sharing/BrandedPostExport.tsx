@@ -1,3 +1,4 @@
+import { prepareOwnedVideoExport } from '@/lib/owned-video-export';
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { getExportIdentity, prepareOwnedPostMedia, getOwnedMediaDescriptor } from '@/lib/owned-post-media';
@@ -32,12 +33,13 @@ function ExportAction({ id, index, kind, onShared }: { id: string; index: number
       else {
         setStatus('A carregar o ficheiro original…');
         const descriptor = await getOwnedMediaDescriptor(id, index, controller.signal);
-        const original = await prepareOwnedPostMedia(id, index, { signal: controller.signal, onProgress: (loaded, total) => setStatus(total ? `A carregar… ${Math.round(100 * loaded / total)}%` : 'A carregar…') });
         if (kind === 'video') {
-          const { brandVideo } = await import('@/lib/branded-video');
-          setStatus('A exportar vídeo com áudio. Mantém esta página aberta…');
-          result = [await brandVideo(original, identity, controller.signal, progress => setStatus(`A exportar vídeo com áudio… ${progress}%`))];
-        } else result = [await brandImage(original, identity, controller.signal)];
+          setStatus('A preparar MP4 com áudio. Mantém esta página aberta…');
+          result = [await prepareOwnedVideoExport(id, index, { identity, signal: controller.signal, onProgress: progress => setStatus(`A preparar MP4 com áudio… ${progress}%`) })];
+        } else {
+          const original = await prepareOwnedPostMedia(id, index, { signal: controller.signal, onProgress: (loaded, total) => setStatus(total ? `A carregar… ${Math.round(100 * loaded / total)}%` : 'A carregar…') });
+          result = [await brandImage(original, identity, controller.signal)];
+        }
         const current = await getOwnedMediaDescriptor(id, index, controller.signal);
         if (current.url !== descriptor.url) throw new Error('A publicação mudou. Prepara novamente a cópia.');
       }
@@ -72,7 +74,6 @@ function ExportAction({ id, index, kind, onShared }: { id: string; index: number
       {files.length > 1 && <label className="block text-sm">Cartão a enviar<select aria-label="Cartão a enviar" value={page} onChange={event => setPage(Number(event.target.value))} className="ml-2 rounded border bg-background p-2">{files.map((_, i) => <option key={i} value={i}>{i + 1} de {files.length}</option>)}</select></label>}
       {file.type.startsWith('video/') ? <video key={preview} src={preview} controls playsInline preload="metadata" className="max-h-[50svh] w-full rounded-lg bg-black" aria-label="Pré-visualização do vídeo exportado" /> : <img src={preview} alt="Cópia com o logótipo Yamilook e identificação do autor" className="max-h-[50svh] w-full rounded-lg object-contain" />}
       <p className="text-xs text-muted-foreground">{file.type.startsWith('video/') ? 'Reproduz para confirmar também o áudio. ' : ''}{file.name} · {(file.size / 1048576).toFixed(1)} MB</p>
-      {file.type === 'video/webm' && <p className="text-sm">Este navegador exportou em WebM. Se a aplicação de destino não aceitar este formato, usa o original ou exporta num navegador com suporte MP4.</p>}
       {canShareVideo(file) && <Button className="w-full" disabled={sharing} onClick={() => void share()}>Confirmar e escolher aplicação</Button>}
       <Button asChild variant="outline" className="w-full"><a href={preview} download={file.name}>Guardar cópia com marca</a></Button>
       <Button variant="ghost" className="w-full" disabled={sharing} onClick={() => { setFiles([]); setStatus(''); }}>Preparar novamente</Button>
@@ -88,7 +89,7 @@ export default function BrandedPostExport({ id, mediaUrls, onShared }: { id: str
     <h3 className="font-semibold">Partilhar com a marca Yamilook</h3>
     <p className="text-sm text-muted-foreground">Cria uma cópia com logótipo e autor. Confirma o resultado antes de escolher a aplicação e o destinatário. Quem recebe pode guardar ou reencaminhar a cópia.</p>
     {!!media.length && <label className="block text-sm">Conteúdo a exportar<select className="mt-1 min-h-11 w-full rounded border bg-background p-2" value={selection} onChange={event => setSelection(Number(event.target.value))}>{media.map((item, position) => <option key={item.index} value={item.index}>{item.kind === 'video' ? 'Vídeo' : 'Fotografia'} {position + 1}</option>)}<option value={-1}>Cartão de texto</option></select></label>}
-    {selected.kind === 'video' && <p className="text-xs text-muted-foreground">Vídeos até 10 minutos e 100 MB. Mantém a página aberta durante a preparação.</p>}
+    {selected.kind === 'video' && <p className="text-xs text-muted-foreground">Preparamos uma cópia MP4 mais pequena, com áudio, para enviar noutras aplicações. Vídeos até 10 minutos. Mantém esta página aberta.</p>}
     <ExportAction key={`${id}:${selected.index}:${mediaUrls[selected.index] ?? ''}`} id={id} index={selected.index} kind={selected.kind} onShared={onShared} />
   </section>;
 }

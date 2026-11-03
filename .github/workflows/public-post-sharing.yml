@@ -1,7 +1,7 @@
 name: Public post sharing
 on:
   pull_request:
-    paths: ['api/public-post.js', 'server/public-post-page.mjs', 'shared/public-post.mjs', 'shared/post-video-sharing.mjs', 'shared/owned-post-media.mjs', 'supabase/functions/owned-post-media/**', 'build/public-sharing-plugin.ts', 'vite.config.ts', 'shared/share-destinations.mjs', 'src/components/sharing/**', 'src/features/sharing/**', 'src/features/papos/PaposApp.tsx', 'src/components/chat/EnhancedMessageBubble*', 'public/public-post*', 'src/pages/PublicPost.tsx', 'src/lib/owned-post-media*', 'src/lib/branded-*', 'package-lock.json', 'src/lib/post-sharing*', 'src/components/feed/PostCard*', 'supabase/migrations/*public_post_sharing.sql', 'tests/public-post/**', 'tests/branded-export/**', 'vercel.json', '.github/workflows/public-post-sharing.yml']
+    paths: ['api/public-post.js', 'server/public-post-page.mjs', 'shared/public-post.mjs', 'shared/post-video-sharing.mjs', 'shared/owned-post-media.mjs', 'supabase/functions/owned-post-media/**', 'build/public-sharing-plugin.ts', 'vite.config.ts', 'shared/share-destinations.mjs', 'src/components/sharing/**', 'src/features/sharing/**', 'src/features/papos/PaposApp.tsx', 'src/components/chat/EnhancedMessageBubble*', 'public/public-post*', 'src/pages/PublicPost.tsx', 'src/lib/owned-post-media*', 'src/lib/owned-video-export*', 'src/lib/branded-*', 'package-lock.json', 'src/lib/post-sharing*', 'src/components/feed/PostCard*', 'supabase/migrations/*public_post_sharing.sql', 'tests/public-post/**', 'tests/branded-export/**', 'vercel.json', '.github/workflows/public-post-sharing.yml']
 permissions:
   contents: read
 jobs:
@@ -15,13 +15,15 @@ jobs:
           cache: npm
       - run: npm ci
       - run: node --test tests/public-post/*.test.mjs
-      - run: npm test -- src/lib/branded-media.test.ts src/lib/branded-video.test.ts src/lib/post-sharing.test.ts src/components/sharing src/components/feed/PostCard.test.tsx src/features/sharing src/components/chat/EnhancedMessageBubble.test.tsx src/features/papos/Papos.test.tsx
+      - run: npm test -- src/lib/owned-video-export.test.ts src/lib/branded-media.test.ts src/lib/branded-video.test.ts src/lib/post-sharing.test.ts src/components/sharing src/components/feed/PostCard.test.tsx src/features/sharing src/components/chat/EnhancedMessageBubble.test.tsx src/features/papos/Papos.test.tsx
       - run: npx tsc --noEmit -p tsconfig.app.json
       - run: npm run build
       - run: sudo apt-get update && sudo apt-get install -y ffmpeg
       - run: npx playwright install --with-deps chromium
       - run: ffmpeg -v error -f lavfi -i testsrc2=size=640x360:rate=30 -f lavfi -i sine=frequency=440:sample_rate=48000 -t 3 -c:v libx264 -pix_fmt yuv420p -c:a aac -y tests/branded-export/fixture.mp4
       - run: ffmpeg -v error -i tests/branded-export/fixture.mp4 -c:v libvpx-vp9 -c:a libopus -y tests/branded-export/fixture.webm
+      - run: ffmpeg -v error -i tests/branded-export/fixture.webm -c copy -live 1 -y tests/branded-export/live.webm
+      - run: node tests/branded-export/create-large-fixture.mjs
       - run: npx playwright test -c tests/branded-export/playwright.config.mjs
       - uses: actions/upload-artifact@v4
         if: always()

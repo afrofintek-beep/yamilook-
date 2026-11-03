@@ -4,13 +4,13 @@ import { brandImage, brandText } from '/src/lib/branded-media.ts';
 document.querySelector('#export').onclick = async () => {
   const status = document.querySelector('#status');
   try {
+    const large = new URL(location.href).searchParams.has('large');
     const extension = new URL(location.href).searchParams.get('format') === 'webm' ? 'webm' : 'mp4';
-    const response = await fetch('/tests/branded-export/fixture.' + extension);
-    const file = new File([await response.blob()], 'fixture.' + extension, {type:'video/' + extension});
+    const sourceUrl = new URL('/tests/branded-export/' + (large ? 'large.webm' : 'fixture.' + extension), location.href).href;
     const identity = {content:'Cerimónia de abertura da AFIS\n' + 'Texto completo 🎉 '.repeat(180), author:{name:'Autor de teste',username:'autor_teste'}};
     const cards = await brandText(identity);
     const image = await brandImage(new File([await (await fetch('/yamilook-logo.png')).blob()], 'photo.png', {type:'image/png'}), identity);
-    const video = await brandVideo(file, identity, new AbortController().signal, p => status.textContent = 'Export '+p);
+    const video = await brandVideo(sourceUrl, identity, new AbortController().signal, p => status.textContent = 'Export '+p);
     const url = URL.createObjectURL(video);
     document.querySelector('#preview').src = url;
     const link = document.querySelector('#download'); link.href = url; link.download = video.name;

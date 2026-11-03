@@ -1,16 +1,23 @@
+import { prepareOwnedVideoExport } from '@/lib/owned-video-export';
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { getOwnedMediaDescriptor, prepareOwnedPostMedia } from '@/lib/owned-post-media';
 import { mediaKind } from '../../../shared/owned-post-media.mjs';
 import { canShareVideo as canShareFile, sharePreparedVideo as shareFile } from '../../../shared/post-video-sharing.mjs';
 
-function FileActions({ id, index, onShared }: { id: string; index: number; onShared?: () => void }) {
+function FileActions({ id, index, kind, onShared }: { id: string; index: number; kind: string; onShared?: () => void }) {
   const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState('');
   const [download, setDownload] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState('');
   const request = useRef<AbortController | null>(null);
   useEffect(() => () => { request.current?.abort(); request.current = null; }, []);
+  useEffect(() => {
+    if (!file || kind !== 'video') { setPreview(''); return; }
+    const url = URL.createObjectURL(file); setPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file, kind]);
   useEffect(() => {
     if (!download) return;
     const timeout = window.setTimeout(() => setDownload(null), 30000);
@@ -27,12 +34,18 @@ function FileActions({ id, index, onShared }: { id: string; index: number; onSha
       request.current = null;
       setBusy(false);
       setStatus('A preparação demorou demasiado. Tenta novamente ou descarrega o ficheiro.');
-    }, 120000);
+    }, kind === 'video' ? 15 * 60 * 1000 : 120000);
     setBusy(true);
     setDownload(null);
     setStatus(downloadOnly ? 'A preparar descarga…' : 'A preparar ficheiro…');
     try {
-      if (downloadOnly) {
+      if (kind === 'video') {
+        setStatus('A preparar MP4 com áudio. Mantém esta página aberta…');
+        const prepared = await prepareOwnedVideoExport(id, index, { signal: controller.signal, onProgress: progress => { if (!controller.signal.aborted) setStatus(`A preparar MP4 com áudio… ${progress}%`); } });
+        if (controller.signal.aborted) return;
+        setFile(prepared);
+        setStatus('MP4 pronto. Reproduz a pré-visualização e escolhe a aplicação ou guarda o vídeo.');
+      } else if (downloadOnly) {
         const descriptor = await getOwnedMediaDescriptor(id, index, controller.signal);
         if (controller.signal.aborted) return;
         setDownload(descriptor.downloadUrl);
@@ -81,9 +94,10 @@ function FileActions({ id, index, onShared }: { id: string; index: number; onSha
 
   return <div className="space-y-2">
     {!file && <Button className="w-full" disabled={busy} onClick={() => void prepare()}>Preparar ficheiro</Button>}
+    {file && preview && kind === 'video' && <><video src={preview} controls playsInline preload="metadata" aria-label="Pré-visualização do MP4" className="max-h-[50svh] w-full rounded bg-black" /><p className="text-xs">MP4 · {(file.size / 1048576).toFixed(1)} MB · com áudio quando presente no original</p><Button asChild variant="outline" className="w-full"><a href={preview} download={file.name}>Guardar vídeo MP4</a></Button></>}
     {file && canShareFile(file) && <Button className="w-full" disabled={busy} onClick={() => void share()}>Escolher aplicação</Button>}
     {busy && request.current && <Button variant="ghost" className="w-full" onClick={cancel}>Cancelar preparação</Button>}
-    <Button variant="outline" className="w-full" disabled={busy} onClick={() => void prepare(true)}>Descarregar ficheiro</Button>
+    {(!file || kind !== 'video') && <Button variant="outline" className="w-full" disabled={busy} onClick={() => void prepare(true)}>Descarregar ficheiro</Button>}
     {download && <Button asChild variant="outline" className="w-full"><a href={download} target="_blank" rel="noopener noreferrer" referrerPolicy="no-referrer">Guardar ficheiro</a></Button>}
     <p role="status" aria-live="polite" className="text-sm">{status}</p>
   </div>;
@@ -98,6 +112,6 @@ export default function OwnedPostMediaShare({ id, mediaUrls, onShared }: { id: s
     <h3 className="font-semibold">Enviar ficheiro a amigos</h3>
     <p className="text-sm text-muted-foreground">Envia uma cópia da fotografia ou do vídeo. Escolhe o destinatário na aplicação. Quem recebe pode guardar ou reencaminhar o ficheiro.</p>
     {media.length > 1 && <label className="block text-sm">Ficheiro a enviar<select className="mt-1 min-h-11 w-full rounded border bg-background p-2" value={index} onChange={event => setSelection(Number(event.target.value))}>{media.map((item, position) => <option key={item.index} value={item.index}>{item.kind === 'video' ? 'Vídeo' : 'Fotografia'} {position + 1}</option>)}</select></label>}
-    <FileActions key={`${id}:${index}:${mediaUrls[index]}`} id={id} index={index} onShared={onShared} />
+    <FileActions key={`${id}:${index}:${mediaUrls[index]}`} id={id} index={index} kind={media.find(item => item.index === index)?.kind || 'image'} onShared={onShared} />
   </section>;
 }
