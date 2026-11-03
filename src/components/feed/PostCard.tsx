@@ -1,3 +1,4 @@
+import { sharePostLink } from '@/lib/post-sharing';
 import { useState, useRef, useCallback, useEffect, memo, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -202,13 +203,26 @@ export const PostCard = memo(function PostCard({ mediaPriority = false, post, on
     }
   };
 
-  const handleShare = () => {
-    navigator.clipboard.writeText(`${window.location.origin}/post/${post.id}`);
-    toast({
-      title: t('feed.linkCopied'),
-      description: t('feed.linkCopiedDesc'),
-    });
-    sharePost(post.id, 'message');
+  const handleShare = async (copyOnly = false) => {
+    if (post.privacy !== 'everyone') {
+      toast({
+        title: t('publicPost.restricted', 'Publicação com visibilidade limitada'),
+        description: isOwner
+          ? t('publicPost.makePublic', 'Seleciona “Todos” na visibilidade para partilhar fora do Yamilook.')
+          : t('publicPost.authorOnly', 'Só o autor pode tornar esta publicação pública.'),
+      });
+      if (isOwner) { setEditEverOpened(true); setShowEdit(true); }
+      return;
+    }
+    try {
+      const result = await sharePostLink(post.id, { title: `${post.user.display_name} — Yamilook`, copyOnly });
+      if (result === 'cancelled') return;
+      if (result === 'copied') toast({ title: t('feed.linkCopied'), description: t('feed.linkCopiedDesc') });
+      // Record only successful share/copy operations; cancellation is not a share.
+      await sharePost(post.id, 'message');
+    } catch {
+      toast({ title: t('publicPost.shareError', 'Não foi possível partilhar. Tenta novamente.'), variant: 'destructive' });
+    }
   };
 
   const handleDelete = async () => {
@@ -260,7 +274,7 @@ export const PostCard = memo(function PostCard({ mediaPriority = false, post, on
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={handleShare}>
+            <DropdownMenuItem onClick={() => void handleShare(true)}>
               <Link className="w-4 h-4 mr-2" />
               {t('feed.copyLink')}
             </DropdownMenuItem>
@@ -433,7 +447,8 @@ export const PostCard = memo(function PostCard({ mediaPriority = false, post, on
             variant="ghost" 
             size="sm"
             className="gap-2 px-2 min-h-11 min-w-11"
-            onClick={handleShare}
+            aria-label={t('publicPost.share', 'Partilhar')}
+            onClick={() => void handleShare()}
           >
             <Send className="w-5 h-5" />
           </Button>

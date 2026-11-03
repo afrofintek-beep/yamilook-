@@ -2,6 +2,14 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
     {
+      "source": "/post/:id",
+      "destination": "/api/public-post?id=:id"
+    },
+    {
+      "source": "/api/public-post",
+      "destination": "/api/public-post"
+    },
+    {
       "source": "/papos-app",
       "destination": "/papos-app/index.html"
     },

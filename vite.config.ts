@@ -37,7 +37,7 @@ export default defineConfig(({ mode }) => ({
       workbox: {
         globIgnores: ["papos-app/**"],
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
-        navigateFallbackDenylist: [/^\/papos-app(?:\/|$)/,/^\/~oauth/, /^\/guia/, /^\/app/, /^\/download/, /^\/store/],
+        navigateFallbackDenylist: [/^\/post(?:\/|$)/, /^\/api(?:\/|$)/, /^\/papos-app(?:\/|$)/,/^\/~oauth/, /^\/guia/, /^\/app/, /^\/download/, /^\/store/],
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
