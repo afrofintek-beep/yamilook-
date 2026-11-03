@@ -1,0 +1,33 @@
+name: Yamilook startup recovery
+on:
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'public/app/recover.html'
+      - 'src/main.tsx'
+      - 'src/App.tsx'
+      - 'src/components/AppStartupBoundary*'
+      - 'src/lib/app-assets*'
+      - 'src/lib/call-update-guard*'
+      - 'src/test/yamilook-startup.test.ts'
+      - '.github/workflows/yamilook-startup.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  startup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      VITE_SUPABASE_URL: https://example.supabase.co
+      VITE_SUPABASE_PUBLISHABLE_KEY: test-key
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx vitest run src/components/AppStartupBoundary.test.tsx src/test/yamilook-startup.test.ts src/lib/app-assets.test.ts src/lib/call-update-guard.test.ts src/features/papos/startup-recovery.test.ts
+      - run: npx tsc --noEmit --project tsconfig.app.json
+      - run: npm run build

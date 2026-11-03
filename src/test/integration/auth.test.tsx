@@ -61,7 +61,7 @@ describe('Authentication Flow', () => {
       fireEvent.click(submitButton);
 
       await waitFor(() => {
-        expect(screen.getByText(/por favor insere um email válido/i)).toBeInTheDocument();
+        expect(screen.getByText(/introduz um email válido/i)).toBeInTheDocument();
       });
     });
 
@@ -75,7 +75,7 @@ describe('Authentication Flow', () => {
       fireEvent.click(submitButton);
 
       await waitFor(() => {
-        expect(screen.getByText(/por favor insere um email válido/i)).toBeInTheDocument();
+        expect(screen.getByText(/introduz um email válido/i)).toBeInTheDocument();
       });
     });
 

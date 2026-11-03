@@ -11,7 +11,9 @@ for (const width of [320, 390]) {
     await page.route('**/127.0.0.1:54321/**', route => route.fulfill({ json: [] }));
     await page.goto('/papos-app/login');
     const select = page.getByRole('combobox');
-    await expect(select.locator('option')).toHaveCount(13);
+    await expect(select.locator('option')).toHaveCount(10);
+    // The public rollout excludes languages still awaiting linguistic review.
+    await expect(select.locator('option[value="kmb"], option[value="umb"], option[value="kg"]')).toHaveCount(0);
     await expect(select).toBeEnabled();
     await select.selectOption('fr');
     await expect(page.getByLabel('Mot de passe', { exact: true })).toBeVisible();

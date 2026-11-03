@@ -2,6 +2,7 @@ import { deferCallUpdate } from './lib/call-update-guard';
 import { recoverApplicationAssets } from './lib/app-assets';
 import { clearLegacyPrivateCache } from "./lib/private-cache";
 import React from "react";
+import { AppStartupBoundary } from './components/AppStartupBoundary';
 import { createRoot } from "react-dom/client";
 import { I18nextProvider } from "react-i18next";
 import i18n from "./i18n";
@@ -157,8 +158,10 @@ void setupPwaAutoUpdate();
 // Render immediately for instant first paint
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
+    <AppStartupBoundary>
     <I18nextProvider i18n={i18n}>
       <App />
     </I18nextProvider>
+    </AppStartupBoundary>
   </React.StrictMode>
 );
