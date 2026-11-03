@@ -75,9 +75,11 @@ export function ContactInviteActions() {
       {pending && <p role="status">A preparar convite…</p>}
     </> : <>
       <Button variant="outline" className="w-full" onClick={() => setChannel('qr')}><QrCode className="mr-2 h-4 w-4" />Mostrar QR individual</Button>
-      {channel === 'qr' && <figure className="space-y-2 text-center" aria-label="Convite individual por QR code">
-        <div className="mx-auto w-fit max-w-full rounded-lg bg-white p-4"><QRCodeSVG value={url} size={240} level="M" marginSize={4} title="Convite individual" style={{ maxWidth: '100%', height: 'auto' }} /></div>
-        <figcaption className="text-sm text-muted-foreground">Lê com a câmara para te registares. Válido para uma pessoa; só fica utilizado após o registo bem-sucedido.</figcaption>
+      {channel === 'qr' && <figure className="space-y-3 rounded-2xl border border-primary/20 bg-gradient-to-b from-primary/10 to-background p-4 text-center" aria-label="Convite individual por QR code">
+        <p className="text-xs font-semibold uppercase tracking-widest text-primary">Convite pessoal · {brand}</p>
+        <h3 className="text-xl font-bold">A nossa comunidade começa contigo.</h3>
+        <div className="mx-auto w-fit max-w-full rounded-lg bg-white p-4"><QRCodeSVG value={url} size={240} level="H" marginSize={4} imageSettings={{ src: brand === 'KOSOLOLA' ? '/papos-app/kosolola-icon-192.png' : '/yamilook-logo.png', width: 44, height: brand === 'KOSOLOLA' ? 44 : 30, excavate: true }} title="Convite individual" style={{ maxWidth: '100%', height: 'auto' }} /></div>
+        <figcaption className="text-sm text-muted-foreground">Aponta a câmara. Junta-te à {brand}.<span className="mt-1 block text-xs">Este convite é só para ti. Uma pessoa, uma adesão.</span></figcaption>
       </figure>}
       <Button variant={channel === 'whatsapp' ? 'default' : 'outline'} className="w-full" asChild><a href={buildWhatsAppInviteUrl('', invite.code, brand)} target="_blank" rel="noopener noreferrer"><MessageCircle className="mr-2 h-4 w-4" />Escolher contacto no WhatsApp</a></Button>
       <Button variant={channel === 'email' ? 'default' : 'outline'} className="w-full" asChild><a href={buildEmailInviteDraftUrl('', invite.code, brand)}><Mail className="mr-2 h-4 w-4" />Escolher contacto no email</a></Button>
