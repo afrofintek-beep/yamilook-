@@ -208,13 +208,11 @@ export const PostCard = memo(function PostCard({ mediaPriority = false, post, on
 
   const handleShare = async (copyOnly = false) => {
     if (post.privacy !== 'everyone') {
+      if (isOwner) { setShowShare(true); return; }
       toast({
         title: t('publicPost.restricted', 'Publicação com visibilidade limitada'),
-        description: isOwner
-          ? t('publicPost.makePublic', 'Seleciona “Todos” na visibilidade para partilhar fora do Yamilook.')
-          : t('publicPost.authorOnly', 'Só o autor pode tornar esta publicação pública.'),
+        description: 'Só o autor pode enviar ficheiros desta publicação restrita.',
       });
-      if (isOwner) { setEditEverOpened(true); setShowEdit(true); }
       return;
     }
     if (!copyOnly) { setShowShare(true); return; }
@@ -280,7 +278,7 @@ export const PostCard = memo(function PostCard({ mediaPriority = false, post, on
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => void handleShare(true)}>
               <Link className="w-4 h-4 mr-2" />
-              {t('feed.copyLink')}
+              {isOwner && post.privacy !== 'everyone' ? 'Partilhar ficheiro' : t('feed.copyLink')}
             </DropdownMenuItem>
             {onToggleArchive && (
               <DropdownMenuItem onClick={() => onToggleArchive(post.id)}>
@@ -480,7 +478,7 @@ export const PostCard = memo(function PostCard({ mediaPriority = false, post, on
           />
         </Suspense>
       )}
-      {showShare && <Suspense fallback={null}><PostShareDialog id={post.id} mediaUrls={post.media_urls || []} open={showShare} onOpenChange={setShowShare} onShared={() => void sharePost(post.id, 'message')} /></Suspense>}
+      {showShare && <Suspense fallback={null}><PostShareDialog id={post.id} mediaUrls={post.media_urls || []} privacy={post.privacy} isOwner={isOwner} open={showShare} onOpenChange={setShowShare} onShared={() => void sharePost(post.id, 'message')} /></Suspense>}
       {/* Edit Sheet */}
       {isOwner && editEverOpened && (
         <Suspense fallback={null}>
