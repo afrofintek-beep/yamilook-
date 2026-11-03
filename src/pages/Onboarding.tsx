@@ -1,3 +1,4 @@
+import { EntryLanguageSelector } from '@/components/auth/EntryLanguageSelector';
 import { communityReturn } from '@/features/academia/community-links';
 import { ResidenceForm } from '@/components/residence/ResidenceForm';
 import { submitResidence, validResidencePlan, type ResidencePlan } from '@/lib/residence';
@@ -1249,6 +1250,7 @@ export default function Onboarding() {
         >
           <ChevronLeft className="w-5 h-5" />
         </Button>
+        <EntryLanguageSelector />
         <div className="bg-background">
           <YamilookLogo size="md" showTagline={false} animate={false} />
         </div>
