@@ -20,6 +20,7 @@ import PaposInstall from './PaposInstall';
 import PaposConversations from './PaposConversations';
 import { usePaposViewport } from './usePaposViewport';
 const Chat = lazy(() => import('@/pages/Chat'));
+const SharePostToKosolola = lazy(() => import('@/features/sharing/SharePostToKosolola'));
 const Contacts = lazy(() => import('@/pages/Contacts'));
 const Calls = lazy(() => import('@/pages/Calls'));
 const ScheduledCallRoom = lazy(() => import('@/features/scheduled-calls/ScheduledCallRoom'));
@@ -75,6 +76,7 @@ function PaposRuntime() {
       <Route path="/papos" element={null} />
       <Route path="/chat/:conversationId" element={<Chat />} />
       </Route>
+      <Route path="/share/post/:postId" element={<SharePostToKosolola />} />
       <Route path="/contacts" element={<Contacts />} />
       <Route path="/calls" element={<div className="h-screen-safe overflow-y-auto pb-[calc(5rem+env(safe-area-inset-bottom,0px))]"><Calls /><BottomNav /></div>} />
       <Route path="/scheduled-call/:sessionId" element={<ScheduledCallRoom />} />

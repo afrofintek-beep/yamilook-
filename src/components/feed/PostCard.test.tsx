@@ -94,6 +94,7 @@ describe('PostCard', () => {
   it('copies a canonical public link and records only successful sharing', async () => {
     render(<PostCard post={mockPost} />);
     fireEvent.click(screen.getByRole('button', { name: 'Partilhar' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Copiar ligação' }));
     await waitFor(() => expect(navigator.clipboard.writeText).toHaveBeenCalledWith('https://www.yamilook.com/post/post-1'));
     await waitFor(() => expect(mockSharePost).toHaveBeenCalledWith('post-1', 'message'));
   });

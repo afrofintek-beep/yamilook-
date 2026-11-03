@@ -14,7 +14,8 @@
     });
     video.addEventListener('volumechange', update);
   });
-  const status = document.getElementById('share-status');
+  const dialog = document.getElementById('share-destinations');
+  const status = { set textContent(value) { for (const id of ['share-status', 'dialog-share-status']) { const element = document.getElementById(id); if (element) element.textContent = value; } } };
   async function share(button, copyOnly) {
     const url = button.dataset.url;
     if (!url) return;
@@ -30,11 +31,14 @@
     } catch (error) {
       if (error?.name !== 'AbortError') {
         status.textContent = 'Seleciona e copia a ligação abaixo para partilhar.';
-        document.getElementById('post-url')?.select();
+        document.getElementById(dialog?.open ? 'dialog-post-url' : 'post-url')?.select();
       }
     } finally { button.disabled = false; }
   }
-  document.getElementById('share-post')?.addEventListener('click', (event) => share(event.currentTarget, false));
+  document.getElementById('share-post')?.addEventListener('click', () => dialog?.showModal());
+  document.getElementById('close-share')?.addEventListener('click', () => dialog?.close());
+  document.getElementById('more-share')?.addEventListener('click', (event) => share(event.currentTarget, false));
+  document.getElementById('dialog-copy-post')?.addEventListener('click', (event) => share(event.currentTarget, true));
   document.getElementById('copy-post')?.addEventListener('click', (event) => share(event.currentTarget, true));
   document.getElementById('retry-post')?.addEventListener('click', () => location.reload());
 })();

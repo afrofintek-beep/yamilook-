@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { loadPublicPost, isVideo, postUrl } from '../../shared/public-post.mjs';
-import { sharePostLink } from '@/lib/post-sharing';
+import PostShareDialog from '@/components/sharing/PostShareDialog';
 import { useTranslation } from 'react-i18next';
 
 type PublicPostData = Awaited<ReturnType<typeof loadPublicPost>>;
@@ -29,7 +29,7 @@ export default function PublicPost() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [attempt, setAttempt] = useState(0);
-  const [status, setStatus] = useState('');
+  const [showShare, setShowShare] = useState(false);
   useEffect(() => {
     const controller = new AbortController();
     const timeout = window.setTimeout(() => controller.abort(), 10000);
@@ -56,13 +56,8 @@ export default function PublicPost() {
             </header>
             {post.content && <p className="my-5 whitespace-pre-wrap break-words leading-relaxed">{post.content}</p>}
 
-            <Button onClick={async () => {
-              try {
-                const result = await sharePostLink(post.id, { title: `${post.author.display_name} — Yamilook` });
-                if (result === 'copied') setStatus(t('feed.linkCopied', 'Ligação copiada'));
-              } catch { setStatus(t('publicPost.copyManually', 'Seleciona e copia a ligação abaixo.')); }
-            }}>{t('publicPost.share', 'Partilhar')}</Button>
-            <p role="status" className="my-3 text-sm">{status}</p>
+            <Button onClick={() => setShowShare(true)}>{t('publicPost.share', 'Partilhar')}</Button>
+            {showShare && <PostShareDialog id={post.id} open={showShare} onOpenChange={setShowShare} />}
             <input aria-label={t('publicPost.link', 'Ligação pública')} readOnly value={postUrl(post.id)} onFocus={(event) => event.target.select()} className="w-full rounded border bg-background p-3 text-xs" />
           </article>
         )}

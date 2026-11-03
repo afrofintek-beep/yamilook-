@@ -2,7 +2,7 @@
 
 The feed used to copy `/post/:id` links even though no route existed. The posts SELECT policy also excluded anonymous readers. Public posts now have a server-rendered page on the same canonical URL, with complete text, image/video controls and Open Graph/Twitter metadata. Viewing needs neither login nor JavaScript. The React fallback covers navigation within the app and old service workers; direct public routes skip authenticated providers.
 
-The share button uses the native device sharing sheet with clipboard fallback. The copy-link menu still copies directly. Both use `https://www.yamilook.com`, including when the app runs on a preview or alternate domain. Restricted posts prompt their author to select the public audience in the existing edit sheet. Other people's audiences cannot be changed by sharing.
+The share button opens a destination picker with KOSOLOLA first, followed by WhatsApp, Facebook, LinkedIn, X, the native device sharing sheet and copy link. The copy-link menu still copies directly. Both use `https://www.yamilook.com`, including when the app runs on a preview or alternate domain. Restricted posts prompt their author to select the public audience in the existing edit sheet. Other people's audiences cannot be changed by sharing.
 
 ## Access and data
 
@@ -24,3 +24,11 @@ The server function expects the existing `VITE_SUPABASE_URL` and `VITE_SUPABASE_
 ## Direct viewing mode
 
 Shared links now open with the image/video before the author and caption, in a viewport-sized media stage. The first video requests inline autoplay while muted, with native play controls if the browser blocks autoplay. A visible sound toggle enables audio on a user gesture. Only the first item autoplays; other videos remain manually controlled. This applies to both server-rendered links and the SPA fallback, without requesting browser fullscreen automatically.
+
+## KOSOLOLA destinations
+
+KOSOLOLA opens `/papos-app/share/post/:postId`; the existing authentication gate preserves this destination through login. Users search contacts and existing conversations (including groups), select one recipient and explicitly send. Blocked contacts are excluded. Selecting a recipient does not create a conversation or send anything. The post is checked again for public visibility before sending. Existing message RLS enforces sender identity and conversation membership.
+
+Messages contain only the canonical public link, using a stable message UUID across retries to avoid duplicate delivery after a lost acknowledgement. Chat renders exact canonical post links as previews fetched anonymously, without storing author/media snapshots. Opening the card leads to the public viewer. Non-public content is unavailable; external platform previews remain subject to their caches.
+
+Focused tests cover recipient selection, contact creation on confirmation, visibility revalidation, retry identity and server errors. External destination tests cover canonical links, spoofed URL rejection and server-rendered destination order. No real messages are sent by automated tests.
