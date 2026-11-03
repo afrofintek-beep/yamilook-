@@ -205,6 +205,15 @@ for (const [width, height, insets] of [
       });
       await reachable(create, 420);
       await reachable(close, 420);
+      await reachable(dialog.getByLabel('Nome do grupo', { exact: true }), 420);
+      await page.screenshot({ path: testInfo.outputPath('group-keyboard-open.png') });
+      await page.evaluate(() => {
+        (document.activeElement as HTMLElement)?.blur();
+        Object.defineProperty(window.visualViewport, 'height', { configurable: true, value: 844 });
+        window.visualViewport!.dispatchEvent(new Event('resize'));
+      });
+      await expect(dialog.getByText('Adicionar foto do grupo')).toBeVisible();
+      await reachable(create);
     }
     await dialog.getByRole('button', { name: 'Voltar à seleção de contactos' }).click();
     await expect(next).toBeEnabled();

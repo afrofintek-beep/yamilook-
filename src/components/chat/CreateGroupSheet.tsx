@@ -1,5 +1,6 @@
 import { useAuth } from '@/hooks/useAuth';
 import { useState, useMemo } from 'react';
+import { useKeyboardViewport } from '@/hooks/useKeyboardViewport';
 import { useNavigate } from 'react-router-dom';
 import { 
   Search, 
@@ -40,6 +41,7 @@ interface CreateGroupSheetProps {
 const MAX_GROUP_MEMBERS = 255;
 
 export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) {
+  const { style: viewportStyle, compact } = useKeyboardViewport(open);
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -219,7 +221,8 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
         srTitle="Novo Grupo"
         padded={false}
         hideCloseButton
-        className="flex h-[min(90dvh,var(--kosolola-height,100dvh))] max-h-[min(90dvh,var(--kosolola-height,100dvh))] flex-col gap-0 overflow-hidden rounded-t-3xl pl-[env(safe-area-inset-left,0px)] pr-[env(safe-area-inset-right,0px)] sm:max-w-lg max-[767px]:bottom-[var(--kosolola-bottom,0px)]"
+        style={viewportStyle}
+        className="flex h-[min(90dvh,var(--group-viewport-height,100dvh))] max-h-[min(90dvh,var(--group-viewport-height,100dvh))] flex-col gap-0 overflow-hidden rounded-t-3xl pl-[env(safe-area-inset-left,0px)] pr-[env(safe-area-inset-right,0px)] sm:max-w-lg max-[767px]:bottom-[var(--group-viewport-bottom,0px)]"
       >
           <div className="flex shrink-0 items-center gap-2 border-b border-border/50 px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top,0px))]">
             {step === 'details' && (
@@ -297,7 +300,7 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder="Pesquisar contactos..."
-                      className="pl-10 h-12 rounded-xl"
+                      className="pl-10 h-12 rounded-xl text-base"
                     />
                   </div>
                 </div>
@@ -399,9 +402,9 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
               >
                 <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 space-y-6">
                   {/* Group photo */}
-                  <div className="flex flex-col items-center gap-3">
+                  <div className={compact ? "flex items-center gap-3" : "flex flex-col items-center gap-3"}>
                     <label className="relative cursor-pointer group">
-                      <div className="w-24 h-24 rounded-full bg-secondary flex items-center justify-center overflow-hidden border-2 border-dashed border-muted-foreground/30 group-hover:border-primary transition-colors">
+                      <div className={`${compact ? "w-12 h-12" : "w-24 h-24"} rounded-full bg-secondary flex items-center justify-center overflow-hidden border-2 border-dashed border-muted-foreground/30 group-hover:border-primary transition-colors`}>
                         {groupPhotoPreview ? (
                           <img
                             src={groupPhotoPreview}
@@ -435,7 +438,7 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
                       value={groupName}
                       onChange={(e) => setGroupName(e.target.value.slice(0, 100))}
                       placeholder="Ex: Família, Trabalho, Amigos..."
-                      className="h-12 rounded-xl"
+                      className="h-12 rounded-xl text-base scroll-my-4"
                       maxLength={100}
                     />
                     <p className="text-xs text-muted-foreground text-right">
@@ -444,7 +447,7 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
                   </div>
 
                   {/* Members summary */}
-                  <div className="bg-secondary/50 rounded-xl p-4 space-y-3">
+                  <div className={compact ? "hidden" : "bg-secondary/50 rounded-xl p-4 space-y-3"}>
                     <div className="flex items-center justify-between">
                       <span className="font-medium">Membros</span>
                       <Badge variant="secondary">{selectedContacts.size + 1}</Badge>
