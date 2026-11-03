@@ -30,6 +30,7 @@ const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
 const Profile = lazy(() => import("./pages/Profile"));
+const PublicPost = lazy(() => import("./pages/PublicPost"));
 const PublicProfile = lazy(() => import("./pages/PublicProfile"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Contacts = lazy(() => import("./pages/Contacts"));
@@ -307,6 +308,7 @@ function AnimatedRoutes() {
           <Route path="/scheduled-call/:sessionId" element={<ProtectedRoute><ScheduledCallRoom /></ProtectedRoute>} />
           <Route path="/call/:callId" element={<ProtectedRoute><Call /></ProtectedRoute>} />
           <Route path="/status" element={<ProtectedRoute><Status /></ProtectedRoute>} />
+          <Route path="/post/:postId" element={<PublicPost />} />
           <Route path="/feed" element={<ProtectedRoute><Feed /></ProtectedRoute>} />
           <Route path="/muxi" element={<ProtectedRoute><Feed /></ProtectedRoute>} />
           <Route path="/mokubico" element={<ProtectedRoute><MokubHome /></ProtectedRoute>} />
@@ -451,7 +453,17 @@ function AppContent() {
   );
 }
 
-const App = () => (
+// A shared public link must not wait for login, calls or presence services.
+// Keep the SPA route too, for navigation from an already running application.
+const App = () => /^\/post\//.test(window.location.pathname) ? (
+  <BrowserRouter>
+    <LazyLoadErrorBoundary>
+      <Suspense fallback={<PageLoader />}>
+        <Routes><Route path="/post/:postId" element={<PublicPost />} /></Routes>
+      </Suspense>
+    </LazyLoadErrorBoundary>
+  </BrowserRouter>
+) : (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <TooltipProvider>

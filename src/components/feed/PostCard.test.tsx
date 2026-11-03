@@ -91,6 +91,19 @@ describe('PostCard', () => {
     mockSharePost.mockClear();
   });
 
+  it('copies a canonical public link and records only successful sharing', async () => {
+    render(<PostCard post={mockPost} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Partilhar' }));
+    await waitFor(() => expect(navigator.clipboard.writeText).toHaveBeenCalledWith('https://www.yamilook.com/post/post-1'));
+    await waitFor(() => expect(mockSharePost).toHaveBeenCalledWith('post-1', 'message'));
+  });
+
+  it('does not share another author’s restricted post', async () => {
+    render(<PostCard post={{ ...mockPost, privacy: 'contacts' }} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Partilhar' }));
+    expect(mockSharePost).not.toHaveBeenCalled();
+  });
+
   it('does not query moderator permissions for a closed report sheet', () => {
     render(<PostCard post={mockPost} />);
     expect(mockSupabaseClient.rpc).not.toHaveBeenCalledWith(

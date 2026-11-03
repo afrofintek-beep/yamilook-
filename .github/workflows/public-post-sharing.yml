@@ -1,0 +1,18 @@
+name: Public post sharing
+on:
+  pull_request:
+    paths: ['api/public-post.js', 'server/public-post-page.mjs', 'shared/public-post.mjs', 'public/public-post*', 'src/pages/PublicPost.tsx', 'src/lib/post-sharing*', 'src/components/feed/PostCard*', 'supabase/migrations/*public_post_sharing.sql', 'tests/public-post/**', 'vercel.json', '.github/workflows/public-post-sharing.yml']
+permissions:
+  contents: read
+jobs:
+  public-post-sharing:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: node --test tests/public-post/*.test.mjs
+      - run: npm test -- src/lib/post-sharing.test.ts src/components/feed/PostCard.test.tsx
