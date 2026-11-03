@@ -28,6 +28,7 @@ interface ResponsiveModalProps {
   children: React.ReactNode;
   /** Extra classes for the content container (e.g. a wider desktop dialog). */
   className?: string;
+  style?: React.CSSProperties;
   /** Padding is applied by default; set false when the child manages its own. */
   padded?: boolean;
   /** Use a custom close control inside the modal body. */
@@ -49,6 +50,7 @@ export function ResponsiveModal({
   description,
   children,
   className,
+  style,
   padded = true,
   hideCloseButton = false,
   overlayClassName,
@@ -76,6 +78,7 @@ export function ResponsiveModal({
     return (
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent
+          style={style}
           side="bottom"
           hideCloseButton={hideCloseButton}
           overlayClassName={overlayClassName}
@@ -90,7 +93,7 @@ export function ResponsiveModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent hideCloseButton={hideCloseButton} overlayClassName={overlayClassName} className={cn('max-w-md', !padded && 'p-0', className)}>
+      <DialogContent style={style} hideCloseButton={hideCloseButton} overlayClassName={overlayClassName} className={cn('max-w-md', !padded && 'p-0', className)}>
         {header(DialogTitle, DialogDescription, DialogHeader)}
         {children}
       </DialogContent>
