@@ -99,8 +99,10 @@ begin
    if p_action='decline' and m.status<>'invited' then return jsonb_build_object('ok',false); end if;
    update public.group_conference_members set status=case when p_action='decline' then 'declined' else 'left' end,lease_until=null
      where conference_id=c.id and user_id=actor;
-   if not exists(select 1 from public.group_conference_members where conference_id=c.id and status in ('joined','invited')) then
+   if not exists(select 1 from public.group_conference_members where conference_id=c.id and status='joined' and lease_until>now())
+    and (p_action='leave' or not exists(select 1 from public.group_conference_members where conference_id=c.id and status='invited')) then
     update public.group_conferences set status='ended',ended_at=now() where id=c.id;
+    update public.group_conference_members set status='left',lease_until=null where conference_id=c.id and status in ('invited','joined');
    end if;
    return jsonb_build_object('ok',true);
   end if;

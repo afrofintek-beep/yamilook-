@@ -211,7 +211,10 @@ export function GroupConferenceProvider({
             request={picker}
             userId={user.id}
             onClose={() => setPicker(null)}
-            onJoin={enter}
+            onJoin={async (c) => {
+              setPicker(null);
+              await enter(c);
+            }}
             onConfirm={async (ids) => {
               if (picker.conferenceId) {
                 await conferenceAction("invite", picker.conferenceId, {
@@ -224,6 +227,7 @@ export function GroupConferenceProvider({
                   picker.conversationId,
                   { call_type: picker.type, user_ids: ids },
                 );
+                setPicker(null);
                 await enter({ ...c, name: picker.name });
               }
             }}

@@ -165,6 +165,13 @@ test("conference authorization and lifecycle", async (t) => {
       );
     },
   );
+  await t.test(
+    "declining while the creator is connecting preserves the other invitations",
+    async () => {
+      await action(B, "decline", c.id);
+      assert.equal((await action(A, "detail", c.id)).status, "active");
+    },
+  );
   await t.test("creator joins and claims one device", async () => {
     assert.equal(
       (await action(A, "join", c.id, { device_id: device })).allowed,
@@ -329,5 +336,10 @@ test("conference authorization and lifecycle", async (t) => {
       user_ids: [C],
     });
     assert.notEqual(next.id, c.id);
+    assert.equal((await action(B, "current", group)).id, next.id);
+    await action(B, "join", next.id, { device_id: device });
+    await action(B, "leave", next.id, { device_id: device });
+    assert.equal((await action(C, "list")).length, 0);
+    assert.equal((await action(C, "detail", next.id)).status, "ended");
   });
 });
