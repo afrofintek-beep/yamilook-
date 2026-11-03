@@ -29,16 +29,30 @@ export default function PublicProfile() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<PublicProfileData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
-    if (!username) return;
+    let active = true;
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 10000);
+    setLoading(true); setLoadError(false); setProfile(null);
     (async () => {
-      setLoading(true);
-      const { data } = await supabase.rpc('get_public_profile' as never, { p_username: username } as never);
-      setProfile((data as PublicProfileData) ?? null);
-      setLoading(false);
+      try {
+        const handle = username?.trim();
+        if (!handle) return;
+        const { data, error } = await supabase.rpc('get_public_profile', { p_username: handle }).abortSignal(controller.signal);
+        if (error) throw error;
+        if (active) setProfile((data as unknown as PublicProfileData) ?? null);
+      } catch {
+        if (active) setLoadError(true);
+      } finally {
+        window.clearTimeout(timeout);
+        if (active) setLoading(false);
+      }
     })();
-  }, [username]);
+    return () => { active = false; controller.abort(); window.clearTimeout(timeout); };
+  }, [username, attempt]);
 
   if (loading) {
     return (
@@ -51,7 +65,8 @@ export default function PublicProfile() {
   if (!profile) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 px-6 text-center">
-        <p className="text-sm text-muted-foreground">Perfil não encontrado.</p>
+        <p role={loadError ? 'alert' : 'status'} className="text-sm text-muted-foreground">{loadError ? 'Não foi possível carregar o perfil. Verifica a ligação e tenta novamente.' : 'Perfil não encontrado.'}</p>
+        {loadError && <Button onClick={() => setAttempt(value => value + 1)}>Tentar novamente</Button>}
         <Button onClick={() => navigate('/')}>Ir para o Yamilook</Button>
       </div>
     );

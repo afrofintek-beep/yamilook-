@@ -79,7 +79,7 @@ const themeColors = [
 
 const profileSchema = z.object({
   display_name: z.string().min(2, 'Name must be at least 2 characters'),
-  username: z.string().min(3, 'Username must be at least 3 characters').max(20),
+  username: z.string().trim().min(3, 'Username must be at least 3 characters').max(20),
   bio: z.string().max(150, 'Bio must be less than 150 characters').optional(),
   status_message: z.string().max(100, 'Status must be less than 100 characters').optional(),
 });
