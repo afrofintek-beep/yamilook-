@@ -36,3 +36,11 @@ Focused tests cover recipient selection, contact creation on confirmation, visib
 ## Site icon
 
 The public viewer explicitly declares the Yamilook PNG favicon and Apple touch icon. The root `/favicon.ico` also packages that same PNG, replacing the inherited Lovable asset for clients that request the conventional path. That path requests cache revalidation; previews already stored by external platforms may retain their previous icon.
+
+## Video file sharing
+
+The chooser separates file sharing from link sharing. For public videos, users select a video and explicitly prepare its file; a second tap invokes Web Share with `files` only, preserving mobile transient activation and avoiding apps treating the payload as a link. Native share success means handoff to an app, not confirmation of publication. Unsupported browsers and failures retain a download action; LinkedIn availability is determined by the installed app and OS.
+
+`GET /api/public-post?id=…&media=video&index=…` returns the selected public video descriptor using the same anonymous visibility checks as the viewer. `download=1` rechecks visibility and redirects to the existing media URL with Storage's download filename hint. No binary data is proxied through Vercel, no credentials are forwarded to media hosts, and no storage policies change. Previously downloaded copies cannot be revoked.
+
+Preparation streams at most 100 MiB into memory, reports progress, supports cancellation and times out after two minutes. Larger files use the direct download path. Visibility and the media URL are rechecked after transfer. Closing the chooser or changing video cancels the transfer and releases the prepared file. Shared browser helpers are emitted from one source file by the Vite plugin; the SSR viewer and React dialog use the same preparation and native sharing logic.

@@ -57,7 +57,7 @@ export default function PublicPost() {
             {post.content && <p className="my-5 whitespace-pre-wrap break-words leading-relaxed">{post.content}</p>}
 
             <Button onClick={() => setShowShare(true)}>{t('publicPost.share', 'Partilhar')}</Button>
-            {showShare && <PostShareDialog id={post.id} open={showShare} onOpenChange={setShowShare} />}
+            {showShare && <PostShareDialog id={post.id} mediaUrls={post.media_urls} open={showShare} onOpenChange={setShowShare} />}
             <input aria-label={t('publicPost.link', 'Ligação pública')} readOnly value={postUrl(post.id)} onFocus={(event) => event.target.select()} className="w-full rounded border bg-background p-3 text-xs" />
           </article>
         )}

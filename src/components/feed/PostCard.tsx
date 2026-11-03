@@ -480,7 +480,7 @@ export const PostCard = memo(function PostCard({ mediaPriority = false, post, on
           />
         </Suspense>
       )}
-      {showShare && <Suspense fallback={null}><PostShareDialog id={post.id} open={showShare} onOpenChange={setShowShare} onShared={() => void sharePost(post.id, 'message')} /></Suspense>}
+      {showShare && <Suspense fallback={null}><PostShareDialog id={post.id} mediaUrls={post.media_urls || []} open={showShare} onOpenChange={setShowShare} onShared={() => void sharePost(post.id, 'message')} /></Suspense>}
       {/* Edit Sheet */}
       {isOwner && editEverOpened && (
         <Suspense fallback={null}>
