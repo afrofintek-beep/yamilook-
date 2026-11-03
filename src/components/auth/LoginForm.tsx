@@ -22,12 +22,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { SocialLoginButtons } from './SocialLoginButtons';
 import { triggerSuccessConfetti } from '@/lib/confetti';
 
-const loginSchema = z.object({
-  email: z.string().email('Por favor insere um email válido'),
-  password: z.string().min(6, 'A palavra-passe deve ter pelo menos 6 caracteres'),
-});
-
-type LoginFormValues = z.infer<typeof loginSchema>;
+type LoginFormValues = { email: string; password: string };
 
 const DEV_TEST_ACCOUNTS = [
   { email: 'maria@yamilook.test', password: 'TestUser123!', name: 'Maria' },
@@ -38,6 +33,10 @@ const DEV_TEST_ACCOUNTS = [
 
 export function LoginForm() {
   const { t } = useTranslation();
+  const loginSchema = z.object({
+    email: z.string().email(t('publicAuth.validEmail')),
+    password: z.string().min(6, t('publicAuth.passwordMin', { count: 6 })),
+  });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showDevAccounts, setShowDevAccounts] = useState(false);
@@ -77,9 +76,9 @@ export function LoginForm() {
         if (error.message.includes('Invalid login credentials')) {
           toast.error(t('auth.invalidCredentials') || 'Email ou palavra-passe incorretos');
         } else if (error.message.includes('Email not confirmed')) {
-          toast.error('Por favor tenta novamente');
+          toast.error(t('publicAuth.retry'));
         } else {
-          toast.error(error.message);
+          toast.error(t('publicAuth.retry'));
         }
       } else {
         triggerSuccessConfetti();
@@ -88,7 +87,7 @@ export function LoginForm() {
       }
     } catch (error) {
       console.error('Login error:', error);
-      toast.error(t('errors.generic'));
+      toast.error(t('publicAuth.retry'));
     } finally {
       setIsLoading(false);
     }
@@ -225,7 +224,7 @@ export function LoginForm() {
                 {t('auth.signingIn')}
               </>
             ) : (
-            'Entrar no YamiLook'
+            t('publicAuth.login')
             )}
           </Button>
         </motion.div>
@@ -287,7 +286,7 @@ export function LoginForm() {
             </div>
             <div className="relative flex justify-center text-sm">
               <span className="px-4 bg-card text-muted-foreground">
-                Ou entra com
+                {t('auth.continueWith')}
               </span>
             </div>
           </div>
@@ -300,7 +299,7 @@ export function LoginForm() {
             </div>
             <div className="relative flex justify-center text-sm">
               <span className="px-4 bg-card text-muted-foreground">
-                Novo no YamiLook?
+                {t('auth.newToYamilook')}
               </span>
             </div>
           </div>

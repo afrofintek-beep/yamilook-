@@ -15,18 +15,16 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { triggerSuccessConfetti } from '@/lib/confetti';
 
-const resetPasswordSchema = z.object({
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ['confirmPassword'],
-});
-
-type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
+type ResetPasswordFormData = { password: string; confirmPassword: string };
 
 export default function ResetPassword() {
   const { t } = useTranslation();
+  const resetPasswordSchema = z.object({
+    password: z.string().min(8, t('publicAuth.passwordMin', { count: 8 })),
+    confirmPassword: z.string(),
+  }).refine(data => data.password === data.confirmPassword, {
+    message: t('publicAuth.passwordMismatch'), path: ['confirmPassword'],
+  });
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -72,7 +70,7 @@ export default function ResetPassword() {
       });
 
       if (error) {
-        toast.error(error.message);
+        toast.error(t('publicAuth.retry'));
       } else {
         triggerSuccessConfetti();
         setIsSuccess(true);
@@ -84,7 +82,7 @@ export default function ResetPassword() {
         }, 3000);
       }
     } catch (error) {
-      toast.error(t('errors.generic'));
+      toast.error(t('publicAuth.retry'));
     } finally {
       setIsLoading(false);
     }

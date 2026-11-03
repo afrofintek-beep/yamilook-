@@ -14,14 +14,11 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from '@/component
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-const forgotPasswordSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
-});
-
-type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
+type ForgotPasswordFormData = { email: string };
 
 export default function ForgotPassword() {
   const { t } = useTranslation();
+  const forgotPasswordSchema = z.object({ email: z.string().email(t('publicAuth.validEmail')) });
   const [isLoading, setIsLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [sentEmail, setSentEmail] = useState('');
@@ -42,14 +39,14 @@ export default function ForgotPassword() {
       });
 
       if (error) {
-        toast.error(error.message);
+        toast.error(t('publicAuth.retry'));
       } else {
         setSentEmail(data.email);
         setEmailSent(true);
         toast.success(t('auth.resetEmailSent'));
       }
     } catch (error) {
-      toast.error(t('errors.generic'));
+      toast.error(t('publicAuth.retry'));
     } finally {
       setIsLoading(false);
     }

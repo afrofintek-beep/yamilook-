@@ -8,8 +8,7 @@ export default function Login() {
   return (
     <AuthLayout
       title={t('auth.loginTitle')}
-      subtitle={t('welcome.subtitle')}
-      tagline={t('welcome.tagline2')}
+      subtitle={t('entry.subtitle')}
       footerNote={t('entry.subtitle')}
       showBackButton={true}
       backTo="/welcome"

@@ -1,7 +1,7 @@
 import { useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { changeAppLanguage } from '@/i18n';
-import { afrolocLanguages, normalizeAppLanguage } from '@/i18n/afroloc-languages';
+import { appLanguages, normalizeAppLanguage } from '@/i18n/afroloc-languages';
 
 export function EntryLanguageSelector() {
   const { t, i18n } = useTranslation();
@@ -22,10 +22,10 @@ export function EntryLanguageSelector() {
   return (
     <div className="w-full max-w-sm my-4 px-4" aria-busy={busy}>
       <label htmlFor={id} className="block text-sm font-medium mb-2">🌐 {t('entry.chooseLanguage')}</label>
-      <select id={id} value={normalizeAppLanguage(i18n.language || 'pt').replace('pt-banda', 'pt')}
+      <select id={id} value={appLanguages.some(language => language.code === normalizeAppLanguage(i18n.language || 'pt')) ? normalizeAppLanguage(i18n.language || 'pt') : 'pt'}
         disabled={busy} onChange={event => void choose(event.target.value)}
         className="w-full min-h-12 rounded-xl border border-input bg-background px-3 text-base">
-        {afrolocLanguages.map(language => (
+        {appLanguages.map(language => (
           <option key={language.code} value={language.code} lang={language.code} dir={language.code === 'ar' ? 'rtl' : 'ltr'}>
             {language.nativeName}
           </option>
