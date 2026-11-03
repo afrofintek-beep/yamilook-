@@ -33,6 +33,12 @@ jobs:
       - run: node --test tests/security/group-conferences.test.mjs tests/security/group-conference-edge.test.mjs
       - run: npx vitest run src/features/group-calls src/hooks/useCallTransport.test.tsx src/components/calls/ActiveCallProvider.test.tsx
       - run: npx tsc -p tsconfig.app.json --noEmit
-      - run: npx playwright install --with-deps webkit
+      - run: npx playwright install --with-deps webkit chromium
       - run: npx playwright test -c playwright.groups.config.ts
       - run: npm run build
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: group-conference-browser-results
+          path: test-results/
+          retention-days: 7

@@ -133,3 +133,83 @@ test("group voice button selects multiple members and enforces seven invitees", 
     ),
   ).toBe(true);
 });
+
+// Exercise the real flex layout, including safe areas that Linux browsers lack.
+async function safeAreas(page: import('@playwright/test').Page, insets: number[]) {
+  await page.evaluate(insets => {
+    const keys = ['top', 'right', 'bottom', 'left'];
+    const rewrite = (rules: CSSRuleList): string => Array.from(rules).map(rule => {
+      if (rule instanceof CSSStyleRule) {
+        let css = rule.style.cssText;
+        keys.forEach((key, i) => { css = css.replace(new RegExp(`env\\(safe-area-inset-${key}(?:,\\s*0px)?\\)`, 'g'), `${insets[i]}px`); });
+        return `${rule.selectorText}{${css}}`;
+      }
+      if (rule instanceof CSSMediaRule) return `@media ${rule.conditionText}{${rewrite(rule.cssRules)}}`;
+      if (rule instanceof CSSSupportsRule) return `@supports ${rule.conditionText}{${rewrite(rule.cssRules)}}`;
+      return rule.cssText;
+    }).join('\n');
+    const style = document.createElement('style');
+    style.textContent = Array.from(document.styleSheets).map(sheet => { try { return rewrite(sheet.cssRules); } catch { return ''; } }).join('\n');
+    document.head.append(style);
+  }, insets);
+}
+
+for (const [width, height, insets] of [
+  [320, 568, [0, 0, 0, 0]],
+  [390, 844, [59, 0, 34, 0]],
+  [412, 915, [24, 0, 24, 0]],
+  [844, 390, [0, 59, 21, 0]],
+  [844, 390, [0, 0, 21, 59]],
+  [1280, 800, [0, 0, 0, 0]],
+] as [number, number, number[]][]) {
+  test(`group actions remain reachable at ${width}x${height} insets ${insets}`, async ({ page }, testInfo) => {
+    await page.setViewportSize({ width, height });
+    await setup(page);
+    await page.goto('/papos-app/contacts');
+    await page.getByRole('button', { name: 'Criar grupo', exact: true }).click();
+    const dialog = page.getByRole('dialog', { name: 'Novo Grupo', exact: true });
+    await expect(dialog.getByPlaceholder('Pesquisar contactos...')).toBeVisible();
+    await safeAreas(page, insets);
+    const close = dialog.getByRole('button', { name: 'Fechar criação do grupo' });
+    const next = dialog.getByRole('button', { name: /^Continuar ·/ });
+    const reachable = async (control: import('@playwright/test').Locator, bottom = height) => {
+      await expect.poll(() => control.evaluate((el, bounds) => {
+        const box = el.getBoundingClientRect();
+        return box.top >= bounds.top && box.left >= bounds.left && box.right <= bounds.right + 1 && box.bottom <= bounds.bottom + 1 && (el.matches(':disabled') || el.contains(document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2)));
+      }, { top: insets[0], left: insets[3], right: width - insets[1], bottom: bottom - insets[2] })).toBe(true);
+    };
+    await reachable(close);
+    await reachable(next);
+    await expect(next).toBeDisabled();
+    await dialog.getByRole('button', { name: /Membro 1 @membro1$/ }).click();
+    await dialog.getByRole('button', { name: /Membro 2 @membro2$/ }).click();
+    await expect(next).toHaveText('Continuar · 2 selecionados');
+    await dialog.locator('[data-group-contact-list]').evaluate(el => { el.scrollTop = el.scrollHeight; });
+    await reachable(next);
+    await reachable(close);
+    await page.screenshot({ path: testInfo.outputPath('group-selection.png') });
+    await next.click();
+    await expect(dialog.getByRole('heading', { name: 'Detalhes do Grupo' })).toBeVisible();
+    const create = dialog.getByRole('button', { name: 'Criar Grupo', exact: true });
+    await expect(create).toBeDisabled();
+    await dialog.getByLabel('Nome do grupo', { exact: true }).fill('Grupo de teste');
+    await expect(create).toBeEnabled();
+    await reachable(create);
+    await reachable(close);
+    if (width === 390) {
+      // iOS keeps the layout viewport tall when its keyboard opens.
+      await page.evaluate(() => {
+        Object.defineProperty(window.visualViewport, 'height', { configurable: true, value: 420 });
+        Object.defineProperty(window.visualViewport, 'offsetTop', { configurable: true, value: 0 });
+        window.visualViewport!.dispatchEvent(new Event('resize'));
+      });
+      await reachable(create, 420);
+      await reachable(close, 420);
+    }
+    await dialog.getByRole('button', { name: 'Voltar à seleção de contactos' }).click();
+    await expect(next).toBeEnabled();
+    await expect(next).toHaveText('Continuar · 2 selecionados');
+    await close.click();
+    await expect(dialog).toHaveCount(0);
+  });
+}

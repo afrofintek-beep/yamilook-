@@ -6,9 +6,11 @@ export default defineConfig({
   reporter: "list",
   use: {
     baseURL: "http://127.0.0.1:8097",
-    ...devices["iPhone 13"],
-    browserName: "webkit",
   },
+  projects: [
+    { name: "webkit", use: { ...devices["iPhone 13"], browserName: "webkit" } },
+    { name: "chromium", use: { ...devices["Pixel 7"], browserName: "chromium" } },
+  ],
   webServer: {
     command: "npm run dev -- --port 8097 --host 127.0.0.1",
     url: "http://127.0.0.1:8097",
