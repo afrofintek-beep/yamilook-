@@ -1,5 +1,5 @@
 import { genderCtx } from '@/lib/i18n-gender';
-import { useState, useMemo } from 'react';
+import { lazy, Suspense, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -28,6 +28,8 @@ import { CloseFriendsSheet } from '@/components/contacts/CloseFriendsSheet';
 import BottomNav from '@/components/BottomNav';
 import { useToast } from '@/hooks/use-toast';
 
+const CreateGroupSheet = lazy(() => import('@/components/chat/CreateGroupSheet').then(m => ({default:m.CreateGroupSheet})));
+
 export default function Contacts() {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -50,6 +52,7 @@ export default function Contacts() {
   const { closeFriends, loading: closeFriendsLoading } = useCloseFriends();
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [createGroupOpen, setCreateGroupOpen] = useState(false);
   const [addContactOpen, setAddContactOpen] = useState(false);
   const [closeFriendsOpen, setCloseFriendsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
@@ -155,6 +158,7 @@ export default function Contacts() {
 
   return (
     <div className="h-screen-safe overflow-hidden pb-[calc(5rem+env(safe-area-inset-bottom,0px))] bg-background flex flex-col">
+      {createGroupOpen && <Suspense fallback={null}><CreateGroupSheet open onOpenChange={setCreateGroupOpen} /></Suspense>}
       {/* Header */}
       <header className="shrink-0 relative z-50 bg-background border-b border-border/50 safe-top">
         <div className="flex items-center justify-between px-4 py-3">
@@ -208,6 +212,9 @@ export default function Contacts() {
           </div>
         </div>
 
+        <div className="px-4 pb-3">
+          <Button variant="outline" className="w-full justify-start gap-3 rounded-xl" onClick={() => setCreateGroupOpen(true)}><Users className="w-5 h-5" />{t('groupCalls.createGroup')}</Button>
+        </div>
         {/* Search */}
         <div className="px-4 pb-3">
           <div className="relative">

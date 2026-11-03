@@ -1,3 +1,4 @@
+import { useGroupConference } from '@/features/group-calls/GroupConferenceProvider';
 import { isRecentlyOnline } from '@/lib/online-presence';
 import { usePresenceClock } from '@/hooks/usePresenceClock';
 import { useEffect, useRef, useState, useCallback } from 'react';
@@ -77,6 +78,7 @@ export default function Chat() {
   const { toast } = useToast();
   const activeCall = useActiveCall();
   const startCall = activeCall?.startCall;
+  const groupConference = useGroupConference();
   const { settings } = useSettings();
   const { conversations, loading: conversationsLoading, refresh: refreshConversations, createConversation } = useConversations();
   
@@ -724,7 +726,8 @@ export default function Chat() {
                 variant="ghost" 
                 size="icon" 
                 className="rounded-full"
-                onClick={() => otherParticipant && startCall?.(otherParticipant.id, 'voice', conversationId)}
+                aria-label={t('groupCalls.startVoice')}
+                onClick={() => isGroup && conversationId ? groupConference?.open({conversationId, name:displayName, type:'voice'}) : otherParticipant && startCall?.(otherParticipant.id, 'voice', conversationId)}
               >
                 <Phone className="w-5 h-5" />
               </Button>
@@ -732,7 +735,8 @@ export default function Chat() {
                 variant="ghost" 
                 size="icon" 
                 className="rounded-full"
-                onClick={() => otherParticipant && startCall?.(otherParticipant.id, 'video', conversationId)}
+                aria-label={t('groupCalls.startVideo')}
+                onClick={() => isGroup && conversationId ? groupConference?.open({conversationId, name:displayName, type:'video'}) : otherParticipant && startCall?.(otherParticipant.id, 'video', conversationId)}
               >
                 <Video className="w-5 h-5" />
               </Button>

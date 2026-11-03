@@ -1,0 +1,38 @@
+name: Group conferences
+on:
+  pull_request:
+    paths:
+      - 'src/features/group-calls/**'
+      - 'src/components/calls/ActiveCallProvider*'
+      - 'src/components/chat/CreateGroupSheet*'
+      - 'src/pages/Contacts.tsx'
+      - 'src/pages/Chat.tsx'
+      - 'supabase/functions/group-conference/**'
+      - 'supabase/migrations/*group_conferences.sql'
+      - 'tests/security/group-conference*'
+      - 'e2e/group-conferences.spec.ts'
+      - 'playwright.groups.config.ts'
+      - '.github/workflows/group-conference-checks.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  groups:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      VITE_SUPABASE_URL: https://example.supabase.co
+      VITE_SUPABASE_PUBLISHABLE_KEY: test-key
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: node --test tests/security/group-conferences.test.mjs tests/security/group-conference-edge.test.mjs
+      - run: npx vitest run src/features/group-calls src/hooks/useCallTransport.test.tsx src/components/calls/ActiveCallProvider.test.tsx
+      - run: npx tsc -p tsconfig.app.json --noEmit
+      - run: npx playwright install --with-deps webkit
+      - run: npx playwright test -c playwright.groups.config.ts
+      - run: npm run build
