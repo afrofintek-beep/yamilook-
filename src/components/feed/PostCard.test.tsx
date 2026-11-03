@@ -103,6 +103,18 @@ describe('PostCard', () => {
     render(<PostCard post={{ ...mockPost, privacy: 'contacts' }} />);
     fireEvent.click(screen.getByRole('button', { name: 'Partilhar' }));
     expect(mockSharePost).not.toHaveBeenCalled();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it.each(['contacts', 'close_friends', 'only_me'] as const)('lets the owner send files with %s visibility without opening the editor or a public link', async privacy => {
+    render(<PostCard post={{ ...mockPost, user_id: 'test-user-id', privacy }} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Partilhar' }));
+    await screen.findByRole('region', { name: 'Enviar ficheiro a amigos' });
+    expect(screen.getByRole('button', { name: 'Preparar ficheiro' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Guardar' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Copiar ligação' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'WhatsApp' })).not.toBeInTheDocument();
+    expect(mockSharePost).not.toHaveBeenCalled();
   });
 
   it('does not query moderator permissions for a closed report sheet', () => {
