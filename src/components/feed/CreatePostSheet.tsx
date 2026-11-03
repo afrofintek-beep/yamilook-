@@ -46,6 +46,7 @@ import { VideoEditor } from './VideoEditor';
 import { supabase } from '@/integrations/supabase/client';
 import { snapToGrid } from '@/lib/geo-privacy';
 import { isHeicImage, preparePostImage } from '@/lib/post-image';
+import { useKeyboardViewport } from '@/hooks/useKeyboardViewport';
 
 // African-inspired emoji set for Yamilook
 const AFRICAN_EMOJIS = [
@@ -71,6 +72,7 @@ interface CreatePostSheetProps {
 }
 
 export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
+  const viewport = useKeyboardViewport(open);
   const { t } = useTranslation();
   const { user, profile } = useAuth();
   const { createPost } = usePosts({ autoLoad: false });
@@ -371,7 +373,13 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
       <SheetContent
         side="bottom"
         hideCloseButton
-        className="h-[90vh] max-h-[90dvh] rounded-t-3xl p-0 bg-card flex flex-col gap-0 overflow-hidden"
+        style={{
+          ...viewport.style,
+          bottom: 'var(--group-viewport-bottom, 0px)',
+          height: 'min(640px, calc(var(--group-viewport-height, 100dvh) * 0.9))',
+          maxHeight: 'calc(var(--group-viewport-height, 100dvh) - env(safe-area-inset-top, 0px))',
+        }}
+        className="rounded-t-3xl p-0 bg-card flex flex-col gap-0 overflow-hidden"
         onInteractOutside={(e) => { if (editingVideoIndex !== null || editorGuardRef.current) e.preventDefault(); }}
         onPointerDownOutside={(e) => { if (editingVideoIndex !== null || editorGuardRef.current) e.preventDefault(); }}
         onEscapeKeyDown={(e) => { if (editingVideoIndex !== null || editorGuardRef.current) e.preventDefault(); }}
@@ -397,7 +405,7 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
           </p>
         )}
 
-        <ScrollArea className="flex-1 min-h-0 w-full">
+        <div className="flex-1 min-h-0 w-full overflow-y-auto overscroll-contain">
           <div className="p-4 space-y-4">
             {/* User info */}
             <div className="flex items-center gap-3">
@@ -443,7 +451,7 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
               placeholder={t('feed.createPlaceholder', 'O que se passa na tua banda?')}
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              className="min-h-[76px] sm:min-h-[100px] resize-none border-none text-lg p-0 focus-visible:ring-0"
+              className="min-h-[76px] sm:min-h-[100px] resize-none border-none text-lg text-foreground placeholder:text-foreground/60 p-0 focus-visible:ring-0"
             />
 
             {/* File previews */}
@@ -524,10 +532,10 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
               maxTopics={3}
             />
           </div>
-        </ScrollArea>
+        </div>
 
         {/* Bottom actions */}
-        <div className="relative shrink-0 px-4 py-2 border-t bg-background safe-bottom">
+        <div className="relative shrink-0 px-4 pt-2 border-t bg-background" style={{ paddingBottom: viewport.compact ? '8px' : 'max(8px, env(safe-area-inset-bottom, 0px))' }}>
           <div className="flex items-center gap-2" data-testid="post-action-buttons">
             <Button 
               variant="ghost" 
