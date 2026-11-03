@@ -218,8 +218,21 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
         onOpenChange={resetAndClose}
         srTitle="Novo Grupo"
         padded={false}
-        className="h-[90vh] rounded-t-3xl sm:max-w-lg flex flex-col"
+        hideCloseButton
+        className="flex h-[min(90dvh,var(--kosolola-height,100dvh))] max-h-[min(90dvh,var(--kosolola-height,100dvh))] flex-col gap-0 overflow-hidden rounded-t-3xl pl-[env(safe-area-inset-left,0px)] pr-[env(safe-area-inset-right,0px)] sm:max-w-lg max-[767px]:bottom-[var(--kosolola-bottom,0px)]"
       >
+          <div className="flex shrink-0 items-center gap-2 border-b border-border/50 px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top,0px))]">
+            {step === 'details' && (
+              <Button variant="ghost" size="icon" aria-label="Voltar à seleção de contactos" onClick={() => setStep('select')} className="h-11 w-11 shrink-0 rounded-full">
+                <ChevronRight className="h-5 w-5 rotate-180" />
+              </Button>
+            )}
+            <h2 className="min-w-0 flex-1 text-lg font-semibold">{step === 'select' ? 'Novo Grupo' : 'Detalhes do Grupo'}</h2>
+            {step === 'select' && <Badge variant="secondary" className="shrink-0 font-mono">{selectedContacts.size}/{MAX_GROUP_MEMBERS}</Badge>}
+            <Button variant="ghost" onClick={resetAndClose} className="h-11 shrink-0 gap-1 rounded-full px-2" aria-label="Fechar criação do grupo">
+              <X className="h-4 w-4" /><span>Fechar</span>
+            </Button>
+          </div>
           <AnimatePresence mode="wait">
             {step === 'select' ? (
               <motion.div
@@ -227,17 +240,8 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                className="flex flex-col h-full"
+                className="flex min-h-0 flex-1 flex-col"
               >
-                <div className="p-4 border-b border-border/50">
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold">Novo Grupo</h2>
-                    <Badge variant="secondary" className="font-mono">
-                      {selectedContacts.size}/{MAX_GROUP_MEMBERS}
-                    </Badge>
-                  </div>
-                </div>
-
                 {/* Selected contacts preview */}
                 <AnimatePresence>
                   {selectedContactsList.length > 0 && (
@@ -245,7 +249,7 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
-                      className="border-b border-border/50 overflow-hidden"
+                      className="shrink-0 border-b border-border/50 overflow-hidden [@media(max-height:500px)]:hidden"
                     >
                       <div className="flex gap-2 p-3 overflow-x-auto">
                         {selectedContactsList.map((contact) => {
@@ -267,6 +271,7 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
                                   </AvatarFallback>
                                 </Avatar>
                                 <button
+                                  aria-label={`Remover ${displayName}`}
                                   onClick={() => toggleContact(contact.contact_user_id)}
                                   className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center"
                                 >
@@ -285,7 +290,7 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
                 </AnimatePresence>
 
                 {/* Search */}
-                <div className="p-4">
+                <div className="shrink-0 px-4 py-3">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                     <Input
@@ -298,7 +303,7 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
                 </div>
 
                 {/* Contacts list */}
-                <div className="flex-1 overflow-y-auto">
+                <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain" data-group-contact-list>
                   {contactsLoading ? (
                     <div className="flex items-center justify-center py-12">
                       <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -331,6 +336,7 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
                         return (
                           <button
                             key={contact.id}
+                            aria-pressed={isSelected}
                             className="w-full flex items-center gap-3 px-4 py-3 hover:bg-secondary/50 transition-colors text-left"
                             onClick={() => toggleContact(contact.contact_user_id)}
                           >
@@ -372,13 +378,13 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
                 </div>
 
                 {/* Next button */}
-                <div className="p-4 border-t border-border/50">
+                <div className="shrink-0 border-t border-border/50 bg-background px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))]">
                   <Button
                     onClick={() => setStep('details')}
                     disabled={!canProceed}
                     className="w-full h-12 rounded-xl gap-2"
                   >
-                    Próximo
+                    Continuar · {selectedContacts.size} {selectedContacts.size === 1 ? 'selecionado' : 'selecionados'}
                     <ChevronRight className="w-5 h-5" />
                   </Button>
                 </div>
@@ -389,23 +395,9 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
-                className="flex flex-col h-full"
+                className="flex min-h-0 flex-1 flex-col"
               >
-                <div className="p-4 border-b border-border/50">
-                  <div className="flex items-center gap-3">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setStep('select')}
-                      className="rounded-full"
-                    >
-                      <ChevronRight className="w-5 h-5 rotate-180" />
-                    </Button>
-                    <h2 className="text-xl font-semibold">Detalhes do Grupo</h2>
-                  </div>
-                </div>
-
-                <div className="flex-1 p-4 space-y-6">
+                <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 space-y-6">
                   {/* Group photo */}
                   <div className="flex flex-col items-center gap-3">
                     <label className="relative cursor-pointer group">
@@ -437,8 +429,9 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
 
                   {/* Group name */}
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Nome do grupo</label>
+                    <label htmlFor="new-group-name" className="text-sm font-medium">Nome do grupo</label>
                     <Input
+                      id="new-group-name"
                       value={groupName}
                       onChange={(e) => setGroupName(e.target.value.slice(0, 100))}
                       placeholder="Ex: Família, Trabalho, Amigos..."
@@ -484,7 +477,7 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
                 </div>
 
                 {/* Create button */}
-                <div className="p-4 border-t border-border/50">
+                <div className="shrink-0 border-t border-border/50 bg-background px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))]">
                   <Button
                     onClick={handleCreateGroup}
                     disabled={creating || !groupName.trim()}
