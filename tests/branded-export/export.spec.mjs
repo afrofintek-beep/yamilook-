@@ -1,9 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
 
-test('encodes branded video with audible synchronized audio and renders text/photo cards', async ({ page }, testInfo) => {
-  await page.goto('/tests/branded-export/harness.html');
+for (const format of ['mp4', 'webm']) test(`encodes branded ${format} with audible synchronized audio and renders text/photo cards`, async ({ page }, testInfo) => {
+  await page.goto('/tests/branded-export/harness.html?format=' + format);
   await page.getByRole('button', { name: 'Export synthetic fixture' }).click();
   await expect(page.locator('#status')).toHaveText(/^PASS /, { timeout: 90000 });
   const report = JSON.parse((await page.locator('#status').textContent()).slice(5));
@@ -18,7 +17,7 @@ test('encodes branded video with audible synchronized audio and renders text/pho
   const pcm = execFileSync('ffmpeg', ['-v','error','-i',output,'-f','f32le','-ac','1','-ar','48000','pipe:1']);
   let power = 0; for (let i=0;i<pcm.length;i+=4) power += pcm.readFloatLE(i)**2;
   expect(Math.sqrt(power/(pcm.length/4))).toBeGreaterThan(.03);
-  const original = execFileSync('ffmpeg', ['-v','error','-i','tests/branded-export/fixture.mp4','-f','f32le','-ac','1','-ar','48000','pipe:1']);
+  const original = execFileSync('ffmpeg', ['-v','error','-i','tests/branded-export/fixture.' + format,'-f','f32le','-ac','1','-ar','48000','pipe:1']);
   // Compatible AAC is copied; samples must stay identical (no silent/microphone substitute).
   if (audio.codec_name === 'aac') expect(Buffer.compare(pcm, original)).toBe(0);
   const still = testInfo.outputPath('branded-frame.png');

@@ -21,6 +21,7 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y ffmpeg
       - run: npx playwright install --with-deps chromium
       - run: ffmpeg -v error -f lavfi -i testsrc2=size=640x360:rate=30 -f lavfi -i sine=frequency=440:sample_rate=48000 -t 3 -c:v libx264 -pix_fmt yuv420p -c:a aac -y tests/branded-export/fixture.mp4
+      - run: ffmpeg -v error -i tests/branded-export/fixture.mp4 -c:v libvpx-vp9 -c:a libopus -y tests/branded-export/fixture.webm
       - run: npx playwright test -c tests/branded-export/playwright.config.mjs
       - uses: actions/upload-artifact@v4
         if: always()

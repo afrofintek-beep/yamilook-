@@ -4,8 +4,9 @@ import { brandImage, brandText } from '/src/lib/branded-media.ts';
 document.querySelector('#export').onclick = async () => {
   const status = document.querySelector('#status');
   try {
-    const response = await fetch('/tests/branded-export/fixture.mp4');
-    const file = new File([await response.blob()], 'fixture.mp4', {type:'video/mp4'});
+    const extension = new URL(location.href).searchParams.get('format') === 'webm' ? 'webm' : 'mp4';
+    const response = await fetch('/tests/branded-export/fixture.' + extension);
+    const file = new File([await response.blob()], 'fixture.' + extension, {type:'video/' + extension});
     const identity = {content:'Cerimónia de abertura da AFIS\n' + 'Texto completo 🎉 '.repeat(180), author:{name:'Autor de teste',username:'autor_teste'}};
     const cards = await brandText(identity);
     const image = await brandImage(new File([await (await fetch('/yamilook-logo.png')).blob()], 'photo.png', {type:'image/png'}), identity);
