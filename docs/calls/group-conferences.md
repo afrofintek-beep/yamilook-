@@ -6,7 +6,7 @@ Participants explicitly accept, decline, leave and rejoin. A joined participant 
 
 ## Deployment order
 
-1. Apply `20261102235845_group_conferences.sql` to the existing Yamilook Supabase project.
+1. Apply `20261103002307_group_conferences.sql` to the existing Yamilook Supabase project.
 2. Deploy `group-conference` with the existing `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`. Authentication is verified inside the handler through `auth.getUser()`; no service-role credential is sent to the client.
 3. Deploy the frontend from the same reviewed commit.
 4. Test real audio/video with at least three consenting accounts on iPhone and Android, including mobile data, permission refusal, reconnect, background/foreground and participant departure. Validate eight-party operation before expanding the cap.

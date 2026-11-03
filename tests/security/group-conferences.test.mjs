@@ -39,7 +39,7 @@ for (const id of ids.slice(0, 10))
 await db.exec(
   await readFile(
     new URL(
-      "../../supabase/migrations/20261102235845_group_conferences.sql",
+      "../../supabase/migrations/20261103002307_group_conferences.sql",
       import.meta.url,
     ),
     "utf8",
