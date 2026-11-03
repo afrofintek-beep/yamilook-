@@ -1,3 +1,4 @@
+import { EntryLanguageSelector } from './EntryLanguageSelector';
 import { ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -64,6 +65,8 @@ export function AuthLayout({ children, title, subtitle, tagline, footerNote, sho
         >
           <YamilookLogo size="lg" showTagline={false} animate={false} />
         </motion.div>
+
+        <EntryLanguageSelector />
 
         {/* Card - Seamless, no borders */}
         <div className="w-full max-w-md">

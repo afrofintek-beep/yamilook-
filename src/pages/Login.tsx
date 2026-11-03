@@ -10,7 +10,7 @@ export default function Login() {
       title={t('auth.loginTitle')}
       subtitle={t('welcome.subtitle')}
       tagline={t('welcome.tagline2')}
-      footerNote="Viver o melhor da vida contigo."
+      footerNote={t('entry.subtitle')}
       showBackButton={true}
       backTo="/welcome"
     >

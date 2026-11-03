@@ -1,3 +1,4 @@
+import { entryTranslations } from './entry-translations';
 import { afrolocLanguages, normalizeAppLanguage } from './afroloc-languages';
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
@@ -37,7 +38,7 @@ const deepMerge = (base: Record<string, unknown>, overrides: Record<string, unkn
 };
 
 // Lazy load language resources
-const loadLanguage = async (lng: string): Promise<{ translation: Record<string, unknown> }> => {
+const loadBaseLanguage = async (lng: string): Promise<{ translation: Record<string, unknown> }> => {
   // Handle banda variant
   if (lng === 'pt-banda' || lng === 'pt-BANDA') {
     const bandaOverrides = await loadBandaOverrides();
@@ -76,12 +77,17 @@ const loadLanguage = async (lng: string): Promise<{ translation: Record<string, 
   }
 };
 
+const loadLanguage = async (lng: string) => {
+  const resources = await loadBaseLanguage(lng);
+  return { translation: { ...resources.translation, entry: entryTranslations[normalizeAppLanguage(lng)] || entryTranslations.pt } };
+};
+
 i18n
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
     resources: {
-      pt: { translation: pt },
+      pt: { translation: { ...pt, entry: entryTranslations.pt } },
     },
     fallbackLng: { yo: ['en', 'pt'], sn: ['en', 'pt'], zu: ['en', 'pt'], default: ['pt'] },
     interpolation: {
