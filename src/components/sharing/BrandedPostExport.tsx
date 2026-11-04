@@ -51,7 +51,7 @@ function ExportAction({ id, index, kind, onShared }: { id: string; index: number
       setFiles(result); setPage(0);
       setStatus('Cópia pronta. Confirma a pré-visualização antes de enviar.');
     } catch (error) {
-      if (request.current === controller) setStatus(controller.signal.aborted ? 'Preparação interrompida. Podes tentar novamente.' : error instanceof Error ? error.message : 'Não foi possível exportar. Usa o ficheiro original abaixo.');
+      if (request.current === controller) setStatus(controller.signal.aborted ? 'Preparação interrompida. Podes tentar novamente.' : error instanceof Error ? error.message : 'Não foi possível exportar. Tenta preparar novamente.');
     } finally {
       clearTimeout(timeout);
       if (request.current === controller) { request.current = null; setBusy(false); }
@@ -76,8 +76,8 @@ function ExportAction({ id, index, kind, onShared }: { id: string; index: number
       {files.length > 1 && <label className="block text-sm">Cartão a enviar<select aria-label="Cartão a enviar" value={page} onChange={event => setPage(Number(event.target.value))} className="ml-2 rounded border bg-background p-2">{files.map((_, i) => <option key={i} value={i}>{i + 1} de {files.length}</option>)}</select></label>}
       {file.type.startsWith('video/') ? <video key={preview} src={preview} controls playsInline preload="metadata" className="max-h-[50svh] w-full rounded-lg bg-black" aria-label="Pré-visualização do vídeo exportado" /> : <img src={preview} alt="Cópia com o logótipo Yamilook e identificação do autor" className="max-h-[50svh] w-full rounded-lg object-contain" />}
       <p className="text-xs text-muted-foreground">{file.type.startsWith('video/') ? 'Reproduz para confirmar também o áudio. ' : ''}{file.name} · {(file.size / 1048576).toFixed(1)} MB</p>
-      <Button className="w-full" disabled={sharing} onClick={() => setChoosing(true)}>Confirmar e escolher aplicação</Button>
-      {choosing && <FileApplicationPicker disabled={sharing} nativeShareAvailable={canShareVideo(file)} downloadUrl={preview} filename={file.name} onShare={() => void share()} />}
+      {!choosing && <Button className="w-full" disabled={sharing} onClick={() => setChoosing(true)}>Confirmar e escolher aplicação</Button>}
+      {choosing && <FileApplicationPicker disabled={sharing} nativeShareAvailable={canShareVideo(file)} onShare={() => void share()} />}
       <Button asChild variant="outline" className="w-full"><a href={preview} download={file.name}>Guardar cópia com marca</a></Button>
       <Button variant="ghost" className="w-full" disabled={sharing} onClick={() => { setFiles([]); setStatus(''); setChoosing(false); }}>Preparar novamente</Button>
     </>}

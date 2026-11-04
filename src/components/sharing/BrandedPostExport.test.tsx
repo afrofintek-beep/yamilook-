@@ -29,6 +29,7 @@ it('requires preview and a second user tap, sends only the branded file and revo
   expect(screen.getByRole('img')).toHaveAttribute('src', 'blob:preview');
   expect(sharePreparedVideo).not.toHaveBeenCalled();
   fireEvent.click(button);
+  expect(screen.queryByText('Confirmar e escolher aplicação')).not.toBeInTheDocument();
   expect(sharePreparedVideo).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole('button', { name: 'Outros' })); expect(sharePreparedVideo).toHaveBeenCalledWith(file);
   await screen.findByText(/Cópia entregue/); expect(shared).toHaveBeenCalledOnce();
@@ -58,8 +59,8 @@ it('keeps download and preview when native file sharing is unsupported', async (
   expect(await screen.findByRole('link', { name: 'Guardar cópia com marca' })).toHaveAttribute('download', 'cartao.jpg');
   fireEvent.click(screen.getByText('Confirmar e escolher aplicação'));
   fireEvent.click(screen.getByRole('button', { name: 'LinkedIn' }));
-  expect(screen.getByRole('link', { name: 'Guardar cópia para LinkedIn' })).toHaveAttribute('href', 'blob:preview');
-  expect(screen.getByRole('link', { name: 'Guardar cópia para LinkedIn' })).toHaveAttribute('download', 'cartao.jpg');
+  expect(screen.getByRole('link', { name: 'Guardar cópia com marca' })).toHaveAttribute('href', 'blob:preview');
+  expect(screen.queryByRole('link', { name: 'Guardar cópia para LinkedIn' })).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Abrir opções do telemóvel' })).not.toBeInTheDocument();
   expect(screen.getByRole('img')).toBeInTheDocument();
   expect(sharePreparedVideo).not.toHaveBeenCalled();
@@ -75,7 +76,7 @@ it('preserves the branded preview after a failed LinkedIn file handoff', async (
   await screen.findByText(/Não foi possível abrir a partilha/);
   expect(sharePreparedVideo).toHaveBeenCalledWith(file);
   expect(shared).not.toHaveBeenCalled();
-  expect(screen.getByRole('link', { name: 'Guardar cópia para LinkedIn' })).toHaveAttribute('download', file.name);
+  expect(screen.getByRole('link', { name: 'Guardar cópia com marca' })).toHaveAttribute('download', file.name);
   expect(screen.getByRole('img')).toHaveAttribute('src', 'blob:preview');
 });
 it('aborts preparation on unmount and prevents stale output', async () => {
