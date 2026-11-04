@@ -35,6 +35,9 @@
       }
     } finally { button.disabled = false; }
   }
+  document.querySelectorAll('[data-file-destination]').forEach(button => {
+    button.addEventListener('click', () => { status.textContent = `Para publicar no ${button.dataset.fileDestination}, guarda a fotografia ou o vídeo e anexa-o nessa aplicação.`; });
+  });
   document.getElementById('share-post')?.addEventListener('click', () => dialog?.showModal());
   document.getElementById('close-share')?.addEventListener('click', () => dialog?.close());
   document.getElementById('more-share')?.addEventListener('click', (event) => share(event.currentTarget, false));
