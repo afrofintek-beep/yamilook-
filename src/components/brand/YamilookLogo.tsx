@@ -1,7 +1,6 @@
 import { motion } from "framer-motion";
+import { YAMILOOK_LOGO_LIGHT as logoLight, YAMILOOK_LOGO_DARK as logoDark } from '@/lib/brand-assets';
 // Two wordmarks: a dark-ink logo for light backgrounds and a light logo for dark.
-const logoLight = "/yamilook-logo.png";       // dark ink on white → shown in light theme
-const logoDark = "/yamilook-logo-dark.webp";  // light ink → shown in dark theme
 
 interface YamilookLogoProps {
   size?: "sm" | "md" | "lg" | "xl";

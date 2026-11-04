@@ -5,7 +5,7 @@ vi.mock('mediabunny', () => ({
   Output: class {}, Mp4OutputFormat: class {}, WebMOutputFormat: class {}, StreamTarget: class {}, Quality: class {},
   canEncodeVideo: async () => true, canEncodeAudio: async () => true, Conversion: { init: mocks.init },
 }));
-vi.mock('./branded-media', () => ({ fitMedia: () => ({ width: 640, height: 360 }), loadBrandLogo: async () => ({ close: vi.fn() }), drawBrand: vi.fn(), EXPORT_LIMIT: 104857600 }));
+vi.mock('./branded-media', () => ({ fitMedia: () => ({ width: 640, height: 360 }), loadBrandLogo: async () => ({ close: vi.fn() }), drawMediaBrand: vi.fn(), EXPORT_LIMIT: 104857600 }));
 import { brandVideo } from './branded-video';
 const identity = { content: '', author: { name: 'Author', username: 'author' } };
 beforeEach(() => {
