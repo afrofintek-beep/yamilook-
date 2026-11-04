@@ -56,7 +56,27 @@ it('keeps download and preview when native file sharing is unsupported', async (
   render(<BrandedPostExport id="id" mediaUrls={[]} />);
   fireEvent.click(screen.getByText('Preparar cópia com marca'));
   expect(await screen.findByRole('link', { name: 'Guardar cópia com marca' })).toHaveAttribute('download', 'cartao.jpg');
-  expect(screen.queryByText('Confirmar e escolher aplicação')).not.toBeInTheDocument();
+  fireEvent.click(screen.getByText('Confirmar e escolher aplicação'));
+  fireEvent.click(screen.getByRole('button', { name: 'LinkedIn' }));
+  expect(screen.getByRole('link', { name: 'Guardar cópia para LinkedIn' })).toHaveAttribute('href', 'blob:preview');
+  expect(screen.getByRole('link', { name: 'Guardar cópia para LinkedIn' })).toHaveAttribute('download', 'cartao.jpg');
+  expect(screen.queryByRole('button', { name: 'Abrir opções do telemóvel' })).not.toBeInTheDocument();
+  expect(screen.getByRole('img')).toBeInTheDocument();
+  expect(sharePreparedVideo).not.toHaveBeenCalled();
+});
+it('preserves the branded preview after a failed LinkedIn file handoff', async () => {
+  vi.mocked(sharePreparedVideo).mockRejectedValue(new Error('Share failed'));
+  const shared = vi.fn();
+  render(<BrandedPostExport id="id" mediaUrls={[]} onShared={shared} />);
+  fireEvent.click(screen.getByText('Preparar cópia com marca'));
+  fireEvent.click(await screen.findByText('Confirmar e escolher aplicação'));
+  fireEvent.click(screen.getByRole('button', { name: 'LinkedIn' }));
+  fireEvent.click(screen.getByText('Abrir opções do telemóvel'));
+  await screen.findByText(/Não foi possível abrir a partilha/);
+  expect(sharePreparedVideo).toHaveBeenCalledWith(file);
+  expect(shared).not.toHaveBeenCalled();
+  expect(screen.getByRole('link', { name: 'Guardar cópia para LinkedIn' })).toHaveAttribute('download', file.name);
+  expect(screen.getByRole('img')).toHaveAttribute('src', 'blob:preview');
 });
 it('aborts preparation on unmount and prevents stale output', async () => {
   vi.mocked(getExportIdentity).mockImplementation((_id, signal) => new Promise((_resolve, reject) => signal?.addEventListener('abort', () => reject(new DOMException('aborted', 'AbortError')))));
