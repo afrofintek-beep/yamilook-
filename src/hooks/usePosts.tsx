@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { fetchPublicProfilesBatched } from '@/lib/public-profile-batch';
-import { preparePostImage } from '@/lib/post-image';
+import { preparePostMedia } from '@/lib/prepare-post-media';
 import { uploadPostFile } from '@/lib/post-upload';
 import { useAuth } from './useAuth';
 import { ReactionCounts, createEmptyReactionCounts, normalizeReactionType } from '@/lib/reactions';
@@ -371,7 +371,8 @@ export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?:
       for (const [index, originalFile] of options.mediaFiles.entries()) {
         options.signal?.throwIfAborted();
         options.onUploadProgress?.('preparing', index + 1, options.mediaFiles.length);
-        const file = await preparePostImage(originalFile);
+        const file = await preparePostMedia(originalFile, options.signal ?? new AbortController().signal,
+          percent => options.onUploadProgress?.('preparing', index + 1, options.mediaFiles!.length, percent));
         options.onUploadProgress?.('uploading', index + 1, options.mediaFiles.length);
         const fileExt = file.name.split('.').pop();
         const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;

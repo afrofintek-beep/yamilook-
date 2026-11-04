@@ -2,14 +2,16 @@ import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 
-for (const format of ['mp4', 'webm', 'large']) test(`encodes branded ${format} with audible synchronized audio and renders text/photo cards`, async ({ page }, testInfo) => {
+for (const format of ['mp4', 'webm', 'large', 'upload']) test(`encodes branded ${format} with audible synchronized audio and renders text/photo cards`, async ({ page }, testInfo) => {
   const mediaRequests = [];
   page.on('request', request => { if (request.url().endsWith('/large.webm')) mediaRequests.push(request); });
-  await page.goto('/tests/branded-export/harness.html?format=' + (format === 'large' ? 'webm&large=1' : format));
+  await page.goto('/tests/branded-export/harness.html?format=' + (format === 'large' ? 'webm&large=1' : format === 'upload' ? 'mp4&upload=1' : format));
+  if (format === 'upload') await page.locator('#source').setInputFiles('tests/branded-export/upload.mov');
   await page.getByRole('button', { name: 'Export synthetic fixture' }).click();
   await expect(page.locator('#status')).toHaveText(/^PASS /, { timeout: 90000 });
   const report = JSON.parse((await page.locator('#status').textContent()).slice(5));
   expect(report.type).toBe('video/mp4');
+  if (format === 'upload') expect(report.video).toBeLessThan(48*1024*1024);
   if (format === 'large') { expect(mediaRequests.length).toBeGreaterThan(0); expect(mediaRequests.every(r => !!r.headers()['range'])).toBe(true); }
   expect(report.cards).toBeGreaterThan(1); expect(report.image).toBeGreaterThan(1000);
   const photo = page.locator('#photo');
@@ -46,9 +48,9 @@ for (const format of ['mp4', 'webm', 'large']) test(`encodes branded ${format} w
   const pcm = execFileSync('ffmpeg', ['-v','error','-i',output,'-f','f32le','-ac','1','-ar','48000','pipe:1']);
   let power = 0; for (let i=0;i<pcm.length;i+=4) power += pcm.readFloatLE(i)**2;
   expect(Math.sqrt(power/(pcm.length/4))).toBeGreaterThan(.03);
-  const original = execFileSync('ffmpeg', ['-v','error','-i','tests/branded-export/fixture.' + (format === 'mp4' ? 'mp4' : 'webm'),'-f','f32le','-ac','1','-ar','48000','pipe:1']);
+  const original = execFileSync('ffmpeg', ['-v','error','-i','tests/branded-export/fixture.' + (format === 'mp4' || format === 'upload' ? 'mp4' : 'webm'),'-f','f32le','-ac','1','-ar','48000','pipe:1']);
   // Compatible AAC is copied; samples must stay identical (no silent/microphone substitute).
-  if (format === 'mp4') expect(Buffer.compare(pcm, original)).toBe(0);
+  if (format === 'mp4' || format === 'upload') expect(Buffer.compare(pcm, original)).toBe(0);
   const still = testInfo.outputPath('branded-frame.png');
   execFileSync('ffmpeg', ['-v','error','-i',output,'-frames:v','1',still]);
   await testInfo.attach('branded-frame', {path:still,contentType:'image/png'});
