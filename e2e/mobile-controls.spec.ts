@@ -299,7 +299,8 @@ test('call chat, media and hangup occupy separate areas through keyboard resize'
       // The toolbar now moves ABOVE the chat so the composer meets the keyboard.
       expect(toolbar!.y + toolbar!.height).toBeLessThanOrEqual(panel!.y + 1);
       expect(Math.abs(panel!.y + panel!.height - size.height)).toBeLessThanOrEqual(1);
-      expect(stage!.height).toBe(0);
+      expect(stage?.height ?? 0).toBe(0);
+      await expect(page.getByTestId('call-stage')).not.toBeVisible();
       expect((await page.getByRole('log', { name: 'Mensagens da conversa' }).boundingBox())!.height).toBeGreaterThanOrEqual(120);
       expect(hangup!.y + hangup!.height).toBeLessThanOrEqual(panel!.y + 1);
       await expect(page.getByRole('button', { name: 'Open reactions', exact: true })).toHaveCount(0);
