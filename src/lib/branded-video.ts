@@ -23,7 +23,7 @@ export async function brandVideo(file: File | string, identity: ExportIdentity |
     if (!video) throw new Error('O ficheiro não contém uma pista de vídeo.');
     const audio = await input.getPrimaryAudioTrack();
     const duration = await input.computeDuration();
-    if (!Number.isFinite(duration) || duration <= 0 || duration > 600) throw new Error('A cópia com marca suporta vídeos até 10 minutos. Usa o original para vídeos maiores.');
+    if (!Number.isFinite(duration) || duration <= 0 || duration > 600) throw new Error('A preparação automática suporta vídeos até 10 minutos. Divide o vídeo em partes mais curtas.');
     const { width, height } = fitMedia(video.displayWidth, video.displayHeight);
     if (!(await canEncodeVideo('avc', { width, height }))) throw new Error('Este navegador não permite preparar MP4. Abre a Yamilook no Safari ou Chrome atualizado e tenta novamente.');
     if (audio && await audio.getCodec() !== 'aac') await ensureAacEncoder();

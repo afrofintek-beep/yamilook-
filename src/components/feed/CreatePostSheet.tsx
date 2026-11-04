@@ -94,6 +94,7 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPreparingFiles, setIsPreparingFiles] = useState(false);
   const [uploadProgress, setUploadProgress] = useState('');
+  const [submitError, setSubmitError] = useState('');
   const [savingPost, setSavingPost] = useState(false);
   const uploadController = useRef<AbortController | null>(null);
   useEffect(() => () => uploadController.current?.abort(), []);
@@ -230,6 +231,7 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
       return;
     }
 
+    setSubmitError('');
     setIsPreparingFiles(true);
     try {
       // Decode HEIC before preview: the uploaded and displayed file must agree.
@@ -242,6 +244,7 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
       setFilePreviews(prev => [...prev, ...previews]);
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') return;
+      setSubmitError(error instanceof Error && error.message ? error.message : t('feed.errorPosting'));
       toast({
         title: t('feed.failedToPost'),
         description: error instanceof Error ? error.message : t('feed.errorPosting'),
@@ -280,6 +283,7 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
       return;
     }
 
+    setSubmitError('');
     const controller = new AbortController();
     uploadController.current = controller;
     setIsSubmitting(true);
@@ -326,7 +330,9 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
             setSavingPost(true);
             setUploadProgress(t('feed.savingPost', { defaultValue: 'A guardar publicação…' }));
           } else if (stage === 'preparing') {
-            setUploadProgress(t('feed.preparingFile', { defaultValue: 'A preparar ficheiro…' }));
+            setUploadProgress(t(video ? 'feed.preparingVideoUpload' : 'feed.preparingFile', {
+              defaultValue: video ? 'A preparar vídeo para envio…' : 'A preparar ficheiro…',
+            }) + (percent === undefined ? '' : ` ${percent}%`));
           } else {
             setUploadProgress(t(video ? 'feed.uploadingVideo' : 'feed.uploadingPhoto', {
               defaultValue: video ? 'A enviar vídeo {{current}}/{{total}}…' : 'A enviar fotografia {{current}}/{{total}}…',
@@ -367,6 +373,7 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
       onOpenChange(false);
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') return;
+      setSubmitError(error instanceof Error && error.message ? error.message : t('feed.errorPosting'));
       toast({
         title: t('feed.failedToPost'),
         description: error instanceof Error && error.message ? error.message : t('feed.errorPosting'),
@@ -413,6 +420,11 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
             {isSubmitting ? t('feed.posting') : isPreparingFiles ? t('feed.preparingMedia', { defaultValue: 'A preparar…' }) : t('feed.post')}
           </Button>
         </SheetHeader>
+        {submitError && (
+          <p role="alert" className="shrink-0 mx-4 mt-2 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-foreground">
+            {submitError}
+          </p>
+        )}
         {(isPreparingFiles || isSubmitting) && (
           <p role="status" aria-live="polite" className="shrink-0 px-4 py-1 text-xs text-muted-foreground">
             {isPreparingFiles ? t('feed.preparingMedia', { defaultValue: 'A preparar fotografia…' }) : uploadProgress}

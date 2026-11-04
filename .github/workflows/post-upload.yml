@@ -1,7 +1,7 @@
 name: Post upload recovery
 on:
   pull_request:
-    paths: ['src/lib/post-upload*', 'src/hooks/usePosts*', 'src/components/feed/CreatePostSheet*', 'tests/post-upload/**', 'package-lock.json', '.github/workflows/post-upload.yml']
+    paths: ['src/lib/post-upload*', 'src/lib/prepare-post-media*', 'src/hooks/usePosts*', 'src/components/feed/CreatePostSheet*', 'tests/post-upload/**', 'package-lock.json', '.github/workflows/post-upload.yml']
 permissions:
   contents: read
 jobs:
@@ -15,7 +15,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx vitest run src/lib/post-upload.test.ts src/components/feed/CreatePostSheet.test.tsx src/hooks/usePosts*.test.tsx
+      - run: npx vitest run src/lib/prepare-post-media.test.ts src/lib/post-upload.test.ts src/components/feed/CreatePostSheet.test.tsx src/hooks/usePosts*.test.tsx
       - run: npx tsc --noEmit -p tsconfig.app.json
       - run: npm run build
       - run: npx playwright install --with-deps chromium webkit

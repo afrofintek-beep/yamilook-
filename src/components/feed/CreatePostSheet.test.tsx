@@ -393,4 +393,15 @@ describe('CreatePostSheet', () => {
     expect(document.querySelector('video')).not.toBeNull();
   });
 
+  it('shows a storage size rejection inside the composer instead of behind it', async () => {
+    mockCreatePost.mockRejectedValueOnce(new Error('Este ficheiro excede o limite de envio.'));
+    render(<CreatePostSheet {...defaultProps} />);
+    fireEvent.change(screen.getByPlaceholderText('O que se passa na tua vizinhança?'), { target: { value: 'Rascunho' } });
+    fireEvent.click(screen.getByText('Publicar'));
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Este ficheiro excede o limite de envio.');
+    expect(screen.getByRole('dialog')).toContainElement(alert);
+    expect(screen.getByPlaceholderText('O que se passa na tua vizinhança?')).toHaveValue('Rascunho');
+  });
+
 });

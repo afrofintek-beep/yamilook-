@@ -1,7 +1,7 @@
 name: Public post sharing
 on:
   pull_request:
-    paths: ['api/public-post.js', 'server/public-post-page.mjs', 'shared/public-post.mjs', 'shared/post-video-sharing.mjs', 'shared/owned-post-media.mjs', 'supabase/functions/owned-post-media/**', 'build/public-sharing-plugin.ts', 'vite.config.ts', 'shared/share-destinations.mjs', 'src/components/sharing/**', 'src/features/sharing/**', 'src/features/papos/PaposApp.tsx', 'src/components/chat/EnhancedMessageBubble*', 'public/public-post*', 'src/pages/PublicPost.tsx', 'src/lib/owned-post-media*', 'src/lib/owned-video-export*', 'src/lib/branded-*', 'src/lib/brand-assets.ts', 'src/components/brand/**', 'public/yamilook-logo*', 'package-lock.json', 'src/lib/post-sharing*', 'src/components/feed/PostCard*', 'supabase/migrations/*public_post_sharing.sql', 'tests/public-post/**', 'tests/branded-export/**', 'vercel.json', '.github/workflows/public-post-sharing.yml']
+    paths: ['api/public-post.js', 'server/public-post-page.mjs', 'shared/public-post.mjs', 'shared/post-video-sharing.mjs', 'shared/owned-post-media.mjs', 'supabase/functions/owned-post-media/**', 'build/public-sharing-plugin.ts', 'vite.config.ts', 'shared/share-destinations.mjs', 'src/components/sharing/**', 'src/features/sharing/**', 'src/features/papos/PaposApp.tsx', 'src/components/chat/EnhancedMessageBubble*', 'public/public-post*', 'src/pages/PublicPost.tsx', 'src/lib/owned-post-media*', 'src/lib/owned-video-export*', 'src/lib/branded-*', 'src/lib/prepare-post-media*', 'src/lib/brand-assets.ts', 'src/components/brand/**', 'public/yamilook-logo*', 'package-lock.json', 'src/lib/post-sharing*', 'src/components/feed/PostCard*', 'supabase/migrations/*public_post_sharing.sql', 'tests/public-post/**', 'tests/branded-export/**', 'vercel.json', '.github/workflows/public-post-sharing.yml']
 permissions:
   contents: read
 jobs:
@@ -15,7 +15,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: node --test tests/public-post/*.test.mjs
-      - run: npm test -- src/lib/owned-video-export.test.ts src/lib/branded-media.test.ts src/lib/branded-video.test.ts src/lib/post-sharing.test.ts src/components/sharing src/components/feed/PostCard.test.tsx src/features/sharing src/components/chat/EnhancedMessageBubble.test.tsx src/features/papos/Papos.test.tsx
+      - run: npm test -- src/lib/prepare-post-media.test.ts src/lib/owned-video-export.test.ts src/lib/branded-media.test.ts src/lib/branded-video.test.ts src/lib/post-sharing.test.ts src/components/sharing src/components/feed/PostCard.test.tsx src/features/sharing src/components/chat/EnhancedMessageBubble.test.tsx src/features/papos/Papos.test.tsx
       - run: npx tsc --noEmit -p tsconfig.app.json
       - run: npm run build
       - run: sudo apt-get update && sudo apt-get install -y ffmpeg
