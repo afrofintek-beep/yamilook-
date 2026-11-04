@@ -109,8 +109,9 @@ describe('PostCard', () => {
   it.each(['contacts', 'close_friends', 'only_me'] as const)('lets the owner send files with %s visibility without opening the editor or a public link', async privacy => {
     render(<PostCard post={{ ...mockPost, user_id: 'test-user-id', privacy }} />);
     fireEvent.click(screen.getByRole('button', { name: 'Partilhar' }));
-    await screen.findByRole('region', { name: 'Enviar ficheiro a amigos' });
-    expect(screen.getByRole('button', { name: 'Preparar ficheiro' })).toBeInTheDocument();
+    await screen.findByRole('region', { name: 'Partilhar com a marca Yamilook' });
+    expect(screen.getByRole('button', { name: 'Preparar cópia com marca' })).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Enviar ficheiro a amigos' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Guardar' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Copiar ligação' })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'WhatsApp' })).not.toBeInTheDocument();
