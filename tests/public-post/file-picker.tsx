@@ -1,4 +1,5 @@
 import React from 'react';
+import '../../src/index.css';
 import { createRoot } from 'react-dom/client';
 import FileApplicationPicker from '../../src/components/sharing/FileApplicationPicker';
 import { sharePreparedVideo } from '../../shared/post-video-sharing.mjs';
