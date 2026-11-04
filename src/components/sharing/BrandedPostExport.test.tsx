@@ -5,10 +5,12 @@ import BrandedPostExport from './BrandedPostExport';
 import { getExportIdentity, prepareOwnedPostMedia, getOwnedMediaDescriptor } from '@/lib/owned-post-media';
 import { brandImage, brandText } from '@/lib/branded-media';
 import { canShareVideo, sharePreparedVideo } from '../../../shared/post-video-sharing.mjs';
+import { exportVideoFromPlayback, playbackExportSupported } from '@/lib/playback-video-export';
 vi.mock('@/lib/owned-video-export', () => ({ prepareOwnedVideoExport: vi.fn() }));
 vi.mock('@/lib/owned-post-media', () => ({ getExportIdentity: vi.fn(), prepareOwnedPostMedia: vi.fn(), getOwnedMediaDescriptor: vi.fn() }));
 vi.mock('@/lib/branded-media', () => ({ brandImage: vi.fn(), brandText: vi.fn() }));
 vi.mock('../../../shared/post-video-sharing.mjs', () => ({ canShareVideo: vi.fn(), sharePreparedVideo: vi.fn() }));
+vi.mock('@/lib/playback-video-export', () => ({ exportVideoFromPlayback: vi.fn(), playbackExportSupported: vi.fn() }));
 const identity = { content: 'Cerimónia AFIS', author: { name: 'Antonio', username: 'tony' } };
 const file = new File(['branded'], 'cartao.jpg', { type: 'image/jpeg' });
 beforeEach(() => {
@@ -19,6 +21,8 @@ beforeEach(() => {
   vi.mocked(getOwnedMediaDescriptor).mockResolvedValue({ url: 'https://example.test/photo.jpg', downloadUrl: '', filename: '', type: 'image/jpeg' });
   vi.mocked(brandImage).mockResolvedValue(file); vi.mocked(brandText).mockResolvedValue([file]);
   vi.mocked(canShareVideo).mockReturnValue(true); vi.mocked(sharePreparedVideo).mockResolvedValue('shared');
+  vi.mocked(playbackExportSupported).mockReturnValue(true);
+  vi.mocked(exportVideoFromPlayback).mockResolvedValue(new File(['mp4'], 'video-yamilook.mp4', { type: 'video/mp4' }));
 });
 afterEach(cleanup);
 it('requires preview and a second user tap, sends only the branded file and revokes URLs', async () => {
@@ -103,4 +107,34 @@ it('reports a preview playback failure while retaining download recovery', async
   fireEvent.error(preview);
   expect(screen.getByRole('status')).toHaveTextContent('Não foi possível reproduzir');
   expect(screen.getByRole('link', { name: 'Guardar cópia com marca' })).toHaveAttribute('download', 'video-yamilook.mp4');
+});
+
+it('recovers a decoder failure through native playback in a fresh tap and revalidates ownership', async () => {
+  vi.mocked(prepareOwnedVideoExport).mockRejectedValue(new Error('Decoder failure'));
+  render(<BrandedPostExport id="id" mediaUrls={['https://example.test/video.mp4']} />);
+  fireEvent.click(screen.getByText('Preparar cópia com marca'));
+  const retry = await screen.findByRole('button', { name: 'Preparar em modo compatível' });
+  expect(retry).toBeDisabled();
+  expect(screen.queryByText('Decoder failure')).not.toBeInTheDocument();
+  const original = screen.getByLabelText('Vídeo original para modo compatível');
+  fireEvent.loadedData(original);
+  const before = vi.mocked(getExportIdentity).mock.calls.length;
+  fireEvent.click(retry);
+  expect(exportVideoFromPlayback).toHaveBeenCalledWith(original, identity, expect.any(AbortSignal), expect.any(Function));
+  expect(vi.mocked(exportVideoFromPlayback).mock.invocationCallOrder[0]).toBeLessThan(vi.mocked(getExportIdentity).mock.invocationCallOrder[before]);
+  await screen.findByText('Pré-visualização da cópia');
+  expect(getExportIdentity).toHaveBeenCalledTimes(before + 2);
+});
+
+it('does not expose native playback output when ownership is revoked', async () => {
+  vi.mocked(prepareOwnedVideoExport).mockRejectedValue(new Error('Decoder failure'));
+  render(<BrandedPostExport id="id" mediaUrls={['https://example.test/video.mp4']} />);
+  fireEvent.click(screen.getByText('Preparar cópia com marca'));
+  const retry = await screen.findByRole('button', { name: 'Preparar em modo compatível' });
+  fireEvent.loadedData(screen.getByLabelText('Vídeo original para modo compatível'));
+  vi.mocked(getExportIdentity).mockRejectedValueOnce(new Error('Acesso recusado.'));
+  fireEvent.click(retry);
+  await screen.findByText('Acesso recusado.');
+  expect(screen.queryByText('Pré-visualização da cópia')).not.toBeInTheDocument();
+  expect(vi.mocked(exportVideoFromPlayback).mock.calls[0][2].aborted).toBe(true);
 });

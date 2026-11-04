@@ -2,7 +2,7 @@ import FileApplicationPicker from './FileApplicationPicker';
 import { prepareOwnedVideoExport } from '@/lib/owned-video-export';
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { getExportIdentity, prepareOwnedPostMedia, getOwnedMediaDescriptor } from '@/lib/owned-post-media';
+import { getExportIdentity, prepareOwnedPostMedia, getOwnedMediaDescriptor, type ExportIdentity } from '@/lib/owned-post-media';
 import { brandImage, brandText } from '@/lib/branded-media';
 import { mediaKind } from '../../../shared/owned-post-media.mjs';
 import { canShareVideo, sharePreparedVideo } from '../../../shared/post-video-sharing.mjs';
@@ -15,6 +15,9 @@ function ExportAction({ id, index, kind, onShared }: { id: string; index: number
   const [busy, setBusy] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [choosing, setChoosing] = useState(false);
+  const [compatible, setCompatible] = useState<{ url: string; identity: ExportIdentity; run: typeof import('@/lib/playback-video-export').exportVideoFromPlayback; attempt: number } | null>(null);
+  const [sourceReady, setSourceReady] = useState(false);
+  const sourceVideo = useRef<HTMLVideoElement>(null);
   const request = useRef<AbortController | null>(null);
   const file = files[page];
   useEffect(() => () => { request.current?.abort(); request.current = null; }, []);
@@ -23,21 +26,34 @@ function ExportAction({ id, index, kind, onShared }: { id: string; index: number
     const url = URL.createObjectURL(file); setPreview(url);
     return () => URL.revokeObjectURL(url);
   }, [file]);
-  const prepare = async () => {
+  const prepare = async (usePlayback = false) => {
     if (request.current) return;
     const controller = new AbortController(); request.current = controller;
     const timeout = window.setTimeout(() => controller.abort(new Error('A preparação demorou demasiado. Tenta um ficheiro mais curto.')), 15 * 60 * 1000);
     setBusy(true); setStatus('A confirmar a autoria…');
+    let attempted: { url: string; identity: ExportIdentity } | null = null;
     try {
+      // The loaded native player must start in this tap, before authorization awaits.
+      const playback = usePlayback && compatible && sourceVideo.current
+        ? compatible.run(sourceVideo.current, compatible.identity, controller.signal, progress => setStatus(`A preparar em modo compatível… ${progress}%`)) : null;
+      // Observe failures immediately, even while the permission checks are in flight.
+      void playback?.catch(() => undefined);
       const identity = await getExportIdentity(id, controller.signal);
       let result: File[];
       if (kind === 'text') result = await brandText(identity, controller.signal);
       else {
         setStatus('A carregar o ficheiro original…');
         const descriptor = await getOwnedMediaDescriptor(id, index, controller.signal);
+        attempted = { url: descriptor.url, identity };
         if (kind === 'video') {
-          setStatus('A preparar MP4 com áudio. Mantém esta página aberta…');
-          result = [await prepareOwnedVideoExport(id, index, { identity, signal: controller.signal, onProgress: progress => setStatus(`A preparar MP4 com áudio… ${progress}%`) })];
+          if (playback) {
+            if (descriptor.url !== compatible?.url || JSON.stringify(identity) !== JSON.stringify(compatible.identity)) throw new Error('A publicação mudou. Fecha e volta a abrir a partilha.');
+            setStatus('A preparar em modo compatível. Mantém esta página visível…');
+            result = [await playback];
+          } else {
+            setStatus('A preparar MP4 com áudio. Mantém esta página aberta…');
+            result = [await prepareOwnedVideoExport(id, index, { identity, signal: controller.signal, onProgress: progress => setStatus(`A preparar MP4 com áudio… ${progress}%`) })];
+          }
         } else {
           const original = await prepareOwnedPostMedia(id, index, { signal: controller.signal, onProgress: (loaded, total) => setStatus(total ? `A carregar… ${Math.round(100 * loaded / total)}%` : 'A carregar…') });
           result = [await brandImage(original, identity, controller.signal)];
@@ -48,16 +64,28 @@ function ExportAction({ id, index, kind, onShared }: { id: string; index: number
       const currentIdentity = await getExportIdentity(id, controller.signal);
       if (JSON.stringify(identity) !== JSON.stringify(currentIdentity)) throw new Error('A publicação ou o autor mudou. Prepara novamente a cópia.');
       controller.signal.throwIfAborted();
-      setFiles(result); setPage(0);
+      setFiles(result); setPage(0); setCompatible(null);
       setStatus('Cópia pronta. Confirma a pré-visualização antes de enviar.');
     } catch (error) {
-      if (request.current === controller) setStatus(controller.signal.aborted ? 'Preparação interrompida. Podes tentar novamente.' : error instanceof Error ? error.message : 'Não foi possível exportar. Tenta preparar novamente.');
+      if (request.current === controller) {
+        if (!controller.signal.aborted && !usePlayback && attempted && error instanceof Error && /decod|unsupported.*codec|codec.*unsupported/i.test(error.message)) {
+          const native = await import('@/lib/playback-video-export');
+          if (!controller.signal.aborted && request.current === controller && native.playbackExportSupported()) {
+            setSourceReady(false); setCompatible({ ...attempted, run: native.exportVideoFromPlayback, attempt: 0 });
+            setStatus('A conversão rápida não conseguiu abrir este vídeo. Usa Preparar em modo compatível abaixo.');
+          } else setStatus('Este navegador não conseguiu converter o vídeo. Tenta no Safari atualizado.');
+        } else {
+          controller.abort(); // Stop playback too if authorization or revalidation failed.
+          if (usePlayback) { setSourceReady(false); setCompatible(value => value ? { ...value, attempt: value.attempt + 1 } : null); }
+          setStatus(error instanceof Error && error.name !== 'AbortError' ? error.message : 'Preparação interrompida. Podes tentar novamente.');
+        }
+      }
     } finally {
       clearTimeout(timeout);
       if (request.current === controller) { request.current = null; setBusy(false); }
     }
   };
-  const cancel = () => { request.current?.abort(); request.current = null; setBusy(false); setStatus('Preparação cancelada.'); };
+  const cancel = () => { request.current?.abort(); request.current = null; setBusy(false); if (compatible) { setSourceReady(false); setCompatible(value => value ? { ...value, attempt: value.attempt + 1 } : null); } setStatus('Preparação cancelada.'); };
   const share = async () => {
     if (!file || sharing) return;
     setSharing(true);
@@ -69,7 +97,12 @@ function ExportAction({ id, index, kind, onShared }: { id: string; index: number
     finally { setSharing(false); }
   };
   return <div className="space-y-3">
-    {!file && <Button className="w-full" disabled={busy} onClick={() => void prepare()}>Preparar cópia com marca</Button>}
+    {!file && !compatible && <Button className="w-full" disabled={busy} onClick={() => void prepare()}>Preparar cópia com marca</Button>}
+    {!file && compatible && <div className="space-y-3">
+      <p className="text-sm">Modo compatível: mantém esta página visível. A preparação demora aproximadamente o tempo do vídeo e preserva o áudio, o logótipo e o autor.</p>
+      <video key={compatible.attempt} ref={sourceVideo} crossOrigin="anonymous" src={compatible.url} playsInline controls={!busy} preload="auto" onLoadedData={() => setSourceReady(true)} onError={() => { setSourceReady(false); setStatus('Não foi possível carregar o vídeo original. Fecha e volta a abrir a partilha.'); }} className="max-h-[40svh] w-full rounded-lg bg-black" aria-label="Vídeo original para modo compatível" />
+      <Button className="w-full" disabled={busy || !sourceReady} onClick={() => void prepare(true)}>Preparar em modo compatível</Button>
+    </div>}
     {busy && <Button variant="outline" className="w-full" onClick={cancel}>Cancelar exportação</Button>}
     {file && preview && <>
       <h4 className="font-medium">Pré-visualização da cópia</h4>
