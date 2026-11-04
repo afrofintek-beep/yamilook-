@@ -72,7 +72,6 @@ it('preserves the branded preview after a failed LinkedIn file handoff', async (
   fireEvent.click(screen.getByText('Preparar cópia com marca'));
   fireEvent.click(await screen.findByText('Confirmar e escolher aplicação'));
   fireEvent.click(screen.getByRole('button', { name: 'LinkedIn' }));
-  fireEvent.click(screen.getByText('Abrir opções do telemóvel'));
   await screen.findByText(/Não foi possível abrir a partilha/);
   expect(sharePreparedVideo).toHaveBeenCalledWith(file);
   expect(shared).not.toHaveBeenCalled();
@@ -94,4 +93,14 @@ it('exports branded video by URL instead of downloading a size-limited File', as
   await screen.findByText('Pré-visualização da cópia');
   expect(prepareOwnedPostMedia).not.toHaveBeenCalled();
   expect(prepareOwnedVideoExport).toHaveBeenCalledWith('id', 0, expect.objectContaining({ identity, signal: expect.any(AbortSignal) }));
+});
+
+it('reports a preview playback failure while retaining download recovery', async () => {
+  vi.mocked(prepareOwnedVideoExport).mockResolvedValue(new File(['mp4'], 'video-yamilook.mp4', { type: 'video/mp4' }));
+  render(<BrandedPostExport id="id" mediaUrls={['https://example.test/video.mp4']} />);
+  fireEvent.click(screen.getByText('Preparar cópia com marca'));
+  const preview = await screen.findByLabelText('Pré-visualização do vídeo exportado');
+  fireEvent.error(preview);
+  expect(screen.getByRole('status')).toHaveTextContent('Não foi possível reproduzir');
+  expect(screen.getByRole('link', { name: 'Guardar cópia com marca' })).toHaveAttribute('download', 'video-yamilook.mp4');
 });
