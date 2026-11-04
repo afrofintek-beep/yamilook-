@@ -1,4 +1,4 @@
-<!doctype html><html><body><button id="export">Export synthetic fixture</button><p id="status">Ready</p><video controls id="preview"></video><a id="download">Download</a><script type="module">
+<!doctype html><html><body><button id="export">Export synthetic fixture</button><p id="status">Ready</p><video controls id="preview"></video><img id="photo" alt="Exported photograph" /><a id="download">Download</a><script type="module">
 import { brandVideo } from '/src/lib/branded-video.ts';
 import { brandImage, brandText } from '/src/lib/branded-media.ts';
 document.querySelector('#export').onclick = async () => {
@@ -11,7 +11,11 @@ document.querySelector('#export').onclick = async () => {
     const sourceUrl = source.href;
     const identity = {content:'Cerimónia de abertura da AFIS\n' + 'Texto completo 🎉 '.repeat(180), author:{name:'Autor de teste',username:'autor_teste'}};
     const cards = await brandText(identity);
-    const image = await brandImage(new File([await (await fetch('/yamilook-logo.png')).blob()], 'photo.png', {type:'image/png'}), identity);
+    const photo = document.createElement('canvas'); photo.width = 640; photo.height = 360;
+    const photoContext = photo.getContext('2d'); photoContext.fillStyle = '#203060'; photoContext.fillRect(0, 0, 640, 360);
+    const sourcePhoto = await new Promise(resolve => photo.toBlob(resolve, 'image/png'));
+    const image = await brandImage(new File([sourcePhoto], 'photo.png', {type:'image/png'}), identity);
+    document.querySelector('#photo').src = URL.createObjectURL(image);
     const video = await brandVideo(sourceUrl, identity, new AbortController().signal, p => status.textContent = 'Export '+p);
     const url = URL.createObjectURL(video);
     document.querySelector('#preview').src = url;

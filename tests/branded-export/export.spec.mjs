@@ -12,6 +12,25 @@ for (const format of ['mp4', 'webm', 'large']) test(`encodes branded ${format} w
   expect(report.type).toBe('video/mp4');
   if (format === 'large') { expect(mediaRequests.length).toBeGreaterThan(0); expect(mediaRequests.every(r => !!r.headers()['range'])).toBe(true); }
   expect(report.cards).toBeGreaterThan(1); expect(report.image).toBeGreaterThan(1000);
+  const photo = page.locator('#photo');
+  await expect(photo).toBeVisible();
+  const pixels = await photo.evaluate(image => {
+    const canvas = document.createElement('canvas'); canvas.width = image.naturalWidth; canvas.height = image.naturalHeight;
+    const ctx = canvas.getContext('2d'); ctx.drawImage(image, 0, 0);
+    const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+    let white = 0, gold = 0;
+    for (let y = 270; y < 342; y++) for (let x = 32; x < 192; x++) {
+      const i = (y * canvas.width + x) * 4, [r,g,b] = data.slice(i, i+3);
+      if (r > 220 && g > 220 && b > 220) white++;
+      if (r > 120 && g > 90 && b < 150 && r > g * 1.05 && g > b * 1.2) gold++;
+    }
+    return { width: canvas.width, height: canvas.height, white, gold, top: Array.from(data.slice(0, 3)) };
+  });
+  expect(pixels.width).toBe(640); expect(pixels.height).toBe(360);
+  expect(pixels.white).toBeGreaterThan(100); expect(pixels.gold).toBeGreaterThan(10);
+  pixels.top.forEach((value, i) => expect(Math.abs(value - [32,48,96][i])).toBeLessThan(4));
+  await photo.screenshot({ path: testInfo.outputPath('branded-photo.png') });
+
   const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('link', { name: 'Download' }).click()]);
   const output = testInfo.outputPath(download.suggestedFilename()); await download.saveAs(output);
   const bytes = readFileSync(output);
@@ -22,7 +41,7 @@ for (const format of ['mp4', 'webm', 'large']) test(`encodes branded ${format} w
   const meta = JSON.parse(execFileSync('ffprobe', ['-v','error','-show_streams','-show_format','-of','json',output]).toString());
   const video = meta.streams.find(s => s.codec_type === 'video');
   const audio = meta.streams.find(s => s.codec_type === 'audio');
-  expect(video.width).toBe(640); expect(video.height).toBeGreaterThan(360); expect(audio.codec_name).toBe('aac'); expect(video.codec_name).toBe('h264');
+  expect(video.width).toBe(640); expect(video.height).toBe(360); expect(audio.codec_name).toBe('aac'); expect(video.codec_name).toBe('h264');
   expect(Math.abs(Number(meta.format.duration) - 3)).toBeLessThan(.25);
   const pcm = execFileSync('ffmpeg', ['-v','error','-i',output,'-f','f32le','-ac','1','-ar','48000','pipe:1']);
   let power = 0; for (let i=0;i<pcm.length;i+=4) power += pcm.readFloatLE(i)**2;

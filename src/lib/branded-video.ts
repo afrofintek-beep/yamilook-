@@ -1,6 +1,6 @@
 import { ALL_FORMATS, BlobSource, UrlSource, Conversion, Input, Output, Mp4OutputFormat, StreamTarget, canEncodeVideo, canEncodeAudio, Quality } from 'mediabunny';
 import type { ExportIdentity } from './owned-post-media';
-import { drawBrand, fitMedia, loadBrandLogo } from './branded-media';
+import { drawMediaBrand, fitMedia, loadBrandLogo } from './branded-media';
 
 export const VIDEO_SHARE_LIMIT = 48 * 1024 * 1024;
 let aacRegistration: Promise<void> | undefined;
@@ -25,14 +25,13 @@ export async function brandVideo(file: File | string, identity: ExportIdentity |
     const duration = await input.computeDuration();
     if (!Number.isFinite(duration) || duration <= 0 || duration > 600) throw new Error('A cópia com marca suporta vídeos até 10 minutos. Usa o original para vídeos maiores.');
     const { width, height } = fitMedia(video.displayWidth, video.displayHeight);
-    const band = identity ? Math.max(80, Math.ceil(width * .14 / 2) * 2) : 0;
-    if (!(await canEncodeVideo('avc', { width, height: height + band }))) throw new Error('Este navegador não permite preparar MP4. Abre a Yamilook no Safari ou Chrome atualizado e tenta novamente.');
+    if (!(await canEncodeVideo('avc', { width, height }))) throw new Error('Este navegador não permite preparar MP4. Abre a Yamilook no Safari ou Chrome atualizado e tenta novamente.');
     if (audio && await audio.getCodec() !== 'aac') await ensureAacEncoder();
-    if (identity) logo = await loadBrandLogo(signal);
+    if (identity) logo = await loadBrandLogo(signal, true);
     // Reserve headroom for AAC and container metadata, even for long clips.
     const bitrate = Math.min(2_000_000, Math.floor(40 * 1024 * 1024 * 8 / duration) - 192_000);
     signal.throwIfAborted();
-    const canvas = document.createElement('canvas'); canvas.width = width; canvas.height = height + band;
+    const canvas = document.createElement('canvas'); canvas.width = width; canvas.height = height;
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('Não foi possível preparar o vídeo.');
     const chunks: { position: number; data: Uint8Array<ArrayBuffer> }[] = [];
@@ -49,12 +48,12 @@ export async function brandVideo(file: File | string, identity: ExportIdentity |
       } })),
     });
     conversion = await Conversion.init({ input, output, tracks: 'primary', showWarnings: false,
-      video: { codec: 'avc', width, height, fit: 'contain', frameRate: 30, quality: new Quality({ bitrate }), processedWidth: width, processedHeight: height + band,
+      video: { codec: 'avc', width, height, fit: 'contain', frameRate: 30, quality: new Quality({ bitrate }), processedWidth: width, processedHeight: height,
         process(sample) {
           signal.throwIfAborted();
-          ctx.fillStyle = '#000'; ctx.fillRect(0, 0, width, height + band);
-          sample.draw(ctx, 0, band, width, height);
-          if (logo && identity) drawBrand(ctx, width, band, logo, identity);
+          ctx.fillStyle = '#000'; ctx.fillRect(0, 0, width, height);
+          sample.draw(ctx, 0, 0, width, height);
+          if (logo && identity) drawMediaBrand(ctx, width, height, logo, identity);
           return canvas;
         },
       },
