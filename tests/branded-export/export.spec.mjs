@@ -14,6 +14,12 @@ for (const format of ['mp4', 'webm', 'large', 'upload']) test(`encodes branded $
   if (format === 'upload') expect(report.video).toBeLessThan(48*1024*1024);
   if (format === 'large') { expect(mediaRequests.length).toBeGreaterThan(0); expect(mediaRequests.every(r => !!r.headers()['range'])).toBe(true); }
   expect(report.cards).toBeGreaterThan(1); expect(report.image).toBeGreaterThan(1000);
+  // Verify playback, rather than accepting the existence of an MP4 container alone.
+  const preview = page.locator('#preview');
+  await expect.poll(() => preview.evaluate(video => video.readyState)).toBeGreaterThanOrEqual(2);
+  await preview.evaluate(video => { video.muted = true; return video.play(); });
+  await expect.poll(() => preview.evaluate(video => video.currentTime)).toBeGreaterThan(0.1);
+  await preview.evaluate(video => video.pause());
   const photo = page.locator('#photo');
   await expect(photo).toBeVisible();
   const pixels = await photo.evaluate(image => {
