@@ -117,7 +117,7 @@ it('recovers a decoder failure through native playback in a fresh tap and revali
   expect(retry).toBeDisabled();
   expect(screen.queryByText('Decoder failure')).not.toBeInTheDocument();
   const original = screen.getByLabelText('Vídeo original para modo compatível');
-  fireEvent.loadedData(original);
+  fireEvent.loadedMetadata(original);
   const before = vi.mocked(getExportIdentity).mock.calls.length;
   fireEvent.click(retry);
   expect(exportVideoFromPlayback).toHaveBeenCalledWith(original, identity, expect.any(AbortSignal), expect.any(Function));
@@ -131,7 +131,7 @@ it('does not expose native playback output when ownership is revoked', async () 
   render(<BrandedPostExport id="id" mediaUrls={['https://example.test/video.mp4']} />);
   fireEvent.click(screen.getByText('Preparar cópia com marca'));
   const retry = await screen.findByRole('button', { name: 'Preparar em modo compatível' });
-  fireEvent.loadedData(screen.getByLabelText('Vídeo original para modo compatível'));
+  fireEvent.loadedMetadata(screen.getByLabelText('Vídeo original para modo compatível'));
   vi.mocked(getExportIdentity).mockRejectedValueOnce(new Error('Acesso recusado.'));
   fireEvent.click(retry);
   await screen.findByText('Acesso recusado.');

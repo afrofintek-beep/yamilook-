@@ -100,7 +100,7 @@ function ExportAction({ id, index, kind, onShared }: { id: string; index: number
     {!file && !compatible && <Button className="w-full" disabled={busy} onClick={() => void prepare()}>Preparar cópia com marca</Button>}
     {!file && compatible && <div className="space-y-3">
       <p className="text-sm">Modo compatível: mantém esta página visível. A preparação demora aproximadamente o tempo do vídeo e preserva o áudio, o logótipo e o autor.</p>
-      <video key={compatible.attempt} ref={sourceVideo} crossOrigin="anonymous" src={compatible.url} playsInline controls={!busy} preload="auto" onLoadedData={() => setSourceReady(true)} onError={() => { setSourceReady(false); setStatus('Não foi possível carregar o vídeo original. Fecha e volta a abrir a partilha.'); }} className="max-h-[40svh] w-full rounded-lg bg-black" aria-label="Vídeo original para modo compatível" />
+      <video key={compatible.attempt} ref={sourceVideo} crossOrigin="anonymous" src={compatible.url} playsInline controls={!busy} preload="auto" onLoadedMetadata={() => setSourceReady(true)} onError={() => { setSourceReady(false); setStatus('Não foi possível carregar o vídeo original. Fecha e volta a abrir a partilha.'); }} className="max-h-[40svh] w-full rounded-lg bg-black" aria-label="Vídeo original para modo compatível" />
       <Button className="w-full" disabled={busy || !sourceReady} onClick={() => void prepare(true)}>Preparar em modo compatível</Button>
     </div>}
     {busy && <Button variant="outline" className="w-full" onClick={cancel}>Cancelar exportação</Button>}

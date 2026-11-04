@@ -12,7 +12,7 @@ export function playbackExportSupported() {
 export async function exportVideoFromPlayback(video: HTMLVideoElement, identity: ExportIdentity, signal: AbortSignal, progress: (value: number) => void): Promise<File> {
   signal.throwIfAborted();
   if (!playbackExportSupported()) throw new Error('Este navegador não permite o modo compatível. Tenta no Safari atualizado.');
-  if (video.readyState < 2 || !Number.isFinite(video.duration) || video.duration <= 0 || video.duration > 600) throw new Error('Aguarda o carregamento do vídeo. O limite é de 10 minutos.');
+  if (video.readyState < 1 || !Number.isFinite(video.duration) || video.duration <= 0 || video.duration > 600) throw new Error('Aguarda o carregamento do vídeo. O limite é de 10 minutos.');
   const duration = video.duration;
   const { width, height } = fitMedia(video.videoWidth, video.videoHeight, 960);
   const canvas = document.createElement('canvas'); canvas.width = width; canvas.height = height;
