@@ -78,3 +78,20 @@ it('allows composing while the destination conversation is being resolved', asyn
   fireEvent.click(screen.getByRole('button', { name: 'Enviar' }));
   await waitFor(() => expect(sendMessage).toHaveBeenCalledWith('Olá'));
 });
+
+
+it('preserves the same composer and draft through keyboard layout changes', async () => {
+  const inputRef = createRef<HTMLTextAreaElement>();
+  const props = { conversationId: 'conversation', open: true, inline: true, inputRef, onClose: vi.fn() };
+  const { rerender } = render(<CallChatPanel {...props} />);
+  const input = screen.getByLabelText('Escrever mensagem');
+  fireEvent.change(input, { target: { value: 'Continuo na chamada' } });
+  rerender(<CallChatPanel {...props} compact />);
+  expect(screen.getByLabelText('Escrever mensagem')).toBe(input);
+  expect(input).toHaveValue('Continuo na chamada');
+  rerender(<CallChatPanel {...props} />);
+  expect(input).toHaveValue('Continuo na chamada');
+  sendMessage.mockResolvedValue({ error: null });
+  fireEvent.click(screen.getByRole('button', { name: 'Enviar' }));
+  await waitFor(() => expect(sendMessage).toHaveBeenCalledWith('Continuo na chamada'));
+});

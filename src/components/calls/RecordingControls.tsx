@@ -6,7 +6,7 @@ import { useActiveCallRequired } from './ActiveCallProvider';
 import { useRecordingSession } from '@/features/call-recording/useRecordingSession';
 
 interface Participant { id: string; user_id: string; display_name: string }
-export function RecordingControls({ callId, participants }: { callId: string; participants: Participant[] }) {
+export function RecordingControls({ callId, participants, compact = false }: { callId: string; participants: Participant[]; compact?: boolean }) {
   const { user } = useAuth();
   const { webRTCState } = useActiveCallRequired();
   const recording = useRecordingSession(callId, user?.id, webRTCState.localStream, webRTCState.remoteStreams, webRTCState.screenStream, webRTCState.remoteScreenStreams);
@@ -25,7 +25,7 @@ export function RecordingControls({ callId, participants }: { callId: string; pa
       <Button disabled={busy} onClick={recording.retrySave}>Tentar guardar novamente</Button>
       <Button variant="outline" onClick={recording.download}>Descarregar gravação</Button>
     </div>}
-    {!recording.hasActiveSession && <div className="shrink-0 px-3 pb-2">
+    {!recording.hasActiveSession && <div className={compact && !error && !busy ? "hidden" : "shrink-0 px-3 pb-2"}>
       <Button variant="outline" size="sm" disabled={busy || webRTCState.callStatus !== 'connected'} onClick={recording.request}>
         <Circle className="h-4 w-4 mr-2 text-red-500" />{busy ? 'A preparar…' : 'Gravar'}
       </Button>

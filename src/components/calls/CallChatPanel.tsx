@@ -11,8 +11,9 @@ import { createChatConversation } from '@/lib/chat-conversations';
  * must never start a second call or request microphone/camera permission.
  * Its height follows the visible iOS keyboard viewport in the KOSOLOLA PWA.
  */
-export function CallChatPanel({ conversationId, contactId, open, onClose, inputRef, inline = false }: {
+export function CallChatPanel({ conversationId, contactId, open, onClose, inputRef, inline = false, compact = false }: {
   inline?: boolean;
+  compact?: boolean;
   conversationId?: string | null;
   contactId?: string;
   open: boolean;
@@ -48,7 +49,7 @@ export function CallChatPanel({ conversationId, contactId, open, onClose, inputR
     if (!open) return;
     const viewport = messagesViewportRef.current;
     if (viewport) viewport.scrollTop = viewport.scrollHeight;
-  }, [messages, open]);
+  }, [messages, open, compact]);
 
   useEffect(() => {
     if (!open) return;
@@ -85,7 +86,7 @@ export function CallChatPanel({ conversationId, contactId, open, onClose, inputR
       aria-label="Mensagens durante a chamada"
       aria-hidden={!open}
       className={open
-        ? `${inline ? 'relative min-h-[7.5rem] flex-[1.2] basis-0 border-y' : 'fixed inset-x-0 z-[90]'} flex flex-col overflow-hidden bg-background text-foreground`
+        ? `${inline ? `relative order-4 ${compact ? 'min-h-0 flex-1' : 'min-h-[7.5rem] flex-[1.2]'} basis-0 border-y` : 'fixed inset-x-0 z-[90]'} flex flex-col overflow-hidden bg-background text-foreground`
         : 'hidden'}
       style={open && !inline ? {
         top: 'var(--kosolola-top, 0px)',
