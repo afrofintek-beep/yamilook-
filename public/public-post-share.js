@@ -23,13 +23,15 @@
     try {
       if (!copyOnly && navigator.share) {
         await navigator.share({ title: document.title, url });
-        status.textContent = 'Partilha concluída.';
+        status.textContent = 'Conclui a publicação na aplicação escolhida. A Yamilook não recebe confirmação de publicação.';
       } else {
         await navigator.clipboard.writeText(url);
-        status.textContent = 'Ligação copiada.';
+        status.textContent = button.id === 'linkedin-copy' ? 'Ligação copiada. Abre a aplicação LinkedIn, toca em Publicar e cola a ligação.' : 'Ligação copiada.';
       }
     } catch (error) {
-      if (error?.name !== 'AbortError') {
+      if (error?.name === 'AbortError') {
+        status.textContent = 'Partilha cancelada. Podes tentar novamente.';
+      } else {
         status.textContent = 'Seleciona e copia a ligação abaixo para partilhar.';
         document.getElementById(dialog?.open ? 'dialog-post-url' : 'post-url')?.select();
       }
@@ -42,6 +44,15 @@
   document.getElementById('close-share')?.addEventListener('click', () => dialog?.close());
   document.getElementById('more-share')?.addEventListener('click', (event) => share(event.currentTarget, false));
   document.getElementById('dialog-copy-post')?.addEventListener('click', (event) => share(event.currentTarget, true));
+  const linkedInShare = document.getElementById('linkedin-native-share');
+  if (linkedInShare) linkedInShare.hidden = typeof navigator.share !== 'function';
+  linkedInShare?.addEventListener('click', (event) => share(event.currentTarget, false));
+  document.getElementById('linkedin-copy')?.addEventListener('click', (event) => share(event.currentTarget, true));
+  document.getElementById('linkedin-prepare-video')?.addEventListener('click', () => {
+    document.getElementById('video-sharing')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const target = document.getElementById('send-video');
+    (target && !target.hidden ? target : document.getElementById('prepare-video'))?.focus({ preventScroll: true });
+  });
   document.getElementById('copy-post')?.addEventListener('click', (event) => share(event.currentTarget, true));
   document.getElementById('retry-post')?.addEventListener('click', () => location.reload());
 })();
