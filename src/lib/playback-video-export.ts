@@ -104,7 +104,7 @@ export async function exportVideoFromPlayback(video: HTMLVideoElement, identity:
     }
     if (Math.abs(await input.computeDuration() - duration) > Math.max(1, duration * .02)) throw new Error('A cópia ficou incompleta. Tenta novamente.');
     conversion = await Conversion.init({ input, output, tracks: 'primary', showWarnings: false, video: { codec: 'avc' }, audio: { codec: 'aac' } });
-    if (!conversion.isValid || tracks.some(track => !conversion!.utilizedTracks.includes(track!))) throw new Error('Não foi possível finalizar a cópia com áudio.', { cause: { codecs: await Promise.all(tracks.map(track => track!.getCodec())), discarded: conversion.discardedTracks.map(track => track.reason), mimeType: recorder.mimeType } });
+    if (!conversion.isValid || tracks.some(track => !conversion!.utilizedTracks.includes(track!))) throw Object.assign(new Error('Não foi possível finalizar a cópia com áudio.'), { cause: { codecs: await Promise.all(tracks.map(track => track!.getCodec())), discarded: conversion.discardedTracks.map(track => track.reason), mimeType: recorder.mimeType } });
     await conversion.execute(); signal.throwIfAborted();
     if (!target.buffer?.byteLength || target.buffer.byteLength > LIMIT) throw new Error('A cópia excedeu o limite de envio.');
     progress(99);
