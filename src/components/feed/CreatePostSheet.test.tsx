@@ -375,4 +375,22 @@ describe('CreatePostSheet', () => {
     // The default should be "Contacts"
     expect(screen.getByText('Amigos')).toBeInTheDocument();
   });
+  it('labels a MOV without MIME as video, shows percent and retains the draft on cancel', async () => {
+    mockCreatePost.mockImplementationOnce((_type, options) => new Promise((_resolve, reject) => {
+      options.onUploadProgress('uploading', 1, 1, 42);
+      options.signal.addEventListener('abort', () => reject(new DOMException('Cancelled', 'AbortError')));
+    }));
+    render(<CreatePostSheet {...defaultProps} />);
+    const file = new File(['video'], 'clip.MOV', { type: '' });
+    fireEvent.change(document.body.querySelector('input[type="file"]')!, { target: { files: [file] } });
+    await waitFor(() => expect(screen.getByText('Publicar')).not.toBeDisabled());
+    fireEvent.click(screen.getByText('Publicar'));
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('A enviar vídeo 1/1… 42%'));
+    expect(mockCreatePost).toHaveBeenCalledWith('video', expect.objectContaining({ mediaFiles: [file] }));
+    fireEvent.click(screen.getByText('Cancelar'));
+    await waitFor(() => expect(screen.getByText('Publicar')).not.toBeDisabled());
+    expect(defaultProps.onOpenChange).not.toHaveBeenCalled();
+    expect(document.querySelector('video')).not.toBeNull();
+  });
+
 });
