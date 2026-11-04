@@ -100,6 +100,18 @@ export default function Admin() {
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [usersError, setUsersError] = useState(false);
   const usersRequest = useRef(0);
+  const usersSection = useRef<HTMLDivElement>(null);
+  const [adminTab, setAdminTab] = useState('users');
+
+  const openUsers = () => {
+    setAdminTab('users');
+    setUserFilter('all');
+    setSearchQuery('');
+    requestAnimationFrame(() => {
+      usersSection.current?.focus({ preventScroll: true });
+      usersSection.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  };
   const [loadingStats, setLoadingStats] = useState(true);
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [seeding, setSeeding] = useState(false);
@@ -384,12 +396,12 @@ export default function Admin() {
   }
 
   const statCards = [
-    { label: 'Utilizadores', value: stats.users, icon: Users, color: 'text-blue-500' },
-    { label: 'Posts', value: stats.posts, icon: FileText, color: 'text-green-500' },
-    { label: 'Conversas', value: stats.conversations, icon: MessageSquare, color: 'text-purple-500' },
-    { label: 'Mensagens', value: stats.messages, icon: MessageSquare, color: 'text-orange-500' },
-    { label: 'Statuses', value: stats.statuses, icon: Clock, color: 'text-pink-500' },
-    { label: 'Links', value: stats.contacts, icon: UserPlus, color: 'text-cyan-500' },
+    { label: 'Utilizadores', value: stats.users, icon: Users, color: 'text-blue-500', onClick: openUsers },
+    { label: 'Posts', value: stats.posts, icon: FileText, color: 'text-green-500', onClick: () => navigate('/feed') },
+    { label: 'Conversas', value: stats.conversations, icon: MessageSquare, color: 'text-purple-500', onClick: () => navigate('/papos') },
+    { label: 'Mensagens', value: stats.messages, icon: MessageSquare, color: 'text-orange-500', onClick: () => navigate('/papos') },
+    { label: 'Statuses', value: stats.statuses, icon: Clock, color: 'text-pink-500', onClick: () => navigate('/status') },
+    { label: 'Links', value: stats.contacts, icon: UserPlus, color: 'text-cyan-500', onClick: () => navigate('/contacts') },
   ];
 
   const adminCount = users.filter((u) => u.isAdmin).length;
@@ -436,8 +448,14 @@ export default function Admin() {
           animate={{ opacity: 1, y: 0 }}
         >
           {statCards.map((stat) => (
-            <Card key={stat.label} className="relative overflow-hidden">
-              <CardContent className="p-4">
+            <button
+              key={stat.label}
+              type="button"
+              onClick={stat.onClick}
+              aria-label={`Abrir ${stat.label}`}
+              className="relative w-full overflow-hidden rounded-xl border border-border bg-card text-card-foreground text-left shadow-sm transition-colors hover:bg-accent active:bg-accent/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              <div className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-2xl font-bold">
@@ -447,8 +465,8 @@ export default function Admin() {
                   </div>
                   <stat.icon className={`w-8 h-8 ${stat.color} opacity-50`} />
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </button>
           ))}
         </motion.div>
 
@@ -542,7 +560,8 @@ export default function Admin() {
         <TopicPostManager />
 
         {/* Users Tab */}
-        <Tabs defaultValue="users">
+        <div ref={usersSection} tabIndex={-1} aria-label="Gestão de utilizadores" className="scroll-mt-20">
+        <Tabs value={adminTab} onValueChange={setAdminTab}>
           <TabsList className="w-full">
             <TabsTrigger value="users" className="flex-1 gap-2">
               <Users className="w-4 h-4" />
@@ -735,6 +754,7 @@ export default function Admin() {
             </Card>
           </TabsContent>
         </Tabs>
+        </div>
       </div>
 
       {/* Confirmation Dialog */}
