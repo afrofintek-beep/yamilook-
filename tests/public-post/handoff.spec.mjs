@@ -20,7 +20,7 @@ test('mobile LinkedIn chooser keeps manual recovery available and never claims p
     return route.fulfill({ status: 404, body: '' });
   });
   await page.goto(url);
-  await page.getByRole('button', { name: 'Partilhar', exact: true }).click();
+  await page.locator('#share-post').click();
   await page.locator('summary', { hasText: 'LinkedIn' }).click();
   await expect(page).toHaveURL(url);
   await expect(page.getByRole('button', { name: 'Preparar vídeo para LinkedIn' })).toBeVisible();
