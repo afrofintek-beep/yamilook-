@@ -17,6 +17,6 @@ document.querySelector('#export').onclick = async () => {
     document.querySelector('#preview').src = url;
     const link = document.querySelector('#download'); link.href = url; link.download = file.name;
     status.textContent = 'PASS';
-  } catch(error) { status.textContent = controller.signal.aborted ? 'CANCELLED' : 'FAIL '+error.stack; }
+  } catch(error) { status.textContent = controller.signal.aborted ? 'CANCELLED' : 'FAIL '+error.stack+' '+JSON.stringify(error.cause); }
 };
 </script></body></html>
