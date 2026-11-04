@@ -48,6 +48,17 @@ import { snapToGrid } from '@/lib/geo-privacy';
 import { chatMediaType } from '@/lib/chat-media';
 import { isHeicImage, preparePostImage } from '@/lib/post-image';
 import { useKeyboardViewport } from '@/hooks/useKeyboardViewport';
+import { clearPostDraft, loadPostDraft, savePostDraft } from '@/lib/post-draft';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 // African-inspired emoji set for Yamilook
 const AFRICAN_EMOJIS = [
@@ -96,6 +107,9 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
   const [uploadProgress, setUploadProgress] = useState('');
   const [submitError, setSubmitError] = useState('');
   const [savingPost, setSavingPost] = useState(false);
+  const [showDraftDialog, setShowDraftDialog] = useState(false);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const restoredDraftFor = useRef<string | null>(null);
   const uploadController = useRef<AbortController | null>(null);
   useEffect(() => () => uploadController.current?.abort(), []);
   const previewUrlsRef = useRef<string[]>([]);
@@ -107,6 +121,33 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   const [editingVideoIndex, setEditingVideoIndex] = useState<number | null>(null);
+
+  useEffect(() => {
+    const userId = user?.id;
+    if (!open || !userId || restoredDraftFor.current === userId) return;
+    restoredDraftFor.current = userId;
+    let current = true;
+    void loadPostDraft(userId).then(draft => {
+      if (!current || !draft) return;
+      setContent(draft.content);
+      setPrivacy(draft.privacy);
+      setLocation(draft.location);
+      setSelectedTopics(draft.selectedTopics);
+      if (draft.files.length) {
+        const previews = draft.files.map(file => URL.createObjectURL(file));
+        previewUrlsRef.current.push(...previews);
+        setSelectedFiles(draft.files);
+        setFilePreviews(previews);
+      }
+      toast({
+        title: t('feed.draftRestored', { defaultValue: 'Rascunho recuperado' }),
+        description: draft.hadMedia && !draft.files.length
+          ? t('feed.draftMediaReselect', { defaultValue: 'O texto foi recuperado. Seleciona novamente o vídeo.' })
+          : t('feed.draftReady', { defaultValue: 'Podes continuar a editar e publicar.' }),
+      });
+    });
+    return () => { current = false; };
+  }, [open, t, toast, user?.id]);
   // Fechar o editor propaga um clique/foco para fora da Sheet DEPOIS de o
   // estado mudar; sem esta janela de guarda, a Sheet interpretava-o como
   // "interagiu fora" e fechava, perdendo o post inteiro.
@@ -272,6 +313,58 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
     setFilePreviews([]);
   };
 
+  const resetComposer = () => {
+    setContent('');
+    clearFiles();
+    setLocation('');
+    setPrivacy('contacts');
+    setSelectedTopics([]);
+    setSubmitError('');
+  };
+
+  const requestCancel = () => {
+    if (isSubmitting) uploadController.current?.abort();
+    if (content.trim() || selectedFiles.length || location || selectedTopics.length) {
+      setShowDraftDialog(true);
+    } else {
+      onOpenChange(false);
+    }
+  };
+
+  const handleSaveDraft = async () => {
+    if (!user?.id || isSavingDraft) return;
+    setIsSavingDraft(true);
+    try {
+      const result = await savePostDraft(user.id, {
+        content,
+        privacy,
+        location,
+        selectedTopics,
+        files: selectedFiles,
+      });
+      setShowDraftDialog(false);
+      onOpenChange(false);
+      toast({
+        title: t('feed.draftSaved', { defaultValue: 'Rascunho guardado' }),
+        description: result.mediaSaved
+          ? t('feed.draftSavedDescription', { defaultValue: 'Podes continuar esta publicação mais tarde.' })
+          : t('feed.draftMediaNotSaved', { defaultValue: 'O texto foi guardado, mas terás de selecionar novamente o vídeo.' }),
+      });
+    } catch {
+      setSubmitError(t('feed.draftSaveFailed', { defaultValue: 'Não foi possível guardar o rascunho neste dispositivo.' }));
+      setShowDraftDialog(false);
+    } finally {
+      setIsSavingDraft(false);
+    }
+  };
+
+  const handleDiscardDraft = async () => {
+    if (user?.id) await clearPostDraft(user.id);
+    resetComposer();
+    setShowDraftDialog(false);
+    onOpenChange(false);
+  };
+
   const handleSubmit = async () => {
     if (isSubmitting || isPreparingFiles) return;
     if (!content.trim() && selectedFiles.length === 0) {
@@ -365,11 +458,8 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
       });
 
       // Reset form
-      setContent('');
-      clearFiles();
-      setLocation('');
-      setPrivacy('contacts');
-      setSelectedTopics([]);
+      if (user?.id) await clearPostDraft(user.id);
+      resetComposer();
       onOpenChange(false);
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') return;
@@ -406,7 +496,7 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
         onEscapeKeyDown={(e) => { if (editingVideoIndex !== null || editorGuardRef.current) e.preventDefault(); }}
       >
         <SheetHeader data-testid="muxi-publish-header" className="shrink-0 px-4 py-2 border-b border-border flex-row space-y-0 items-center justify-between gap-2">
-          <Button variant="ghost" size="sm" className="shrink-0 min-h-11" disabled={savingPost} onClick={() => isSubmitting ? uploadController.current?.abort() : onOpenChange(false)}>
+          <Button variant="ghost" size="sm" className="shrink-0 min-h-11" disabled={savingPost} onClick={requestCancel}>
             {t('feed.cancel')}
           </Button>
           <SheetTitle className="min-w-0 flex-1 truncate text-center text-sm sm:text-lg text-foreground">{t('feed.createPost')}</SheetTitle>
@@ -664,6 +754,29 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
           onCancel={closeVideoEditor}
         />
       )}
+      <AlertDialog open={showDraftDialog} onOpenChange={setShowDraftDialog}>
+        <AlertDialogContent className="max-w-sm rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('feed.saveDraftQuestion', { defaultValue: 'Guardar como rascunho?' })}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('feed.saveDraftDescription', { defaultValue: 'Podes continuar esta publicação mais tarde sem perder o texto e as definições.' })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 sm:flex-col">
+            <AlertDialogAction disabled={isSavingDraft} onClick={(event) => { event.preventDefault(); void handleSaveDraft(); }}>
+              {isSavingDraft
+                ? t('feed.savingDraft', { defaultValue: 'A guardar…' })
+                : t('feed.saveDraft', { defaultValue: 'Guardar rascunho' })}
+            </AlertDialogAction>
+            <AlertDialogCancel disabled={isSavingDraft}>
+              {t('feed.continueEditing', { defaultValue: 'Continuar a editar' })}
+            </AlertDialogCancel>
+            <Button variant="destructive" disabled={isSavingDraft} onClick={() => void handleDiscardDraft()}>
+              {t('feed.discardDraft', { defaultValue: 'Descartar' })}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Sheet>
   );
 }

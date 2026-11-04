@@ -44,6 +44,12 @@ describe('CreatePostSheet', () => {
   };
 
   beforeEach(() => {
+    const stored = new Map<string, string>();
+    vi.mocked(localStorage.getItem).mockImplementation(key => stored.get(key) ?? null);
+    vi.mocked(localStorage.setItem).mockImplementation((key, value) => { stored.set(key, value); });
+    vi.mocked(localStorage.removeItem).mockImplementation(key => { stored.delete(key); });
+    vi.mocked(localStorage.clear).mockImplementation(() => { stored.clear(); });
+    localStorage.clear();
     resetMocks();
     mockCreatePost.mockClear();
     mockToast.mockClear();
@@ -106,6 +112,60 @@ describe('CreatePostSheet', () => {
     fireEvent.click(cancelButton);
     
     expect(defaultProps.onOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  it('offers to save, continue editing or discard when cancelling a post with content', () => {
+    render(<CreatePostSheet {...defaultProps} />);
+    fireEvent.change(screen.getByPlaceholderText("O que se passa na tua vizinhança?"), {
+      target: { value: 'Texto ainda não publicado' },
+    });
+
+    fireEvent.click(screen.getByText('Cancelar'));
+
+    expect(screen.getByText('Guardar como rascunho?')).toBeInTheDocument();
+    expect(screen.getByText('Guardar rascunho')).toBeInTheDocument();
+    expect(screen.getByText('Continuar a editar')).toBeInTheDocument();
+    expect(screen.getByText('Descartar')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('Continuar a editar'));
+    expect(screen.queryByText('Guardar como rascunho?')).not.toBeInTheDocument();
+    expect(screen.getByPlaceholderText("O que se passa na tua vizinhança?")).toHaveValue('Texto ainda não publicado');
+    expect(defaultProps.onOpenChange).not.toHaveBeenCalled();
+  });
+
+  it('saves and restores a post draft for the signed-in account', async () => {
+    const first = render(<CreatePostSheet {...defaultProps} />);
+    fireEvent.change(screen.getByPlaceholderText("O que se passa na tua vizinhança?"), {
+      target: { value: 'Guardar esta ideia' },
+    });
+    fireEvent.click(screen.getByText('Cancelar'));
+    fireEvent.click(screen.getByText('Guardar rascunho'));
+
+    await waitFor(() => expect(defaultProps.onOpenChange).toHaveBeenCalledWith(false));
+    expect(localStorage.getItem('yamilook_post_draft_v1:test-user-id')).toContain('Guardar esta ideia');
+    first.unmount();
+
+    render(<CreatePostSheet {...defaultProps} />);
+    await waitFor(() => expect(screen.getByPlaceholderText("O que se passa na tua vizinhança?")).toHaveValue('Guardar esta ideia'));
+    expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Rascunho recuperado' }));
+  });
+
+  it('discards the pending draft and closes the composer', async () => {
+    localStorage.setItem('yamilook_post_draft_v1:test-user-id', JSON.stringify({
+      version: 1,
+      content: 'Rascunho antigo',
+      privacy: 'contacts',
+      location: '',
+      selectedTopics: [],
+      hadMedia: false,
+      savedAt: Date.now(),
+    }));
+    render(<CreatePostSheet {...defaultProps} />);
+    await waitFor(() => expect(screen.getByPlaceholderText("O que se passa na tua vizinhança?")).toHaveValue('Rascunho antigo'));
+    fireEvent.click(screen.getByText('Cancelar'));
+    fireEvent.click(screen.getByText('Descartar'));
+
+    await waitFor(() => expect(defaultProps.onOpenChange).toHaveBeenCalledWith(false));
+    expect(localStorage.getItem('yamilook_post_draft_v1:test-user-id')).toBeNull();
   });
 
   it('renders user avatar with initial', () => {
