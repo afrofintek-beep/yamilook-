@@ -1,13 +1,16 @@
+export const shareApplications = ['Kosolola', 'WhatsApp', 'LinkedIn', 'TikTok', 'YouTube', 'Facebook', 'Instagram', 'Outros'];
 import { isPostId, postUrl } from './public-post.mjs';
 export function shareDestinations(id) {
   if (!isPostId(id)) return [];
   const url = postUrl(id);
   return [
-    { id: 'kosolola', label: 'KOSOLOLA', url: `https://www.kosolola.com/papos-app/share/post/${id}` },
+    { id: 'kosolola', label: 'Kosolola', url: `https://www.kosolola.com/papos-app/share/post/${id}` },
     { id: 'whatsapp', label: 'WhatsApp', url: `https://wa.me/?text=${encodeURIComponent(url)}` },
-    { id: 'facebook', label: 'Facebook', url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}` },
     { id: 'linkedin', label: 'LinkedIn', url: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}` },
-    { id: 'x', label: 'X', url: `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}` },
+    { id: 'tiktok', label: 'TikTok', url: null },
+    { id: 'youtube', label: 'YouTube', url: null },
+    { id: 'facebook', label: 'Facebook', url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}` },
+    { id: 'instagram', label: 'Instagram', url: null },
   ];
 }
 export function sharedPostId(content) {

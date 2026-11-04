@@ -28,7 +28,9 @@ it('requires preview and a second user tap, sends only the branded file and revo
   const button = await screen.findByText('Confirmar e escolher aplicação');
   expect(screen.getByRole('img')).toHaveAttribute('src', 'blob:preview');
   expect(sharePreparedVideo).not.toHaveBeenCalled();
-  fireEvent.click(button); expect(sharePreparedVideo).toHaveBeenCalledWith(file);
+  fireEvent.click(button);
+  expect(sharePreparedVideo).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'Outros' })); expect(sharePreparedVideo).toHaveBeenCalledWith(file);
   await screen.findByText(/Cópia entregue/); expect(shared).toHaveBeenCalledOnce();
   view.unmount(); expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:preview');
 });

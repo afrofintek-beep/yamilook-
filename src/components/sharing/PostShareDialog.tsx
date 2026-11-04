@@ -26,10 +26,10 @@ export default function PostShareDialog({ id, mediaUrls = [], privacy = 'everyon
     {open && (isOwner ? <OwnedPostMediaShare id={id} mediaUrls={mediaUrls} onShared={onShared} /> : isPublic ? <PostVideoShare id={id} mediaUrls={mediaUrls} onShared={onShared} /> : null)}
     {isPublic ? <><h3 className="mb-2 font-semibold">Partilhar ligação</h3>
     <div className="grid gap-2">
-      {shareDestinations(id).map(destination => <a key={destination.id} href={destination.url} target="_blank" rel="noopener noreferrer" className={`flex min-h-12 items-center justify-between rounded-xl border px-4 py-3 font-medium ${destination.id === 'kosolola' ? 'border-primary bg-primary/10' : ''}`}>
+      {shareDestinations(id).map(destination => destination.url ? <a key={destination.id} href={destination.url} target="_blank" rel="noopener noreferrer" className={`flex min-h-12 items-center justify-between rounded-xl border px-4 py-3 font-medium ${destination.id === 'kosolola' ? 'border-primary bg-primary/10' : ''}`}>
         <span>{destination.label}</span>{destination.id === 'kosolola' && <span className="text-xs text-muted-foreground">Contactos e grupos</span>}
-      </a>)}
-      <Button variant="outline" onClick={() => void share(false)}>Mais aplicações…</Button>
+      </a> : <Button key={destination.id} variant="outline" className="min-h-12 justify-start" onClick={() => setStatus(`Para publicar no ${destination.label}, prepara ou guarda o ficheiro acima e anexa-o nessa aplicação.`)}>{destination.label}</Button>)}
+      <Button variant="outline" onClick={() => void share(false)}>Outros</Button>
       <Button variant="outline" onClick={() => void share(true)}>Copiar ligação</Button>
     </div>
     <p role="status" className="mt-3 text-sm">{status}</p>
