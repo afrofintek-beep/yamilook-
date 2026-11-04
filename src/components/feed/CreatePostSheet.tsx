@@ -45,6 +45,7 @@ import { TopicSelector } from './TopicSelector';
 import { VideoEditor } from './VideoEditor';
 import { supabase } from '@/integrations/supabase/client';
 import { snapToGrid } from '@/lib/geo-privacy';
+import { chatMediaType } from '@/lib/chat-media';
 import { isHeicImage, preparePostImage } from '@/lib/post-image';
 import { useKeyboardViewport } from '@/hooks/useKeyboardViewport';
 
@@ -93,6 +94,9 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPreparingFiles, setIsPreparingFiles] = useState(false);
   const [uploadProgress, setUploadProgress] = useState('');
+  const [savingPost, setSavingPost] = useState(false);
+  const uploadController = useRef<AbortController | null>(null);
+  useEffect(() => () => uploadController.current?.abort(), []);
   const previewUrlsRef = useRef<string[]>([]);
   useEffect(() => () => {
     previewUrlsRef.current.forEach(url => URL.revokeObjectURL(url));
@@ -237,6 +241,7 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
       setSelectedFiles(prev => [...prev, ...prepared]);
       setFilePreviews(prev => [...prev, ...previews]);
     } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') return;
       toast({
         title: t('feed.failedToPost'),
         description: error instanceof Error ? error.message : t('feed.errorPosting'),
@@ -275,6 +280,8 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
       return;
     }
 
+    const controller = new AbortController();
+    uploadController.current = controller;
     setIsSubmitting(true);
     setUploadProgress(t('feed.posting'));
 
@@ -303,25 +310,29 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
       }
 
       const type = selectedFiles.length > 0 
-        ? selectedFiles[0].type.startsWith('video') ? 'video' : 'photo'
+        ? chatMediaType(selectedFiles[0]) === 'video' ? 'video' : 'photo'
         : 'text';
 
+      controller.signal.throwIfAborted();
       const newPost = await createPost(type, {
+        signal: controller.signal,
         content: content || undefined,
         mediaFiles: selectedFiles.length > 0 ? selectedFiles : undefined,
         location: location || undefined,
         privacy,
-        onUploadProgress: (stage, current, total) => {
+        onUploadProgress: (stage, current, total, percent) => {
+          const video = selectedFiles[current - 1] && chatMediaType(selectedFiles[current - 1]) === 'video';
           if (stage === 'saving') {
+            setSavingPost(true);
             setUploadProgress(t('feed.savingPost', { defaultValue: 'A guardar publicação…' }));
           } else if (stage === 'preparing') {
-            setUploadProgress(t('feed.preparingMedia', { defaultValue: 'A preparar fotografia…' }));
+            setUploadProgress(t('feed.preparingFile', { defaultValue: 'A preparar ficheiro…' }));
           } else {
-            setUploadProgress(t('feed.uploadingMedia', {
-              defaultValue: 'A enviar fotografia {{current}}/{{total}}…',
+            setUploadProgress(t(video ? 'feed.uploadingVideo' : 'feed.uploadingPhoto', {
+              defaultValue: video ? 'A enviar vídeo {{current}}/{{total}}…' : 'A enviar fotografia {{current}}/{{total}}…',
               current,
               total,
-            }));
+            }) + (percent === undefined ? '' : ` ${percent}%`));
           }
         },
       });
@@ -355,6 +366,7 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
       setSelectedTopics([]);
       onOpenChange(false);
     } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') return;
       toast({
         title: t('feed.failedToPost'),
         description: error instanceof Error && error.message ? error.message : t('feed.errorPosting'),
@@ -362,6 +374,8 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
       });
     } finally {
       setIsSubmitting(false);
+      setSavingPost(false);
+      uploadController.current = null;
       setUploadProgress('');
     }
   };
@@ -369,7 +383,7 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
   const canPost = content.trim() || selectedFiles.length > 0;
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet open={open} onOpenChange={value => { if (!isSubmitting) onOpenChange(value); }}>
       <SheetContent
         side="bottom"
         hideCloseButton
@@ -385,7 +399,7 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
         onEscapeKeyDown={(e) => { if (editingVideoIndex !== null || editorGuardRef.current) e.preventDefault(); }}
       >
         <SheetHeader data-testid="muxi-publish-header" className="shrink-0 px-4 py-2 border-b border-border flex-row space-y-0 items-center justify-between gap-2">
-          <Button variant="ghost" size="sm" className="shrink-0 min-h-11" onClick={() => onOpenChange(false)}>
+          <Button variant="ghost" size="sm" className="shrink-0 min-h-11" disabled={savingPost} onClick={() => isSubmitting ? uploadController.current?.abort() : onOpenChange(false)}>
             {t('feed.cancel')}
           </Button>
           <SheetTitle className="min-w-0 flex-1 truncate text-center text-sm sm:text-lg text-foreground">{t('feed.createPost')}</SheetTitle>
@@ -470,7 +484,7 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
                 >
                   {filePreviews.map((preview, index) => (
                     <div key={index} data-testid="muxi-photo-preview" className="relative h-[min(35vh,300px)] max-h-[35dvh] rounded-xl overflow-hidden bg-black/5">
-                    {selectedFiles[index]?.type.startsWith('video') ? (
+                    {selectedFiles[index] && chatMediaType(selectedFiles[index]) === 'video' ? (
                         <div className="relative w-full h-full">
                           <video
                             src={`${preview}#t=0.1`}

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { fetchPublicProfilesBatched } from '@/lib/public-profile-batch';
 import { preparePostImage } from '@/lib/post-image';
+import { uploadPostFile } from '@/lib/post-upload';
 import { useAuth } from './useAuth';
 import { ReactionCounts, createEmptyReactionCounts, normalizeReactionType } from '@/lib/reactions';
 import type { Tables, TablesUpdate } from '@/integrations/supabase/types';
@@ -358,7 +359,8 @@ export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?:
       mediaFiles?: File[];
       location?: string;
       privacy?: 'everyone' | 'contacts' | 'close_friends' | 'only_me';
-      onUploadProgress?: (stage: 'preparing' | 'uploading' | 'saving', current: number, total: number) => void;
+      signal?: AbortSignal;
+      onUploadProgress?: (stage: 'preparing' | 'uploading' | 'saving', current: number, total: number, percent?: number) => void;
     }
   ) => {
     if (!userId) throw new Error('A sessão expirou. Entre novamente para publicar.');
@@ -367,34 +369,23 @@ export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?:
 
     if (options.mediaFiles?.length) {
       for (const [index, originalFile] of options.mediaFiles.entries()) {
+        options.signal?.throwIfAborted();
         options.onUploadProgress?.('preparing', index + 1, options.mediaFiles.length);
         const file = await preparePostImage(originalFile);
         options.onUploadProgress?.('uploading', index + 1, options.mediaFiles.length);
         const fileExt = file.name.split('.').pop();
         const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
 
-        console.log('[createPost] Uploading file:', file.name, 'size:', file.size, 'type:', file.type);
-
-        const { error: uploadError } = await supabase.storage
-          .from('media')
-          .upload(fileName, file, {
-            cacheControl: '31536000',
-            upsert: false,
-          });
-
-        if (uploadError) {
-          console.error('[createPost] Upload error:', uploadError.message, uploadError);
-          throw new Error(`Falha ao enviar ficheiro: ${uploadError.message}`);
-        } else {
-          const { data: { publicUrl } } = supabase.storage
-            .from('media')
-            .getPublicUrl(fileName);
-          console.log('[createPost] Upload success, URL:', publicUrl);
-          mediaUrls.push(publicUrl);
-        }
+        await uploadPostFile(file, fileName, {
+          signal: options.signal,
+          onProgress: percent => options.onUploadProgress?.('uploading', index + 1, options.mediaFiles!.length, percent),
+        });
+        const { data: { publicUrl } } = supabase.storage.from('media').getPublicUrl(fileName);
+        mediaUrls.push(publicUrl);
       }
     }
 
+    options.signal?.throwIfAborted();
     options.onUploadProgress?.('saving', options.mediaFiles?.length ?? 0, options.mediaFiles?.length ?? 0);
     const { data, error } = await supabase
       .from('posts')
@@ -411,7 +402,7 @@ export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?:
 
     if (error || !data?.id) {
       console.error('Create post error:', error);
-      throw new Error('Não foi possível guardar a publicação. A fotografia foi mantida para nova tentativa.');
+      throw new Error('Não foi possível guardar a publicação. O texto e os ficheiros foram mantidos para nova tentativa.');
     }
 
     // Acknowledgement is based on the saved row, not a subsequent feed refresh.

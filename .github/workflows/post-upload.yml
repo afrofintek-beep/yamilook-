@@ -1,0 +1,27 @@
+name: Post upload recovery
+on:
+  pull_request:
+    paths: ['src/lib/post-upload*', 'src/hooks/usePosts*', 'src/components/feed/CreatePostSheet*', 'tests/post-upload/**', 'package-lock.json', '.github/workflows/post-upload.yml']
+permissions:
+  contents: read
+jobs:
+  upload:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx vitest run src/lib/post-upload.test.ts src/components/feed/CreatePostSheet.test.tsx src/hooks/usePosts*.test.tsx
+      - run: npx tsc --noEmit -p tsconfig.app.json
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium webkit
+      - run: npx playwright test -c tests/post-upload/playwright.config.mjs
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: post-upload-failures
+          path: test-results/
