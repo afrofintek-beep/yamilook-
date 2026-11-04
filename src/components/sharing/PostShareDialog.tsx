@@ -1,6 +1,6 @@
 import BrandedPostExport from './BrandedPostExport';
 import PostVideoShare from './PostVideoShare';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ResponsiveModal } from '@/components/ui/responsive-modal';
 import { Button } from '@/components/ui/button';
 import { shareDestinations } from '../../../shared/share-destinations.mjs';
@@ -10,6 +10,7 @@ import { isVideo } from '../../../shared/public-post.mjs';
 
 export default function PostShareDialog({ id, mediaUrls = [], privacy = 'everyone', isOwner = false, open, onOpenChange, onShared }: { id: string; mediaUrls?: string[]; privacy?: string; isOwner?: boolean; open: boolean; onOpenChange: (open: boolean) => void; onShared?: () => void }) {
   const [status, setStatus] = useState('');
+  useEffect(() => { if (open) document.querySelectorAll('video').forEach(video => video.pause()); }, [open]);
   const isPublic = privacy === 'everyone';
   const hasFile = isOwner || (isPublic && mediaUrls.some(isVideo));
   const [mode, setMode] = useState<'file' | 'link'>(hasFile ? 'file' : 'link');

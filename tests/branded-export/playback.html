@@ -1,0 +1,22 @@
+<!doctype html><html><head><meta name="viewport" content="width=device-width, initial-scale=1" /></head><body>
+<video id="source" crossorigin="anonymous" controls playsinline preload="auto" src="/tests/branded-export/fixture.mp4"></video>
+<button id="export">Prepare compatible copy</button><button id="cancel">Cancel</button><p id="status">Ready</p><video controls id="preview"></video><a id="download">Download</a>
+<script type="module">
+import { exportVideoFromPlayback, playbackExportSupported } from '/src/lib/playback-video-export.ts';
+const source = document.querySelector('#source');
+source.src = new URL(location.href).searchParams.get('source') || source.src;
+window.compatibleSupported = playbackExportSupported();
+let controller;
+document.querySelector('#cancel').onclick = () => controller?.abort();
+document.querySelector('#export').onclick = async () => {
+  controller = new AbortController();
+  const status = document.querySelector('#status');
+  try {
+    const file = await exportVideoFromPlayback(source, {content:'AFIS', author:{name:'Tony',username:'tony'}}, controller.signal, value => status.textContent = 'Preparing '+value);
+    const url = URL.createObjectURL(file);
+    document.querySelector('#preview').src = url;
+    const link = document.querySelector('#download'); link.href = url; link.download = file.name;
+    status.textContent = 'PASS';
+  } catch(error) { status.textContent = controller.signal.aborted ? 'CANCELLED' : 'FAIL '+error.stack+' '+JSON.stringify(error.cause); }
+};
+</script></body></html>
