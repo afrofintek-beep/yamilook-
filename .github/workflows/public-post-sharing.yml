@@ -18,7 +18,11 @@ jobs:
       - run: npm test -- src/lib/prepare-post-media.test.ts src/lib/owned-video-export.test.ts src/lib/branded-media.test.ts src/lib/branded-video.test.ts src/lib/post-sharing.test.ts src/components/sharing src/components/feed/PostCard.test.tsx src/features/sharing src/components/chat/EnhancedMessageBubble.test.tsx src/features/papos/Papos.test.tsx
       - run: npx tsc --noEmit -p tsconfig.app.json
       - run: npm run build
-      - run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - name: Install video validation tools
+        timeout-minutes: 5
+        run: |
+          sudo apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 update
+          sudo apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 install -y --no-install-recommends ffmpeg
       - run: npx playwright install --with-deps chromium webkit
       - run: npx playwright test -c tests/public-post/playwright.config.mjs
       - run: ffmpeg -v error -f lavfi -i testsrc2=size=640x360:rate=30 -f lavfi -i sine=frequency=440:sample_rate=48000 -t 3 -c:v libx264 -pix_fmt yuv420p -c:a aac -y tests/branded-export/fixture.mp4
