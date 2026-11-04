@@ -60,7 +60,9 @@ export async function exportVideoFromPlayback(video: HTMLVideoElement, identity:
     draw();
     const chunks: Blob[] = [];
     let size = 0;
-    const mimeType = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4'].find(type => MediaRecorder.isTypeSupported(type))!;
+    // Generic MP4 in Chromium may contain VP9 with an unusable decoder config.
+    // Prefer explicit AVC on Safari, or a well-described WebM intermediate.
+    const mimeType = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4;codecs=avc1', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/mp4'].find(type => MediaRecorder.isTypeSupported(type))!;
     recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: Math.min(2_000_000, Math.floor(40 * 1024 * 1024 * 8 / duration) - 192_000), audioBitsPerSecond: 128000 });
     const recording = new Promise<Blob>((resolve, reject) => {
       let finished = false;
@@ -81,7 +83,7 @@ export async function exportVideoFromPlayback(video: HTMLVideoElement, identity:
         if (finished) return;
         finished = true; cleanup();
         if (video.currentTime < duration - .5 || !size) reject(new Error('A cópia ficou incompleta. Tenta novamente.'));
-        else resolve(new Blob(chunks, { type: 'video/mp4' }));
+        else resolve(new Blob(chunks, { type: recorder!.mimeType }));
       };
       video.addEventListener('ended', ended, { once: true }); video.addEventListener('error', failed, { once: true });
       document.addEventListener('visibilitychange', hidden); signal.addEventListener('abort', aborted, { once: true });
