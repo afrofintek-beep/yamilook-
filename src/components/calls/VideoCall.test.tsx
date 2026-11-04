@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { VideoCall } from './VideoCall';
 const { controls, checkIsHost, callState } = vi.hoisted(() => ({
@@ -90,4 +90,38 @@ it('swaps self view on tap without replacing the video element', () => {
   expect(screen.getByTestId('remote-call-view')).not.toHaveClass('absolute');
   expect(controls.endCall).not.toHaveBeenCalled();
   expect(controls.toggleVideo).not.toHaveBeenCalled();
+});
+
+
+it('keeps media mounted and essential controls usable while the keyboard opens and closes', async () => {
+  const originalWidth = window.innerWidth;
+  const originalViewport = window.visualViewport;
+  const viewport = Object.assign(new EventTarget(), { height: 844, offsetTop: 0, scale: 1 });
+  Object.defineProperty(window, 'innerWidth', { configurable: true, value: 390 });
+  Object.defineProperty(window, 'visualViewport', { configurable: true, value: viewport });
+  try {
+    setup();
+    const media = screen.getByTestId('call-media');
+    const video = screen.getByTestId('call-stage').querySelector('video');
+    act(() => { viewport.height = 380; viewport.offsetTop = 12; viewport.dispatchEvent(new Event('resize')); });
+    expect(screen.getByTestId('call-layout')).toHaveAttribute('data-compact-chat', 'true');
+    expect(screen.getByTestId('call-layout')).toHaveStyle({ height: '380px', top: '12px' });
+    expect(screen.getByTestId('call-stage')).toHaveAttribute('aria-hidden', 'true');
+    expect(screen.getByTestId('call-media')).toBe(media);
+    expect(screen.getByTestId('call-stage').querySelector('video')).toBe(video);
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Desligar chamada' })).toBeVisible());
+    fireEvent.click(screen.getByRole('button', { name: 'Desligar microfone' }));
+    expect(controls.toggleMute).toHaveBeenCalledOnce();
+    expect(screen.queryByRole('button', { name: 'Definições da chamada' })).not.toBeInTheDocument();
+    act(() => { viewport.height = 844; viewport.offsetTop = 0; viewport.dispatchEvent(new Event('resize')); });
+    expect(screen.getByTestId('call-layout')).toHaveAttribute('data-compact-chat', 'false');
+    expect(screen.getByTestId('call-stage')).toHaveAttribute('aria-hidden', 'false');
+    expect(screen.getByRole('button', { name: 'Trocar câmara' })).toBeVisible();
+    expect(screen.getByTestId('call-stage').querySelector('video')).toBe(video);
+    expect(controls.endCall).not.toHaveBeenCalled();
+  } finally {
+    cleanup();
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: originalWidth });
+    Object.defineProperty(window, 'visualViewport', { configurable: true, value: originalViewport });
+  }
 });

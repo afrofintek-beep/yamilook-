@@ -282,19 +282,39 @@ test('call chat, media and hangup occupy separate areas through keyboard resize'
   for (const size of [{ width: 390, height: 740 }, { width: 390, height: 430 }, { width: 844, height: 390 }, { width: 390, height: 740 }]) {
     await page.setViewportSize(size);
     await composer.fill('Continuo a escrever durante a chamada');
+    const compact = size.height < 600;
+    await expect(layout).toHaveAttribute('data-compact-chat', String(compact));
     const rectangles = await Promise.all([layout, controls, chatPanel, composer].map(locator => locator.boundingBox()));
-    const [root, footer, panel, input] = rectangles;
-    expect(root && footer && panel && input).toBeTruthy();
-    expect(panel!.y + panel!.height).toBeLessThanOrEqual(footer!.y + 1);
-    expect(input!.y + input!.height, JSON.stringify({ size, root, footer, panel, input })).toBeLessThanOrEqual(footer!.y + 1);
-    expect(footer!.y + footer!.height).toBeLessThanOrEqual(size.height + 1);
+    const [root, toolbar, panel, input] = rectangles;
+    expect(root && toolbar && panel && input).toBeTruthy();
+    expect(input!.y + input!.height).toBeLessThanOrEqual(size.height + 1);
+    expect(toolbar!.y + toolbar!.height).toBeLessThanOrEqual(size.height + 1);
     const stage = await page.getByTestId('call-stage').boundingBox();
-    expect(stage!.height).toBeGreaterThan(0);
-    expect(stage!.y + stage!.height).toBeLessThanOrEqual(panel!.y + 1);
-    const hangup = await page.getByRole('button', { name: 'Desligar chamada', exact: true }).boundingBox();
-    expect(hangup!.y).toBeGreaterThanOrEqual(panel!.y + panel!.height - 1);
+    const hangupButton = page.getByRole('button', { name: 'Desligar chamada', exact: true });
+    const hangup = await hangupButton.boundingBox();
+    await expect(hangupButton).toBeVisible();
+    expect(hangup!.height).toBeGreaterThanOrEqual(44);
+    expect(hangup!.y).toBeGreaterThanOrEqual(0);
+    if (compact) {
+      // The toolbar now moves ABOVE the chat so the composer meets the keyboard.
+      expect(toolbar!.y + toolbar!.height).toBeLessThanOrEqual(panel!.y + 1);
+      expect(Math.abs(panel!.y + panel!.height - size.height)).toBeLessThanOrEqual(1);
+      expect(stage?.height ?? 0).toBe(0);
+      await expect(page.getByTestId('call-stage')).not.toBeVisible();
+      expect((await page.getByRole('log', { name: 'Mensagens da conversa' }).boundingBox())!.height).toBeGreaterThanOrEqual(120);
+      expect(hangup!.y + hangup!.height).toBeLessThanOrEqual(panel!.y + 1);
+      await expect(page.getByRole('button', { name: 'Open reactions', exact: true })).toHaveCount(0);
+    } else {
+      expect(panel!.y + panel!.height).toBeLessThanOrEqual(toolbar!.y + 1);
+      expect(input!.y + input!.height).toBeLessThanOrEqual(toolbar!.y + 1);
+      expect(stage!.height).toBeGreaterThan(0);
+      expect(stage!.y + stage!.height).toBeLessThanOrEqual(panel!.y + 1);
+      expect(hangup!.y).toBeGreaterThanOrEqual(panel!.y + panel!.height - 1);
+    }
     await expect(composer).toHaveValue('Continuo a escrever durante a chamada');
   }
+  // Returning to the call reveals secondary actions even on a short screen.
+  await page.getByRole('button', { name: 'Voltar à chamada', exact: true }).click();
   for (const width of [390, 320]) {
     await page.setViewportSize({ width, height: 430 });
     await page.getByRole('button', { name: 'Open reactions', exact: true }).click();

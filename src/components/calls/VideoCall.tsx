@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useLayoutEffect, useState, useCallback } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { flushSync } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -27,6 +27,7 @@ import { cn } from '@/lib/utils';
 import { CallChatPanel } from './CallChatPanel';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { useToast } from '@/hooks/use-toast';
+import { useCallViewport } from '@/hooks/useCallViewport';
 
 interface VideoCallProps {
   conversationId?: string | null;
@@ -59,16 +60,7 @@ export function VideoCall({
   isHost = false,
 }: VideoCallProps) {
   const callViewportRef = useRef<HTMLDivElement>(null);
-  useLayoutEffect(() => {
-    const viewport = window.visualViewport;
-    const fit = () => {
-      if (viewport && Math.abs(viewport.scale - 1) > 0.01) return;
-      const root = callViewportRef.current;
-      if (root) { root.style.height = `${viewport?.height ?? window.innerHeight}px`; root.style.top = `${viewport?.offsetTop ?? 0}px`; }
-    };
-    fit(); viewport?.addEventListener('resize', fit); viewport?.addEventListener('scroll', fit); window.addEventListener('resize', fit);
-    return () => { viewport?.removeEventListener('resize', fit); viewport?.removeEventListener('scroll', fit); window.removeEventListener('resize', fit); };
-  }, []);
+  const compactViewport = useCallViewport(callViewportRef);
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
   const callChatInputRef = useRef<HTMLTextAreaElement>(null);
   const { t } = useTranslation();
@@ -79,6 +71,7 @@ export function VideoCall({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [showChat, setShowChat] = useState(true);
+  const compactChat = showChat && compactViewport;
   // Keep the composer mounted after first opening so drafts survive switching back to the call.
   const [chatOpenedOnce, setChatOpenedOnce] = useState(true);
   const [showParticipants, setShowParticipants] = useState(false);
@@ -214,21 +207,23 @@ export function VideoCall({
   return (
     <div ref={callViewportRef}
       data-testid="call-layout"
+      data-compact-chat={compactChat}
       className={cn(
         "fixed inset-x-0 top-0 z-50 flex flex-col w-full bg-black overflow-hidden",
         isFullscreen && "fixed inset-0 z-50"
       )}
       style={{ height: "var(--kosolola-height, 100dvh)" }}
     >
-      <header className="shrink-0 flex items-center justify-end gap-2 px-3 pb-2 pt-[calc(env(safe-area-inset-top,0px)+0.5rem)]">
+      <header className="order-0 shrink-0 flex items-center justify-end gap-2 px-3 pb-1 pt-[calc(env(safe-area-inset-top,0px)+0.25rem)]">
+      {compactChat && <span className="min-w-0 flex-1 truncate text-sm font-medium text-white">{participants.map(p => p.display_name).join(', ')}</span>}
       <span role="status" className="rounded-full bg-black/70 px-3 py-1 text-sm text-white">
         {(state.callStatus === 'connected' && state.connectionState === 'connected') ? 'Ligada' : state.callStatus === 'ringing' ? 'A chamar…' : state.lastError || 'A estabelecer ligação…'}
       </span>
       </header>
       {/* Keep recording controls outside the stage so neither video thumbnail is covered. */}
-      <RecordingControls callId={callId} participants={participants} />
+      <div className="order-1 shrink-0"><RecordingControls callId={callId} participants={participants} compact={compactChat} /></div>
       {/* Main Video Grid */}
-      <section data-testid="call-stage" className="relative min-h-0 flex-1 basis-0 overflow-hidden">
+      <section data-testid="call-stage" className={cn("relative order-2 min-h-0 overflow-hidden", compactChat ? "h-0 shrink-0" : "flex-1 basis-0")} aria-hidden={compactChat} {...(compactChat ? { inert: "" } : {})}>
       <div data-testid="remote-call-view" className={enlargeSelf && !hasSharedScreen ? "absolute right-3 top-3 w-24 h-28 z-20 rounded-2xl overflow-hidden border-2 border-white/20" : "w-full h-full"}>
       <ParticipantGrid
         key={callId}
@@ -282,6 +277,7 @@ export function VideoCall({
       {chatOpenedOnce && (
         <CallChatPanel
           inline
+          compact={compactChat}
           conversationId={conversationId}
           contactId={!isGroupCall && participants.length === 1 ? participants[0].user_id : undefined}
           open={showChat}
@@ -333,14 +329,14 @@ export function VideoCall({
 
       {/* Call Controls */}
       <AnimatePresence>
-        {showControls && (
+        {(showControls || compactChat) && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            data-testid="call-controls" className="relative shrink-0 z-30"
+            data-testid="call-controls" className={cn("relative shrink-0 z-30", compactChat ? "order-3" : "order-5")}
           >
-            <div className="bg-black p-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))]">
+            <div className={compactChat ? "bg-black px-2 py-1" : "bg-black p-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))]"}>
               {/* Main Controls */}
               <div className="flex flex-wrap items-center justify-center gap-2">
                 {/* Mute */}
@@ -393,7 +389,7 @@ export function VideoCall({
                 </Button>
 
                 {/* Flip Camera */}
-                {callType === 'video' && (
+                {callType === 'video' && !compactChat && (
                   <Button
                     variant="outline"
                     size="icon"
@@ -405,13 +401,14 @@ export function VideoCall({
                   </Button>
                 )}
 
-                <CallReactions inline onReaction={handleReaction} />
+                {!compactChat && <CallReactions inline onReaction={handleReaction} />}
 
                 {/* More Options */}
                 <Button
                   variant="outline"
                   size="icon"
                   className="h-11 w-11 shrink-0 rounded-full border-white/20 bg-white/10 hover:bg-white/20"
+                  style={compactChat ? { display: 'none' } : undefined}
                   onClick={() => setShowEffects(true)}
                   aria-label="Definições da chamada"
                 >
@@ -420,7 +417,7 @@ export function VideoCall({
               </div>
 
               {/* Secondary Controls */}
-                <div className="flex items-center gap-2 mt-2 overflow-x-auto [&>button]:shrink-0">
+                <div className={compactChat ? "hidden" : "flex items-center gap-2 mt-2 overflow-x-auto [&>button]:shrink-0"}>
                 <Button
                   variant="ghost"
                   size="sm"
