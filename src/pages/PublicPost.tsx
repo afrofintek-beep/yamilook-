@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { loadPublicPost, isVideo, postUrl } from '../../shared/public-post.mjs';
+import { loadPublicPost, isVideo } from '../../shared/public-post.mjs';
 import PostShareDialog from '@/components/sharing/PostShareDialog';
 import { useTranslation } from 'react-i18next';
 
@@ -56,9 +57,11 @@ export default function PublicPost() {
             </header>
             {post.content && <p className="my-5 whitespace-pre-wrap break-words leading-relaxed">{post.content}</p>}
 
-            <Button onClick={() => setShowShare(true)}>{t('publicPost.share', 'Partilhar')}</Button>
+            <div className="flex items-center gap-3">
+              <Button asChild className="min-h-11 flex-1"><a href="/feed">{t('publicPost.viewInYamilook', 'Ver na Yamilook')}</a></Button>
+              <Button variant="secondary" size="icon" className="min-h-11 min-w-11" aria-label={t('publicPost.share', 'Partilhar')} aria-haspopup="dialog" onClick={() => setShowShare(true)}><Share2 className="h-5 w-5" aria-hidden="true" /></Button>
+            </div>
             {showShare && <PostShareDialog id={post.id} mediaUrls={post.media_urls} open={showShare} onOpenChange={setShowShare} />}
-            <input aria-label={t('publicPost.link', 'Ligação pública')} readOnly value={postUrl(post.id)} onFocus={(event) => event.target.select()} className="w-full rounded border bg-background p-3 text-xs" />
           </article>
         )}
       </div>
