@@ -6,11 +6,18 @@ test('native playback fallback exports a branded playable MP4 with audible origi
   await page.goto('/tests/branded-export/playback.html?source=' + encodeURIComponent(source));
   await expect.poll(() => page.locator('#source').evaluate(video => video.readyState)).toBeGreaterThanOrEqual(2);
   const duration = await page.locator('#source').evaluate(video => video.duration);
-  expect(await page.evaluate(() => window.compatibleSupported)).toBe(true);
+  if (!(await page.evaluate(() => window.compatibleSupported))) {
+    testInfo.annotations.push({ type: 'capability', description: 'This browser build lacks native MP4 recording; verify safe refusal.' });
+    await page.getByRole('button', { name: 'Prepare compatible copy' }).click();
+    await expect(page.locator('#status')).toContainText('FAIL');
+    await expect(page.locator('#download')).not.toHaveAttribute('href');
+    return;
+  }
   // No getUserMedia is permitted: the soundtrack must come from the original media.
   await page.evaluate(() => { navigator.mediaDevices.getUserMedia = () => { throw new Error('Unexpected microphone access'); }; });
   await page.getByRole('button', { name: 'Prepare compatible copy' }).click();
-  await expect(page.locator('#status')).toHaveText('PASS', { timeout: 90000 });
+  await expect(page.locator('#status')).toHaveText(/^(PASS|FAIL)/, { timeout: 90000 });
+  await expect(page.locator('#status')).toHaveText('PASS');
   await page.locator('#preview').evaluate(video => { video.muted = true; return video.play(); });
   await expect.poll(() => page.locator('#preview').evaluate(video => video.currentTime)).toBeGreaterThan(.1);
   const brand = await page.locator('#preview').evaluate(video => {
@@ -43,6 +50,12 @@ test('native playback fallback exports a branded playable MP4 with audible origi
 test('native playback cancellation never exposes a partial file', async ({ page }) => {
   await page.goto('/tests/branded-export/playback.html');
   await expect.poll(() => page.locator('#source').evaluate(video => video.readyState)).toBeGreaterThanOrEqual(2);
+  if (!(await page.evaluate(() => window.compatibleSupported))) {
+    await page.getByRole('button', { name: 'Prepare compatible copy' }).click();
+    await expect(page.locator('#status')).toContainText('FAIL');
+    await expect(page.locator('#download')).not.toHaveAttribute('href');
+    return;
+  }
   await page.getByRole('button', { name: 'Prepare compatible copy' }).click();
   await expect(page.locator('#status')).toContainText('Preparing');
   await page.getByRole('button', { name: 'Cancel', exact: true }).click();

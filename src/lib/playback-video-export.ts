@@ -1,4 +1,4 @@
-import { ALL_FORMATS, BlobSource, BufferTarget, Conversion, Input, Mp4OutputFormat, Output } from 'mediabunny';
+import { ALL_FORMATS, BlobSource, BufferTarget, Conversion, Input, Mp4OutputFormat, Output, canEncodeAudio } from 'mediabunny';
 import { drawMediaBrand, fitMedia, loadBrandLogo } from './branded-media';
 import type { ExportIdentity } from './owned-post-media';
 
@@ -22,6 +22,7 @@ export async function exportVideoFromPlayback(video: HTMLVideoElement, identity:
   const source = audio.createMediaElementSource(video);
   const destination = audio.createMediaStreamDestination();
   source.connect(destination); // Original soundtrack only; do not connect to speakers.
+  video.muted = false; video.volume = 1; video.playbackRate = 1; video.loop = false;
   const stream = canvas.captureStream(30);
   destination.stream.getAudioTracks().forEach(track => stream.addTrack(track));
   let recorder: MediaRecorder | undefined;
@@ -90,15 +91,19 @@ export async function exportVideoFromPlayback(video: HTMLVideoElement, identity:
     });
     const blob = await recording;
     video.pause(); cancelAnimationFrame(frame); signal.throwIfAborted();
-    // Remux native fragmented recordings into ordinary MP4 without using a decoder.
+    // Native Safari H.264/AAC passes through; normalize other recorder audio to AAC.
+    // Any decode here concerns the new recording, never the failing original.
     input = new Input({ formats: ALL_FORMATS, source: new BlobSource(blob) });
     const target = new BufferTarget();
     const output = new Output({ format: new Mp4OutputFormat({ fastStart: 'in-memory' }), target });
     const tracks = [await input.getPrimaryVideoTrack(), await input.getPrimaryAudioTrack()];
     if (tracks.some(track => !track)) throw new Error('A cópia não preservou o vídeo e o áudio.');
-    if (await tracks[0]!.getCodec() !== 'avc' || await tracks[1]!.getCodec() !== 'aac') throw new Error('O navegador não gerou uma cópia MP4 compatível.');
+    if (await tracks[1]!.getCodec() !== 'aac' && !(await canEncodeAudio('aac'))) {
+      const { registerAacEncoder } = await import('@mediabunny/aac-encoder');
+      registerAacEncoder();
+    }
     if (Math.abs(await input.computeDuration() - duration) > Math.max(1, duration * .02)) throw new Error('A cópia ficou incompleta. Tenta novamente.');
-    conversion = await Conversion.init({ input, output, tracks: 'primary', showWarnings: false });
+    conversion = await Conversion.init({ input, output, tracks: 'primary', showWarnings: false, video: { codec: 'avc' }, audio: { codec: 'aac' } });
     if (!conversion.isValid || tracks.some(track => !conversion!.utilizedTracks.includes(track!))) throw new Error('Não foi possível finalizar a cópia com áudio.');
     await conversion.execute(); signal.throwIfAborted();
     if (!target.buffer?.byteLength || target.buffer.byteLength > LIMIT) throw new Error('A cópia excedeu o limite de envio.');
