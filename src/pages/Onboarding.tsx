@@ -1,3 +1,4 @@
+import { onboardingImage } from '@/components/auth/onboarding-images';
 import { EntryLanguageSelector } from '@/components/auth/EntryLanguageSelector';
 import { communityReturn } from '@/features/academia/community-links';
 import { ResidenceForm } from '@/components/residence/ResidenceForm';
@@ -90,6 +91,8 @@ export default function Onboarding() {
   const returnToCommunity = communityReturn(useLocation().search);
   const { t, i18n } = useTranslation();
 
+  const imageLanguage = i18n.resolvedLanguage || i18n.language;
+
   // Track whether the user just completed onboarding in this session
   const justCompletedRef = useRef(false);
 
@@ -107,9 +110,10 @@ export default function Onboarding() {
 
   const localizedTourSlides = useMemo(() => tourSlides.map((slide, index) => ({
     ...slide,
+    image: onboardingImage(imageLanguage, ['chat', 'calls', 'groups', 'stories'][index], slide.image),
     title: t(['onboardingFlow.tourChat', 'onboardingFlow.tourCalls', 'onboardingFlow.tourGroups', 'onboardingFlow.tourStories'][index]),
     description: t(['onboardingFlow.tourChatHint', 'onboardingFlow.tourCallsHint', 'onboardingFlow.tourGroupsHint', 'onboardingFlow.tourStoriesHint'][index]),
-  })), [t]);
+  })), [t, imageLanguage]);
 
   const [currentStep, setCurrentStep] = useState(0);
   const [tourSlide, setTourSlide] = useState(0);
@@ -423,7 +427,7 @@ export default function Onboarding() {
               transition={{ delay: 0.1, type: 'spring', stiffness: 200 }}
             >
               <img
-                src={genderIdentityImg}
+                src={onboardingImage(imageLanguage, 'identity', genderIdentityImg)}
                 alt={t("onboardingFlow.identity")}
                 className="w-full h-full object-cover"
               />
@@ -500,7 +504,7 @@ export default function Onboarding() {
               transition={{ delay: 0.1, type: 'spring', stiffness: 200 }}
             >
               <img
-                src={birthdayCakeImg}
+                src={onboardingImage(imageLanguage, 'birthday', birthdayCakeImg)}
                 alt={t("onboardingFlow.birthday")}
                 className="w-full h-full object-cover"
               />
@@ -600,7 +604,7 @@ export default function Onboarding() {
               transition={{ delay: 0.1, type: 'spring', stiffness: 200 }}
             >
               <img
-                src={welcomeBandaImg}
+                src={onboardingImage(imageLanguage, 'welcome', welcomeBandaImg)}
                 alt={t("entry.title")}
                 className="w-full h-full object-cover"
               />
@@ -629,7 +633,7 @@ export default function Onboarding() {
               transition={{ delay: 0.4 }}
             >
               <img
-                src={bandaCommunityImg}
+                src={onboardingImage(imageLanguage, 'groups', bandaCommunityImg)}
                 alt={t("entry.subtitle")}
                 className="w-full h-32 object-cover"
               />
@@ -667,7 +671,7 @@ export default function Onboarding() {
               transition={{ delay: 0.1, type: 'spring', stiffness: 200 }}
             >
               <img
-                src={profilePhotoImg}
+                src={onboardingImage(imageLanguage, 'avatar', profilePhotoImg)}
                 alt={t("onboardingFlow.photo")}
                 className="w-full h-full object-cover"
               />
@@ -759,7 +763,7 @@ export default function Onboarding() {
               transition={{ delay: 0.1, type: 'spring', stiffness: 200 }}
             >
               <img
-                src={bioStoryImg}
+                src={onboardingImage(imageLanguage, 'bio', bioStoryImg)}
                 alt={t("onboardingFlow.bio")}
                 className="w-full h-full object-cover"
               />
