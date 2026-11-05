@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { localizedCountryName } from '@/lib/localized-country-name';
 import { AFRICAN_LOCATIONS } from '@/lib/african-locations';
 import { snapToGrid } from '@/lib/geo-privacy';
 import { validResidencePlan, type ResidencePlan, type ResidenceMethod } from '@/lib/residence';
@@ -17,7 +18,7 @@ interface Props {
  plan: ResidencePlan; onPlan:(v:ResidencePlan)=>void; onContinue:()=>void; onBack?:()=>void; saving?:boolean;
 }
 export function ResidenceForm(p: Props) {
- const { t } = useTranslation();
+ const { t, i18n } = useTranslation();
  const [locating,setLocating]=useState(false); const [error,setError]=useState(''); const generation=useRef(0);
  useEffect(()=>()=>{generation.current++;},[]);
  const resetHomeCapture=()=>{if(p.plan.method==='home'){generation.current++;setLocating(false);p.onPlan({method:'home'});}};
@@ -40,7 +41,7 @@ export function ResidenceForm(p: Props) {
  return <div className="space-y-4 text-start">
   <h2 className="text-xl font-bold">{t("onboardingFlow.residenceTitle")}</h2>
   <p className="text-sm text-muted-foreground">{t("onboardingFlow.residenceHint")}</p>
-  <label className="block text-sm">{t("onboardingFlow.country")}<select className={selectClass} value={p.country} onChange={e=>{resetHomeCapture();p.onCountry(e.target.value);p.onCity('');p.onNeighborhood('');}}>{AFRICAN_LOCATIONS.map(c=><option key={c.countryCode} value={c.countryCode}>{c.country}</option>)}</select></label>
+  <label className="block text-sm">{t("onboardingFlow.country")}<select className={selectClass} value={p.country} onChange={e=>{resetHomeCapture();p.onCountry(e.target.value);p.onCity('');p.onNeighborhood('');}}>{AFRICAN_LOCATIONS.map(c=><option key={c.countryCode} value={c.countryCode}>{localizedCountryName(c.countryCode, i18n.resolvedLanguage || i18n.language)}</option>)}</select></label>
   <label className="block text-sm">{t("onboardingFlow.city")}<select className={selectClass} value={p.city} onChange={e=>{resetHomeCapture();p.onCity(e.target.value);p.onNeighborhood('');}}><option value="">{t("onboardingFlow.selectCity")}</option>{country?.cities.map(c=><option key={c.name} value={c.name}>{c.name}</option>)}</select></label>
   <label className="block text-sm">{t("onboardingFlow.neighborhood")}<select className={selectClass} value={p.neighborhood} onChange={e=>{resetHomeCapture();p.onNeighborhood(e.target.value);}}><option value="">{t("onboardingFlow.selectNeighborhood")}</option>{neighborhoods.map(n=><option key={n} value={n}>{n}</option>)}{p.neighborhood && p.neighborhood!=='__other__' && !neighborhoods.includes(p.neighborhood) && <option value={p.neighborhood}>{p.neighborhood}</option>}<option value="__other__">{t("onboardingFlow.otherNeighborhood")}</option></select></label>
   {p.neighborhood==='__other__'&&<Input aria-label={t("onboardingFlow.neighborhoodName")} value={p.customNeighborhood} onChange={e=>p.onCustomNeighborhood(e.target.value)} placeholder={t("onboardingFlow.neighborhoodName")}/>}
