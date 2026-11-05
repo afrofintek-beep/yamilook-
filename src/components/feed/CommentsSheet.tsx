@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatDistanceToNow } from 'date-fns';
@@ -39,6 +39,8 @@ export function CommentsSheet({ open, onOpenChange, post }: CommentsSheetProps) 
   const [newComment, setNewComment] = useState('');
   const [replyingTo, setReplyingTo] = useState<Comment | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const submittingRef = useRef(false);
+  const [submitError, setSubmitError] = useState(false);
   const [loading, setLoading] = useState(true);
 
   // Count total comments including replies
@@ -57,7 +59,10 @@ export function CommentsSheet({ open, onOpenChange, post }: CommentsSheetProps) 
   }, [open, post?.id, getComments]);
 
   const handleSubmit = () => {
-    if (!newComment.trim() || !post || !user) return;
+    if (!newComment.trim() || !post || !user || submittingRef.current) return;
+    submittingRef.current = true;
+    setIsSubmitting(true);
+    setSubmitError(false);
 
     const commentContent = newComment.trim();
     const parentId = replyingTo?.id;
@@ -99,8 +104,17 @@ export function CommentsSheet({ open, onOpenChange, post }: CommentsSheetProps) 
     setNewComment('');
     setReplyingTo(null);
 
-    // Fire and forget - sync with server in background
+    // Show optimistic feedback, but roll back failed writes and keep the draft.
+    const failed = () => {
+      setComments(prev => prev.filter(c => c.id !== optimisticComment.id).map(c => ({
+        ...c, replies: c.replies?.filter(r => r.id !== optimisticComment.id),
+      })));
+      setNewComment(commentContent);
+      setReplyingTo(replyingTo);
+      setSubmitError(true);
+    };
     addComment(post.id, commentContent, parentId).then(realComment => {
+      if (!realComment) { failed(); return; }
       if (realComment) {
         // Replace temp comment with real one
         if (parentId) {
@@ -124,6 +138,9 @@ export function CommentsSheet({ open, onOpenChange, post }: CommentsSheetProps) 
           ));
         }
       }
+    }).catch(failed).finally(() => {
+      submittingRef.current = false;
+      setIsSubmitting(false);
     });
   };
 
@@ -227,7 +244,7 @@ export function CommentsSheet({ open, onOpenChange, post }: CommentsSheetProps) 
             onClick={() => onOpenChange(false)}
             className="block w-fit font-semibold text-sm hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >{comment.user.display_name || comment.user.username}</Link>
-          <p className="text-sm"><MentionText text={comment.content} /></p>
+          <p className="text-sm"><MentionText text={comment.content} onNavigate={() => onOpenChange(false)} /></p>
         </div>
         <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
           <span>{formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}</span>
@@ -311,6 +328,7 @@ export function CommentsSheet({ open, onOpenChange, post }: CommentsSheetProps) 
 
         {/* Input */}
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t bg-background safe-bottom">
+          {submitError && <p role="alert" className="mb-2 text-sm text-destructive">Não foi possível publicar. O texto foi reposto para tentares novamente.</p>}
           {replyingTo && (
             <div className="flex items-center justify-between mb-2 text-sm text-muted-foreground">
               <span>Replying to {replyingTo.user.display_name}</span>
@@ -335,6 +353,7 @@ export function CommentsSheet({ open, onOpenChange, post }: CommentsSheetProps) 
                 value={newComment}
                 onValueChange={setNewComment}
                 onSubmit={handleSubmit}
+                disabled={!user || isSubmitting}
                 className="flex-1 rounded-full bg-secondary/50 border-none"
               />
               <Button 

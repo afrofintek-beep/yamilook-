@@ -1,0 +1,72 @@
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+import { PGlite } from '@electric-sql/pglite';
+const db = new PGlite();
+let checks = 0;
+const a = '10000000-0000-4000-8000-000000000001', b = '10000000-0000-4000-8000-000000000002', c = '10000000-0000-4000-8000-000000000003';
+const migration = fs.readFileSync('supabase/migrations/20261105143445_comment_mentions_privacy.sql', 'utf8');
+const check = (v, label) => { assert.ok(v, label); checks++; console.log('PASS', label); };
+const as = async (id, role = 'authenticated') => { await db.exec('reset role'); await db.query("select set_config('request.jwt.claim.sub',$1,false)", [id || '']); await db.exec('set role ' + role); };
+const visible = async id => (await db.query('select id from post_comments where post_id=$1', [id])).rows.length;
+try {
+  await db.exec(`create role anon; create role authenticated; create schema auth; create schema private;
+    grant usage on schema auth to anon,authenticated;
+    create function auth.uid() returns uuid language sql as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
+    create table contacts(user_id uuid,contact_user_id uuid,is_blocked boolean);
+    create table close_friends(user_id uuid,friend_id uuid);
+    create table blocked_users(blocker_id uuid,blocked_id uuid);
+    alter table blocked_users enable row level security;
+    create policy own_blocks on blocked_users for select using(blocker_id=auth.uid());
+    create table posts(id uuid primary key default gen_random_uuid(),user_id uuid,privacy text,is_hidden boolean default false);
+    create table post_comments(id uuid primary key default gen_random_uuid(),post_id uuid references posts(id),user_id uuid,content text,is_hidden boolean default false);
+    alter table posts enable row level security; alter table post_comments enable row level security;
+    grant select on posts,post_comments,blocked_users to anon,authenticated;
+    grant insert,update,delete on post_comments to authenticated;
+    create policy posts_public_read on posts for select to anon using(privacy='everyone' and not is_hidden);
+    create policy "Anyone can view comments" on post_comments for select using(true);
+    create policy author_insert on post_comments for insert with check(auth.uid()=user_id);
+    create policy author_update on post_comments for update using(auth.uid()=user_id);
+    create policy author_delete on post_comments for delete using(auth.uid()=user_id);`);
+  for (const path of ['20260206005359_f0295eb5-4bae-43bb-a114-502368464afa.sql','20260206005455_ae9e9c95-b203-41e1-b9b3-4dab0dcd940f.sql','20260206011640_98bb9c94-ff9d-4d58-8717-6760aaccf38f.sql']) await db.exec(fs.readFileSync('supabase/migrations/' + path, 'utf8'));
+  await db.exec('create policy posts_select on posts for select to authenticated using(can_view_post(auth.uid(),user_id,privacy));');
+  const ids = {};
+  for (const privacy of ['everyone','only_me','contacts','close_friends']) {
+    ids[privacy] = (await db.query('insert into posts(user_id,privacy) values($1,$2) returning id',[a,privacy])).rows[0].id;
+    await db.query("insert into post_comments(post_id,user_id,content) values($1,$2,'Hello @recipient')",[ids[privacy],a]);
+  }
+  await as(b);
+  check(await visible(ids.only_me) === 1, 'reproduces original private-comment leak');
+  await db.exec('reset role'); await db.exec(migration);
+  await as(b);
+  check(await visible(ids.everyone) === 1, 'recipient can read public mention');
+  check(await visible(ids.only_me) === 0, 'private post produces no readable mention');
+  check(await visible(ids.contacts) === 0, 'non-contact receives no contact-only mention');
+  check(await visible(ids.close_friends) === 0, 'non-close-friend receives no close-friends mention');
+  await assert.rejects(db.query("insert into post_comments(post_id,user_id,content) values($1,$2,'forged')",[ids.only_me,b]),e=>e.code==='42501'); checks++;
+  await assert.rejects(db.query("insert into post_comments(post_id,user_id,content) values($1,$2,'forged author')",[ids.everyone,a]),e=>e.code==='42501'); checks++;
+  const own = (await db.query("insert into post_comments(post_id,user_id,content) values($1,$2,'allowed') returning id",[ids.everyone,b])).rows[0].id;
+  check(!!own,'recipient can publish on accessible post');
+  await assert.rejects(db.query('update post_comments set post_id=$1 where id=$2',[ids.only_me,own]),e=>e.code==='42501'); checks++;
+  await db.query('delete from post_comments where id=$1',[own]);
+  await db.exec('reset role'); await db.query('insert into contacts values($1,$2,false)',[a,b]); await db.query('insert into close_friends values($1,$2)',[a,b]);
+  await as(b);check(await visible(ids.contacts)===1,'contact gets access');check(await visible(ids.close_friends)===1,'close friend gets access');
+  await db.exec('reset role');await db.exec('delete from contacts;delete from close_friends');
+  await as(b);check(await visible(ids.contacts)===0,'revoked contact loses access');check(await visible(ids.close_friends)===0,'revoked close friend loses access');
+  await as(a);check(await visible(ids.only_me)===1,'owner retains private comments');
+  await as(null,'anon');check(await visible(ids.everyone)===1,'anonymous public access preserved');check(await visible(ids.only_me)===0,'anonymous cannot read private comments');
+  await db.exec('reset role');await db.query('update post_comments set is_hidden=true where post_id=$1',[ids.everyone]);
+  await as(b);check(await visible(ids.everyone)===0,'moderated comment excluded');
+  await db.exec('reset role');await db.query('update post_comments set is_hidden=false where post_id=$1',[ids.everyone]);await db.query('update posts set is_hidden=true where id=$1',[ids.everyone]);
+  await as(b);check(await visible(ids.everyone)===0,'moderated post excluded');
+  await db.exec('reset role');await db.query('update posts set is_hidden=false where id=$1',[ids.everyone]);
+  for(const [blocker,blocked,label] of [[a,b,'reverse block'],[b,a,'own block']]) {
+    await db.query('insert into blocked_users values($1,$2)',[blocker,blocked]);await as(b);
+    check(await visible(ids.everyone)===0,label+' excludes mention');
+    await assert.rejects(db.query("insert into post_comments(post_id,user_id,content) values($1,$2,'blocked')",[ids.everyone,b]),e=>e.code==='42501');checks++;
+    await db.exec('reset role');await db.exec('delete from blocked_users');
+  }
+  await db.query('update post_comments set user_id=$1 where post_id=$2',[c,ids.everyone]);await db.query('insert into blocked_users values($1,$2)',[c,b]);
+  await as(b);check(await visible(ids.everyone)===0,'blocked third-party comment author excluded');
+  check((await db.query('select id from posts where id=$1',[ids.everyone])).rows.length===1,'unblocked post itself stays visible');
+  console.log(`${checks} PostgreSQL privacy checks passed`);
+} finally { await db.close(); }

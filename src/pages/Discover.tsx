@@ -19,6 +19,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { snapToGrid } from '@/lib/geo-privacy';
 import { cn } from '@/lib/utils';
+import { loadNotificationPost } from '@/lib/notification-post';
 
 interface DiscoverUser {
   id: string;
@@ -32,7 +33,7 @@ export default function Discover() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
   const { discoverPosts, topics, loading, getPostsByTopic } = usePosts();
   const { locationMarkets } = useAdvertising();
   
@@ -47,6 +48,29 @@ export default function Discover() {
   const [userMarket, setUserMarket] = useState<LocationMarket | undefined>();
   const [discoverUsers, setDiscoverUsers] = useState<DiscoverUser[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
+  const [notificationPostError, setNotificationPostError] = useState<string | null>(null);
+  const notificationPostId = searchParams.get('post');
+
+  useEffect(() => {
+    let active = true;
+    setSelectedPost(null);
+    setCommentsOpen(false);
+    setNotificationPostError(null);
+    if (notificationPostId && user?.id) {
+      loadNotificationPost(notificationPostId).then(post => {
+        if (!active) return;
+        if (!post) {
+          setNotificationPostError('Esta publicação já não está disponível ou não tens acesso.');
+          return;
+        }
+        setSelectedPost(post);
+        setCommentsOpen(true);
+      }).catch(() => {
+        if (active) setNotificationPostError('Não foi possível carregar a publicação. Tenta novamente.');
+      });
+    }
+    return () => { active = false; };
+  }, [notificationPostId, user?.id]);
 
   // Handle topic from URL query param
   useEffect(() => {
@@ -231,6 +255,7 @@ export default function Discover() {
       </header>
 
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        {notificationPostError && <p role="alert" className="p-4 text-sm text-muted-foreground">{notificationPostError}</p>}
         {/* Local Businesses Section */}
         {!selectedTopic && !searchQuery && (
           <LocalBusinessSection 
