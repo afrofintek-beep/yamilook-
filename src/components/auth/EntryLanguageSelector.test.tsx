@@ -8,6 +8,20 @@ import Welcome from '@/pages/Welcome';
 afterEach(async () => { cleanup(); await changeAppLanguage('pt'); });
 
 describe('public language selection', () => {
+  it('offers Angolan tone only in Portuguese and preserves the QR invitation', async () => {
+    await changeAppLanguage('pt');
+    render(<MemoryRouter initialEntries={['/welcome?invite=qr-one-use']}><Welcome /></MemoryRouter>);
+    fireEvent.click(screen.getByRole('radio', { name: /Yamilook da Banda/ }));
+    await waitFor(() => expect(i18n.language).toBe('pt-banda'));
+    expect(screen.getByRole('radio', { name: /Yamilook da Banda/ })).toBeChecked();
+    expect(screen.getByRole('combobox')).toHaveValue('pt');
+    expect(localStorage.setItem).toHaveBeenCalledWith('i18nextLng', 'pt-banda');
+    expect(screen.getByRole('link', { name: i18n.t('entry.createAccount') })).toHaveAttribute('href', '/onboarding?invite=qr-one-use');
+    fireEvent.click(screen.getByRole('radio', { name: 'Português formal' }));
+    await waitFor(() => expect(i18n.language).toBe('pt'));
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'en' } });
+    await waitFor(() => expect(screen.queryByRole('radio')).not.toBeInTheDocument());
+  });
   it('has every entry string in each of the 10 resource bundles without fallback', async () => {
     expect(appLanguages).toHaveLength(10);
     for (const { code } of appLanguages) {
