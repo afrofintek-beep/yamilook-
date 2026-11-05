@@ -1,3 +1,5 @@
+import welcomeImage from '@/assets/onboarding/welcome-banda.jpg';
+import { normalizeAppLanguage } from '@/i18n/afroloc-languages';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -5,14 +7,19 @@ import YamilookLogo from '@/components/brand/YamilookLogo';
 import { EntryLanguageSelector } from '@/components/auth/EntryLanguageSelector';
 
 export default function Welcome() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isPortuguese = ['pt', 'pt-banda'].includes(normalizeAppLanguage(i18n.language));
   const { search } = useLocation();
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center bg-background px-6 py-10 gap-5">
+    <main className="min-h-screen flex flex-col items-center justify-center bg-background px-5 py-8 gap-5 relative isolate overflow-hidden">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-96 bg-gradient-to-b from-primary/10 via-ubuntu/5 to-transparent" />
       <YamilookLogo size="xl" showTagline={false} animate={false} />
+      <h1 className="text-2xl font-semibold text-center">{isPortuguese ? t('welcome.title') : t('entry.title')} 👋🏾</h1>
+      <p className="text-muted-foreground text-center">{isPortuguese ? t('welcome.subtitle') : t('entry.subtitle')}</p>
+      <div className="w-full max-w-sm overflow-hidden rounded-3xl shadow-lg">
+        <img src={welcomeImage} alt="" className="h-40 sm:h-48 w-full object-cover" fetchPriority="high" />
+      </div>
       <EntryLanguageSelector />
-      <h1 className="text-2xl font-semibold text-center">{t('entry.title')}</h1>
-      <p className="text-muted-foreground text-center">{t('entry.subtitle')}</p>
       <div className="w-full max-w-sm space-y-3">
         <Button asChild size="lg" className="w-full min-h-14"><Link to={`/onboarding${search}`}>{t('entry.createAccount')}</Link></Button>
         <Button asChild variant="outline" size="lg" className="w-full min-h-14"><Link to={`/login${search}`}>{t('entry.login')}</Link></Button>
