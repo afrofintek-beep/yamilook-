@@ -421,7 +421,7 @@ export default function Onboarding() {
           >
             {/* Illustration */}
             <motion.div
-              className="relative w-40 h-40 mx-auto mb-6 rounded-3xl overflow-hidden shadow-2xl"
+              className="relative w-full aspect-[1.42] mx-auto mb-6 rounded-3xl overflow-hidden shadow-lg"
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.1, type: 'spring', stiffness: 200 }}
@@ -498,7 +498,7 @@ export default function Onboarding() {
           >
             {/* Illustration */}
             <motion.div
-              className="relative w-40 h-40 mx-auto mb-6 rounded-3xl overflow-hidden shadow-2xl"
+              className="relative w-full aspect-[1.42] mx-auto mb-6 rounded-3xl overflow-hidden shadow-lg"
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.1, type: 'spring', stiffness: 200 }}
@@ -570,12 +570,12 @@ export default function Onboarding() {
                 onClick={prevStep}
                 className="h-14 px-6 rounded-2xl border-2"
               >
-                <ChevronLeft className="w-5 h-5 mr-2" />{t("common.back")}</Button>
+                <ChevronLeft className="rtl:rotate-180 w-5 h-5 me-2" />{t("common.back")}</Button>
               <Button
                 onClick={handleBirthdaySave}
                 disabled={!birthDay || !birthMonth || !birthYear}
-                className="h-14 px-8 rounded-2xl bg-gradient-primary hover:opacity-90 text-white font-semibold shadow-lg shadow-primary/30"
-              >{t("onboardingFlow.continue")}<ChevronRight className="w-5 h-5 ml-2" />
+                className="h-14 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-lg shadow-primary/30"
+              >{t("onboardingFlow.continue")}<ChevronRight className="rtl:rotate-180 w-5 h-5 ms-2" />
               </Button>
             </div>
             <p className="text-xs text-muted-foreground mt-6 text-center">{t("onboardingFlow.required")}</p>
@@ -583,10 +583,10 @@ export default function Onboarding() {
         );
 
       case 'banda':
-        return <ResidenceForm country={selectedCountry} city={selectedCity} neighborhood={selectedNeighborhood}
+        return <><img src={onboardingImage(imageLanguage, 'welcome', bandaCommunityImg)} alt={t("onboardingFlow.residenceTitle")} className="w-full aspect-[1.42] object-cover rounded-3xl mb-6" /><ResidenceForm country={selectedCountry} city={selectedCity} neighborhood={selectedNeighborhood}
           customNeighborhood={customNeighborhood} onCountry={setSelectedCountry} onCity={setSelectedCity}
           onNeighborhood={setSelectedNeighborhood} onCustomNeighborhood={setCustomNeighborhood}
-          plan={residencePlan} onPlan={setResidencePlan} onContinue={nextStep} onBack={prevStep} />;
+          plan={residencePlan} onPlan={setResidencePlan} onContinue={nextStep} onBack={prevStep} /></>;
 
       case 'welcome':
         return (
@@ -598,7 +598,7 @@ export default function Onboarding() {
           >
             {/* Welcome Illustration */}
             <motion.div
-              className="relative w-48 h-48 mx-auto mb-6 rounded-3xl overflow-hidden shadow-2xl"
+              className="relative w-full aspect-[1.42] mx-auto mb-6 rounded-3xl overflow-hidden shadow-lg"
               initial={{ scale: 0.8, opacity: 0, rotate: -5 }}
               animate={{ scale: 1, opacity: 1, rotate: 0 }}
               transition={{ delay: 0.1, type: 'spring', stiffness: 200 }}
@@ -645,11 +645,11 @@ export default function Onboarding() {
                 onClick={prevStep}
                 className="h-14 px-6 rounded-2xl border-2"
               >
-                <ChevronLeft className="w-5 h-5 mr-2" />{t("common.back")}</Button>
+                <ChevronLeft className="rtl:rotate-180 w-5 h-5 me-2" />{t("common.back")}</Button>
               <Button
                 onClick={nextStep}
-                className="h-14 px-8 rounded-2xl bg-gradient-primary hover:opacity-90 text-white font-semibold shadow-lg shadow-primary/30"
-              >{t("onboardingFlow.continue")}<ChevronRight className="w-5 h-5 ml-2" />
+                className="h-14 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-lg shadow-primary/30"
+              >{t("onboardingFlow.continue")}<ChevronRight className="rtl:rotate-180 w-5 h-5 ms-2" />
               </Button>
             </div>
           </motion.div>
@@ -665,7 +665,7 @@ export default function Onboarding() {
           >
             {/* Illustration */}
             <motion.div
-              className="relative w-40 h-40 mx-auto mb-6 rounded-3xl overflow-hidden shadow-2xl"
+              className="relative w-full aspect-[1.42] mx-auto mb-6 rounded-3xl overflow-hidden shadow-lg"
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.1, type: 'spring', stiffness: 200 }}
@@ -735,12 +735,12 @@ export default function Onboarding() {
                 onClick={prevStep}
                 className="h-14 px-6 rounded-2xl border-2"
               >
-                <ChevronLeft className="w-5 h-5 mr-2" />{t("common.back")}</Button>
+                <ChevronLeft className="rtl:rotate-180 w-5 h-5 me-2" />{t("common.back")}</Button>
               <Button
                 onClick={nextStep}
                 disabled={!avatarUrl}
-                className="h-14 px-8 rounded-2xl bg-gradient-primary hover:opacity-90 text-white font-semibold shadow-lg shadow-primary/30"
-              >{t("onboardingFlow.continue")}<ChevronRight className="w-5 h-5 ml-2" />
+                className="h-14 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-lg shadow-primary/30"
+              >{t("onboardingFlow.continue")}<ChevronRight className="rtl:rotate-180 w-5 h-5 ms-2" />
               </Button>
             </div>
             <p className="text-xs text-muted-foreground mt-6 text-center">{t("onboardingFlow.required")}</p>
@@ -757,7 +757,7 @@ export default function Onboarding() {
           >
             {/* Illustration */}
             <motion.div
-              className="relative w-40 h-40 mx-auto mb-6 rounded-3xl overflow-hidden shadow-2xl"
+              className="relative w-full aspect-[1.42] mx-auto mb-6 rounded-3xl overflow-hidden shadow-lg"
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.1, type: 'spring', stiffness: 200 }}
@@ -808,13 +808,13 @@ export default function Onboarding() {
                 onClick={prevStep}
                 className="h-14 px-6 rounded-2xl border-2"
               >
-                <ChevronLeft className="w-5 h-5 mr-2" />{t("common.back")}</Button>
+                <ChevronLeft className="rtl:rotate-180 w-5 h-5 me-2" />{t("common.back")}</Button>
               <Button
                 onClick={handleBioSave}
-                className="h-14 px-8 rounded-2xl bg-gradient-primary hover:opacity-90 text-white font-semibold shadow-lg shadow-primary/30"
+                className="h-14 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-lg shadow-primary/30"
               >
                 {bio.trim() ? t("onboardingFlow.continue") : t("onboardingFlow.skip")}
-                <ChevronRight className="w-5 h-5 ml-2" />
+                <ChevronRight className="rtl:rotate-180 w-5 h-5 ms-2" />
               </Button>
             </div>
             <p className="text-xs text-muted-foreground mt-6 text-center">{t("onboardingFlow.optional")}</p>
@@ -837,14 +837,14 @@ export default function Onboarding() {
                 className="text-center"
               >
                 {/* Tour illustration */}
-                <div className={`relative w-full max-w-xs mx-auto mb-6 rounded-3xl overflow-hidden shadow-2xl bg-gradient-to-br ${localizedTourSlides[tourSlide].bgColor}`}>
+                <div className={`relative w-full mx-auto mb-6 rounded-3xl overflow-hidden shadow-2xl bg-gradient-to-br ${localizedTourSlides[tourSlide].bgColor}`}>
                   <img
                     src={localizedTourSlides[tourSlide].image}
                     alt={localizedTourSlides[tourSlide].title}
-                    className="w-full h-48 object-cover"
+                    className="w-full aspect-[1.42] object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                  <div className="absolute bottom-4 left-4 right-4 text-left">
+                  <div className="absolute bottom-4 left-4 right-4 text-start">
                     <div className="flex items-center gap-2 mb-1">
                       {(() => {
                         const Icon = localizedTourSlides[tourSlide].icon;
@@ -888,11 +888,11 @@ export default function Onboarding() {
                   onClick={() => tourSlide === 0 ? prevStep() : setTourSlide(tourSlide - 1)}
                   className="h-14 px-6 rounded-2xl"
                 >
-                  <ChevronLeft className="w-5 h-5 mr-2" />{t("common.back")}</Button>
+                  <ChevronLeft className="rtl:rotate-180 w-5 h-5 me-2" />{t("common.back")}</Button>
                 <Button
                   onClick={() => setTourSlide(tourSlide + 1)}
-                  className="h-14 px-8 rounded-2xl bg-gradient-primary hover:opacity-90 text-white font-semibold shadow-lg shadow-primary/30"
-                >{t("common.next")}<ChevronRight className="w-5 h-5 ml-2" />
+                  className="h-14 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-lg shadow-primary/30"
+                >{t("common.next")}<ChevronRight className="rtl:rotate-180 w-5 h-5 ms-2" />
                 </Button>
               </div>
             ) : (
@@ -902,11 +902,11 @@ export default function Onboarding() {
                   onClick={() => setTourSlide(tourSlide - 1)}
                   className="h-14 px-6 rounded-2xl"
                 >
-                  <ChevronLeft className="w-5 h-5 mr-2" />{t("common.back")}</Button>
+                  <ChevronLeft className="rtl:rotate-180 w-5 h-5 me-2" />{t("common.back")}</Button>
                 <Button
                   onClick={nextStep}
-                  className="h-14 px-8 rounded-2xl bg-gradient-to-r from-ubuntu to-djembe hover:opacity-90 text-white font-semibold shadow-xl shadow-ubuntu/40"
-                >{t("onboardingFlow.continue")}<ChevronRight className="w-5 h-5 ml-2" />
+                  className="h-14 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-lg"
+                >{t("onboardingFlow.continue")}<ChevronRight className="rtl:rotate-180 w-5 h-5 ms-2" />
                 </Button>
               </div>
             )}
@@ -940,9 +940,7 @@ export default function Onboarding() {
               transition={{ delay: 0.1 }}
               className="text-center mb-6"
             >
-              <div className="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-br from-primary to-ubuntu flex items-center justify-center shadow-glow mb-4">
-                <Sparkles className="w-10 h-10 text-white" />
-              </div>
+              <img src={onboardingImage(imageLanguage, 'welcome', welcomeBandaImg)} alt={t("entry.title")} className="w-full aspect-[1.42] object-cover rounded-3xl mb-6" />
               <h2 className="text-2xl font-bold mb-2 text-foreground">{t("auth.createAccount")}</h2>
               <p className="text-muted-foreground text-sm max-w-sm mx-auto">{t("onboardingFlow.registerHint")}</p>
             </motion.div>
@@ -966,19 +964,19 @@ export default function Onboarding() {
               <div>
                 <label className="text-sm font-medium text-foreground mb-1.5 block">{t("onboardingFlow.name")}</label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <User className="absolute start-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <Input
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
                     placeholder={t("auth.displayNamePlaceholder")}
                     className={cn(
-                      "pl-10 pr-10 h-12 rounded-xl bg-secondary/50 border-0 focus:ring-2 focus:ring-primary",
+                      "ps-10 pe-10 h-12 rounded-xl bg-secondary/50 border-0 focus:ring-2 focus:ring-primary",
                       displayName.length >= 2 && "ring-2 ring-green-500"
                     )}
                     disabled={isRegistering}
                   />
                   {displayName.length >= 2 && (
-                    <Check className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500" />
+                    <Check className="absolute end-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500" />
                   )}
                 </div>
               </div>
@@ -987,7 +985,7 @@ export default function Onboarding() {
               <div>
                 <label className="text-sm font-medium text-foreground mb-1.5 block">{t("auth.username")}</label>
                 <div className="relative">
-                  <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <AtSign className="absolute start-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <Input
                     value={username}
                     onChange={(e) => {
@@ -996,14 +994,14 @@ export default function Onboarding() {
                     }}
                     placeholder={t("auth.usernamePlaceholder")}
                     className={cn(
-                      "pl-10 pr-10 h-12 rounded-xl bg-secondary/50 border-0 focus:ring-2 focus:ring-primary",
+                      "ps-10 pe-10 h-12 rounded-xl bg-secondary/50 border-0 focus:ring-2 focus:ring-primary",
                       usernameAvailable === true && "ring-2 ring-green-500",
                       usernameAvailable === false && "ring-2 ring-red-500"
                     )}
                     disabled={isRegistering}
                   />
                   {username.length >= 3 && (
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <div className="absolute end-3 top-1/2 -translate-y-1/2">
                       {isCheckingUsername ? (
                         <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />
                       ) : usernameAvailable === true ? (
@@ -1023,20 +1021,20 @@ export default function Onboarding() {
               <div>
                 <label className="text-sm font-medium text-foreground mb-1.5 block">{t("auth.email")}</label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Mail className="absolute start-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <Input
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     type="email"
                     placeholder="nome@exemplo.com"
                     className={cn(
-                      "pl-10 pr-10 h-12 rounded-xl bg-secondary/50 border-0 focus:ring-2 focus:ring-primary",
+                      "ps-10 pe-10 h-12 rounded-xl bg-secondary/50 border-0 focus:ring-2 focus:ring-primary",
                       isEmailValid && "ring-2 ring-green-500"
                     )}
                     disabled={isRegistering}
                   />
                   {isEmailValid && (
-                    <Check className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500" />
+                    <Check className="absolute end-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500" />
                   )}
                 </div>
               </div>
@@ -1045,20 +1043,20 @@ export default function Onboarding() {
               <div>
                 <label className="text-sm font-medium text-foreground mb-1.5 block">{t("auth.password")}</label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Lock className="absolute start-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <Input
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     type={showPassword ? 'text' : 'password'}
                     placeholder="••••••••"
-                    className="pl-10 pr-10 h-12 rounded-xl bg-secondary/50 border-0 focus:ring-2 focus:ring-primary"
+                    className="ps-10 pe-10 h-12 rounded-xl bg-secondary/50 border-0 focus:ring-2 focus:ring-primary"
                     disabled={isRegistering}
                   />
                   <button
                     type="button"
                     aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    className="absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                   >
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
@@ -1086,17 +1084,17 @@ export default function Onboarding() {
                 className="h-14 px-6 rounded-2xl border-2"
                 disabled={isRegistering}
               >
-                <ChevronLeft className="w-5 h-5 mr-2" />{t("common.back")}</Button>
+                <ChevronLeft className="rtl:rotate-180 w-5 h-5 me-2" />{t("common.back")}</Button>
               <Button
                 onClick={handleRegister}
                 disabled={!isRegisterFormValid || !accessCode.trim() || isRegistering}
-                className="h-14 px-8 rounded-2xl bg-gradient-to-r from-ubuntu to-djembe hover:opacity-90 text-white font-semibold shadow-xl shadow-ubuntu/40"
+                className="h-14 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-lg"
               >
                 {isRegistering ? (
                   <>
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />{t("auth.creatingAccount")}</>
+                    <Loader2 className="w-5 h-5 me-2 animate-spin" />{t("auth.creatingAccount")}</>
                 ) : (
-                  <>{t("onboardingFlow.join")}<Sparkles className="w-5 h-5 ml-2" />
+                  <>{t("onboardingFlow.join")}<Sparkles className="w-5 h-5 ms-2" />
                   </>
                 )}
               </Button>
@@ -1123,11 +1121,11 @@ export default function Onboarding() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background overflow-hidden">
+    <div dir={i18n.dir()} className="min-h-screen flex flex-col bg-background overflow-x-hidden">
       {/* Progress bar */}
       <div className="w-full h-1.5 bg-secondary/50">
         <motion.div
-          className="h-full bg-gradient-to-r from-primary via-ubuntu to-djembe"
+          className="h-full bg-primary"
           initial={{ width: 0 }}
           animate={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
           transition={{ duration: 0.5, ease: 'easeOut' }}
@@ -1148,7 +1146,7 @@ export default function Onboarding() {
           aria-label={t('common.back')}
           onClick={() => currentStep === 0 ? navigate('/welcome') : prevStep()}
         >
-          <ChevronLeft className="w-5 h-5" />
+          <ChevronLeft className="rtl:rotate-180 w-5 h-5" />
         </Button>
         <EntryLanguageSelector />
         <div className="bg-background">
@@ -1165,7 +1163,7 @@ export default function Onboarding() {
 
       {/* Content */}
       <div className="flex-1 flex items-center justify-center px-4 py-4 pb-8">
-        <div className="w-full max-w-md overflow-y-auto max-h-full">
+        <div className="w-full max-w-md">
           <AnimatePresence mode="wait">
             {renderStep()}
           </AnimatePresence>
