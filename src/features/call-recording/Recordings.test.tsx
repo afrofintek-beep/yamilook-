@@ -1,13 +1,13 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { Recordings } from './Recordings';
-const m=vi.hoisted(()=>({id:'owner',pending:vi.fn(),save:vi.fn(),download:vi.fn(),signed:vi.fn(),rows:vi.fn(),fetchFile:vi.fn(),export:vi.fn()}));
+const m=vi.hoisted(()=>({id:'owner',pending:vi.fn(),save:vi.fn(),download:vi.fn(),signed:vi.fn(),rows:vi.fn(),fetchFile:vi.fn(),export:vi.fn(),invoke:vi.fn()}));
 vi.mock('@/hooks/useAuth',()=>({useAuth:()=>({user:{id:m.id}})}));
 vi.mock('./pending',()=>({pendingRecordings:m.pending,downloadRecording:m.download,RECORDINGS_CHANGED:'recordings-test'}));
 vi.mock('./export',async()=>({...await vi.importActual('./export'),downloadFile:m.export}));
 vi.mock('./mp4',()=>({prepareMp4:vi.fn(async file=>file)}));
 vi.mock('./save',()=>({saveRecording:m.save}));
-vi.mock('@/integrations/supabase/client',()=>({supabase:{from:()=>({select:()=>({eq:()=>({eq:()=>({order:()=>({limit:m.rows})})})})}),storage:{from:()=>({createSignedUrl:m.signed,download:m.fetchFile})}}}));
+vi.mock('@/integrations/supabase/client',()=>({supabase:{functions:{invoke:m.invoke},from:()=>({select:()=>({eq:()=>({eq:()=>({order:()=>({limit:m.rows})})})})}),storage:{from:()=>({createSignedUrl:m.signed,download:m.fetchFile})}}}));
 afterEach(()=>{cleanup();vi.unstubAllGlobals();});
 beforeEach(()=>{vi.clearAllMocks();m.id='owner';m.pending.mockResolvedValue([]);m.rows.mockResolvedValue({data:[],error:null});m.signed.mockResolvedValue({data:{signedUrl:'https://example.test/private?token=short'},error:null});});
 it('lists saved recordings and obtains a short-lived private playback URL only on tap',async()=>{
@@ -72,4 +72,16 @@ it('retains the original when conversion fails without mislabelling it as MP4',a
  m.rows.mockResolvedValue({data:[{...savedRow,storage_path:'call/rec.webm'}],error:null});m.fetchFile.mockResolvedValue({data:new Blob(['video'],{type:'video/webm'}),error:null});
  render(<Recordings/>);fireEvent.click(await screen.findByRole('button',{name:'Descarregar gravação'}));
  fireEvent.click(await screen.findByRole('button',{name:'Guardar original'}));expect(m.export.mock.calls[0][0].name).toMatch(/\.webm$/);expect(m.export.mock.calls[0][0].type).toBe('video/webm');
+});
+
+it('requires confirmation before deleting a recording and refreshes after success',async()=>{
+ m.rows.mockResolvedValue({data:[savedRow],error:null});m.invoke.mockResolvedValue({data:{removed:1},error:null});
+ const confirm=vi.spyOn(window,'confirm').mockReturnValue(false);render(<Recordings/>);
+ fireEvent.click(await screen.findByRole('button',{name:'Apagar gravação'}));expect(m.invoke).not.toHaveBeenCalled();
+ confirm.mockReturnValue(true);fireEvent.click(screen.getByRole('button',{name:'Apagar gravação'}));
+ await waitFor(()=>expect(m.invoke).toHaveBeenCalledWith('recording-retention',{body:{id:'rec'}}));confirm.mockRestore();
+});
+it('shows the final 24 hour warning and exact expiry date',async()=>{
+ m.rows.mockResolvedValue({data:[{...savedRow,expires_at:new Date(Date.now()+3600000).toISOString()}],error:null});render(<Recordings/>);
+ expect(await screen.findByText(/apagada em menos de 24 horas/)).toBeVisible();expect(screen.getByText(/Remoção automática:/)).toBeVisible();
 });
