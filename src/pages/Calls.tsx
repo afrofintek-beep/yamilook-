@@ -1,3 +1,4 @@
+import { Recordings } from '@/features/call-recording/Recordings';
 import { lazy, Suspense, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useActiveCall } from '@/components/calls/ActiveCallProvider';
@@ -251,7 +252,9 @@ export default function Calls() {
           >
             {t('calls.scheduled')}
           </TabsTrigger>
+          <TabsTrigger value="recordings" className="flex-1">Gravações</TabsTrigger>
         </TabsList>
+        <TabsContent value="recordings" className="min-h-0 flex-1 overflow-y-auto mt-0"><Recordings key={user?.id} /></TabsContent>
 
         {/* All & Missed Calls */}
         <TabsContent value="all" className="min-h-0 flex-1 overflow-y-auto overscroll-contain mt-0">

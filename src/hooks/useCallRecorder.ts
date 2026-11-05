@@ -1,4 +1,5 @@
 import { useRef, useCallback, useEffect } from "react";
+import { getSharedAudioContext } from "@/lib/audio-context";
 import { CallRecordingInputs } from "@/lib/call-recording-inputs";
 
 // Records the whole call: composites every video tile onto a canvas and mixes
@@ -18,8 +19,8 @@ interface RecorderState {
   combined: MediaStream;
 }
 
-export function pickMimeType(): string | undefined {
-  const candidates = [
+export function pickMimeType(audioOnly = false): string | undefined {
+  const candidates = audioOnly ? ["audio/webm;codecs=opus", "audio/webm", "audio/mp4"] : [
     "video/webm;codecs=vp9,opus",
     "video/webm;codecs=vp8,opus",
     "video/webm",
@@ -36,8 +37,7 @@ export function useCallRecorder() {
   const stoppingRef = useRef<Promise<Blob | null> | null>(null);
 
   const start = useCallback((localStream: MediaStream | null, remoteStreams: Map<string, MediaStream>, localScreen: MediaStream | null = null, remoteScreens: Map<string, MediaStream> = new Map()): boolean => {
-    if (stateRef.current || stoppingRef.current) return false;
-    let allocatedAudio: AudioContext | null = null;
+    if (stateRef.current || stoppingRef.current || typeof MediaRecorder === "undefined") return false;
     let allocatedStream: MediaStream | null = null;
     let allocatedInputs: CallRecordingInputs | null = null;
     try {
@@ -53,10 +53,10 @@ export function useCallRecorder() {
       if (!ctx) return false;
 
       // audio mixing
-      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-      const audioCtx = new AudioCtx();
-      allocatedAudio = audioCtx;
-      void audioCtx.resume().catch(() => {});
+      // Reuse the context unlocked by the call/user tap. A fresh context created
+      // after asynchronous consent can remain suspended on iOS and record silence.
+      const audioCtx = getSharedAudioContext();
+      if (audioCtx.state !== "running") return false;
       const dest = audioCtx.createMediaStreamDestination();
       const inputs = new CallRecordingInputs(audioCtx, dest, remoteStreams.keys());
       allocatedInputs = inputs;
@@ -83,7 +83,7 @@ export function useCallRecorder() {
         if (st) st.raf = requestAnimationFrame(drawFrame);
       };
 
-      const canvasStream = canvas.captureStream(30);
+      const canvasStream = inputs.videos.length ? canvas.captureStream(30) : new MediaStream();
       const combined = new MediaStream([
         ...canvasStream.getVideoTracks(),
         ...dest.stream.getAudioTracks(),
@@ -91,7 +91,8 @@ export function useCallRecorder() {
 
       allocatedStream = combined;
       const chunks: BlobPart[] = [];
-      const recorder = new MediaRecorder(combined, pickMimeType() ? { mimeType: pickMimeType() } : undefined);
+      const mimeType = pickMimeType(combined.getVideoTracks().length === 0);
+      const recorder = new MediaRecorder(combined, mimeType ? { mimeType } : undefined);
       recorder.ondataavailable = (e) => { if (e.data && e.data.size > 0) chunks.push(e.data); };
       recorder.start(1000);
 
@@ -101,7 +102,6 @@ export function useCallRecorder() {
     } catch (e) {
       allocatedInputs?.dispose();
       allocatedStream?.getTracks().forEach(t => t.stop());
-      if (allocatedAudio) void allocatedAudio.close().catch(() => {});
       console.error("[rec] failed to start:", e);
       return false;
     }
@@ -122,7 +122,7 @@ export function useCallRecorder() {
         cancelAnimationFrame(st.raf);
         st.inputs.dispose();
         st.combined.getTracks().forEach(t => t.stop());
-        void st.audioCtx.close().catch(() => {});
+        st.dest.disconnect(); // Shared call AudioContext must remain running.
         const blob = st.chunks.length ? new Blob(st.chunks, { type: st.recorder.mimeType || (st.chunks[0] instanceof Blob ? st.chunks[0].type : "") }) : null;
         stateRef.current = null;
         resolve(blob);

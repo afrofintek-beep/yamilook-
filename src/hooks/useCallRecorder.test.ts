@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+vi.mock('@/lib/audio-context', () => ({ getSharedAudioContext: () => new AudioContext() }));
 import { pickMimeType } from './useCallRecorder';
 afterEach(() => vi.unstubAllGlobals());
 describe('call recording formats', () => {
@@ -18,15 +19,15 @@ afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 it.each([0, 3500])('preserves media delivered after %i ms and releases only recording-owned tracks', async (delay) => {
   const micStop=vi.fn(), videoStop=vi.fn(), mixStop=vi.fn(), close=vi.fn().mockResolvedValue(undefined), connect=vi.fn();
   class Stream {
-    constructor(public tracks: {kind:string;stop:()=>void}[]) {}
+    constructor(public tracks: {kind:string;stop:()=>void}[] = []) {}
     getTracks(){return this.tracks;}
     getAudioTracks(){return this.tracks.filter(t=>t.kind==='audio');}
     getVideoTracks(){return this.tracks.filter(t=>t.kind==='video');}
   }
   const mixed=new Stream([{kind:'audio',stop:mixStop}]);
   class Audio {
-    close=close; resume=vi.fn().mockResolvedValue(undefined);
-    createMediaStreamDestination(){return {stream:mixed};}
+    state='running'; close=close; resume=vi.fn().mockResolvedValue(undefined);
+    createMediaStreamDestination(){return {stream:mixed,disconnect:vi.fn()};}
     createMediaStreamSource(){return {connect, disconnect: vi.fn()};}
   }
   const stop=vi.fn();
@@ -54,6 +55,6 @@ it.each([0, 3500])('preserves media delivered after %i ms and releases only reco
   let blob: Blob|null=null;
   await act(async()=>{const first=result.current.stop();expect(result.current.stop()).toBe(first);blob=await first;});
   expect(blob!.type).toBe('video/mp4');expect(blob!.size).toBeGreaterThan(0);
-  expect(stop).toHaveBeenCalledOnce();expect(videoStop).toHaveBeenCalledOnce();expect(mixStop).toHaveBeenCalledOnce();expect(micStop).not.toHaveBeenCalled();expect(close).toHaveBeenCalledOnce();
+  expect(stop).toHaveBeenCalledOnce();expect(videoStop).not.toHaveBeenCalled();expect(mixStop).toHaveBeenCalledOnce();expect(micStop).not.toHaveBeenCalled();expect(close).not.toHaveBeenCalled();
   unmount();delete (HTMLCanvasElement.prototype as unknown as {captureStream?:unknown}).captureStream;
 });

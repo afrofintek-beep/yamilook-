@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { unlockCallAudio } from '@/lib/audio-context';
+import { saveRecording } from './save';
+import { downloadRecording, type PendingRecording } from './pending';
 import { useCallRecorder } from '@/hooks/useCallRecorder';
 import { recordingSession, type RecordingAction, type RecordingSession } from './api';
 
@@ -14,7 +16,7 @@ export function useRecordingSession(callId: string, userId: string | undefined,
   const [session, setSession] = useState<RecordingSession | null>(null);
   const [busy, setBusy] = useState(false);
   const [retryAvailable, setRetryAvailable] = useState(false);
-  const pendingFile = useRef<{ id: string; blob: Blob; uploaded: boolean; duration: number } | null>(null);
+  const pendingFile = useRef<PendingRecording | null>(null);
   const [error, setError] = useState('');
   const [duration, setDuration] = useState(0);
   const [localRecording, setLocalRecording] = useState(false);
@@ -27,6 +29,9 @@ export function useRecordingSession(callId: string, userId: string | undefined,
   const working = useRef(false);
   const revision = useRef(0);
   const mounted = useRef(true);
+  const finalize = useRef<() => Promise<void>>(async () => {});
+  const durationRef = useRef(0);
+  durationRef.current = duration;
 
   const discard = useCallback(async () => {
     capturing.current = false;
@@ -43,7 +48,7 @@ export function useRecordingSession(callId: string, userId: string | undefined,
     try {
       const next = await recordingSession(callId, action, id, consent);
       if (!mounted.current) {
-        if (action === 'request' && next) void recordingSession(callId, 'cancel', next.id).catch(() => {});
+        if ((action === 'request' || action === 'start') && next) void recordingSession(callId, 'cancel', next.id).catch(() => {});
         return;
       }
       if (action === 'request' && next) owned.current = next.id;
@@ -105,9 +110,13 @@ export function useRecordingSession(callId: string, userId: string | undefined,
         const next = await recordingSession(callId);
         if (!alive || version !== revision.current || working.current) return;
         if (capturing.current && (!next || next.id !== owned.current || !['recording', 'paused'].includes(next.status))) {
-          await discard();
-          owned.current = null;
-          setError('A gravação foi interrompida porque o pedido terminou ou os participantes mudaram.');
+          if (next?.id === owned.current && next.status === 'processing') {
+            void finalize.current();
+          } else {
+            await discard();
+            owned.current = null;
+            setError('A gravação foi interrompida porque o pedido terminou ou os participantes mudaram.');
+          }
         }
         setError(previous => previous === verificationError ? '' : previous);
         setSession(next);
@@ -115,10 +124,9 @@ export function useRecordingSession(callId: string, userId: string | undefined,
         if (alive && version === revision.current) {
           // Do not continue capturing when consent can no longer be verified.
           if (capturing.current) {
-            const id = owned.current;
-            owned.current = null;
-            await discard();
-            if (id) void recordingSession(callId, 'fail', id).catch(() => {});
+            // Stop immediately, retaining only the already consented media.
+            // Saving rechecks authorization after connectivity recovers.
+            void finalize.current();
           }
           setError(verificationError);
         }
@@ -137,10 +145,14 @@ export function useRecordingSession(callId: string, userId: string | undefined,
       window.removeEventListener('online', refresh);
       document.removeEventListener('visibilitychange', onVisible);
       const id = owned.current;
-      owned.current = null;
-      capturing.current = false;
-      void recorderRef.current.stop();
-      if (id) void recordingSession(callId, 'cancel', id).catch(() => {});
+      if (capturing.current) {
+        // The promise survives route teardown; persist before trying the network.
+        void finalize.current();
+      } else if (!working.current && !pendingFile.current) {
+        owned.current = null;
+        void recorderRef.current.stop();
+        if (id) void recordingSession(callId, 'cancel', id).catch(() => {});
+      }
     };
   }, [callId, userId, discard]);
 
@@ -175,40 +187,15 @@ export function useRecordingSession(callId: string, userId: string | undefined,
     revision.current++;
     setBusy(true);
     setError('');
-    let stage = 'preparar';
     try {
-      const state = await recordingSession(callId);
-      if (state?.id !== file.id) throw new Error('recording_changed');
-      if (state.status === 'recording' || state.status === 'paused') {
-        await recordingSession(callId, 'stop', file.id);
-      } else if (state.status !== 'processing' && state.status !== 'completed') {
-        throw new Error('recording_closed');
-      }
-      const path = `${callId}/${file.id}.${file.blob.type.includes('mp4') ? 'mp4' : 'webm'}`;
-      if (state.status !== 'completed') {
-        stage = 'enviar';
-        if (!file.uploaded) {
-          const { error } = await supabase.storage.from('call-recordings').upload(path, file.blob,
-            { contentType: file.blob.type || 'video/webm', upsert: false });
-          if (error) throw error;
-          file.uploaded = true;
-        }
-        stage = 'confirmar';
-        const next = await recordingSession(callId, 'complete', file.id, undefined, {
-          storage_path: path, file_size_bytes: file.blob.size, duration_seconds: file.duration,
-        });
-        if (mounted.current) setSession(next);
-      } else if (mounted.current) setSession(state);
+      const next = await saveRecording(file);
       pendingFile.current = null;
       owned.current = null;
-      setRetryAvailable(false);
+      if (mounted.current) { setSession(next); setRetryAvailable(false); }
     } catch (cause) {
-      // Keep media in this tab; never log tokens, participant data or media.
-      const code = typeof cause === 'object' && cause && 'code' in cause ? String(cause.code) : 'unknown';
-      console.warn('[recording-save]', { stage, code });
       if (mounted.current) {
         setRetryAvailable(true);
-        setError(`Não foi possível ${stage} a gravação. O ficheiro está disponível nesta página. Tente novamente ou descarregue antes de sair.`);
+        setError(cause instanceof Error ? cause.message : 'Não foi possível guardar a gravação.');
       }
     } finally {
       working.current = false;
@@ -217,18 +204,12 @@ export function useRecordingSession(callId: string, userId: string | undefined,
   };
 
   const download = () => {
-    const file = pendingFile.current;
-    if (!file) return;
-    const url = URL.createObjectURL(file.blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `gravacao-${file.id}.${file.blob.type.includes('mp4') ? 'mp4' : 'webm'}`;
-    link.click();
-    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    if (pendingFile.current) downloadRecording(pendingFile.current);
   };
 
   const stop = async () => {
-    if (working.current || !session || owned.current !== session.id || !capturing.current) return;
+    if (!owned.current || !userId || !capturing.current) return;
+    const id = owned.current;
     working.current = true;
     revision.current++;
     setBusy(true);
@@ -237,11 +218,11 @@ export function useRecordingSession(callId: string, userId: string | undefined,
     setLocalRecording(false);
     const blob = await recorderRef.current.stop();
     if (blob?.size) {
-      pendingFile.current = { id: session.id, blob, uploaded: false, duration };
+      pendingFile.current = { id, callId, ownerId: userId, blob, duration: durationRef.current, createdAt: Date.now() };
       working.current = false;
       await save();
     } else {
-      void recordingSession(callId, 'fail', session.id).catch(() => {});
+      void recordingSession(callId, 'fail', id).catch(() => {});
       owned.current = null;
       working.current = false;
       if (mounted.current) {
@@ -251,8 +232,10 @@ export function useRecordingSession(callId: string, userId: string | undefined,
     }
   };
 
+  finalize.current = stop;
+
   return { session, busy, error, duration, localRecording, retryAvailable, retrySave: save, download, hasActiveSession: !!active(session),
-    request: () => run('request'), respond: (answer: boolean) => run('respond', session?.id, answer),
+    request: () => { unlockCallAudio(); return run('request'); }, respond: (answer: boolean) => run('respond', session?.id, answer),
     cancel: () => run('cancel', session?.id),
     togglePause: () => run(session?.status === 'paused' ? 'resume' : 'pause', session?.id), stop };
 }
