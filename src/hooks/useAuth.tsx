@@ -1,3 +1,4 @@
+import { recoverySession } from '@/lib/recovery-session';
 import { clearListCache } from '@/lib/list-cache';
 import { getYamilookPublicUrl } from '@/lib/public-site';
 import { clearLegacyPrivateCache } from '@/lib/private-cache';
@@ -53,6 +54,7 @@ interface AuthContextType {
   profile: Profile | null;
   loading: boolean;
   profileError: boolean;
+  recoveringPassword: boolean;
   signUp: (email: string, password: string, metadata?: { display_name?: string; username?: string; ref?: string; access_code?: string }) => Promise<{ error: AuthError | null }>;
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signInWithSocial: (provider: SocialProvider) => Promise<{ error: AuthError | null }>;
@@ -72,6 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [profileError, setProfileError] = useState(false);
+  const [recoveringPassword, setRecoveringPassword] = useState(false);
   const initialSessionResolved = useRef(false);
 
   const fetchProfile = async (userId: string) => {
@@ -155,6 +158,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Only a change of account starts a fresh profile read. Refresh events for
     // the same account must not reset the screen or race with a pending fetch.
     const applySession = (nextSession: Session | null) => {
+      setRecoveringPassword(recoverySession.matches(nextSession));
       const previousUserId = sessionRef.current?.user.id;
       const nextUserId = nextSession?.user.id;
       if (!nextUserId || (previousUserId && previousUserId !== nextUserId)) clearListCache();
@@ -454,6 +458,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     profile,
     loading,
     profileError,
+    recoveringPassword,
     signUp,
     signInWithSocial,
     signIn,

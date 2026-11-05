@@ -1,0 +1,32 @@
+import { vi, it, expect, afterEach } from 'vitest';
+import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import ResetPassword from '@/pages/ResetPassword';
+import { recoverySession } from '@/lib/recovery-session';
+const m=vi.hoisted(()=>({getSession:vi.fn(),getUser:vi.fn(),updateUser:vi.fn(),signOut:vi.fn(),navigate:vi.fn()}));
+vi.mock('@/integrations/supabase/client',()=>({supabase:{auth:m}}));
+vi.mock('react-router-dom',async()=>({...await vi.importActual('react-router-dom'),useNavigate:()=>m.navigate}));
+vi.mock('@/components/auth/AuthLayout',()=>({AuthLayout:({children}:any)=><div>{children}</div>}));
+vi.mock('sonner',()=>({toast:{error:vi.fn(),success:vi.fn()}}));
+afterEach(()=>{cleanup();recoverySession.clear();vi.clearAllMocks()});
+it('accepts a verified recovery session after fragment removal, updates then signs out',async()=>{
+ const session:any={access_token:`e30.${btoa(JSON.stringify({session_id:'recovery'}))}.synthetic`,user:{id:'test'}};
+ recoverySession.begin(session);
+ m.getSession.mockResolvedValue({data:{session}});m.getUser.mockResolvedValue({data:{user:session.user},error:null});
+ m.updateUser.mockResolvedValue({error:null});m.signOut.mockResolvedValue({error:null});
+ render(<MemoryRouter><ResetPassword/></MemoryRouter>);
+ fireEvent.change(await screen.findByPlaceholderText('Nova palavra-passe'),{target:{value:'AuditPass123'}});
+ fireEvent.change(screen.getByPlaceholderText('Confirmar palavra-passe'),{target:{value:'AuditPass123'}});
+ const button=screen.getByRole('button',{name:'Atualizar palavra-passe'});
+ await waitFor(()=>expect(button).toBeEnabled());fireEvent.click(button);
+ await waitFor(()=>expect(m.signOut).toHaveBeenCalledWith({scope:'local'}));
+ expect(m.updateUser).toHaveBeenCalledWith({password:'AuditPass123'});
+ expect(recoverySession.matches(session)).toBe(false);
+ expect(m.navigate).not.toHaveBeenCalledWith('/forgot-password',{replace:true});
+});
+it('rejects an unverified ordinary session',async()=>{
+ m.getSession.mockResolvedValue({data:{session:null}});m.getUser.mockResolvedValue({data:{user:null},error:new Error('invalid')});
+ render(<MemoryRouter><ResetPassword/></MemoryRouter>);
+ await waitFor(()=>expect(m.navigate).toHaveBeenCalledWith('/forgot-password',{replace:true}));
+ expect(m.updateUser).not.toHaveBeenCalled();
+});

@@ -1,3 +1,4 @@
+import { recoverySession } from '@/lib/recovery-session';
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -27,6 +28,7 @@ export default function ResetPassword() {
   });
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [verified, setVerified] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -50,21 +52,34 @@ export default function ResetPassword() {
   ];
 
   useEffect(() => {
-    // Check if we have an access token in the URL (from email link)
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    const accessToken = hashParams.get('access_token');
-    const type = hashParams.get('type');
-    
-    if (type !== 'recovery' && !accessToken) {
-      // No valid recovery session, redirect to forgot password
-      toast.error(t('auth.invalidResetLink'));
-      navigate('/forgot-password');
-    }
+    let cancelled = false;
+    void (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      const { data, error } = await supabase.auth.getUser();
+      if (cancelled) return;
+      if (error || !data.user || data.user.id !== session?.user.id || !recoverySession.matches(session)) {
+        toast.error(t('auth.invalidResetLink'));
+        navigate('/forgot-password', { replace: true });
+        return;
+      }
+      setVerified(true);
+    })().catch(() => {
+      if (!cancelled) { toast.error(t('publicAuth.retry')); navigate('/forgot-password', { replace: true }); }
+    });
+    return () => { cancelled = true; };
   }, [navigate, t]);
 
   const onSubmit = async (data: ResetPasswordFormData) => {
+    if (!verified) return;
     setIsLoading(true);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!recoverySession.matches(session)) {
+        setVerified(false);
+        toast.error(t("auth.invalidResetLink"));
+        navigate("/forgot-password", { replace: true });
+        return;
+      }
       const { error } = await supabase.auth.updateUser({
         password: data.password,
       });
@@ -72,6 +87,9 @@ export default function ResetPassword() {
       if (error) {
         toast.error(t('publicAuth.retry'));
       } else {
+        const { error: logoutError } = await supabase.auth.signOut({ scope: "local" });
+        if (logoutError) { toast.error(t("publicAuth.retry")); return; }
+        recoverySession.clear();
         triggerSuccessConfetti();
         setIsSuccess(true);
         toast.success(t('auth.passwordUpdated'));
@@ -116,6 +134,8 @@ export default function ResetPassword() {
       </AuthLayout>
     );
   }
+
+  if (!verified) return <div role="status">{t("auth.updating")}</div>;
 
   return (
     <AuthLayout
