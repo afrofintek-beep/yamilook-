@@ -21,6 +21,8 @@ interface PublicProfile {
   avatar_url: string | null;
   is_online?: boolean | null;
   last_seen?: string | null;
+  show_online_status?: boolean | null;
+  show_last_seen?: boolean | null;
 }
 
 function messageProfile(profile?: PublicProfile): Message['sender_profile'] {
@@ -91,6 +93,8 @@ export interface Conversation {
       avatar_url: string | null;
       is_online: boolean;
       last_seen: string | null;
+      show_online_status?: boolean | null;
+      show_last_seen?: boolean | null;
     };
   }[];
   last_message?: Message;
@@ -118,18 +122,70 @@ export function useConversations() {
   // callbacks ... after subscribe()").
   const instanceIdRef = useRef(Math.random().toString(36).slice(2));
 
+  const presenceIdsKey = JSON.stringify([...new Set(conversations.flatMap(conversation =>
+    (conversation.participants ?? []).flatMap(participant =>
+      participant.profile?.id && participant.user_id !== userId ? [participant.profile.id] : []),
+  ))].sort());
+
   useEffect(() => {
-    if (!userId) return;
+    const ids: string[] = JSON.parse(presenceIdsKey);
+    if (!userId || !ids.length) return;
+    let disposed = false;
+    let inFlight = false;
+    let revision = 0;
+    const apply = (profiles: PublicProfile[]) => {
+      const byId = new Map(profiles.map(profile => [profile.id, profile]));
+      setConversations(previous => previous.map(conversation => ({ ...conversation,
+        participants: (conversation.participants ?? []).map(participant => {
+          const profile = byId.get(participant.profile?.id);
+          if (!profile || !participant.profile) return participant;
+          return { ...participant, profile: { ...participant.profile,
+            is_online: profile.show_online_status !== false && (profile.is_online ?? false),
+            last_seen: profile.show_last_seen === false ? null : profile.last_seen ?? null,
+            show_online_status: profile.show_online_status,
+            show_last_seen: profile.show_last_seen,
+          } };
+        }),
+      })));
+    };
+    // Mobile browsers can suspend Realtime while backgrounded. Reconcile only
+    // the participant profiles, without reloading messages or the entire inbox.
+    const refreshPresence = async () => {
+      if (disposed || inFlight || document.hidden || !navigator.onLine) return;
+      inFlight = true;
+      const startedAt = revision;
+      try {
+        const { data, error } = await fetchPublicProfilesBatched(ids);
+        if (!disposed && !error && data && startedAt === revision) {
+          const byId = new Map(data.map(profile => [profile.id, profile]));
+          apply(ids.map(id => byId.get(id) ?? { id, display_name: null, avatar_url: null, is_online: false, last_seen: null }));
+        }
+      } catch (error) {
+        console.error('Error refreshing conversation presence:', error);
+      } finally { inFlight = false; }
+    };
+    const refresh = () => { void refreshPresence(); };
     const channel = supabase.channel(`conversation-presence-${crypto.randomUUID()}`)
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profile_presence' }, (payload) => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profile_presence' }, (payload) => {
         const profile = payload.new as PublicProfile;
-        setConversations(previous => previous.map(conversation => ({ ...conversation,
-          participants: (conversation.participants ?? []).map(participant => participant.profile?.id === profile.id
-            ? { ...participant, profile: { ...participant.profile, is_online: profile.is_online ?? false, last_seen: profile.last_seen ?? null } } : participant),
-        })));
-      }).subscribe();
-    return () => { void supabase.removeChannel(channel); };
-  }, [userId]);
+        if (disposed || !profile.id || !ids.includes(profile.id)) return;
+        ++revision; // A slower snapshot must not overwrite a newer privacy event.
+        apply([profile]);
+      }).subscribe(status => { if (status === 'SUBSCRIBED') refresh(); });
+    refresh();
+    const timer = window.setInterval(refresh, 30_000);
+    document.addEventListener('visibilitychange', refresh);
+    window.addEventListener('online', refresh);
+    window.addEventListener('pageshow', refresh);
+    return () => {
+      disposed = true;
+      window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', refresh);
+      window.removeEventListener('online', refresh);
+      window.removeEventListener('pageshow', refresh);
+      void supabase.removeChannel(channel);
+    };
+  }, [userId, presenceIdsKey, setConversations]);
 
   const fetchConversations = useCallback(async () => {
     if (!userId) { setConversations([]); setLoading(false); return; }

@@ -37,30 +37,44 @@ export function useOnlineStatus() {
     if (!userId) return;
     let disposed = false;
     let initialized = false;
+    let initializing = false;
     let wantsOnline = false;
     const sync = () => {
-      if (!disposed && initialized) void persistStatus(wantsOnline && !document.hidden && navigator.onLine);
+      if (disposed) return;
+      if (!initialized) {
+        if (!document.hidden && navigator.onLine) void init();
+        return;
+      }
+      void persistStatus(wantsOnline && !document.hidden && navigator.onLine);
     };
     const init = async () => {
-      const { data, error } = await supabase.from('profiles').select('show_online_status').eq('id', userId).single();
-      if (disposed) return;
-      wantsOnline = !error && !!data && data.show_online_status !== false;
-      initialized = true;
-      sync();
+      if (disposed || initializing) return;
+      initializing = true;
+      try {
+        const { data, error } = await supabase.from('profiles').select('show_online_status').eq('id', userId).single();
+        // A transient failed read is unknown, not a permanent privacy opt-out.
+        // A newer Realtime preference also takes priority over this snapshot.
+        if (disposed || initialized || error || !data) return;
+        wantsOnline = data.show_online_status !== false;
+        initialized = true;
+        sync();
+      } catch (error) {
+        logger.error('Failed to initialize presence', 'presence', error);
+      } finally { initializing = false; }
     };
-    void init().catch((error) => logger.error('Failed to initialize presence', 'presence', error));
+    sync();
     const channel = supabase.channel(`presence-preference-${userId}-${clientId.current}`)
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${userId}` }, (payload) => {
         const preference = (payload.new as Tables<'profiles'>).show_online_status;
         // Heartbeats also update profiles: only react when the preference changes.
-        if (typeof preference === 'boolean' && preference !== wantsOnline) {
+        if (typeof preference === 'boolean' && (!initialized || preference !== wantsOnline)) {
           wantsOnline = preference;
           initialized = true;
           sync();
         }
       }).subscribe();
     const timer = window.setInterval(() => {
-      if (!document.hidden && navigator.onLine && wantsOnline) sync();
+      if (!document.hidden && navigator.onLine && (!initialized || wantsOnline)) sync();
     }, 30_000);
     const hide = () => { void persistStatus(false); };
     document.addEventListener('visibilitychange', sync);

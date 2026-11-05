@@ -51,3 +51,32 @@ describe('online lease renewal', () => {
     expect(rpc).toHaveBeenLastCalledWith('renew_online_presence', { p_client_id: clientId, p_active: false });
   });
 });
+
+it('retries a failed initial privacy read instead of staying offline permanently', async () => {
+  single.mockResolvedValueOnce({ data: null, error: { message: 'Temporary connection failure' } });
+  renderHook(() => useOnlineStatus()); await flush();
+  expect(rpc).not.toHaveBeenCalled();
+  await act(async () => vi.advanceTimersByTime(30_000)); await flush();
+  expect(single).toHaveBeenCalledTimes(2);
+  expect(rpc).toHaveBeenLastCalledWith('renew_online_presence', expect.objectContaining({ p_active: true }));
+});
+
+it('retries unknown privacy when a connection returns and honours the recovered preference', async () => {
+  single.mockResolvedValueOnce({ data: null, error: { message: 'Offline' } });
+  renderHook(() => useOnlineStatus()); await flush();
+  single.mockResolvedValue({ data: { show_online_status: false }, error: null });
+  act(() => window.dispatchEvent(new Event('online'))); await flush();
+  expect(rpc).toHaveBeenLastCalledWith('renew_online_presence', expect.objectContaining({ p_active: false }));
+  expect(rpc.mock.calls.some(([, args]) => args.p_active)).toBe(false);
+});
+
+it('does not let an older privacy read override a realtime opt-out', async () => {
+  let resolve!: (value: unknown) => void;
+  single.mockImplementationOnce(() => new Promise(done => { resolve = done; }));
+  renderHook(() => useOnlineStatus()); await flush();
+  act(() => channel.on.mock.calls[0][2]({ new: { show_online_status: false } }));
+  await flush();
+  await act(async () => resolve({ data: { show_online_status: true }, error: null }));
+  await flush();
+  expect(rpc.mock.calls.every(([, args]) => args.p_active === false)).toBe(true);
+});
