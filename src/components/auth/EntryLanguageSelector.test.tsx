@@ -17,7 +17,7 @@ describe('public language selection', () => {
     expect(screen.getByRole('combobox')).toHaveValue('pt');
     expect(localStorage.setItem).toHaveBeenCalledWith('i18nextLng', 'pt-banda');
     expect(screen.getByRole('link', { name: i18n.t('entry.createAccount') })).toHaveAttribute('href', '/onboarding?invite=qr-one-use');
-    fireEvent.click(screen.getByRole('radio', { name: 'Português formal' }));
+    fireEvent.click(screen.getByRole('radio', { name: 'Linguagem formal' }));
     await waitFor(() => expect(i18n.language).toBe('pt'));
     fireEvent.change(screen.getByRole('combobox'), { target: { value: 'en' } });
     await waitFor(() => expect(screen.queryByRole('radio')).not.toBeInTheDocument());
