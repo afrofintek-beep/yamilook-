@@ -215,7 +215,8 @@ const queryClient = new QueryClient({
 });
 
 function ProtectedRoute({ children, skipOnboardingCheck }: { children: React.ReactNode; skipOnboardingCheck?: boolean }) {
-  const { user, profile, loading, profileError, refreshProfile, signOut } = useAuth();
+  const { user, profile, loading, profileError, refreshProfile, signOut, recoveringPassword } = useAuth();
+  if (recoveringPassword) return <Navigate to="/reset-password" replace />;
   
   if (loading) {
     return <PageLoader />;
@@ -255,8 +256,9 @@ function ProtectedRoute({ children, skipOnboardingCheck }: { children: React.Rea
 }
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, loading, recoveringPassword } = useAuth();
   const location = useLocation();
+  if (recoveringPassword) return <Navigate to="/reset-password" replace />;
   
   if (loading) {
     return <PageLoader />;
@@ -370,7 +372,7 @@ function AnimatedRoutes() {
           <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
           <Route path="/welcome" element={<PublicRoute><Welcome /></PublicRoute>} />
           <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
-          <Route path="/reset-password" element={<PublicRoute><ResetPassword /></PublicRoute>} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           {/* Open to everyone (authed or not) — ecosystem deep-link target */}
           <Route path="/u/:username" element={<PublicProfile />} />
           <Route path="*" element={<NotFound />} />
