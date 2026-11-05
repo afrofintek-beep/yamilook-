@@ -5,7 +5,8 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { MentionInput } from '@/components/feed/MentionInput';
+import { MentionText } from '@/components/feed/MentionText';
 import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -256,11 +257,11 @@ export function RitmosCommentsSheet({ open, onOpenChange, ritmo }: RitmosComment
         {/* Input area */}
         <div className="absolute bottom-0 left-0 right-0 p-4 bg-card border-t border-border safe-bottom">
           <div className="flex items-center gap-2">
-            <Input
+            <MentionInput
               placeholder="Add a comment..."
               value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+              onValueChange={setNewComment}
+              onSubmit={handleSubmit}
               disabled={!user || submitting}
               className="flex-1 rounded-full"
             />
@@ -324,7 +325,7 @@ function CommentItem({
             {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
           </span>
         </div>
-        <p className="text-sm text-foreground">{comment.content}</p>
+        <p className="text-sm text-foreground"><MentionText text={comment.content} /></p>
 
         {/* Reactions display */}
         {totalReactions > 0 && (

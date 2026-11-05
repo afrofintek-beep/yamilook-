@@ -5,7 +5,8 @@ import { formatDistanceToNow } from 'date-fns';
 import { MoreHorizontal, Trash2, Send } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { MentionInput } from '@/components/feed/MentionInput';
+import { MentionText } from '@/components/feed/MentionText';
 import {
   Sheet,
   SheetContent,
@@ -226,7 +227,7 @@ export function CommentsSheet({ open, onOpenChange, post }: CommentsSheetProps) 
             onClick={() => onOpenChange(false)}
             className="block w-fit font-semibold text-sm hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >{comment.user.display_name || comment.user.username}</Link>
-          <p className="text-sm">{comment.content}</p>
+          <p className="text-sm"><MentionText text={comment.content} /></p>
         </div>
         <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
           <span>{formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}</span>
@@ -329,11 +330,11 @@ export function CommentsSheet({ open, onOpenChange, post }: CommentsSheetProps) 
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 flex gap-2">
-              <Input
+              <MentionInput
                 placeholder="Write a comment..."
                 value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSubmit()}
+                onValueChange={setNewComment}
+                onSubmit={handleSubmit}
                 className="flex-1 rounded-full bg-secondary/50 border-none"
               />
               <Button 
