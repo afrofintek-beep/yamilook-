@@ -67,6 +67,28 @@ export default function Notifications() {
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
+      // Mentions are derived from comments visible under the recipient's RLS.
+      const { data: ownProfile } = await supabase.from('public_profiles')
+        .select('username').eq('id', user.id).maybeSingle();
+      if (ownProfile?.username) {
+        const handle = ownProfile.username;
+        const pattern = '%' + '@' + handle.replace(/[_%\\]/g, '\\$&') + '%';
+        const { data: mentions } = await supabase.from('post_comments')
+          .select('id,content,created_at,post_id,user_id')
+          .ilike('content', pattern).neq('user_id', user.id)
+          .gte('created_at', sevenDaysAgo.toISOString())
+          .order('created_at', { ascending: false }).limit(50);
+        for (const comment of mentions || []) {
+          const handles = [...comment.content.matchAll(/(?:^|[\s(])@([\p{L}\p{N}_][\p{L}\p{N}_.-]*)/gu)]
+            .map(m => m[1].replace(/[.-]+$/, '').toLowerCase());
+          if (!handles.includes(handle.toLowerCase())) continue;
+          allNotifications.push({ id: `mention_${comment.id}`, type: 'mention',
+            title: '@' + handle, message: 'mencionou-te num comentário',
+            created_at: comment.created_at, read: false,
+            action_data: { post_id: comment.post_id, sender_id: comment.user_id } });
+        }
+      }
+
       // Fetch pending friend requests (received)
       const { data: friendRequests, error: frError } = await supabase
         .from('friend_requests')
@@ -486,6 +508,7 @@ export default function Notifications() {
                   
                   switch (notification.type) {
                     case 'post_reaction':
+                    case 'mention':
                     case 'comment':
                       if (notification.action_data?.post_id) {
                         navigate(`/discover?post=${notification.action_data.post_id}`);

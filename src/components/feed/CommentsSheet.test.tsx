@@ -4,8 +4,8 @@ import { CommentsSheet } from './CommentsSheet';
 import { mockSupabaseClient, resetMocks } from '@/test/mocks/supabase';
 
 // Mock the supabase client
-vi.mock('@/integrations/supabase/client', () => ({
-  supabase: mockSupabaseClient,
+vi.mock('@/integrations/supabase/client', async () => ({
+  supabase: (await import('@/test/mocks/supabase')).mockSupabaseClient,
 }));
 
 // Mock comments data
