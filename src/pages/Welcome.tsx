@@ -1,3 +1,4 @@
+import { WelcomeCarousel } from '@/components/auth/WelcomeCarousel';
 import { normalizeAppLanguage } from '@/i18n/afroloc-languages';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -10,10 +11,11 @@ export default function Welcome() {
   const isPortuguese = ['pt', 'pt-banda'].includes(normalizeAppLanguage(i18n.language));
   const { search } = useLocation();
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center bg-background px-5 py-8 gap-5">
-      <YamilookLogo size="xl" showTagline={false} animate={false} />
+    <main className="min-h-screen flex flex-col items-center justify-center bg-background px-5 py-6 gap-3">
+      <YamilookLogo size="lg" showTagline={false} animate={false} />
       <h1 className="text-2xl font-semibold text-center">{isPortuguese ? t('welcome.title') : t('entry.title')} 👋🏾</h1>
       <p className="text-muted-foreground text-center">{isPortuguese ? t('welcome.subtitle') : t('entry.subtitle')}</p>
+      <WelcomeCarousel />
       <EntryLanguageSelector />
       <div className="w-full max-w-sm space-y-3">
         <Button asChild size="lg" className="w-full min-h-14"><Link to={`/onboarding${search}`}>{t('entry.createAccount')}</Link></Button>

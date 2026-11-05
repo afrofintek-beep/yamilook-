@@ -1,0 +1,105 @@
+{
+  "pt": {
+    "src": "/welcome/pt-ae6904e9.webp",
+    "order": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  "ar": {
+    "src": "/welcome/ar-648fc179.webp",
+    "order": [
+      2,
+      1,
+      3,
+      4,
+      0
+    ],
+    "overrides": {
+      "2": "/welcome/morocco-20bc8984.webp"
+    }
+  },
+  "fr": {
+    "src": "/welcome/fr-8b8d2e3a.webp",
+    "order": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  "en": {
+    "src": "/welcome/en-afcc411f.webp",
+    "order": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  "am": {
+    "src": "/welcome/am-9674c9af.webp",
+    "order": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  "sw": {
+    "src": "/welcome/sw-b3c2de5b.webp",
+    "order": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  "ln": {
+    "src": "/welcome/ln-117f5402.webp",
+    "order": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  "yo": {
+    "src": "/welcome/yo-00766334.webp",
+    "order": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  "sn": {
+    "src": "/welcome/sn-75b4d421.webp",
+    "order": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  "zu": {
+    "src": "/welcome/zu-d31713cb.webp",
+    "order": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ]
+  }
+}
