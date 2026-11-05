@@ -246,6 +246,7 @@ export function RitmosCommentsSheet({ open, onOpenChange, ritmo }: RitmosComment
                   <CommentItem
                     key={comment.id}
                     comment={comment}
+                    onNavigate={() => onOpenChange(false)}
                     onReact={(type) => handleReactToComment(comment.id, type)}
                   />
                 ))}
@@ -283,9 +284,11 @@ export function RitmosCommentsSheet({ open, onOpenChange, ritmo }: RitmosComment
 // Comment item component
 function CommentItem({ 
   comment, 
-  onReact 
+  onReact,
+  onNavigate
 }: { 
-  comment: Comment; 
+  comment: Comment;
+  onNavigate: () => void;
   onReact: (type: AfricanReactionType) => void;
 }) {
   const [showPicker, setShowPicker] = useState(false);
@@ -325,7 +328,7 @@ function CommentItem({
             {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
           </span>
         </div>
-        <p className="text-sm text-foreground"><MentionText text={comment.content} /></p>
+        <p className="text-sm text-foreground"><MentionText text={comment.content} onNavigate={onNavigate} /></p>
 
         {/* Reactions display */}
         {totalReactions > 0 && (

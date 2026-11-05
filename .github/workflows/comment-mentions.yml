@@ -1,0 +1,33 @@
+name: Comment mention privacy
+on:
+  pull_request:
+    paths:
+      - 'src/components/feed/CommentsSheet*'
+      - 'src/components/feed/Mention*'
+      - 'src/components/ritmos/RitmosCommentsSheet.tsx'
+      - 'src/lib/comment-mention*'
+      - 'src/lib/notification-post*'
+      - 'src/pages/Notifications.tsx'
+      - 'src/pages/Discover.tsx'
+      - 'supabase/migrations/*comment_mentions_privacy.sql'
+      - 'scripts/test-comment-privacy.mjs'
+      - '.github/workflows/comment-mentions.yml'
+permissions:
+  contents: read
+jobs:
+  mentions:
+    runs-on: ubuntu-24.04
+    env:
+      VITE_SUPABASE_URL: http://127.0.0.1:54321
+      VITE_SUPABASE_PUBLISHABLE_KEY: test-only
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: node scripts/test-comment-privacy.mjs
+      - run: npm test -- src/lib/comment-mentions.test.ts src/lib/comment-mention-notifications.test.ts src/lib/notification-post.test.ts src/components/feed/MentionInput.test.tsx src/components/feed/CommentsSheet.test.tsx src/pages/PublicProfile.test.tsx
+      - run: npx tsc --noEmit -p tsconfig.app.json
+      - run: npm run build

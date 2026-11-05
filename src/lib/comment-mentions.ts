@@ -1,3 +1,8 @@
+export function mentionedHandles(text: string) {
+  return [...text.matchAll(/(?:^|[\s(])@([\p{L}\p{N}_][\p{L}\p{N}_.-]*)/gu)]
+    .map(match => match[1].replace(/[.-]+$/, '').toLowerCase());
+}
+
 export function activeMention(value: string, cursor: number) {
   const match = /(?:^|[\s(])@([\p{L}\p{N}_.-]*)$/u.exec(value.slice(0, cursor));
   return match ? { query: match[1], start: cursor - match[1].length - 1 } : null;

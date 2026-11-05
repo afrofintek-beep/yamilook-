@@ -162,6 +162,27 @@ describe('CommentsSheet', () => {
     expect(screen.queryByText(/Comments/)).not.toBeInTheDocument();
   });
 
+  it('removes a failed optimistic mention and restores its draft', async () => {
+    mockAddComment.mockResolvedValueOnce(null);
+    render(<CommentsSheet {...defaultProps} />);
+    await screen.findByText('This is a great post!');
+    const input = screen.getByRole('combobox');
+    fireEvent.change(input, { target: { value: 'Hello @recipient' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    await screen.findByRole('alert');
+    expect(input).toHaveValue('Hello @recipient');
+    expect(screen.queryByRole('link', { name: '@recipient' })).not.toBeInTheDocument();
+  });
+
+  it('closes the comments sheet when opening a mentioned profile', async () => {
+    mockGetComments.mockResolvedValueOnce([{ ...mockComments[0], content: 'Hello @recipient' }]);
+    render(<CommentsSheet {...defaultProps} />);
+    const link = await screen.findByRole('link', { name: '@recipient' });
+    expect(link).toHaveAttribute('href', '/u/recipient');
+    fireEvent.click(link);
+    expect(defaultProps.onOpenChange).toHaveBeenCalledWith(false);
+  });
+
   it('fetches comments when opened', async () => {
     render(<CommentsSheet {...defaultProps} />);
     

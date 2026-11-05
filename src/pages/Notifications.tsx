@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -24,6 +24,8 @@ import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { AFRICAN_REACTIONS } from '@/lib/reactions';
+
+import { fetchCommentMentions } from '@/lib/comment-mention-notifications';
 
 interface Notification {
   id: string;
@@ -52,14 +54,19 @@ export default function Notifications() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
 
+  const requestVersion = useRef(0);
+
   useEffect(() => {
+    setNotifications([]);
     if (user) {
       fetchNotifications();
     }
-  }, [user]);
+    return () => { requestVersion.current += 1; };
+  }, [user?.id]);
 
   const fetchNotifications = async () => {
     if (!user) return;
+    const version = ++requestVersion.current;
     setLoading(true);
 
     try {
@@ -67,27 +74,7 @@ export default function Notifications() {
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-      // Mentions are derived from comments visible under the recipient's RLS.
-      const { data: ownProfile } = await supabase.from('public_profiles')
-        .select('username').eq('id', user.id).maybeSingle();
-      if (ownProfile?.username) {
-        const handle = ownProfile.username;
-        const pattern = '%' + '@' + handle.replace(/[_%\\]/g, '\\$&') + '%';
-        const { data: mentions } = await supabase.from('post_comments')
-          .select('id,content,created_at,post_id,user_id')
-          .ilike('content', pattern).neq('user_id', user.id)
-          .gte('created_at', sevenDaysAgo.toISOString())
-          .order('created_at', { ascending: false }).limit(50);
-        for (const comment of mentions || []) {
-          const handles = [...comment.content.matchAll(/(?:^|[\s(])@([\p{L}\p{N}_][\p{L}\p{N}_.-]*)/gu)]
-            .map(m => m[1].replace(/[.-]+$/, '').toLowerCase());
-          if (!handles.includes(handle.toLowerCase())) continue;
-          allNotifications.push({ id: `mention_${comment.id}`, type: 'mention',
-            title: '@' + handle, message: 'mencionou-te num comentário',
-            created_at: comment.created_at, read: false,
-            action_data: { post_id: comment.post_id, sender_id: comment.user_id } });
-        }
-      }
+      allNotifications.push(...await fetchCommentMentions(user.id, sevenDaysAgo.toISOString()));
 
       // Fetch pending friend requests (received)
       const { data: friendRequests, error: frError } = await supabase
@@ -350,11 +337,11 @@ export default function Notifications() {
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
 
-      setNotifications(allNotifications);
+      if (version === requestVersion.current) setNotifications(allNotifications);
     } catch (error) {
       console.error('Error fetching notifications:', error);
     } finally {
-      setLoading(false);
+      if (version === requestVersion.current) setLoading(false);
     }
   };
 
