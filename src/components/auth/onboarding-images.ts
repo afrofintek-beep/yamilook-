@@ -1,5 +1,5 @@
 /** Approved regional onboarding photographs; other languages keep their existing images. */
-const regionalLanguages = new Set(['ar', 'am', 'zu']);
+const regionalLanguages = new Set(['pt', 'en', 'fr', 'ar', 'am', 'sw', 'ln', 'yo', 'sn', 'zu']);
 const scenes = new Set(['identity', 'birthday', 'welcome', 'avatar', 'bio', 'chat', 'calls', 'groups', 'stories']);
 
 export function onboardingImage(language: string | undefined, scene: string, fallback: string): string {
