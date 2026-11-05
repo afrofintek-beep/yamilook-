@@ -39,12 +39,12 @@ describe('public language selection', () => {
     render(<MemoryRouter initialEntries={['/welcome?invite=single-use-code&ref=founder']}><Welcome /></MemoryRouter>);
     expect(screen.getAllByRole('option')).toHaveLength(10);
     fireEvent.change(screen.getByRole('combobox'), { target: { value: 'ar' } });
-    await waitFor(() => expect(screen.getByRole('heading').textContent).toBe(i18n.getResource('ar', 'translation', 'entry.title')));
+    await waitFor(() => expect(screen.getByRole('heading').textContent).toBe(`${i18n.getResource('ar', 'translation', 'entry.title')} 👋🏾`));
     expect(document.documentElement.dir).toBe('rtl');
     expect(localStorage.setItem).toHaveBeenCalledWith('i18nextLng', 'ar');
     expect(screen.getByRole('link', { name: i18n.t('entry.createAccount') }).getAttribute('href')).toBe('/onboarding?invite=single-use-code&ref=founder');
     fireEvent.change(screen.getByRole('combobox'), { target: { value: 'fr' } });
     await waitFor(() => expect(document.documentElement.dir).toBe('ltr'));
-    expect(screen.getByRole('heading').textContent).toBe('Bienvenue sur YAMILOOK');
+    expect(screen.getByRole('heading').textContent).toBe('Bienvenue sur YAMILOOK 👋🏾');
   });
 });
