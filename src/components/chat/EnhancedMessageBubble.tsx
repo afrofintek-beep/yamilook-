@@ -6,6 +6,7 @@ import { parseChatLocation } from '@/lib/chat-location';
 import { useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from 'framer-motion';
 import { 
   Check, 
@@ -91,6 +92,7 @@ interface EnhancedMessageBubbleProps {
   isGroupChat?: boolean;
   currentUserId: string;
   onDelete?: (id: string) => Promise<void>;
+  onDeleteForMe?: (id: string) => Promise<void>;
   onReply?: (message: BubbleMessage) => void;
   onReact?: (messageId: string, emoji: string) => Promise<void>;
   onStar?: (messageId: string) => Promise<void>;
@@ -119,6 +121,7 @@ export function EnhancedMessageBubble({
   isGroupChat = false,
   currentUserId,
   onDelete,
+  onDeleteForMe,
   onReply,
   onReact,
   onStar,
@@ -134,6 +137,7 @@ export function EnhancedMessageBubble({
   showReadReceipts = true,
 }: EnhancedMessageBubbleProps) {
   const navigate = useNavigate();
+  const { i18n } = useTranslation();
   const { toast } = useToast();
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const [showMediaPreview, setShowMediaPreview] = useState(false);
@@ -389,7 +393,7 @@ export function EnhancedMessageBubble({
             // Transparent at rest so the chat wallpaper shows through uniformly
             // (an opaque bg-background here banded over the wallpaper). The
             // swipe-to-reply icon is occluded by its own opacity, not this.
-            isSelected ? 'bg-primary/10' : 'bg-transparent'
+            isSelected || showActionsSheet ? 'bg-primary/10 ring-2 ring-inset ring-primary/60' : 'bg-transparent'
           )}
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
@@ -520,9 +524,9 @@ export function EnhancedMessageBubble({
                       )}
                       <DropdownMenuSeparator />
                       {onDelete && (
-                        <DropdownMenuItem onClick={() => onDelete(message.id)} className="text-destructive">
+                        <DropdownMenuItem onClick={() => setShowActionsSheet(true)} className="text-destructive">
                           <Trash2 className="w-4 h-4 mr-2" />
-                          Delete
+                          Apagar mensagem
                         </DropdownMenuItem>
                       )}
                     </DropdownMenuContent>
@@ -619,7 +623,7 @@ export function EnhancedMessageBubble({
           <div className={`flex items-center gap-1 mt-0.5 ${isOwn ? 'mr-1' : 'ml-1'}`}>
             {isStarred && <Star className="w-3 h-3 fill-warning text-warning" />}
             <span className="text-[10px] text-muted-foreground">
-              {format(new Date(message.created_at), 'h:mm a')}
+              {format(new Date(message.created_at), i18n.language?.startsWith('pt') ? 'HH:mm' : 'h:mm a')}
             </span>
             {message.is_edited && (
               <span className="text-[10px] text-muted-foreground italic">edited</span>
@@ -650,6 +654,8 @@ export function EnhancedMessageBubble({
         messageType={message.message_type}
         mediaUrl={message.media_url}
         thumbnailUrl={message.thumbnail_url}
+        durationSeconds={message.duration_seconds}
+        senderName={displayName}
         isViewOnce={message.is_view_once}
         isOwn={isOwn}
         isStarred={isStarred}
@@ -660,7 +666,8 @@ export function EnhancedMessageBubble({
         onReact={(emoji) => handleReaction(emoji)}
         onStar={() => onStar?.(message.id)}
         onPin={() => onPin?.(message.id)}
-        onDelete={onDelete ? () => onDelete(message.id) : undefined}
+        onDeleteForMe={onDeleteForMe ? () => onDeleteForMe(message.id) : undefined}
+        onDelete={isOwn && onDelete ? () => onDelete(message.id) : undefined}
         onHighlight={onHighlight}
         onRemoveHighlight={onRemoveHighlight}
       />

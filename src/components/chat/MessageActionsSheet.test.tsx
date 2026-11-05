@@ -113,3 +113,39 @@ describe('KOSOLOLA compact message actions', () => {
     expect(props.onOpenChange).not.toHaveBeenCalledWith(false);
   });
 });
+
+it.each([null, 'chat-attachment://voice.webm'])('shows the same compact voice summary with or without a media URL (%s)', mediaUrl => {
+  render(<MessageActionsSheet {...makeProps({ messageType: 'voice', messageContent: 'recording.webm', mediaUrl,
+    durationSeconds: 77, senderName: 'Ana', isOwn: false })} />);
+  expect(screen.getByText('Ana')).toBeInTheDocument();
+  expect(screen.getByText('Mensagem de voz')).toBeInTheDocument();
+  expect(screen.getByText('1:17')).toBeInTheDocument();
+  expect(screen.queryByText('recording.webm')).not.toBeInTheDocument();
+  expect(document.querySelector('.lucide-mic')).toBeInTheDocument();
+});
+
+it('offers personal deletion for received messages, with confirmation and cancellation', async () => {
+  const onDeleteForMe = vi.fn();
+  const onDelete = vi.fn();
+  const props = makeProps({ isOwn: false, onDeleteForMe, onDelete });
+  render(<MessageActionsSheet {...props} />);
+  fireEvent.click(screen.getByRole('button', { name: 'Apagar mensagem' }));
+  expect(onDeleteForMe).not.toHaveBeenCalled();
+  expect(screen.queryByRole('button', { name: 'Apagar para todos' })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
+  expect(onDeleteForMe).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'Apagar mensagem' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Apagar só para mim' }));
+  await waitFor(() => expect(onDeleteForMe).toHaveBeenCalledOnce());
+  expect(onDelete).not.toHaveBeenCalled();
+});
+
+it('offers both deletion scopes for own messages and keeps failed deletions open', async () => {
+  const props = makeProps({ onDeleteForMe: vi.fn(), onDelete: vi.fn().mockRejectedValue(new Error('denied')) });
+  render(<MessageActionsSheet {...props} />);
+  fireEvent.click(screen.getByRole('button', { name: 'Apagar mensagem' }));
+  expect(screen.getByRole('button', { name: 'Apagar só para mim' })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Apagar para todos' }));
+  await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument());
+  expect(props.onOpenChange).not.toHaveBeenCalledWith(false);
+});

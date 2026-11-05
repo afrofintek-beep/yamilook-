@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { changeAppLanguage } from '@/i18n';
 import { EnhancedMessageBubble, type BubbleMessage } from './EnhancedMessageBubble';
 
 vi.mock('@/integrations/supabase/client', () => ({ supabase: { storage: { from: vi.fn() } } }));
@@ -41,4 +42,17 @@ describe('uploaded videos in the actual chat bubble', () => {
     expect(onToggleSelect).toHaveBeenCalledOnce();
     expect(screen.queryByLabelText('Vídeo da conversa')).not.toBeInTheDocument();
   });
+});
+
+it('uses 24-hour timestamps in Portuguese and highlights the message whose actions are open', async () => {
+  await changeAppLanguage('pt');
+  const localTime = new Date(2026, 10, 5, 15, 38).toISOString();
+  mount({ message: { ...message, created_at: localTime } });
+  expect(screen.getByText('15:38')).toBeInTheDocument();
+  const bubble = screen.getByText('15:38').closest('.group')!;
+  fireEvent.contextMenu(bubble);
+  expect(bubble).toHaveClass('ring-primary/60');
+  expect(screen.getByRole('button', { name: 'Marcar como favorita' })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Fechar ações' }));
+  expect(bubble).not.toHaveClass('ring-primary/60');
 });
