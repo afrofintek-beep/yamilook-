@@ -21,6 +21,8 @@ interface RecorderState {
 
 export function pickMimeType(audioOnly = false): string | undefined {
   const candidates = audioOnly ? ["audio/webm;codecs=opus", "audio/webm", "audio/mp4"] : [
+    "video/mp4;codecs=avc1.42E01E,mp4a.40.2",
+    "video/mp4;codecs=avc1",
     "video/webm;codecs=vp9,opus",
     "video/webm;codecs=vp8,opus",
     "video/webm",
