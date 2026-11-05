@@ -11,8 +11,10 @@ const m = vi.hoisted(() => ({
   conversations: [] as Record<string, unknown>[], participants: [] as Record<string, unknown>[],
   listMode: false, messages: [] as Record<string, unknown>[], holdReceipt: false,
   holdMessages: false, releaseMessages: null as null | (() => void), queryStart: vi.fn(),
+  personalDelete: vi.fn(),
   user: { id: 'me' }, reads: vi.fn(), channels: [] as Channel[], profile: vi.fn(), profiles: vi.fn(),
 }));
+vi.mock('@/lib/delete-chat-message', () => ({ deleteChatMessage: vi.fn(), deleteChatMessageForMe: (...args: unknown[]) => m.personalDelete(...args) }));
 vi.mock('./useAuth', () => ({ useAuth: () => ({ user: m.user }) }));
 vi.mock('./useMessageNotification', () => ({ useMessageNotification: () => ({ notifyMessage: vi.fn() }) }));
 vi.mock('@/lib/public-profile-batch', () => ({ fetchPublicProfilesBatched: (...args: unknown[]) => m.profiles(...args), fetchPublicProfileById: (...args: unknown[]) => m.profile(...args) }));
@@ -283,4 +285,28 @@ it('ignores late presence reads after unmount and cleans up recovery listeners',
     document.dispatchEvent(new Event('visibilitychange'));
   });
   expect(m.profiles).not.toHaveBeenCalled();
+});
+
+it('keeps personal deletions hidden through overlapping refreshes and scopes them by account', async () => {
+  m.messages = [incoming('remove-me')];
+  m.personalDelete.mockResolvedValue({ error: null });
+  const { result, rerender } = renderHook(() => useMessages('chat'));
+  await waitFor(() => expect(result.current.messages).toHaveLength(1));
+  await act(async () => { await result.current.deleteMessageForMe('remove-me'); });
+  expect(m.personalDelete).toHaveBeenCalledWith('remove-me', 'me');
+  expect(result.current.messages).toHaveLength(0);
+  await act(async () => { await result.current.refresh(false); });
+  expect(result.current.messages).toHaveLength(0);
+  m.user = { id: 'someone-else' };
+  rerender();
+  await waitFor(() => expect(result.current.messages).toHaveLength(1));
+});
+
+it('retains the message when personal deletion fails', async () => {
+  m.messages = [incoming('keep-me')];
+  m.personalDelete.mockResolvedValue({ error: new Error('denied') });
+  const { result } = renderHook(() => useMessages('chat'));
+  await waitFor(() => expect(result.current.messages).toHaveLength(1));
+  await act(async () => { expect((await result.current.deleteMessageForMe('keep-me')).error).toBeInstanceOf(Error); });
+  expect(result.current.messages).toHaveLength(1);
 });

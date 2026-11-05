@@ -26,7 +26,7 @@ export function CallChatPanel({ conversationId, contactId, open, onClose, inputR
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
   const pending = useRef<ReturnType<typeof createChatConversation> | null>(null);
-  const { messages, reactions, starredIds, pinnedIds, viewOnceViewedIds, markViewOnce, loading, sendMessage } = useMessages(resolvedId);
+  const { messages, reactions, starredIds, pinnedIds, viewOnceViewedIds, markViewOnce, loading, sendMessage, deleteMessage, deleteMessageForMe } = useMessages(resolvedId);
   const messagesViewportRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -119,6 +119,8 @@ export function CallChatPanel({ conversationId, contactId, open, onClose, inputR
             isStarred={starredIds.has(message.id)}
             isPinned={pinnedIds.has(message.id)}
             viewOnceViewed={viewOnceViewedIds.has(message.id)}
+            onDeleteForMe={async id => { const result = await deleteMessageForMe(id); if (result.error) throw result.error; }}
+            onDelete={message.sender_id === user?.id ? async id => { const result = await deleteMessage(id); if (result.error) throw result.error; } : undefined}
             onViewOnce={async id => { await markViewOnce(id); }}
           />
         ))}

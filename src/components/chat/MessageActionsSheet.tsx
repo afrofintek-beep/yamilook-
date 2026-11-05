@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Check, Copy, FileText, Highlighter, Image as ImageIcon, Pin, Reply, Star, Tag, Trash2, Video, Forward, X, Music2 } from 'lucide-react';
+import { Check, Copy, FileText, Highlighter, Image as ImageIcon, Pin, Reply, Star, Tag, Trash2, Video, Forward, X, Mic } from 'lucide-react';
 import { ResponsiveModal } from '@/components/ui/responsive-modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,9 +30,9 @@ function AttachmentThumbnail({ type, url, posterUrl }: {
   const { resolvedUrl, onError, error } = useResolvedMediaUrl(type === 'image' ? url : '');
   const { resolvedUrl: poster, onError: onPosterError, error: posterError } = useResolvedMediaUrl(type === 'video' ? posterUrl || '' : '');
   const imageUrl = type === 'image' ? resolvedUrl : poster;
-  const Icon = type === 'video' ? Video : type === 'image' ? ImageIcon : type === 'voice' ? Music2 : FileText;
+  const Icon = type === 'video' ? Video : type === 'image' ? ImageIcon : type === 'voice' ? Mic : FileText;
   return (
-    <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-secondary flex items-center justify-center">
+    <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-secondary flex items-center justify-center">
       {imageUrl && !error && !posterError ? (
         <img src={imageUrl} alt={type === 'video' ? 'Miniatura do vídeo' : 'Miniatura da fotografia'}
           loading="lazy" className="h-full w-full object-cover"
@@ -53,6 +53,8 @@ interface MessageActionsSheetProps {
   mediaUrl?: string | null;
   thumbnailUrl?: string | null;
   isViewOnce?: boolean;
+  durationSeconds?: number;
+  senderName?: string;
   isOwn: boolean;
   isStarred: boolean;
   isPinned: boolean;
@@ -64,15 +66,16 @@ interface MessageActionsSheetProps {
   onPin: () => void | Promise<void>;
   onForward?: () => void;
   onDelete?: () => void | Promise<void>;
+  onDeleteForMe?: () => void | Promise<void>;
   onHighlight?: (color: string, label?: string) => void | Promise<void>;
   onRemoveHighlight?: () => void | Promise<void>;
 }
 
 export function MessageActionsSheet({
   open, onOpenChange, messageContent, messageType = 'text', mediaUrl,
-  thumbnailUrl, isViewOnce = false, isOwn, isStarred, isPinned,
+  thumbnailUrl, durationSeconds, senderName, isViewOnce = false, isOwn, isStarred, isPinned,
   highlight, onReply, onCopy, onReact, onStar, onPin,
-  onForward, onDelete, onHighlight, onRemoveHighlight,
+  onForward, onDelete, onDeleteForMe, onHighlight, onRemoveHighlight,
 }: MessageActionsSheetProps) {
   const { t } = useTranslation();
   const getMeaning = (type: string) => t(`kosolola.reactionMeanings.${type}`, { fallbackLng: 'pt' });
@@ -80,6 +83,7 @@ export function MessageActionsSheet({
   const [highlightLabel, setHighlightLabel] = useState(highlight?.label || '');
   const [showHighlightOptions, setShowHighlightOptions] = useState(false);
   const [showMeanings, setShowMeanings] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState('');
 
@@ -90,6 +94,7 @@ export function MessageActionsSheet({
     setShowHighlightOptions(Boolean(highlight?.color));
     setShowMeanings(false);
     setActionError('');
+    setConfirmDelete(false);
   }, [open, highlight?.color, highlight?.label]);
 
   const handleAction = async (action: () => void | Promise<void>) => {
@@ -108,7 +113,7 @@ export function MessageActionsSheet({
 
   const previewText = messageType === 'image' || messageType === 'video'
     ? mediaCaption(messageContent || null, mediaUrl || null)
-    : messageContent;
+    : messageType === 'voice' ? undefined : messageContent;
   const attachment = ['image', 'video', 'file', 'voice'].includes(messageType);
   const attachmentName = messageType === 'image' ? 'Fotografia'
     : messageType === 'video' ? 'Vídeo'
@@ -160,12 +165,20 @@ export function MessageActionsSheet({
         {(attachment || previewText) && (
           <div className="my-3 flex min-w-0 items-center gap-3 rounded-xl border border-border bg-secondary/40 p-2.5">
             {attachment && (isViewOnce
-              ? <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-secondary"><ImageIcon aria-hidden="true" className="h-6 w-6" /></div>
-              : mediaUrl ? <AttachmentThumbnail type={messageType} url={mediaUrl} posterUrl={thumbnailUrl} />
+              ? <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary"><ImageIcon aria-hidden="true" className="h-6 w-6" /></div>
+              : (mediaUrl || messageType === 'voice') ? <AttachmentThumbnail type={messageType} url={mediaUrl || ''} posterUrl={thumbnailUrl} />
               : <FileText aria-hidden="true" className="h-5 w-5 shrink-0" />)}
-            <p className="min-w-0 flex-1 break-words text-sm text-foreground line-clamp-2">
-              {isViewOnce ? 'Conteúdo de visualização única' : previewText || (attachment ? attachmentName : '')}
-            </p>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-xs text-muted-foreground">{isOwn ? 'Tu' : senderName || 'Remetente'}</p>
+              <p className="break-words text-sm text-foreground line-clamp-2">
+                {isViewOnce ? 'Conteúdo de visualização única' : previewText || (attachment ? attachmentName : '')}
+                {messageType === 'voice' && !isViewOnce && <span className="ml-2 text-muted-foreground">
+                  {typeof durationSeconds === 'number' && Number.isFinite(durationSeconds) && durationSeconds >= 0
+                    ? `${Math.floor(durationSeconds / 60)}:${String(Math.floor(durationSeconds % 60)).padStart(2, '0')}`
+                    : 'Duração indisponível'}
+                </span>}
+              </p>
+            </div>
           </div>
         )}
 
@@ -181,15 +194,35 @@ export function MessageActionsSheet({
           {onForward && <Button variant="ghost" disabled={busy} className={actionClass} onClick={() => void handleAction(onForward)}>
             <Forward className="h-4 w-4 shrink-0" />Reencaminhar
           </Button>}
-          <Button variant="ghost" disabled={busy} className={actionClass} title="Guarda a mensagem apenas nos teus favoritos" onClick={() => void handleAction(onStar)}>
+          <Button variant="ghost" disabled={busy} className={cn(actionClass, 'col-span-2')} title="Guarda a mensagem apenas nos teus favoritos" onClick={() => void handleAction(onStar)}>
             <Star className={cn('h-4 w-4 shrink-0', isStarred && 'fill-amber-400 text-amber-500')} />
-            {isStarred ? 'Retirar estrela' : 'Adicionar estrela'}
+            {isStarred ? 'Retirar dos favoritos' : 'Marcar como favorita'}
           </Button>
           {isOwn && <Button variant="ghost" disabled={busy} className={actionClass} title="Fixa a mensagem no topo desta conversa" onClick={() => void handleAction(onPin)}>
             <Pin className={cn('h-4 w-4 shrink-0', isPinned && 'fill-primary text-primary')} />
             {isPinned ? 'Desafixar' : 'Fixar na conversa'}
           </Button>}
         </div>
+
+        {(onDeleteForMe || (isOwn && onDelete)) && (
+          <div className="mt-2 border-t border-border pt-1">
+            {!confirmDelete ? (
+              <Button variant="ghost" disabled={busy} className="h-11 w-full justify-start gap-2 text-destructive hover:text-destructive"
+                onClick={() => setConfirmDelete(true)}>
+                <Trash2 className="h-4 w-4" />Apagar mensagem
+              </Button>
+            ) : (
+              <div role="group" aria-label="Confirmar eliminação" className="space-y-1">
+                <p className="px-3 text-xs text-muted-foreground">Apagar só para ti mantém a mensagem para os outros participantes.</p>
+                {onDeleteForMe && <Button variant="ghost" disabled={busy} className="h-11 w-full justify-start text-destructive"
+                  onClick={() => void handleAction(onDeleteForMe)}>Apagar só para mim</Button>}
+                {isOwn && onDelete && <Button variant="ghost" disabled={busy} className="h-11 w-full justify-start text-destructive"
+                  onClick={() => void handleAction(onDelete)}>Apagar para todos</Button>}
+                <Button variant="ghost" disabled={busy} className="h-11 w-full" onClick={() => setConfirmDelete(false)}>Cancelar</Button>
+              </div>
+            )}
+          </div>
+        )}
 
         {onHighlight && (
           <div className="mt-3 border-t border-border pt-2">
@@ -241,12 +274,6 @@ export function MessageActionsSheet({
           </div>
         )}
 
-        {onDelete && (
-          <Button variant="ghost" disabled={busy} className="mt-2 h-11 w-full justify-start gap-2 border-t border-border text-sm text-destructive hover:text-destructive"
-            onClick={() => void handleAction(onDelete)}>
-            <Trash2 className="h-4 w-4" />Apagar mensagem
-          </Button>
-        )}
         {actionError && <p role="alert" className="mt-2 text-xs text-destructive">{actionError}</p>}
       </div>
     </ResponsiveModal>

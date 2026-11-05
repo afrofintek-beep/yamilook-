@@ -1,6 +1,6 @@
 import { useCachedList } from './useCachedList';
 import { readChatHotCache, saveChatHotCache, clearChatHotCache } from '@/lib/chat-hot-cache';
-import { deleteChatMessage } from '@/lib/delete-chat-message';
+import { deleteChatMessage, deleteChatMessageForMe } from '@/lib/delete-chat-message';
 import { createChatConversation } from '@/lib/chat-conversations';
 import { useMessageExpiry } from './useMessageExpiry';
 import { useMessageRecovery } from './useMessageRecovery';
@@ -324,6 +324,7 @@ export function useMessages(conversationId: string | null) {
   const olderCursorRef = useRef<string | null>(null);
   const olderLoadedIdsRef = useRef(new Set<string>());
   const unexpiredMessages = useMessageExpiry(messages);
+  const [personalRemovals, setPersonalRemovals] = useState<{ scope: string; ids: Set<string> }>({ scope: '', ids: new Set() });
   const messagesRef = useRef(messages);
   messagesRef.current = messages;
   const fetchVersionRef = useRef(0);
@@ -1129,6 +1130,22 @@ export function useMessages(conversationId: string | null) {
     }, 5000);
   };
 
+  const deleteMessageForMe = async (messageId: string) => {
+    if (!user) return { error: new Error('Not authenticated') };
+    const requestScope = scope;
+    const { error } = await deleteChatMessageForMe(messageId, user.id);
+    if (!error) {
+      if (userId && conversationId) clearChatHotCache(userId, conversationId);
+      if (scopeRef.current === requestScope) {
+        setMessages(previous => previous.filter(message => message.id !== messageId));
+        // Keep overlapping reads/realtime events from restoring a removed row.
+        setPersonalRemovals(previous => ({ scope: requestScope,
+          ids: new Set([...(previous.scope === requestScope ? previous.ids : []), messageId]) }));
+      }
+    }
+    return { error };
+  };
+
   const deleteMessage = async (messageId: string) => {
     if (!user) return { error: new Error('Not authenticated') };
     const { error } = await deleteChatMessage(messageId, user.id);
@@ -1308,7 +1325,7 @@ export function useMessages(conversationId: string | null) {
 
   return {
     historyClearedAt, setHistoryCleared,
-    messages: renderedScope === scope ? unexpiredMessages : [],
+    messages: renderedScope === scope ? unexpiredMessages.filter(message => personalRemovals.scope !== scope || !personalRemovals.ids.has(message.id)) : [],
     reactions,
     starredIds,
     pinnedIds,
@@ -1323,6 +1340,7 @@ export function useMessages(conversationId: string | null) {
     updateMessageMediaUrl,
     setTyping,
     deleteMessage,
+    deleteMessageForMe,
     editMessage,
     forwardMessage,
     toggleReaction,

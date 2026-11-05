@@ -101,6 +101,7 @@ export default function Chat() {
     updateMessageMediaUrl,
     setTyping,
     deleteMessage,
+    deleteMessageForMe,
     toggleReaction,
     toggleStar,
     togglePin,
@@ -448,9 +449,16 @@ export default function Chat() {
     const { error } = await deleteMessage(messageId);
     if (error) {
       toast({ title: 'Não foi possível apagar a mensagem', description: error.message, variant: 'destructive' });
+      throw error;
     } else {
       toast({ title: 'Mensagem apagada' });
     }
+  };
+
+  const handleDeleteForMe = async (messageId: string) => {
+    const { error } = await deleteMessageForMe(messageId);
+    if (error) throw error;
+    toast({ title: 'Mensagem apagada só para ti' });
   };
 
   const handleReact = async (messageId: string, emoji: string) => {
@@ -901,6 +909,7 @@ export default function Chat() {
                       showAvatar={shouldShowAvatar(index)}
                       isGroupChat={isGroup}
                       currentUserId={user?.id || ''}
+                      onDeleteForMe={handleDeleteForMe}
                       onDelete={message.sender_id === user?.id ? handleDelete : undefined}
                       onReply={selectionMode ? undefined : setReplyTo}
                       onReact={handleReact}
