@@ -3,10 +3,12 @@ import { StrictMode } from 'react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { useMessages, useConversations } from './useChat';
 import { clearChatHotCache } from '@/lib/chat-hot-cache';
+import { clearListCache } from '@/lib/list-cache';
 type Change = { old?: Record<string, unknown>; new: Record<string, unknown> };
 type Filter = { table?: string; event?: string };
 type Channel = { handlers: { filter: Filter; callback: (payload: Change) => void }[]; on: (event: string, filter: Filter, callback: (payload: Change) => void) => Channel; status?: (status: string) => void; subscribe: (callback?: (status: string) => void) => Channel };
 const m = vi.hoisted(() => ({
+  conversations: [] as Record<string, unknown>[], participants: [] as Record<string, unknown>[],
   listMode: false, messages: [] as Record<string, unknown>[], holdReceipt: false,
   holdMessages: false, releaseMessages: null as null | (() => void), queryStart: vi.fn(),
   user: { id: 'me' }, reads: vi.fn(), channels: [] as Channel[], profile: vi.fn(), profiles: vi.fn(),
@@ -24,7 +26,7 @@ vi.mock('@/integrations/supabase/client', () => ({ supabase: {
     q.update = () => { updating = true; return q; };
     const result = () => {
       m.reads(table);
-      return { data: table === 'conversation_participants' ? (m.listMode ? [{ conversation_id: 'chat', is_archived: false, user_id: 'me' }] : { history_cleared_at: null }) : table === 'visible_messages' ? m.messages : [], error: null };
+      return { data: table === 'conversation_participants' ? (m.listMode ? [{ conversation_id: 'chat', is_archived: false, user_id: 'me' }, ...m.participants] : { history_cleared_at: null }) : table === 'conversations' ? m.conversations : table === 'visible_messages' ? m.messages : [], error: null };
     };
     q.single = async () => result();
     q.then = (resolve: (value: unknown) => unknown) => {
@@ -43,8 +45,8 @@ vi.mock('@/integrations/supabase/client', () => ({ supabase: {
   },
   removeChannel: vi.fn(),
 } }));
-beforeEach(() => { clearChatHotCache(); m.listMode = false; m.messages = []; m.holdReceipt = false; m.holdMessages = false; m.releaseMessages = null; m.queryStart.mockClear(); m.reads.mockClear(); m.channels.length = 0; m.user = { id: 'me' }; m.profile.mockReset().mockResolvedValue({ data: null }); m.profiles.mockReset().mockResolvedValue({ data: [] }); });
-afterEach(cleanup);
+beforeEach(() => { clearListCache(); clearChatHotCache(); m.conversations = []; m.participants = []; m.listMode = false; m.messages = []; m.holdReceipt = false; m.holdMessages = false; m.releaseMessages = null; m.queryStart.mockClear(); m.reads.mockClear(); m.channels.length = 0; m.user = { id: 'me' }; m.profile.mockReset().mockResolvedValue({ data: null }); m.profiles.mockReset().mockResolvedValue({ data: [] }); });
+afterEach(() => { cleanup(); vi.useRealTimers(); });
 it('does not reload history or resubscribe when the same user receives a refreshed auth object', async () => {
   const { rerender } = renderHook(() => useMessages('chat'));
   await waitFor(() => expect(m.reads).toHaveBeenCalledWith('visible_messages'));
@@ -201,4 +203,84 @@ it('restarts an invalidated first history read after React StrictMode effect rep
   await act(async () => { m.releaseMessages?.(); });
   await waitFor(() => expect(result.current.loading).toBe(false));
   expect(result.current.messages.map(message => message.id)).toContain('survives-replay');
+});
+
+const presenceProfile = (online: boolean, overrides = {}) => ({
+  id: 'other', display_name: 'Ana', username: 'ana', avatar_url: null,
+  is_online: online, last_seen: new Date().toISOString(), show_online_status: true, show_last_seen: true,
+  ...overrides,
+});
+const setupPresence = async () => {
+  m.listMode = true;
+  m.conversations = [{ id: 'chat', type: 'direct' }];
+  m.participants = [{ conversation_id: 'chat', user_id: 'other' }];
+  m.profiles.mockResolvedValue({ data: [presenceProfile(false)], error: null });
+  Object.defineProperty(document, 'hidden', { configurable: true, value: false });
+  Object.defineProperty(navigator, 'onLine', { configurable: true, value: true });
+  const hook = renderHook(useConversations);
+  await waitFor(() => expect(hook.result.current.conversations[0]?.participants?.some(p => p.user_id === 'other')).toBe(true));
+  await act(async () => {});
+  return hook;
+};
+const otherPresence = (hook: Awaited<ReturnType<typeof setupPresence>>) =>
+  hook.result.current.conversations[0]?.participants?.find(p => p.user_id === 'other')?.profile;
+const presenceChannel = () => m.channels.find(ch => ch.handlers.some(h => h.filter.table === 'profile_presence'))!;
+
+it('recovers presence on mobile resume and reconnect without reloading messages', async () => {
+  const hook = await setupPresence();
+  m.profiles.mockResolvedValue({ data: [presenceProfile(true)], error: null });
+  m.reads.mockClear();
+  await act(async () => document.dispatchEvent(new Event('visibilitychange')));
+  expect(otherPresence(hook)?.is_online).toBe(true);
+  expect(m.reads).not.toHaveBeenCalled();
+  m.profiles.mockResolvedValue({ data: [presenceProfile(false)], error: null });
+  await act(async () => presenceChannel().status?.('SUBSCRIBED'));
+  expect(otherPresence(hook)?.is_online).toBe(false);
+});
+
+it('rechecks presence while visible and stops polling while hidden or offline', async () => {
+  const hook = await setupPresence();
+  vi.useFakeTimers();
+  // Re-mount with fake timers so the polling interval belongs to this clock.
+  hook.unmount();
+  const active = renderHook(useConversations);
+  await act(async () => {});
+  m.profiles.mockClear().mockResolvedValue({ data: [presenceProfile(true)], error: null });
+  await act(async () => vi.advanceTimersByTime(30_000));
+  expect(active.result.current.conversations[0].participants?.find(p => p.user_id === 'other')?.profile?.is_online).toBe(true);
+  m.profiles.mockClear();
+  Object.defineProperty(document, 'hidden', { configurable: true, value: true });
+  await act(async () => vi.advanceTimersByTime(60_000));
+  expect(m.profiles).not.toHaveBeenCalled();
+  Object.defineProperty(document, 'hidden', { configurable: true, value: false });
+  Object.defineProperty(navigator, 'onLine', { configurable: true, value: false });
+  await act(async () => vi.advanceTimersByTime(30_000));
+  expect(m.profiles).not.toHaveBeenCalled();
+  Object.defineProperty(navigator, 'onLine', { configurable: true, value: true });
+  await act(async () => window.dispatchEvent(new Event('online')));
+  expect(m.profiles).toHaveBeenCalledOnce();
+});
+
+it('keeps newer privacy events when an older presence snapshot completes', async () => {
+  const hook = await setupPresence();
+  let resolve!: (value: unknown) => void;
+  m.profiles.mockImplementationOnce(() => new Promise(done => { resolve = done; }));
+  await act(async () => window.dispatchEvent(new Event('pageshow')));
+  await act(async () => presenceChannel().handlers[0].callback({ new: presenceProfile(false, { show_online_status: false, show_last_seen: false, last_seen: null }) }));
+  await act(async () => resolve({ data: [presenceProfile(true)], error: null }));
+  expect(otherPresence(hook)?.is_online).toBe(false);
+  expect(otherPresence(hook)?.show_online_status).toBe(false);
+  expect(otherPresence(hook)?.last_seen).toBeNull();
+});
+
+it('ignores late presence reads after unmount and cleans up recovery listeners', async () => {
+  const hook = await setupPresence();
+  hook.unmount();
+  m.profiles.mockClear();
+  await act(async () => {
+    window.dispatchEvent(new Event('online'));
+    window.dispatchEvent(new Event('pageshow'));
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  expect(m.profiles).not.toHaveBeenCalled();
 });

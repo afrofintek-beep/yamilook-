@@ -5,6 +5,7 @@ import { pt } from 'date-fns/locale';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Users, Image, Mic, Pin, Film, FileText } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface ConversationItemProps {
   conversation: {
@@ -21,6 +22,7 @@ interface ConversationItemProps {
         avatar_url: string | null;
         is_online: boolean;
         last_seen: string | null;
+        show_online_status?: boolean | null;
       };
     }[];
     last_message?: {
@@ -63,6 +65,7 @@ export function ConversationItem({
   onClick,
   isActive,
 }: ConversationItemProps) {
+  const { t } = useTranslation();
   const otherParticipant = conversation.participants?.find(
     (p) => p.user_id !== currentUserId
   )?.profile;
@@ -73,7 +76,7 @@ export function ConversationItem({
     : otherParticipant?.display_name || 'Unknown';
   const avatarUrl = isGroup ? conversation.avatar_url : otherParticipant?.avatar_url;
   const presenceNow = usePresenceClock();
-  const isOnline = !isGroup && isRecentlyOnline(otherParticipant?.is_online, otherParticipant?.last_seen, presenceNow);
+  const isOnline = !isGroup && otherParticipant?.show_online_status !== false && isRecentlyOnline(otherParticipant?.is_online, otherParticipant?.last_seen, presenceNow);
 
   const initials = displayName
     .split(' ')
@@ -138,7 +141,7 @@ export function ConversationItem({
           </AvatarFallback>
         </Avatar>
         {isOnline && (
-          <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-success rounded-full border-[2.5px] border-background" />
+          <span aria-hidden="true" className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-success rounded-full border-[2.5px] border-background" />
         )}
       </div>
 
@@ -150,6 +153,11 @@ export function ConversationItem({
             <span className={`text-[13px] truncate ${hasUnread ? 'font-bold text-foreground' : 'font-medium text-foreground/90'}`}>
               {displayName}
             </span>
+            {isOnline && (
+              <span className="shrink-0 rounded-full bg-success/10 px-1.5 py-0.5 text-[11px] font-semibold text-success">
+                {t('chat.online')}
+              </span>
+            )}
             {isPinned && (
               <Pin className="h-3 w-3 text-muted-foreground/40 shrink-0 rotate-45" />
             )}

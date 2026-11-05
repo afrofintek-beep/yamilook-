@@ -181,8 +181,8 @@ export default function Chat() {
   const [otherUserOnline, setOtherUserOnline] = useState(otherParticipantFromConv?.is_online || false);
   const [otherUserLastSeen, setOtherUserLastSeen] = useState(otherParticipantFromConv?.last_seen || null);
   // Other user's privacy settings
-  const [otherUserShowOnlineStatus, setOtherUserShowOnlineStatus] = useState<boolean>(true);
-  const [otherUserShowLastSeen, setOtherUserShowLastSeen] = useState<boolean>(true);
+  const [otherUserShowOnlineStatus, setOtherUserShowOnlineStatus] = useState<boolean>(otherParticipantFromConv?.show_online_status !== false);
+  const [otherUserShowLastSeen, setOtherUserShowLastSeen] = useState<boolean>(otherParticipantFromConv?.show_last_seen !== false);
   const [otherUserShowTypingIndicators, setOtherUserShowTypingIndicators] = useState<boolean>(true);
   
   // Combine profile data with real-time status
@@ -207,6 +207,16 @@ export default function Chat() {
   const isOnline = !isGroup && otherUserShowOnlineStatus && isRecentlyOnline(otherUserOnline, otherUserLastSeen, presenceNow);
 
   const initials = displayName.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);
+
+  // The conversation hook reconciles missed mobile Realtime events. Keep the
+  // open chat header in sync too, even when the participant ID has not changed.
+  useEffect(() => {
+    setOtherUserOnline(otherParticipantFromConv?.is_online ?? false);
+    setOtherUserLastSeen(otherParticipantFromConv?.last_seen ?? null);
+    setOtherUserShowOnlineStatus(otherParticipantFromConv?.show_online_status !== false);
+    setOtherUserShowLastSeen(otherParticipantFromConv?.show_last_seen !== false);
+  }, [otherParticipantFromConv?.id, otherParticipantFromConv?.is_online, otherParticipantFromConv?.last_seen,
+    otherParticipantFromConv?.show_online_status, otherParticipantFromConv?.show_last_seen]);
   
   // Subscribe to real-time online status updates AND fetch privacy settings
   useEffect(() => {
@@ -243,7 +253,7 @@ export default function Chat() {
       }, (payload) => {
         const updated = payload.new as { 
           is_online?: boolean; 
-          last_seen?: string;
+          last_seen?: string | null;
           show_online_status?: boolean;
           show_last_seen?: boolean;
           show_typing_indicators?: boolean;
@@ -251,8 +261,8 @@ export default function Chat() {
         if (typeof updated.is_online === 'boolean') {
           setOtherUserOnline(updated.is_online);
         }
-        if (updated.last_seen) {
-          setOtherUserLastSeen(updated.last_seen);
+        if ('last_seen' in updated) {
+          setOtherUserLastSeen(updated.last_seen ?? null);
         }
         if (typeof updated.show_online_status === 'boolean') {
           setOtherUserShowOnlineStatus(updated.show_online_status);
