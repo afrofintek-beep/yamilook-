@@ -3,13 +3,14 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { RecordingControls } from './RecordingControls';
 import type { RecordingSession } from '@/features/call-recording/api';
 const mocks = vi.hoisted(() => ({ api: vi.fn(), start: vi.fn(), stop: vi.fn(), pause: vi.fn(), update: vi.fn(), upload: vi.fn(), userId: 'me' }));
+vi.mock('@/lib/audio-context', () => ({ unlockCallAudio: vi.fn() }));
 vi.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: { id: mocks.userId } }) }));
 vi.mock('./ActiveCallProvider', () => ({ useActiveCallRequired: () => ({ webRTCState: {
   callStatus: 'connected', localStream: { id: 'local' }, remoteStreams: new Map([['other', { id: 'remote' }]]),
 } }) }));
 vi.mock('@/hooks/useCallRecorder', () => ({ useCallRecorder: () => ({ start: mocks.start, stop: mocks.stop, pause: mocks.pause, update: mocks.update }) }));
 vi.mock('@/features/call-recording/api', () => ({ recordingSession: mocks.api }));
-vi.mock('@/integrations/supabase/client', () => ({ supabase: { storage: { from: () => ({ upload: mocks.upload }) } } }));
+vi.mock('@/integrations/supabase/client', () => ({ supabase: { auth: { getSession: async () => ({data:{session:{user:{id:mocks.userId}}}}) }, storage: { from: () => ({ upload: mocks.upload }) } } }));
 let state: RecordingSession | null;
 let failure: string | null;
 const pending = (): RecordingSession => ({ id: 'rec', initiated_by: 'me', status: 'pending_consent',
@@ -76,22 +77,23 @@ it('pauses, resumes and uploads the actual MP4 before completing', async () => {
   await click('Pausar gravação');expect(mocks.pause).toHaveBeenLastCalledWith(true);
   await click('Retomar gravação');expect(mocks.pause).toHaveBeenLastCalledWith(false);
   await click('Parar e guardar gravação');expect(mocks.upload).toHaveBeenCalledWith('call/rec.mp4',expect.any(Blob),{contentType:'video/mp4',upsert:false});
-  expect(screen.getByText('Gravação guardada.')).toBeInTheDocument();
+  expect(screen.getByText(/Gravação guardada\./)).toBeInTheDocument();
 });
 it('reports upload failure without claiming the recording was saved', async () => {
   await mount();await click('Gravar');state={...state!,consents:[]};await tick(2000);mocks.upload.mockResolvedValue({error:new Error('storage')});
   await click('Parar e guardar gravação');await tick(2000);
-  expect(screen.queryByText('Gravação guardada.')).not.toBeInTheDocument();expect(screen.getByRole('alert')).toHaveTextContent('Não foi possível enviar');
+  expect(screen.queryByText(/Gravação guardada\./)).not.toBeInTheDocument();expect(screen.getByRole('alert')).toHaveTextContent('Não foi possível enviar');
   expect(screen.getByRole('button', {name:'Descarregar gravação'})).toBeEnabled();
   mocks.upload.mockResolvedValue({error:null});
   await click('Tentar guardar novamente');
-  expect(screen.getByText('Gravação guardada.')).toBeInTheDocument();
+  expect(screen.getByText(/Gravação guardada\./)).toBeInTheDocument();
   expect(mocks.stop).toHaveBeenCalledTimes(1);
   expect(mocks.upload.mock.calls[0][1]).toBe(mocks.upload.mock.calls[1][1]);
 });
 it('stops capture if consent state cannot be verified after connection loss', async () => {
   await mount();await click('Gravar');state={...state!,consents:[]};await tick(2000);failure='state';await tick(2000);
-  expect(mocks.stop).toHaveBeenCalled();expect(mocks.api).toHaveBeenCalledWith('call','fail','rec');
+  expect(mocks.stop).toHaveBeenCalled();expect(mocks.upload).not.toHaveBeenCalled();
+  failure=null;await click('Tentar guardar novamente');expect(mocks.upload).toHaveBeenCalledOnce();
 });
 it('does not record on a second device belonging to the initiator', async () => {
   state={...pending(),status:'recording',consents:[]};await mount();await tick(2000);
@@ -130,4 +132,31 @@ it('stops and marks the recording failed when replacement media cannot be attach
   expect(mocks.stop).toHaveBeenCalled();
   expect(mocks.api).toHaveBeenCalledWith('call','fail','rec');
   expect(mocks.upload).not.toHaveBeenCalled();
+});
+
+it('automatically saves consented media after navigation/unmount instead of cancelling it', async () => {
+  const view = await mount(); await click('Gravar'); state={...state!,consents:[]}; await tick(2000);
+  view.unmount(); await tick();
+  expect(mocks.upload).toHaveBeenCalledOnce();
+  expect(mocks.api.mock.calls.some(c => c[1] === 'cancel')).toBe(false);
+  expect(state?.status).toBe('completed');
+});
+it('finalizes and saves when the server closes an ended call for processing', async () => {
+  await mount(); await click('Gravar'); state={...state!,consents:[]}; await tick(2000);
+  state={...state!,status:'processing'}; await tick(2000);
+  expect(mocks.stop).toHaveBeenCalledOnce(); expect(mocks.upload).toHaveBeenCalledOnce();
+  expect(state?.status).toBe('completed');
+});
+it('never uploads media after a roster change invalidates consent', async () => {
+  await mount(); await click('Gravar'); state={...state!,consents:[]}; await tick(2000);
+  state={...state!,status:'stopped'}; await tick(2000);
+  expect(mocks.stop).toHaveBeenCalled(); expect(mocks.upload).not.toHaveBeenCalled();
+});
+it('finishes a delayed manual stop after the call screen unmounts', async () => {
+  const view=await mount();await click('Gravar');state={...state!,consents:[]};await tick(2000);
+  let finish!: (blob: Blob) => void;
+  mocks.stop.mockImplementationOnce(() => new Promise<Blob>(resolve => { finish=resolve; }));
+  fireEvent.click(screen.getByRole('button',{name:'Parar e guardar gravação'}));
+  view.unmount();finish(new Blob(['sound'],{type:'audio/mp4'}));await tick();
+  expect(mocks.upload).toHaveBeenCalledOnce();expect(state?.status).toBe('completed');
 });

@@ -17,6 +17,11 @@ try {
   await db.exec(fs.readFileSync('supabase/migrations/20260111080645_fabe1024-a669-45bf-9607-3010674989b3.sql','utf8'));
   const migration=fs.readdirSync('supabase/migrations').find(f=>f.endsWith('_recording_consent_workflow.sql'));
   await db.exec(fs.readFileSync('supabase/migrations/'+migration,'utf8'));
+  await db.exec(`create schema storage; create table storage.objects(id uuid default gen_random_uuid(),bucket_id text,name text,owner uuid,metadata jsonb);
+    alter table storage.objects enable row level security;
+    grant usage on schema storage to authenticated; grant insert,select on storage.objects to authenticated;`);
+  const recovery=fs.readdirSync('supabase/migrations').find(f=>f.endsWith('_recording_save_recovery.sql'));
+  await db.exec(fs.readFileSync('supabase/migrations/'+recovery,'utf8'));
   const call=(await db.query("insert into calls(initiator_id,status) values($1,'ongoing') returning id",[a])).rows[0].id;
   await db.query("insert into call_participants(call_id,user_id,status) values($1,$2,'connected'),($1,$3,'connected')",[call,a,b]);
   const as=async id=>{await db.exec('reset role');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[id||'']);await db.exec('set role authenticated');};
@@ -41,6 +46,8 @@ try {
   check((await action('resume',r.id)).status==='recording','resume');
   check((await action('stop',r.id)).status==='processing','stop before upload');
   await reject(()=>action('complete',r.id,null,{storage_path:'wrong',file_size_bytes:3}),'invalid_recording_file');
+  await reject(()=>action('complete',r.id,null,{storage_path:`${call}/${r.id}.mp4`,file_size_bytes:123,duration_seconds:4}),'recording_file_not_uploaded');
+  await db.query("insert into storage.objects(bucket_id,name,owner,metadata) values('call-recordings',$1,$2,'{\"size\":123}')",[`${call}/${r.id}.mp4`,a]);
   check((await action('complete',r.id,null,{storage_path:`${call}/${r.id}.mp4`,file_size_bytes:123,duration_seconds:4})).status==='completed','MP4 upload metadata saved');
   await reject(()=>action('start',r.id),'request_closed');
   r=await action('request');await as(b);
@@ -59,7 +66,15 @@ try {
   await as(b);await action('respond',r.id,true);await as(a);await reject(()=>action('start',r.id),'consent_required');
   await as(c);await action('respond',r.id,true);await as(a);check((await action('start',r.id)).status==='recording','three-person unanimous consent');
   await db.exec('reset role');await db.query("update calls set status='ended' where id=$1",[call]);
-  await as(a);check((await action()).status==='stopped','ended call stops recording');
+  await as(a);check((await action()).status==='processing','ended call preserves upload window');
+  await as(b);await reject(()=>action('complete',r.id,null,{storage_path:`${call}/${r.id}.mp4`,file_size_bytes:123}),'initiator_required');
+  await as(c);await reject(()=>db.query("insert into storage.objects(bucket_id,name,owner,metadata) values('call-recordings',$1,$2,'{}')",[`${call}/${r.id}.mp4`,c]),'row-level security');
+  await as(a);await db.query("insert into storage.objects(bucket_id,name,owner,metadata) values('call-recordings',$1,$2,'{\"size\":123}')",[`${call}/${r.id}.mp4`,a]);
+  await reject(()=>action('complete',r.id,null,{storage_path:`${call}/${r.id}.mp4`,file_size_bytes:999}),'recording_file_not_uploaded');
+  check((await action('complete',r.id,null,{storage_path:`${call}/${r.id}.mp4`,file_size_bytes:123,duration_seconds:4})).status==='completed','upload completes after hangup');
+  check((await action('complete',r.id,null,{storage_path:`${call}/${r.id}.mp4`,file_size_bytes:123,duration_seconds:4})).status==='completed','lost completion response retries idempotently');
+  await reject(()=>db.query("insert into storage.objects(bucket_id,name,owner,metadata) values('call-recordings',$1,$2,'{}')",[`${call}/${r.id}.webm`,a]),'row-level security');
+
   await reject(()=>action('request'),'call_not_connected');
   await db.exec('reset role');
   check(!(await db.query("select has_function_privilege('anon','public.recording_session(uuid,text,uuid,boolean,jsonb)','EXECUTE') allowed")).rows[0].allowed,'anonymous RPC denied');

@@ -5,6 +5,8 @@ on:
       - 'src/components/calls/RecordingControls*'
       - 'src/features/call-recording/**'
       - 'src/hooks/useCallRecorder*'
+      - 'src/pages/Calls.tsx'
+      - 'tests/call-recording/**'
       - 'supabase/migrations/**'
       - 'scripts/test-recording-consent.mjs'
       - '.github/workflows/recording-consent-checks.yml'
@@ -18,6 +20,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx vitest run src/components/calls/RecordingControls.test.tsx src/hooks/useCallRecorder.test.ts
+      - run: npx vitest run src/components/calls/RecordingControls.test.tsx src/hooks/useCallRecorder.test.ts src/features/call-recording/ src/lib/call-recording-inputs.test.ts
       - run: node scripts/test-recording-consent.mjs
       - run: npm run build
+      - run: npx playwright install --with-deps chromium webkit
+      - run: npx playwright test --config tests/call-recording/playwright.config.mjs

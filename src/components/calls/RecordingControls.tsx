@@ -29,8 +29,8 @@ export function RecordingControls({ callId, participants, compact = false }: { c
       <Button variant="outline" size="sm" disabled={busy || webRTCState.callStatus !== 'connected'} onClick={recording.request}>
         <Circle className="h-4 w-4 mr-2 text-red-500" />{busy ? 'A preparar…' : 'Gravar'}
       </Button>
-      {errorMessage}
-      {session?.status === 'completed' && <p role="status">Gravação guardada.</p>}
+      {!recording.retryAvailable && errorMessage}
+      {session?.status === 'completed' && <p role="status">Gravação guardada. Disponível em Chamadas → Gravações.</p>}
       {session?.status === 'stopped' && <p role="status">Pedido de gravação terminado.</p>}
     </div>}
     {active && <div className="shrink-0 self-center max-w-full px-2 pb-2">
