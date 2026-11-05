@@ -16,6 +16,9 @@ export function Recordings() {
   const [saved, setSaved] = useState<Saved[]>([]);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState<string | null>(null);
+  const exportTask = useRef<AbortController | null>(null);
+  const [exportProgress, setExportProgress] = useState<number | null>(null);
+  const [originalFile, setOriginalFile] = useState<{ id: string; file: File } | null>(null);
   const [exportFile, setExportFile] = useState<{ id: string; file: File } | null>(null);
   const [playback, setPlayback] = useState<{ id: string; url: string } | null>(null);
   const reload = useCallback(async () => {
@@ -33,12 +36,12 @@ export function Recordings() {
   }, [ownerId]);
   useEffect(() => {
     currentOwner.current = ownerId;
-    setPending([]); setSaved([]); setPlayback(null); setExportFile(null); setBusy(null); setError('');
+    setPending([]); setSaved([]); setPlayback(null); setExportFile(null); setOriginalFile(null); setExportProgress(null); setBusy(null); setError('');
     void reload();
     const refresh = () => { void reload(); };
     window.addEventListener(RECORDINGS_CHANGED, refresh);
     window.addEventListener('online', refresh);
-    return () => { currentOwner.current = undefined; window.removeEventListener(RECORDINGS_CHANGED, refresh); window.removeEventListener('online', refresh); };
+    return () => { exportTask.current?.abort(); currentOwner.current = undefined; window.removeEventListener(RECORDINGS_CHANGED, refresh); window.removeEventListener('online', refresh); };
   }, [reload, ownerId]);
   const retry = async (file: PendingRecording) => {
     if (busy || file.ownerId !== ownerId) return;
@@ -58,16 +61,26 @@ export function Recordings() {
   };
   const prepareDownload = async (recording: Saved) => {
     if (!ownerId || !recording.storage_path || busy) return;
-    setBusy(recording.id); setError(''); setExportFile(null);
+    setBusy(recording.id); setError(''); setExportFile(null); setOriginalFile(null); setExportProgress(null);
+    exportTask.current?.abort();
+    const controller = new AbortController(); exportTask.current = controller;
     try {
       const { data, error } = await supabase.storage.from('call-recordings').download(recording.storage_path);
       if (currentOwner.current !== ownerId) return;
       if (error || !data?.size) throw new Error('download_failed');
-      setExportFile({ id: recording.id, file: recordingFile(data, recording.id, recording.storage_path) });
+      const original = recordingFile(data, recording.id, recording.storage_path, recording.created_at);
+      setOriginalFile({ id: recording.id, file: original });
+      setExportProgress(0);
+      const { prepareMp4 } = await import('./mp4');
+      const converted = await prepareMp4(original, controller.signal, value => {
+        if (currentOwner.current === ownerId && !controller.signal.aborted) setExportProgress(value);
+      });
+      if (currentOwner.current !== ownerId || controller.signal.aborted) return;
+      setExportFile({ id: recording.id, file: converted });
     } catch {
-      if (currentOwner.current === ownerId) setError('Não foi possível descarregar a gravação. Tente novamente.');
+      if (currentOwner.current === ownerId && !controller.signal.aborted) setError('Não foi possível preparar o formato padrão. Se o original estiver disponível abaixo, pode guardá-lo sem conversão.');
     } finally {
-      if (currentOwner.current === ownerId) setBusy(null);
+      if (currentOwner.current === ownerId) { setBusy(null); setExportProgress(null); }
     }
   };
   const share = async (file: File) => {
@@ -94,15 +107,16 @@ export function Recordings() {
         <Button disabled={!!busy} variant="outline" onClick={() => void play(file)}>Reproduzir gravação</Button>
         <Button disabled={!!busy || !file.storage_path} variant="outline" onClick={() => void prepareDownload(file)}>Descarregar gravação</Button>
       </div>
-      {busy === file.id && <p role="status" className="text-sm">A carregar…</p>}
+      {busy === file.id && <p role="status" className="text-sm">{exportProgress === null ? 'A carregar…' : `A preparar MP4… ${exportProgress}%`}</p>}
+      {originalFile?.id === file.id && !busy && !exportFile && <Button variant="outline" onClick={() => downloadFile(originalFile.file)}>Guardar original</Button>}
       {exportFile?.id === file.id && <div className="space-y-2">
         <p role="status" className="text-sm">Ficheiro pronto. Escolha como guardar.</p>
         <div className="flex flex-wrap gap-2">
           <Button onClick={() => downloadFile(exportFile.file)}>Guardar ficheiro</Button>
           {typeof navigator.canShare === 'function' && navigator.canShare({ files: [exportFile.file] }) &&
-            <Button variant="outline" onClick={() => void share(exportFile.file)}>Partilhar / Guardar em Ficheiros</Button>}
+            <Button variant="outline" onClick={() => void share(exportFile.file)}>{exportFile.file.type.startsWith('video/') ? 'Guardar na Fototeca / Partilhar' : 'Partilhar / Guardar em Ficheiros'}</Button>}
         </div>
-        <p className="text-sm text-muted-foreground">No iPhone, abra Partilhar e escolha Guardar em Ficheiros, se disponível.</p>
+        <p className="text-sm text-muted-foreground">{exportFile.file.type.startsWith('video/') ? 'No iPhone, escolha Guardar vídeo na folha de partilha para adicionar à Fototeca. A gravação também permanece na aplicação.' : 'No iPhone, abra Partilhar e escolha Guardar em Ficheiros, se disponível.'}</p>
       </div>}
       {playback?.id === file.id && <video className="w-full max-h-80" src={playback.url} controls playsInline onError={() => setError('Não foi possível reproduzir. Toque novamente em Reproduzir gravação.')} />}
     </div>)}
