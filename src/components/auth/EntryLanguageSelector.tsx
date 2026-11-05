@@ -1,4 +1,3 @@
-import { Check, MessageCircle, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -38,25 +37,20 @@ export function EntryLanguageSelector() {
       {isPortuguese && (
         <fieldset className="mt-4" disabled={busy}>
           <legend className="text-sm font-medium mb-2">Como prefere que a Yamilook fale consigo?</legend>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2 rounded-2xl bg-secondary/50 p-1">
             {[
-              { code: 'pt', label: 'Português formal', description: 'Claro, cuidado e familiar.', example: 'Olá! É um prazer ter a sua companhia.', Icon: MessageCircle },
-              { code: 'pt-banda', label: 'Yamilook da Banda', description: 'Linguagem popular angolana.', example: 'Kamba, bem-vindo à nossa banda!', Icon: Sparkles },
+              { code: 'pt', label: 'Português formal', description: 'Claro, cuidado e familiar.' },
+              { code: 'pt-banda', label: 'Yamilook da Banda', description: 'Linguagem popular angolana.' },
             ].map(tone => (
-              <label key={tone.code} className={cn("relative flex flex-col gap-3 rounded-2xl border-2 p-4 cursor-pointer transition-colors motion-reduce:transition-none focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2", language === tone.code ? "border-primary bg-primary/5 shadow-sm" : "border-border bg-background hover:border-primary/40")}>
+              <label key={tone.code} className={cn("relative flex flex-col items-center gap-1 rounded-xl py-3 px-2 text-center cursor-pointer focus-within:ring-2 focus-within:ring-ring", language === tone.code ? "bg-background shadow-md" : "hover:bg-background/50")}>
                 <input type="radio" name={`${id}-tone`} value={tone.code}
                   className="sr-only" aria-label={tone.label} checked={language === tone.code} onChange={() => void choose(tone.code)} />
-                <span className="flex items-center justify-between" aria-hidden="true">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary"><tone.Icon className="h-5 w-5" /></span>
-                  {language === tone.code && <Check className="h-4 w-4 text-primary" />}
-                </span>
+                <span className="text-2xl" aria-hidden="true">🇦🇴</span>
                 <span className="text-sm font-semibold leading-tight">{tone.label}</span>
-                <span className="text-xs text-muted-foreground leading-relaxed">{tone.description}</span>
-                <span className="text-xs leading-relaxed border-t border-border/60 pt-3">“{tone.example}”</span>
+                {language === tone.code && <span className="text-xs text-muted-foreground leading-relaxed">{tone.description}</span>}
               </label>
             ))}
           </div>
-        <p className="mt-3 text-xs text-muted-foreground text-center">A mesma comunidade, à sua maneira.</p>
         </fieldset>
       )}
       {failed && <p role="alert" className="mt-2 text-sm text-destructive">{t('entry.languageError')}</p>}
