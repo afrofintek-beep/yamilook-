@@ -64,7 +64,7 @@ it('keeps download and preview when native file sharing is unsupported', async (
   fireEvent.click(screen.getByText('Confirmar e escolher aplicação'));
   fireEvent.click(screen.getByRole('button', { name: 'LinkedIn' }));
   expect(screen.getByRole('link', { name: 'Guardar cópia com marca' })).toHaveAttribute('href', 'blob:preview');
-  expect(screen.queryByRole('link', { name: 'Guardar cópia para LinkedIn' })).not.toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'Guardar cópia para LinkedIn' })).toHaveAttribute('href', 'blob:preview');
   expect(screen.queryByRole('button', { name: 'Abrir opções do telemóvel' })).not.toBeInTheDocument();
   expect(screen.getByRole('img')).toBeInTheDocument();
   expect(sharePreparedVideo).not.toHaveBeenCalled();
@@ -76,6 +76,8 @@ it('preserves the branded preview after a failed LinkedIn file handoff', async (
   fireEvent.click(screen.getByText('Preparar cópia com marca'));
   fireEvent.click(await screen.findByText('Confirmar e escolher aplicação'));
   fireEvent.click(screen.getByRole('button', { name: 'LinkedIn' }));
+  expect(sharePreparedVideo).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'Tentar partilha pelo menu do telemóvel' }));
   await screen.findByText(/Não foi possível abrir a partilha/);
   expect(sharePreparedVideo).toHaveBeenCalledWith(file);
   expect(shared).not.toHaveBeenCalled();

@@ -2,18 +2,18 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
 import FileApplicationPicker from './FileApplicationPicker';
 afterEach(cleanup);
-it('keeps the requested order and opens native sharing in the application tap', () => {
+it('keeps the requested order and guides LinkedIn without opening the native sheet', () => {
   const share = vi.fn();
   render(<FileApplicationPicker onShare={share} />);
   expect(screen.getAllByRole('button').map(button => button.textContent)).toEqual(['Kosolola','WhatsApp','LinkedIn','TikTok','YouTube','Facebook','Instagram','Outros']);
   fireEvent.click(screen.getByRole('button', { name: 'LinkedIn' }));
-  expect(share).toHaveBeenCalledTimes(1);
-  expect(screen.getByRole('note')).toHaveTextContent('Se não aparecer');
+  expect(share).not.toHaveBeenCalled();
+  expect(screen.getByRole('region', { name: 'Publicar no LinkedIn' })).toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Abrir opções do telemóvel' })).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Outros' }));
-  expect(share).toHaveBeenCalledTimes(2);
+  expect(share).toHaveBeenCalledTimes(1);
 });
-it.each(['WhatsApp', 'LinkedIn', 'TikTok', 'YouTube', 'Facebook', 'Instagram', 'Outros'])('opens sharing directly for %s and updates the selected destination', label => {
+it.each(['WhatsApp', 'TikTok', 'YouTube', 'Facebook', 'Instagram', 'Outros'])('opens sharing directly for %s and updates the selected destination', label => {
   const share = vi.fn();
   render(<FileApplicationPicker onShare={share} />);
   fireEvent.click(screen.getByRole('button', { name: label, exact: true }));
