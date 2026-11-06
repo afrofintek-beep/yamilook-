@@ -572,5 +572,10 @@
     "confirmLaterHint": "ምዝገባውን ጨርሰው መሳተፍ ይችላሉ። አድራሻዎን በኋላ በመገለጫ → Bandaዬን አረጋግጥ ያረጋግጡ።",
     "residenceNotice": "አሁን በቦታው መገኘት መኖሪያን አያረጋግጥም። የአካባቢ ጥቅሞች የተረጋገጠ Banda ያስፈልጋቸዋል፤ ጉዞ Bandaዎን በራሱ አይቀይርም።",
     "confirmBanda": "Bandaን አረጋግጥና ቀጥል"
+  },
+  "groupCalls": {
+    "conferenceLabel": "ስብሰባ",
+    "participantCount": "ተሳታፊዎች፦ {{count}}",
+    "addParticipant": "አክል"
   }
 }

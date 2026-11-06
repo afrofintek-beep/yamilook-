@@ -573,5 +573,10 @@
     "confirmLaterHint": "Unaweza kukamilisha usajili na kushiriki. Thibitisha anwani baadaye katika Wasifu → Thibitisha Banda yangu.",
     "residenceNotice": "Kuwepo sasa hakuthibitishi makazi. Manufaa ya eneo yanahitaji Banda iliyothibitishwa; kusafiri hakubadilishi Banda yako kiotomatiki.",
     "confirmBanda": "Thibitisha Banda na uendelee"
+  },
+  "groupCalls": {
+    "conferenceLabel": "Mkutano",
+    "participantCount": "Washiriki: {{count}}",
+    "addParticipant": "Ongeza"
   }
 }

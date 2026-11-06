@@ -652,6 +652,9 @@
     }
   },
   "groupCalls": {
+    "conferenceLabel": "Conference",
+    "participantCount": "Participants: {{count}}",
+    "addParticipant": "Add",
     "title": "Group conference",
     "createGroup": "Create group",
     "selectTitle": "Conference participants",

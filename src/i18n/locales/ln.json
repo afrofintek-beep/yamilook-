@@ -570,5 +570,10 @@
     "confirmLaterHint": "Okoki kosilisa komikomisa mpe kosangana. Ndímá adresse na nsima na Profil → Ndima Banda na ngai.",
     "residenceNotice": "Kozala awa sikoyo endimisi kofanda te. Matomba ya etuka esengi Banda endimami; mobembo ebongolaka Banda na yo yango moko te.",
     "confirmBanda": "Ndímá Banda mpe koba"
+  },
+  "groupCalls": {
+    "conferenceLabel": "Lisolo ya etuluku",
+    "participantCount": "Bato: {{count}}",
+    "addParticipant": "Bakisa"
   }
 }

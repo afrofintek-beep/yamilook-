@@ -879,6 +879,9 @@
     "revokeLabel": "Revogar {{device}}"
   },
   "groupCalls": {
+    "conferenceLabel": "Conferência",
+    "participantCount": "Participantes: {{count}}",
+    "addParticipant": "Adicionar",
     "title": "Conferência do grupo",
     "createGroup": "Criar grupo",
     "selectTitle": "Participantes da conferência",
