@@ -39,8 +39,8 @@ export function EntryLanguageSelector() {
           <legend className="text-sm font-medium mb-2">Como prefere que a Yamilook fale consigo?</legend>
           <div className="grid grid-cols-2 gap-2 rounded-2xl bg-secondary/50 p-1">
             {[
-              { code: 'pt', label: 'Linguagem formal', description: 'Claro, cuidado e familiar.' },
-              { code: 'pt-banda', label: 'Falar como na banda', description: 'Linguagem popular angolana.' },
+              { code: 'pt', label: 'Formal', description: 'Claro, cuidado e familiar.' },
+              { code: 'pt-banda', label: 'Urbano', description: 'Linguagem popular angolana.' },
             ].map(tone => (
               <label key={tone.code} className={cn("relative flex flex-col items-center gap-1 rounded-xl py-3 px-2 text-center cursor-pointer focus-within:ring-2 focus-within:ring-ring", language === tone.code ? "bg-background shadow-md" : "hover:bg-background/50")}>
                 <input type="radio" name={`${id}-tone`} value={tone.code}
