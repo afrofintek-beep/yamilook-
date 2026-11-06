@@ -6,7 +6,7 @@ import { shareApplications } from '../../../shared/share-destinations.mjs';
 const icons = [MessagesSquare, MessageCircle, Linkedin, Music2, Youtube, Facebook, Instagram, MoreHorizontal];
 
 /** Keep the prepared File in the parent; choosing a destination never re-exports it. */
-export default function FileApplicationPicker({ onShare, disabled = false, nativeShareAvailable = true, downloadUrl, filename }: { onShare: () => void; disabled?: boolean; nativeShareAvailable?: boolean; downloadUrl?: string; filename?: string }) {
+export default function FileApplicationPicker({ onShare, onSave, disabled = false, nativeShareAvailable = true, downloadUrl, filename }: { onShare: () => void; onSave?: () => void; disabled?: boolean; nativeShareAvailable?: boolean; downloadUrl?: string; filename?: string }) {
   const linkedInPanel = useRef<HTMLElement>(null);
   const [selected, setSelected] = useState('');
   return <div className="space-y-3" aria-label="Aplicações para partilhar">
@@ -30,11 +30,12 @@ export default function FileApplicationPicker({ onShare, disabled = false, nativ
       {selected === 'LinkedIn' && <section ref={linkedInPanel} tabIndex={-1} className="space-y-3 rounded-xl border p-4" aria-label="Publicar no LinkedIn">
         <h4 className="font-semibold">Publicar no LinkedIn</h4>
         <p className="text-sm">1. Guarda esta cópia com o logótipo e o autor.</p>
-        {downloadUrl && <Button asChild className="min-h-12 w-full"><a href={downloadUrl} download={filename}>Guardar cópia para LinkedIn</a></Button>}
+        {nativeShareAvailable && onSave ? <Button className="min-h-12 w-full" disabled={disabled} onClick={onSave}>Guardar cópia para LinkedIn</Button> : downloadUrl && <Button asChild className="min-h-12 w-full"><a href={downloadUrl} download={filename}>Guardar cópia para LinkedIn</a></Button>}
+        <p className="text-sm">No menu que abrir, procura Guardar vídeo, Guardar imagem ou Guardar em Ficheiros na lista de ações por baixo das aplicações.</p>
         <p className="text-xs text-muted-foreground">No iPhone, se o ficheiro abrir numa pré-visualização, toca em Partilhar e escolhe Guardar vídeo ou Guardar imagem. Se ficar em Ficheiros, abre-o aí e usa Partilhar para o guardar nas Fotografias.</p>
         <p className="text-sm">2. Abre o LinkedIn, toca em Publicar e adiciona o vídeo ou a fotografia guardada.</p>
-        <Button asChild variant="outline" className="min-h-12 w-full"><a href="https://www.linkedin.com/feed/" target="_blank" rel="noopener noreferrer">Abrir LinkedIn</a></Button>
-        <p className="text-xs text-muted-foreground">Se abrir o site, podes continuar nele ou abrir a aplicação LinkedIn no telemóvel. O ficheiro não é anexado automaticamente.</p>
+        <Button asChild variant="outline" className="min-h-12 w-full"><a href="https://www.linkedin.com/feed/">Abrir LinkedIn</a></Button>
+        <p className="text-xs text-muted-foreground">Guarda primeiro a cópia: este botão sai da Yamilook e abre o LinkedIn nesta janela. O ficheiro não é anexado automaticamente.</p>
         <p className="text-sm">3. Acrescenta o texto, aguarda o carregamento e confirma a publicação no LinkedIn.</p>
         {nativeShareAvailable && <Button variant="ghost" className="min-h-12 w-full whitespace-normal" disabled={disabled} onClick={onShare}>Tentar partilha pelo menu do telemóvel</Button>}
       </section>}
