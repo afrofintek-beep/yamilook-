@@ -110,7 +110,7 @@ function ExportAction({ id, index, kind, onShared }: { id: string; index: number
       {file.type.startsWith('video/') ? <video key={preview} src={preview} controls playsInline preload="auto" onError={() => setStatus('Não foi possível reproduzir a pré-visualização. Guarda a cópia para a verificar ou prepara novamente.')} className="max-h-[50svh] w-full rounded-lg bg-black" aria-label="Pré-visualização do vídeo exportado" /> : <img src={preview} alt="Cópia com o logótipo Yamilook e identificação do autor" className="max-h-[50svh] w-full rounded-lg object-contain" />}
       <p className="text-xs text-muted-foreground">{file.type.startsWith('video/') ? 'Reproduz para confirmar também o áudio. ' : ''}{file.name} · {(file.size / 1048576).toFixed(1)} MB</p>
       {!choosing && <Button className="w-full" disabled={sharing} onClick={() => setChoosing(true)}>Confirmar e escolher aplicação</Button>}
-      {choosing && <FileApplicationPicker disabled={sharing} nativeShareAvailable={canShareVideo(file)} onShare={() => void share()} />}
+      {choosing && <FileApplicationPicker downloadUrl={preview} filename={file.name} disabled={sharing} nativeShareAvailable={canShareVideo(file)} onShare={() => void share()} />}
       <Button asChild variant="outline" className="w-full"><a href={preview} download={file.name}>Guardar cópia com marca</a></Button>
       <Button variant="ghost" className="w-full" disabled={sharing} onClick={() => { setFiles([]); setStatus(''); setChoosing(false); }}>Preparar novamente</Button>
     </>}
