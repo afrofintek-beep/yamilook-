@@ -1,3 +1,9 @@
+import { useTranslation } from 'react-i18next';
+import { useId, useRef } from 'react';
+import { Input } from '@/components/ui/input';
+import { localizedCountryName } from '@/lib/localized-country-name';
+import { RESIDENCE_COUNTRY_CODES, loadResidenceCities, matchingResidenceCities } from '@/lib/residence-locations';
+import locationHints from '@/i18n/location-labels.json';
 import { submitResidence } from '@/lib/residence';
 import { useEffect, useMemo, useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -39,6 +45,14 @@ const RESIDENCY_BADGE: Record<string, { label: string; className: string; icon: 
 /** "Mudei-me" — change the user's banda (neighborhood). One change per 60 days.
  *  Captures the new location so the AFROLOC code regenerates for the new place. */
 export function BandaChangeSheet({ open, onOpenChange, current, onChanged }: Props) {
+  const { t, i18n } = useTranslation();
+  const language = i18n.resolvedLanguage || i18n.language;
+  const locale = language.toLowerCase().split(/[-_]/)[0] as keyof typeof locationHints;
+  const captureGeneration = useRef(0);
+  useEffect(() => () => { captureGeneration.current++; }, [open]);
+  const cityListId = useId();
+  const neighborhoodListId = useId();
+  const [cityData, setCityData] = useState<{country:string; cities:string[]}>({country:'',cities:[]});
   const [country, setCountry] = useState(current.country_code || 'AO');
   const [city, setCity] = useState(current.city || '');
   const [neighborhood, setNeighborhood] = useState(current.neighborhood || '');
@@ -98,11 +112,20 @@ export function BandaChangeSheet({ open, onOpenChange, current, onChanged }: Pro
     }
   };
 
+  useEffect(() => {
+    if (!open) return;
+    let active = true;
+    loadResidenceCities(country).then(cities => {if(active) setCityData({country,cities});}).catch(() => {if(active) setCityData({country,cities:[]});});
+    return () => {active=false;};
+  }, [open,country]);
+  const countryCodes = useMemo(() => [...RESIDENCE_COUNTRY_CODES].sort((a,b)=>localizedCountryName(a,language).localeCompare(localizedCountryName(b,language),locale)), [language,locale]);
+  const citySuggestions = useMemo(() => matchingResidenceCities(cityData.country===country?cityData.cities:[],city,language), [cityData,country,city,language]);
+  const clearLocation = () => {captureGeneration.current++;setLocating(false);setGps(null);setGpsAccuracy(null);setHomeConfirmed(false);};
   const countryData = useMemo(() => AFRICAN_LOCATIONS.find((l) => l.countryCode === country), [country]);
   const cities = countryData?.cities ?? [];
   const neighborhoods = cities.find((c) => c.name === city)?.neighborhoods ?? [];
 
-  const changingBanda = neighborhood.trim() !== (current.neighborhood || '').trim()
+  const changingBanda = country !== (current.country_code || 'AO') || neighborhood.trim() !== (current.neighborhood || '').trim()
     || city.trim() !== (current.city || '').trim();
   const blockedByCooldown = changingBanda && residency?.can_change_now === false;
   const nextChange = residency?.next_change_at
@@ -111,24 +134,26 @@ export function BandaChangeSheet({ open, onOpenChange, current, onChanged }: Pro
 
   const useGps = async () => {
     if (!homeConfirmed) return;
+    const request = ++captureGeneration.current;
     setLocating(true);
     try {
       const pos = await new Promise<GeolocationPosition>((res, rej) =>
         navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy: true, timeout: 10000 }),
       );
+      if (request !== captureGeneration.current) return;
       const _cell = snapToGrid(pos.coords.latitude, pos.coords.longitude);
       setGps({ lat: _cell.lat, lng: _cell.lng });
       setGpsAccuracy(pos.coords.accuracy);
       toast.success('Localização captada. A validação fica pendente.');
     } catch {
-      toast.error('Não foi possível gerar o teu endereço AFROLOC.');
+      if (request === captureGeneration.current) toast.error('Não foi possível gerar o teu endereço AFROLOC.');
     } finally {
-      setLocating(false);
+      if (request === captureGeneration.current) setLocating(false);
     }
   };
 
   const save = async () => {
-    if (!neighborhood || !city) {
+    if (!neighborhood.trim() || !city.trim()) {
       toast.info('Escolhe cidade e bairro.');
       return;
     }
@@ -136,7 +161,7 @@ export function BandaChangeSheet({ open, onOpenChange, current, onChanged }: Pro
     try {
       await submitResidence(gps && homeConfirmed
         ? {method:'home',lat:gps.lat,lng:gps.lng,accuracy:gpsAccuracy || undefined}
-        : {method:'away'},country,city,neighborhood);
+        : {method:'away'},country,city.trim(),neighborhood.trim());
       toast.success(changingBanda ? 'Mudaste de banda! 🏡' : 'Endereço AFROLOC atualizado.');
       onChanged();
       onOpenChange(false);
@@ -227,31 +252,24 @@ export function BandaChangeSheet({ open, onOpenChange, current, onChanged }: Pro
             <Label className="text-sm font-medium">Mudei-me — para onde?</Label>
 
             <div className="grid grid-cols-1 gap-3">
-              <Select value={country} onValueChange={(v) => { setCountry(v); setCity(''); setNeighborhood(''); }}>
-                <SelectTrigger className="h-11 rounded-xl"><SelectValue placeholder="País" /></SelectTrigger>
+              <Select value={country} onValueChange={(v) => { clearLocation(); setCountry(v); setCity(''); setNeighborhood(''); }}>
+                <SelectTrigger aria-label={t("onboardingFlow.country")} className="h-11 rounded-xl"><SelectValue placeholder={t("onboardingFlow.country")} /></SelectTrigger>
                 <SelectContent className="z-[9999] max-h-64">
-                  {AFRICAN_LOCATIONS.map((l) => (
-                    <SelectItem key={l.countryCode} value={l.countryCode}>{l.country}</SelectItem>
+                  {countryCodes.map(code => (
+                    <SelectItem key={code} value={code}>{localizedCountryName(code,language)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
 
-              <Select value={city} onValueChange={(v) => { setCity(v); setNeighborhood(''); }}>
-                <SelectTrigger className="h-11 rounded-xl"><SelectValue placeholder="Cidade" /></SelectTrigger>
-                <SelectContent className="z-[9999] max-h-64">
-                  {cities.map((c) => <SelectItem key={c.name} value={c.name}>{c.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-
-              <Select value={neighborhood} onValueChange={setNeighborhood} disabled={!city}>
-                <SelectTrigger className="h-11 rounded-xl"><SelectValue placeholder="Bairro / banda" /></SelectTrigger>
-                <SelectContent className="z-[9999] max-h-64">
-                  {neighborhoods.map((n) => <SelectItem key={n} value={n}>{n}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <Input aria-label={t("onboardingFlow.city")} list={cityListId} value={city} maxLength={200} autoComplete="address-level2" aria-describedby={`${cityListId}-hint`} placeholder={t("onboardingFlow.city")} onChange={e=>{clearLocation();setCity(e.target.value);setNeighborhood('');}} />
+              <datalist id={cityListId}>{citySuggestions.map(name=><option key={name} value={name}/>)}</datalist>
+              <p id={`${cityListId}-hint`} className="text-xs text-muted-foreground">{locationHints[locale] || locationHints.pt}</p>
+              <Input aria-label={t("onboardingFlow.neighborhood")} list={neighborhoodListId} value={neighborhood} maxLength={200} disabled={!city.trim()} placeholder={t("onboardingFlow.neighborhood")} onChange={e=>{clearLocation();setNeighborhood(e.target.value);}} />
+              <datalist id={neighborhoodListId}>{neighborhoods.map(name=><option key={name} value={name}/>)}</datalist>
+              <a href="https://www.geonames.org/" target="_blank" rel="noreferrer" className="text-xs text-muted-foreground underline">GeoNames · CC BY 4.0</a>
             </div>
 
-            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={homeConfirmed} onChange={e=>{setHomeConfirmed(e.target.checked);if(!e.target.checked)setGps(null);}}/>Estou agora no meu endereço de residência</label>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={homeConfirmed} onChange={e=>{setHomeConfirmed(e.target.checked);if(!e.target.checked){captureGeneration.current++;setGps(null);setLocating(false);}}}/>Estou agora no meu endereço de residência</label>
             <Button
               type="button" variant="outline"
               className={cn('w-full h-11 rounded-xl', gps && 'border-green-500 text-green-600')}
@@ -268,7 +286,7 @@ export function BandaChangeSheet({ open, onOpenChange, current, onChanged }: Pro
           <Button
             className="w-full h-12 rounded-xl"
             onClick={save}
-            disabled={saving || blockedByCooldown || !neighborhood || !city}
+            disabled={saving || blockedByCooldown || !neighborhood.trim() || !city.trim() || locating}
           >
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : (changingBanda ? 'Confirmar mudança' : 'Guardar')}
           </Button>

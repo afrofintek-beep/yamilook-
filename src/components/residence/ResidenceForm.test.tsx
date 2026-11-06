@@ -27,3 +27,21 @@ it('ignores a GPS response after the user switches to deferred confirmation',()=
  fireEvent.click(screen.getByLabelText('Confirmar mais tarde'));success({coords:{latitude:1,longitude:2,accuracy:10}});
  expect(screen.queryByText(/Precisão indicada/)).not.toBeInTheDocument();expect(screen.getByText('Confirmar Banda e continuar')).toBeEnabled();
 });
+
+it('allows a missing locality to be entered and saved without a mandatory catalog match',()=>{
+ function Form(){
+  const[country,setCountry]=useState('AO'); const[city,setCity]=useState('Luanda');const[n,setN]=useState('Talatona');const[custom,setCustom]=useState('');const[plan,setPlan]=useState<ResidencePlan>({method:'later'});
+  return <ResidenceForm country={country} city={city} neighborhood={n} customNeighborhood={custom} onCountry={setCountry} onCity={setCity} onNeighborhood={setN} onCustomNeighborhood={setCustom} plan={plan} onPlan={setPlan} onContinue={done}/>;
+ }
+ render(<Form/>);
+ fireEvent.change(screen.getByLabelText('País'),{target:{value:'PT'}});
+ expect(screen.getByLabelText('Cidade')).toHaveValue('');
+ expect(screen.getByLabelText('Bairro')).toHaveValue('');
+ fireEvent.change(screen.getByLabelText('Cidade'),{target:{value:'Localidade não catalogada'}});
+ fireEvent.change(screen.getByLabelText('Bairro'),{target:{value:'__other__'}});
+ fireEvent.change(screen.getByLabelText('Nome do teu bairro'),{target:{value:'Bairro novo'}});
+ fireEvent.click(screen.getByText('Confirmar Banda e continuar'));
+ expect(done).toHaveBeenCalledOnce(); expect(location).not.toHaveBeenCalled();
+ fireEvent.change(screen.getByLabelText('Cidade'),{target:{value:'  '}});
+ expect(screen.getByText('Confirmar Banda e continuar')).toBeDisabled();
+});
