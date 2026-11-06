@@ -1,5 +1,5 @@
 import { MessageCircle, Linkedin, Music2, Youtube, Facebook, Instagram, MoreHorizontal, MessagesSquare } from 'lucide-react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { shareApplications } from '../../../shared/share-destinations.mjs';
 
@@ -7,12 +7,17 @@ const icons = [MessagesSquare, MessageCircle, Linkedin, Music2, Youtube, Faceboo
 
 /** Keep the prepared File in the parent; choosing a destination never re-exports it. */
 export default function FileApplicationPicker({ onShare, disabled = false, nativeShareAvailable = true, downloadUrl, filename }: { onShare: () => void; disabled?: boolean; nativeShareAvailable?: boolean; downloadUrl?: string; filename?: string }) {
+  const linkedInPanel = useRef<HTMLElement>(null);
   const [selected, setSelected] = useState('');
   return <div className="space-y-3" aria-label="Aplicações para partilhar">
     <p className="text-sm text-muted-foreground">Escolhe onde publicar. Para LinkedIn, guarda a cópia e abre a aplicação nos passos abaixo.</p>
     <div className="grid grid-cols-2 gap-2">
       {shareApplications.map((label, index) => { const Icon = icons[index]; return <Button key={label} variant="outline" className="min-h-12" disabled={disabled} aria-pressed={selected === label} onClick={() => {
         setSelected(label);
+        if (label === 'LinkedIn') requestAnimationFrame(() => {
+          linkedInPanel.current?.scrollIntoView?.({ block: 'start', behavior: 'smooth' });
+          linkedInPanel.current?.focus({ preventScroll: true });
+        });
         // Invoke in this tap, before any await, so iOS retains user activation.
         if (label !== 'Kosolola' && label !== 'LinkedIn' && nativeShareAvailable) onShare();
       }}><Icon className="mr-2 h-5 w-5 shrink-0" aria-hidden="true" />{label}</Button>; })}
@@ -22,7 +27,7 @@ export default function FileApplicationPicker({ onShare, disabled = false, nativ
         ? 'Guarda a cópia com marca e anexa-a na conversa ou grupo da Kosolola.'
         : `Escolhe ${selected} nas opções do telemóvel. Se não aparecer, guarda a cópia e anexa-a nessa aplicação.`}</p>}
       {selected === 'Kosolola' && <Button asChild variant="outline"><a href="https://www.kosolola.com" target="_blank" rel="noopener noreferrer">Abrir Kosolola</a></Button>}
-      {selected === 'LinkedIn' && <section className="space-y-3 rounded-xl border p-4" aria-label="Publicar no LinkedIn">
+      {selected === 'LinkedIn' && <section ref={linkedInPanel} tabIndex={-1} className="space-y-3 rounded-xl border p-4" aria-label="Publicar no LinkedIn">
         <h4 className="font-semibold">Publicar no LinkedIn</h4>
         <p className="text-sm">1. Guarda esta cópia com o logótipo e o autor.</p>
         {downloadUrl && <Button asChild className="min-h-12 w-full"><a href={downloadUrl} download={filename}>Guardar cópia para LinkedIn</a></Button>}
