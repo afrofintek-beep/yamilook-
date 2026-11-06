@@ -1,0 +1,82 @@
+{
+  "en": {
+    "back": "Back",
+    "updated": "Last updated: January 12, 2026",
+    "accept": "By continuing, you accept our",
+    "terms": "Terms of Service",
+    "and": "and",
+    "privacy": "Privacy Policy"
+  },
+  "sw": {
+    "back": "Rudi",
+    "updated": "Ilisasishwa mwisho: 12 Januari 2026",
+    "accept": "Kwa kuendelea, unakubali",
+    "terms": "Masharti ya Huduma",
+    "and": "na",
+    "privacy": "Sera ya Faragha"
+  },
+  "am": {
+    "back": "ተመለስ",
+    "updated": "ለመጨረሻ ጊዜ የተዘመነው፦ 12 ጃንዋሪ 2026",
+    "accept": "በመቀጠል፣ የሚከተሉትን ይቀበላሉ፦",
+    "terms": "የአገልግሎት ውሎች",
+    "and": "እና",
+    "privacy": "የግላዊነት ፖሊሲ"
+  },
+  "yo": {
+    "back": "Padà",
+    "updated": "Ìmúdójúìwọ̀n tó kẹ́yìn: 12 Ṣẹ́rẹ́ 2026",
+    "accept": "Nípa títẹ̀síwájú, o gba",
+    "terms": "Àwọn Òfin Iṣẹ́",
+    "and": "àti",
+    "privacy": "Ìlànà Àṣírí"
+  },
+  "sn": {
+    "back": "Dzokera",
+    "updated": "Rakapedzisira kuvandudzwa: 12 Ndira 2026",
+    "accept": "Nekuenderera mberi, unobvuma",
+    "terms": "Mitemo Yebasa",
+    "and": "ne",
+    "privacy": "Gwaro Rekuvanzika"
+  },
+  "pt": {
+    "back": "Voltar",
+    "updated": "Última atualização: 12 de Janeiro de 2026",
+    "accept": "Ao continuar, aceita os nossos",
+    "terms": "Termos de Serviço",
+    "and": "e",
+    "privacy": "Política de Privacidade"
+  },
+  "fr": {
+    "back": "Retour",
+    "updated": "Dernière mise à jour : 12 janvier 2026",
+    "accept": "En continuant, vous acceptez nos",
+    "terms": "Conditions d'utilisation",
+    "and": "et notre",
+    "privacy": "Politique de confidentialité"
+  },
+  "zu": {
+    "back": "Emuva",
+    "updated": "Igcine ukubuyekezwa: 12 Januwari 2026",
+    "accept": "Ngokuqhubeka, wamukela",
+    "terms": "Imigomo Yesevisi",
+    "and": "kanye",
+    "privacy": "Inqubomgomo Yobumfihlo"
+  },
+  "ln": {
+    "back": "Zonga",
+    "updated": "Mbongwana ya nsuka: 12 Yanuali 2026",
+    "accept": "Na kokoba, ondimi",
+    "terms": "Mibeko ya Mosala",
+    "and": "mpe",
+    "privacy": "Mobeko ya Kobatela Sekele"
+  },
+  "ar": {
+    "back": "رجوع",
+    "updated": "آخر تحديث: 12 يناير 2026",
+    "accept": "بالمتابعة، فإنك توافق على",
+    "terms": "شروط الخدمة",
+    "and": "و",
+    "privacy": "سياسة الخصوصية"
+  }
+}

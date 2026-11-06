@@ -1,3 +1,4 @@
+import { legalLabel } from '@/i18n/legal-labels';
 import { onboardingImage } from '@/components/auth/onboarding-images';
 import { EntryLanguageSelector } from '@/components/auth/EntryLanguageSelector';
 import { communityReturn } from '@/features/academia/community-links';
@@ -1101,8 +1102,8 @@ export default function Onboarding() {
             </div>
 
             <p className="text-xs text-muted-foreground text-center mt-4">{t("onboardingFlow.accept")}{' '}
-              <Link to="/terms" className="underline hover:text-foreground">{t("auth.termsOfService")}</Link>{' '}{t("auth.and")}{' '}
-              <Link to="/privacy" className="underline hover:text-foreground">{t("auth.privacyPolicy")}</Link>
+              <Link to="/terms" className="underline hover:text-foreground">{legalLabel(i18n.resolvedLanguage || i18n.language, 'terms')}</Link>{' '}{legalLabel(i18n.resolvedLanguage || i18n.language, 'and')}{' '}
+              <Link to="/privacy" className="underline hover:text-foreground">{legalLabel(i18n.resolvedLanguage || i18n.language, 'privacy')}</Link>
             </p>
 
             <p className="text-center text-sm text-muted-foreground mt-4">{t("auth.haveAccount")}{' '}
