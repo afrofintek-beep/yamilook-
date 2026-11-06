@@ -86,12 +86,12 @@ function ExportAction({ id, index, kind, onShared }: { id: string; index: number
     }
   };
   const cancel = () => { request.current?.abort(); request.current = null; setBusy(false); if (compatible) { setSourceReady(false); setCompatible(value => value ? { ...value, attempt: value.attempt + 1 } : null); } setStatus('Preparação cancelada.'); };
-  const share = async () => {
+  const share = async (saving = false) => {
     if (!file || sharing) return;
     setSharing(true);
     try {
       const result = await sharePreparedVideo(file);
-      if (result === 'shared') { setStatus('Cópia entregue à aplicação. Conclui o envio lá.'); onShared?.(); }
+      if (result === 'shared') { setStatus(saving ? 'Menu fechado. Confirma que a cópia está nas Fotografias ou em Ficheiros antes de abrir o LinkedIn.' : 'Cópia entregue à aplicação. Conclui o envio lá.'); if (!saving) onShared?.(); }
       else setStatus(result === 'cancelled' ? 'Partilha cancelada. A pré-visualização continua disponível.' : 'Guarda a cópia e anexa-a na aplicação de destino.');
     } catch { setStatus('Não foi possível abrir a partilha. Guarda a cópia e anexa-a na aplicação.'); }
     finally { setSharing(false); }
@@ -110,7 +110,7 @@ function ExportAction({ id, index, kind, onShared }: { id: string; index: number
       {file.type.startsWith('video/') ? <video key={preview} src={preview} controls playsInline preload="auto" onError={() => setStatus('Não foi possível reproduzir a pré-visualização. Guarda a cópia para a verificar ou prepara novamente.')} className="max-h-[50svh] w-full rounded-lg bg-black" aria-label="Pré-visualização do vídeo exportado" /> : <img src={preview} alt="Cópia com o logótipo Yamilook e identificação do autor" className="max-h-[50svh] w-full rounded-lg object-contain" />}
       <p className="text-xs text-muted-foreground">{file.type.startsWith('video/') ? 'Reproduz para confirmar também o áudio. ' : ''}{file.name} · {(file.size / 1048576).toFixed(1)} MB</p>
       {!choosing && <Button className="w-full" disabled={sharing} onClick={() => setChoosing(true)}>Confirmar e escolher aplicação</Button>}
-      {choosing && <FileApplicationPicker downloadUrl={preview} filename={file.name} disabled={sharing} nativeShareAvailable={canShareVideo(file)} onShare={() => void share()} />}
+      {choosing && <FileApplicationPicker downloadUrl={preview} filename={file.name} disabled={sharing} nativeShareAvailable={canShareVideo(file)} onShare={() => void share()} onSave={() => void share(true)} />}
       <Button asChild variant="outline" className="w-full"><a href={preview} download={file.name}>Guardar cópia com marca</a></Button>
       <Button variant="ghost" className="w-full" disabled={sharing} onClick={() => { setFiles([]); setStatus(''); setChoosing(false); }}>Preparar novamente</Button>
     </>}
