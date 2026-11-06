@@ -1,5 +1,7 @@
+import locationHints from '@/i18n/location-labels.json';
+import { RESIDENCE_COUNTRY_CODES, loadResidenceCities, matchingResidenceCities } from '@/lib/residence-locations';
 import { useTranslation } from 'react-i18next';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { localizedCountryName } from '@/lib/localized-country-name';
@@ -19,6 +21,17 @@ interface Props {
 }
 export function ResidenceForm(p: Props) {
  const { t, i18n } = useTranslation();
+ const language = i18n.resolvedLanguage || i18n.language;
+ const locale = language.toLowerCase().split(/[-_]/)[0] as keyof typeof locationHints;
+ const cityListId = useId();
+ const [cityData, setCityData] = useState<{country: string; cities: string[]}>({country: '', cities: []});
+ const countryCodes = useMemo(() => [...RESIDENCE_COUNTRY_CODES].sort((a,b) => localizedCountryName(a,language).localeCompare(localizedCountryName(b,language),locale)), [language,locale]);
+ useEffect(() => {
+  let active = true;
+  loadResidenceCities(p.country).then(cities => { if (active) setCityData({country:p.country,cities}); }).catch(() => { if (active) setCityData({country:p.country,cities:[]}); });
+  return () => { active = false; };
+ }, [p.country]);
+ const suggestions = useMemo(() => matchingResidenceCities(cityData.country === p.country ? cityData.cities : [],p.city,language), [cityData,p.country,p.city,language]);
  const [locating,setLocating]=useState(false); const [error,setError]=useState(''); const generation=useRef(0);
  useEffect(()=>()=>{generation.current++;},[]);
  const resetHomeCapture=()=>{if(p.plan.method==='home'){generation.current++;setLocating(false);p.onPlan({method:'home'});}};
@@ -36,13 +49,16 @@ export function ResidenceForm(p: Props) {
   },()=>{if(request!==generation.current)return;setLocating(false);setError('onboardingFlow.locationFailed');},
   {enableHighAccuracy:true,timeout:10000,maximumAge:0});
  };
- const valid=!!p.country&&!!p.city&&!!p.neighborhood&&(p.neighborhood!=='__other__'||!!p.customNeighborhood.trim())&&validResidencePlan(p.plan);
+ const valid=!!p.country&&!!p.city.trim()&&!!p.neighborhood&&(p.neighborhood!=='__other__'||!!p.customNeighborhood.trim())&&validResidencePlan(p.plan);
  const selectClass='w-full rounded-xl border bg-background px-3 py-3 text-base';
  return <div className="space-y-4 text-start">
   <h2 className="text-xl font-bold">{t("onboardingFlow.residenceTitle")}</h2>
   <p className="text-sm text-muted-foreground">{t("onboardingFlow.residenceHint")}</p>
-  <label className="block text-sm">{t("onboardingFlow.country")}<select className={selectClass} value={p.country} onChange={e=>{resetHomeCapture();p.onCountry(e.target.value);p.onCity('');p.onNeighborhood('');}}>{AFRICAN_LOCATIONS.map(c=><option key={c.countryCode} value={c.countryCode}>{localizedCountryName(c.countryCode, i18n.resolvedLanguage || i18n.language)}</option>)}</select></label>
-  <label className="block text-sm">{t("onboardingFlow.city")}<select className={selectClass} value={p.city} onChange={e=>{resetHomeCapture();p.onCity(e.target.value);p.onNeighborhood('');}}><option value="">{t("onboardingFlow.selectCity")}</option>{country?.cities.map(c=><option key={c.name} value={c.name}>{c.name}</option>)}</select></label>
+  <label className="block text-sm">{t("onboardingFlow.country")}<select className={selectClass} value={p.country} onChange={e=>{resetHomeCapture();p.onCountry(e.target.value);p.onCity('');p.onNeighborhood('');p.onCustomNeighborhood('');}}>{countryCodes.map(code=><option key={code} value={code}>{localizedCountryName(code, language)}</option>)}</select></label>
+  <label className="block text-sm">{t("onboardingFlow.city")}<Input list={cityListId} autoComplete="address-level2" maxLength={200} className={selectClass} value={p.city} aria-describedby={`${cityListId}-hint`} onChange={e=>{resetHomeCapture();p.onCity(e.target.value);p.onNeighborhood('');p.onCustomNeighborhood('');}} placeholder={t("onboardingFlow.selectCity")}/></label>
+  <datalist id={cityListId}>{suggestions.map(name=><option key={name} value={name}/>)}</datalist>
+  <p id={`${cityListId}-hint`} className="text-xs text-muted-foreground">{locationHints[locale] || locationHints.pt}</p>
+  <p className="text-xs text-muted-foreground"><a href="https://www.geonames.org/" target="_blank" rel="noreferrer" className="underline">GeoNames</a> · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer" className="underline">CC BY 4.0</a></p>
   <label className="block text-sm">{t("onboardingFlow.neighborhood")}<select className={selectClass} value={p.neighborhood} onChange={e=>{resetHomeCapture();p.onNeighborhood(e.target.value);}}><option value="">{t("onboardingFlow.selectNeighborhood")}</option>{neighborhoods.map(n=><option key={n} value={n}>{n}</option>)}{p.neighborhood && p.neighborhood!=='__other__' && !neighborhoods.includes(p.neighborhood) && <option value={p.neighborhood}>{p.neighborhood}</option>}<option value="__other__">{t("onboardingFlow.otherNeighborhood")}</option></select></label>
   {p.neighborhood==='__other__'&&<Input aria-label={t("onboardingFlow.neighborhoodName")} value={p.customNeighborhood} onChange={e=>p.onCustomNeighborhood(e.target.value)} placeholder={t("onboardingFlow.neighborhoodName")}/>}
   <fieldset className="space-y-2"><legend className="font-medium mb-2">{t("onboardingFlow.atAddress")}</legend>{options.map(o=><label key={o.value} className="flex gap-3 items-center rounded-xl border p-3 text-sm"><input type="radio" name="residence-method" value={o.value} checked={p.plan.method===o.value} onChange={()=>changeMode(o.value)}/>{t(o.key)}</label>)}</fieldset>
