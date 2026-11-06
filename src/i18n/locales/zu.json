@@ -226,5 +226,10 @@
     "confirmLaterHint": "Ungaqedela ukubhalisa futhi ubambe iqhaza. Qinisekisa ikheli kamuva kokuthi Iphrofayela → Qinisekisa i-Banda yami.",
     "residenceNotice": "Ukuba khona kwakho manje akufakazeli ukuhlala. Izinzuzo zendawo zidinga i-Banda eqinisekisiwe; ukuhamba akuyishintshi ngokuzenzakalelayo i-Banda yakho.",
     "confirmBanda": "Qinisekisa i-Banda bese uqhubeka"
+  },
+  "calls": {
+    "waitingTitle": "Ucingo olulindile",
+    "waitingDescription": "Ucingo lwakho lwamanje luyaqhubeka. Ukuze uphendule lolu cingo, qeda olwamanje.",
+    "endAndAnswer": "Qeda olwamanje bese uphendula"
   }
 }

@@ -226,5 +226,10 @@
     "confirmLaterHint": "O lè parí ìforúkọsílẹ̀ kí o sì kópa. Jẹ́rìí àdírẹ́sì nígbà míì ní Púrófáìlì → Jẹ́rìí Banda mi.",
     "residenceNotice": "Wíwà níbẹ̀ báyìí kì í jẹ́ ẹ̀rí ibùgbé. Àwọn àǹfààní agbègbè nílò Banda tí a jẹ́rìí; ìrìnàjò kò yí Banda rẹ padà fúnra rẹ̀.",
     "confirmBanda": "Jẹ́rìí Banda kí o tẹ̀síwájú"
+  },
+  "calls": {
+    "waitingTitle": "Ìpè tó ń dúró",
+    "waitingDescription": "Ìpè rẹ lọ́wọ́lọ́wọ́ ń bá a lọ. Láti dáhùn ìpè yìí, parí ìpè lọ́wọ́lọ́wọ́.",
+    "endAndAnswer": "Parí ìpè lọ́wọ́lọ́wọ́ kí o sì dáhùn"
   }
 }

@@ -301,7 +301,10 @@
     "copyInviteLink": "የጥሪ ሊንክ ቅዳ",
     "share": "አጋራ",
     "recurring": "ተደጋጋሚ",
-    "maybe": "ምናልባት"
+    "maybe": "ምናልባት",
+    "waitingTitle": "በመጠባበቅ ላይ ያለ ጥሪ",
+    "waitingDescription": "አሁን ያለው ጥሪ ይቀጥላል። ይህን ጥሪ ለመመለስ አሁን ያለውን ጥሪ ያቋርጡ።",
+    "endAndAnswer": "ያለውን ጥሪ አቋርጥና መልስ"
   },
   "contacts": {
     "addContact": "እውቂያ ጨምር",

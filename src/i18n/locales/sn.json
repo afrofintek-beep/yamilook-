@@ -226,5 +226,10 @@
     "confirmLaterHint": "Unogona kupedzisa kunyoresa uye kutora chikamu. Simbisa kero gare gare paMbiri → Simbisa Banda rangu.",
     "residenceNotice": "Kuvapo kwako ikozvino hakuratidzi kugara. Mabhenefiti enzvimbo anoda Banda rakasimbiswa; kufamba hakuchinji Banda rako kwega.",
     "confirmBanda": "Simbisa Banda uenderere mberi"
+  },
+  "calls": {
+    "waitingTitle": "Runhare rwakamirira",
+    "waitingDescription": "Runhare rwazvino rwunoenderera. Kuti udavire urwu, pedza rwazvino.",
+    "endAndAnswer": "Pedza rwazvino wodavira"
   }
 }

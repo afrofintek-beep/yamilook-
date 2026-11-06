@@ -2,19 +2,37 @@ import { act, cleanup, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useRingtone, useRingtonePreview } from './useRingtone';
 
-const { audio } = vi.hoisted(() => ({ audio: {
+const { audio, prefs } = vi.hoisted(() => ({ prefs: { ringtone_pattern: 'default', ringtone_enabled: true, ringtone_volume: 0.5 }, audio: {
   state: 'running', currentTime: 0, destination: {}, resume: vi.fn(), createGain: vi.fn(), createOscillator: vi.fn(),
 } }));
 vi.mock('@/lib/audio-context', () => ({ getSharedAudioContext: () => audio }));
-vi.mock('./useSettings', () => ({ useSettings: () => ({ settings: null }) }));
+vi.mock('./useSettings', () => ({ useSettings: () => ({ settings: prefs }) }));
 beforeEach(() => {
   vi.useFakeTimers(); vi.clearAllMocks(); audio.state = 'running';
+  prefs.ringtone_pattern='default';prefs.ringtone_enabled=true;prefs.ringtone_volume=0.5;
   audio.resume.mockImplementation(async () => { audio.state = 'running'; });
   audio.createGain.mockImplementation(() => ({ connect: vi.fn(), disconnect: vi.fn(), gain: { value: 0, setValueAtTime: vi.fn(), linearRampToValueAtTime: vi.fn() } }));
   audio.createOscillator.mockImplementation(() => ({ type: '', frequency: { value: 0 }, connect: vi.fn(), disconnect: vi.fn(), start: vi.fn(), stop: vi.fn() }));
 });
 afterEach(() => { cleanup(); vi.useRealTimers(); });
 describe('call ringtone lifecycle', () => {
+  it('uses a short quiet waiting pulse without continuous ringing', async () => {
+    const {result}=renderHook(()=>useRingtone({waiting:true}));
+    await act(async()=>result.current.startRingtone());
+    expect(audio.createOscillator).toHaveBeenCalledOnce();
+    expect(audio.createGain.mock.results[0].value.gain.linearRampToValueAtTime).toHaveBeenCalledWith(0.12,0.1);
+    await act(async()=>vi.advanceTimersByTime(8000));expect(audio.createOscillator).toHaveBeenCalledOnce();
+    await act(async()=>vi.advanceTimersByTime(300));expect(audio.createOscillator).toHaveBeenCalledTimes(2);
+  });
+  it('respects silence and disabled ringing while a call is waiting',async()=>{
+    prefs.ringtone_pattern='silent';
+    const first=renderHook(()=>useRingtone({waiting:true}));
+    await act(async()=>first.result.current.startRingtone());first.unmount();
+    prefs.ringtone_pattern='default';prefs.ringtone_enabled=false;
+    const second=renderHook(()=>useRingtone({waiting:true}));
+    await act(async()=>second.result.current.startRingtone());
+    expect(audio.createOscillator).not.toHaveBeenCalled();
+  });
   it('plays the selected tone and stops all resources on answer/decline', async () => {
     const { result } = renderHook(() => useRingtone({ pattern: 'modern', vibrationEnabled: false }));
     await act(async () => result.current.startRingtone());

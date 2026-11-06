@@ -13,6 +13,8 @@ interface IncomingCallOverlayProps {
   callerId: string;
   onAnswer: () => void;
   onDecline: () => void;
+  waiting?: boolean;
+  busy?: boolean;
 }
 
 export function IncomingCallOverlay({
@@ -21,6 +23,8 @@ export function IncomingCallOverlay({
   callerId,
   onAnswer,
   onDecline,
+  waiting = false,
+  busy = false,
 }: IncomingCallOverlayProps) {
   const [caller, setCaller] = useState<{
     display_name: string;
@@ -28,10 +32,12 @@ export function IncomingCallOverlay({
   } | null>(null);
   const { t } = useTranslation();
   
-  const { startRingtone, stopRingtone } = useRingtone();
+  const { startRingtone, stopRingtone } = useRingtone({ waiting });
 
   // Fetch caller info
   useEffect(() => {
+    let alive = true;
+    setCaller(null);
     const fetchCaller = async () => {
       const { data } = await supabase
         .from('public_profiles')
@@ -39,12 +45,13 @@ export function IncomingCallOverlay({
         .eq('id', callerId)
         .single();
 
-      if (data) {
+      if (alive && data) {
         setCaller(data);
       }
     };
 
     fetchCaller();
+    return () => { alive = false; };
   }, [callerId]);
 
   // Start ringtone when component mounts
@@ -67,6 +74,18 @@ export function IncomingCallOverlay({
     stopRingtone();
     onDecline();
   }, [stopRingtone, onDecline]);
+
+  if (waiting) return <section role="region" aria-label={t('calls.waitingTitle')} className="fixed left-3 right-3 top-[max(1rem,env(safe-area-inset-top))] z-[200] mx-auto max-w-md rounded-2xl border bg-background p-4 shadow-xl">
+    <div className="flex items-center gap-3">
+      <Avatar className="h-10 w-10 shrink-0"><AvatarImage src={caller?.avatar_url || ''} /><AvatarFallback><User className="h-5 w-5" /></AvatarFallback></Avatar>
+      <div className="min-w-0"><p role="status" className="text-sm font-semibold text-primary">{t('calls.waitingTitle')}</p><p className="truncate font-medium">{caller?.display_name || t('calls.unknownCaller')}</p><p className="text-xs text-muted-foreground">{callType === 'video' ? t('calls.incomingVideoCall') : t('calls.incomingVoiceCall')}</p></div>
+    </div>
+    <p className="my-3 text-sm text-muted-foreground">{t('calls.waitingDescription')}</p>
+    <div className="flex flex-wrap gap-2">
+      <Button disabled={busy} variant="outline" onClick={handleDecline}>{t('calls.decline')}</Button>
+      <Button disabled={busy} onClick={handleAnswer}>{t('calls.endAndAnswer')}</Button>
+    </div>
+  </section>;
 
   return (
     <AnimatePresence>

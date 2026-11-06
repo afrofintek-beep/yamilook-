@@ -301,7 +301,10 @@
     "copyInviteLink": "نسخ رابط الدعوة",
     "share": "مشاركة",
     "recurring": "متكررة",
-    "maybe": "ربما"
+    "maybe": "ربما",
+    "waitingTitle": "مكالمة قيد الانتظار",
+    "waitingDescription": "تستمر مكالمتك الحالية. للرد على هذه المكالمة، أنهِ المكالمة الحالية.",
+    "endAndAnswer": "إنهاء الحالية والرد"
   },
   "contacts": {
     "addContact": "إضافة جهة اتصال",

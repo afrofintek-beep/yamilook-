@@ -375,7 +375,10 @@
     "copyInviteLink": "Copy invite link",
     "share": "Share",
     "recurring": "Recurring",
-    "maybe": "Maybe"
+    "maybe": "Maybe",
+    "waitingTitle": "Call waiting",
+    "waitingDescription": "Your current call continues. To answer this call, end the current one.",
+    "endAndAnswer": "End current call and answer"
   },
   "contacts": {
     "title": "Contacts",

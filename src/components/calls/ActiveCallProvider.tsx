@@ -4,6 +4,7 @@ import { ScheduledCallNotices } from '@/features/scheduled-calls/ScheduledCallNo
 /* @refresh reset */
 import { createContext, useContext, useState, useCallback, ReactNode, lazy, Suspense, useMemo, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import type { CallState } from '@/hooks/webrtc/types';
 import { useCallTransport } from '@/hooks/useCallTransport';
 import type { BgMode, EffectsConfig } from '@/lib/virtualBackground';
@@ -100,6 +101,7 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [isInCall, setIsInCall] = useState(false);
   const [currentCallId, setCurrentCallId] = useState<string | null>(null);
   const [setupCallType, setSetupCallType] = useState<'voice' | 'video'>('voice');
@@ -116,6 +118,7 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
     state: webRTCState,
     initiateCall, 
     answerCall, 
+    endAndAnswerCall,
     declineCall, 
     endCall,
     toggleMute,
@@ -136,6 +139,7 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
   useEffect(() => () => { startEpoch.current++; stopCallTone(); }, []);
 
   useEffect(() => {
+    if (answeringCallRef.current) return;
     if (!currentCallId || !['idle', 'ended', 'declined', 'failed'].includes(webRTCState.callStatus)) return;
     // A failed transport may still be running ICE recovery. Leave only after cleanup.
     if (webRTCState.callStatus === 'failed' && webRTCState.callId) return;
@@ -149,7 +153,7 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
     setIsInCall(false);
     setCurrentCallId(null);
     if (location.pathname === `/call/${currentCallId}`) navigate('/calls', { replace: true });
-  }, [currentCallId, webRTCState.callId, webRTCState.callStatus, webRTCState.lastError, location.pathname, navigate, toast]);
+  }, [answering, currentCallId, webRTCState.callId, webRTCState.callStatus, webRTCState.lastError, location.pathname, navigate, toast]);
 
   const startCall = useCallback(async (contactId: string, type: 'voice' | 'video', conversationId?: string) => {
     logger.debug('Starting call', 'ActiveCallProvider', { contactId, type });
@@ -211,6 +215,10 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
   const joinCall = useCallback(async (callId: string, callType: 'voice' | 'video', initiatorId: string) => {
     // If we already bootstrapped this call, do nothing.
     if ((currentCallId === callId && isInCall) || answeringCallRef.current) return;
+    if (isInCall || currentCallId || startingRef.current) {
+      toast({ title: t('calls.waitingTitle'), description: t('calls.waitingDescription') });
+      return;
+    }
     answeringCallRef.current = callId;
     const epoch = ++startEpoch.current;
     setSetupCallType(callType);
@@ -236,7 +244,7 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
       if (epoch === startEpoch.current) setAnswering(false);
       if (answeringCallRef.current === callId) answeringCallRef.current = null;
     }
-  }, [answerCall, currentCallId, isInCall, toast, markUserInteracted]);
+  }, [answerCall, currentCallId, isInCall, toast, markUserInteracted, t]);
 
   const endCurrentCall = useCallback(() => {
     logger.debug('Ending current call', 'ActiveCallProvider');
@@ -256,7 +264,8 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
     setAnswering(true);
     unlockCallAudio(); markUserInteracted();
     try {
-      await answerCall(call.id, call.type, call.initiator_id);
+      if (currentCallId && isInCall) await endAndAnswerCall(currentCallId, call.id, call.type, call.initiator_id);
+      else await answerCall(call.id, call.type, call.initiator_id);
       if (epoch !== startEpoch.current) return;
       setCurrentCallId(call.id);
       setIsInCall(true);
@@ -270,9 +279,10 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
       if (epoch === startEpoch.current) setAnswering(false);
       if (answeringCallRef.current === call.id) answeringCallRef.current = null;
     }
-  }, [incomingCall, currentCallId, answerCall, markUserInteracted, setIncomingCall, navigate, toast]);
+  }, [incomingCall, currentCallId, isInCall, answerCall, endAndAnswerCall, markUserInteracted, setIncomingCall, navigate, toast]);
 
   const handleDeclineCall = useCallback(async () => {
+    if (answeringCallRef.current) return;
     if (incomingCall) {
       logger.debug('Declining incoming call', 'ActiveCallProvider', incomingCall.id);
       try {
@@ -305,6 +315,7 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
     sendReaction,
     endCall,
   }), [isInCall, currentCallId, startCall, joinCall, endCurrentCall, markUserInteracted, webRTCState, toggleMute, toggleVideo, toggleScreenShare, flipCamera, setVirtualBackground, setCallEffects, setAudioProcessing, raiseHand, sendReaction, endCall]);
+  const callWaiting = !!incomingCall && !!currentCallId && isInCall && incomingCall.id !== currentCallId;
 
   return (
     <ActiveCallContext.Provider value={contextValue}>
@@ -321,7 +332,7 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
       
       {/* Incoming call overlay - lazy loaded */}
       {incomingCall && (
-        <IncomingCallBoundary key={incomingCall.id} onAnswer={handleAnswerCall} onDecline={handleDeclineCall}>
+        <IncomingCallBoundary key={incomingCall.id} onAnswer={handleAnswerCall} onDecline={handleDeclineCall} waiting={callWaiting} busy={answering} answerLabel={callWaiting ? t('calls.endAndAnswer') : undefined} waitingLabel={callWaiting ? t('calls.waitingTitle') : undefined}>
         <Suspense fallback={null}>
           <IncomingCallOverlay
             callId={incomingCall.id}
@@ -329,6 +340,8 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
             callerId={incomingCall.initiator_id}
             onAnswer={handleAnswerCall}
             onDecline={handleDeclineCall}
+            waiting={callWaiting}
+            busy={answering}
           />
         </Suspense>
         </IncomingCallBoundary>
