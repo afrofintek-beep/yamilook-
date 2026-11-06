@@ -310,6 +310,10 @@
     "share": "Partager",
     "recurring": "Récurrent",
     "maybe": "Peut-être",
+    "addToCall": "Ajouter à l’appel",
+    "addToCallDescription": "Les deux appels individuels vont se terminer. Un nouveau groupe sera créé et les trois participants recevront une invitation à une conférence vocale. Chacun devra accepter. Les messages et enregistrements précédents ne seront pas partagés.",
+    "createConference": "Créer une conférence",
+    "conferenceInvited": "Invitations envoyées. Appuyez sur Accepter pour rejoindre la conférence.",
     "waitingTitle": "Appel en attente",
     "waitingDescription": "Votre appel actuel continue. Pour répondre à cet appel, terminez l’appel actuel.",
     "endAndAnswer": "Terminer et répondre"

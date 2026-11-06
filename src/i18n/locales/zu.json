@@ -228,6 +228,10 @@
     "confirmBanda": "Qinisekisa i-Banda bese uqhubeka"
   },
   "calls": {
+    "addToCall": "Engeza ocingweni",
+    "addToCallDescription": "Izingcingo zombili zabantu ngabanye zizophela. Kuzokwakhiwa iqembu elisha futhi bobathathu bazothola isimemo sengqungquthela yezwi. Umuntu ngamunye kufanele amukele. Imiyalezo nokuqoshiwe kwangaphambilini ngeke kwabelwane ngakho.",
+    "createConference": "Dala ingqungquthela",
+    "conferenceInvited": "Izimemo zithunyelwe. Thepha Yamukela ukuze ujoyine ingqungquthela.",
     "waitingTitle": "Ucingo olulindile",
     "waitingDescription": "Ucingo lwakho lwamanje luyaqhubeka. Ukuze uphendule lolu cingo, qeda olwamanje.",
     "endAndAnswer": "Qeda olwamanje bese uphendula"

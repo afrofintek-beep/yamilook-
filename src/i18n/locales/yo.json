@@ -228,6 +228,10 @@
     "confirmBanda": "Jẹ́rìí Banda kí o tẹ̀síwájú"
   },
   "calls": {
+    "addToCall": "Fi kún ìpè",
+    "addToCallDescription": "Àwọn ìpè ẹnìkọ̀ọ̀kan méjèèjì yóò parí. A ó dá ẹgbẹ́ tuntun, gbogbo ènìyàn mẹ́tẹ̀ẹ̀ta yóò sì gba ìkésíni sí ìpè ohùn ẹgbẹ́. Olúkúlùkù gbọ́dọ̀ gbà á. A kò ní pín àwọn ìránṣẹ́ àti ìgbasilẹ̀ tẹ́lẹ̀.",
+    "createConference": "Dá ìpè ẹgbẹ́",
+    "conferenceInvited": "A ti fi ìkésíni ránṣẹ́. Tẹ Gba láti darapọ̀ mọ́ ìpè ẹgbẹ́.",
     "waitingTitle": "Ìpè tó ń dúró",
     "waitingDescription": "Ìpè rẹ lọ́wọ́lọ́wọ́ ń bá a lọ. Láti dáhùn ìpè yìí, parí ìpè lọ́wọ́lọ́wọ́.",
     "endAndAnswer": "Parí ìpè lọ́wọ́lọ́wọ́ kí o sì dáhùn"

@@ -22,3 +22,15 @@ it('declines only through the decline action and disables actions during handoff
   view.rerender(<IncomingCallOverlay {...props} busy />);
   expect(screen.getByRole('button',{name:'calls.endAndAnswer'})).toBeDisabled();expect(screen.getByRole('button',{name:'calls.decline'})).toBeDisabled();
 });
+
+it('requires confirmation to create a conference and permits cancellation without ending calls',async()=>{
+  const add=vi.fn(),answer=vi.fn(),decline=vi.fn();
+  render(<IncomingCallOverlay callId="waiting" callType="voice" callerId="ana" waiting onAnswer={answer} onDecline={decline} onAddToCall={add} />);
+  await screen.findByText('Ana');
+  fireEvent.click(screen.getByRole('button',{name:'calls.addToCall'}));
+  expect(screen.getByText('calls.addToCallDescription')).toBeInTheDocument();expect(add).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button',{name:'common.cancel'}));expect(add).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button',{name:'calls.addToCall'}));
+  fireEvent.click(screen.getByRole('button',{name:'calls.createConference'}));
+  expect(add).toHaveBeenCalledOnce();expect(answer).not.toHaveBeenCalled();expect(decline).not.toHaveBeenCalled();
+});

@@ -376,6 +376,10 @@
     "share": "Share",
     "recurring": "Recurring",
     "maybe": "Maybe",
+    "addToCall": "Add to call",
+    "addToCallDescription": "Both individual calls will end. A new group will be created and all three participants will receive an invitation to a voice conference. Each person must accept. Previous messages and recordings will not be shared.",
+    "createConference": "Create conference",
+    "conferenceInvited": "Invitations sent. Tap Accept to join the conference.",
     "waitingTitle": "Call waiting",
     "waitingDescription": "Your current call continues. To answer this call, end the current one.",
     "endAndAnswer": "End current call and answer"

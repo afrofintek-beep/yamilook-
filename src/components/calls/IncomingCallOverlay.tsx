@@ -13,6 +13,7 @@ interface IncomingCallOverlayProps {
   callerId: string;
   onAnswer: () => void;
   onDecline: () => void;
+  onAddToCall?: () => void;
   waiting?: boolean;
   busy?: boolean;
 }
@@ -23,9 +24,11 @@ export function IncomingCallOverlay({
   callerId,
   onAnswer,
   onDecline,
+  onAddToCall,
   waiting = false,
   busy = false,
 }: IncomingCallOverlayProps) {
+  const [confirmAdd, setConfirmAdd] = useState(false);
   const [caller, setCaller] = useState<{
     display_name: string;
     avatar_url: string | null;
@@ -81,10 +84,17 @@ export function IncomingCallOverlay({
       <div className="min-w-0"><p role="status" className="text-sm font-semibold text-primary">{t('calls.waitingTitle')}</p><p className="truncate font-medium">{caller?.display_name || t('calls.unknownCaller')}</p><p className="text-xs text-muted-foreground">{callType === 'video' ? t('calls.incomingVideoCall') : t('calls.incomingVoiceCall')}</p></div>
     </div>
     <p className="my-3 text-sm text-muted-foreground">{t('calls.waitingDescription')}</p>
-    <div className="flex flex-wrap gap-2">
+    {confirmAdd && onAddToCall ? <div className="space-y-3">
+      <p className="text-sm">{t('calls.addToCallDescription')}</p>
+      <div className="flex flex-wrap gap-2">
+        <Button disabled={busy} variant="outline" onClick={() => setConfirmAdd(false)}>{t('common.cancel')}</Button>
+        <Button disabled={busy} onClick={() => { stopRingtone(); onAddToCall(); }}>{t('calls.createConference')}</Button>
+      </div>
+    </div> : <div className="flex flex-wrap gap-2">
       <Button disabled={busy} variant="outline" onClick={handleDecline}>{t('calls.decline')}</Button>
       <Button disabled={busy} onClick={handleAnswer}>{t('calls.endAndAnswer')}</Button>
-    </div>
+      {onAddToCall && <Button disabled={busy} variant="secondary" onClick={() => setConfirmAdd(true)}>{t('calls.addToCall')}</Button>}
+    </div>}
   </section>;
 
   return (

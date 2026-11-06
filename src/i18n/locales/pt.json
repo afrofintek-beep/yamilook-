@@ -425,6 +425,10 @@
     "share": "Partilhar",
     "recurring": "Recorrente",
     "maybe": "Talvez",
+    "addToCall": "Adicionar à chamada",
+    "addToCallDescription": "As duas chamadas individuais vão terminar. Será criado um novo grupo e os três participantes receberão um convite para uma conferência de voz. Cada pessoa terá de aceitar. As mensagens e gravações anteriores não serão partilhadas.",
+    "createConference": "Criar conferência",
+    "conferenceInvited": "Convites enviados. Toca em Aceitar para entrar na conferência.",
     "waitingTitle": "Chamada em espera",
     "waitingDescription": "A chamada atual continua. Para atender esta chamada, termina a atual.",
     "endAndAnswer": "Terminar atual e atender"

@@ -6671,6 +6671,10 @@ export type Database = {
         Args: { p_call_id: string }
         Returns: boolean
       }
+      add_waiting_call_to_conference: {
+        Args: { p_current_call_id: string; p_waiting_call_id: string }
+        Returns: string
+      }
       end_direct_call_for_waiting: {
         Args: { p_current_call_id: string; p_waiting_call_id: string }
         Returns: boolean

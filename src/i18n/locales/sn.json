@@ -228,6 +228,10 @@
     "confirmBanda": "Simbisa Banda uenderere mberi"
   },
   "calls": {
+    "addToCall": "Wedzera parunhare",
+    "addToCallDescription": "Nhare mbiri dzemunhu nemunhu dzichapera. Boka idzva richagadzirwa uye vanhu vatatu vose vachakokwa kumusangano wezwi. Munhu mumwe nemumwe anofanira kubvuma. Mameseji nezvakarekodhwa kare hazvizogoverwi.",
+    "createConference": "Gadzira musangano",
+    "conferenceInvited": "Kukokwa kwatumirwa. Dzvanya Bvuma kuti upinde mumusangano.",
     "waitingTitle": "Runhare rwakamirira",
     "waitingDescription": "Runhare rwazvino rwunoenderera. Kuti udavire urwu, pedza rwazvino.",
     "endAndAnswer": "Pedza rwazvino wodavira"

@@ -3,6 +3,7 @@ import { IncomingCallBoundary } from './IncomingCallBoundary';
 import { ScheduledCallNotices } from '@/features/scheduled-calls/ScheduledCallNotices';
 /* @refresh reset */
 import { createContext, useContext, useState, useCallback, ReactNode, lazy, Suspense, useMemo, useEffect, useRef } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { CallState } from '@/hooks/webrtc/types';
@@ -99,6 +100,7 @@ function formatCallError(err: unknown) {
 
 export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const location = useLocation();
   const { toast } = useToast();
   const { t } = useTranslation();
@@ -119,6 +121,7 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
     initiateCall, 
     answerCall, 
     endAndAnswerCall,
+    addWaitingToConference,
     declineCall, 
     endCall,
     toggleMute,
@@ -281,6 +284,31 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
     }
   }, [incomingCall, currentCallId, isInCall, answerCall, endAndAnswerCall, markUserInteracted, setIncomingCall, navigate, toast]);
 
+  const handleAddToCall = useCallback(async () => {
+    if (!incomingCall || !currentCallId || !isInCall || answeringCallRef.current) return;
+    const call = incomingCall;
+    answeringCallRef.current = call.id;
+    const epoch = ++startEpoch.current;
+    setAnswering(true);
+    unlockCallAudio(); markUserInteracted();
+    try {
+      await addWaitingToConference(currentCallId, call.id);
+      if (epoch !== startEpoch.current) return;
+      setCurrentCallId(null);
+      setIsInCall(false);
+      setIncomingCall(null);
+      navigate('/calls', { replace: true });
+      await queryClient.invalidateQueries({ queryKey: ['group-conference-invites'] });
+      void queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      toast({ title: t('calls.conferenceInvited') });
+    } catch (err) {
+      if (epoch === startEpoch.current) toast({ title: t('calls.addToCall'), description: formatCallError(err), variant: 'destructive' });
+    } finally {
+      if (epoch === startEpoch.current) setAnswering(false);
+      if (answeringCallRef.current === call.id) answeringCallRef.current = null;
+    }
+  }, [incomingCall, currentCallId, isInCall, addWaitingToConference, markUserInteracted, setIncomingCall, navigate, queryClient, toast, t]);
+
   const handleDeclineCall = useCallback(async () => {
     if (answeringCallRef.current) return;
     if (incomingCall) {
@@ -340,6 +368,7 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
             callerId={incomingCall.initiator_id}
             onAnswer={handleAnswerCall}
             onDecline={handleDeclineCall}
+            onAddToCall={callWaiting ? handleAddToCall : undefined}
             waiting={callWaiting}
             busy={answering}
           />
