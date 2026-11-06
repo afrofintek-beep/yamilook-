@@ -1,8 +1,9 @@
+import { legalLabel } from '@/i18n/legal-labels';
 import { EntryLanguageSelector } from './EntryLanguageSelector';
 import { ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import YamilookLogo from '@/components/brand/YamilookLogo';
@@ -18,7 +19,7 @@ interface AuthLayoutProps {
 }
 
 export function AuthLayout({ children, title, subtitle, tagline, footerNote, showBackButton = false, backTo }: AuthLayoutProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   
   return (
@@ -120,14 +121,14 @@ export function AuthLayout({ children, title, subtitle, tagline, footerNote, sho
         
         {/* Terms footer */}
         <p className="mt-4 text-xs text-muted-foreground text-center">
-          {t('auth.termsAccept')}{' '}
-          <a href="/terms" className="text-primary hover:underline font-medium">
-            {t('auth.termsOfService')}
-          </a>{' '}
-          {t('auth.and')}{' '}
-          <a href="/privacy" className="text-primary hover:underline font-medium">
-            {t('auth.privacyPolicy')}
-          </a>
+          {legalLabel(i18n.resolvedLanguage || i18n.language, 'accept')}{' '}
+          <Link to="/terms" className="text-primary hover:underline font-medium">
+            {legalLabel(i18n.resolvedLanguage || i18n.language, 'terms')}
+          </Link>{' '}
+          {legalLabel(i18n.resolvedLanguage || i18n.language, 'and')}{' '}
+          <Link to="/privacy" className="text-primary hover:underline font-medium">
+            {legalLabel(i18n.resolvedLanguage || i18n.language, 'privacy')}
+          </Link>
         </p>
       </main>
     </motion.div>
