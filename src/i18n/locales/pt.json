@@ -424,7 +424,10 @@
     "copyInviteLink": "Copiar link de convite",
     "share": "Partilhar",
     "recurring": "Recorrente",
-    "maybe": "Talvez"
+    "maybe": "Talvez",
+    "waitingTitle": "Chamada em espera",
+    "waitingDescription": "A chamada atual continua. Para atender esta chamada, termina a atual.",
+    "endAndAnswer": "Terminar atual e atender"
   },
   "contacts": {
     "title": "Contactos",

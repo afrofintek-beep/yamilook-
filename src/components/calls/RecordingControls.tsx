@@ -7,6 +7,13 @@ import { useRecordingSession } from '@/features/call-recording/useRecordingSessi
 
 interface Participant { id: string; user_id: string; display_name: string }
 export function RecordingControls({ callId, participants, compact = false }: { callId: string; participants: Participant[]; compact?: boolean }) {
+  const { webRTCState } = useActiveCallRequired();
+  // Finalize the old recording before any new call's media can reach its session.
+  // The old route can remain mounted briefly during an end-and-answer handoff.
+  if (webRTCState.callId !== callId) return null;
+  return <CallRecordingControls key={callId} callId={callId} participants={participants} compact={compact} />;
+}
+function CallRecordingControls({ callId, participants, compact }: { callId: string; participants: Participant[]; compact: boolean }) {
   const { user } = useAuth();
   const { webRTCState } = useActiveCallRequired();
   const recording = useRecordingSession(callId, user?.id, webRTCState.localStream, webRTCState.remoteStreams, webRTCState.screenStream, webRTCState.remoteScreenStreams);

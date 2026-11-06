@@ -4,6 +4,7 @@ import { getSharedAudioContext } from '@/lib/audio-context';
 
 // Ringtone patterns configuration
 const RINGTONE_PATTERNS = {
+  waiting: { frequencies: [440], ringDuration: 300, silenceDuration: 8000 },
   default: {
     frequencies: [440, 480], // Dual-tone
     ringDuration: 1000,
@@ -38,6 +39,7 @@ const RINGTONE_PATTERNS = {
 
 // Vibration patterns for different ringtone styles
 const VIBRATION_PATTERNS = {
+  waiting: [],
   default: [400, 200, 400, 2000],
   classic: [300, 150, 300, 1500],
   modern: [200, 100, 200, 100, 200, 400],
@@ -76,6 +78,7 @@ const stopVibration = (): void => {
 };
 
 export interface RingtoneOptions {
+  waiting?: boolean;
   volume?: number;
   pattern?: keyof typeof RINGTONE_PATTERNS;
   vibrationEnabled?: boolean;
@@ -97,12 +100,12 @@ export function useRingtone(options?: RingtoneOptions) {
   // Get effective settings (options override settings from database)
   const getEffectiveSettings = useCallback(() => {
     return {
-      volume: options?.volume ?? settings?.ringtone_volume ?? 0.5,
-      pattern: (options?.pattern ?? settings?.ringtone_pattern ?? 'default') as keyof typeof RINGTONE_PATTERNS,
-      vibrationEnabled: options?.vibrationEnabled ?? settings?.call_vibration_enabled ?? true,
+      volume: Math.min(options?.waiting ? 0.12 : 1, options?.volume ?? settings?.ringtone_volume ?? 0.5),
+      pattern: (options?.waiting && settings?.ringtone_pattern !== 'silent' ? 'waiting' : options?.pattern ?? settings?.ringtone_pattern ?? 'default') as keyof typeof RINGTONE_PATTERNS,
+      vibrationEnabled: options?.waiting ? false : options?.vibrationEnabled ?? settings?.call_vibration_enabled ?? true,
       ringtoneEnabled: options?.ringtoneEnabled ?? settings?.ringtone_enabled ?? true,
     };
-  }, [options?.volume, options?.pattern, options?.vibrationEnabled, options?.ringtoneEnabled,
+  }, [options?.waiting, options?.volume, options?.pattern, options?.vibrationEnabled, options?.ringtoneEnabled,
     settings?.ringtone_volume, settings?.ringtone_pattern, settings?.call_vibration_enabled, settings?.ringtone_enabled]);
 
   // Use the shared (pre-unlocked) AudioContext

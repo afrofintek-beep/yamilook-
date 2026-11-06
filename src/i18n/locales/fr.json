@@ -309,7 +309,10 @@
     "copyInviteLink": "Copier le lien d'invitation",
     "share": "Partager",
     "recurring": "Récurrent",
-    "maybe": "Peut-être"
+    "maybe": "Peut-être",
+    "waitingTitle": "Appel en attente",
+    "waitingDescription": "Votre appel actuel continue. Pour répondre à cet appel, terminez l’appel actuel.",
+    "endAndAnswer": "Terminer et répondre"
   },
   "contacts": {
     "title": "Contacts",

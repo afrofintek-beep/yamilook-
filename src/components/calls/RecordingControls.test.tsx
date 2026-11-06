@@ -2,11 +2,11 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { RecordingControls } from './RecordingControls';
 import type { RecordingSession } from '@/features/call-recording/api';
-const mocks = vi.hoisted(() => ({ api: vi.fn(), start: vi.fn(), stop: vi.fn(), pause: vi.fn(), update: vi.fn(), upload: vi.fn(), userId: 'me' }));
+const mocks = vi.hoisted(() => ({ mediaCallId:'call', api: vi.fn(), start: vi.fn(), stop: vi.fn(), pause: vi.fn(), update: vi.fn(), upload: vi.fn(), userId: 'me' }));
 vi.mock('@/lib/audio-context', () => ({ unlockCallAudio: vi.fn() }));
 vi.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: { id: mocks.userId } }) }));
 vi.mock('./ActiveCallProvider', () => ({ useActiveCallRequired: () => ({ webRTCState: {
-  callStatus: 'connected', localStream: { id: 'local' }, remoteStreams: new Map([['other', { id: 'remote' }]]),
+  callId: mocks.mediaCallId, callStatus: 'connected', localStream: { id: 'local' }, remoteStreams: new Map([['other', { id: 'remote' }]]),
 } }) }));
 vi.mock('@/hooks/useCallRecorder', () => ({ useCallRecorder: () => ({ start: mocks.start, stop: mocks.stop, pause: mocks.pause, update: mocks.update }) }));
 vi.mock('@/features/call-recording/api', () => ({ recordingSession: mocks.api }));
@@ -19,7 +19,7 @@ const tick = async (ms = 0) => { await act(async () => { await vi.advanceTimersB
 const mount = async () => { const view = render(<RecordingControls callId="call" participants={[{ id: 'p', user_id: 'other', display_name: 'Ana' }]} />); await tick(); return view; };
 const click = async (name: string) => { fireEvent.click(screen.getByRole('button', { name })); await tick(); };
 beforeEach(() => {
-  vi.useFakeTimers();vi.clearAllMocks();state=null;failure=null;mocks.userId='me';
+  vi.useFakeTimers();vi.clearAllMocks();state=null;failure=null;mocks.userId='me';mocks.mediaCallId='call';
   mocks.update.mockReturnValue(true);
   mocks.start.mockReturnValue(true);mocks.stop.mockResolvedValue(new Blob(['recording'], { type: 'video/mp4' }));mocks.upload.mockResolvedValue({error:null});
   mocks.api.mockImplementation(async (_call, action='state', _id, answer) => {
@@ -139,6 +139,14 @@ it('automatically saves consented media after navigation/unmount instead of canc
   view.unmount(); await tick();
   expect(mocks.upload).toHaveBeenCalledOnce();
   expect(mocks.api.mock.calls.some(c => c[1] === 'cancel')).toBe(false);
+  expect(state?.status).toBe('completed');
+});
+it('finalizes the old recording when transport switches calls before the route changes', async () => {
+  const view=await mount();await click('Gravar');state={...state!,consents:[]};await tick(2000);
+  mocks.update.mockClear();mocks.mediaCallId='next-call';
+  view.rerender(<RecordingControls callId="call" participants={[]} />);await tick();
+  expect(mocks.update).not.toHaveBeenCalled();
+  expect(mocks.stop).toHaveBeenCalled();expect(mocks.upload).toHaveBeenCalledOnce();
   expect(state?.status).toBe('completed');
 });
 it('finalizes and saves when the server closes an ended call for processing', async () => {

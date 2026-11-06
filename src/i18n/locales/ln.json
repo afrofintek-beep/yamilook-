@@ -301,7 +301,10 @@
     "copyInviteLink": "Kokopya link ya belengeli",
     "share": "Kokabola",
     "recurring": "Ekozonga",
-    "maybe": "Mbala moko"
+    "maybe": "Mbala moko",
+    "waitingTitle": "Libengi ezali kozela",
+    "waitingDescription": "Libengi ozali kosala ezali kokoba. Mpo na koyamba oyo, sukisa libengi ya sikoyo.",
+    "endAndAnswer": "Sukisa oyo mpe yamba"
   },
   "contacts": {
     "addContact": "Kobakisa moto",

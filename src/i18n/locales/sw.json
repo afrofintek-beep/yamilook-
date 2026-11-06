@@ -301,7 +301,10 @@
     "copyInviteLink": "Nakili kiungo cha mwaliko",
     "share": "Shiriki",
     "recurring": "Inayorudiwa",
-    "maybe": "Labda"
+    "maybe": "Labda",
+    "waitingTitle": "Simu inayosubiri",
+    "waitingDescription": "Simu yako ya sasa inaendelea. Ili kujibu simu hii, maliza simu ya sasa.",
+    "endAndAnswer": "Maliza ya sasa na ujibu"
   },
   "contacts": {
     "title": "Anwani",
