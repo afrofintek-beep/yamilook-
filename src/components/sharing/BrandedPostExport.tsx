@@ -1,6 +1,9 @@
 import FileApplicationPicker from './FileApplicationPicker';
 import { prepareOwnedVideoExport } from '@/lib/owned-video-export';
-import { useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+const DirectLinkedInPublish = lazy(() => import('./DirectLinkedInPublish'));
+const LinkedInConnection = lazy(() => import('./DirectLinkedInPublish').then(m => ({ default: m.LinkedInConnection })));
+const directLinkedInEnabled = import.meta.env.VITE_LINKEDIN_DIRECT_PUBLISH === 'true';
 import { Button } from '@/components/ui/button';
 import { getExportIdentity, prepareOwnedPostMedia, getOwnedMediaDescriptor, type ExportIdentity } from '@/lib/owned-post-media';
 import { brandImage, brandText } from '@/lib/branded-media';
@@ -110,7 +113,7 @@ function ExportAction({ id, index, kind, onShared }: { id: string; index: number
       {file.type.startsWith('video/') ? <video key={preview} src={preview} controls playsInline preload="auto" onError={() => setStatus('Não foi possível reproduzir a pré-visualização. Guarda a cópia para a verificar ou prepara novamente.')} className="max-h-[50svh] w-full rounded-lg bg-black" aria-label="Pré-visualização do vídeo exportado" /> : <img src={preview} alt="Cópia com o logótipo Yamilook e identificação do autor" className="max-h-[50svh] w-full rounded-lg object-contain" />}
       <p className="text-xs text-muted-foreground">{file.type.startsWith('video/') ? 'Reproduz para confirmar também o áudio. ' : ''}{file.name} · {(file.size / 1048576).toFixed(1)} MB</p>
       {!choosing && <Button className="w-full" disabled={sharing} onClick={() => setChoosing(true)}>Confirmar e escolher aplicação</Button>}
-      {choosing && <FileApplicationPicker downloadUrl={preview} filename={file.name} disabled={sharing} nativeShareAvailable={canShareVideo(file)} onShare={() => void share()} onSave={() => void share(true)} />}
+      {choosing && <FileApplicationPicker linkedInPublisher={directLinkedInEnabled ? <Suspense fallback={<p>A carregar LinkedIn…</p>}><DirectLinkedInPublish key={preview} file={file} postId={id} /></Suspense> : undefined} downloadUrl={preview} filename={file.name} disabled={sharing} nativeShareAvailable={canShareVideo(file)} onShare={() => void share()} onSave={() => void share(true)} />}
       <Button asChild variant="outline" className="w-full"><a href={preview} download={file.name}>Guardar cópia com marca</a></Button>
       <Button variant="ghost" className="w-full" disabled={sharing} onClick={() => { setFiles([]); setStatus(''); setChoosing(false); }}>Preparar novamente</Button>
     </>}
@@ -126,6 +129,7 @@ export default function BrandedPostExport({ id, mediaUrls, onShared }: { id: str
     <p className="text-sm text-muted-foreground">Cria uma cópia com logótipo e autor. Confirma o resultado antes de escolher a aplicação e o destinatário. Quem recebe pode guardar ou reencaminhar a cópia.</p>
     {!!media.length && <label className="block text-sm">Conteúdo a exportar<select className="mt-1 min-h-11 w-full rounded border bg-background p-2" value={selection} onChange={event => setSelection(Number(event.target.value))}>{media.map((item, position) => <option key={item.index} value={item.index}>{item.kind === 'video' ? 'Vídeo' : 'Fotografia'} {position + 1}</option>)}<option value={-1}>Cartão de texto</option></select></label>}
     {selected.kind === 'video' && <p className="text-xs text-muted-foreground">Preparamos uma cópia MP4 mais pequena, com áudio, para enviar noutras aplicações. Vídeos até 10 minutos. Mantém esta página aberta.</p>}
+    {directLinkedInEnabled && <Suspense fallback={null}><LinkedInConnection /></Suspense>}
     <ExportAction key={`${id}:${selected.index}:${mediaUrls[selected.index] ?? ''}`} id={id} index={selected.index} kind={selected.kind} onShared={onShared} />
   </section>;
 }
