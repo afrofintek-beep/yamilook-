@@ -66,3 +66,25 @@ it('cancellation during handoff prevents answering a second call', async () => {
   await act(async()=>{await result.current.endCall();resolve({data:true});await handoff;});
   expect(m.newAnswer).not.toHaveBeenCalled();expect(m.read).not.toHaveBeenCalled();
 });
+
+it('creates invitations before releasing old media and never connects another direct call',async()=>{
+  m.state.callId='active';m.rpc.mockResolvedValue({data:'conference'});
+  const steps:string[]=[];m.end.mockImplementation(async()=>{steps.push('release');});
+  const {result}=renderHook(useCallTransport);
+  await act(async()=>{expect(await result.current.addWaitingToConference('active','waiting')).toBe('conference');});
+  expect(m.rpc).toHaveBeenCalledWith('add_waiting_call_to_conference',{p_current_call_id:'active',p_waiting_call_id:'waiting'});
+  expect(steps).toEqual(['release','release']);expect(m.newAnswer).not.toHaveBeenCalled();
+});
+it('does not disconnect a call when conference validation fails',async()=>{
+  m.state.callId='active';m.rpc.mockResolvedValue({error:{message:'call_unavailable'}});
+  const {result}=renderHook(useCallTransport);
+  await expect(result.current.addWaitingToConference('active','waiting')).rejects.toThrow();
+  expect(m.end).not.toHaveBeenCalled();
+});
+it('blocks duplicate conference conversions while the first is pending',async()=>{
+  m.state.callId='active';let resolve!:(v:unknown)=>void;m.rpc.mockImplementation(()=>new Promise(r=>{resolve=r;}));
+  const {result}=renderHook(useCallTransport);let first!:Promise<unknown>;
+  act(()=>{first=result.current.addWaitingToConference('active','waiting');});
+  await expect(result.current.addWaitingToConference('active','waiting')).rejects.toThrow();
+  await act(async()=>{resolve({data:'conference'});await first;});expect(m.rpc).toHaveBeenCalledOnce();
+});

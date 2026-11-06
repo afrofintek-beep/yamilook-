@@ -1,0 +1,77 @@
+// Isolated PostgreSQL tests; no production data or credentials.
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+import { PGlite } from '@electric-sql/pglite';
+const db = new PGlite(); let count = 0;
+const check = (value, label) => { assert.ok(value, label); count++; console.log('PASS', label); };
+const a='10000000-0000-4000-8000-000000000001', b='10000000-0000-4000-8000-000000000002', c='10000000-0000-4000-8000-000000000003';
+try {
+ await db.exec(`create role anon;create role authenticated;create schema auth;create schema private;
+ create function auth.uid() returns uuid language sql as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
+ create table auth.users(id uuid primary key);create table public.profiles(id uuid primary key references auth.users(id),display_name text);
+ create type public.group_member_role as enum ('admin','member');
+ create table public.conversations(id uuid primary key default gen_random_uuid(),type text,name text,created_by uuid);
+ create table public.conversation_participants(conversation_id uuid,user_id uuid,role public.group_member_role,primary key(conversation_id,user_id));
+ create function public.user_is_participant(cid uuid) returns boolean language sql stable security definer set search_path='' as $$select exists(select 1 from public.conversation_participants where conversation_id=cid and user_id=auth.uid())$$;
+ create table public.contacts(user_id uuid,contact_user_id uuid,is_blocked boolean default false);
+ create table public.blocked_users(blocker_id uuid,blocked_id uuid);`);
+ const schema=fs.readFileSync('supabase/migrations/20260110032750_1027a5bb-8adb-4f5b-8bc9-c50a464b17c9.sql','utf8');
+ await db.exec(schema.slice(0,schema.indexOf('-- Create call recordings table')));
+ await db.exec('alter table public.calls add caller_id uuid, add callee_id uuid, add call_type text, add sdp_offer jsonb;');
+ await db.exec(fs.readFileSync('supabase/migrations/20261029224605_direct_call_busy_feedback.sql','utf8'));
+ await db.exec(fs.readFileSync('supabase/migrations/20261106162641_direct_call_waiting.sql','utf8'));
+
+ await db.exec(fs.readFileSync('supabase/migrations/20261103002307_group_conferences.sql','utf8'));
+ await db.exec(fs.readFileSync('supabase/migrations/20261106171303_add_waiting_call_to_conference.sql','utf8'));
+ const d='10000000-0000-4000-8000-000000000004';
+ await db.query('insert into auth.users values($1),($2),($3),($4)',[a,b,c,d]);
+ await db.exec('insert into profiles(id) select id from auth.users');
+ const as=async id=>{await db.exec('reset role');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[id||'']);await db.exec('set role authenticated');};
+ const create=async target=>(await db.query("select public.create_call($1,'voice',null) id",[target])).rows[0].id;
+ const merge=async(x,y)=>(await db.query('select public.add_waiting_call_to_conference($1,$2) id',[x,y])).rows[0].id;
+ const reject=async(fn,reason)=>{await assert.rejects(fn,e=>e.message.includes(reason));count++;console.log('PASS rejects',reason);};
+ const row=async id=>{await db.exec('reset role');return (await db.query('select * from calls where id=$1',[id])).rows[0];};
+ await as(a);const active=await create(b);
+ await db.exec('reset role');await db.query("update calls set status='ongoing',started_at=now(),sdp_offer='{\"transport\":\"livekit-v1\"}' where id=$1",[active]);
+ await db.query("update call_participants set status='connected' where call_id=$1",[active]);
+ await as(c);const waiting=await create(b);
+ await as(d);await reject(()=>merge(active,waiting),'not_allowed');
+ await as(a);await reject(()=>merge(active,waiting),'not_allowed');
+ await as(c);await reject(()=>merge(active,waiting),'not_allowed');
+ await as(null);await reject(()=>merge(active,waiting),'unauthenticated');
+ await as(b);await reject(()=>merge(active,active),'invalid_call');
+ await db.exec('reset role');await db.query('insert into blocked_users values($1,$2)',[a,c]);
+ await as(b);await reject(()=>merge(active,waiting),'call_unavailable');
+ check((await row(active)).status==='ongoing','blocked peer pair leaves active call intact');
+ check((await db.query('select count(*) n from group_conferences')).rows[0].n===0,'failed conversion creates no conference');
+ await db.exec('delete from blocked_users');
+ await db.query('insert into contacts values($1,$2,true)',[c,a]);
+ await as(b);await reject(()=>merge(active,waiting),'call_unavailable');
+ await db.exec('reset role');await db.exec('delete from contacts');
+ await db.query("update calls set created_at=now()-interval '91 seconds' where id=$1",[waiting]);
+ await as(b);await reject(()=>merge(active,waiting),'call_unavailable');
+ check((await row(active)).status==='ongoing','expired invitation preserves active call');
+ await db.query("update calls set created_at=now(),status='connecting' where id=$1",[waiting]);
+ await as(b);await reject(()=>merge(active,waiting),'call_unavailable');
+ await db.exec('reset role');await db.query("update calls set status='ringing' where id=$1",[waiting]);
+ await as(b);const conf=await merge(active,waiting);
+ check((await row(active)).status==='ended','current direct call ended');
+ check((await row(waiting)).status==='ended','waiting direct call ended');
+ const room=(await db.query('select * from group_conferences where id=$1',[conf])).rows[0];
+ check(room.call_type==='voice','conference does not turn cameras on');
+ const members=(await db.query('select * from group_conference_members where conference_id=$1',[conf])).rows;
+ check(members.length===3 && members.every(m=>m.status==='invited' && !m.device_id && !m.lease_until),'three invitations without any media admission');
+ check((await db.query('select count(*) n from conversation_participants where conversation_id=$1',[room.conversation_id])).rows[0].n===3,'fresh three-member conversation');
+ await as(b);await reject(()=>merge(active,waiting),'call_unavailable');
+ await db.exec('reset role');check((await db.query('select count(*) n from group_conferences')).rows[0].n===1,'retry cannot create duplicate conference');
+ for(const actor of [a,b,c]) {
+  await as(actor);const list=(await db.query("select public.group_conference_action('list') r")).rows[0].r;
+  check(list.some(x=>x.id===conf && x.invitation_status==='invited'),'participant sees invitation '+actor);
+ }
+ await as(d);check((await db.query("select public.group_conference_action('list') r")).rows[0].r.length===0,'outsider sees no invitation');
+ await as(a);check((await db.query("select public.group_conference_action('join',$1,$2) r",[conf,JSON.stringify({device_id:d})])).rows[0].r.allowed,'explicit acceptance admits participant');
+ await as(c);await db.query("select public.group_conference_action('decline',$1) r",[conf]);
+ await db.exec('reset role');check((await db.query('select status from group_conferences where id=$1',[conf])).rows[0].status==='active','declining invitation does not end conference');
+ for(const prefix of ['public','private']) check(!(await db.query("select has_function_privilege('anon',$1,'EXECUTE') ok",[prefix+'.add_waiting_call_to_conference(uuid,uuid)'])).rows[0].ok,'anonymous denied '+prefix);
+ console.log(`${count} PostgreSQL add-to-call checks passed`);
+} finally {await db.close();}

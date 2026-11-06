@@ -302,6 +302,10 @@
     "share": "Shiriki",
     "recurring": "Inayorudiwa",
     "maybe": "Labda",
+    "addToCall": "Ongeza kwenye simu",
+    "addToCallDescription": "Simu zote mbili za mtu binafsi zitaisha. Kikundi kipya kitaundwa na washiriki wote watatu watapokea mwaliko wa mkutano wa sauti. Kila mtu lazima akubali. Ujumbe na rekodi za awali hazitashirikiwa.",
+    "createConference": "Unda mkutano",
+    "conferenceInvited": "Mialiko imetumwa. Gusa Kubali ili kujiunga na mkutano.",
     "waitingTitle": "Simu inayosubiri",
     "waitingDescription": "Simu yako ya sasa inaendelea. Ili kujibu simu hii, maliza simu ya sasa.",
     "endAndAnswer": "Maliza ya sasa na ujibu"

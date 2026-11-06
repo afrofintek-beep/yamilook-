@@ -302,6 +302,10 @@
     "share": "Kokabola",
     "recurring": "Ekozonga",
     "maybe": "Mbala moko",
+    "addToCall": "Bakisa na libengisi",
+    "addToCallDescription": "Mabengisi mibale ya moto na moto ekosila. Etuluku ya sika ekosalema mpe bato nyonso misato bakozwa libyangi ya lisolo ya mongongo. Moto na moto asengeli kondima. Bansango mpe baenregistrement ya kala ekokabolama te.",
+    "createConference": "Sala lisolo ya etuluku",
+    "conferenceInvited": "Mabyangi etindami. Finá Kondima mpo na kokota na lisolo.",
     "waitingTitle": "Libengi ezali kozela",
     "waitingDescription": "Libengi ozali kosala ezali kokoba. Mpo na koyamba oyo, sukisa libengi ya sikoyo.",
     "endAndAnswer": "Sukisa oyo mpe yamba"

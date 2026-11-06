@@ -71,6 +71,22 @@ export function useCallTransport() {
         if (operation.current === epoch) pending.current = false;
       }
     },
+    addWaitingToConference: async (currentId: string, waitingId: string) => {
+      if (pending.current || active.state.callId !== currentId || currentId === waitingId) throw new Error('A chamada atual mudou. Tenta novamente.');
+      protect(); const epoch = ++operation.current; pending.current = true;
+      let released = false;
+      try {
+        const { data, error } = await supabase.rpc('add_waiting_call_to_conference', { p_current_call_id: currentId, p_waiting_call_id: waitingId });
+        if (epoch !== operation.current) throw new Error('Chamada cancelada.');
+        if (error || !data) throw new Error('Não foi possível reunir estas chamadas. Verifica se a chamada em espera continua disponível.');
+        released = true;
+        await Promise.all([legacy.endCall(), livekit.endCall()]);
+        if (epoch !== operation.current) throw new Error('Chamada cancelada.');
+        return data;
+      } finally {
+        if (epoch === operation.current) { pending.current = false; if (released) unprotect(); }
+      }
+    },
     endCall: async () => {
       operation.current++; pending.current = false;
       await Promise.all([legacy.endCall(), livekit.endCall()]);
