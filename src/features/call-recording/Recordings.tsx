@@ -6,7 +6,7 @@ import { downloadRecording, pendingRecordings, RECORDINGS_CHANGED, type PendingR
 import { saveRecording } from './save';
 import { recordingFile, downloadFile } from './export';
 
-type Saved = { id: string; storage_path: string | null; created_at: string; duration_seconds: number | null };
+type Saved = { id: string; storage_path: string | null; created_at: string; duration_seconds: number | null; expires_at?: string | null; deletion_requested_at?: string | null };
 export function Recordings() {
   const { user } = useAuth();
   const ownerId = user?.id;
@@ -25,7 +25,7 @@ export function Recordings() {
     if (!ownerId) return;
     const [files, result] = await Promise.all([
       pendingRecordings(ownerId),
-      supabase.from('call_recordings').select('id,storage_path,created_at,duration_seconds')
+      supabase.from('call_recordings').select('id,storage_path,created_at,duration_seconds,expires_at')
         .eq('initiated_by', ownerId).eq('status', 'completed').order('created_at', { ascending: false }).limit(50),
     ]);
     if (currentOwner.current !== ownerId) return;
@@ -49,6 +49,19 @@ export function Recordings() {
     try { await saveRecording(file); await reload(); }
     catch (cause) { if (currentOwner.current === ownerId) setError(cause instanceof Error ? cause.message : 'Não foi possível guardar.'); }
     finally { if (currentOwner.current === ownerId) setBusy(null); }
+  };
+  const deleteSaved = async (file: Saved) => {
+    if (!ownerId || busy || !window.confirm('Apagar esta gravação definitivamente da aplicação? As cópias descarregadas não serão apagadas.')) return;
+    setBusy(file.id); setError('');
+    try {
+      const { error } = await supabase.functions.invoke('recording-retention', { body: { id: file.id } });
+      if (error) throw error;
+      if (currentOwner.current !== ownerId) return;
+      setPlayback(null); setExportFile(null); setOriginalFile(null);
+      await reload();
+    } catch {
+      if (currentOwner.current === ownerId) setError('Não foi possível concluir a eliminação. Tente novamente.');
+    } finally { if (currentOwner.current === ownerId) setBusy(null); }
   };
   const play = async (file: Saved) => {
     if (!file.storage_path || busy) return;
@@ -94,7 +107,7 @@ export function Recordings() {
   };
   return <section aria-label="As minhas gravações" className="p-4 space-y-4">
     <div className="flex items-center justify-between gap-2"><h2 className="font-semibold">As minhas gravações</h2><Button variant="outline" onClick={() => { setError(''); void reload(); }}>Actualizar</Button></div>
-    <p className="text-sm text-muted-foreground">Gravações que iniciou, guardadas com o consentimento dos participantes.</p>
+    <p className="text-sm text-muted-foreground">Gravações que iniciou com consentimento. São conservadas por 30 dias. Descarregue as que pretende manter antes da data indicada.</p>
     {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
     {pending.map(file => <div key={file.id} className="rounded-lg border p-3 space-y-2">
       <p>Gravação por enviar · {new Date(file.createdAt).toLocaleString()}</p>
@@ -103,6 +116,10 @@ export function Recordings() {
     </div>)}
     {saved.map(file => <div key={file.id} className="rounded-lg border p-3 space-y-2">
       <p>{new Date(file.created_at).toLocaleString()} · {file.duration_seconds ?? 0}s</p>
+      {file.expires_at && <p className="text-sm">Remoção automática: {new Date(file.expires_at).toLocaleString()}</p>}
+      {file.expires_at && Date.parse(file.expires_at) - Date.now() <= 7 * 86400000 && <p role="status" className="text-sm font-semibold">{Date.parse(file.expires_at) <= Date.now() ? 'Prazo terminado. A eliminação está pendente.' : Date.parse(file.expires_at) - Date.now() <= 86400000 ? 'Esta gravação será apagada em menos de 24 horas. Descarregue-a agora.' : 'Esta gravação será apagada nos próximos 7 dias. Descarregue-a para conservar.'}</p>}
+      {file.deletion_requested_at && <p role="status">Eliminação em curso.</p>}
+      <Button disabled={!!busy} variant="destructive" onClick={() => void deleteSaved(file)}>Apagar gravação</Button>
       <div className="flex flex-wrap gap-2">
         <Button disabled={!!busy} variant="outline" onClick={() => void play(file)}>Reproduzir gravação</Button>
         <Button disabled={!!busy || !file.storage_path} variant="outline" onClick={() => void prepareDownload(file)}>Descarregar gravação</Button>

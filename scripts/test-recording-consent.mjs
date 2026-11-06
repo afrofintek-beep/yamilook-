@@ -78,5 +78,16 @@ try {
   await reject(()=>action('request'),'call_not_connected');
   await db.exec('reset role');
   check(!(await db.query("select has_function_privilege('anon','public.recording_session(uuid,text,uuid,boolean,jsonb)','EXECUTE') allowed")).rows[0].allowed,'anonymous RPC denied');
+  await db.exec(`create role service_role bypassrls; create schema cron; create schema net;
+    create function cron.schedule(text,text,text) returns bigint language sql as $$ select 1::bigint $$;
+    create function net.http_post(url text,headers jsonb,body jsonb) returns bigint language sql as $$ select 1::bigint $$;`);
+  const retention=fs.readdirSync('supabase/migrations').find(f=>f.endsWith('_recording_retention.sql'));
+  await db.exec(fs.readFileSync('supabase/migrations/'+retention,'utf8').replace('create extension if not exists pg_net with schema extensions;',''));
+  check((await db.query("select bool_and(expires_at > now()+interval '29 days' and retention_days=30) ok from call_recordings where status='completed'")).rows[0].ok,'existing recordings receive a full 30-day grace period');
+  check(!(await db.query("select has_function_privilege('authenticated','public.recording_maintenance_authorized(text)','EXECUTE') allowed")).rows[0].allowed,'scheduler authentication inaccessible to clients');
+  await as(a);await reject(()=>db.query('select * from private.recording_maintenance_config'),'permission denied');
+  await db.exec('reset role');await db.query("update call_recordings set deletion_requested_at=now() where id=$1",[r.id]);
+  await as(a);await reject(()=>action('complete',r.id,null,{storage_path:`${call}/${r.id}.mp4`,file_size_bytes:123,duration_seconds:4}),'recording_deleted');
+  await db.exec('reset role');
   console.log(`${count} PostgreSQL checks passed`);
 } finally {await db.close();}
