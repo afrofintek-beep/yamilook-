@@ -235,5 +235,10 @@
     "waitingTitle": "Ucingo olulindile",
     "waitingDescription": "Ucingo lwakho lwamanje luyaqhubeka. Ukuze uphendule lolu cingo, qeda olwamanje.",
     "endAndAnswer": "Qeda olwamanje bese uphendula"
+  },
+  "groupCalls": {
+    "conferenceLabel": "Ingqungquthela",
+    "participantCount": "Abahlanganyeli: {{count}}",
+    "addParticipant": "Engeza"
   }
 }

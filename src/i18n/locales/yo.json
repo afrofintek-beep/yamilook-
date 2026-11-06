@@ -235,5 +235,10 @@
     "waitingTitle": "Ìpè tó ń dúró",
     "waitingDescription": "Ìpè rẹ lọ́wọ́lọ́wọ́ ń bá a lọ. Láti dáhùn ìpè yìí, parí ìpè lọ́wọ́lọ́wọ́.",
     "endAndAnswer": "Parí ìpè lọ́wọ́lọ́wọ́ kí o sì dáhùn"
+  },
+  "groupCalls": {
+    "conferenceLabel": "Ìpè ẹgbẹ́",
+    "participantCount": "Àwọn olùkópa: {{count}}",
+    "addParticipant": "Fi kún"
   }
 }

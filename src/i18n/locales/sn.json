@@ -235,5 +235,10 @@
     "waitingTitle": "Runhare rwakamirira",
     "waitingDescription": "Runhare rwazvino rwunoenderera. Kuti udavire urwu, pedza rwazvino.",
     "endAndAnswer": "Pedza rwazvino wodavira"
+  },
+  "groupCalls": {
+    "conferenceLabel": "Musangano",
+    "participantCount": "Vatori vechikamu: {{count}}",
+    "addParticipant": "Wedzera"
   }
 }

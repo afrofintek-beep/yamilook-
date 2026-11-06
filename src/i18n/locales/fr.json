@@ -663,5 +663,10 @@
     "confirmLaterHint": "Tu peux terminer l'inscription et participer. Confirme ton adresse plus tard dans Profil → Valider ma Banda.",
     "residenceNotice": "Ta présence actuelle ne prouve pas ta résidence. Les avantages territoriaux exigent une Banda validée ; voyager ne modifie pas automatiquement ta Banda.",
     "confirmBanda": "Confirmer la Banda et continuer"
+  },
+  "groupCalls": {
+    "conferenceLabel": "Conférence",
+    "participantCount": "Participants : {{count}}",
+    "addParticipant": "Ajouter"
   }
 }
