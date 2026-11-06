@@ -2,6 +2,14 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
     {
+      "source": "/api/linkedin",
+      "destination": "/api/linkedin"
+    },
+    {
+      "source": "/api/linkedin/callback",
+      "destination": "/api/linkedin/callback"
+    },
+    {
       "source": "/post/:id",
       "destination": "/api/public-post?id=:id"
     },

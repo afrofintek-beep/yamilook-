@@ -1,0 +1,20 @@
+name: LinkedIn direct publishing
+on:
+  pull_request:
+    paths: ['api/linkedin/**', 'api/linkedin.js', 'server/linkedin/**', 'src/lib/linkedin-publishing.ts', 'src/components/sharing/**', 'tests/linkedin/**', 'supabase/migrations/*linkedin_direct_publishing.sql', 'vercel.json', '.github/workflows/linkedin-publishing.yml']
+permissions:
+  contents: read
+jobs:
+  integration:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: node --test tests/linkedin/*.test.mjs
+      - run: npx vitest run src/components/sharing
+      - run: npx tsc --noEmit -p tsconfig.app.json
+      - run: npm run build

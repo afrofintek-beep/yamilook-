@@ -1,12 +1,12 @@
 import { MessageCircle, Linkedin, Music2, Youtube, Facebook, Instagram, MoreHorizontal, MessagesSquare } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { shareApplications } from '../../../shared/share-destinations.mjs';
 
 const icons = [MessagesSquare, MessageCircle, Linkedin, Music2, Youtube, Facebook, Instagram, MoreHorizontal];
 
 /** Keep the prepared File in the parent; choosing a destination never re-exports it. */
-export default function FileApplicationPicker({ onShare, onSave, disabled = false, nativeShareAvailable = true, downloadUrl, filename }: { onShare: () => void; onSave?: () => void; disabled?: boolean; nativeShareAvailable?: boolean; downloadUrl?: string; filename?: string }) {
+export default function FileApplicationPicker({ onShare, onSave, linkedInPublisher, disabled = false, nativeShareAvailable = true, downloadUrl, filename }: { onShare: () => void; onSave?: () => void; linkedInPublisher?: ReactNode; disabled?: boolean; nativeShareAvailable?: boolean; downloadUrl?: string; filename?: string }) {
   const linkedInPanel = useRef<HTMLElement>(null);
   const [selected, setSelected] = useState('');
   return <div className="space-y-3" aria-label="Aplicações para partilhar">
@@ -29,6 +29,7 @@ export default function FileApplicationPicker({ onShare, onSave, disabled = fals
       {selected === 'Kosolola' && <Button asChild variant="outline"><a href="https://www.kosolola.com" target="_blank" rel="noopener noreferrer">Abrir Kosolola</a></Button>}
       {selected === 'LinkedIn' && <section ref={linkedInPanel} tabIndex={-1} className="space-y-3 rounded-xl border p-4" aria-label="Publicar no LinkedIn">
         <h4 className="font-semibold">Publicar no LinkedIn</h4>
+        {linkedInPublisher}
         <p className="text-sm">1. Guarda esta cópia com o logótipo e o autor.</p>
         {nativeShareAvailable && onSave ? <Button className="min-h-12 w-full" disabled={disabled} onClick={onSave}>Guardar cópia para LinkedIn</Button> : downloadUrl && <Button asChild className="min-h-12 w-full"><a href={downloadUrl} download={filename}>Guardar cópia para LinkedIn</a></Button>}
         <p className="text-sm">No menu que abrir, procura Guardar vídeo, Guardar imagem ou Guardar em Ficheiros na lista de ações por baixo das aplicações.</p>
