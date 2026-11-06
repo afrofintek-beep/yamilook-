@@ -140,3 +140,17 @@ it('does not expose native playback output when ownership is revoked', async () 
   expect(screen.queryByText('Pré-visualização da cópia')).not.toBeInTheDocument();
   expect(vi.mocked(exportVideoFromPlayback).mock.calls[0][2].aborted).toBe(true);
 });
+
+it('opens native saving with the prepared file and keeps the export dialog open', async () => {
+  const shared = vi.fn();
+  render(<BrandedPostExport id="id" mediaUrls={[]} onShared={shared} />);
+  fireEvent.click(screen.getByText('Preparar cópia com marca'));
+  fireEvent.click(await screen.findByText('Confirmar e escolher aplicação'));
+  fireEvent.click(screen.getByRole('button', { name: 'LinkedIn', exact: true }));
+  fireEvent.click(screen.getByRole('button', { name: 'Guardar cópia para LinkedIn' }));
+  expect(sharePreparedVideo).toHaveBeenCalledWith(file);
+  await screen.findByText(/Menu fechado. Confirma/);
+  expect(shared).not.toHaveBeenCalled();
+  expect(screen.getByRole('link', { name: 'Abrir LinkedIn' })).not.toHaveAttribute('target');
+  expect(screen.getByRole('img')).toBeInTheDocument();
+});
