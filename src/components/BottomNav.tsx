@@ -1,15 +1,16 @@
+import KosololaLogo from '@/components/brand/KosololaLogo';
 import { useTranslation } from 'react-i18next';
 import i18n from '@/i18n';
 import { useAppSurface } from "@/lib/app-surface";
 import { createPortal } from "react-dom";
 import { NavLink } from "react-router-dom";
-import { Home, Flame, GraduationCap, MessageCircle, User, Users, Phone, Settings } from "lucide-react";
+import { Home, Flame, GraduationCap, User, Users, Phone, Settings } from "lucide-react";
 
 const navItems = [
   { to: "/muxi", label: "Muxi", Icon: Flame },
   { to: "/mokubico", label: "Mokubico", Icon: Home },
   { to: "/academia", label: "Academia", Icon: GraduationCap },
-  { to: "/papos", label: "KOSOLOLA", Icon: MessageCircle },
+  { to: "/papos", label: "KOSOLOLA", Icon: KosololaLogo },
   { to: "/perfil", label: "Perfil", Icon: User },
 ];
 
@@ -17,7 +18,7 @@ export default function BottomNav({ layout = 'default' }: { layout?: 'default' |
   useTranslation();
   const surface = useAppSurface();
   const items = surface === 'papos' ? [
-    { to: '/papos', label: i18n.t('settingsScreen.text1'), Icon: MessageCircle },
+    { to: '/papos', label: i18n.t('settingsScreen.text1'), Icon: KosololaLogo },
     { to: '/contacts', label: i18n.t('settingsScreen.text2'), Icon: Users },
     { to: '/calls', label: i18n.t('settingsScreen.text3'), Icon: Phone },
     { to: '/settings', label: i18n.t('settingsScreen.text4'), Icon: Settings },

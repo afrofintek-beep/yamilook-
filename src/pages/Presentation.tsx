@@ -1,3 +1,4 @@
+import KosololaLogo from '@/components/brand/KosololaLogo';
 import { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -94,7 +95,7 @@ const SLIDES: Slide[] = [
       "Reações, respostas e encaminhamento",
       "GIFs, stickers e formatação rica",
     ],
-    icon: <MessageCircle className="h-10 w-10" />,
+    icon: <KosololaLogo className="h-10 w-10" />,
   },
   {
     id: "calls",

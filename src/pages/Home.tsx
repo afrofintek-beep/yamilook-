@@ -216,7 +216,7 @@ export default function Home() {
     <div className="h-screen-safe w-full min-w-0 overflow-hidden pb-[calc(5rem+env(safe-area-inset-bottom,0px))] bg-background flex flex-col">
       <header className="shrink-0 relative z-50 glass-nav safe-top safe-inline">
         <div className="flex items-center justify-between px-4 py-2.5">
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 items-center gap-3">
             <button onClick={() => navigate('/profile')} className="focus:outline-none">
               <Avatar className="w-9 h-9 ring-2 ring-primary/15">
                 <AvatarImage src={profile?.avatar_url || ''} />
@@ -225,7 +225,7 @@ export default function Home() {
                 </AvatarFallback>
               </Avatar>
             </button>
-            {surface === 'papos' ? <PaposBrand compact /> : <span className="text-base font-bold text-foreground tracking-tight">KOSOLOLA</span>}
+            <PaposBrand compact />
           </div>
           <div className="flex items-center gap-1">
             {!selectionMode && (

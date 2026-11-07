@@ -1,9 +1,10 @@
-import { MessageCircle, Linkedin, Music2, Youtube, Facebook, Instagram, MoreHorizontal, MessagesSquare } from 'lucide-react';
+import KosololaLogo from '@/components/brand/KosololaLogo';
+import { MessageCircle, Linkedin, Music2, Youtube, Facebook, Instagram, MoreHorizontal } from 'lucide-react';
 import { useRef, useState, type ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { shareApplications } from '../../../shared/share-destinations.mjs';
 
-const icons = [MessagesSquare, MessageCircle, Linkedin, Music2, Youtube, Facebook, Instagram, MoreHorizontal];
+const icons = [KosololaLogo, MessageCircle, Linkedin, Music2, Youtube, Facebook, Instagram, MoreHorizontal];
 
 /** Keep the prepared File in the parent; choosing a destination never re-exports it. */
 export default function FileApplicationPicker({ onShare, onSave, linkedInPublisher, disabled = false, nativeShareAvailable = true, downloadUrl, filename }: { onShare: () => void; onSave?: () => void; linkedInPublisher?: ReactNode; disabled?: boolean; nativeShareAvailable?: boolean; downloadUrl?: string; filename?: string }) {

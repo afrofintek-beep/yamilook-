@@ -1,3 +1,4 @@
+import KosololaLogo from '@/components/brand/KosololaLogo';
 import BrandedPostExport from './BrandedPostExport';
 import PostVideoShare from './PostVideoShare';
 import { useEffect, useState } from 'react';
@@ -36,7 +37,7 @@ export default function PostShareDialog({ id, mediaUrls = [], privacy = 'everyon
     <p className="mb-3 text-sm text-muted-foreground">Envia um endereço para abrir o conteúdo na Yamilook. Para mostrar o vídeo ou a fotografia na publicação de destino, escolhe o ficheiro.</p>
     <div className="grid gap-2">
       {shareDestinations(id).filter(destination => destination.url).map(destination => destination.id === 'linkedin' ? <LinkedInShareOptions key={destination.id} id={id} webUrl={destination.url} /> : <a key={destination.id} href={destination.url} target="_blank" rel="noopener noreferrer" className={`flex min-h-12 items-center justify-between rounded-xl border px-4 py-3 font-medium ${destination.id === 'kosolola' ? 'border-primary bg-primary/10' : ''}`}>
-        <span>{destination.label}</span>{destination.id === 'kosolola' && <span className="text-xs text-muted-foreground">Contactos e grupos</span>}
+        <span className="flex items-center gap-2">{destination.id === 'kosolola' && <KosololaLogo className="h-6 w-6" />}{destination.label}</span>{destination.id === 'kosolola' && <span className="text-xs text-muted-foreground">Contactos e grupos</span>}
       </a>)}
       <Button variant="outline" onClick={() => void share(false)}>Outros</Button>
       <Button variant="outline" onClick={() => void share(true)}>Copiar ligação</Button>
