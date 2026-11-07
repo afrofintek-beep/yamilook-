@@ -7,6 +7,7 @@ import PaposLanguageSelector from './PaposLanguageSelector';
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAdmin } from '@/hooks/useAdmin';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -20,6 +21,7 @@ import { ConnectedDevices } from '@/components/settings/ConnectedDevices';
 import { BackupManager } from '@/components/settings/BackupManager';
 export default function PaposSettings() {
   const { t } = useTranslation();
+  const { isAdmin } = useAdmin();
   const queryClient = useQueryClient();
   const [inviteOpen, setInviteOpen] = useState(false);
   const [logoutError, setLogoutError] = useState('');
@@ -60,6 +62,6 @@ export default function PaposSettings() {
       <p className="text-xs text-muted-foreground">{i18n.t('settingsScreen.text46')}</p>
       {logoutError && <p role="alert" className="text-sm text-destructive">{logoutError}</p>}
       <Button variant="outline" className="w-full" disabled={busy} onClick={() => void leave()}>{t('settings.logOut')}</Button>
-    </main><InviteSheet open={inviteOpen} onOpenChange={setInviteOpen} /><ArchivedChatsSheet open={archived} onOpenChange={setArchived} /><BlockedUsersSheet open={blocked} onOpenChange={setBlocked} /><BottomNav /></div>;
+    </main><InviteSheet isAdmin={isAdmin} open={inviteOpen} onOpenChange={setInviteOpen} /><ArchivedChatsSheet open={archived} onOpenChange={setArchived} /><BlockedUsersSheet open={blocked} onOpenChange={setBlocked} /><BottomNav /></div>;
 }
 

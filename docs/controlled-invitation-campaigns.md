@@ -63,6 +63,7 @@ A emissão obtém primeiro o bloqueio da linha da campanha; depois serializa o e
 - **Administração → Campanhas de convites controladas:** formulário de condições e datas, ativação/suspensão/encerramento, autorização com referência de presença, revogação, estatísticas, paginação e auditoria.
 - **Definições → Convidar → Campanhas de convites:** seleção de campanha atribuída, quota utilizada/restante, geração individual, consulta de estado e partilha manual por WhatsApp/email.
 - A mensagem usa a expiração devolvida pelo servidor. Não promete sempre sete dias.
+- A KOSOLOLA usa a mesma autorização de campanha e mantém a sua marca nas mensagens; as opções legadas de administrador dependem também da função administrativa do servidor.
 - O novo fluxo não envia mensagens automaticamente. O envio automático já existente para o administrador e o fluxo inicial de 100 inscrições não são substituídos.
 - O texto novo segue a interface portuguesa existente. Traduções adicionais não fazem parte deste patch.
 
@@ -78,7 +79,7 @@ A emissão obtém primeiro o bloqueio da linha da campanha; depois serializa o e
 
 - 14 testes de integração num PostgreSQL 17.6 local, com ligações independentes: permissões, RLS/ACL, critérios de elegibilidade, datas, suspensão, revogação, limites, duplicação, email, expiração, rollback da inscrição, compatibilidade antiga, separação da campanha inicial e auditoria.
 - Carga concorrente: 40 pedidos de dois utilizadores, limite individual 3 e global 5; exatamente 5 emissões e nenhum utilizador acima de 3. Dezasseis pedidos idempotentes produziram um só token. Oito inscrições simultâneas no mesmo token produziram uma inscrição. Teste adicional com oito snapshots `REPEATABLE READ` e quota 1.
-- 63 testes Vitest da interface, mensagens de convite, links e compatibilidade de registo.
+- 67 testes Vitest da interface, mensagens de convite, links, compatibilidade de registo e integração KOSOLOLA. A suite móvel de regressão passou também os seus 99 testes, incluindo quatro da integração KOSOLOLA.
 - TypeScript, ESLint dos ficheiros alterados e compilação Vite. A compilação mantém avisos existentes de bundles grandes.
 - Novo workflow CI reproduz os testes em PostgreSQL 17.6 sem credenciais de produção.
 
