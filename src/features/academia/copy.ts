@@ -1,7 +1,8 @@
+import { uiText } from '@/i18n/ui-copy';
 /** Exact UI copy strings for Academia da Banda */
 export const ACADEMIA_COPY = {
-  title: 'ACADEMIA DA BANDA',
-  subtitle: 'Na Academia a banda cresce.',
+  get title() { return uiText("ACADEMIA DA BANDA"); },
+  get subtitle() { return uiText("Na Academia a banda cresce."); },
   tabAll: 'Todas',
   tabFree: 'Gratuitas',
   tabPremium: 'Premium',

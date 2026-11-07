@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { motion } from 'framer-motion';
 import { Trophy, GraduationCap, BookOpen, Users, Flame, Star, Heart } from 'lucide-react';
 
@@ -24,6 +25,7 @@ const iconMap: Record<string, React.ElementType> = {
 };
 
 export function ProfileAchievements({ achievements }: ProfileAchievementsProps) {
+  useUiLocale();
   if (!achievements || achievements.length === 0) return null;
 
   return (
@@ -33,9 +35,7 @@ export function ProfileAchievements({ achievements }: ProfileAchievementsProps) 
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.35, duration: 0.3 }}
     >
-      <h3 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/50 mb-3 px-1">
-        Conquistas
-      </h3>
+      <h3 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/50 mb-3 px-1">{uiText("Conquistas")}</h3>
       <div className="grid grid-cols-2 gap-2.5">
         {achievements.map((achievement, index) => {
           const Icon = iconMap[achievement.icon] || Trophy;

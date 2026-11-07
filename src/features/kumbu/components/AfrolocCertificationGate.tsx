@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, type ReactNode } from 'react';
 import { ShieldCheck, ShieldAlert, Clock, MapPin, Loader2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -19,6 +20,7 @@ export function AfrolocCertificationGate({
   action: string;
   children: ReactNode;
 }) {
+  useUiLocale();
   const { status, isCertified, hasAddress, afrolocCode, requestCertification, verifyWithAfroloc } =
     useAfrolocCertification();
   const [submitting, setSubmitting] = useState(false);
@@ -33,7 +35,7 @@ export function AfrolocCertificationGate({
     const res = await verifyWithAfroloc();
     setVerifying(false);
     if (res.certified) {
-      toast.success('Endereço AFROLOC certificado verificado ✓');
+      toast.success(uiText("Endereço AFROLOC certificado verificado ✓"));
       return;
     }
     const msg: Record<string, string> = {
@@ -59,15 +61,15 @@ export function AfrolocCertificationGate({
     const res = await requestCertification();
     setSubmitting(false);
     if (res.success) {
-      toast.success('Pedido enviado. Uma autoridade vai validar o teu endereço AFROLOC.');
+      toast.success(uiText("Pedido enviado. Uma autoridade vai validar o teu endereço AFROLOC."));
     } else if (res.error === 'no_address') {
-      toast.error('Precisas primeiro de um endereço AFROLOC.');
+      toast.error(uiText("Precisas primeiro de um endereço AFROLOC."));
     } else if (res.error === 'already_pending') {
-      toast.message('Já tens um pedido de certificação pendente.');
+      toast.message(uiText("Já tens um pedido de certificação pendente."));
     } else if (res.error === 'already_certified') {
-      toast.message('O teu endereço já está certificado.');
+      toast.message(uiText("O teu endereço já está certificado."));
     } else {
-      toast.error('Não foi possível enviar o pedido. Tenta novamente.');
+      toast.error(uiText("Não foi possível enviar o pedido. Tenta novamente."));
     }
   };
 
@@ -76,20 +78,18 @@ export function AfrolocCertificationGate({
       <CardContent className="p-5 space-y-4">
         <div className="flex items-center gap-2">
           <ShieldAlert className="h-5 w-5 text-amber-500" />
-          <span className="text-sm font-semibold">Endereço AFROLOC por certificar</span>
+          <span className="text-sm font-semibold">{uiText("Endereço AFROLOC por certificar")}</span>
           {status === 'pending' && (
             <Badge variant="secondary" className="ml-auto text-xs gap-1">
-              <Clock className="h-3 w-3" /> Em análise
-            </Badge>
+              <Clock className="h-3 w-3" />{uiText(" Em análise")}</Badge>
           )}
           {status === 'rejected' && (
-            <Badge variant="destructive" className="ml-auto text-xs">Rejeitado</Badge>
+            <Badge variant="destructive" className="ml-auto text-xs">{uiText("Rejeitado")}</Badge>
           )}
         </div>
 
-        <p className="text-sm text-muted-foreground">
-          Para {action}, o teu endereço AFROLOC precisa de ser{' '}
-          <span className="font-medium text-foreground">certificado por uma autoridade</span>.
+        <p className="text-sm text-muted-foreground">{uiText("Para ")}{action}{uiText(", o teu endereço AFROLOC precisa de ser")}{' '}
+          <span className="font-medium text-foreground">{uiText("certificado por uma autoridade")}</span>.
         </p>
 
         {afrolocCode && (
@@ -100,28 +100,19 @@ export function AfrolocCertificationGate({
         )}
 
         {!hasAddress && (
-          <p className="text-xs text-muted-foreground">
-            Ainda não tens um endereço AFROLOC. Cria o teu endereço no perfil antes de pedir a
-            certificação.
-          </p>
+          <p className="text-xs text-muted-foreground">{uiText("Ainda não tens um endereço AFROLOC. Cria o teu endereço no perfil antes de pedir a certificação.")}</p>
         )}
 
         <label className="flex items-start gap-2 text-xs text-muted-foreground">
           <input type="checkbox" checked={!!afrolocCode && consentedCode === afrolocCode}
-            onChange={event => setConsentedCode(event.target.checked ? afrolocCode : null)} disabled={!hasAddress || verifying} />
-          Autorizo a consulta ao AFROLOC com o telefone confirmado e este código de endereço, apenas para verificar a titularidade e certificação.
-        </label>
+            onChange={event => setConsentedCode(event.target.checked ? afrolocCode : null)} disabled={!hasAddress || verifying} />{uiText("Autorizo a consulta ao AFROLOC com o telefone confirmado e este código de endereço, apenas para verificar a titularidade e certificação.")}</label>
         {/* Primary: automatic verification against the AFROLOC partner API (by phone). */}
         <Button className="w-full" disabled={verifying || !hasAddress || consentedCode !== afrolocCode} onClick={handleVerify}>
-          {verifying ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
-          Verificar com AFROLOC
-        </Button>
+          {verifying ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}{uiText("Verificar com AFROLOC")}</Button>
 
         {/* Fallback: manual authority review. */}
         {status === 'pending' ? (
-          <p className="text-xs text-muted-foreground text-center">
-            Pedido de validação manual em análise por uma autoridade.
-          </p>
+          <p className="text-xs text-muted-foreground text-center">{uiText("Pedido de validação manual em análise por uma autoridade.")}</p>
         ) : (
           <button
             type="button"
@@ -130,10 +121,10 @@ export function AfrolocCertificationGate({
             onClick={handleRequest}
           >
             {submitting
-              ? 'A enviar…'
+              ? uiText("A enviar…")
               : status === 'rejected'
-                ? 'Ou pedir validação manual de novo'
-                : 'Ou pedir validação manual'}
+                ? uiText("Ou pedir validação manual de novo")
+                : uiText("Ou pedir validação manual")}
           </button>
         )}
       </CardContent>

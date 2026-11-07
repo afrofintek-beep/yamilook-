@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import locationHints from '@/i18n/location-labels.json';
 import { RESIDENCE_COUNTRY_CODES, loadResidenceCities, matchingResidenceCities } from '@/lib/residence-locations';
 import { useTranslation } from 'react-i18next';
@@ -20,6 +21,7 @@ interface Props {
  plan: ResidencePlan; onPlan:(v:ResidencePlan)=>void; onContinue:()=>void; onBack?:()=>void; saving?:boolean;
 }
 export function ResidenceForm(p: Props) {
+  useUiLocale();
  const { t, i18n } = useTranslation();
  const language = i18n.resolvedLanguage || i18n.language;
  const locale = language.toLowerCase().split(/[-_]/)[0] as keyof typeof locationHints;
@@ -39,14 +41,14 @@ export function ResidenceForm(p: Props) {
  const neighborhoods=country?.cities.find(c=>c.name===p.city)?.neighborhoods || [];
  const changeMode=(method:ResidenceMethod)=>{generation.current++;setLocating(false);setError('');p.onPlan({method});};
  const locate=()=>{
-  if(!navigator.geolocation){setError('onboardingFlow.locationUnavailable');return;}
+  if(!navigator.geolocation){setError(uiText("onboardingFlow.locationUnavailable"));return;}
   const request=++generation.current;setLocating(true);setError('');
   navigator.geolocation.getCurrentPosition(pos=>{
    if(request!==generation.current)return;setLocating(false);
-   if(pos.coords.accuracy>1000){setError('onboardingFlow.weakSignal');return;}
+   if(pos.coords.accuracy>1000){setError(uiText("onboardingFlow.weakSignal"));return;}
    const cell=snapToGrid(pos.coords.latitude,pos.coords.longitude);
    p.onPlan({method:'home',lat:cell.lat,lng:cell.lng,accuracy:pos.coords.accuracy});
-  },()=>{if(request!==generation.current)return;setLocating(false);setError('onboardingFlow.locationFailed');},
+  },()=>{if(request!==generation.current)return;setLocating(false);setError(uiText("onboardingFlow.locationFailed"));},
   {enableHighAccuracy:true,timeout:10000,maximumAge:0});
  };
  const valid=!!p.country&&!!p.city.trim()&&!!p.neighborhood&&(p.neighborhood!=='__other__'||!!p.customNeighborhood.trim())&&validResidencePlan(p.plan);
@@ -58,7 +60,7 @@ export function ResidenceForm(p: Props) {
   <label className="block text-sm">{t("onboardingFlow.city")}<Input list={cityListId} autoComplete="address-level2" maxLength={200} className={selectClass} value={p.city} aria-describedby={`${cityListId}-hint`} onChange={e=>{resetHomeCapture();p.onCity(e.target.value);p.onNeighborhood('');p.onCustomNeighborhood('');}} placeholder={t("onboardingFlow.selectCity")}/></label>
   <datalist id={cityListId}>{suggestions.map(name=><option key={name} value={name}/>)}</datalist>
   <p id={`${cityListId}-hint`} className="text-xs text-muted-foreground">{locationHints[locale] || locationHints.pt}</p>
-  <p className="text-xs text-muted-foreground"><a href="https://www.geonames.org/" target="_blank" rel="noreferrer" className="underline">GeoNames</a> · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer" className="underline">CC BY 4.0</a></p>
+  <p className="text-xs text-muted-foreground"><a href="https://www.geonames.org/" target="_blank" rel="noreferrer" className="underline">{uiText("GeoNames")}</a> · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer" className="underline">{uiText("CC BY 4.0")}</a></p>
   <label className="block text-sm">{t("onboardingFlow.neighborhood")}<select className={selectClass} value={p.neighborhood} onChange={e=>{resetHomeCapture();p.onNeighborhood(e.target.value);}}><option value="">{t("onboardingFlow.selectNeighborhood")}</option>{neighborhoods.map(n=><option key={n} value={n}>{n}</option>)}{p.neighborhood && p.neighborhood!=='__other__' && !neighborhoods.includes(p.neighborhood) && <option value={p.neighborhood}>{p.neighborhood}</option>}<option value="__other__">{t("onboardingFlow.otherNeighborhood")}</option></select></label>
   {p.neighborhood==='__other__'&&<Input aria-label={t("onboardingFlow.neighborhoodName")} value={p.customNeighborhood} onChange={e=>p.onCustomNeighborhood(e.target.value)} placeholder={t("onboardingFlow.neighborhoodName")}/>}
   <fieldset className="space-y-2"><legend className="font-medium mb-2">{t("onboardingFlow.atAddress")}</legend>{options.map(o=><label key={o.value} className="flex gap-3 items-center rounded-xl border p-3 text-sm"><input type="radio" name="residence-method" value={o.value} checked={p.plan.method===o.value} onChange={()=>changeMode(o.value)}/>{t(o.key)}</label>)}</fieldset>

@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -5,7 +6,7 @@ import { AFRICAN_REACTIONS, AfricanReactionType, getReaction } from '@/lib/react
 
 /**
  * YAMILOOK African Reaction Picker
- * 
+ *
  * Displays the 5 official African reactions with:
  * - Final emoji icons (cultural symbols - DO NOT REPLACE)
  * - Hover/long-press shows name and meaning
@@ -26,6 +27,7 @@ export function AfricanReactionPicker({
   onClose,
   position = 'top',
 }: AfricanReactionPickerProps) {
+  useUiLocale();
   const [hoveredReaction, setHoveredReaction] = useState<string | null>(null);
   const hoveredData = hoveredReaction ? getReaction(hoveredReaction) : null;
 
@@ -50,7 +52,7 @@ export function AfricanReactionPicker({
         onClose?.();
       }}
       role="menu"
-      aria-label="Choose a reaction"
+      aria-label={uiText("Choose a reaction")}
     >
       <div className="bg-card border border-border rounded-2xl shadow-brand-md p-2 flex flex-col gap-1">
         {/* Reaction buttons */}
@@ -75,7 +77,7 @@ export function AfricanReactionPicker({
             </button>
           ))}
         </div>
-        
+
         {/* Label shown on hover - accessibility requirement */}
         <AnimatePresence mode="wait">
           {hoveredData && (

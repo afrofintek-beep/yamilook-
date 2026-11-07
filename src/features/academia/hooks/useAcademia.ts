@@ -1,3 +1,4 @@
+import { uiText } from '@/i18n/ui-copy';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -103,7 +104,7 @@ export function useCreateAcademiaSession() {
       scheduledAt: string;
       durationMinutes?: number;
     }) => {
-      if (!user) throw new Error('Not authenticated');
+      if (!user) throw new Error(uiText("Not authenticated"));
 
       const { error } = await supabase.from('academia_sessions').insert({
         mentor_id: user.id,
@@ -144,7 +145,7 @@ export function useSubmitAcademiaReview() {
       rating: number;
       comment: string;
     }) => {
-      if (!user) throw new Error('Not authenticated');
+      if (!user) throw new Error(uiText("Not authenticated"));
 
       const { error } = await supabase
         .from('academia_reviews')
@@ -263,7 +264,7 @@ export function useBecomeMentor() {
 
   return useMutation({
     mutationFn: async (input: { specialty: string; mentorBio: string; experience: string }) => {
-      if (!user) throw new Error('Not authenticated');
+      if (!user) throw new Error(uiText("Not authenticated"));
 
       const { error } = await supabase.rpc('academia_save_mentor', {
         p_specialty: input.specialty, p_bio: input.mentorBio,
@@ -287,7 +288,7 @@ export function useManageAcademiaSession() {
         p_session: sessionId, p_action: action, p_reason: reason,
       });
       if (error) throw error;
-      if (!(data as { ok?: boolean })?.ok) throw new Error('Não foi possível gerir a sessão.');
+      if (!(data as { ok?: boolean })?.ok) throw new Error(uiText("Não foi possível gerir a sessão."));
     },
     onSuccess: () => {
       for (const key of ['academia-sessions', 'academia-session', 'academia-reservation', 'academia-notices', 'kumbu-ledger']) {

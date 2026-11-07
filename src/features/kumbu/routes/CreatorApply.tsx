@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -15,12 +16,13 @@ import { AfrolocCertificationGate } from '../components/AfrolocCertificationGate
 type AppStatus = 'none' | 'pending' | 'approved' | 'rejected';
 
 const STATUS_UI: Record<Exclude<AppStatus, 'none'>, { icon: React.ReactNode; label: string; variant: 'default' | 'secondary' | 'destructive' }> = {
-  pending: { icon: <Clock className="h-4 w-4" />, label: 'Pendente', variant: 'secondary' },
-  approved: { icon: <CheckCircle className="h-4 w-4" />, label: 'Aprovada', variant: 'default' },
-  rejected: { icon: <XCircle className="h-4 w-4" />, label: 'Rejeitada', variant: 'destructive' },
+  pending: { icon: <Clock className="h-4 w-4" />, get label() { return uiText("Pendente"); }, variant: 'secondary' },
+  approved: { icon: <CheckCircle className="h-4 w-4" />, get label() { return uiText("Aprovada"); }, variant: 'default' },
+  rejected: { icon: <XCircle className="h-4 w-4" />, get label() { return uiText("Rejeitada"); }, variant: 'destructive' },
 };
 
 export default function CreatorApply() {
+  useUiLocale();
   const navigate = useNavigate();
   const { user, profile } = useAuth();
   const [status, setStatus] = useState<AppStatus>('none');
@@ -55,7 +57,7 @@ export default function CreatorApply() {
   const handleSubmit = async () => {
     if (!user || !fullName.trim()) return;
     if (!file) {
-      toast.error('Anexa o teu documento de identificação.');
+      toast.error(uiText("Anexa o teu documento de identificação."));
       return;
     }
 
@@ -92,7 +94,7 @@ export default function CreatorApply() {
       });
 
       setStatus('pending');
-      toast.success('Candidatura submetida com sucesso.');
+      toast.success(uiText("Candidatura submetida com sucesso."));
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Erro ao submeter candidatura.');
     } finally {
@@ -106,12 +108,12 @@ export default function CreatorApply() {
         <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h1 className="text-lg font-semibold">Candidatura de Criador</h1>
+        <h1 className="text-lg font-semibold">{uiText("Candidatura de Criador")}</h1>
       </header>
 
       <main className="max-w-lg mx-auto px-4 pt-4 space-y-4">
         {loading && (
-          <p className="text-sm text-muted-foreground text-center py-8">A carregar…</p>
+          <p className="text-sm text-muted-foreground text-center py-8">{uiText("A carregar…")}</p>
         )}
 
         {!loading && (
@@ -123,7 +125,7 @@ export default function CreatorApply() {
             <CardContent className="p-5 space-y-3">
               <div className="flex items-center gap-2">
                 {STATUS_UI[status].icon}
-                <span className="text-sm font-medium">Estado da candidatura</span>
+                <span className="text-sm font-medium">{uiText("Estado da candidatura")}</span>
                 <Badge variant={STATUS_UI[status].variant} className="ml-auto text-xs">
                   {STATUS_UI[status].label}
                 </Badge>
@@ -132,16 +134,11 @@ export default function CreatorApply() {
                 <p className="text-xs text-muted-foreground">{rejectionReason}</p>
               )}
               {status === 'pending' && (
-                <p className="text-xs text-muted-foreground">
-                  A tua candidatura está a ser analisada. Receberás uma notificação quando for processada.
-                </p>
+                <p className="text-xs text-muted-foreground">{uiText("A tua candidatura está a ser analisada. Receberás uma notificação quando for processada.")}</p>
               )}
               {status === 'approved' && (
-                <p className="text-xs text-muted-foreground">
-                  Parabéns! A tua conta de criador está ativa. Podes solicitar payouts em{' '}
-                  <button onClick={() => navigate('/payouts')} className="text-primary font-medium">
-                    Payouts
-                  </button>.
+                <p className="text-xs text-muted-foreground">{uiText("Parabéns! A tua conta de criador está ativa. Podes solicitar payouts em")}{' '}
+                  <button onClick={() => navigate('/payouts')} className="text-primary font-medium">{uiText("Payouts")}</button>.
                 </p>
               )}
             </CardContent>
@@ -153,33 +150,33 @@ export default function CreatorApply() {
           <Card className="border-none shadow-sm">
             <CardContent className="p-5 space-y-4">
               <div className="space-y-1.5">
-                <Label htmlFor="fullName" className="text-sm">Nome completo</Label>
+                <Label htmlFor="fullName" className="text-sm">{uiText("Nome completo")}</Label>
                 <Input
                   id="fullName"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  placeholder="Nome como consta no BI"
+                  placeholder={uiText("Nome como consta no BI")}
                   maxLength={120}
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="reason" className="text-sm">Porquê queres ser criador? (opcional)</Label>
+                <Label htmlFor="reason" className="text-sm">{uiText("Porquê queres ser criador? (opcional)")}</Label>
                 <Textarea
                   id="reason"
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
-                  placeholder="Conta-nos a tua motivação…"
+                  placeholder={uiText("Conta-nos a tua motivação…")}
                   maxLength={500}
                   rows={3}
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-sm">Documento de identificação (BI)</Label>
+                <Label className="text-sm">{uiText("Documento de identificação (BI)")}</Label>
                 <label className="flex items-center gap-2 px-3 py-2.5 border border-dashed rounded-lg cursor-pointer text-sm text-muted-foreground hover:border-primary/50 transition-colors">
                   <Upload className="h-4 w-4 shrink-0" />
-                  <span className="truncate">{file ? file.name : 'Selecionar ficheiro…'}</span>
+                  <span className="truncate">{file ? file.name : uiText("Selecionar ficheiro…")}</span>
                   <input
                     type="file"
                     accept="image/*,.pdf"
@@ -194,9 +191,7 @@ export default function CreatorApply() {
                 disabled={!fullName.trim() || !file || submitting}
                 onClick={handleSubmit}
               >
-                {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                Submeter candidatura
-              </Button>
+                {submitting && <Loader2 className="h-4 w-4 animate-spin" />}{uiText("Submeter candidatura")}</Button>
             </CardContent>
           </Card>
         )}

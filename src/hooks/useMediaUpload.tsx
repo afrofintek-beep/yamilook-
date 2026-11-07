@@ -1,3 +1,4 @@
+import { uiText } from '@/i18n/ui-copy';
 import { uploadPrivateChatFile } from '@/lib/private-chat-media';
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -40,18 +41,18 @@ export function useVoiceRecorder(conversationId?: string) {
   const startRecording = useCallback(async () => {
     try {
       setError(null);
-      
+
       // Request microphone permission
-      const stream = await navigator.mediaDevices.getUserMedia({ 
+      const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true
-        } 
+        }
       });
-      
+
       streamRef.current = stream;
-      
+
       // Determine best supported format - prioritize widely compatible formats
       let mimeType = '';
       const supportedTypes = [
@@ -62,14 +63,14 @@ export function useVoiceRecorder(conversationId?: string) {
         'audio/ogg;codecs=opus',
         'audio/ogg'
       ];
-      
+
       for (const type of supportedTypes) {
         if (MediaRecorder.isTypeSupported(type)) {
           mimeType = type;
           break;
         }
       }
-      
+
       const options: MediaRecorderOptions = mimeType ? { mimeType } : {};
       const mediaRecorder = new MediaRecorder(stream, options);
       mediaRecorderRef.current = mediaRecorder;
@@ -94,7 +95,7 @@ export function useVoiceRecorder(conversationId?: string) {
 
       mediaRecorder.onerror = (event) => {
         console.error('MediaRecorder error:', event);
-        setError('Erro ao gravar áudio');
+        setError(uiText("Erro ao gravar áudio"));
         cleanup();
         setIsRecording(false);
       };
@@ -110,9 +111,9 @@ export function useVoiceRecorder(conversationId?: string) {
     } catch (err) {
       console.error('Failed to start recording:', err);
       if (err instanceof DOMException && err.name === 'NotAllowedError') {
-        setError('Permissão de microfone negada');
+        setError(uiText("Permissão de microfone negada"));
       } else {
-        setError('Não foi possível iniciar a gravação');
+        setError(uiText("Não foi possível iniciar a gravação"));
       }
       cleanup();
     }
@@ -123,7 +124,7 @@ export function useVoiceRecorder(conversationId?: string) {
       if (mediaRecorderRef.current && isRecording) {
         // Capture the current recording time before stopping
         const currentDuration = recordingTime;
-        
+
         // Override the onstop handler to resolve the promise
         const originalOnStop = mediaRecorderRef.current.onstop;
         mediaRecorderRef.current.onstop = (event) => {
@@ -139,7 +140,7 @@ export function useVoiceRecorder(conversationId?: string) {
             resolve(null);
           }
         };
-        
+
         try {
           if (mediaRecorderRef.current.state === 'recording') {
             mediaRecorderRef.current.stop();
@@ -168,10 +169,10 @@ export function useVoiceRecorder(conversationId?: string) {
   // Get a local blob URL immediately for optimistic display
   const getLocalAudioUrl = useCallback((): { localUrl: string; duration: number; blob: Blob } | null => {
     if (!audioBlob) return null;
-    
+
     const localUrl = URL.createObjectURL(audioBlob);
     const duration = recordingTime;
-    
+
     return { localUrl, duration, blob: audioBlob };
   }, [audioBlob, recordingTime]);
 
@@ -190,7 +191,7 @@ export function useVoiceRecorder(conversationId?: string) {
       // Determine file extension based on blob type
       let extension = 'webm';
       let contentType = blob.type || 'audio/webm';
-      
+
       if (contentType.includes('mp4') || contentType.includes('aac')) {
         extension = 'm4a';
         contentType = 'audio/mp4';
@@ -202,7 +203,7 @@ export function useVoiceRecorder(conversationId?: string) {
         contentType = 'audio/webm';
       }
 
-      if (!conversationId) throw new Error('Conversation required');
+      if (!conversationId) throw new Error(uiText("Conversation required"));
       onSuccess(await uploadPrivateChatFile(conversationId, blob, `audio.${extension}`, contentType));
 
     } catch (err) {
@@ -218,7 +219,7 @@ export function useVoiceRecorder(conversationId?: string) {
     try {
       let extension = 'webm';
       let contentType = audioBlob.type || 'audio/webm';
-      
+
       if (contentType.includes('mp4') || contentType.includes('aac')) {
         extension = 'm4a';
         contentType = 'audio/mp4';
@@ -241,7 +242,7 @@ export function useVoiceRecorder(conversationId?: string) {
 
     } catch (err) {
       console.error('Upload error:', err);
-      setError('Erro ao enviar áudio');
+      setError(uiText("Erro ao enviar áudio"));
       return null;
     }
   };

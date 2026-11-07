@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,6 +10,7 @@ import { toast } from 'sonner';
  * status 'invited'). Tapping "Entrar" opens the live, where they accept.
  */
 export function GlobalLiveInviteNotifier() {
+  useUiLocale();
   const { user } = useAuth();
   const navigate = useNavigate();
   const seenRef = useRef<Set<string>>(new Set());
@@ -37,7 +39,7 @@ export function GlobalLiveInviteNotifier() {
           toast(`${host} convidou-te para a live`, {
             description: data.title || 'Live da banda',
             duration: 12000,
-            action: { label: 'Entrar', onClick: () => navigate(`/live/${row.session_id}`) },
+            action: { label: uiText("Entrar"), onClick: () => navigate(`/live/${row.session_id}`) },
           });
         },
       )

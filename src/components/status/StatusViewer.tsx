@@ -1,12 +1,13 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 import { format, formatDistanceToNow } from 'date-fns';
 import { useTranslation } from 'react-i18next';
-import { 
-  X, 
-  ChevronLeft, 
-  ChevronRight, 
-  Eye, 
+import {
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Eye,
   Send,
   MoreVertical,
   Trash2,
@@ -60,17 +61,18 @@ interface StatusViewerProps {
 
 const STATUS_DURATION = 5000; // 5 seconds per status
 
-export function StatusViewer({ 
-  open, 
-  onClose, 
-  initialGroup, 
+export function StatusViewer({
+  open,
+  onClose,
+  initialGroup,
   allGroups,
   isOwnStatus = false,
 }: StatusViewerProps) {
+  useUiLocale();
   const { t } = useTranslation();
   const { user } = useAuth();
   const { markAsViewed, replyToStatus, reactToStatus, deleteStatus, archiveStatus, getStatusViews, getStatusReactions, getUserReaction, toggleMuteContact } = useStatus();
-  
+
   const [currentGroupIndex, setCurrentGroupIndex] = useState(0);
   const [currentStatusIndex, setCurrentStatusIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
@@ -83,7 +85,7 @@ export function StatusViewer({
   const [showReactions, setShowReactions] = useState(false);
   const [userReaction, setUserReaction] = useState<string | null>(null);
   const [statusReactions, setStatusReactions] = useState<Awaited<ReturnType<typeof getStatusReactions>>>([]);
-  
+
   const progressRef = useRef<number | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -242,24 +244,24 @@ export function StatusViewer({
 
   const handleConfirmDelete = async () => {
     if (!currentStatus || !currentGroup) return;
-    
+
     const statusToDelete = currentStatus;
     const wasLastStatus = currentGroup.statuses.length === 1;
-    
+
     // Close dialog first
     setShowDeleteConfirm(false);
-    
+
     // Navigate away before showing toast
     if (wasLastStatus) {
       onClose();
     } else {
       goToNext();
     }
-    
+
     // Show toast with undo option - delay actual deletion
     const UNDO_TIMEOUT = 10000; // 10 seconds to undo
     let isUndone = false;
-    
+
     const toastId = toast(t('status.statusDeleted'), {
       description: t('status.undoDeleteDescription'),
       action: {
@@ -327,12 +329,12 @@ export function StatusViewer({
             <div className="absolute top-0 left-0 right-0 z-20 flex gap-1.5 px-3 pt-4 pb-2">
               {currentGroup.statuses.map((status, index) => (
                 <div key={status.id} className="flex-1 h-1 bg-white/40 rounded-full overflow-hidden shadow-sm">
-                  <motion.div 
+                  <motion.div
                     className="h-full bg-white rounded-full"
                     initial={{ width: 0 }}
-                    animate={{ 
-                      width: index < currentStatusIndex ? '100%' : 
-                             index === currentStatusIndex ? `${progress}%` : '0%' 
+                    animate={{
+                      width: index < currentStatusIndex ? '100%' :
+                             index === currentStatusIndex ? `${progress}%` : '0%'
                     }}
                     transition={{ duration: 0.1, ease: 'linear' }}
                   />
@@ -342,7 +344,7 @@ export function StatusViewer({
 
             {/* Header gradient overlay */}
             <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-black/60 via-black/30 to-transparent z-10 pointer-events-none" />
-            
+
             {/* Header */}
             <div className="absolute top-16 left-0 right-0 z-20 flex items-center justify-between px-4 safe-top">
               <div className="flex items-center gap-3">
@@ -418,15 +420,15 @@ export function StatusViewer({
             </div>
 
             {/* Status content */}
-            <div 
+            <div
               className="absolute inset-0 flex items-center justify-center"
               onClick={handleTap}
             >
               {currentStatus.type === 'text' ? (
-                <div 
+                <div
                   className="w-full h-full flex items-center justify-center p-8"
-                  style={{ 
-                    background: currentStatus.background || 'linear-gradient(135deg, hsl(var(--primary)), hsl(280, 100%, 60%))' 
+                  style={{
+                    background: currentStatus.background || 'linear-gradient(135deg, hsl(var(--primary)), hsl(280, 100%, 60%))'
                   }}
                 >
                   <p className="text-white text-2xl font-bold text-center leading-relaxed">
@@ -434,9 +436,9 @@ export function StatusViewer({
                   </p>
                 </div>
               ) : currentStatus.type === 'photo' ? (
-                <img 
-                  src={currentStatus.media_url || ''} 
-                  alt="Status"
+                <img
+                  src={currentStatus.media_url || ''}
+                  alt={uiText("Status")}
                   className="w-full h-full object-contain"
                 />
               ) : (
@@ -482,7 +484,7 @@ export function StatusViewer({
 
             {/* Navigation arrows */}
             {currentGroupIndex > 0 && (
-              <button 
+              <button
                 className="absolute left-2 top-1/2 -translate-y-1/2 z-10 text-white/50 hover:text-white"
                 onClick={(e) => { e.stopPropagation(); goToPrev(); }}
               >
@@ -490,7 +492,7 @@ export function StatusViewer({
               </button>
             )}
             {currentGroupIndex < allGroups.length - 1 && (
-              <button 
+              <button
                 className="absolute right-2 top-1/2 -translate-y-1/2 z-10 text-white/50 hover:text-white"
                 onClick={(e) => { e.stopPropagation(); goToNext(); }}
               >
@@ -521,8 +523,8 @@ export function StatusViewer({
                         onClick={() => handleReaction(reaction.type)}
                         className={cn(
                           "w-10 h-10 rounded-full flex items-center justify-center text-xl transition-all",
-                          userReaction === reaction.type 
-                            ? "bg-primary/30 ring-2 ring-primary" 
+                          userReaction === reaction.type
+                            ? "bg-primary/30 ring-2 ring-primary"
                             : "bg-white/10 hover:bg-white/20"
                         )}
                         title={reaction.label}
@@ -531,7 +533,7 @@ export function StatusViewer({
                       </motion.button>
                     ))}
                   </div>
-                  
+
                   {/* Reply input */}
                   <div className="flex gap-2">
                     <Input
@@ -573,7 +575,7 @@ export function StatusViewer({
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1">
-                        <p className="font-medium">{viewer.viewer?.display_name || 'Unknown'}</p>
+                        <p className="font-medium">{viewer.viewer?.display_name || uiText("Unknown")}</p>
                         <p className="text-xs text-muted-foreground">
                           {formatDistanceToNow(new Date(viewer.viewed_at), { addSuffix: true })}
                         </p>
@@ -603,7 +605,7 @@ export function StatusViewer({
                 <AlertDialogCancel onClick={handleCancelDelete}>
                   {t('common.cancel')}
                 </AlertDialogCancel>
-                <AlertDialogAction 
+                <AlertDialogAction
                   onClick={handleConfirmDelete}
                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                 >

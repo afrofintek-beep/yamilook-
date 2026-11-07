@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -5,12 +6,12 @@ import {
   DialogContent,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { 
-  X, 
-  ChevronLeft, 
-  ChevronRight, 
-  Plus, 
-  Trash2, 
+import {
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  Trash2,
   Star,
   Loader2,
   Download,
@@ -46,6 +47,7 @@ export function ProfilePhotosGallery({
   selectedIndex,
   onPhotosUpdate,
 }: ProfilePhotosGalleryProps) {
+  useUiLocale();
   const { user, refreshProfile } = useAuth();
   const [currentIndex, setCurrentIndex] = useState(selectedIndex);
   const [uploading, setUploading] = useState(false);
@@ -53,7 +55,7 @@ export function ProfilePhotosGallery({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Combine avatar with photos
-  const allPhotos = avatarUrl 
+  const allPhotos = avatarUrl
     ? [{ id: 'avatar', photo_url: avatarUrl, is_primary: true, display_order: -1 }, ...photos]
     : photos;
 
@@ -97,10 +99,10 @@ export function ProfilePhotosGallery({
 
       if (insertError) throw insertError;
 
-      toast.success('Photo added!');
+      toast.success(uiText("Photo added!"));
       onPhotosUpdate();
     } catch (error) {
-      toast.error('Failed to upload photo');
+      toast.error(uiText("Failed to upload photo"));
     } finally {
       setUploading(false);
       if (fileInputRef.current) {
@@ -121,16 +123,16 @@ export function ProfilePhotosGallery({
 
       if (error) throw error;
 
-      toast.success('Photo deleted');
-      
+      toast.success(uiText("Photo deleted"));
+
       // Adjust index if needed
       if (currentIndex >= allPhotos.length - 1) {
         setCurrentIndex(Math.max(0, allPhotos.length - 2));
       }
-      
+
       onPhotosUpdate();
     } catch (error) {
-      toast.error('Failed to delete photo');
+      toast.error(uiText("Failed to delete photo"));
     } finally {
       setDeleting(false);
     }
@@ -148,14 +150,14 @@ export function ProfilePhotosGallery({
 
       if (error) throw error;
 
-      toast.success('Profile photo updated!');
-      
+      toast.success(uiText("Profile photo updated!"));
+
       // Refresh global auth state so header/other components update
       await refreshProfile();
-      
+
       onPhotosUpdate();
     } catch (error) {
-      toast.error('Failed to set as profile photo');
+      toast.error(uiText("Failed to set as profile photo"));
     }
   };
 
@@ -174,7 +176,7 @@ export function ProfilePhotosGallery({
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (error) {
-      toast.error('Failed to download photo');
+      toast.error(uiText("Failed to download photo"));
     }
   };
 

@@ -1,13 +1,14 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect, useCallback } from 'react';
 import { format } from 'date-fns';
-import { 
-  Search, 
-  X, 
-  Calendar, 
-  Image, 
-  FileText, 
-  User, 
-  Star, 
+import {
+  Search,
+  X,
+  Calendar,
+  Image,
+  FileText,
+  User,
+  Star,
   Pin,
   Mic,
   Clock,
@@ -53,6 +54,7 @@ interface GlobalSearchProps {
 }
 
 export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
+  useUiLocale();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
@@ -250,7 +252,7 @@ export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="top" className="h-[90vh] rounded-b-3xl">
         <SheetHeader className="pb-4">
-          <SheetTitle>Search Messages</SheetTitle>
+          <SheetTitle>{uiText("Search Messages")}</SheetTitle>
         </SheetHeader>
 
         <div className="space-y-4">
@@ -261,7 +263,7 @@ export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
               <Input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search messages..."
+                placeholder={uiText("Search messages...")}
                 className="pl-10 pr-10"
                 autoFocus
               />
@@ -284,17 +286,17 @@ export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
               </PopoverTrigger>
               <PopoverContent className="w-80" align="end">
                 <div className="space-y-4">
-                  <h4 className="font-medium">Filters</h4>
+                  <h4 className="font-medium">{uiText("Filters")}</h4>
 
                   {/* Date range */}
                   <div className="space-y-2">
-                    <label className="text-sm text-muted-foreground">Date range</label>
+                    <label className="text-sm text-muted-foreground">{uiText("Date range")}</label>
                     <div className="flex gap-2">
                       <Popover>
                         <PopoverTrigger asChild>
                           <Button variant="outline" size="sm" className="flex-1 justify-start">
                             <Calendar className="w-4 h-4 mr-2" />
-                            {filters.dateFrom ? format(filters.dateFrom, 'MMM d') : 'From'}
+                            {filters.dateFrom ? format(filters.dateFrom, 'MMM d') : uiText("From")}
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0">
@@ -309,7 +311,7 @@ export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
                         <PopoverTrigger asChild>
                           <Button variant="outline" size="sm" className="flex-1 justify-start">
                             <Calendar className="w-4 h-4 mr-2" />
-                            {filters.dateTo ? format(filters.dateTo, 'MMM d') : 'To'}
+                            {filters.dateTo ? format(filters.dateTo, 'MMM d') : uiText("To")}
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0">
@@ -325,7 +327,7 @@ export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
 
                   {/* Message type */}
                   <div className="space-y-2">
-                    <label className="text-sm text-muted-foreground">Message type</label>
+                    <label className="text-sm text-muted-foreground">{uiText("Message type")}</label>
                     <div className="flex flex-wrap gap-2">
                       {['text', 'image', 'voice', 'file'].map((type) => (
                         <Button
@@ -352,24 +354,18 @@ export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
                       size="sm"
                       onClick={() => setFilters({ ...filters, starredOnly: !filters.starredOnly })}
                     >
-                      <Star className="w-4 h-4 mr-1" />
-                      Starred
-                    </Button>
+                      <Star className="w-4 h-4 mr-1" />{uiText("Starred")}</Button>
                     <Button
                       variant={filters.pinnedOnly ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setFilters({ ...filters, pinnedOnly: !filters.pinnedOnly })}
                     >
-                      <Pin className="w-4 h-4 mr-1" />
-                      Pinned
-                    </Button>
+                      <Pin className="w-4 h-4 mr-1" />{uiText("Pinned")}</Button>
                   </div>
 
                   {/* Clear filters */}
                   {Object.keys(filters).length > 0 && (
-                    <Button variant="ghost" size="sm" className="w-full" onClick={() => setFilters({})}>
-                      Clear all filters
-                    </Button>
+                    <Button variant="ghost" size="sm" className="w-full" onClick={() => setFilters({})}>{uiText("Clear all filters")}</Button>
                   )}
                 </div>
               </PopoverContent>
@@ -394,7 +390,7 @@ export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
                 {recentSearches.length > 0 && (
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-muted-foreground">Recent searches</span>
+                      <span className="text-sm font-medium text-muted-foreground">{uiText("Recent searches")}</span>
                       <Button
                         variant="ghost"
                         size="sm"
@@ -403,9 +399,7 @@ export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
                           setRecentSearches([]);
                           localStorage.removeItem('recentSearches');
                         }}
-                      >
-                        Clear
-                      </Button>
+                      >{uiText("Clear")}</Button>
                     </div>
                     <div className="space-y-1">
                       {recentSearches.map((search) => (
@@ -425,12 +419,12 @@ export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
             ) : results.length === 0 ? (
               <div className="text-center py-12">
                 <Search className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
-                <p className="text-muted-foreground">No messages found</p>
+                <p className="text-muted-foreground">{uiText("No messages found")}</p>
               </div>
             ) : (
               <div className="space-y-2">
                 <p className="text-sm text-muted-foreground mb-3">
-                  {results.length} result{results.length !== 1 ? 's' : ''}
+                  {results.length}{uiText(" result")}{results.length !== 1 ? 's' : ''}
                 </p>
                 {results.map((result) => (
                   <button

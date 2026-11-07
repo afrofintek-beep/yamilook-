@@ -1,3 +1,4 @@
+import { uiText } from '@/i18n/ui-copy';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -55,7 +56,7 @@ export function useRitmos() {
   // Convert signed URL to public URL
   const toPublicUrl = useCallback((url: string): string => {
     if (!url) return url;
-    
+
     // If it's a signed URL, convert to public URL by removing the token
     if (url.includes('/object/sign/')) {
       // Extract bucket and path from signed URL
@@ -141,7 +142,7 @@ export function useRitmos() {
       setRitmos(enrichedRitmos as unknown as Ritmo[]);
     } catch (error) {
       console.error('Error fetching ritmos:', error);
-      toast.error('Failed to load Ritmos');
+      toast.error(uiText("Failed to load Ritmos"));
     } finally {
       setLoading(false);
     }
@@ -149,11 +150,11 @@ export function useRitmos() {
 
   // React to a ritmo (Djembe is default on tap)
   const reactToRitmo = useCallback(async (
-    ritmoId: string, 
+    ritmoId: string,
     reactionType: AfricanReactionType = 'djembe'
   ) => {
     if (!user) {
-      toast.error('Please sign in to react');
+      toast.error(uiText("Please sign in to react"));
       return;
     }
 
@@ -194,13 +195,13 @@ export function useRitmos() {
       // Update local state
       setRitmos(prev => prev.map(r => {
         if (r.id !== ritmoId) return r;
-        
+
         const counts = { ...r.reaction_counts! };
-        
+
         if (existing) {
           // Decrement old reaction
           counts[existing.reaction_type as AfricanReactionType] = Math.max(0, (counts[existing.reaction_type as AfricanReactionType] || 0) - 1);
-          
+
           if (existing.reaction_type !== reactionType) {
             // Increment new reaction
             counts[reactionType] = (counts[reactionType] || 0) + 1;
@@ -218,7 +219,7 @@ export function useRitmos() {
       }));
     } catch (error) {
       console.error('Error reacting to ritmo:', error);
-      toast.error('Failed to react');
+      toast.error(uiText("Failed to react"));
     }
   }, [user]);
 
@@ -244,7 +245,7 @@ export function useRitmos() {
     location?: { city?: string; neighborhood?: string; market?: string }
   ) => {
     if (!user) {
-      toast.error('Please sign in to post');
+      toast.error(uiText("Please sign in to post"));
       return null;
     }
 
@@ -264,12 +265,12 @@ export function useRitmos() {
 
       if (error) throw error;
 
-      toast.success('Ritmo posted!');
+      toast.success(uiText("Ritmo posted!"));
       fetchRitmos(currentCity || undefined, currentMarket || undefined);
       return data;
     } catch (error) {
       console.error('Error creating ritmo:', error);
-      toast.error('Failed to post Ritmo');
+      toast.error(uiText("Failed to post Ritmo"));
       return null;
     }
   }, [user, currentCity, currentMarket, fetchRitmos]);
@@ -288,10 +289,10 @@ export function useRitmos() {
       if (error) throw error;
 
       setRitmos(prev => prev.filter(r => r.id !== ritmoId));
-      toast.success('Ritmo eliminado');
+      toast.success(uiText("Ritmo eliminado"));
     } catch (error) {
       console.error('Error deleting ritmo:', error);
-      toast.error('Falha ao eliminar Ritmo');
+      toast.error(uiText("Falha ao eliminar Ritmo"));
     }
   }, [user]);
 
@@ -310,10 +311,10 @@ export function useRitmos() {
 
       // Remove from local state
       setRitmos(prev => prev.filter(r => r.id !== ritmoId));
-      toast.success('Ritmo arquivado');
+      toast.success(uiText("Ritmo arquivado"));
     } catch (error) {
       console.error('Error archiving ritmo:', error);
-      toast.error('Falha ao arquivar Ritmo');
+      toast.error(uiText("Falha ao arquivar Ritmo"));
     }
   }, [user]);
 
@@ -337,7 +338,7 @@ export function useRitmos() {
           });
       }
 
-      toast.success('Placeholder Ritmos created!');
+      toast.success(uiText("Placeholder Ritmos created!"));
       fetchRitmos();
     } catch (error) {
       console.error('Error seeding placeholders:', error);

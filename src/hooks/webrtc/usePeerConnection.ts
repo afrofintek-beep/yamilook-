@@ -1,3 +1,4 @@
+import { uiText } from '@/i18n/ui-copy';
 /**
  * usePeerConnection - Creates and manages RTCPeerConnection instances
  * Handles ICE, track management, connection state, and recovery ladder.
@@ -112,7 +113,7 @@ export function usePeerConnection(options: UsePeerConnectionOptions): UsePeerCon
 
   // Stable ref so rebuildPeerConnection never captures a stale createPeerConnection
   const createPeerConnectionRef = useRef<(peerId: string) => RTCPeerConnection>(() => {
-    throw new Error('createPeerConnection not ready');
+    throw new Error(uiText("createPeerConnection not ready"));
   });
 
   /**

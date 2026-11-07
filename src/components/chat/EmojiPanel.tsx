@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { EMOJI_GROUPS, SKIN_TONES, DEFAULT_TONE, applyTone, supportsTone } from '@/lib/african-emojis';
@@ -12,6 +13,7 @@ const TONE_KEY = 'yamilook-emoji-tone';
  *  skin-tone selector re-tones people/hand emojis (default darkest, up to the
  *  lightest/European); the "Outros" group holds the general set. */
 export function EmojiPanel({ onSelect }: Props) {
+  useUiLocale();
   const [active, setActive] = useState(EMOJI_GROUPS[0].key);
   const [tone, setTone] = useState<string>(() => {
     try {
@@ -57,7 +59,7 @@ export function EmojiPanel({ onSelect }: Props) {
       {/* Skin-tone selector — only where the current group has tonable emojis */}
       {groupHasTonable && (
         <div className="flex items-center gap-1 pb-2">
-          <span className="text-[10px] text-muted-foreground mr-1">Tom:</span>
+          <span className="text-[10px] text-muted-foreground mr-1">{uiText("Tom:")}</span>
           {SKIN_TONES.map((t) => (
             <button
               key={t.key}

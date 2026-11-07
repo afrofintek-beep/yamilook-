@@ -1,9 +1,11 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { CheckCircle, ArrowRight, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
 export default function PurchaseSuccess() {
+  useUiLocale();
   const { palcoId, rodaId } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -23,46 +25,42 @@ export default function PurchaseSuccess() {
 
           {/* Title */}
           <h1 className="text-2xl font-bold text-palco-text mb-2">
-            {isVoice ? 'Voz confirmada!' : isQAPass ? 'Passe ativo!' : 'Pagamento confirmado!'}
+            {isVoice ? uiText("Voz confirmada!") : isQAPass ? uiText("Passe ativo!") : uiText("Pagamento confirmado!")}
           </h1>
 
           {/* Subtitle */}
           <p className="text-palco-text-secondary mb-6">
-            {isVoice 
-              ? 'A tua Voz foi registada. Receberás a resposta conforme o tipo escolhido.'
+            {isVoice
+              ? uiText("A tua Voz foi registada. Receberás a resposta conforme o tipo escolhido.")
               : isQAPass
-              ? 'Agora já podes ouvir a sessão de perguntas.'
-              : 'O teu pagamento foi processado com sucesso.'
+              ? uiText("Agora já podes ouvir a sessão de perguntas.")
+              : uiText("O teu pagamento foi processado com sucesso.")
             }
           </p>
 
           {/* Receipt Info */}
           <div className="bg-palco-bg rounded-xl p-4 mb-6">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-palco-text-secondary">Recibo</span>
+              <span className="text-palco-text-secondary">{uiText("Recibo")}</span>
               <span className="font-mono text-palco-text">#YML-{Date.now().toString(36).toUpperCase()}</span>
             </div>
           </div>
 
           {/* Actions */}
           <div className="space-y-3">
-            <Button 
+            <Button
               onClick={() => navigate(`/palco/${palcoId}/roda/${rodaId}`)}
               className="w-full bg-palco-accent hover:bg-palco-accent/90 text-white rounded-full h-12"
-            >
-              Voltar à Roda
-              <ArrowRight className="w-4 h-4 ml-2" />
+            >{uiText("Voltar à Roda")}<ArrowRight className="w-4 h-4 ml-2" />
             </Button>
-            
+
             {isVoice && (
-              <Button 
+              <Button
                 variant="outline"
                 onClick={() => navigate('/profile?tab=voices')}
                 className="w-full border-palco-border text-palco-text rounded-full h-12"
               >
-                <MessageSquare className="w-4 h-4 mr-2" />
-                Ver as minhas Vozes
-              </Button>
+                <MessageSquare className="w-4 h-4 mr-2" />{uiText("Ver as minhas Vozes")}</Button>
             )}
           </div>
         </CardContent>

@@ -1,13 +1,14 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { Recordings } from '@/features/call-recording/Recordings';
 import { lazy, Suspense, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useActiveCall } from '@/components/calls/ActiveCallProvider';
 import { useTranslation } from 'react-i18next';
-import { 
-  Phone, 
-  Video, 
-  PhoneIncoming, 
-  PhoneOutgoing, 
+import {
+  Phone,
+  Video,
+  PhoneIncoming,
+  PhoneOutgoing,
   PhoneMissed,
   Plus,
   Calendar,
@@ -41,22 +42,23 @@ import { OnlineStatus, formatLastSeen } from '@/components/ui/OnlineStatus';
 import { useMultipleUserStatus } from '@/hooks/useOnlineStatus';
 
 export default function Calls() {
+  useUiLocale();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { user } = useAuth();
   const activeCall = useActiveCall();
   const [scheduleOpen, setScheduleOpen] = useState(false);
-  const { 
-    callHistory, 
+  const {
+    callHistory,
     scheduledCalls,
     scheduledError,
     scheduledLoading,
     fetchScheduledCalls,
-    loading, 
+    loading,
     getCallStatistics,
     cancelScheduledCall,
   } = useCalls();
-  
+
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [voicemailOpen, setVoicemailOpen] = useState(false);
@@ -78,7 +80,7 @@ export default function Calls() {
   }, [activeCall, navigate]);
 
   // Get all participant user IDs for status tracking
-  const participantIds = [...new Set(callHistory.flatMap(call => 
+  const participantIds = [...new Set(callHistory.flatMap(call =>
     call.participants.map(p => p.user_id)
   ))];
   const { statuses } = useMultipleUserStatus(participantIds);
@@ -143,7 +145,7 @@ export default function Calls() {
         && (call.status === 'missed' || call.end_reason === 'no_answer');
     }
     if (searchQuery) {
-      return call.participants.some(p => 
+      return call.participants.some(p =>
         p.display_name.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
@@ -156,13 +158,13 @@ export default function Calls() {
       (groups['Data indisponível'] ??= []).push(call);
       return groups;
     }
-    
-    const dateKey = isToday(new Date(date)) 
-      ? 'Today' 
-      : isYesterday(new Date(date)) 
-        ? 'Yesterday' 
+
+    const dateKey = isToday(new Date(date))
+      ? 'Today'
+      : isYesterday(new Date(date))
+        ? 'Yesterday'
         : format(new Date(date), 'MMMM d, yyyy');
-    
+
     if (!groups[dateKey]) {
       groups[dateKey] = [];
     }
@@ -176,9 +178,9 @@ export default function Calls() {
       <header className="shrink-0 relative z-50 bg-background border-b border-border/50 safe-top">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               className="rounded-full"
               onClick={() => navigate('/')}
             >
@@ -234,25 +236,25 @@ export default function Calls() {
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="min-h-0 flex-1 flex flex-col">
         <TabsList className="mx-4 mt-4 bg-secondary/80 p-1">
-          <TabsTrigger 
-            value="all" 
+          <TabsTrigger
+            value="all"
             className="flex-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all"
           >
             {t('contacts.all')}
           </TabsTrigger>
-          <TabsTrigger 
-            value="missed" 
+          <TabsTrigger
+            value="missed"
             className="flex-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all"
           >
             {t('calls.missed')}
           </TabsTrigger>
-          <TabsTrigger 
-            value="scheduled" 
+          <TabsTrigger
+            value="scheduled"
             className="flex-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all"
           >
             {t('calls.scheduled')}
           </TabsTrigger>
-          <TabsTrigger value="recordings" className="flex-1">Gravações</TabsTrigger>
+          <TabsTrigger value="recordings" className="flex-1">{uiText("Gravações")}</TabsTrigger>
         </TabsList>
         <TabsContent value="recordings" className="min-h-0 flex-1 overflow-y-auto mt-0"><Recordings key={user?.id} /></TabsContent>
 
@@ -322,14 +324,14 @@ export default function Calls() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="font-semibold truncate">
-                              {call.participants[0]?.display_name || 'Unknown'}
+                              {call.participants[0]?.display_name || uiText("Unknown")}
                               {call.participants.length > 1 && ` +${call.participants.length - 1}`}
                             </p>
                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
                               {getCallIcon(call, user?.id || '')}
                               <span>{call.type === 'video' ? t('calls.videoCall') : t('calls.voiceCall')}</span>
                               <span>•</span>
-                              <span>{call.end_reason === 'no_answer' ? 'Sem resposta' : call.end_reason === 'cancelled' ? 'Cancelada' : call.status === 'declined' ? 'Recusada' : formatDuration(call.duration_seconds)}</span>
+                              <span>{call.end_reason === 'no_answer' ? uiText("Sem resposta") : call.end_reason === 'cancelled' ? uiText("Cancelada") : call.status === 'declined' ? uiText("Recusada") : formatDuration(call.duration_seconds)}</span>
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
@@ -338,9 +340,9 @@ export default function Calls() {
                             </span>
                             {/* Voicemail button for missed calls */}
                             {(call.status === 'missed' || call.end_reason === 'no_answer' || call.status === 'declined') && call.participants[0] && (
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
+                              <Button
+                                variant="ghost"
+                                size="icon"
                                 className="rounded-full text-muted-foreground hover:text-primary"
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -354,9 +356,9 @@ export default function Calls() {
                                 <Voicemail className="w-5 h-5" />
                               </Button>
                             )}
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
+                            <Button
+                              variant="ghost"
+                              size="icon"
                               className="rounded-full"
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -425,7 +427,7 @@ export default function Calls() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="font-semibold truncate text-destructive">
-                            {call.participants[0]?.display_name || 'Unknown'}
+                            {call.participants[0]?.display_name || uiText("Unknown")}
                           </p>
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <PhoneMissed className="w-4 h-4 text-destructive" />
@@ -433,9 +435,9 @@ export default function Calls() {
                           </div>
                         </div>
                         <div className="flex items-center gap-1">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             className="rounded-full text-muted-foreground hover:text-primary"
                             onClick={(e) => {
                               e.stopPropagation();
@@ -450,9 +452,9 @@ export default function Calls() {
                           >
                             <Voicemail className="w-5 h-5" />
                           </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             className="rounded-full"
                             onClick={(e) => {
                               e.stopPropagation();
@@ -475,7 +477,7 @@ export default function Calls() {
 
         {/* Scheduled Calls */}
         <TabsContent value="scheduled" className="min-h-0 flex-1 overflow-y-auto overscroll-contain mt-0">
-          {scheduledError ? <div role="alert" className="p-4 space-y-3"><p>Não foi possível carregar os agendamentos.</p><Button onClick={()=>void fetchScheduledCalls()}>Tentar novamente</Button></div> : scheduledLoading ? <p className="p-4">A carregar agendamentos…</p> : scheduledCalls.length === 0 ? (
+          {scheduledError ? <div role="alert" className="p-4 space-y-3"><p>{uiText("Não foi possível carregar os agendamentos.")}</p><Button onClick={()=>void fetchScheduledCalls()}>{uiText("Tentar novamente")}</Button></div> : scheduledLoading ? <p className="p-4">{uiText("A carregar agendamentos…")}</p> : scheduledCalls.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-64 text-center px-8">
               <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
                 <Calendar className="w-10 h-10 text-primary" />
@@ -484,7 +486,7 @@ export default function Calls() {
               <p className="text-muted-foreground text-sm mb-4 max-w-[250px]">
                 {t('calls.scheduleCallDesc')}
               </p>
-              <Button 
+              <Button
                 className="rounded-xl bg-gradient-primary text-white shadow-md hover:shadow-lg transition-shadow"
                 onClick={() => setScheduleOpen(true)}
               >
@@ -507,7 +509,7 @@ export default function Calls() {
       </Tabs>
 
       {/* FAB */}
-      <button 
+      <button
         className="fixed bottom-6 right-6 w-14 h-14 rounded-2xl bg-gradient-primary text-white shadow-xl flex items-center justify-center hover:scale-105 transition-all hover:shadow-2xl active:scale-95"
         onClick={() => setScheduleOpen(true)}
         style={{ boxShadow: '0 8px 30px -4px hsl(var(--primary) / 0.5)' }}
@@ -516,7 +518,7 @@ export default function Calls() {
       </button>
 
       {/* Schedule Call Sheet */}
-      {scheduleOpen && <Suspense fallback={<p role="status">A carregar agendamento…</p>}><ScheduleCallSheet open={scheduleOpen} onOpenChange={setScheduleOpen} /></Suspense>}
+      {scheduleOpen && <Suspense fallback={<p role="status">{uiText("A carregar agendamento…")}</p>}><ScheduleCallSheet open={scheduleOpen} onOpenChange={setScheduleOpen} /></Suspense>}
 
       {/* Voicemail Recorder */}
       {selectedContact && (

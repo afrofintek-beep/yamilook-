@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -29,13 +30,14 @@ import {
 type LiveTab = 'para_ti' | 'banda' | 'em_alta' | 'explorar';
 
 const TABS: { key: LiveTab; label: string }[] = [
-  { key: 'para_ti', label: 'Para Ti' },
-  { key: 'banda', label: 'Banda' },
-  { key: 'em_alta', label: 'Em Alta' },
-  { key: 'explorar', label: 'Explorar' },
+  { key: 'para_ti', get label() { return uiText("Para Ti"); } },
+  { key: 'banda', get label() { return uiText("Banda"); } },
+  { key: 'em_alta', get label() { return uiText("Em Alta"); } },
+  { key: 'explorar', get label() { return uiText("Explorar"); } },
 ];
 
 export default function LiveHub() {
+  useUiLocale();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { user, profile } = useAuth();
@@ -62,9 +64,9 @@ export default function LiveHub() {
     setEnding(false);
     setEndingId(null);
     if (error) {
-      toast.error('Não foi possível terminar a live');
+      toast.error(uiText("Não foi possível terminar a live"));
     } else {
-      toast.success('Live terminada');
+      toast.success(uiText("Live terminada"));
       fetchLiveSessions();
     }
   };
@@ -113,7 +115,7 @@ export default function LiveHub() {
         <div className="flex items-center justify-between px-4 py-2">
           <div className="flex items-center gap-2">
             <span className="text-lg">📡</span>
-            <span className="font-bold text-base text-foreground tracking-tight">Na Banda Ao Vivo</span>
+            <span className="font-bold text-base text-foreground tracking-tight">{uiText("Na Banda Ao Vivo")}</span>
           </div>
           <div className="flex items-center gap-1">
             <Button
@@ -149,7 +151,7 @@ export default function LiveHub() {
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Procurar na banda..."
+                placeholder={uiText("Procurar na banda...")}
                 className="pl-10 rounded-full bg-muted border-0"
                 autoFocus
               />
@@ -234,20 +236,18 @@ export default function LiveHub() {
               </div>
               <h3 className="text-lg font-semibold mb-2 text-foreground">
                 {activeTab === 'banda'
-                  ? 'A banda está pausada na tua zona'
-                  : 'A banda está pausada hoje'}
+                  ? uiText("A banda está pausada na tua zona")
+                  : uiText("A banda está pausada hoje")}
               </h3>
               <p className="text-muted-foreground text-sm mb-6">
                 {activeTab === 'banda'
-                  ? 'Quem vai abrir o Palco no teu bairro?'
-                  : 'Quem vai abrir?'}
+                  ? uiText("Quem vai abrir o Palco no teu bairro?")
+                  : uiText("Quem vai abrir?")}
               </p>
               <Button
                 className="rounded-full bg-destructive hover:bg-destructive/90 text-destructive-foreground"
                 onClick={() => setStartLiveOpen(true)}
-              >
-                🔴 Entrar na Banda
-              </Button>
+              >{uiText("🔴 Entrar na Banda")}</Button>
             </motion.div>
           )}
         </div>
@@ -270,19 +270,17 @@ export default function LiveHub() {
       <AlertDialog open={!!endingId} onOpenChange={(o) => !o && setEndingId(null)}>
         <AlertDialogContent className="rounded-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle>Terminar a tua live?</AlertDialogTitle>
-            <AlertDialogDescription>
-              A transmissão será encerrada para todos os espectadores. Esta ação não pode ser desfeita.
-            </AlertDialogDescription>
+            <AlertDialogTitle>{uiText("Terminar a tua live?")}</AlertDialogTitle>
+            <AlertDialogDescription>{uiText("A transmissão será encerrada para todos os espectadores. Esta ação não pode ser desfeita.")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-xl">Cancelar</AlertDialogCancel>
+            <AlertDialogCancel className="rounded-xl">{uiText("Cancelar")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleEndLive}
               disabled={ending}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-xl"
             >
-              {ending ? 'A terminar…' : 'Terminar'}
+              {ending ? uiText("A terminar…") : uiText("Terminar")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

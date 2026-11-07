@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -6,10 +7,10 @@ import BottomNav from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Plus, 
-  Radio, 
-  Clock, 
+import {
+  Plus,
+  Radio,
+  Clock,
   Users,
   MessageSquare,
   TrendingUp,
@@ -41,6 +42,7 @@ import { useCurrencyRates } from '@/hooks/useCurrencyRates';
 type TabFilter = 'active' | 'scheduled' | 'archived';
 
 export default function GuideDashboard() {
+  useUiLocale();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { user, profile } = useAuth();
@@ -55,7 +57,7 @@ export default function GuideDashboard() {
     p.status === 'scheduled' || (p.status === 'draft' && p.roda_id != null);
 
   const activePalcos = palcos?.filter(p => p.status === 'live') || [];
-  
+
   // Sort scheduled palcos by roda date (soonest first)
   const scheduledPalcos = (palcos?.filter(isEffectivelyScheduled) || []).sort((a, b) => {
     const aDate = a.roda?.scheduled_at;
@@ -65,7 +67,7 @@ export default function GuideDashboard() {
     if (bDate) return 1;
     return 0;
   });
-  
+
   const archivedPalcos = palcos?.filter(p => p.status === 'ended' || p.status === 'archived') || [];
 
   // Calculate summary stats
@@ -104,7 +106,7 @@ export default function GuideDashboard() {
         </div>
         <div className="px-4 pb-4">
           <div className="flex items-center justify-between mb-4">
-            <button 
+            <button
               className="flex items-center gap-3 text-left"
               onClick={() => user?.id && navigate(`/profile/${user.id}`)}
             >
@@ -116,7 +118,7 @@ export default function GuideDashboard() {
               </Avatar>
               <div>
                 <h1 className="text-lg font-semibold text-palco-text">
-                  {profile?.display_name 
+                  {profile?.display_name
                     ? t('palco.guideGreetingWithName', { name: profile.display_name })
                     : t('palco.guideGreeting')}
                 </h1>
@@ -125,8 +127,8 @@ export default function GuideDashboard() {
                 </p>
               </div>
             </button>
-            <Button 
-              size="icon" 
+            <Button
+              size="icon"
               className="bg-palco-accent text-palco-surface hover:bg-palco-accent/90 rounded-full shadow-sm"
               onClick={() => navigate('/palco/create')}
             >
@@ -136,19 +138,19 @@ export default function GuideDashboard() {
 
           {/* Quick Stats */}
           <div className="grid grid-cols-3 gap-3">
-            <StatCard 
+            <StatCard
               icon={<MessageSquare className="w-4 h-4" />}
               label="Vozes"
               value={totalVoices}
               color="accent"
             />
-            <StatCard 
+            <StatCard
               icon={<Calendar className="w-4 h-4" />}
               label="Palcos"
               value={totalPalcos}
               color="accent"
             />
-            <StatCard 
+            <StatCard
               icon={<Radio className="w-4 h-4" />}
               label="Ao Vivo"
               value={livePalcos}
@@ -162,23 +164,20 @@ export default function GuideDashboard() {
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabFilter)} className="mb-4">
           <TabsList className="grid w-full grid-cols-3 bg-palco-surface/60 rounded-full p-1">
-            <TabsTrigger 
-              value="active" 
+            <TabsTrigger
+              value="active"
               className="rounded-full data-[state=active]:bg-palco-accent data-[state=active]:text-palco-surface data-[state=active]:shadow-sm"
-            >
-              Ativos ({activePalcos.length})
+            >{uiText("Ativos (")}{activePalcos.length})
             </TabsTrigger>
-            <TabsTrigger 
-              value="scheduled" 
+            <TabsTrigger
+              value="scheduled"
               className="rounded-full data-[state=active]:bg-palco-accent data-[state=active]:text-palco-surface data-[state=active]:shadow-sm"
-            >
-              Agendados ({scheduledPalcos.length})
+            >{uiText("Agendados (")}{scheduledPalcos.length})
             </TabsTrigger>
-            <TabsTrigger 
-              value="archived" 
+            <TabsTrigger
+              value="archived"
               className="rounded-full data-[state=active]:bg-palco-accent data-[state=active]:text-palco-surface data-[state=active]:shadow-sm"
-            >
-              Arquivo ({archivedPalcos.length})
+            >{uiText("Arquivo (")}{archivedPalcos.length})
             </TabsTrigger>
           </TabsList>
         </Tabs>
@@ -204,17 +203,18 @@ export default function GuideDashboard() {
   );
 }
 
-function StatCard({ 
-  icon, 
-  label, 
-  value, 
-  color 
-}: { 
-  icon: React.ReactNode; 
-  label: string; 
-  value: number; 
+function StatCard({
+  icon,
+  label,
+  value,
+  color
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: number;
   color: 'accent' | 'blue' | 'red';
 }) {
+  useUiLocale();
   return (
     <div className="bg-palco-surface/70 rounded-[16px] p-3 shadow-sm">
       <div className="w-8 h-8 rounded-full flex items-center justify-center mb-2 bg-palco-accent/10 text-palco-accent">
@@ -227,9 +227,10 @@ function StatCard({
 }
 
 function PalcoManageCard({ palco, index }: { palco: Palco; index: number }) {
+  useUiLocale();
   const navigate = useNavigate();
   const { selectedCurrency, creditsToMoney } = useCurrencyRates();
-  
+
   // Format price with user's selected currency
   const formatPrice = (price: number) => {
     if (!selectedCurrency) return `$${price}`;
@@ -247,34 +248,24 @@ function PalcoManageCard({ palco, index }: { palco: Palco; index: number }) {
       case 'live':
         return (
           <Badge className="bg-destructive text-destructive-foreground gap-1">
-            <Radio className="w-3 h-3 animate-pulse" />
-            AO VIVO
-          </Badge>
+            <Radio className="w-3 h-3 animate-pulse" />{uiText("AO VIVO")}</Badge>
         );
       case 'scheduled':
         return (
           <Badge className="bg-palco-accent/20 text-palco-accent gap-1 border-0">
-            <Clock className="w-3 h-3" />
-            Agendado
-          </Badge>
+            <Clock className="w-3 h-3" />{uiText("Agendado")}</Badge>
         );
       case 'ended':
         return (
-          <Badge variant="secondary" className="bg-palco-bg text-palco-text-secondary">
-            Terminado
-          </Badge>
+          <Badge variant="secondary" className="bg-palco-bg text-palco-text-secondary">{uiText("Terminado")}</Badge>
         );
       case 'archived':
         return (
-          <Badge variant="secondary" className="bg-palco-bg text-palco-text-secondary">
-            Arquivado
-          </Badge>
+          <Badge variant="secondary" className="bg-palco-bg text-palco-text-secondary">{uiText("Arquivado")}</Badge>
         );
       default:
         return (
-          <Badge variant="secondary" className="bg-palco-bg text-palco-text-secondary">
-            Rascunho
-          </Badge>
+          <Badge variant="secondary" className="bg-palco-bg text-palco-text-secondary">{uiText("Rascunho")}</Badge>
         );
     }
   };
@@ -289,8 +280,8 @@ function PalcoManageCard({ palco, index }: { palco: Palco; index: number }) {
       {/* Header with image */}
       <div className="relative h-24 bg-gradient-to-br from-palco-accent/20 to-palco-accent/5">
         {palco.cover_url && (
-          <img 
-            src={palco.cover_url} 
+          <img
+            src={palco.cover_url}
             alt={palco.title}
             className="w-full h-full object-cover"
           />
@@ -300,40 +291,32 @@ function PalcoManageCard({ palco, index }: { palco: Palco; index: number }) {
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button 
-              size="icon" 
-              variant="ghost" 
+            <Button
+              size="icon"
+              variant="ghost"
               className="absolute top-2 right-2 w-8 h-8 bg-black/30 backdrop-blur-sm text-white hover:bg-black/50"
             >
               <MoreVertical className="w-4 h-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="bg-palco-surface">
-            <DropdownMenuItem 
+            <DropdownMenuItem
               onClick={() => navigate(`/palco/${palco.id}`)}
               className="text-palco-text"
             >
-              <Eye className="w-4 h-4 mr-2" />
-              Ver Palco
-            </DropdownMenuItem>
-            <DropdownMenuItem 
+              <Eye className="w-4 h-4 mr-2" />{uiText("Ver Palco")}</DropdownMenuItem>
+            <DropdownMenuItem
               onClick={() => navigate(`/palco/${palco.id}/edit`)}
               className="text-palco-text"
             >
-              <Edit className="w-4 h-4 mr-2" />
-              Editar
-            </DropdownMenuItem>
-            <DropdownMenuItem 
+              <Edit className="w-4 h-4 mr-2" />{uiText("Editar")}</DropdownMenuItem>
+            <DropdownMenuItem
               onClick={() => navigate(`/palco/${palco.id}/manage`)}
               className="text-palco-text"
             >
-              <Settings className="w-4 h-4 mr-2" />
-              Gerir
-            </DropdownMenuItem>
+              <Settings className="w-4 h-4 mr-2" />{uiText("Gerir")}</DropdownMenuItem>
             <DropdownMenuItem className="text-palco-text-secondary">
-              <Archive className="w-4 h-4 mr-2" />
-              Arquivar
-            </DropdownMenuItem>
+              <Archive className="w-4 h-4 mr-2" />{uiText("Arquivar")}</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -349,7 +332,7 @@ function PalcoManageCard({ palco, index }: { palco: Palco; index: number }) {
         <div className="flex items-center gap-4 mb-3 text-xs text-palco-text-secondary">
           <span className="flex items-center gap-1">
             <MessageSquare className="w-3.5 h-3.5" />
-            {palco.total_voices || 0} {(palco.total_voices || 0) === 1 ? 'Voz' : 'Vozes'}
+            {palco.total_voices || 0} {(palco.total_voices || 0) === 1 ? uiText("Voz") : uiText("Vozes")}
           </span>
           {palco.roda && (
             <span className="flex items-center gap-1">
@@ -389,21 +372,17 @@ function PalcoManageCard({ palco, index }: { palco: Palco; index: number }) {
                 </span>
               </div>
               {isSoon && (
-                <Badge className="bg-green-500 text-white text-[10px] px-1.5 py-0 border-0">
-                  Em breve
-                </Badge>
+                <Badge className="bg-green-500 text-white text-[10px] px-1.5 py-0 border-0">{uiText("Em breve")}</Badge>
               )}
             </div>
           );
         })()}
 
         {/* Action Button */}
-        <Button 
+        <Button
           className="w-full bg-palco-accent hover:bg-palco-accent/90 text-palco-surface rounded-full"
           onClick={() => navigate(`/palco/${palco.id}/manage`)}
-        >
-          Gerir Palco
-          <ChevronRight className="w-4 h-4 ml-1" />
+        >{uiText("Gerir Palco")}<ChevronRight className="w-4 h-4 ml-1" />
         </Button>
       </div>
     </motion.div>
@@ -411,20 +390,21 @@ function PalcoManageCard({ palco, index }: { palco: Palco; index: number }) {
 }
 
 function EmptyState({ tab, onCreateClick }: { tab: TabFilter; onCreateClick: () => void }) {
+  useUiLocale();
   const messages = {
     active: {
-      title: 'Nenhum palco ativo',
-      description: 'Crie o seu primeiro palco para começar a receber vozes.',
+      title: uiText("Nenhum palco ativo"),
+      description: uiText("Crie o seu primeiro palco para começar a receber vozes."),
       showButton: true,
     },
     scheduled: {
-      title: 'Nenhuma roda agendada',
-      description: 'Agende uma roda nos seus palcos existentes.',
+      title: uiText("Nenhuma roda agendada"),
+      description: uiText("Agende uma roda nos seus palcos existentes."),
       showButton: false,
     },
     archived: {
-      title: 'Nenhum palco arquivado',
-      description: 'Os palcos terminados aparecerão aqui.',
+      title: uiText("Nenhum palco arquivado"),
+      description: uiText("Os palcos terminados aparecerão aqui."),
       showButton: false,
     },
   };
@@ -443,13 +423,11 @@ function EmptyState({ tab, onCreateClick }: { tab: TabFilter; onCreateClick: () 
         {content.description}
       </p>
       {content.showButton && (
-        <Button 
+        <Button
           className="bg-palco-accent text-palco-surface rounded-full"
           onClick={onCreateClick}
         >
-          <Plus className="w-4 h-4 mr-2" />
-          Abrir Banda ao Vivo
-        </Button>
+          <Plus className="w-4 h-4 mr-2" />{uiText("Abrir Banda ao Vivo")}</Button>
       )}
     </div>
   );

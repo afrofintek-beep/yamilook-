@@ -1,9 +1,11 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { isVideo } from '../../../shared/public-post.mjs';
 import { canShareVideo, preparePostVideo, sharePreparedVideo, videoEndpoint } from '../../../shared/post-video-sharing.mjs';
 
 function VideoFileActions({ id, index, onShared }: { id: string; index: number; onShared?: () => void }) {
+  useUiLocale();
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState('');
@@ -33,21 +35,22 @@ function VideoFileActions({ id, index, onShared }: { id: string; index: number; 
     finally { setBusy(false); }
   };
   return <div className="space-y-2">
-    {!file ? <Button className="w-full" disabled={busy} onClick={() => void prepare()}>{busy ? 'A preparar vídeo…' : 'Partilhar vídeo'}</Button> : canShareVideo(file) ? <Button className="w-full" disabled={busy} onClick={() => void share()}>Escolher aplicação</Button> : null}
-    {busy && request.current && <Button variant="ghost" className="w-full" onClick={() => request.current?.abort()}>Cancelar preparação</Button>}
-    <Button asChild variant="outline" className="w-full"><a href={videoEndpoint(id, index, true)} target="_blank" rel="noopener noreferrer">Descarregar vídeo</a></Button>
+    {!file ? <Button className="w-full" disabled={busy} onClick={() => void prepare()}>{busy ? uiText("A preparar vídeo…") : uiText("Partilhar vídeo")}</Button> : canShareVideo(file) ? <Button className="w-full" disabled={busy} onClick={() => void share()}>{uiText("Escolher aplicação")}</Button> : null}
+    {busy && request.current && <Button variant="ghost" className="w-full" onClick={() => request.current?.abort()}>{uiText("Cancelar preparação")}</Button>}
+    <Button asChild variant="outline" className="w-full"><a href={videoEndpoint(id, index, true)} target="_blank" rel="noopener noreferrer">{uiText("Descarregar vídeo")}</a></Button>
     <p role="status" aria-live="polite" className="text-sm text-muted-foreground">{status}</p>
   </div>;
 }
 export default function PostVideoShare({ id, mediaUrls, onShared }: { id: string; mediaUrls: string[]; onShared?: () => void }) {
+  useUiLocale();
   const videos = mediaUrls.flatMap((url, index) => isVideo(url) ? [index] : []);
   const [selection, setSelection] = useState(videos[0]);
   if (!videos.length) return null;
   const index = videos.includes(selection) ? selection : videos[0];
-  return <section className="mb-5 space-y-3 border-b pb-4" aria-label="Partilhar ficheiro de vídeo">
-    <h3 className="font-semibold">Partilhar vídeo</h3>
-    <p className="text-sm text-muted-foreground">Envia o ficheiro às aplicações compatíveis. Se o LinkedIn não aparecer, descarrega o vídeo e anexa-o numa publicação.</p>
-    {videos.length > 1 && <label className="block text-sm">Vídeo a partilhar<select className="mt-1 min-h-11 w-full rounded border bg-background p-2" value={index} onChange={event => setSelection(Number(event.target.value))}>{videos.map((value, position) => <option key={value} value={value}>Vídeo {position + 1}</option>)}</select></label>}
+  return <section className="mb-5 space-y-3 border-b pb-4" aria-label={uiText("Partilhar ficheiro de vídeo")}>
+    <h3 className="font-semibold">{uiText("Partilhar vídeo")}</h3>
+    <p className="text-sm text-muted-foreground">{uiText("Envia o ficheiro às aplicações compatíveis. Se o LinkedIn não aparecer, descarrega o vídeo e anexa-o numa publicação.")}</p>
+    {videos.length > 1 && <label className="block text-sm">{uiText("Vídeo a partilhar")}<select className="mt-1 min-h-11 w-full rounded border bg-background p-2" value={index} onChange={event => setSelection(Number(event.target.value))}>{videos.map((value, position) => <option key={value} value={value}>{uiText("Vídeo ")}{position + 1}</option>)}</select></label>}
     <VideoFileActions key={`${id}:${index}`} id={id} index={index} onShared={onShared} />
   </section>;
 }

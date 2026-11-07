@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useNavigate } from 'react-router-dom';
 import { Radio, ChevronRight, Users } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -9,6 +10,7 @@ import type { ActiveStream } from '@/hooks/useActiveStreams';
  * the wallet, no balance exposed) and the bandas that are live right now.
  */
 export function FeedSidebar({ activeStreams }: { activeStreams: ActiveStream[] }) {
+  useUiLocale();
   const navigate = useNavigate();
 
   return (
@@ -16,7 +18,7 @@ export function FeedSidebar({ activeStreams }: { activeStreams: ActiveStream[] }
       {/* Kumbu — branded cover, not a balance readout */}
       <button
         onClick={() => navigate('/kumbu')}
-        aria-label="Abrir a carteira Kumbu"
+        aria-label={uiText("Abrir a carteira Kumbu")}
         className="group relative block w-full overflow-hidden rounded-2xl bg-gradient-primary p-5 text-left text-white shadow-md transition-transform hover:scale-[1.02]"
       >
         {/* soft glow + oversized coin motif */}
@@ -24,11 +26,9 @@ export function FeedSidebar({ activeStreams }: { activeStreams: ActiveStream[] }
         <div className="pointer-events-none absolute -bottom-3 -right-1 select-none text-7xl leading-none opacity-20 rotate-12">🪙</div>
         <div className="relative">
           <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/75">Yamilook</div>
-          <div className="mt-0.5 text-3xl font-extrabold tracking-tight drop-shadow-sm">KUMBU</div>
-          <div className="mt-1 text-xs text-white/85">Kumbu é valor</div>
-          <div className="mt-3 inline-flex items-center gap-1 text-xs font-semibold">
-            Abrir a tua carteira
-            <ChevronRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+          <div className="mt-0.5 text-3xl font-extrabold tracking-tight drop-shadow-sm">{uiText("KUMBU")}</div>
+          <div className="mt-1 text-xs text-white/85">{uiText("Kumbu é valor")}</div>
+          <div className="mt-3 inline-flex items-center gap-1 text-xs font-semibold">{uiText("Abrir a tua carteira")}<ChevronRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
           </div>
         </div>
       </button>
@@ -36,7 +36,7 @@ export function FeedSidebar({ activeStreams }: { activeStreams: ActiveStream[] }
       {/* Bandas ao vivo — clickable red cover, coherent with the live branding */}
       <button
         onClick={() => navigate('/live')}
-        aria-label="Ver as bandas ao vivo"
+        aria-label={uiText("Ver as bandas ao vivo")}
         className="group relative block w-full overflow-hidden rounded-2xl bg-gradient-to-br from-red-500 via-red-600 to-red-700 p-5 text-left text-white shadow-md transition-transform hover:scale-[1.02]"
       >
         {/* soft glow + oversized radio motif */}
@@ -47,13 +47,11 @@ export function FeedSidebar({ activeStreams }: { activeStreams: ActiveStream[] }
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
-            </span>
-            Ao vivo
-          </div>
-          <div className="mt-0.5 text-2xl font-extrabold tracking-tight drop-shadow-sm">Bandas ao vivo</div>
+            </span>{uiText("Ao vivo")}</div>
+          <div className="mt-0.5 text-2xl font-extrabold tracking-tight drop-shadow-sm">{uiText("Bandas ao vivo")}</div>
 
           {activeStreams.length === 0 ? (
-            <div className="mt-1 text-xs text-white/85">Ninguém ao vivo agora. Sê o primeiro a abrir a tua banda!</div>
+            <div className="mt-1 text-xs text-white/85">{uiText("Ninguém ao vivo agora. Sê o primeiro a abrir a tua banda!")}</div>
           ) : (
             <div className="mt-3 space-y-2">
               {activeStreams.slice(0, 3).map((s) => (
@@ -77,13 +75,13 @@ export function FeedSidebar({ activeStreams }: { activeStreams: ActiveStream[] }
           )}
 
           <div className="mt-3 inline-flex items-center gap-1 text-xs font-semibold">
-            {activeStreams.length > 0 ? 'Entrar na live' : 'Abrir a minha banda'}
+            {activeStreams.length > 0 ? uiText("Entrar na live") : uiText("Abrir a minha banda")}
             <ChevronRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
           </div>
         </div>
       </button>
 
-      <p className="text-[10px] text-muted-foreground/50 px-1">Yamilook · a vida na tua banda</p>
+      <p className="text-[10px] text-muted-foreground/50 px-1">{uiText("Yamilook · a vida na tua banda")}</p>
     </div>
   );
 }

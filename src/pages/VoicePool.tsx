@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, MessageSquare, Mail, Mic, Star, Filter } from 'lucide-react';
@@ -9,8 +10,8 @@ import { useRoda, usePalco } from '@/hooks/usePalco';
 
 const voiceTypeConfig = {
   email: { icon: Mail, label: 'Email', color: 'bg-blue-100 text-blue-700' },
-  live: { icon: Mic, label: 'Ao Vivo', color: 'bg-green-100 text-green-700' },
-  highlight: { icon: Star, label: 'Destaque', color: 'bg-amber-100 text-amber-700' },
+  live: { icon: Mic, get label() { return uiText("Ao Vivo"); }, color: 'bg-green-100 text-green-700' },
+  highlight: { icon: Star, get label() { return uiText("Destaque"); }, color: 'bg-amber-100 text-amber-700' },
 };
 
 // Mock data - will be replaced with real data from API
@@ -24,15 +25,16 @@ const mockVozes = [
 ];
 
 export default function VoicePool() {
+  useUiLocale();
   const { palcoId, rodaId } = useParams();
   const navigate = useNavigate();
   const [selectedType, setSelectedType] = useState<string>('all');
-  
+
   const { data: roda } = useRoda(rodaId);
   const { data: palco } = usePalco(palcoId);
 
-  const filteredVozes = selectedType === 'all' 
-    ? mockVozes 
+  const filteredVozes = selectedType === 'all'
+    ? mockVozes
     : mockVozes.filter(v => v.type === selectedType);
 
   const groupedVozes = {
@@ -49,16 +51,16 @@ export default function VoicePool() {
       {/* Header */}
       <header className="sticky top-0 z-10 bg-palco-surface border-b border-palco-border px-4 py-3 safe-top">
         <div className="flex items-center gap-3">
-          <Button 
-            variant="ghost" 
-            size="icon" 
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => navigate(-1)}
             className="text-palco-text"
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div className="flex-1">
-            <h1 className="text-lg font-semibold text-palco-text">Vozes</h1>
+            <h1 className="text-lg font-semibold text-palco-text">{uiText("Vozes")}</h1>
             {palco && (
               <p className="text-sm text-palco-text-secondary">{palco.title}</p>
             )}
@@ -73,10 +75,10 @@ export default function VoicePool() {
       <div className="px-4 py-3 bg-palco-surface border-b border-palco-border">
         <Tabs value={selectedType} onValueChange={setSelectedType}>
           <TabsList className="w-full bg-palco-bg">
-            <TabsTrigger value="all" className="flex-1">Todas</TabsTrigger>
+            <TabsTrigger value="all" className="flex-1">{uiText("Todas")}</TabsTrigger>
             <TabsTrigger value="email" className="flex-1">Email</TabsTrigger>
-            <TabsTrigger value="live" className="flex-1">Ao Vivo</TabsTrigger>
-            <TabsTrigger value="highlight" className="flex-1">Destaque</TabsTrigger>
+            <TabsTrigger value="live" className="flex-1">{uiText("Ao Vivo")}</TabsTrigger>
+            <TabsTrigger value="highlight" className="flex-1">{uiText("Destaque")}</TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
@@ -86,14 +88,13 @@ export default function VoicePool() {
         {/* Available Voices */}
         {groupedVozes.available.length > 0 && (
           <section>
-            <h2 className="text-sm font-medium text-palco-text-secondary mb-3">
-              Disponíveis ({groupedVozes.available.length})
+            <h2 className="text-sm font-medium text-palco-text-secondary mb-3">{uiText("Disponíveis (")}{groupedVozes.available.length})
             </h2>
             <div className="space-y-3">
               {groupedVozes.available.map((voz) => {
                 const config = voiceTypeConfig[voz.type];
                 const Icon = config.icon;
-                
+
                 return (
                   <button
                     key={voz.id}
@@ -130,14 +131,13 @@ export default function VoicePool() {
         {/* Sold Voices */}
         {groupedVozes.sold.length > 0 && (
           <section>
-            <h2 className="text-sm font-medium text-palco-text-secondary mb-3">
-              Vendidas ({groupedVozes.sold.length})
+            <h2 className="text-sm font-medium text-palco-text-secondary mb-3">{uiText("Vendidas (")}{groupedVozes.sold.length})
             </h2>
             <div className="space-y-3">
               {groupedVozes.sold.map((voz) => {
                 const config = voiceTypeConfig[voz.type];
                 const Icon = config.icon;
-                
+
                 return (
                   <div
                     key={voz.id}
@@ -152,9 +152,7 @@ export default function VoicePool() {
                           <Badge variant="secondary" className="text-xs bg-muted text-muted-foreground">
                             {config.label}
                           </Badge>
-                          <Badge variant="outline" className="text-xs">
-                            Vendida
-                          </Badge>
+                          <Badge variant="outline" className="text-xs">{uiText("Vendida")}</Badge>
                         </div>
                         <p className="text-sm text-palco-text-secondary line-clamp-2">
                           {voz.question}
@@ -177,12 +175,8 @@ export default function VoicePool() {
         {filteredVozes.length === 0 && (
           <div className="text-center py-12">
             <MessageSquare className="w-12 h-12 text-palco-text-secondary mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-palco-text mb-2">
-              Nenhuma Voz encontrada
-            </h3>
-            <p className="text-sm text-palco-text-secondary">
-              Não há vozes disponíveis com este filtro.
-            </p>
+            <h3 className="text-lg font-medium text-palco-text mb-2">{uiText("Nenhuma Voz encontrada")}</h3>
+            <p className="text-sm text-palco-text-secondary">{uiText("Não há vozes disponíveis com este filtro.")}</p>
           </div>
         )}
       </div>

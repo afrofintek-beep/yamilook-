@@ -1,3 +1,4 @@
+import { uiText } from '@/i18n/ui-copy';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { fetchPublicProfilesBatched } from '@/lib/public-profile-batch';
@@ -172,13 +173,13 @@ export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?:
     // Get unique topic IDs and fetch topic details
     const topicIds = [...new Set(postTopicsData?.map(pt => pt.topic_id) || [])];
     const topicsMap = new Map<string, PostTopic>();
-    
+
     if (topicIds.length > 0) {
       const { data: topicsData } = await supabase
         .from('discover_topics')
         .select('id, name, slug')
         .in('id', topicIds);
-      
+
       topicsData?.forEach(t => {
         topicsMap.set(t.id, { id: t.id, name: t.name, slug: t.slug });
       });
@@ -363,7 +364,7 @@ export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?:
       onUploadProgress?: (stage: 'preparing' | 'uploading' | 'saving', current: number, total: number, percent?: number) => void;
     }
   ) => {
-    if (!userId) throw new Error('A sessão expirou. Entre novamente para publicar.');
+    if (!userId) throw new Error(uiText("A sessão expirou. Entre novamente para publicar."));
 
     const mediaUrls: string[] = [];
 
@@ -403,7 +404,7 @@ export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?:
 
     if (error || !data?.id) {
       console.error('Create post error:', error);
-      throw new Error('Não foi possível guardar a publicação. O texto e os ficheiros foram mantidos para nova tentativa.');
+      throw new Error(uiText("Não foi possível guardar a publicação. O texto e os ficheiros foram mantidos para nova tentativa."));
     }
 
     // Acknowledgement is based on the saved row, not a subsequent feed refresh.
@@ -622,7 +623,7 @@ export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?:
     ]);
 
     const profileMap = new Map(profilesResult.data?.map(p => [p.id, p]) || []);
-    
+
     // Build reactions map per comment
     const reactionsMap = new Map<string, { [type: string]: number }>();
     reactionsResult.data?.forEach(r => {
@@ -639,11 +640,11 @@ export function usePosts({ autoLoad = true, loadDiscovery = true }: { autoLoad?:
 
     const commentsWithUsers = data.map(comment => ({
       ...comment,
-      user: profileMap.get(comment.user_id) || { 
-        id: comment.user_id, 
-        display_name: 'Unknown', 
-        avatar_url: null, 
-        username: '' 
+      user: profileMap.get(comment.user_id) || {
+        id: comment.user_id,
+        display_name: 'Unknown',
+        avatar_url: null,
+        username: ''
       },
       reactions: reactionsMap.get(comment.id) || {},
       my_reaction: myReactionsMap.get(comment.id) || null,

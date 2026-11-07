@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 /* @refresh reset */
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -18,6 +19,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { RoomEvent, Track } from 'livekit-client';
 
 export default function Live() {
+  useUiLocale();
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
   const {
@@ -157,12 +159,12 @@ export default function Live() {
   };
 
   // IMPORTANT: do not memoize this; the participant object is stable while track publications mutate.
-   
+
   const _trackTick = trackTick;
 
   // Find the host participant - use prefixed identity format
   const hostIdentity = currentSession?.host_id ? `host:${currentSession.host_id}` : null;
-  
+
   const hostParticipant = isHost
     ? (room?.localParticipant ?? localParticipant)
     : (remoteParticipants.find((p) => p.identity === hostIdentity) ?? remoteParticipants[0]);
@@ -173,15 +175,15 @@ export default function Live() {
     : [];
 
   // Find camera and microphone tracks with proper source detection
-  const cameraPub = publications.find((p) => 
+  const cameraPub = publications.find((p) =>
     p.source === Track.Source.Camera && p.track
-  ) ?? publications.find((p) => 
+  ) ?? publications.find((p) =>
     p.kind === Track.Kind.Video && p.source !== Track.Source.ScreenShare && p.track
   ) ?? null;
 
-  const micPub = publications.find((p) => 
+  const micPub = publications.find((p) =>
     p.source === Track.Source.Microphone && p.track
-  ) ?? publications.find((p) => 
+  ) ?? publications.find((p) =>
     p.kind === Track.Kind.Audio && p.track
   ) ?? null;
 
@@ -217,7 +219,7 @@ export default function Live() {
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center space-y-4">
           <Radio className="w-12 h-12 text-primary animate-pulse mx-auto" />
-          <p className="text-white">Joining stream...</p>
+          <p className="text-white">{uiText("Joining stream...")}</p>
         </div>
       </div>
     );
@@ -265,9 +267,7 @@ export default function Live() {
 
           <div className="flex items-center gap-3">
             <Badge variant="destructive" className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
-              LIVE
-            </Badge>
+              <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />{uiText("LIVE")}</Badge>
             <div className="flex items-center gap-1 bg-black/50 backdrop-blur-sm rounded-full px-3 py-1 text-white text-sm">
               <Users className="w-4 h-4" />
               {currentSession?.viewer_count || 0}
@@ -295,7 +295,7 @@ export default function Live() {
             </Avatar>
             <div>
               <p className="text-white font-medium">
-                {currentSession.host?.display_name || 'Anonymous'}
+                {currentSession.host?.display_name || uiText("Anonymous")}
               </p>
               <p className="text-white/70 text-sm">{currentSession.title}</p>
             </div>

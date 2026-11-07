@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useRef, useEffect } from 'react';
 import { Send, Paperclip, Smile, Mic } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -10,6 +11,7 @@ interface ChatInputProps {
 }
 
 export function ChatInput({ onSend, onTyping, disabled }: ChatInputProps) {
+  useUiLocale();
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -73,7 +75,7 @@ export function ChatInput({ onSend, onTyping, disabled }: ChatInputProps) {
             value={message}
             onChange={handleChange}
             onKeyDown={handleKeyDown}
-            placeholder="Type a message..."
+            placeholder={uiText("Type a message...")}
             className="min-h-[44px] max-h-[120px] py-3 pr-12 rounded-2xl resize-none bg-secondary/50 border-0 focus-visible:ring-1 focus-visible:ring-primary/50"
             disabled={disabled}
             rows={1}

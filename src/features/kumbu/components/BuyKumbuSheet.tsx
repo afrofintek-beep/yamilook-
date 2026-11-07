@@ -1,3 +1,4 @@
+import { uiText, useUiLocale, uiLocale } from '@/i18n/ui-copy';
 import { useEffect, useRef, useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -22,11 +23,12 @@ const PACKAGES = [
 ];
 type Method = 'GPO' | 'REF';
 type Phase = 'choose' | 'pending' | 'ref' | 'done';
-const fmtKz = (n: number) => `${n.toLocaleString('pt-PT')} Kz`;
+const fmtKz = (n: number) => `${n.toLocaleString(uiLocale())} Kz`;
 
 /** Buy Kumbu via AppyPay. Purchased Kumbu is spend-only (não levantável).
  *  Payment confirmed by polling check-kumbu-topup (webhook unreliable). */
 export function BuyKumbuSheet({ open, onOpenChange, onPurchased }: Props) {
+  useUiLocale();
   const { refreshProfile } = useAuth();
   const [packageId, setPackageId] = useState('p500');
   const [method, setMethod] = useState<Method>('GPO');
@@ -49,7 +51,7 @@ export function BuyKumbuSheet({ open, onOpenChange, onPurchased }: Props) {
   const done = async () => {
     stopPoll(); setPhase('done');
     await refreshProfile(); onPurchased?.();
-    toast.success('Kumbu adicionado! 🎉');
+    toast.success(uiText("Kumbu adicionado! 🎉"));
   };
   const check = async () => {
     const { data } = await supabase.functions.invoke('check-kumbu-topup', { body: { purchaseId: purchaseId.current } });
@@ -58,7 +60,7 @@ export function BuyKumbuSheet({ open, onOpenChange, onPurchased }: Props) {
   const startPolling = () => { stopPoll(); poll.current = setInterval(check, 10000); };
 
   const pay = async () => {
-    if (method === 'GPO' && phone.replace(/\D/g, '').length < 9) { toast.info('Escreve o teu número Multicaixa Express.'); return; }
+    if (method === 'GPO' && phone.replace(/\D/g, '').length < 9) { toast.info(uiText("Escreve o teu número Multicaixa Express.")); return; }
     setBusy(true);
     try {
       const { data, error } = await supabase.functions.invoke('create-kumbu-topup', { body: { packageId, method, phone } });
@@ -69,10 +71,10 @@ export function BuyKumbuSheet({ open, onOpenChange, onPurchased }: Props) {
       if (r.status === 'paid') { await done(); return; }
       if (r.status === 'pending_ref') { setRef({ entity: r.entity ?? null, reference: r.reference ?? null }); setPhase('ref'); startPolling(); return; }
       if (r.status === 'pending_push') { setPhase('pending'); startPolling(); return; }
-      if (r.status === 'gateway_pending') { toast.info('Compra registada — pagamento ainda não ativo (falta configurar o gateway).'); setPhase('pending'); return; }
+      if (r.status === 'gateway_pending') { toast.info(uiText("Compra registada — pagamento ainda não ativo (falta configurar o gateway).")); setPhase('pending'); return; }
       setPhase('pending'); startPolling();
     } catch {
-      toast.error('Não foi possível iniciar o pagamento.');
+      toast.error(uiText("Não foi possível iniciar o pagamento."));
     } finally { setBusy(false); }
   };
 
@@ -80,7 +82,7 @@ export function BuyKumbuSheet({ open, onOpenChange, onPurchased }: Props) {
     <Sheet open={open} onOpenChange={(o) => { if (!o) stopPoll(); onOpenChange(o); }}>
       <SheetContent side="bottom" className="h-auto max-h-[90vh] overflow-y-auto rounded-t-3xl">
         <SheetHeader className="mb-4">
-          <SheetTitle className="flex items-center gap-2"><Coins className="w-5 h-5 text-amber-500" /> Comprar Kumbu</SheetTitle>
+          <SheetTitle className="flex items-center gap-2"><Coins className="w-5 h-5 text-amber-500" />{uiText(" Comprar Kumbu")}</SheetTitle>
         </SheetHeader>
 
         {phase === 'done' ? (
@@ -88,8 +90,8 @@ export function BuyKumbuSheet({ open, onOpenChange, onPurchased }: Props) {
             <div className="w-16 h-16 rounded-full bg-emerald-500/15 flex items-center justify-center mx-auto">
               <Check className="w-8 h-8 text-emerald-500" />
             </div>
-            <p className="font-semibold">Kumbu adicionado! 🎉</p>
-            <Button className="w-full h-12 rounded-xl mt-2" onClick={() => onOpenChange(false)}>Boa!</Button>
+            <p className="font-semibold">{uiText("Kumbu adicionado! 🎉")}</p>
+            <Button className="w-full h-12 rounded-xl mt-2" onClick={() => onOpenChange(false)}>{uiText("Boa!")}</Button>
           </div>
         ) : (
           <div className="space-y-5">
@@ -105,48 +107,45 @@ export function BuyKumbuSheet({ open, onOpenChange, onPurchased }: Props) {
             </div>
 
             <div className="space-y-2">
-              <Label className="text-sm">Como pagas</Label>
+              <Label className="text-sm">{uiText("Como pagas")}</Label>
               <div className="grid grid-cols-2 gap-3">
                 <button type="button" onClick={() => setMethod('GPO')}
                   className={cn('rounded-xl border p-3 flex items-center gap-2 text-sm transition-colors', method === 'GPO' ? 'border-primary bg-primary/5' : 'border-border')}>
-                  <Smartphone className="w-4 h-4" /> Multicaixa Express
-                </button>
+                  <Smartphone className="w-4 h-4" />{uiText(" Multicaixa Express")}</button>
                 <button type="button" onClick={() => setMethod('REF')}
                   className={cn('rounded-xl border p-3 flex items-center gap-2 text-sm transition-colors', method === 'REF' ? 'border-primary bg-primary/5' : 'border-border')}>
-                  <Receipt className="w-4 h-4" /> Referência
-                </button>
+                  <Receipt className="w-4 h-4" />{uiText(" Referência")}</button>
               </div>
             </div>
 
             {method === 'GPO' && phase === 'choose' && (
               <div className="space-y-1.5">
-                <Label className="text-sm">Número Multicaixa Express</Label>
-                <Input value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" placeholder="9xx xxx xxx" className="h-11" />
+                <Label className="text-sm">{uiText("Número Multicaixa Express")}</Label>
+                <Input value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" placeholder={uiText("9xx xxx xxx")} className="h-11" />
               </div>
             )}
 
             {phase === 'ref' && ref && (
               <div className="rounded-xl bg-secondary/50 p-4 space-y-1 text-sm">
-                <p className="font-medium">Paga esta referência:</p>
-                <div className="flex justify-between"><span className="text-muted-foreground">Entidade</span><span className="font-mono font-semibold">{ref.entity ?? '—'}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Referência</span><span className="font-mono font-semibold">{ref.reference ?? '—'}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Valor</span><span className="font-semibold">{fmtKz(pkg.kwanza)}</span></div>
+                <p className="font-medium">{uiText("Paga esta referência:")}</p>
+                <div className="flex justify-between"><span className="text-muted-foreground">{uiText("Entidade")}</span><span className="font-mono font-semibold">{ref.entity ?? '—'}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">{uiText("Referência")}</span><span className="font-mono font-semibold">{ref.reference ?? '—'}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">{uiText("Valor")}</span><span className="font-semibold">{fmtKz(pkg.kwanza)}</span></div>
               </div>
             )}
             {phase === 'pending' && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground bg-secondary/40 rounded-xl p-3">
-                <Loader2 className="w-4 h-4 animate-spin" /> À espera da confirmação do pagamento…
-              </div>
+                <Loader2 className="w-4 h-4 animate-spin" />{uiText(" À espera da confirmação do pagamento…")}</div>
             )}
 
-            <p className="text-[11px] text-muted-foreground">O Kumbu comprado serve para gastar na app (não é levantável).</p>
+            <p className="text-[11px] text-muted-foreground">{uiText("O Kumbu comprado serve para gastar na app (não é levantável).")}</p>
 
             {phase === 'choose' ? (
               <Button className="w-full h-12 rounded-xl" onClick={pay} disabled={busy}>
                 {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : `Pagar ${fmtKz(pkg.kwanza)}`}
               </Button>
             ) : (
-              <Button variant="secondary" className="w-full h-12 rounded-xl" onClick={check}>Já paguei — verificar agora</Button>
+              <Button variant="secondary" className="w-full h-12 rounded-xl" onClick={check}>{uiText("Já paguei — verificar agora")}</Button>
             )}
           </div>
         )}

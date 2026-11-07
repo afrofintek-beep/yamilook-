@@ -1,3 +1,4 @@
+import { uiText, useUiLocale, uiLocale } from '@/i18n/ui-copy';
 import { useTranslation } from 'react-i18next';
 import { useId, useRef } from 'react';
 import { Input } from '@/components/ui/input';
@@ -37,14 +38,15 @@ interface Residency {
 }
 
 const RESIDENCY_BADGE: Record<string, { label: string; className: string; icon: typeof Home }> = {
-  novo: { label: 'Novo na banda', className: 'bg-amber-500/15 text-amber-600', icon: Home },
-  residente: { label: 'Membro com antiguidade', className: 'bg-sky-500/15 text-sky-600', icon: Home },
-  verificado: { label: 'Presença regular', className: 'bg-emerald-500/15 text-emerald-600', icon: ShieldCheck },
+  novo: { get label() { return uiText("Novo na banda"); }, className: 'bg-amber-500/15 text-amber-600', icon: Home },
+  residente: { get label() { return uiText("Membro com antiguidade"); }, className: 'bg-sky-500/15 text-sky-600', icon: Home },
+  verificado: { get label() { return uiText("Presença regular"); }, className: 'bg-emerald-500/15 text-emerald-600', icon: ShieldCheck },
 };
 
 /** "Mudei-me" — change the user's banda (neighborhood). One change per 60 days.
  *  Captures the new location so the AFROLOC code regenerates for the new place. */
 export function BandaChangeSheet({ open, onOpenChange, current, onChanged }: Props) {
+  useUiLocale();
   const { t, i18n } = useTranslation();
   const language = i18n.resolvedLanguage || i18n.language;
   const locale = language.toLowerCase().split(/[-_]/)[0] as keyof typeof locationHints;
@@ -100,13 +102,13 @@ export function BandaChangeSheet({ open, onOpenChange, current, onChanged }: Pro
           : 'Não foi possível fazer check-in.');
         return;
       }
-      if (!r.present) toast.error('Estás longe da tua banda — o check-in conta perto de casa.');
-      else if (r.already) toast.info('Já fizeste check-in hoje. 👍🏾');
-      else toast.success('Check-in feito! Presença registada. 🏡');
+      if (!r.present) toast.error(uiText("Estás longe da tua banda — o check-in conta perto de casa."));
+      else if (r.already) toast.info(uiText("Já fizeste check-in hoje. 👍🏾"));
+      else toast.success(uiText("Check-in feito! Presença registada. 🏡"));
       if (typeof r.streak === 'number') setStreak(r.streak);
       await loadResidency();
     } catch {
-      toast.error('Não foi possível confirmar a tua presença.');
+      toast.error(uiText("Não foi possível confirmar a tua presença."));
     } finally {
       setChecking(false);
     }
@@ -129,7 +131,7 @@ export function BandaChangeSheet({ open, onOpenChange, current, onChanged }: Pro
     || city.trim() !== (current.city || '').trim();
   const blockedByCooldown = changingBanda && residency?.can_change_now === false;
   const nextChange = residency?.next_change_at
-    ? new Date(residency.next_change_at).toLocaleDateString('pt-PT', { day: '2-digit', month: 'long', year: 'numeric' })
+    ? new Date(residency.next_change_at).toLocaleDateString(uiLocale(), { day: '2-digit', month: 'long', year: 'numeric' })
     : null;
 
   const useGps = async () => {
@@ -144,9 +146,9 @@ export function BandaChangeSheet({ open, onOpenChange, current, onChanged }: Pro
       const _cell = snapToGrid(pos.coords.latitude, pos.coords.longitude);
       setGps({ lat: _cell.lat, lng: _cell.lng });
       setGpsAccuracy(pos.coords.accuracy);
-      toast.success('Localização captada. A validação fica pendente.');
+      toast.success(uiText("Localização captada. A validação fica pendente."));
     } catch {
-      if (request === captureGeneration.current) toast.error('Não foi possível gerar o teu endereço AFROLOC.');
+      if (request === captureGeneration.current) toast.error(uiText("Não foi possível gerar o teu endereço AFROLOC."));
     } finally {
       if (request === captureGeneration.current) setLocating(false);
     }
@@ -154,7 +156,7 @@ export function BandaChangeSheet({ open, onOpenChange, current, onChanged }: Pro
 
   const save = async () => {
     if (!neighborhood.trim() || !city.trim()) {
-      toast.info('Escolhe cidade e bairro.');
+      toast.info(uiText("Escolhe cidade e bairro."));
       return;
     }
     setSaving(true);
@@ -166,7 +168,7 @@ export function BandaChangeSheet({ open, onOpenChange, current, onChanged }: Pro
       onChanged();
       onOpenChange(false);
     } catch {
-      toast.error('Não foi possível guardar. Verifica o prazo de mudança de Banda e tenta novamente.');
+      toast.error(uiText("Não foi possível guardar. Verifica o prazo de mudança de Banda e tenta novamente."));
     } finally {
       setSaving(false);
     }
@@ -178,13 +180,13 @@ export function BandaChangeSheet({ open, onOpenChange, current, onChanged }: Pro
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="h-auto max-h-[88vh] overflow-y-auto rounded-t-3xl">
         <SheetHeader className="mb-4">
-          <SheetTitle className="flex items-center gap-2"><MapPin className="w-5 h-5 text-primary" /> A minha banda</SheetTitle>
+          <SheetTitle className="flex items-center gap-2"><MapPin className="w-5 h-5 text-primary" />{uiText(" A minha banda")}</SheetTitle>
         </SheetHeader>
 
         <div className="space-y-4">
           {/* Current banda + residency */}
           <div className="rounded-2xl bg-secondary/50 p-4 space-y-2">
-            <div className="text-sm text-muted-foreground">Banda atual</div>
+            <div className="text-sm text-muted-foreground">{uiText("Banda atual")}</div>
             <div className="text-base font-semibold">
               {current.neighborhood || '—'}{current.city ? ` · ${current.city}` : ''}
             </div>
@@ -194,9 +196,7 @@ export function BandaChangeSheet({ open, onOpenChange, current, onChanged }: Pro
               </span>
             )}
             {residency && residency.status !== 'none' && residency.status !== 'verificado' && (
-              <p className="text-[11px] text-muted-foreground">
-                A antiguidade, a atividade e os check-ins mostram participação. A validação do endereço é um processo separado.
-              </p>
+              <p className="text-[11px] text-muted-foreground">{uiText("A antiguidade, a atividade e os check-ins mostram participação. A validação do endereço é um processo separado.")}</p>
             )}
           </div>
 
@@ -205,18 +205,17 @@ export function BandaChangeSheet({ open, onOpenChange, current, onChanged }: Pro
             <div className="rounded-2xl border border-border p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="text-sm font-medium flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-primary" /> Presença na banda
-                </div>
+                  <CheckCircle2 className="w-4 h-4 text-primary" />{uiText(" Presença na banda")}</div>
                 {(streak ?? 0) > 0 && (
                   <span className="inline-flex items-center gap-1 text-xs text-orange-600 font-medium">
-                    <Flame className="w-3.5 h-3.5" /> {streak} {streak === 1 ? 'dia' : 'dias'}
+                    <Flame className="w-3.5 h-3.5" /> {streak} {streak === 1 ? uiText("dia") : uiText("dias")}
                   </span>
                 )}
               </div>
               <div className="space-y-1">
                 <div className="flex justify-between text-[11px] text-muted-foreground">
-                  <span>Últimos 14 dias</span>
-                  <span>{residency.present_days_14 ?? 0}/{residency.need_present ?? 8} dias</span>
+                  <span>{uiText("Últimos 14 dias")}</span>
+                  <span>{residency.present_days_14 ?? 0}/{residency.need_present ?? 8}{uiText(" dias")}</span>
                 </div>
                 <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
                   <div
@@ -230,12 +229,8 @@ export function BandaChangeSheet({ open, onOpenChange, current, onChanged }: Pro
                 className="w-full h-11 rounded-xl"
                 onClick={checkIn} disabled={checking}
               >
-                {checking ? <Loader2 className="w-4 h-4 animate-spin" /> : <MapPin className="w-4 h-4 mr-1" />}
-                Estou na minha banda
-              </Button>
-              <p className="text-[11px] text-muted-foreground">
-                Um check-in por dia, perto de casa, prova que vives mesmo aqui.
-              </p>
+                {checking ? <Loader2 className="w-4 h-4 animate-spin" /> : <MapPin className="w-4 h-4 mr-1" />}{uiText("Estou na minha banda")}</Button>
+              <p className="text-[11px] text-muted-foreground">{uiText("Um check-in por dia, perto de casa, prova que vives mesmo aqui.")}</p>
             </div>
           )}
 
@@ -243,13 +238,13 @@ export function BandaChangeSheet({ open, onOpenChange, current, onChanged }: Pro
           {residency?.can_change_now === false && nextChange && (
             <div className="flex items-start gap-2 rounded-xl bg-amber-500/10 text-amber-700 p-3 text-xs">
               <Clock className="w-4 h-4 mt-0.5 shrink-0" />
-              <span>Mudaste de banda há pouco. Podes voltar a mudar a partir de <b>{nextChange}</b>.</span>
+              <span>{uiText("Mudaste de banda há pouco. Podes voltar a mudar a partir de ")}<b>{nextChange}</b>.</span>
             </div>
           )}
 
           {/* Mudei-me — new location */}
           <div className="space-y-3 pt-1">
-            <Label className="text-sm font-medium">Mudei-me — para onde?</Label>
+            <Label className="text-sm font-medium">{uiText("Mudei-me — para onde?")}</Label>
 
             <div className="grid grid-cols-1 gap-3">
               <Select value={country} onValueChange={(v) => { clearLocation(); setCountry(v); setCity(''); setNeighborhood(''); }}>
@@ -266,21 +261,19 @@ export function BandaChangeSheet({ open, onOpenChange, current, onChanged }: Pro
               <p id={`${cityListId}-hint`} className="text-xs text-muted-foreground">{locationHints[locale] || locationHints.pt}</p>
               <Input aria-label={t("onboardingFlow.neighborhood")} list={neighborhoodListId} value={neighborhood} maxLength={200} disabled={!city.trim()} placeholder={t("onboardingFlow.neighborhood")} onChange={e=>{clearLocation();setNeighborhood(e.target.value);}} />
               <datalist id={neighborhoodListId}>{neighborhoods.map(name=><option key={name} value={name}/>)}</datalist>
-              <a href="https://www.geonames.org/" target="_blank" rel="noreferrer" className="text-xs text-muted-foreground underline">GeoNames · CC BY 4.0</a>
+              <a href="https://www.geonames.org/" target="_blank" rel="noreferrer" className="text-xs text-muted-foreground underline">{uiText("GeoNames · CC BY 4.0")}</a>
             </div>
 
-            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={homeConfirmed} onChange={e=>{setHomeConfirmed(e.target.checked);if(!e.target.checked){captureGeneration.current++;setGps(null);setLocating(false);}}}/>Estou agora no meu endereço de residência</label>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={homeConfirmed} onChange={e=>{setHomeConfirmed(e.target.checked);if(!e.target.checked){captureGeneration.current++;setGps(null);setLocating(false);}}}/>{uiText("Estou agora no meu endereço de residência")}</label>
             <Button
               type="button" variant="outline"
               className={cn('w-full h-11 rounded-xl', gps && 'border-green-500 text-green-600')}
               onClick={useGps} disabled={locating || !homeConfirmed}
             >
               {locating ? <Loader2 className="w-4 h-4 animate-spin" /> : <MapPin className="w-4 h-4 mr-1" />}
-              {gps ? 'Localização captada — validação pendente' : 'Captar localização do meu endereço'}
+              {gps ? uiText("Localização captada — validação pendente") : uiText("Captar localização do meu endereço")}
             </Button>
-            <p className="text-[11px] text-muted-foreground">
-              Isto gera a tua identidade digital territorial (endereço AFROLOC). Sem isso, usamos o centro do bairro escolhido.
-            </p>
+            <p className="text-[11px] text-muted-foreground">{uiText("Isto gera a tua identidade digital territorial (endereço AFROLOC). Sem isso, usamos o centro do bairro escolhido.")}</p>
           </div>
 
           <Button
@@ -288,10 +281,10 @@ export function BandaChangeSheet({ open, onOpenChange, current, onChanged }: Pro
             onClick={save}
             disabled={saving || blockedByCooldown || !neighborhood.trim() || !city.trim() || locating}
           >
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : (changingBanda ? 'Confirmar mudança' : 'Guardar')}
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : (changingBanda ? uiText("Confirmar mudança") : uiText("Guardar"))}
           </Button>
           {blockedByCooldown && (
-            <p className="text-[11px] text-center text-muted-foreground">Em período de espera até {nextChange}.</p>
+            <p className="text-[11px] text-center text-muted-foreground">{uiText("Em período de espera até ")}{nextChange}.</p>
           )}
         </div>
       </SheetContent>

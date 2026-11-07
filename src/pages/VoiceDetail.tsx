@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -11,21 +12,21 @@ import { cn } from '@/lib/utils';
 import { usePalco } from '@/hooks/usePalco';
 
 const voiceTypeConfig = {
-  email: { 
-    icon: Mail, 
-    label: 'Email', 
+  email: {
+    icon: Mail,
+    label: 'Email',
     color: 'bg-blue-100 text-blue-700',
     delivery: 'Email (24-72h)'
   },
-  live: { 
-    icon: Mic, 
-    label: 'Ao Vivo', 
+  live: {
+    icon: Mic,
+    get label() { return uiText("Ao Vivo"); },
     color: 'bg-green-100 text-green-700',
     delivery: 'Ao vivo na Roda'
   },
-  highlight: { 
-    icon: Star, 
-    label: 'Destaque', 
+  highlight: {
+    icon: Star,
+    get label() { return uiText("Destaque"); },
     color: 'bg-amber-100 text-amber-700',
     delivery: 'Destaque + resposta aprofundada'
   },
@@ -47,17 +48,18 @@ const mockVoz: {
 };
 
 export default function VoiceDetail() {
+  useUiLocale();
   const { palcoId, rodaId, vozId } = useParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [customText, setCustomText] = useState('');
-  
+
   const { data: palco } = usePalco(palcoId);
-  
+
   const voz = mockVoz; // Will be fetched from API
   const config = voiceTypeConfig[voz.type];
   const Icon = config.icon;
-  
+
   const allowCustomText = palco?.allow_custom_voice_text ?? true;
 
   const handleBuyVoice = () => {
@@ -69,16 +71,16 @@ export default function VoiceDetail() {
       {/* Header */}
       <header className="sticky top-0 z-10 bg-palco-surface border-b border-palco-border px-4 py-3 safe-top">
         <div className="flex items-center gap-3">
-          <Button 
-            variant="ghost" 
-            size="icon" 
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => navigate(-1)}
             className="text-palco-text"
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div className="flex-1">
-            <h1 className="text-lg font-semibold text-palco-text">Detalhe da Voz</h1>
+            <h1 className="text-lg font-semibold text-palco-text">{uiText("Detalhe da Voz")}</h1>
           </div>
         </div>
       </header>
@@ -105,18 +107,18 @@ export default function VoiceDetail() {
             {/* Details */}
             <div className="space-y-3 pt-4 border-t border-palco-border">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-palco-text-secondary">Tipo</span>
+                <span className="text-sm text-palco-text-secondary">{uiText("Tipo")}</span>
                 <span className="text-sm font-medium text-palco-text">{config.label}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-palco-text-secondary">Entrega</span>
+                <span className="text-sm text-palco-text-secondary">{uiText("Entrega")}</span>
                 <div className="flex items-center gap-1.5 text-sm font-medium text-palco-text">
                   <Clock className="w-4 h-4 text-palco-text-secondary" />
                   {config.delivery}
                 </div>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-palco-text-secondary">Preço</span>
+                <span className="text-sm text-palco-text-secondary">{uiText("Preço")}</span>
                 <span className="text-xl font-bold text-palco-accent">${voz.price}</span>
               </div>
             </div>
@@ -127,12 +129,10 @@ export default function VoiceDetail() {
         {allowCustomText && (
           <Card className="border-palco-border bg-palco-surface">
             <CardContent className="p-4">
-              <Label htmlFor="customText" className="text-sm font-medium text-palco-text mb-2 block">
-                Queres ajustar a tua Voz? (opcional)
-              </Label>
+              <Label htmlFor="customText" className="text-sm font-medium text-palco-text mb-2 block">{uiText("Queres ajustar a tua Voz? (opcional)")}</Label>
               <Textarea
                 id="customText"
-                placeholder="Escreve uma versão mais clara ou detalhada da tua pergunta..."
+                placeholder={uiText("Escreve uma versão mais clara ou detalhada da tua pergunta...")}
                 value={customText}
                 onChange={(e) => setCustomText(e.target.value)}
                 className="min-h-[100px] bg-palco-bg border-palco-border text-palco-text placeholder:text-palco-text-secondary resize-none"
@@ -148,26 +148,21 @@ export default function VoiceDetail() {
         {/* What's Included */}
         <Card className="border-palco-border bg-palco-surface">
           <CardContent className="p-4">
-            <h3 className="text-sm font-medium text-palco-text mb-3">O que inclui</h3>
+            <h3 className="text-sm font-medium text-palco-text mb-3">{uiText("O que inclui")}</h3>
             <ul className="space-y-2">
               <li className="flex items-center gap-2 text-sm text-palco-text-secondary">
-                <CheckCircle className="w-4 h-4 text-green-500" />
-                Resposta personalizada do {t('palco.guide')}
+                <CheckCircle className="w-4 h-4 text-green-500" />{uiText("Resposta personalizada do ")}{t('palco.guide')}
               </li>
               <li className="flex items-center gap-2 text-sm text-palco-text-secondary">
                 <CheckCircle className="w-4 h-4 text-green-500" />
-                {voz.type === 'highlight' ? 'Prioridade máxima na fila' : 'Posição na fila de perguntas'}
+                {voz.type === 'highlight' ? uiText("Prioridade máxima na fila") : uiText("Posição na fila de perguntas")}
               </li>
               {voz.type === 'live' ? (
                 <li className="flex items-center gap-2 text-sm text-palco-text-secondary">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  Interação ao vivo durante a Roda
-                </li>
+                  <CheckCircle className="w-4 h-4 text-green-500" />{uiText("Interação ao vivo durante a Roda")}</li>
               ) : voz.type === 'highlight' ? (
                 <li className="flex items-center gap-2 text-sm text-palco-text-secondary">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  Resposta aprofundada e detalhada
-                </li>
+                  <CheckCircle className="w-4 h-4 text-green-500" />{uiText("Resposta aprofundada e detalhada")}</li>
               ) : null}
             </ul>
           </CardContent>
@@ -176,19 +171,16 @@ export default function VoiceDetail() {
 
       {/* Footer */}
       <div className="sticky bottom-0 bg-palco-surface border-t border-palco-border p-4 space-y-3">
-        <Button 
+        <Button
           onClick={handleBuyVoice}
           className="w-full bg-palco-accent hover:bg-palco-accent/90 text-white rounded-full h-12 text-base font-medium"
-        >
-          Comprar Voz - ${voz.price}
+        >{uiText("Comprar Voz - $")}{voz.price}
         </Button>
-        <Button 
-          variant="ghost" 
+        <Button
+          variant="ghost"
           onClick={() => navigate(-1)}
           className="w-full text-palco-text-secondary"
-        >
-          Voltar
-        </Button>
+        >{uiText("Voltar")}</Button>
       </div>
     </div>
   );

@@ -1,3 +1,4 @@
+import { uiText } from '@/i18n/ui-copy';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database, Json } from '@/integrations/supabase/types';
@@ -15,11 +16,11 @@ export interface LearningInput { action: LearningAction; goalId?: string; target
 export async function requestLearningAction(input: LearningInput): Promise<string> {
   const refresh = async () => {
     const { data, error } = await supabase.auth.refreshSession();
-    if (error || !data.session) throw new Error('Inicia sessão novamente.');
+    if (error || !data.session) throw new Error(uiText("Inicia sessão novamente."));
     return data.session;
   };
   let { data: { session } } = await supabase.auth.getSession();
-  if (!session) throw new Error('Inicia sessão novamente.');
+  if (!session) throw new Error(uiText("Inicia sessão novamente."));
   if (session.expires_at && session.expires_at * 1000 < Date.now() + 10000) session = await refresh();
   const invoke = (token: string) => supabase.functions.invoke('academia-learning', { headers: { Authorization: `Bearer ${token}` }, body: input });
   let result = await invoke(session.access_token);
@@ -29,7 +30,7 @@ export async function requestLearningAction(input: LearningInput): Promise<strin
     try { const body = await result.error.context?.json(); if (typeof body?.error === 'string') message = body.error; } catch { /* offline */ }
     throw new Error(message);
   }
-  if (typeof result.data?.id !== 'string') throw new Error('Não foi possível confirmar a alteração. Atualiza o percurso.');
+  if (typeof result.data?.id !== 'string') throw new Error(uiText("Não foi possível confirmar a alteração. Atualiza o percurso."));
   return result.data.id;
 }
 async function namesFor(ids: string[]) {

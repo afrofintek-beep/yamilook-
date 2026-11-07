@@ -1,9 +1,11 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
 export function SessionAttendance({ sessionId }: { sessionId: string }) {
+  useUiLocale();
   const client = useQueryClient();
   const roster = useQuery({
     queryKey: ['academia-attendance', sessionId],
@@ -24,11 +26,11 @@ export function SessionAttendance({ sessionId }: { sessionId: string }) {
       const { error } = await supabase.rpc('academia_confirm_attendance', { p_session: sessionId, p_user: userId });
       if (error) throw error;
     },
-    onSuccess: () => { void client.invalidateQueries({ queryKey: ['academia-attendance', sessionId] }); void client.invalidateQueries({ queryKey: ['academia-can-review', sessionId] }); toast.success('Presença confirmada.'); },
+    onSuccess: () => { void client.invalidateQueries({ queryKey: ['academia-attendance', sessionId] }); void client.invalidateQueries({ queryKey: ['academia-can-review', sessionId] }); toast.success(uiText("Presença confirmada.")); },
     onError: error => toast.error(error.message),
   });
-  return <section className="mx-4 my-3 rounded-xl border p-4 space-y-3"><h2 className="font-semibold">Confirmar presenças</h2><p className="text-sm text-muted-foreground">Confirma apenas quem participou. Este registo permite avaliar após o fim da sessão; não altera pagamentos.</p>
-    {roster.isLoading && <p>A carregar inscrições…</p>}{roster.isError && <Button onClick={() => roster.refetch()}>Tentar novamente</Button>}
-    {roster.data?.length === 0 && <p>Sem inscrições válidas.</p>}{roster.data?.map(r => <div key={r.userId} className="flex items-center justify-between gap-2"><span>{r.name}</span><Button variant="outline" disabled={r.confirmed || confirm.isPending} onClick={() => confirm.mutate(r.userId)}>{r.confirmed ? 'Presença confirmada' : 'Confirmar presença'}</Button></div>)}
+  return <section className="mx-4 my-3 rounded-xl border p-4 space-y-3"><h2 className="font-semibold">{uiText("Confirmar presenças")}</h2><p className="text-sm text-muted-foreground">{uiText("Confirma apenas quem participou. Este registo permite avaliar após o fim da sessão; não altera pagamentos.")}</p>
+    {roster.isLoading && <p>{uiText("A carregar inscrições…")}</p>}{roster.isError && <Button onClick={() => roster.refetch()}>{uiText("Tentar novamente")}</Button>}
+    {roster.data?.length === 0 && <p>{uiText("Sem inscrições válidas.")}</p>}{roster.data?.map(r => <div key={r.userId} className="flex items-center justify-between gap-2"><span>{r.name}</span><Button variant="outline" disabled={r.confirmed || confirm.isPending} onClick={() => confirm.mutate(r.userId)}>{r.confirmed ? uiText("Presença confirmada") : uiText("Confirmar presença")}</Button></div>)}
   </section>;
 }

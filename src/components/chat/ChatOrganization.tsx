@@ -1,10 +1,11 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState } from 'react';
-import { 
-  Archive, 
-  ArchiveRestore, 
-  Bell, 
-  BellOff, 
-  Pin, 
+import {
+  Archive,
+  ArchiveRestore,
+  Bell,
+  BellOff,
+  Pin,
   PinOff,
   MoreVertical,
   Trash2,
@@ -49,6 +50,7 @@ export function ChatOrganizationMenu({
   isArchived,
   onUpdate,
 }: ChatOrganizationProps) {
+  useUiLocale();
   const { toast } = useToast();
   const [showClearDialog, setShowClearDialog] = useState(false);
 
@@ -60,7 +62,7 @@ export function ChatOrganizationMenu({
       .eq('user_id', userId);
 
     if (error) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      toast({ title: uiText("Error"), description: error.message, variant: 'destructive' });
     } else {
       toast({ title: isPinned ? 'Chat unpinned' : 'Chat pinned to top' });
       onUpdate();
@@ -75,7 +77,7 @@ export function ChatOrganizationMenu({
       .eq('user_id', userId);
 
     if (error) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      toast({ title: uiText("Error"), description: error.message, variant: 'destructive' });
     } else {
       toast({ title: isMuted ? 'Notifications enabled' : 'Chat muted' });
       onUpdate();
@@ -90,7 +92,7 @@ export function ChatOrganizationMenu({
       .eq('user_id', userId);
 
     if (error) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      toast({ title: uiText("Error"), description: error.message, variant: 'destructive' });
     } else {
       toast({ title: isArchived ? 'Chat unarchived' : 'Chat archived' });
       onUpdate();
@@ -100,7 +102,7 @@ export function ChatOrganizationMenu({
   const clearChat = async () => {
     // Soft delete all messages in the conversation for this user
     // In a real app, you might want a separate table for user-specific deletions
-    toast({ title: 'Chat cleared' });
+    toast({ title: uiText("Chat cleared") });
     setShowClearDialog(false);
     onUpdate();
   };
@@ -117,70 +119,52 @@ export function ChatOrganizationMenu({
           <DropdownMenuItem onClick={togglePin}>
             {isPinned ? (
               <>
-                <PinOff className="w-4 h-4 mr-2" />
-                Unpin chat
-              </>
+                <PinOff className="w-4 h-4 mr-2" />{uiText("Unpin chat")}</>
             ) : (
               <>
-                <Pin className="w-4 h-4 mr-2" />
-                Pin chat
-              </>
+                <Pin className="w-4 h-4 mr-2" />{uiText("Pin chat")}</>
             )}
           </DropdownMenuItem>
 
           <DropdownMenuItem onClick={toggleMute}>
             {isMuted ? (
               <>
-                <Bell className="w-4 h-4 mr-2" />
-                Unmute notifications
-              </>
+                <Bell className="w-4 h-4 mr-2" />{uiText("Unmute notifications")}</>
             ) : (
               <>
-                <BellOff className="w-4 h-4 mr-2" />
-                Mute notifications
-              </>
+                <BellOff className="w-4 h-4 mr-2" />{uiText("Mute notifications")}</>
             )}
           </DropdownMenuItem>
 
           <DropdownMenuItem onClick={toggleArchive}>
             {isArchived ? (
               <>
-                <ArchiveRestore className="w-4 h-4 mr-2" />
-                Unarchive chat
-              </>
+                <ArchiveRestore className="w-4 h-4 mr-2" />{uiText("Unarchive chat")}</>
             ) : (
               <>
-                <Archive className="w-4 h-4 mr-2" />
-                Archive chat
-              </>
+                <Archive className="w-4 h-4 mr-2" />{uiText("Archive chat")}</>
             )}
           </DropdownMenuItem>
 
           <DropdownMenuSeparator />
 
-          <DropdownMenuItem 
+          <DropdownMenuItem
             onClick={() => setShowClearDialog(true)}
             className="text-destructive focus:text-destructive"
           >
-            <Trash2 className="w-4 h-4 mr-2" />
-            Clear chat
-          </DropdownMenuItem>
+            <Trash2 className="w-4 h-4 mr-2" />{uiText("Clear chat")}</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
       <AlertDialog open={showClearDialog} onOpenChange={setShowClearDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Clear chat history?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will remove all messages from this chat for you. This action cannot be undone.
-            </AlertDialogDescription>
+            <AlertDialogTitle>{uiText("Clear chat history?")}</AlertDialogTitle>
+            <AlertDialogDescription>{uiText("This will remove all messages from this chat for you. This action cannot be undone.")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={clearChat} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Clear
-            </AlertDialogAction>
+            <AlertDialogCancel>{uiText("Cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={clearChat} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">{uiText("Clear")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -197,6 +181,7 @@ export function ConversationQuickActions({
   isArchived,
   onUpdate,
 }: ChatOrganizationProps) {
+  useUiLocale();
   return (
     <div className="flex items-center gap-1">
       <Button
@@ -215,7 +200,7 @@ export function ConversationQuickActions({
       >
         {isPinned ? <PinOff className="w-4 h-4" /> : <Pin className="w-4 h-4" />}
       </Button>
-      
+
       <Button
         variant="ghost"
         size="icon"

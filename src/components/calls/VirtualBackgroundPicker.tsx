@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { X, Upload, Check, Sparkles } from 'lucide-react';
@@ -36,6 +37,7 @@ export function VirtualBackgroundPicker({
   onSelect,
   onClose,
 }: VirtualBackgroundPickerProps) {
+  useUiLocale();
   const [backgrounds, setBackgrounds] = useState<VirtualBackground[]>([]);
   const [blurIntensity, setBlurIntensity] = useState(5);
   const [loading, setLoading] = useState(true);
@@ -49,7 +51,7 @@ export function VirtualBackgroundPicker({
       .from('virtual_backgrounds')
       .select('*')
       .order('is_preset', { ascending: false });
-    
+
     if (data) {
       setBackgrounds(data as VirtualBackground[]);
     }
@@ -76,7 +78,7 @@ export function VirtualBackgroundPicker({
       className="absolute right-0 top-0 bottom-0 w-80 bg-background/95 backdrop-blur-lg border-l z-40"
     >
       <div className="flex items-center justify-between p-4 border-b">
-        <h3 className="font-semibold">Virtual Background</h3>
+        <h3 className="font-semibold">{uiText("Virtual Background")}</h3>
         <Button variant="ghost" size="icon" onClick={onClose}>
           <X className="h-4 w-4" />
         </Button>
@@ -84,9 +86,9 @@ export function VirtualBackgroundPicker({
 
       <Tabs defaultValue="blur" className="p-4">
         <TabsList className="w-full">
-          <TabsTrigger value="blur" className="flex-1">Blur</TabsTrigger>
-          <TabsTrigger value="images" className="flex-1">Images</TabsTrigger>
-          <TabsTrigger value="effects" className="flex-1">Effects</TabsTrigger>
+          <TabsTrigger value="blur" className="flex-1">{uiText("Blur")}</TabsTrigger>
+          <TabsTrigger value="images" className="flex-1">{uiText("Images")}</TabsTrigger>
+          <TabsTrigger value="effects" className="flex-1">{uiText("Effects")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="blur" className="mt-4 space-y-4">
@@ -95,8 +97,8 @@ export function VirtualBackgroundPicker({
             onClick={() => onSelect(null, { kind: 'none' })}
             className={cn(
               "w-full p-4 rounded-lg border-2 text-left transition-all",
-              selectedBackground === null 
-                ? "border-primary bg-primary/10" 
+              selectedBackground === null
+                ? "border-primary bg-primary/10"
                 : "border-muted hover:border-muted-foreground/50"
             )}
           >
@@ -105,8 +107,8 @@ export function VirtualBackgroundPicker({
                 <X className="h-5 w-5 text-muted-foreground" />
               </div>
               <div>
-                <p className="font-medium">None</p>
-                <p className="text-sm text-muted-foreground">No background effect</p>
+                <p className="font-medium">{uiText("None")}</p>
+                <p className="text-sm text-muted-foreground">{uiText("No background effect")}</p>
               </div>
               {selectedBackground === null && (
                 <Check className="h-5 w-5 text-primary ml-auto" />
@@ -121,23 +123,22 @@ export function VirtualBackgroundPicker({
               onClick={() => onSelect(bg.id, toMode(bg))}
               className={cn(
                 "w-full p-4 rounded-lg border-2 text-left transition-all",
-                selectedBackground === bg.id 
-                  ? "border-primary bg-primary/10" 
+                selectedBackground === bg.id
+                  ? "border-primary bg-primary/10"
                   : "border-muted hover:border-muted-foreground/50"
               )}
             >
               <div className="flex items-center gap-3">
-                <div 
+                <div
                   className="w-12 h-12 rounded-lg flex items-center justify-center"
-                  style={{ 
+                  style={{
                     background: `radial-gradient(circle, rgba(100,100,100,0.${bg.blur_intensity}) 0%, rgba(50,50,50,0.${bg.blur_intensity}) 100%)`,
-                    backdropFilter: `blur(${bg.blur_intensity}px)` 
+                    backdropFilter: `blur(${bg.blur_intensity}px)`
                   }}
                 />
                 <div>
                   <p className="font-medium">{bg.name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    Intensity: {bg.blur_intensity}/10
+                  <p className="text-sm text-muted-foreground">{uiText("Intensity: ")}{bg.blur_intensity}/10
                   </p>
                 </div>
                 {selectedBackground === bg.id && (
@@ -149,7 +150,7 @@ export function VirtualBackgroundPicker({
 
           {/* Custom blur intensity */}
           <div className="space-y-2 pt-4 border-t">
-            <label className="text-sm font-medium">Custom Blur Intensity</label>
+            <label className="text-sm font-medium">{uiText("Custom Blur Intensity")}</label>
             <Slider
               value={[blurIntensity]}
               onValueChange={([val]) => { setBlurIntensity(val); onSelect('custom-blur', { kind: 'blur', intensity: val }); }}
@@ -158,8 +159,8 @@ export function VirtualBackgroundPicker({
               step={1}
             />
             <div className="flex justify-between text-xs text-muted-foreground">
-              <span>Light</span>
-              <span>Heavy</span>
+              <span>{uiText("Light")}</span>
+              <span>{uiText("Heavy")}</span>
             </div>
           </div>
         </TabsContent>
@@ -178,8 +179,8 @@ export function VirtualBackgroundPicker({
                 <Upload className="h-5 w-5 text-muted-foreground" />
               </div>
               <div>
-                <p className="font-medium">Upload Image</p>
-                <p className="text-sm text-muted-foreground">Use your own photo</p>
+                <p className="font-medium">{uiText("Upload Image")}</p>
+                <p className="text-sm text-muted-foreground">{uiText("Use your own photo")}</p>
               </div>
             </div>
           </label>
@@ -192,12 +193,12 @@ export function VirtualBackgroundPicker({
                 onClick={() => onSelect(bg.id, toMode(bg))}
                 className={cn(
                   "relative aspect-video rounded-lg overflow-hidden border-2 transition-all",
-                  selectedBackground === bg.id 
-                    ? "border-primary ring-2 ring-primary/50" 
+                  selectedBackground === bg.id
+                    ? "border-primary ring-2 ring-primary/50"
                     : "border-transparent hover:border-muted-foreground/50"
                 )}
               >
-                <div 
+                <div
                   className="w-full h-full bg-gradient-to-br from-muted to-muted-foreground/20"
                   style={{
                     backgroundImage: bg.storage_path ? `url(${bg.storage_path})` : undefined,
@@ -221,10 +222,8 @@ export function VirtualBackgroundPicker({
         <TabsContent value="effects" className="mt-4 space-y-4">
           <div className="text-center py-8">
             <Sparkles className="h-12 w-12 text-primary mx-auto mb-3" />
-            <h4 className="font-medium mb-1">Premium Effects</h4>
-            <p className="text-sm text-muted-foreground mb-4">
-              Animated and video backgrounds
-            </p>
+            <h4 className="font-medium mb-1">{uiText("Premium Effects")}</h4>
+            <p className="text-sm text-muted-foreground mb-4">{uiText("Animated and video backgrounds")}</p>
 
             <div className="grid grid-cols-2 gap-2">
               {animatedOptions.length > 0 ? (
@@ -236,8 +235,8 @@ export function VirtualBackgroundPicker({
                     className={cn(
                       "relative aspect-video rounded-lg overflow-hidden border-2 transition-all",
                       bg.is_premium && "opacity-50",
-                      selectedBackground === bg.id 
-                        ? "border-primary" 
+                      selectedBackground === bg.id
+                        ? "border-primary"
                         : "border-muted"
                     )}
                   >
@@ -246,16 +245,12 @@ export function VirtualBackgroundPicker({
                       <p className="text-xs text-white truncate">{bg.name}</p>
                     </div>
                     {bg.is_premium && (
-                      <div className="absolute top-1 right-1 px-1.5 py-0.5 rounded bg-yellow-500 text-[10px] font-medium">
-                        PRO
-                      </div>
+                      <div className="absolute top-1 right-1 px-1.5 py-0.5 rounded bg-yellow-500 text-[10px] font-medium">{uiText("PRO")}</div>
                     )}
                   </button>
                 ))
               ) : (
-                <div className="col-span-2 text-sm text-muted-foreground">
-                  Coming soon...
-                </div>
+                <div className="col-span-2 text-sm text-muted-foreground">{uiText("Coming soon...")}</div>
               )}
             </div>
           </div>

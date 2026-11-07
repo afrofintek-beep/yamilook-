@@ -1,3 +1,4 @@
+import { uiText } from '@/i18n/ui-copy';
 import { supabase } from '@/integrations/supabase/client';
 export interface ScheduledCall {
  id:string; organizer_id:string; title:string; description:string|null; call_type:'voice'|'video';
@@ -25,7 +26,7 @@ const messages:Record<string,string>={
 export async function scheduledAction<T>(action:string,id:string|null=null,payload:object={}):Promise<T>{
  const {data,error}=await supabase.rpc('scheduled_call_action' as never,{p_action:action,p_id:id,p_payload:payload} as never);
  if(error)throw new Error(messages[error.message]||'Não foi possível concluir. Verifica a ligação e tenta novamente.');
- if(data===null)throw new Error('O servidor não confirmou a operação.');
+ if(data===null)throw new Error(uiText("O servidor não confirmou a operação."));
  return data as T;
 }
 export function inviteUrl(id:string,origin=window.location.origin,pathname=window.location.pathname){

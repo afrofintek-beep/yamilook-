@@ -1,3 +1,4 @@
+import { uiText } from '@/i18n/ui-copy';
 import { chatMediaType } from './chat-media';
 import { preparePostImage } from './post-image';
 
@@ -15,7 +16,7 @@ export async function preparePostMedia(file: File, signal: AbortSignal, onProgre
   // No attribution is burned into the uploaded original's derived copy.
   const result = await brandVideo(file, null, signal, onProgress);
   signal.throwIfAborted();
-  if (result.size > POST_VIDEO_PREPARE_THRESHOLD) throw new Error('O vídeo continua demasiado grande. Divide-o em partes mais curtas.');
+  if (result.size > POST_VIDEO_PREPARE_THRESHOLD) throw new Error(uiText("O vídeo continua demasiado grande. Divide-o em partes mais curtas."));
   onProgress(100);
   return result;
 }

@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AlertCircle, Loader2, Pause, Play } from 'lucide-react';
 import { useResolvedMediaUrl } from './MediaPreview';
@@ -15,6 +16,7 @@ interface VoiceMessagePlayerProps {
 }
 
 export function VoiceMessagePlayer({ url, duration, isOwn }: VoiceMessagePlayerProps) {
+  useUiLocale();
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const [isPlaying, setIsPlaying] = useState(false);
@@ -153,8 +155,7 @@ export function VoiceMessagePlayer({ url, duration, isOwn }: VoiceMessagePlayerP
           </div>
           <div className="flex justify-between text-xs opacity-70">
             <span className="flex items-center gap-1">
-              <Loader2 className="w-3 h-3 animate-spin" />
-              A enviar... {waitSeconds > 0 ? `(${waitSeconds}s)` : ''}
+              <Loader2 className="w-3 h-3 animate-spin" />{uiText("A enviar... ")}{waitSeconds > 0 ? `(${waitSeconds}s)` : ''}
             </span>
             <span>{formatTime(duration || 0)}</span>
           </div>
@@ -175,7 +176,7 @@ export function VoiceMessagePlayer({ url, duration, isOwn }: VoiceMessagePlayerP
           <AlertCircle className={`w-5 h-5 ${isOwn ? 'text-white' : 'text-muted-foreground'}`} />
         </div>
         <div className="flex-1">
-          <p className={`text-xs ${isOwn ? 'text-white/70' : 'text-muted-foreground'}`}>Áudio não disponível</p>
+          <p className={`text-xs ${isOwn ? 'text-white/70' : 'text-muted-foreground'}`}>{uiText("Áudio não disponível")}</p>
         </div>
       </div>
     );

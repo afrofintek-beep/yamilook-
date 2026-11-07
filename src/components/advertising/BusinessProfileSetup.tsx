@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -19,27 +20,28 @@ interface BusinessProfileSetupProps {
 }
 
 const businessCategories = [
-  { value: 'restaurant', label: 'Restaurante' },
-  { value: 'retail', label: 'Comércio' },
-  { value: 'services', label: 'Serviços' },
-  { value: 'beauty', label: 'Beleza & Estética' },
-  { value: 'health', label: 'Saúde' },
-  { value: 'education', label: 'Educação' },
-  { value: 'entertainment', label: 'Entretenimento' },
-  { value: 'automotive', label: 'Automóvel' },
-  { value: 'real_estate', label: 'Imobiliário' },
-  { value: 'technology', label: 'Tecnologia' },
-  { value: 'other', label: 'Outro' },
+  { value: 'restaurant', get label() { return uiText("Restaurante"); } },
+  { value: 'retail', get label() { return uiText("Comércio"); } },
+  { value: 'services', get label() { return uiText("Serviços"); } },
+  { value: 'beauty', get label() { return uiText("Beleza & Estética"); } },
+  { value: 'health', get label() { return uiText("Saúde"); } },
+  { value: 'education', get label() { return uiText("Educação"); } },
+  { value: 'entertainment', get label() { return uiText("Entretenimento"); } },
+  { value: 'automotive', get label() { return uiText("Automóvel"); } },
+  { value: 'real_estate', get label() { return uiText("Imobiliário"); } },
+  { value: 'technology', get label() { return uiText("Tecnologia"); } },
+  { value: 'other', get label() { return uiText("Outro"); } },
 ];
 
 export function BusinessProfileSetup({ open, onOpenChange, onComplete }: BusinessProfileSetupProps) {
+  useUiLocale();
   const { t } = useTranslation();
   const { createBusinessProfile, updateBusinessProfile, businessProfile, locationMarkets, loading } = useAdvertising();
-  
+
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [detectingLocation, setDetectingLocation] = useState(false);
-  
+
   // Form state
   const [businessName, setBusinessName] = useState('');
   const [category, setCategory] = useState('');
@@ -64,7 +66,7 @@ export function BusinessProfileSetup({ open, onOpenChange, onComplete }: Busines
       setAddress(businessProfile.address || '');
       setLatitude(businessProfile.latitude);
       setLongitude(businessProfile.longitude);
-      
+
       // Find matching market
       const market = locationMarkets.find(
         m => m.city === businessProfile.city && m.neighborhood === businessProfile.neighborhood
@@ -76,7 +78,7 @@ export function BusinessProfileSetup({ open, onOpenChange, onComplete }: Busines
   // Detect location
   const detectLocation = async () => {
     if (!navigator.geolocation) return;
-    
+
     // Only use GPS if permission already granted — avoid popup
     try {
       if (navigator.permissions) {
@@ -84,7 +86,7 @@ export function BusinessProfileSetup({ open, onOpenChange, onComplete }: Busines
         if (perm.state !== 'granted') return;
       }
     } catch { return; }
-    
+
     setDetectingLocation(true);
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -106,7 +108,7 @@ export function BusinessProfileSetup({ open, onOpenChange, onComplete }: Busines
             nearestMarket = market;
           }
         });
-        
+
         if (nearestMarket) {
           setSelectedMarket(nearestMarket);
         }
@@ -128,9 +130,9 @@ export function BusinessProfileSetup({ open, onOpenChange, onComplete }: Busines
 
   const handleSubmit = async () => {
     if (!businessName.trim()) return;
-    
+
     setIsSubmitting(true);
-    
+
     const profileData = {
       business_name: businessName,
       business_category: category || null,
@@ -144,16 +146,16 @@ export function BusinessProfileSetup({ open, onOpenChange, onComplete }: Busines
       latitude,
       longitude,
     };
-    
+
     let result;
     if (businessProfile) {
       result = await updateBusinessProfile(profileData);
     } else {
       result = await createBusinessProfile(profileData);
     }
-    
+
     setIsSubmitting(false);
-    
+
     if (result) {
       onComplete?.(result);
       onOpenChange(false);
@@ -171,28 +173,26 @@ export function BusinessProfileSetup({ open, onOpenChange, onComplete }: Busines
         <div className="w-20 h-20 bg-gradient-to-br from-primary/20 to-primary/5 rounded-2xl flex items-center justify-center mx-auto mb-4">
           <Building2 className="w-10 h-10 text-primary" />
         </div>
-        <h3 className="text-lg font-semibold">Informações do Negócio</h3>
-        <p className="text-sm text-muted-foreground mt-1">
-          Diga-nos mais sobre o seu negócio
-        </p>
+        <h3 className="text-lg font-semibold">{uiText("Informações do Negócio")}</h3>
+        <p className="text-sm text-muted-foreground mt-1">{uiText("Diga-nos mais sobre o seu negócio")}</p>
       </div>
 
       <div className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="businessName">Nome do negócio *</Label>
+          <Label htmlFor="businessName">{uiText("Nome do negócio *")}</Label>
           <Input
             id="businessName"
-            placeholder="Ex: Café Central"
+            placeholder={uiText("Ex: Café Central")}
             value={businessName}
             onChange={(e) => setBusinessName(e.target.value)}
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="category">Categoria</Label>
+          <Label htmlFor="category">{uiText("Categoria")}</Label>
           <Select value={category} onValueChange={setCategory}>
             <SelectTrigger>
-              <SelectValue placeholder="Selecione uma categoria" />
+              <SelectValue placeholder={uiText("Selecione uma categoria")} />
             </SelectTrigger>
             <SelectContent position="popper" className="z-[200] max-h-60">
               {businessCategories.map((cat) => (
@@ -205,10 +205,10 @@ export function BusinessProfileSetup({ open, onOpenChange, onComplete }: Busines
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="description">Descrição</Label>
+          <Label htmlFor="description">{uiText("Descrição")}</Label>
           <Textarea
             id="description"
-            placeholder="Descreva o seu negócio em poucas palavras..."
+            placeholder={uiText("Descreva o seu negócio em poucas palavras...")}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={3}
@@ -220,9 +220,7 @@ export function BusinessProfileSetup({ open, onOpenChange, onComplete }: Busines
         onClick={() => setStep(2)}
         disabled={!businessName.trim()}
         className="w-full"
-      >
-        Continuar
-      </Button>
+      >{uiText("Continuar")}</Button>
     </motion.div>
   );
 
@@ -237,15 +235,13 @@ export function BusinessProfileSetup({ open, onOpenChange, onComplete }: Busines
         <div className="w-20 h-20 bg-gradient-to-br from-primary/20 to-primary/5 rounded-2xl flex items-center justify-center mx-auto mb-4">
           <MapPin className="w-10 h-10 text-primary" />
         </div>
-        <h3 className="text-lg font-semibold">Localização</h3>
-        <p className="text-sm text-muted-foreground mt-1">
-          Onde está localizado o seu negócio?
-        </p>
+        <h3 className="text-lg font-semibold">{uiText("Localização")}</h3>
+        <p className="text-sm text-muted-foreground mt-1">{uiText("Onde está localizado o seu negócio?")}</p>
       </div>
 
       <div className="space-y-4">
         <div className="space-y-2">
-          <Label>Área de atuação</Label>
+          <Label>{uiText("Área de atuação")}</Label>
           <Select
             value={selectedMarket?.id || ''}
             onValueChange={(id) => {
@@ -258,7 +254,7 @@ export function BusinessProfileSetup({ open, onOpenChange, onComplete }: Busines
             }}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Selecione a área" />
+              <SelectValue placeholder={uiText("Selecione a área")} />
             </SelectTrigger>
             <SelectContent position="popper" className="z-[200] max-h-60">
               {locationMarkets.map((market) => (
@@ -268,7 +264,7 @@ export function BusinessProfileSetup({ open, onOpenChange, onComplete }: Busines
               ))}
             </SelectContent>
           </Select>
-          
+
           <Button
             variant="ghost"
             size="sm"
@@ -280,16 +276,14 @@ export function BusinessProfileSetup({ open, onOpenChange, onComplete }: Busines
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
             ) : (
               <MapPin className="w-4 h-4 mr-2" />
-            )}
-            Detetar automaticamente
-          </Button>
+            )}{uiText("Detetar automaticamente")}</Button>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="address">Endereço (opcional)</Label>
+          <Label htmlFor="address">{uiText("Endereço (opcional)")}</Label>
           <Input
             id="address"
-            placeholder="Rua, número, bairro..."
+            placeholder={uiText("Rua, número, bairro...")}
             value={address}
             onChange={(e) => setAddress(e.target.value)}
           />
@@ -297,12 +291,8 @@ export function BusinessProfileSetup({ open, onOpenChange, onComplete }: Busines
       </div>
 
       <div className="flex gap-3">
-        <Button variant="outline" onClick={() => setStep(1)} className="flex-1">
-          Voltar
-        </Button>
-        <Button onClick={() => setStep(3)} className="flex-1">
-          Continuar
-        </Button>
+        <Button variant="outline" onClick={() => setStep(1)} className="flex-1">{uiText("Voltar")}</Button>
+        <Button onClick={() => setStep(3)} className="flex-1">{uiText("Continuar")}</Button>
       </div>
     </motion.div>
   );
@@ -318,20 +308,18 @@ export function BusinessProfileSetup({ open, onOpenChange, onComplete }: Busines
         <div className="w-20 h-20 bg-gradient-to-br from-primary/20 to-primary/5 rounded-2xl flex items-center justify-center mx-auto mb-4">
           <Phone className="w-10 h-10 text-primary" />
         </div>
-        <h3 className="text-lg font-semibold">Contactos do negócio</h3>
-        <p className="text-sm text-muted-foreground mt-1">
-          Como os clientes podem contactar-te?
-        </p>
+        <h3 className="text-lg font-semibold">{uiText("Contactos do negócio")}</h3>
+        <p className="text-sm text-muted-foreground mt-1">{uiText("Como os clientes podem contactar-te?")}</p>
       </div>
 
       <div className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="phone">Telefone</Label>
+          <Label htmlFor="phone">{uiText("Telefone")}</Label>
           <div className="relative">
             <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               id="phone"
-              placeholder="+244 9XX XXX XXX"
+              placeholder={uiText("+244 9XX XXX XXX")}
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               className="pl-10"
@@ -355,7 +343,7 @@ export function BusinessProfileSetup({ open, onOpenChange, onComplete }: Busines
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="website">Website</Label>
+          <Label htmlFor="website">{uiText("Website")}</Label>
           <div className="relative">
             <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
@@ -370,9 +358,7 @@ export function BusinessProfileSetup({ open, onOpenChange, onComplete }: Busines
       </div>
 
       <div className="flex gap-3">
-        <Button variant="outline" onClick={() => setStep(2)} className="flex-1">
-          Voltar
-        </Button>
+        <Button variant="outline" onClick={() => setStep(2)} className="flex-1">{uiText("Voltar")}</Button>
         <Button
           onClick={handleSubmit}
           disabled={isSubmitting}
@@ -383,20 +369,18 @@ export function BusinessProfileSetup({ open, onOpenChange, onComplete }: Busines
           ) : (
             <>
               <CheckCircle2 className="w-4 h-4 mr-2" />
-              {businessProfile ? 'Guardar' : 'Criar Perfil'}
+              {businessProfile ? uiText("Guardar") : uiText("Criar Perfil")}
             </>
           )}
         </Button>
       </div>
-      
+
       {!businessProfile && (
         <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl p-4 flex items-start gap-3">
           <Sparkles className="w-5 h-5 text-primary shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-medium">500 créditos grátis!</p>
-            <p className="text-xs text-muted-foreground">
-              Ao criar o perfil, recebes créditos para experimentar a promoção do teu negócio.
-            </p>
+            <p className="text-sm font-medium">{uiText("500 créditos grátis!")}</p>
+            <p className="text-xs text-muted-foreground">{uiText("Ao criar o perfil, recebes créditos para experimentar a promoção do teu negócio.")}</p>
           </div>
         </div>
       )}
@@ -409,7 +393,7 @@ export function BusinessProfileSetup({ open, onOpenChange, onComplete }: Busines
         <SheetHeader className="mb-4 shrink-0">
           <SheetTitle className="flex items-center gap-2">
             <Building2 className="w-5 h-5 text-primary" />
-            {businessProfile ? 'Editar Perfil de Negócio' : 'Criar Perfil de Negócio'}
+            {businessProfile ? uiText("Editar Perfil de Negócio") : uiText("Criar Perfil de Negócio")}
           </SheetTitle>
         </SheetHeader>
 

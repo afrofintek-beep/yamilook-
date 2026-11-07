@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Dialog,
@@ -14,6 +15,7 @@ interface Props {
 }
 
 export default function KumbuHowToEarn({ open, onOpenChange }: Props) {
+  useUiLocale();
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm rounded-2xl border-border/30 bg-card p-0 overflow-hidden">
@@ -25,20 +27,16 @@ export default function KumbuHowToEarn({ open, onOpenChange }: Props) {
               <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
                 <Coins className="w-4 h-4 text-primary" strokeWidth={1.8} />
               </div>
-              <DialogTitle className="text-base font-bold">Como ganhar Kumbu?</DialogTitle>
+              <DialogTitle className="text-base font-bold">{uiText("Como ganhar Kumbu?")}</DialogTitle>
             </div>
-            <p className="text-[11px] text-muted-foreground/50 uppercase tracking-widest font-medium">
-              Economia da Participação
-            </p>
+            <p className="text-[11px] text-muted-foreground/50 uppercase tracking-widest font-medium">{uiText("Economia da Participação")}</p>
           </DialogHeader>
         </div>
 
         <div className="px-5 pb-6 space-y-5">
           {/* Base rewards */}
           <div>
-            <p className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest mb-2.5">
-              Recompensas base
-            </p>
+            <p className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest mb-2.5">{uiText("Recompensas base")}</p>
             <div className="space-y-1.5">
               {EARN_ACTIONS.map((a, i) => (
                 <motion.div
@@ -64,9 +62,7 @@ export default function KumbuHowToEarn({ open, onOpenChange }: Props) {
           <div>
             <div className="flex items-center gap-1.5 mb-2.5">
               <Trophy className="w-3 h-3 text-[#C9A23F]" />
-              <p className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest">
-                Top 10 semanal
-              </p>
+              <p className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest">{uiText("Top 10 semanal")}</p>
             </div>
             <div className="space-y-1">
               {WEEKLY_REWARDS.map((r) => (
@@ -81,8 +77,7 @@ export default function KumbuHowToEarn({ open, onOpenChange }: Props) {
           {/* Daily cap */}
           <div className="flex items-center gap-2 p-3 rounded-xl bg-muted/30 border border-border/20">
             <Info className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0" />
-            <p className="text-[11px] text-muted-foreground/60">
-              Máximo diário: <span className="font-semibold text-foreground/70">{DAILY_CAP} Kumbu</span>
+            <p className="text-[11px] text-muted-foreground/60">{uiText("Máximo diário: ")}<span className="font-semibold text-foreground/70">{DAILY_CAP} Kumbu</span>
             </p>
           </div>
         </div>

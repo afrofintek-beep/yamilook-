@@ -1,17 +1,18 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
-import { 
-  AFRICAN_REACTIONS, 
-  ReactionCounts, 
-  getTotalReactions, 
+import {
+  AFRICAN_REACTIONS,
+  ReactionCounts,
+  getTotalReactions,
   getTopReactions,
-  getReactionIcon 
+  getReactionIcon
 } from '@/lib/reactions';
 
 /**
  * YAMILOOK Reaction Display
- * 
+ *
  * Displays reaction totals and subtotals:
  * - Shows top 3 reaction icons + total count by default
  * - On click/press: expands to show breakdown per reaction type
@@ -32,6 +33,7 @@ export function ReactionDisplay({
   size = 'md',
   className,
 }: ReactionDisplayProps) {
+  useUiLocale();
   const { t } = useTranslation();
   const [showSubtotals, setShowSubtotals] = useState(false);
   const total = getTotalReactions(counts);
@@ -60,10 +62,10 @@ export function ReactionDisplay({
   };
 
   return (
-    <div 
+    <div
       className={cn(
-        "flex items-center cursor-pointer select-none", 
-        sizeClasses[size], 
+        "flex items-center cursor-pointer select-none",
+        sizeClasses[size],
         className
       )}
       onClick={handleToggleSubtotals}
@@ -89,8 +91,8 @@ export function ReactionDisplay({
             const count = counts[reaction.type as keyof ReactionCounts] || 0;
             if (count === 0) return null;
             return (
-              <span 
-                key={reaction.type} 
+              <span
+                key={reaction.type}
                 className="flex items-center gap-0.5 bg-muted/50 rounded-full px-2 py-0.5"
               >
                 <span className={iconSizes[size]} role="img" aria-label={reaction.label}>
@@ -101,8 +103,7 @@ export function ReactionDisplay({
             );
           })}
           <span className="text-muted-foreground text-xs ml-1">
-            ({total} total)
-          </span>
+            ({total}{uiText(" total)")}</span>
         </div>
       )}
     </div>
@@ -118,6 +119,7 @@ interface ReactionSummaryProps {
 }
 
 export function ReactionSummary({ counts, className }: ReactionSummaryProps) {
+  useUiLocale();
   const total = getTotalReactions(counts);
   const topReactions = getTopReactions(counts, 3);
 

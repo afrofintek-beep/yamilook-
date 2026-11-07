@@ -1,16 +1,17 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Send, 
-  Paperclip, 
-  Smile, 
-  Mic, 
-  X, 
-  Image, 
-  File, 
+import {
+  Send,
+  Paperclip,
+  Smile,
+  Mic,
+  X,
+  Image,
+  File,
   MapPin,
   StopCircle,
   Sticker,
@@ -73,6 +74,7 @@ export function EnhancedChatInput({
   focusInput,
   conversationId,
 }: EnhancedChatInputProps) {
+  useUiLocale();
   const { t } = useTranslation();
   const [message, setMessage] = useState('');
   const [locationDraft, setLocationDraft] = useState<string | null>(null);
@@ -98,14 +100,14 @@ export function EnhancedChatInput({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
 
-  const { 
-    isRecording, 
-    recordingTime, 
-    startRecording, 
-    stopRecording, 
-    cancelRecording, 
+  const {
+    isRecording,
+    recordingTime,
+    startRecording,
+    stopRecording,
+    cancelRecording,
     uploadVoiceMessageAsync,
-    clearRecording 
+    clearRecording
   } = useVoiceRecorder(conversationId);
   const { uploading, uploadMedia } = useMediaUpload();
 
@@ -145,7 +147,7 @@ export function EnhancedChatInput({
     setSendError('');
     try {
       const result = await onSend(content, 'text', undefined, replyTo?.id);
-      if (!result.messageId) throw new Error('Envio não confirmado');
+      if (!result.messageId) throw new Error(uiText("Envio não confirmado"));
       // Preserve anything typed while the previous message was being delivered.
       setMessage(current => current.trim() === content ? '' : current);
       onCancelReply?.();
@@ -205,26 +207,26 @@ export function EnhancedChatInput({
     if (isRecording) {
       // stopRecording now returns the blob directly - no race condition
       const recordingResult = await stopRecording();
-      
+
       if (recordingResult) {
         const { blob, duration } = recordingResult;
         console.log('[Voice] Recording stopped, duration:', duration);
-        
+
         // Create a local URL for optimistic display
         const localUrl = URL.createObjectURL(blob);
-        
+
         // Send message immediately with local blob URL
         const result = await onSend('', 'voice', localUrl, replyTo?.id, duration);
         const messageId = result?.messageId;
         console.log('[Voice] Message created with id:', messageId);
         onCancelReply?.();
-        
+
         if (!messageId) {
           console.error('[Voice] No messageId returned, cannot update media_url');
           clearRecording();
           return;
         }
-        
+
         // Upload in background and update the message's media_url when complete
         uploadVoiceMessageAsync(
           blob,
@@ -246,7 +248,7 @@ export function EnhancedChatInput({
             URL.revokeObjectURL(localUrl);
           }
         );
-        
+
         clearRecording();
       }
     } else {
@@ -265,9 +267,9 @@ export function EnhancedChatInput({
     try {
       const messageType = chatMediaType(file);
       const result = await uploadMedia(file, messageType === 'file' ? type : messageType, { videoPoster: messageType === 'video', conversationId });
-      if (!result) throw new Error('Upload failed');
+      if (!result) throw new Error(uiText("Upload failed"));
       const sent = await onSend(file.name, messageType, result.url, replyTo?.id, result.durationSeconds, viewOnceEnabled, result.thumbnailUrl);
-      if (!sent.messageId) throw new Error('Delivery not confirmed');
+      if (!sent.messageId) throw new Error(uiText("Delivery not confirmed"));
       onCancelReply?.();
       setViewOnceEnabled(false);
     } catch {
@@ -318,7 +320,7 @@ export function EnhancedChatInput({
 
   return (
     <div className="shrink-0 glass border-t border-border/50 safe-bottom relative">
-      {locating && <p role="status" className="px-4 py-2 text-sm">A obter localização…</p>}
+      {locating && <p role="status" className="px-4 py-2 text-sm">{uiText("A obter localização…")}</p>}
       {sendError && <p role="alert" className="px-4 py-2 text-sm text-destructive">{sendError}</p>}
       {/* Sticker Picker */}
       <AnimatePresence>
@@ -356,7 +358,7 @@ export function EnhancedChatInput({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-sm">
                 <EyeOff className="w-4 h-4 text-primary" />
-                <span>View once enabled - media will disappear after viewing</span>
+                <span>{uiText("View once enabled - media will disappear after viewing")}</span>
               </div>
               <Button
                 variant="ghost"
@@ -396,7 +398,7 @@ export function EnhancedChatInput({
           <div className="flex-1 flex items-center gap-3">
             <div className="w-3 h-3 rounded-full bg-destructive animate-pulse" />
             <span className="font-mono text-lg">{formatTime(recordingTime)}</span>
-            <span className="text-sm text-muted-foreground">Recording...</span>
+            <span className="text-sm text-muted-foreground">{uiText("Recording...")}</span>
           </div>
 
           <Button
@@ -422,30 +424,22 @@ export function EnhancedChatInput({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-48">
               <DropdownMenuItem onClick={() => imageInputRef.current?.click()}>
-                <Image className="w-4 h-4 mr-2" />
-                Photo or Video
-              </DropdownMenuItem>
+                <Image className="w-4 h-4 mr-2" />{uiText("Photo or Video")}</DropdownMenuItem>
               <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
-                <File className="w-4 h-4 mr-2" />
-                Document
-              </DropdownMenuItem>
+                <File className="w-4 h-4 mr-2" />{uiText("Document")}</DropdownMenuItem>
               <DropdownMenuItem onClick={() => { setShowGifPicker(true); setShowStickerPicker(false); }}>
                 <Sparkles className="w-4 h-4 mr-2" />
                 GIF
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => { setShowStickerPicker(true); setShowGifPicker(false); }}>
-                <Sticker className="w-4 h-4 mr-2" />
-                Sticker
-              </DropdownMenuItem>
+                <Sticker className="w-4 h-4 mr-2" />{uiText("Sticker")}</DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => setViewOnceEnabled(!viewOnceEnabled)}>
                 {viewOnceEnabled ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
-                {viewOnceEnabled ? 'View once ON' : 'View once'}
+                {viewOnceEnabled ? uiText("View once ON") : uiText("View once")}
               </DropdownMenuItem>
               <DropdownMenuItem onSelect={handleLocation} disabled={disabled || locating || sending}>
-                <MapPin className="w-4 h-4 mr-2" />
-                Localização
-              </DropdownMenuItem>
+                <MapPin className="w-4 h-4 mr-2" />{uiText("Localização")}</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
@@ -453,14 +447,14 @@ export function EnhancedChatInput({
             ref={imageInputRef}
             type="file"
             accept="image/*,video/*"
-            aria-label="Escolher fotografia ou vídeo"
+            aria-label={uiText("Escolher fotografia ou vídeo")}
             className="hidden"
             onChange={(e) => handleFileSelect(e, 'image')}
           />
           <input
             ref={fileInputRef}
             type="file"
-            aria-label="Escolher ficheiro"
+            aria-label={uiText("Escolher ficheiro")}
             className="hidden"
             onChange={(e) => handleFileSelect(e, 'file')}
           />
@@ -469,7 +463,7 @@ export function EnhancedChatInput({
             <Textarea
               ref={textareaRef}
               value={message}
-              aria-label="Mensagem"
+              aria-label={uiText("Mensagem")}
               onChange={handleChange}
               onKeyDown={handleKeyDown}
               placeholder={t('chat.typeMessage')}
@@ -499,18 +493,14 @@ export function EnhancedChatInput({
                     onClick={() => { setShowStickerPicker(true); setShowEmojiMenu(false); }}
                     className="justify-start"
                   >
-                    <Sticker className="w-4 h-4 mr-2" />
-                    Stickers
-                  </Button>
+                    <Sticker className="w-4 h-4 mr-2" />{uiText("Stickers")}</Button>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => { setShowGifPicker(true); setShowEmojiMenu(false); }}
                     className="justify-start"
                   >
-                    <Sparkles className="w-4 h-4 mr-2" />
-                    GIFs
-                  </Button>
+                    <Sparkles className="w-4 h-4 mr-2" />{uiText("GIFs")}</Button>
                 </div>
               </PopoverContent>
             </Popover>
@@ -535,7 +525,7 @@ export function EnhancedChatInput({
                 className="h-10 w-10 rounded-full bg-gradient-primary text-white flex-shrink-0"
                 onClick={handleSend}
                 disabled={sending || disabled || uploading}
-                aria-label="Enviar mensagem"
+                aria-label={uiText("Enviar mensagem")}
               >
                 <Send className="w-5 h-5" />
               </Button>
@@ -556,18 +546,18 @@ export function EnhancedChatInput({
 
       <Dialog open={locationDraft !== null} onOpenChange={open => { if (!open) setLocationDraft(null); }}>
         <DialogContent className="max-w-sm">
-          <DialogHeader><DialogTitle>Partilhar localização</DialogTitle><DialogDescription>Acrescenta os detalhes. A localização será colocada na mensagem para confirmares o envio.</DialogDescription></DialogHeader>
-          <label className="space-y-1 text-sm">Nome do local<Input value={locationName} maxLength={100} onChange={e => setLocationName(e.target.value)} placeholder="Ex.: Escritório AFROFINTEK" /></label>
-          <label className="space-y-1 text-sm">Referência ou encontro<Input value={locationReference} maxLength={250} onChange={e => setLocationReference(e.target.value)} placeholder="Ex.: Portão azul · hoje às 14h00" /></label>
-          <label className="space-y-1 text-sm">Código AFROLOC existente (opcional)<Input value={afrolocCode} maxLength={100} onChange={e => setAfrolocCode(e.target.value)} /></label>
-          <p className="text-xs text-muted-foreground">O código é fornecido por ti e não é verificado neste envio. As coordenadas não certificam um endereço.</p>
-          <a className="text-sm underline" href="https://www.afroloc.ao" target="_blank" rel="noopener noreferrer">Abrir AFROLOC para consultar ou registar endereço</a>
+          <DialogHeader><DialogTitle>{uiText("Partilhar localização")}</DialogTitle><DialogDescription>{uiText("Acrescenta os detalhes. A localização será colocada na mensagem para confirmares o envio.")}</DialogDescription></DialogHeader>
+          <label className="space-y-1 text-sm">{uiText("Nome do local")}<Input value={locationName} maxLength={100} onChange={e => setLocationName(e.target.value)} placeholder={uiText("Ex.: Escritório AFROFINTEK")} /></label>
+          <label className="space-y-1 text-sm">{uiText("Referência ou encontro")}<Input value={locationReference} maxLength={250} onChange={e => setLocationReference(e.target.value)} placeholder={uiText("Ex.: Portão azul · hoje às 14h00")} /></label>
+          <label className="space-y-1 text-sm">{uiText("Código AFROLOC existente (opcional)")}<Input value={afrolocCode} maxLength={100} onChange={e => setAfrolocCode(e.target.value)} /></label>
+          <p className="text-xs text-muted-foreground">{uiText("O código é fornecido por ti e não é verificado neste envio. As coordenadas não certificam um endereço.")}</p>
+          <a className="text-sm underline" href="https://www.afroloc.ao" target="_blank" rel="noopener noreferrer">{uiText("Abrir AFROLOC para consultar ou registar endereço")}</a>
           <Button disabled={disabled || sending} onClick={() => {
             const details = [locationName.trim(), locationReference.trim(), afrolocCode.trim() ? `AFROLOC (não verificado): ${afrolocCode.trim()}` : '', locationDraft].filter(Boolean).join('\n');
             setMessage(current => current ? `${current}\n${details}` : details);
             setLocationDraft(null);
             requestAnimationFrame(() => textareaRef.current?.focus());
-          }}>Adicionar à mensagem</Button>
+          }}>{uiText("Adicionar à mensagem")}</Button>
         </DialogContent>
       </Dialog>
       {/* Schedule Message Sheet */}

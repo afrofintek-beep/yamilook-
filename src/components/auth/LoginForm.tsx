@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { communityReturn } from '@/features/academia/community-links';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -32,6 +33,7 @@ const DEV_TEST_ACCOUNTS = [
 ];
 
 export function LoginForm() {
+  useUiLocale();
   const { t } = useTranslation();
   const loginSchema = z.object({
     email: z.string().email(t('publicAuth.validEmail')),
@@ -95,8 +97,8 @@ export function LoginForm() {
 
   return (
     <Form {...form}>
-      <motion.form 
-        onSubmit={form.handleSubmit(onSubmit)} 
+      <motion.form
+        onSubmit={form.handleSubmit(onSubmit)}
         className="space-y-6"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -104,8 +106,8 @@ export function LoginForm() {
       >
         <motion.div
           initial={{ opacity: 0, x: -10 }}
-          animate={{ 
-            opacity: 1, 
+          animate={{
+            opacity: 1,
             x: 0,
             ...(form.formState.errors.email && { x: [0, -4, 4, -4, 4, 0] })
           }}
@@ -142,8 +144,8 @@ export function LoginForm() {
 
         <motion.div
           initial={{ opacity: 0, x: -10 }}
-          animate={{ 
-            opacity: 1, 
+          animate={{
+            opacity: 1,
             x: 0,
             ...(form.formState.errors.password && { x: [0, -4, 4, -4, 4, 0] })
           }}
@@ -175,7 +177,7 @@ export function LoginForm() {
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
                           className="text-muted-foreground hover:text-foreground transition-colors p-1 min-w-[24px] min-h-[24px] flex items-center justify-center"
-                          aria-label={showPassword ? t('auth.hidePassword') || 'Hide password' : t('auth.showPassword') || 'Show password'}
+                          aria-label={showPassword ? t('auth.hidePassword') || uiText("Hide password") : t('auth.showPassword') || uiText("Show password")}
                         >
                           {showPassword ? (
                             <EyeOff className="w-4 h-4" />
@@ -243,11 +245,9 @@ export function LoginForm() {
               onClick={() => setShowDevAccounts(!showDevAccounts)}
               className="w-full h-10 rounded-xl border border-dashed border-amber-500/50 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/20 text-sm font-medium gap-2"
             >
-              <FlaskConical className="w-4 h-4" />
-              Login Rápido (Dev)
-              <ChevronDown className={`w-4 h-4 transition-transform ${showDevAccounts ? 'rotate-180' : ''}`} />
+              <FlaskConical className="w-4 h-4" />{uiText("Login Rápido (Dev)")}<ChevronDown className={`w-4 h-4 transition-transform ${showDevAccounts ? 'rotate-180' : ''}`} />
             </Button>
-            
+
             {showDevAccounts && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
@@ -265,9 +265,7 @@ export function LoginForm() {
                       <p className="font-medium text-sm">{account.name}</p>
                       <p className="text-xs text-muted-foreground">{account.email}</p>
                     </div>
-                    <span className="text-xs text-muted-foreground bg-secondary px-2 py-1 rounded">
-                      Preencher
-                    </span>
+                    <span className="text-xs text-muted-foreground bg-secondary px-2 py-1 rounded">{uiText("Preencher")}</span>
                   </button>
                 ))}
               </motion.div>

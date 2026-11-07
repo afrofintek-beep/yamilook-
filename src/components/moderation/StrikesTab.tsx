@@ -1,3 +1,4 @@
+import { uiText, useUiLocale, uiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect, useCallback } from 'react';
 import {
   AlertTriangle,
@@ -44,6 +45,7 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 export default function StrikesTab() {
+  useUiLocale();
   const { fetchUserStrikes, revokeStrike } = useStrikes();
   const [strikes, setStrikes] = useState<Strike[]>([]);
   const [loading, setLoading] = useState(true);
@@ -102,7 +104,7 @@ export default function StrikesTab() {
   return (
     <div className="space-y-4">
       <Input
-        placeholder="Pesquisar strikes..."
+        placeholder={uiText("Pesquisar strikes...")}
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
         className="max-w-sm"
@@ -111,7 +113,7 @@ export default function StrikesTab() {
       {filtered.length === 0 ? (
         <Card className="p-8 text-center">
           <Shield className="w-12 h-12 mx-auto mb-3 text-green-500/50" />
-          <p className="text-muted-foreground">Nenhum strike encontrado</p>
+          <p className="text-muted-foreground">{uiText("Nenhum strike encontrado")}</p>
         </Card>
       ) : (
         <div className="space-y-3">
@@ -129,7 +131,7 @@ export default function StrikesTab() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="font-medium text-sm">
-                          {strike.user_profile?.display_name || 'Utilizador'}
+                          {strike.user_profile?.display_name || uiText("Utilizador")}
                         </p>
                         <span className="text-xs text-muted-foreground">@{strike.user_profile?.username}</span>
                       </div>
@@ -140,21 +142,19 @@ export default function StrikesTab() {
                         <Badge variant="secondary" className="text-xs">
                           {VIOLATION_LABELS[strike.violation_category] || strike.violation_category}
                         </Badge>
-                        <Badge variant="outline" className="text-xs">
-                          Severidade {strike.severity}/3
+                        <Badge variant="outline" className="text-xs">{uiText("Severidade ")}{strike.severity}/3
                         </Badge>
                       </div>
                       <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{strike.reason}</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Emitido por {strike.issuer_profile?.display_name || 'Sistema'} •{' '}
+                      <p className="text-xs text-muted-foreground mt-1">{uiText("Emitido por ")}{strike.issuer_profile?.display_name || uiText("Sistema")} •{' '}
                         {formatDistanceToNow(new Date(strike.created_at), { addSuffix: true, locale: pt })}
                       </p>
 
                       {expandedId === strike.id && (
                         <div className="mt-3 p-3 bg-muted/50 rounded-lg text-xs space-y-1">
-                          {strike.content_type && <p><strong>Tipo de conteúdo:</strong> {strike.content_type}</p>}
-                          {strike.expires_at && <p><strong>Expira em:</strong> {new Date(strike.expires_at).toLocaleString('pt')}</p>}
-                          {strike.revoke_reason && <p><strong>Motivo da revogação:</strong> {strike.revoke_reason}</p>}
+                          {strike.content_type && <p><strong>{uiText("Tipo de conteúdo:")}</strong> {strike.content_type}</p>}
+                          {strike.expires_at && <p><strong>{uiText("Expira em:")}</strong> {new Date(strike.expires_at).toLocaleString(uiLocale())}</p>}
+                          {strike.revoke_reason && <p><strong>{uiText("Motivo da revogação:")}</strong> {strike.revoke_reason}</p>}
                         </div>
                       )}
                     </div>
@@ -167,7 +167,7 @@ export default function StrikesTab() {
                         size="icon"
                         className="h-8 w-8"
                         onClick={() => setRevokeDialog({ open: true, strikeId: strike.id })}
-                        title="Revogar strike"
+                        title={uiText("Revogar strike")}
                       >
                         <Undo2 className="w-4 h-4" />
                       </Button>
@@ -192,22 +192,18 @@ export default function StrikesTab() {
       <AlertDialog open={revokeDialog.open} onOpenChange={(open) => setRevokeDialog(prev => ({ ...prev, open }))}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Revogar Strike</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tens a certeza que queres revogar este strike? Esta ação será registada no log de auditoria.
-            </AlertDialogDescription>
+            <AlertDialogTitle>{uiText("Revogar Strike")}</AlertDialogTitle>
+            <AlertDialogDescription>{uiText("Tens a certeza que queres revogar este strike? Esta ação será registada no log de auditoria.")}</AlertDialogDescription>
           </AlertDialogHeader>
           <Textarea
-            placeholder="Motivo da revogação..."
+            placeholder={uiText("Motivo da revogação...")}
             value={revokeReason}
             onChange={(e) => setRevokeReason(e.target.value)}
             rows={3}
           />
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setRevokeReason('')}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction disabled={!revokeReason.trim()} onClick={handleRevoke}>
-              Revogar
-            </AlertDialogAction>
+            <AlertDialogCancel onClick={() => setRevokeReason('')}>{uiText("Cancelar")}</AlertDialogCancel>
+            <AlertDialogAction disabled={!revokeReason.trim()} onClick={handleRevoke}>{uiText("Revogar")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

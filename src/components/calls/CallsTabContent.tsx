@@ -1,11 +1,12 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { lazy, Suspense, useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { 
-  Phone, 
-  Video, 
-  PhoneIncoming, 
-  PhoneOutgoing, 
+import {
+  Phone,
+  Video,
+  PhoneIncoming,
+  PhoneOutgoing,
   PhoneMissed,
   Plus,
   Calendar,
@@ -31,20 +32,21 @@ interface CallsTabContentProps {
 }
 
 export function CallsTabContent({ onStartCall }: CallsTabContentProps) {
+  useUiLocale();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { user } = useAuth();
   const [scheduleOpen, setScheduleOpen] = useState(false);
-  const { 
-    callHistory, 
+  const {
+    callHistory,
     scheduledCalls,
     scheduledError,
     scheduledLoading,
     fetchScheduledCalls,
-    loading, 
+    loading,
     getCallStatistics,
   } = useCalls();
-  
+
   const [activeTab, setActiveTab] = useState('all');
   const [voicemailOpen, setVoicemailOpen] = useState(false);
   const [selectedContact, setSelectedContact] = useState<{ id: string; name: string } | null>(null);
@@ -56,7 +58,7 @@ export function CallsTabContent({ onStartCall }: CallsTabContentProps) {
   } | null>(null);
 
   // Get all participant user IDs for status tracking
-  const participantIds = [...new Set(callHistory.flatMap(call => 
+  const participantIds = [...new Set(callHistory.flatMap(call =>
     call.participants.map(p => p.user_id)
   ))];
   const { statuses } = useMultipleUserStatus(participantIds);
@@ -136,13 +138,13 @@ export function CallsTabContent({ onStartCall }: CallsTabContentProps) {
       (groups['Data indisponível'] ??= []).push(call);
       return groups;
     }
-    
-    const dateKey = isToday(new Date(date)) 
-      ? 'Today' 
-      : isYesterday(new Date(date)) 
-        ? 'Yesterday' 
+
+    const dateKey = isToday(new Date(date))
+      ? 'Today'
+      : isYesterday(new Date(date))
+        ? 'Yesterday'
         : format(new Date(date), 'MMMM d, yyyy');
-    
+
     if (!groups[dateKey]) {
       groups[dateKey] = [];
     }
@@ -184,20 +186,20 @@ export function CallsTabContent({ onStartCall }: CallsTabContentProps) {
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col mt-3">
         <TabsList className="mx-4 bg-secondary/80 p-1">
-          <TabsTrigger 
-            value="all" 
+          <TabsTrigger
+            value="all"
             className="flex-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all"
           >
             {t('contacts.all')}
           </TabsTrigger>
-          <TabsTrigger 
-            value="missed" 
+          <TabsTrigger
+            value="missed"
             className="flex-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all"
           >
             {t('calls.missed')}
           </TabsTrigger>
-          <TabsTrigger 
-            value="scheduled" 
+          <TabsTrigger
+            value="scheduled"
             className="flex-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all"
           >
             {t('calls.scheduled')}
@@ -270,14 +272,14 @@ export function CallsTabContent({ onStartCall }: CallsTabContentProps) {
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="font-semibold truncate">
-                              {call.participants[0]?.display_name || 'Unknown'}
+                              {call.participants[0]?.display_name || uiText("Unknown")}
                               {call.participants.length > 1 && ` +${call.participants.length - 1}`}
                             </p>
                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
                               {getCallIcon(call)}
                               <span>{call.type === 'video' ? t('calls.videoCall') : t('calls.voiceCall')}</span>
                               <span>•</span>
-                              <span>{call.end_reason === 'no_answer' ? 'Sem resposta' : call.end_reason === 'cancelled' ? 'Cancelada' : call.status === 'declined' ? 'Recusada' : formatDuration(call.duration_seconds)}</span>
+                              <span>{call.end_reason === 'no_answer' ? uiText("Sem resposta") : call.end_reason === 'cancelled' ? uiText("Cancelada") : call.status === 'declined' ? uiText("Recusada") : formatDuration(call.duration_seconds)}</span>
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
@@ -286,9 +288,9 @@ export function CallsTabContent({ onStartCall }: CallsTabContentProps) {
                             </span>
                             {/* Voicemail button for missed calls */}
                             {(call.status === 'missed' || call.end_reason === 'no_answer' || call.status === 'declined') && call.participants[0] && (
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
+                              <Button
+                                variant="ghost"
+                                size="icon"
                                 className="rounded-full text-muted-foreground hover:text-primary"
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -302,9 +304,9 @@ export function CallsTabContent({ onStartCall }: CallsTabContentProps) {
                                 <Voicemail className="w-5 h-5" />
                               </Button>
                             )}
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
+                            <Button
+                              variant="ghost"
+                              size="icon"
                               className="rounded-full"
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -372,7 +374,7 @@ export function CallsTabContent({ onStartCall }: CallsTabContentProps) {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="font-semibold truncate text-destructive">
-                            {call.participants[0]?.display_name || 'Unknown'}
+                            {call.participants[0]?.display_name || uiText("Unknown")}
                           </p>
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <PhoneMissed className="w-4 h-4 text-destructive" />
@@ -380,9 +382,9 @@ export function CallsTabContent({ onStartCall }: CallsTabContentProps) {
                           </div>
                         </div>
                         <div className="flex items-center gap-1">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             className="rounded-full text-muted-foreground hover:text-primary"
                             onClick={(e) => {
                               e.stopPropagation();
@@ -397,9 +399,9 @@ export function CallsTabContent({ onStartCall }: CallsTabContentProps) {
                           >
                             <Voicemail className="w-5 h-5" />
                           </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             className="rounded-full"
                             onClick={(e) => {
                               e.stopPropagation();
@@ -422,7 +424,7 @@ export function CallsTabContent({ onStartCall }: CallsTabContentProps) {
 
         {/* Scheduled Calls */}
         <TabsContent value="scheduled" className="flex-1 overflow-y-auto mt-0">
-          {scheduledError ? <div role="alert" className="p-4 space-y-3"><p>Não foi possível carregar os agendamentos.</p><Button onClick={()=>void fetchScheduledCalls()}>Tentar novamente</Button></div> : scheduledLoading ? <p className="p-4">A carregar agendamentos…</p> : scheduledCalls.length === 0 ? (
+          {scheduledError ? <div role="alert" className="p-4 space-y-3"><p>{uiText("Não foi possível carregar os agendamentos.")}</p><Button onClick={()=>void fetchScheduledCalls()}>{uiText("Tentar novamente")}</Button></div> : scheduledLoading ? <p className="p-4">{uiText("A carregar agendamentos…")}</p> : scheduledCalls.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-64 text-center px-8">
               <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
                 <Calendar className="w-10 h-10 text-primary" />
@@ -431,7 +433,7 @@ export function CallsTabContent({ onStartCall }: CallsTabContentProps) {
               <p className="text-muted-foreground text-sm mb-4 max-w-[250px]">
                 {t('calls.scheduleCallDesc')}
               </p>
-              <Button 
+              <Button
                 className="rounded-xl bg-gradient-primary text-white shadow-md hover:shadow-lg transition-shadow"
                 onClick={() => setScheduleOpen(true)}
               >
@@ -454,7 +456,7 @@ export function CallsTabContent({ onStartCall }: CallsTabContentProps) {
       </Tabs>
 
       {/* Schedule Call Sheet */}
-      {scheduleOpen && <Suspense fallback={<p role="status">A carregar agendamento…</p>}><ScheduleCallSheet open={scheduleOpen} onOpenChange={setScheduleOpen} /></Suspense>}
+      {scheduleOpen && <Suspense fallback={<p role="status">{uiText("A carregar agendamento…")}</p>}><ScheduleCallSheet open={scheduleOpen} onOpenChange={setScheduleOpen} /></Suspense>}
 
       {/* Voicemail Recorder */}
       {selectedContact && (

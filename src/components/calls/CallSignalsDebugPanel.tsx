@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Activity, Radio, Square, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,6 +15,7 @@ type DebugEvent = {
 };
 
 export function CallSignalsDebugPanel() {
+  useUiLocale();
   const { user } = useAuth();
   const userId = user?.id ?? null;
 
@@ -126,30 +128,24 @@ export function CallSignalsDebugPanel() {
   return (
     <div className="space-y-3 mb-6">
       <h4 className="text-sm font-medium flex items-center gap-2">
-        <Activity className="h-4 w-4" />
-        call_signals Debug
-      </h4>
+        <Activity className="h-4 w-4" />{uiText("call_signals Debug")}</h4>
 
       <div className="flex flex-wrap gap-2">
         <Button size="sm" variant="outline" onClick={runSelect} disabled={!userId || isSelecting}>
-          <RefreshCw className={`h-4 w-4 mr-2 ${isSelecting ? 'animate-spin' : ''}`} />
-          SELECT (to_user_id)
-        </Button>
+          <RefreshCw className={`h-4 w-4 mr-2 ${isSelecting ? 'animate-spin' : ''}`} />{uiText("SELECT (to_user_id)")}</Button>
 
         {listenStatus === 'subscribed' ? (
           <Button size="sm" variant="destructive" onClick={stopListening}>
-            <Square className="h-4 w-4 mr-2" />
-            Parar listener
-          </Button>
+            <Square className="h-4 w-4 mr-2" />{uiText("Parar listener")}</Button>
         ) : (
           <Button size="sm" onClick={startListening} disabled={!userId || listenStatus === 'subscribing'}>
             <Radio className="h-4 w-4 mr-2" />
-            {listenStatus === 'subscribing' ? 'A subscrever…' : 'Iniciar listener'}
+            {listenStatus === 'subscribing' ? uiText("A subscrever…") : uiText("Iniciar listener")}
           </Button>
         )}
 
         <Badge variant="outline">
-          {userId ? `user: ${userId.slice(0, 8)}…` : 'not logged in'}
+          {userId ? `user: ${userId.slice(0, 8)}…` : uiText("not logged in")}
         </Badge>
 
         <Badge variant={listenStatus === 'subscribed' ? 'default' : 'secondary'}>
@@ -157,11 +153,11 @@ export function CallSignalsDebugPanel() {
         </Badge>
       </div>
 
-      {selectError && <p className="text-xs text-destructive">SELECT error: {selectError}</p>}
+      {selectError && <p className="text-xs text-destructive">{uiText("SELECT error: ")}{selectError}</p>}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div className="p-3 rounded-lg border bg-card">
-          <p className="text-xs text-muted-foreground mb-2">Últimos 20 sinais (SELECT)</p>
+          <p className="text-xs text-muted-foreground mb-2">{uiText("Últimos 20 sinais (SELECT)")}</p>
           <ScrollArea className="h-40">
             <pre className="text-[11px] font-mono whitespace-pre-wrap break-words">
               {signals.length ? JSON.stringify(signals, null, 2) : '—'}
@@ -170,7 +166,7 @@ export function CallSignalsDebugPanel() {
         </div>
 
         <div className="p-3 rounded-lg border bg-card">
-          <p className="text-xs text-muted-foreground mb-2">Eventos Realtime (INSERT/UPDATE)</p>
+          <p className="text-xs text-muted-foreground mb-2">{uiText("Eventos Realtime (INSERT/UPDATE)")}</p>
           <ScrollArea className="h-40">
             <pre className="text-[11px] font-mono whitespace-pre-wrap break-words">
               {events.length ? JSON.stringify(events, null, 2) : '—'}
@@ -179,9 +175,7 @@ export function CallSignalsDebugPanel() {
         </div>
       </div>
 
-      <p className="text-xs text-muted-foreground">
-        Use isto para confirmar: (1) RLS permite o SELECT em call_signals para o utilizador atual; (2) eventos Realtime chegam
-        quando outro utilizador envia sinais para o seu <code className="font-mono">to_user_id</code>.
+      <p className="text-xs text-muted-foreground">{uiText("Use isto para confirmar: (1) RLS permite o SELECT em call_signals para o utilizador atual; (2) eventos Realtime chegam quando outro utilizador envia sinais para o seu ")}<code className="font-mono">{uiText("to_user_id")}</code>.
       </p>
     </div>
   );

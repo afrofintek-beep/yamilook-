@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { motion } from 'framer-motion';
 import { GraduationCap, BookOpen, Calendar, Users } from 'lucide-react';
 
@@ -8,19 +9,20 @@ interface ProfileContributionsProps {
 }
 
 export function ProfileContributions({ sessionsCreated, sessionsAttended, isOwner }: ProfileContributionsProps) {
+  useUiLocale();
   if (sessionsCreated === 0 && sessionsAttended === 0) return null;
 
   const items = [
     {
       icon: GraduationCap,
-      label: 'Sessões criadas',
+      label: uiText("Sessões criadas"),
       value: sessionsCreated,
       sublabel: 'Na Academia',
       accent: true,
     },
     {
       icon: BookOpen,
-      label: 'Sessões frequentadas',
+      label: uiText("Sessões frequentadas"),
       value: sessionsAttended,
       sublabel: 'Como participante',
       accent: false,
@@ -36,9 +38,7 @@ export function ProfileContributions({ sessionsCreated, sessionsAttended, isOwne
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.4, duration: 0.3 }}
     >
-      <h3 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/50 mb-3 px-1">
-        Academia da Banda
-      </h3>
+      <h3 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/50 mb-3 px-1">{uiText("Academia da Banda")}</h3>
       <div className="flex gap-2.5">
         {items.map((item, index) => {
           const Icon = item.icon;

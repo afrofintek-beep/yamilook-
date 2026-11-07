@@ -1,10 +1,11 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { MokubicoInviteSheet, type InvitedUser } from '@/features/mokubico/components/MokubicoInviteSheet';
 import { motion } from 'framer-motion';
-import { 
-  ArrowLeft, 
-  Camera, 
+import {
+  ArrowLeft,
+  Camera,
   ChevronRight,
   Globe,
   Lock,
@@ -53,32 +54,32 @@ import {
 import { Slider } from '@/components/ui/slider';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 const languages = [
-  { code: 'PT', label: 'Português' },
-  { code: 'EN', label: 'English' },
-  { code: 'FR', label: 'Français' },
+  { code: 'PT', get label() { return uiText("Português"); } },
+  { code: 'EN', get label() { return uiText("English"); } },
+  { code: 'FR', get label() { return uiText("Français"); } },
 ];
 
 type PalcoVisibility = 'public' | 'private' | 'unlisted';
 
 const visibilityOptions: { value: PalcoVisibility; label: string; icon: typeof Globe; desc: string }[] = [
-  { value: 'public', label: 'Público', icon: Globe, desc: 'Visível para todos' },
-  { value: 'unlisted', label: 'Não listado', icon: EyeOff, desc: 'Apenas com link' },
-  { value: 'private', label: 'Privado', icon: Lock, desc: 'Apenas convidados' },
+  { value: 'public', get label() { return uiText("Público"); }, icon: Globe, desc: 'Visível para todos' },
+  { value: 'unlisted', get label() { return uiText("Não listado"); }, icon: EyeOff, desc: 'Apenas com link' },
+  { value: 'private', get label() { return uiText("Privado"); }, icon: Lock, desc: 'Apenas convidados' },
 ];
 
 const defaultVoiceTypes = [
   { type: 'email' as const, icon: Mail, label: 'Email', price: 1, delivery: 'Email (24-72h)', enabled: true },
-  { type: 'live' as const, icon: Mic, label: 'Ao Vivo', price: 3, delivery: 'Ao vivo na Roda', enabled: true },
-  { type: 'highlight' as const, icon: Star, label: 'Destaque', price: 7, delivery: 'Destaque + resposta aprofundada', enabled: true },
+  { type: 'live' as const, icon: Mic, get label() { return uiText("Ao Vivo"); }, price: 3, delivery: 'Ao vivo na Roda', enabled: true },
+  { type: 'highlight' as const, icon: Star, get label() { return uiText("Destaque"); }, price: 7, delivery: 'Destaque + resposta aprofundada', enabled: true },
 ];
 
 const durationOptions = [
-  { value: -1, label: 'Personalizado (5-60 min)' },
-  { value: 60, label: '60 min' },
-  { value: 90, label: '90 min' },
-  { value: 120, label: '2 horas' },
-  { value: 150, label: '2h30' },
-  { value: 180, label: '3 horas' },
+  { value: -1, get label() { return uiText("Personalizado (5-60 min)"); } },
+  { value: 60, get label() { return uiText("60 min"); } },
+  { value: 90, get label() { return uiText("90 min"); } },
+  { value: 120, get label() { return uiText("2 horas"); } },
+  { value: 150, get label() { return uiText("2h30"); } },
+  { value: 180, get label() { return uiText("3 horas"); } },
 ];
 
 const maxVoicesOptions = [10, 15, 20, 25, 30, 40];
@@ -92,13 +93,14 @@ interface RodaDraft {
 }
 
 export default function CreatePalco() {
+  useUiLocale();
   const navigate = useNavigate();
   const { palcoId } = useParams();
   const [searchParams] = useSearchParams();
   // MOKUBICO space this palco is being opened in (e.g. /palco/create?space=sala).
   const mokubicoSpace = searchParams.get('space');
   const isEditMode = !!palcoId;
-  
+
   const createPalco = useCreatePalco();
   const updatePalco = useUpdatePalco();
   const createRoda = useCreateRoda();
@@ -133,21 +135,21 @@ export default function CreatePalco() {
 
   // Auto-detect currency based on GPS location - only runs once on mount
   const [gpsAttempted, setGpsAttempted] = useState(false);
-  
+
   useEffect(() => {
     // Skip if already attempted, in edit mode, or currencies not loaded yet
     if (gpsAttempted || isEditMode || currencyLoading) return;
-    
+
     // Wait for currencies to be loaded
     if (currencies.length === 0) return;
-    
+
     const detectLocation = async () => {
       if (!navigator.geolocation) {
         console.log('[GPS] Geolocation not supported');
         setGpsAttempted(true);
         return;
       }
-      
+
       // Only use GPS if permission was already granted — never trigger the popup
       try {
         if (navigator.permissions) {
@@ -163,25 +165,25 @@ export default function CreatePalco() {
         setGpsAttempted(true);
         return;
       }
-      
+
       console.log('[GPS] Starting currency detection...');
       setGpsDetecting(true);
-      
+
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const _cell = snapToGrid(position.coords.latitude, position.coords.longitude);
           const latitude = _cell.lat;
           const longitude = _cell.lng;
           console.log('[GPS] Coordinates obtained:', { latitude, longitude });
-          
+
           const country = getNearestCountry(latitude, longitude);
           console.log('[GPS] Nearest country:', country);
-          
+
           if (country) {
             setDetectedCountry(country.country);
             const currencyCode = getCurrencyForCountry(country.countryCode);
             console.log('[GPS] Currency for country:', currencyCode);
-            
+
             const found = currencies.find(c => c.currency_code === currencyCode);
             if (found) {
               changeCurrency(currencyCode);
@@ -204,7 +206,7 @@ export default function CreatePalco() {
         { timeout: 10000, enableHighAccuracy: false, maximumAge: 300000 }
       );
     };
-    
+
     detectLocation();
   }, [currencies, currencyLoading, isEditMode, changeCurrency, gpsAttempted]);
 
@@ -233,10 +235,10 @@ export default function CreatePalco() {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        alert('A imagem deve ter no máximo 5MB');
+        alert(uiText("A imagem deve ter no máximo 5MB"));
         return;
       }
-      
+
       // Open crop dialog with the selected image
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -251,7 +253,7 @@ export default function CreatePalco() {
     // Convert blob to file for upload
     const croppedFile = new File([croppedBlob], 'cover.jpg', { type: 'image/jpeg' });
     setCoverFile(croppedFile);
-    
+
     // Create preview URL
     const previewUrl = URL.createObjectURL(croppedBlob);
     setCoverImage(previewUrl);
@@ -279,13 +281,13 @@ export default function CreatePalco() {
   };
 
   const handleUpdateVoicePrice = (type: string, price: number) => {
-    setVoiceTypes(voiceTypes.map(vt => 
+    setVoiceTypes(voiceTypes.map(vt =>
       vt.type === type ? { ...vt, price } : vt
     ));
   };
 
   const handleToggleVoiceType = (type: string) => {
-    setVoiceTypes(voiceTypes.map(vt => 
+    setVoiceTypes(voiceTypes.map(vt =>
       vt.type === type ? { ...vt, enabled: !vt.enabled } : vt
     ));
   };
@@ -306,47 +308,47 @@ export default function CreatePalco() {
   };
 
   const handleUpdateRoda = <K extends keyof RodaDraft>(id: string, field: K, value: RodaDraft[K]) => {
-    setRodas(rodas.map(r => 
+    setRodas(rodas.map(r =>
       r.id === id ? { ...r, [field]: value } : r
     ));
   };
 
   const handleSubmit = async () => {
     if (isUploading) return;
-    
+
     try {
       setIsUploading(true);
       let coverUrl = existingCoverUrl || '';
-      
+
       // Upload cover image if a new file was selected
       if (coverFile) {
         const fileExt = coverFile.name.split('.').pop();
         const fileName = `${crypto.randomUUID()}.${fileExt}`;
-        
+
         const { error: uploadError } = await supabase.storage
           .from('palco-covers')
           .upload(fileName, coverFile);
-        
+
         if (uploadError) {
-          toast.error('Erro ao carregar a imagem de capa');
+          toast.error(uiText("Erro ao carregar a imagem de capa"));
           console.error('Upload error:', uploadError);
           setIsUploading(false);
           return;
         }
-        
+
         const { data: urlData } = supabase.storage
           .from('palco-covers')
           .getPublicUrl(fileName);
-        
+
         coverUrl = urlData.publicUrl;
       }
-      
+
       // Voice prices are entered in local currency — convert to USD for storage
       const rateToUsd = selectedCurrency?.rate_to_usd || 1;
       const enabledVTs = voiceTypes.filter(vt => vt.enabled);
       const pricesInUsd = enabledVTs.map(vt => vt.price * rateToUsd);
       const minPrice = pricesInUsd.length > 0 ? Math.min(...pricesInUsd) : 1;
-      
+
       if (isEditMode && palcoId) {
         await updatePalco.mutateAsync({
           id: palcoId,
@@ -385,7 +387,7 @@ export default function CreatePalco() {
             })));
         }
 
-        toast.success('Palco atualizado com sucesso!');
+        toast.success(uiText("Palco atualizado com sucesso!"));
         navigate(`/palco/${palcoId}`);
       } else {
         // Create the Palco first
@@ -401,7 +403,7 @@ export default function CreatePalco() {
           cover_url: coverUrl || undefined,
           space: mokubicoSpace,
         });
-        
+
         // Insert voice types for the new palco
         if (newPalco?.id) {
           // MOKUBICO invites: who may enter this private space (Quarto/Cozinha).
@@ -427,10 +429,10 @@ export default function CreatePalco() {
 
           // Create all the Rodas for this Palco
           const rodasToCreate = rodas.filter(r => r.datetime);
-          
+
           console.log('Rodas to create:', rodasToCreate);
           console.log('New Palco ID:', newPalco.id);
-          
+
           if (rodasToCreate.length > 0) {
             for (const roda of rodasToCreate) {
               try {
@@ -443,15 +445,15 @@ export default function CreatePalco() {
                 console.log('Roda created successfully');
               } catch (rodaError) {
                 console.error('Error creating roda:', rodaError);
-                toast.error('Erro ao criar uma das Rodas');
+                toast.error(uiText("Erro ao criar uma das Rodas"));
               }
             }
           } else {
             console.log('No rodas with datetime found to create');
           }
         }
-        
-        toast.success('Palco criado com sucesso!');
+
+        toast.success(uiText("Palco criado com sucesso!"));
         navigate('/palco');
       }
     } catch (error) {
@@ -483,9 +485,9 @@ export default function CreatePalco() {
       <header className="sticky top-0 z-40 bg-palco-bg/95 backdrop-blur-md safe-top">
         <div className="px-4 pt-3 pb-2">
           <div className="flex items-center justify-between">
-            <Button 
-              size="icon" 
-              variant="ghost" 
+            <Button
+              size="icon"
+              variant="ghost"
               className="text-palco-text hover:bg-palco-accent/10"
               onClick={() => step === 1 ? navigate(-1) : setStep(step - 1)}
             >
@@ -505,13 +507,13 @@ export default function CreatePalco() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="font-semibold text-palco-text">
-                {isEditMode ? 'Editar Palco' : 'Abrir Banda ao Vivo'}
+                {isEditMode ? uiText("Editar Palco") : uiText("Abrir Banda ao Vivo")}
               </h1>
-              <p className="text-xs text-palco-text-secondary">Passo {step} de 4</p>
+              <p className="text-xs text-palco-text-secondary">{uiText("Passo ")}{step}{uiText(" de 4")}</p>
             </div>
             <div className="flex gap-1">
               {[1, 2, 3, 4].map((s) => (
-                <div 
+                <div
                   key={s}
                   className={cn(
                     "w-6 h-1 rounded-full transition-colors",
@@ -547,9 +549,9 @@ export default function CreatePalco() {
             >
               {coverImage ? (
                 <>
-                  <img 
-                    src={coverImage} 
-                    alt="Capa do Palco" 
+                  <img
+                    src={coverImage}
+                    alt={uiText("Capa do Palco")}
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
@@ -568,16 +570,16 @@ export default function CreatePalco() {
               ) : (
                 <>
                   <Camera className="w-8 h-8 text-palco-text-secondary mb-2" />
-                  <p className="text-sm text-palco-text-secondary">Adicionar capa</p>
+                  <p className="text-sm text-palco-text-secondary">{uiText("Adicionar capa")}</p>
                 </>
               )}
             </button>
 
             {/* Title */}
             <div className="space-y-2">
-              <Label className="text-palco-text">Título do Palco *</Label>
+              <Label className="text-palco-text">{uiText("Título do Palco *")}</Label>
               <Input
-                placeholder="Ex: Empreendedorismo em Angola"
+                placeholder={uiText("Ex: Empreendedorismo em Angola")}
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 className="bg-palco-surface border-palco-border"
@@ -589,9 +591,9 @@ export default function CreatePalco() {
 
             {/* Description */}
             <div className="space-y-2">
-              <Label className="text-palco-text">Descrição</Label>
+              <Label className="text-palco-text">{uiText("Descrição")}</Label>
               <Textarea
-                placeholder="Descreva o que as pessoas vão aprender..."
+                placeholder={uiText("Descreva o que as pessoas vão aprender...")}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 className="bg-palco-surface border-palco-border resize-none"
@@ -601,17 +603,17 @@ export default function CreatePalco() {
 
             {/* Tags */}
             <div className="space-y-2">
-              <Label className="text-palco-text">Tags (máx. 5)</Label>
+              <Label className="text-palco-text">{uiText("Tags (máx. 5)")}</Label>
               <div className="flex gap-2">
                 <Input
-                  placeholder="Adicionar tag"
+                  placeholder={uiText("Adicionar tag")}
                   value={newTag}
                   onChange={(e) => setNewTag(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleAddTag()}
                   className="bg-palco-surface border-palco-border flex-1"
                 />
-                <Button 
-                  size="icon" 
+                <Button
+                  size="icon"
                   variant="outline"
                   onClick={handleAddTag}
                   disabled={tags.length >= 5}
@@ -641,7 +643,7 @@ export default function CreatePalco() {
             {needsInvite && (
               <div className="space-y-2">
                 <Label className="text-palco-text">
-                  {singleInvite ? 'Convidar (Quarto — só nós)' : 'Convidar (Cozinha das Sis)'}
+                  {singleInvite ? uiText("Convidar (Quarto — só nós)") : uiText("Convidar (Cozinha das Sis)")}
                 </Label>
                 <button
                   type="button"
@@ -654,16 +656,16 @@ export default function CreatePalco() {
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium text-palco-text">
                       {invited.length === 0
-                        ? (singleInvite ? 'Escolher a pessoa' : 'Adicionar convidadas')
+                        ? (singleInvite ? uiText("Escolher a pessoa") : uiText("Adicionar convidadas"))
                         : invited.map((u) => u.name).join(', ')}
                     </div>
                     <div className="text-xs text-palco-text-secondary">
-                      {singleInvite ? 'Só esta pessoa pode entrar' : 'Além das sis, estas pessoas podem entrar'}
+                      {singleInvite ? uiText("Só esta pessoa pode entrar") : uiText("Além das sis, estas pessoas podem entrar")}
                     </div>
                   </div>
                 </button>
                 {singleInvite && invited.length === 0 && (
-                  <p className="text-xs text-destructive">Escolhe 1 pessoa para abrir o Quarto.</p>
+                  <p className="text-xs text-destructive">{uiText("Escolhe 1 pessoa para abrir o Quarto.")}</p>
                 )}
               </div>
             )}
@@ -678,40 +680,32 @@ export default function CreatePalco() {
             className="space-y-6"
           >
             <div>
-              <h2 className="text-lg font-semibold text-palco-text mb-1">Rodas</h2>
-              <p className="text-sm text-palco-text-secondary">
-                Cria uma ou várias sessões (Rodas). É obrigatório definir a data e hora de cada uma.
-              </p>
+              <h2 className="text-lg font-semibold text-palco-text mb-1">{uiText("Rodas")}</h2>
+              <p className="text-sm text-palco-text-secondary">{uiText("Cria uma ou várias sessões (Rodas). É obrigatório definir a data e hora de cada uma.")}</p>
             </div>
 
             {/* Warning if rodas exist but none have dates */}
             {rodas.length > 0 && rodasWithDates.length === 0 && (
               <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-[12px]">
-                <p className="text-sm text-destructive">
-                  ⚠️ Por favor, defina a data e hora das Rodas para continuar.
-                </p>
+                <p className="text-sm text-destructive">{uiText("⚠️ Por favor, defina a data e hora das Rodas para continuar.")}</p>
               </div>
             )}
 
             {rodas.length === 0 ? (
               <div className="text-center py-8 bg-palco-surface rounded-[18px] border border-dashed border-palco-border">
                 <Calendar className="w-12 h-12 mx-auto mb-3 text-palco-text-secondary" />
-                <h3 className="font-medium text-palco-text mb-1">Ainda sem Rodas</h3>
-                <p className="text-sm text-palco-text-secondary mb-4">
-                  Adiciona a primeira Roda para começar.
-                </p>
-                <Button 
+                <h3 className="font-medium text-palco-text mb-1">{uiText("Ainda sem Rodas")}</h3>
+                <p className="text-sm text-palco-text-secondary mb-4">{uiText("Adiciona a primeira Roda para começar.")}</p>
+                <Button
                   onClick={handleAddRoda}
                   className="bg-palco-accent hover:bg-palco-accent/90 text-white rounded-full"
                 >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Adicionar Roda
-                </Button>
+                  <Plus className="w-4 h-4 mr-2" />{uiText("Adicionar Roda")}</Button>
               </div>
             ) : (
               <div className="space-y-4">
                 {rodas.map((roda, index) => (
-                  <div 
+                  <div
                     key={roda.id}
                     className="bg-palco-surface rounded-[18px] border border-palco-border p-4 space-y-4"
                   >
@@ -720,11 +714,11 @@ export default function CreatePalco() {
                         <div className="w-8 h-8 rounded-full bg-palco-accent/10 flex items-center justify-center">
                           <Radio className="w-4 h-4 text-palco-accent" />
                         </div>
-                        <span className="font-medium text-palco-text">Roda {index + 1}</span>
+                        <span className="font-medium text-palco-text">{uiText("Roda ")}{index + 1}</span>
                       </div>
-                      <Button 
-                        size="sm" 
-                        variant="ghost" 
+                      <Button
+                        size="sm"
+                        variant="ghost"
                         className="text-red-500 hover:text-red-600 hover:bg-red-50"
                         onClick={() => handleRemoveRoda(roda.id)}
                       >
@@ -734,8 +728,7 @@ export default function CreatePalco() {
 
                     {/* Date/Time */}
                     <div className="space-y-2">
-                      <Label className="text-palco-text text-sm">
-                        Data e hora <span className="text-destructive">*</span>
+                      <Label className="text-palco-text text-sm">{uiText("Data e hora ")}<span className="text-destructive">*</span>
                       </Label>
                       <Input
                         type="datetime-local"
@@ -747,15 +740,15 @@ export default function CreatePalco() {
                         )}
                       />
                       {!roda.datetime && (
-                        <p className="text-xs text-destructive">Por favor, defina a data e hora da Roda</p>
+                        <p className="text-xs text-destructive">{uiText("Por favor, defina a data e hora da Roda")}</p>
                       )}
                     </div>
 
                     {/* Duration */}
                     <div className="space-y-2">
-                      <Label className="text-palco-text text-sm">Duração</Label>
-                      <Select 
-                        value={roda.duration <= 60 && roda.duration > 0 ? '-1' : roda.duration.toString()} 
+                      <Label className="text-palco-text text-sm">{uiText("Duração")}</Label>
+                      <Select
+                        value={roda.duration <= 60 && roda.duration > 0 ? '-1' : roda.duration.toString()}
                         onValueChange={(v) => {
                           if (v === '-1') {
                             // Set custom duration - default to 30 min
@@ -767,9 +760,9 @@ export default function CreatePalco() {
                       >
                         <SelectTrigger className="bg-palco-bg border-palco-border">
                           <SelectValue>
-                            {roda.duration <= 60 && roda.duration > 0 
-                              ? `Personalizado: ${roda.duration} min` 
-                              : durationOptions.find(o => o.value === roda.duration)?.label || '60 min'}
+                            {roda.duration <= 60 && roda.duration > 0
+                              ? `Personalizado: ${roda.duration} min`
+                              : durationOptions.find(o => o.value === roda.duration)?.label || uiText("60 min")}
                           </SelectValue>
                         </SelectTrigger>
                         <SelectContent className="bg-palco-surface border-palco-border">
@@ -780,13 +773,13 @@ export default function CreatePalco() {
                           ))}
                         </SelectContent>
                       </Select>
-                      
+
                       {/* Custom duration slider - shows when duration is between 5-60 min */}
                       {roda.duration > 0 && roda.duration <= 60 && (
                         <div className="space-y-3 p-3 bg-palco-bg rounded-[12px]">
                           <div className="flex items-center justify-between text-sm">
-                            <span className="text-palco-text-secondary">Duração personalizada</span>
-                            <span className="font-semibold text-palco-accent">{roda.duration} min</span>
+                            <span className="text-palco-text-secondary">{uiText("Duração personalizada")}</span>
+                            <span className="font-semibold text-palco-accent">{roda.duration}{uiText(" min")}</span>
                           </div>
                           <Slider
                             value={[roda.duration]}
@@ -797,8 +790,8 @@ export default function CreatePalco() {
                             className="[&_[data-radix-slider-track]]:bg-palco-border [&_[data-radix-slider-range]]:bg-palco-accent [&_[data-radix-slider-thumb]]:border-palco-accent [&_[data-radix-slider-thumb]]:bg-palco-surface"
                           />
                           <div className="flex justify-between text-xs text-palco-text-secondary">
-                            <span>5 min</span>
-                            <span>60 min</span>
+                            <span>{uiText("5 min")}</span>
+                            <span>{uiText("60 min")}</span>
                           </div>
                         </div>
                       )}
@@ -806,9 +799,9 @@ export default function CreatePalco() {
 
                     {/* Max Voices */}
                     <div className="space-y-2">
-                      <Label className="text-palco-text text-sm">Máx. Vozes</Label>
-                      <Select 
-                        value={roda.maxVoices.toString()} 
+                      <Label className="text-palco-text text-sm">{uiText("Máx. Vozes")}</Label>
+                      <Select
+                        value={roda.maxVoices.toString()}
                         onValueChange={(v) => handleUpdateRoda(roda.id, 'maxVoices', Number(v))}
                       >
                         <SelectTrigger className="bg-palco-bg border-palco-border">
@@ -817,8 +810,7 @@ export default function CreatePalco() {
                         <SelectContent className="bg-palco-surface border-palco-border">
                           {maxVoicesOptions.map((opt) => (
                             <SelectItem key={opt} value={opt.toString()}>
-                              {opt} vozes
-                            </SelectItem>
+                              {opt}{uiText(" vozes")}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -828,9 +820,9 @@ export default function CreatePalco() {
                     <div className="flex items-center justify-between p-3 bg-palco-bg rounded-[12px]">
                       <div className="flex items-center gap-2">
                         <Radio className="w-4 h-4 text-palco-accent" />
-                        <span className="text-sm text-palco-text">Transmissão ao vivo</span>
+                        <span className="text-sm text-palco-text">{uiText("Transmissão ao vivo")}</span>
                       </div>
-                      <Switch 
+                      <Switch
                         checked={roda.isLive}
                         onCheckedChange={(v) => handleUpdateRoda(roda.id, 'isLive', v)}
                       />
@@ -838,14 +830,12 @@ export default function CreatePalco() {
                   </div>
                 ))}
 
-                <Button 
+                <Button
                   variant="outline"
                   className="w-full border-palco-border text-palco-text rounded-full"
                   onClick={handleAddRoda}
                 >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Adicionar outra Roda
-                </Button>
+                  <Plus className="w-4 h-4 mr-2" />{uiText("Adicionar outra Roda")}</Button>
               </div>
             )}
           </motion.div>
@@ -861,17 +851,15 @@ export default function CreatePalco() {
             {/* Currency Selection */}
             <div className="space-y-2">
               <Label className="text-palco-text flex items-center gap-2">
-                <Coins className="w-4 h-4 text-palco-accent" />
-                Moeda de Preços
-              </Label>
+                <Coins className="w-4 h-4 text-palco-accent" />{uiText("Moeda de Preços")}</Label>
               <div className="space-y-2">
-                <Select 
-                  value={selectedCurrency?.currency_code || 'USD'} 
+                <Select
+                  value={selectedCurrency?.currency_code || 'USD'}
                   onValueChange={changeCurrency}
                   disabled={currencyLoading}
                 >
                   <SelectTrigger className="bg-palco-surface border-palco-border">
-                    <SelectValue placeholder="Selecione a moeda" />
+                    <SelectValue placeholder={uiText("Selecione a moeda")} />
                   </SelectTrigger>
                   <SelectContent className="bg-palco-surface border-palco-border max-h-60">
                     {currencies.map((curr) => (
@@ -885,30 +873,25 @@ export default function CreatePalco() {
                     ))}
                   </SelectContent>
                 </Select>
-                
+
                 {/* GPS Detection indicator */}
                 {gpsDetecting && (
                   <div className="flex items-center gap-2 text-xs text-palco-text-secondary">
-                    <Loader2 className="w-3 h-3 animate-spin" />
-                    A detetar localização...
-                  </div>
+                    <Loader2 className="w-3 h-3 animate-spin" />{uiText("A detetar localização...")}</div>
                 )}
-                
+
                 {detectedCountry && !gpsDetecting && (
                   <div className="flex items-center gap-2 text-xs text-palco-accent">
-                    <MapPin className="w-3 h-3" />
-                    Detetado: {detectedCountry}
+                    <MapPin className="w-3 h-3" />{uiText("Detetado: ")}{detectedCountry}
                   </div>
                 )}
               </div>
-              <p className="text-xs text-palco-text-secondary">
-                Os preços serão apresentados nesta moeda. A conversão é automática com base nas taxas de câmbio.
-              </p>
+              <p className="text-xs text-palco-text-secondary">{uiText("Os preços serão apresentados nesta moeda. A conversão é automática com base nas taxas de câmbio.")}</p>
             </div>
 
             {/* Language */}
             <div className="space-y-2">
-              <Label className="text-palco-text">Idioma</Label>
+              <Label className="text-palco-text">{uiText("Idioma")}</Label>
               <Select value={language} onValueChange={setLanguage}>
                 <SelectTrigger className="bg-palco-surface border-palco-border">
                   <SelectValue />
@@ -923,7 +906,7 @@ export default function CreatePalco() {
 
             {/* Visibility */}
             <div className="space-y-3">
-              <Label className="text-palco-text">Visibilidade</Label>
+              <Label className="text-palco-text">{uiText("Visibilidade")}</Label>
               {visibilityOptions.map((option) => {
                 const Icon = option.icon;
                 return (
@@ -939,8 +922,8 @@ export default function CreatePalco() {
                   >
                     <div className={cn(
                       "w-10 h-10 rounded-full flex items-center justify-center",
-                      visibility === option.value 
-                        ? "bg-palco-accent text-white" 
+                      visibility === option.value
+                        ? "bg-palco-accent text-white"
                         : "bg-palco-border text-palco-text-secondary"
                     )}>
                       <Icon className="w-5 h-5" />
@@ -962,10 +945,10 @@ export default function CreatePalco() {
             {/* Allow Custom Text */}
             <div className="flex items-center justify-between p-4 bg-palco-surface rounded-[12px] border border-palco-border">
               <div>
-                <p className="font-medium text-palco-text">Permitir texto personalizado</p>
-                <p className="text-xs text-palco-text-secondary">Participantes podem escrever perguntas</p>
+                <p className="font-medium text-palco-text">{uiText("Permitir texto personalizado")}</p>
+                <p className="text-xs text-palco-text-secondary">{uiText("Participantes podem escrever perguntas")}</p>
               </div>
-              <Switch 
+              <Switch
                 checked={allowCustomText}
                 onCheckedChange={setAllowCustomText}
               />
@@ -981,15 +964,12 @@ export default function CreatePalco() {
             className="space-y-6"
           >
             <div>
-              <h2 className="text-lg font-semibold text-palco-text mb-2">Preços das Vozes</h2>
-              <p className="text-sm text-palco-text-secondary">
-                Defina quanto custa cada tipo de interação
-              </p>
+              <h2 className="text-lg font-semibold text-palco-text mb-2">{uiText("Preços das Vozes")}</h2>
+              <p className="text-sm text-palco-text-secondary">{uiText("Defina quanto custa cada tipo de interação")}</p>
               {selectedCurrency && (
                 <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 bg-palco-accent/10 rounded-full">
                   <Coins className="w-3.5 h-3.5 text-palco-accent" />
-                  <span className="text-xs font-medium text-palco-accent">
-                    Moeda: {selectedCurrency.currency_code} ({selectedCurrency.symbol})
+                  <span className="text-xs font-medium text-palco-accent">{uiText("Moeda: ")}{selectedCurrency.currency_code} ({selectedCurrency.symbol})
                   </span>
                 </div>
               )}
@@ -999,12 +979,12 @@ export default function CreatePalco() {
               {voiceTypes.map((vt) => {
                 const Icon = vt.icon;
                 return (
-                  <div 
+                  <div
                     key={vt.type}
                     className={cn(
                       "p-4 rounded-[12px] border transition-all",
-                      vt.enabled 
-                        ? "bg-palco-surface border-palco-border" 
+                      vt.enabled
+                        ? "bg-palco-surface border-palco-border"
                         : "bg-palco-bg border-palco-border/50 opacity-60"
                     )}
                   >
@@ -1018,7 +998,7 @@ export default function CreatePalco() {
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-1">
                           <p className="font-medium text-palco-text">{vt.label}</p>
-                          <Switch 
+                          <Switch
                             checked={vt.enabled}
                             onCheckedChange={() => handleToggleVoiceType(vt.type)}
                           />
@@ -1048,15 +1028,12 @@ export default function CreatePalco() {
             {/* Revenue Split Info */}
             <div className="p-4 bg-palco-accent/5 rounded-[12px] border border-palco-accent/20">
               <p className="text-sm text-palco-text">
-                <span className="font-medium">Divisão de receita:</span> Você recebe 70%, a plataforma retém 30%
-              </p>
+                <span className="font-medium">{uiText("Divisão de receita:")}</span>{uiText(" Você recebe 70%, a plataforma retém 30%")}</p>
             </div>
 
             {/* Currency conversion note */}
             <div className="p-3 bg-palco-bg rounded-[12px] border border-palco-border">
-              <p className="text-xs text-palco-text-secondary">
-                💡 Os preços são guardados em USD internamente e convertidos automaticamente para a moeda local de cada utilizador.
-              </p>
+              <p className="text-xs text-palco-text-secondary">{uiText("💡 Os preços são guardados em USD internamente e convertidos automaticamente para a moeda local de cada utilizador.")}</p>
             </div>
           </motion.div>
         )}
@@ -1064,7 +1041,7 @@ export default function CreatePalco() {
 
       {/* Footer */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-palco-bg border-t border-palco-border">
-        <Button 
+        <Button
           className="w-full bg-palco-accent hover:bg-palco-accent/90 text-white rounded-full h-12"
           disabled={!canProceed || isPending}
           onClick={() => {
@@ -1076,14 +1053,12 @@ export default function CreatePalco() {
           }}
         >
           {step < 4 ? (
-            <>
-              Continuar
-              <ChevronRight className="w-5 h-5 ml-1" />
+            <>{uiText("Continuar")}<ChevronRight className="w-5 h-5 ml-1" />
             </>
           ) : isPending ? (
-            isEditMode ? 'A guardar...' : 'Criando...'
+            isEditMode ? uiText("A guardar...") : uiText("Criando...")
           ) : (
-            isEditMode ? 'Guardar Alterações' : 'Abrir Banda ao Vivo'
+            isEditMode ? uiText("Guardar Alterações") : uiText("Abrir Banda ao Vivo")
           )}
         </Button>
       </div>
@@ -1117,19 +1092,20 @@ export default function CreatePalco() {
 }
 
 // Theme Selector Component with dynamic categories
-function ThemeSelector({ 
-  theme, 
-  onThemeChange 
-}: { 
-  theme: string; 
+function ThemeSelector({
+  theme,
+  onThemeChange
+}: {
+  theme: string;
   onThemeChange: (theme: string) => void;
 }) {
+  useUiLocale();
   const { data: themes, isLoading } = usePalcoThemes();
-  
+
   if (isLoading) {
     return (
       <div className="space-y-2">
-        <Label className="text-palco-text">Tema</Label>
+        <Label className="text-palco-text">{uiText("Tema")}</Label>
         <div className="h-24 bg-palco-surface rounded-xl animate-pulse" />
       </div>
     );
@@ -1137,7 +1113,7 @@ function ThemeSelector({
 
   return (
     <div className="space-y-3">
-      <Label className="text-palco-text">Tema</Label>
+      <Label className="text-palco-text">{uiText("Tema")}</Label>
       <ScrollArea className="w-full whitespace-nowrap">
         <div className="flex gap-2 pb-2">
           {themes?.map((t) => (
@@ -1147,14 +1123,14 @@ function ThemeSelector({
               onClick={() => onThemeChange(t.slug === theme ? '' : t.slug)}
               className={cn(
                 "relative flex-shrink-0 w-20 h-24 rounded-xl overflow-hidden transition-all duration-200",
-                theme === t.slug 
-                  ? "ring-2 ring-palco-accent ring-offset-2 ring-offset-palco-bg scale-105" 
+                theme === t.slug
+                  ? "ring-2 ring-palco-accent ring-offset-2 ring-offset-palco-bg scale-105"
                   : "opacity-80 hover:opacity-100"
               )}
             >
               {t.image_url ? (
-                <img 
-                  src={t.image_url} 
+                <img
+                  src={t.image_url}
                   alt={t.name}
                   className="w-full h-full object-cover"
                 />
@@ -1178,8 +1154,7 @@ function ThemeSelector({
         <ScrollBar orientation="horizontal" className="h-1.5" />
       </ScrollArea>
       {theme && (
-        <p className="text-xs text-palco-text-secondary">
-          Selecionado: <span className="text-palco-accent font-medium">
+        <p className="text-xs text-palco-text-secondary">{uiText("Selecionado: ")}<span className="text-palco-accent font-medium">
             {themes?.find(t => t.slug === theme)?.name || theme}
           </span>
         </p>

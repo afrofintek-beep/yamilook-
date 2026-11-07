@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { motion } from 'framer-motion';
 import { Crown, ShieldCheck, User } from 'lucide-react';
 
@@ -8,7 +9,7 @@ interface ProfileLevelProps {
 const levelConfig = {
   founder: {
     icon: Crown,
-    label: 'Fundador',
+    get label() { return uiText("Fundador"); },
     sublabel: 'Membro fundador do Yamilook',
     containerClass: 'bg-[#C9A23F]/8 border-[#C9A23F]/20',
     iconClass: 'text-[#C9A23F]',
@@ -17,7 +18,7 @@ const levelConfig = {
   },
   verified_creator: {
     icon: ShieldCheck,
-    label: 'Criador Verificado',
+    get label() { return uiText("Criador Verificado"); },
     sublabel: 'Identidade verificada',
     containerClass: 'bg-primary/8 border-primary/20',
     iconClass: 'text-primary',
@@ -26,7 +27,7 @@ const levelConfig = {
   },
   default: {
     icon: User,
-    label: 'Membro',
+    get label() { return uiText("Membro"); },
     sublabel: 'Membro da comunidade',
     containerClass: 'bg-muted/60 border-border/30',
     iconClass: 'text-muted-foreground',
@@ -36,6 +37,7 @@ const levelConfig = {
 };
 
 export function ProfileLevel({ role }: ProfileLevelProps) {
+  useUiLocale();
   const config = levelConfig[role];
   const Icon = config.icon;
 

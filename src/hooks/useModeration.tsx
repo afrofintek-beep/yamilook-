@@ -1,3 +1,4 @@
+import { uiText } from '@/i18n/ui-copy';
 import { updateModeratedProfile } from '@/lib/profile-moderation';
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -229,7 +230,7 @@ export function useModeration() {
     if (error) throw error;
 
     await logAction('hide_post', 'post', postId, reason, reportId);
-    toast.success('Post ocultado');
+    toast.success(uiText("Post ocultado"));
   }, [user, logAction]);
 
   const unhidePost = useCallback(async (postId: string) => {
@@ -243,7 +244,7 @@ export function useModeration() {
     if (error) throw error;
 
     await logAction('unhide_post', 'post', postId);
-    toast.success('Post restaurado');
+    toast.success(uiText("Post restaurado"));
   }, [user, logAction]);
 
   const hideComment = useCallback(async (commentId: string, reason: string, reportId?: string) => {
@@ -257,7 +258,7 @@ export function useModeration() {
     if (error) throw error;
 
     await logAction('hide_comment', 'comment', commentId, reason, reportId);
-    toast.success('Comentário ocultado');
+    toast.success(uiText("Comentário ocultado"));
   }, [user, logAction]);
 
   const suspendUser = useCallback(async (targetUserId: string, durationHours: number, reason: string, reportId?: string) => {
@@ -274,7 +275,7 @@ export function useModeration() {
     if (error) throw error;
 
     await logAction('suspend_user', 'user', targetUserId, reason, reportId, { duration_hours: durationHours });
-    toast.success('Utilizador suspenso');
+    toast.success(uiText("Utilizador suspenso"));
   }, [user, logAction]);
 
   const unsuspendUser = useCallback(async (targetUserId: string) => {
@@ -289,7 +290,7 @@ export function useModeration() {
     if (error) throw error;
 
     await logAction('unsuspend_user', 'user', targetUserId);
-    toast.success('Suspensão removida');
+    toast.success(uiText("Suspensão removida"));
   }, [user, logAction]);
 
   const banUser = useCallback(async (targetUserId: string, reason: string, reportId?: string) => {
@@ -303,7 +304,7 @@ export function useModeration() {
     if (error) throw error;
 
     await logAction('ban_user', 'user', targetUserId, reason, reportId);
-    toast.success('Utilizador banido');
+    toast.success(uiText("Utilizador banido"));
   }, [user, logAction]);
 
   const submitReport = useCallback(async (
@@ -323,7 +324,7 @@ export function useModeration() {
     });
 
     if (error) throw error;
-    toast.success('Denúncia enviada. Obrigado por ajudar a manter a comunidade segura.');
+    toast.success(uiText("Denúncia enviada. Obrigado por ajudar a manter a comunidade segura."));
   }, [user]);
 
   return {

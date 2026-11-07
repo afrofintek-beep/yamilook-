@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -10,6 +11,7 @@ import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
 
 export default function KumbuHistory() {
+  useUiLocale();
   const navigate = useNavigate();
   const [dir, setDir] = useState<LedgerDirection>('all');
   const { data: ledger, isLoading } = useKumbuHistory(dir);
@@ -21,7 +23,7 @@ export default function KumbuHistory() {
           <Button variant="ghost" size="icon" className="rounded-xl h-9 w-9" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-4.5 w-4.5" />
           </Button>
-          <h1 className="text-base font-bold tracking-tight">Histórico</h1>
+          <h1 className="text-base font-bold tracking-tight">{uiText("Histórico")}</h1>
         </div>
       </header>
 
@@ -29,27 +31,24 @@ export default function KumbuHistory() {
         <Tabs value={dir} onValueChange={(v) => setDir(v as LedgerDirection)}>
           <TabsList className="w-full bg-card border border-border/20 rounded-xl h-10">
             <TabsTrigger value="all" className="flex-1 text-[11px] rounded-lg gap-1">
-              <ArrowUpDown className="w-3 h-3" /> Tudo
-            </TabsTrigger>
+              <ArrowUpDown className="w-3 h-3" />{uiText(" Tudo")}</TabsTrigger>
             <TabsTrigger value="credit" className="flex-1 text-[11px] rounded-lg gap-1">
-              <TrendingUp className="w-3 h-3" /> Créditos
-            </TabsTrigger>
+              <TrendingUp className="w-3 h-3" />{uiText(" Créditos")}</TabsTrigger>
             <TabsTrigger value="debit" className="flex-1 text-[11px] rounded-lg gap-1">
-              <TrendingDown className="w-3 h-3" /> Débitos
-            </TabsTrigger>
+              <TrendingDown className="w-3 h-3" />{uiText(" Débitos")}</TabsTrigger>
           </TabsList>
         </Tabs>
 
         {isLoading && (
           <div className="py-12 text-center">
             <div className="w-8 h-8 rounded-full bg-muted animate-pulse mx-auto mb-2" />
-            <p className="text-[11px] text-muted-foreground/40">A carregar…</p>
+            <p className="text-[11px] text-muted-foreground/40">{uiText("A carregar…")}</p>
           </div>
         )}
 
         {!isLoading && (!ledger || ledger.length === 0) && (
           <div className="py-12 text-center">
-            <p className="text-sm text-muted-foreground/40">Sem movimentos registados.</p>
+            <p className="text-sm text-muted-foreground/40">{uiText("Sem movimentos registados.")}</p>
           </div>
         )}
 

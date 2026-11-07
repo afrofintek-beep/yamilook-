@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -26,6 +27,7 @@ export function LiveAccessRequest({
   info: LiveAccessInfo;
   onGranted: () => void;
 }) {
+  useUiLocale();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [status, setStatus] = useState<string | null>(info.request_status ?? null);
@@ -57,11 +59,11 @@ export function LiveAccessRequest({
     const { error } = await supabase.from('live_access').insert({ session_id: sessionId, user_id: user.id, status: 'pending' });
     setSending(false);
     if (error && !/duplicate|unique/i.test(error.message)) {
-      toast.error('Não foi possível enviar o pedido.');
+      toast.error(uiText("Não foi possível enviar o pedido."));
       return;
     }
     setStatus('pending');
-    toast.success('Pedido enviado. À espera da autorização do dono.');
+    toast.success(uiText("Pedido enviado. À espera da autorização do dono."));
   };
 
   // Convidado aceita o convite → passa a aprovado e entra.
@@ -70,7 +72,7 @@ export function LiveAccessRequest({
     setSending(true);
     const { data, error } = await supabase.rpc('live_accept_invite', { p_session: sessionId });
     setSending(false);
-    if (error || !(data as { ok?: boolean })?.ok) { toast.error('Não foi possível aceitar o convite.'); return; }
+    if (error || !(data as { ok?: boolean })?.ok) { toast.error(uiText("Não foi possível aceitar o convite.")); return; }
     setStatus('approved');
     onGranted();
   };
@@ -89,7 +91,7 @@ export function LiveAccessRequest({
         <Lock className="w-7 h-7 text-primary" />
       </div>
       <div className="space-y-1">
-        <h1 className="text-lg font-bold text-foreground">{invited ? 'Convite para a live' : 'Live da banda'}</h1>
+        <h1 className="text-lg font-bold text-foreground">{invited ? uiText("Convite para a live") : uiText("Live da banda")}</h1>
         <p className="text-sm text-muted-foreground max-w-xs">
           {invited
             ? `${info.host_name ?? 'O anfitrião'} convidou-te para esta live. Aceita para entrar.`
@@ -99,30 +101,27 @@ export function LiveAccessRequest({
 
       {status === 'approved' ? (
         <Button className="rounded-full px-6" onClick={onGranted}>
-          <Radio className="w-4 h-4 mr-2" /> Entrar na live
-        </Button>
+          <Radio className="w-4 h-4 mr-2" />{uiText(" Entrar na live")}</Button>
       ) : invited ? (
         <div className="flex flex-col items-center gap-2">
           <Button className="rounded-full px-6 bg-amber-400 text-black hover:bg-amber-500" onClick={accept} disabled={sending}>
-            {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Radio className="w-4 h-4 mr-2" /> Aceitar e entrar</>}
+            {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Radio className="w-4 h-4 mr-2" />{uiText(" Aceitar e entrar")}</>}
           </Button>
-          <button className="text-xs text-muted-foreground" onClick={decline}>Recusar</button>
+          <button className="text-xs text-muted-foreground" onClick={decline}>{uiText("Recusar")}</button>
         </div>
       ) : status === 'pending' ? (
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Loader2 className="w-4 h-4 animate-spin" /> À espera da autorização do dono…
-        </div>
+          <Loader2 className="w-4 h-4 animate-spin" />{uiText(" À espera da autorização do dono…")}</div>
       ) : status === 'denied' ? (
-        <p className="text-sm text-destructive">O dono não autorizou a tua entrada.</p>
+        <p className="text-sm text-destructive">{uiText("O dono não autorizou a tua entrada.")}</p>
       ) : (
         <Button className="rounded-full px-6" onClick={request} disabled={sending}>
-          {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Pedir para entrar'}
+          {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : uiText("Pedir para entrar")}
         </Button>
       )}
 
       <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
-        <ArrowLeft className="w-4 h-4 mr-2" /> Voltar
-      </Button>
+        <ArrowLeft className="w-4 h-4 mr-2" />{uiText(" Voltar")}</Button>
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import { uiText } from '@/i18n/ui-copy';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Room, RoomEvent, ConnectionState, Participant, RemoteParticipant, DisconnectReason } from 'livekit-client';
 import { holdCallUpdates } from '@/lib/call-update-guard';
@@ -5,7 +6,7 @@ import { recordAcademiaCall } from './academia-call-diagnostics';
 import { supabase } from '@/integrations/supabase/client';
 
 export async function requestAcademiaVideo(sessionId: string, action: 'join'|'start'|'end') {
-  const expired = () => new Error('A tua sessão expirou. Inicia sessão novamente.');
+  const expired = () => new Error(uiText("A tua sessão expirou. Inicia sessão novamente."));
   const refresh = async () => {
     const result = await supabase.auth.refreshSession();
     if (result.error || !result.data.session?.access_token) throw expired();
@@ -40,7 +41,7 @@ export async function requestAcademiaVideo(sessionId: string, action: 'join'|'st
     };
     throw new Error(messages[reason] || 'Não foi possível ligar à sala de vídeo. Tenta novamente.');
   }
-  if (!data || data.error) throw new Error('Não foi possível obter acesso à sala.');
+  if (!data || data.error) throw new Error(uiText("Não foi possível obter acesso à sala."));
   return data as {token:string;url:string;isMentor:boolean};
 }
 
@@ -149,14 +150,14 @@ export function useAcademiaVideo(sessionId: string | undefined) {
       if(kind==='camera')await r.localParticipant.setCameraEnabled(!r.localParticipant.isCameraEnabled);
       else await r.localParticipant.setMicrophoneEnabled(!r.localParticipant.isMicrophoneEnabled);
       setParticipants([r.localParticipant,...r.remoteParticipants.values()]);setError('');
-    }catch{setError('Não foi possível ativar o dispositivo. Verifica as permissões da câmara e do microfone.');}
+    }catch{setError(uiText("Não foi possível ativar o dispositivo. Verifica as permissões da câmara e do microfone."));}
   };
   const send = async (text:string) => {
     const r=ref.current;const message=text.trim().slice(0,1000);if(!r||!message)return false;
     try {
       await r.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({text:message})),{reliable:true,topic:'academia-chat'});
       setMessages(items=>[...items,{id:crypto.randomUUID(),name:'Tu',text:message}].slice(-100));return true;
-    }catch{setError('Não foi possível enviar a mensagem.');return false;}
+    }catch{setError(uiText("Não foi possível enviar a mensagem."));return false;}
   };
   return {room,participants,connection,loading,error,messages,audioBlocked,join,leave,toggle,send};
 }

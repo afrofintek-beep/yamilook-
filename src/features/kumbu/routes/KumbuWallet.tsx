@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -11,6 +12,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 
 export default function KumbuWallet() {
+  useUiLocale();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [showHelp, setShowHelp] = useState(false);
@@ -38,7 +40,7 @@ export default function KumbuWallet() {
           <Button variant="ghost" size="icon" className="rounded-xl h-9 w-9" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-4.5 w-4.5" />
           </Button>
-          <h1 className="text-base font-bold flex-1 tracking-tight">Carteira Kumbu</h1>
+          <h1 className="text-base font-bold flex-1 tracking-tight">{uiText("Carteira Kumbu")}</h1>
           <Button variant="ghost" size="icon" className="rounded-xl h-9 w-9" onClick={() => navigate('/kumbu/history')}>
             <History className="h-4.5 w-4.5" />
           </Button>
@@ -53,8 +55,7 @@ export default function KumbuWallet() {
           onClick={() => setBuyOpen(true)}
           className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 text-white font-semibold shadow-sm"
         >
-          <Coins className="h-5 w-5" /> Comprar Kumbu
-        </motion.button>
+          <Coins className="h-5 w-5" />{uiText(" Comprar Kumbu")}</motion.button>
 
         <div className="flex gap-2">
           <motion.button
@@ -62,17 +63,13 @@ export default function KumbuWallet() {
             whileTap={{ scale: 0.97 }}
             onClick={() => setShowHelp(true)}
           >
-            <HelpCircle className="h-4 w-4 text-muted-foreground/50" />
-            Como ganhar?
-          </motion.button>
+            <HelpCircle className="h-4 w-4 text-muted-foreground/50" />{uiText("Como ganhar?")}</motion.button>
           <motion.button
             className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-card border border-border/30 text-[13px] font-medium text-foreground/80 transition-colors hover:bg-card/80"
             whileTap={{ scale: 0.97 }}
             onClick={() => navigate('/ranking')}
           >
-            <Trophy className="h-4 w-4 text-[#C9A23F]" />
-            Ranking
-          </motion.button>
+            <Trophy className="h-4 w-4 text-[#C9A23F]" />{uiText("Ranking")}</motion.button>
         </div>
 
         {/* Approved creators → payouts; otherwise → the monetization apply CTA. */}
@@ -86,12 +83,12 @@ export default function KumbuWallet() {
           </div>
           <div className="flex-1 min-w-0">
             <div className="font-semibold text-sm text-foreground">
-              {isCreator ? 'Levantar Kumbu (Payout)' : 'Tornar-me criador'}
+              {isCreator ? uiText("Levantar Kumbu (Payout)") : uiText("Tornar-me criador")}
             </div>
             <div className="text-xs text-muted-foreground">
               {isCreator
-                ? 'Converte os teus Kumbu em dinheiro'
-                : 'Monetiza o que crias — converte Kumbu em dinheiro'}
+                ? uiText("Converte os teus Kumbu em dinheiro")
+                : uiText("Monetiza o que crias — converte Kumbu em dinheiro")}
             </div>
           </div>
           <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />

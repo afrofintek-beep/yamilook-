@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { privateChatPath, signPrivateChatMedia } from '@/lib/private-chat-media';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { X, Download, Play, RotateCcw } from 'lucide-react';
@@ -30,7 +31,7 @@ export function useResolvedMediaUrl(url: string) {
   const authorize = useCallback(async () => {
     if (!legacyVoicePath) return signPrivateChatMedia(url);
     const { data, error } = await supabase.storage.from('voice-messages').createSignedUrl(legacyVoicePath, 300);
-    if (error || !data?.signedUrl) throw new Error('Sem acesso ao anexo');
+    if (error || !data?.signedUrl) throw new Error(uiText("Sem acesso ao anexo"));
     return data.signedUrl;
   }, [url, legacyVoicePath]);
   const [override, setOverride] = useState<{ source: string; url: string } | null>(null);
@@ -100,6 +101,7 @@ interface MediaPreviewProps {
 }
 
 export function MediaPreview({ url, type, posterUrl, open, onClose }: MediaPreviewProps) {
+  useUiLocale();
   const { resolvedUrl, error, onError, retry, retryId } = useResolvedMediaUrl(url);
   const { resolvedUrl: resolvedPoster } = useResolvedMediaUrl(posterUrl || '');
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -130,38 +132,37 @@ export function MediaPreview({ url, type, posterUrl, open, onClose }: MediaPrevi
     <Dialog open={open} onOpenChange={nextOpen => { if (!nextOpen) handleClose(); }}>
       <DialogContent hideCloseButton aria-describedby={undefined}
         className="flex flex-col min-w-0 left-[calc(50%+(env(safe-area-inset-left,0px)-env(safe-area-inset-right,0px))/2)] top-[calc(50%+(env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))/2)] w-[calc(100%-1rem-env(safe-area-inset-left,0px)-env(safe-area-inset-right,0px))] max-w-3xl h-[calc(100dvh-2rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] max-h-[calc(100dvh-2rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] p-0 gap-0 overflow-hidden bg-black border-none text-white">
-        <DialogTitle className="sr-only">{type === 'video' ? 'Reproduzir vídeo' : 'Ver fotografia'}</DialogTitle>
+        <DialogTitle className="sr-only">{type === 'video' ? uiText("Reproduzir vídeo") : uiText("Ver fotografia")}</DialogTitle>
         <div className="relative z-10 flex min-w-0 items-center justify-between gap-3 px-3 py-2 shrink-0 bg-black">
-          <span className="text-sm">{type === 'video' ? 'Vídeo' : 'Fotografia'}</span>
+          <span className="text-sm">{type === 'video' ? uiText("Vídeo") : uiText("Fotografia")}</span>
           <div className="flex shrink-0 gap-2">
             <Button asChild variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-white/20">
-              <a href={downloadUrl} download={getFilenameFromUrl(url)} target="_blank" rel="noopener noreferrer" aria-label="Descarregar ficheiro">
+              <a href={downloadUrl} download={getFilenameFromUrl(url)} target="_blank" rel="noopener noreferrer" aria-label={uiText("Descarregar ficheiro")}>
                 <Download className="w-5 h-5" />
               </a>
             </Button>
-            <Button variant="ghost" aria-label="Fechar pré-visualização"
+            <Button variant="ghost" aria-label={uiText("Fechar pré-visualização")}
               className="h-11 shrink-0 gap-1 rounded-full px-3 text-white hover:bg-white/20" onClick={handleClose}>
               <X className="w-5 h-5" />
-              <span>Fechar</span>
+              <span>{uiText("Fechar")}</span>
             </Button>
           </div>
         </div>
         <div className="relative min-h-0 min-w-0 flex-1 flex items-center justify-center overflow-hidden bg-black">
           {type === 'image' ? (
-            <img key={`${resolvedUrl}-${retryId}`} src={resolvedUrl} alt="Fotografia"
+            <img key={`${resolvedUrl}-${retryId}`} src={resolvedUrl} alt={uiText("Fotografia")}
               className="block min-w-0 w-full h-full max-w-full max-h-full object-contain" onError={() => void onError()} />
           ) : (
             <video key={`${resolvedUrl}-${retryId}`} ref={bindVideo} src={resolvedUrl} poster={resolvedPoster || undefined}
-              aria-label="Vídeo da conversa" controls autoPlay playsInline preload="metadata"
+              aria-label={uiText("Vídeo da conversa")} controls autoPlay playsInline preload="metadata"
               className="block min-w-0 w-full h-full max-w-full max-h-full object-contain" onError={() => void onError()} />
           )}
         </div>
         {error && (
           <div role="alert" className="shrink-0 max-h-32 overflow-y-auto px-4 py-3 text-center text-sm bg-zinc-900">
-            <p>Não foi possível reproduzir este ficheiro. Tenta novamente ou descarrega-o para abrir no telefone.</p>
+            <p>{uiText("Não foi possível reproduzir este ficheiro. Tenta novamente ou descarrega-o para abrir no telefone.")}</p>
             <Button variant="ghost" className="mt-2 hover:bg-white/20" onClick={retry}>
-              <RotateCcw className="w-4 h-4 mr-2" />Tentar novamente
-            </Button>
+              <RotateCcw className="w-4 h-4 mr-2" />{uiText("Tentar novamente")}</Button>
           </div>
         )}
       </DialogContent>
@@ -178,6 +179,7 @@ interface MediaThumbnailProps {
 }
 
 export function MediaThumbnail({ url, type, posterUrl, durationSeconds, onClick }: MediaThumbnailProps) {
+  useUiLocale();
   const { resolvedUrl, error, onError } = useResolvedMediaUrl(url);
   const { resolvedUrl: resolvedPoster } = useResolvedMediaUrl(posterUrl || '');
   const [aspectRatio, setAspectRatio] = useState(3 / 4);
@@ -190,7 +192,7 @@ export function MediaThumbnail({ url, type, posterUrl, durationSeconds, onClick 
   useEffect(() => { setMetadataDuration(undefined); setAspectRatio(3 / 4); }, [url]);
 
   return (
-    <button type="button" onClick={onClick} aria-label={isVideo ? 'Reproduzir vídeo' : 'Ver fotografia'}
+    <button type="button" onClick={onClick} aria-label={isVideo ? uiText("Reproduzir vídeo") : uiText("Ver fotografia")}
       className={`relative block max-w-full rounded-xl overflow-hidden bg-black text-white ${isVideo ? 'w-[240px]' : 'w-[280px]'}`}
       style={isVideo ? { aspectRatio } : undefined}>
       {isVideo ? (
@@ -207,13 +209,13 @@ export function MediaThumbnail({ url, type, posterUrl, durationSeconds, onClick 
             <span className="w-14 h-14 rounded-full bg-black/70 flex items-center justify-center ring-1 ring-white/50">
               <Play className="w-7 h-7 fill-white ml-1" />
             </span>
-            {error && <span className="text-xs px-3 text-center">Toca para abrir o vídeo</span>}
+            {error && <span className="text-xs px-3 text-center">{uiText("Toca para abrir o vídeo")}</span>}
           </span>
-          <span className="absolute bottom-2 left-2 rounded bg-black/70 px-2 py-1 text-xs">Vídeo</span>
+          <span className="absolute bottom-2 left-2 rounded bg-black/70 px-2 py-1 text-xs">{uiText("Vídeo")}</span>
           {duration && <span className="absolute bottom-2 right-2 rounded bg-black/70 px-2 py-1 text-xs">{duration}</span>}
         </>
       ) : (
-        <img src={resolvedUrl} alt="Fotografia da conversa" loading="lazy" decoding="async"
+        <img src={resolvedUrl} alt={uiText("Fotografia da conversa")} loading="lazy" decoding="async"
           className="w-full h-auto object-cover" onError={() => void onError()} />
       )}
     </button>

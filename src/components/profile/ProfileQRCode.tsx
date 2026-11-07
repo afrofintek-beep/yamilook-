@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { QRCodeSVG } from 'qrcode.react';
 import {
   Dialog,
@@ -26,12 +27,13 @@ interface ProfileQRCodeProps {
 }
 
 export function ProfileQRCode({ open, onOpenChange, profile }: ProfileQRCodeProps) {
+  useUiLocale();
   const profileUrl = `${window.location.origin}/profile/${profile.id}`;
   const themeColor = profile.profile_theme_color || '#6366f1';
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(profileUrl);
-    toast.success('Link copied to clipboard!');
+    toast.success(uiText("Link copied to clipboard!"));
   };
 
   const handleShare = async () => {
@@ -61,7 +63,7 @@ export function ProfileQRCode({ open, onOpenChange, profile }: ProfileQRCodeProp
 
     // Fallback: copy and close with clear feedback
     await navigator.clipboard.writeText(profileUrl);
-    toast.success('Link do perfil copiado!');
+    toast.success(uiText("Link do perfil copiado!"));
     onOpenChange(false);
   };
 
@@ -79,7 +81,7 @@ export function ProfileQRCode({ open, onOpenChange, profile }: ProfileQRCodeProp
       canvas.width = img.width;
       canvas.height = img.height;
       ctx?.drawImage(img, 0, 0);
-      
+
       const pngUrl = canvas.toDataURL('image/png');
       const downloadLink = document.createElement('a');
       downloadLink.href = pngUrl;
@@ -96,7 +98,7 @@ export function ProfileQRCode({ open, onOpenChange, profile }: ProfileQRCodeProp
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-center">Share Profile</DialogTitle>
+          <DialogTitle className="text-center">{uiText("Share Profile")}</DialogTitle>
         </DialogHeader>
 
         <div className="flex flex-col items-center py-6">
@@ -110,7 +112,7 @@ export function ProfileQRCode({ open, onOpenChange, profile }: ProfileQRCodeProp
               {profile.display_name[0]?.toUpperCase()}
             </AvatarFallback>
           </Avatar>
-          
+
           <h3 className="text-lg font-bold">{profile.display_name}</h3>
           <p className="text-muted-foreground">@{profile.username}</p>
           {profile.bandaName && (
@@ -121,7 +123,7 @@ export function ProfileQRCode({ open, onOpenChange, profile }: ProfileQRCodeProp
           )}
 
           {/* QR Code */}
-          <div 
+          <div
             className="mt-6 p-4 rounded-2xl"
             style={{ backgroundColor: `${themeColor}15` }}
           >
@@ -136,9 +138,7 @@ export function ProfileQRCode({ open, onOpenChange, profile }: ProfileQRCodeProp
             />
           </div>
 
-          <p className="mt-4 text-sm text-muted-foreground text-center">
-            Scan this QR code to view my profile
-          </p>
+          <p className="mt-4 text-sm text-muted-foreground text-center">{uiText("Scan this QR code to view my profile")}</p>
 
           {/* Actions */}
           <div className="flex gap-3 mt-6 w-full">
@@ -147,17 +147,13 @@ export function ProfileQRCode({ open, onOpenChange, profile }: ProfileQRCodeProp
               className="flex-1 h-12 rounded-xl"
               onClick={handleCopy}
             >
-              <Copy className="w-4 h-4 mr-2" />
-              Copy Link
-            </Button>
+              <Copy className="w-4 h-4 mr-2" />{uiText("Copy Link")}</Button>
             <Button
               variant="outline"
               className="flex-1 h-12 rounded-xl"
               onClick={handleDownload}
             >
-              <Download className="w-4 h-4 mr-2" />
-              Save QR
-            </Button>
+              <Download className="w-4 h-4 mr-2" />{uiText("Save QR")}</Button>
           </div>
 
           <div
@@ -166,7 +162,7 @@ export function ProfileQRCode({ open, onOpenChange, profile }: ProfileQRCodeProp
           >
             <div className="flex items-center justify-center gap-3 text-primary-foreground">
               <Share2 className="w-5 h-5" />
-              <span className="font-semibold text-base">Share Profile</span>
+              <span className="font-semibold text-base">{uiText("Share Profile")}</span>
             </div>
           </div>
 
@@ -175,9 +171,7 @@ export function ProfileQRCode({ open, onOpenChange, profile }: ProfileQRCodeProp
             variant="ghost"
             className="w-full h-10 rounded-xl mt-2"
             onClick={() => onOpenChange(false)}
-          >
-            Fechar
-          </Button>
+          >{uiText("Fechar")}</Button>
         </div>
       </DialogContent>
     </Dialog>

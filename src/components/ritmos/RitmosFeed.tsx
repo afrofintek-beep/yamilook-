@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -24,6 +25,7 @@ function detectLocationFromCoords(lat: number, lng: number): { city: string } {
 }
 
 export function RitmosFeed() {
+  useUiLocale();
   const navigate = useNavigate();
   const {
     ritmos,
@@ -132,11 +134,11 @@ export function RitmosFeed() {
   // Handle share
   const handleShare = useCallback(async (ritmo: Ritmo) => {
     const url = `${window.location.origin}/ritmos/${ritmo.id}`;
-    
+
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'RITMOS',
+          title: uiText("RITMOS"),
           text: ritmo.caption || 'Check out this Ritmo!',
           url,
         });
@@ -145,7 +147,7 @@ export function RitmosFeed() {
       }
     } else {
       await navigator.clipboard.writeText(url);
-      toast.success('Link copied!');
+      toast.success(uiText("Link copied!"));
     }
   }, []);
 
@@ -155,22 +157,18 @@ export function RitmosFeed() {
     return (
       <div className="h-full flex flex-col items-center justify-center bg-black text-white p-8">
         <div className="text-6xl mb-6">🪘</div>
-        <h2 className="text-2xl font-bold mb-2">No Ritmos yet</h2>
-        <p className="text-white/60 text-center mb-6">
-          Be the first to share a moment in your area!
-        </p>
-        <Button 
+        <h2 className="text-2xl font-bold mb-2">{uiText("No Ritmos yet")}</h2>
+        <p className="text-white/60 text-center mb-6">{uiText("Be the first to share a moment in your area!")}</p>
+        <Button
           onClick={seedPlaceholders}
           className="bg-primary text-primary-foreground"
-        >
-          Add Sample Ritmos
-        </Button>
+        >{uiText("Add Sample Ritmos")}</Button>
       </div>
     );
   }
 
   return (
-    <div 
+    <div
       ref={containerRef}
       className="h-full bg-black relative overflow-hidden"
       onTouchStart={handleTouchStart}
@@ -196,7 +194,7 @@ export function RitmosFeed() {
           <div className="bg-black/40 backdrop-blur-md text-white rounded-full px-4 py-2 flex items-center gap-2">
             <MapPin className="w-4 h-4" />
             <span className="text-sm font-medium">
-              {ritmos[currentIndex].neighborhood || ritmos[currentIndex].city || 'Sem local'}
+              {ritmos[currentIndex].neighborhood || ritmos[currentIndex].city || uiText("Sem local")}
             </span>
           </div>
         </div>
@@ -229,13 +227,13 @@ export function RitmosFeed() {
         // Only render items within range of current for better performance
         const isVisible = Math.abs(index - currentIndex) <= 1;
         if (!isVisible) return null;
-        
+
         const isCurrent = index === currentIndex;
         const offset = index - currentIndex;
-        
+
         // IMPORTANT: Pause video when create sheet is open to prevent background audio
         const shouldPlay = isCurrent && !createOpen && !commentsOpen;
-        
+
         return (
           <motion.div
             key={ritmo.id}
@@ -247,7 +245,7 @@ export function RitmosFeed() {
             }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
             className="absolute inset-0"
-            style={{ 
+            style={{
               zIndex: isCurrent ? 10 : 0,
               pointerEvents: isCurrent ? 'auto' : 'none',
             }}
@@ -273,8 +271,8 @@ export function RitmosFeed() {
             key={index}
             className={cn(
               "w-1 rounded-full transition-all",
-              index === currentIndex 
-                ? "h-4 bg-white" 
+              index === currentIndex
+                ? "h-4 bg-white"
                 : "h-1 bg-white/40"
             )}
           />

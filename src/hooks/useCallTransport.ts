@@ -1,3 +1,4 @@
+import { uiText } from '@/i18n/ui-copy';
 import { useEffect, useRef, useState } from 'react';
 import { useWebRTC } from './useWebRTC';
 import { useLiveKitCall } from './useLiveKitCall';
@@ -23,12 +24,12 @@ export function useCallTransport() {
   }, [active.state.callStatus]);
   useEffect(() => () => { updateHold.current?.(); updateHold.current = null; }, []);
   const assertAvailable = () => {
-    if (pending.current || legacy.state.callId || livekit.state.callId || (hasActiveCall() && !updateHold.current)) throw new Error('Já existe uma chamada em curso.');
+    if (pending.current || legacy.state.callId || livekit.state.callId || (hasActiveCall() && !updateHold.current)) throw new Error(uiText("Já existe uma chamada em curso."));
   };
   const connectIncoming = async (id: string, type: 'voice' | 'video', target: string, epoch: number) => {
     const { data, error } = await supabase.from('calls').select('sdp_offer, is_group_call').eq('id', id).single();
-    if (epoch !== operation.current) throw new Error('Chamada cancelada.');
-    if (error || !data) throw new Error('Não foi possível verificar a chamada.');
+    if (epoch !== operation.current) throw new Error(uiText("Chamada cancelada."));
+    if (error || !data) throw new Error(uiText("Não foi possível verificar a chamada."));
     const offer = data.sdp_offer;
     const isLiveKit = !data.is_group_call && offer && typeof offer === 'object' && !Array.isArray(offer) && offer.transport === 'livekit-v1';
     setSelected(isLiveKit ? 'livekit' : 'webrtc');
@@ -50,19 +51,19 @@ export function useCallTransport() {
       finally { if (operation.current === epoch) pending.current = false; }
     },
     endAndAnswerCall: async (currentId: string, id: string, type: 'voice' | 'video', target: string) => {
-      if (pending.current || active.state.callId !== currentId || currentId === id) throw new Error('A chamada atual mudou. Tenta novamente.');
+      if (pending.current || active.state.callId !== currentId || currentId === id) throw new Error(uiText("A chamada atual mudou. Tenta novamente."));
       protect(); const epoch = ++operation.current; pending.current = true;
       let released = false;
       try {
         // Verify the invitation and end only the user's specified call atomically.
         // A stale/cancelled invitation must leave the current conversation intact.
         const { data, error } = await supabase.rpc('end_direct_call_for_waiting', { p_current_call_id: currentId, p_waiting_call_id: id });
-        if (epoch !== operation.current) throw new Error('Chamada cancelada.');
-        if (error || !data) throw new Error('A chamada em espera já terminou ou foi atendida noutro dispositivo.');
+        if (epoch !== operation.current) throw new Error(uiText("Chamada cancelada."));
+        if (error || !data) throw new Error(uiText("A chamada em espera já terminou ou foi atendida noutro dispositivo."));
         // Release all old microphone/camera/screen tracks before connecting the new peer.
         released = true;
         await Promise.all([legacy.endCall(), livekit.endCall()]);
-        if (epoch !== operation.current) throw new Error('Chamada cancelada.');
+        if (epoch !== operation.current) throw new Error(uiText("Chamada cancelada."));
         await connectIncoming(id, type, target, epoch);
       } catch (error) {
         if (released && epoch === operation.current) unprotect();
@@ -72,16 +73,16 @@ export function useCallTransport() {
       }
     },
     addWaitingToConference: async (currentId: string, waitingId: string) => {
-      if (pending.current || active.state.callId !== currentId || currentId === waitingId) throw new Error('A chamada atual mudou. Tenta novamente.');
+      if (pending.current || active.state.callId !== currentId || currentId === waitingId) throw new Error(uiText("A chamada atual mudou. Tenta novamente."));
       protect(); const epoch = ++operation.current; pending.current = true;
       let released = false;
       try {
         const { data, error } = await supabase.rpc('add_waiting_call_to_conference', { p_current_call_id: currentId, p_waiting_call_id: waitingId });
-        if (epoch !== operation.current) throw new Error('Chamada cancelada.');
-        if (error || !data) throw new Error('Não foi possível reunir estas chamadas. Verifica se a chamada em espera continua disponível.');
+        if (epoch !== operation.current) throw new Error(uiText("Chamada cancelada."));
+        if (error || !data) throw new Error(uiText("Não foi possível reunir estas chamadas. Verifica se a chamada em espera continua disponível."));
         released = true;
         await Promise.all([legacy.endCall(), livekit.endCall()]);
-        if (epoch !== operation.current) throw new Error('Chamada cancelada.');
+        if (epoch !== operation.current) throw new Error(uiText("Chamada cancelada."));
         return data;
       } finally {
         if (epoch === operation.current) { pending.current = false; if (released) unprotect(); }
@@ -96,7 +97,7 @@ export function useCallTransport() {
     // Declining needs only the authoritative call row, not a media session.
     declineCall: async (id: string, target: string) => {
       const { data, error } = await supabase.from('calls').select('is_group_call').eq('id', id).single();
-      if (error || !data) throw new Error('Não foi possível verificar a chamada.');
+      if (error || !data) throw new Error(uiText("Não foi possível verificar a chamada."));
       await (data.is_group_call ? legacy : livekit).declineCall(id, target);
     },
   };

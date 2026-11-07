@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Search, X, Loader2, TrendingUp } from 'lucide-react';
@@ -18,6 +19,7 @@ interface GifPickerProps {
 }
 
 export function GifPicker({ onSelect, onClose }: GifPickerProps) {
+  useUiLocale();
   const [gifs, setGifs] = useState<GifResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -26,12 +28,12 @@ export function GifPicker({ onSelect, onClose }: GifPickerProps) {
   const fetchGifs = useCallback(async (action: 'trending' | 'search', query?: string) => {
     setLoading(true);
     setError(null);
-    
+
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      
+
       if (!session) {
-        setError('Please log in to view GIFs');
+        setError(uiText("Please log in to view GIFs"));
         setLoading(false);
         return;
       }
@@ -48,7 +50,7 @@ export function GifPicker({ onSelect, onClose }: GifPickerProps) {
       setGifs(results);
     } catch (err) {
       console.error('Error fetching GIFs:', err);
-      setError('Failed to load GIFs. Please try again.');
+      setError(uiText("Failed to load GIFs. Please try again."));
     } finally {
       setLoading(false);
     }
@@ -92,7 +94,7 @@ export function GifPicker({ onSelect, onClose }: GifPickerProps) {
           <Input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search GIFs..."
+            placeholder={uiText("Search GIFs...")}
             className="pl-9 h-9"
           />
         </div>
@@ -104,7 +106,7 @@ export function GifPicker({ onSelect, onClose }: GifPickerProps) {
       {/* Title */}
       <div className="px-3 py-2 flex items-center gap-2 text-sm text-muted-foreground">
         <TrendingUp className="w-4 h-4" />
-        {searchQuery ? `Results for "${searchQuery}"` : 'Trending'}
+        {searchQuery ? `Results for "${searchQuery}"` : uiText("Trending")}
       </div>
 
       {/* GIF Grid */}
@@ -114,9 +116,7 @@ export function GifPicker({ onSelect, onClose }: GifPickerProps) {
             <Loader2 className="w-6 h-6 animate-spin text-primary" />
           </div>
         ) : gifs.length === 0 ? (
-          <p className="text-center text-muted-foreground py-8 text-sm">
-            No GIFs found
-          </p>
+          <p className="text-center text-muted-foreground py-8 text-sm">{uiText("No GIFs found")}</p>
         ) : (
           <div className="grid grid-cols-2 gap-2">
             {gifs.map((gif) => (
@@ -140,9 +140,7 @@ export function GifPicker({ onSelect, onClose }: GifPickerProps) {
       </div>
 
       {/* Powered by Tenor */}
-      <div className="px-3 py-2 border-t border-border text-xs text-muted-foreground text-center">
-        Powered by Tenor
-      </div>
+      <div className="px-3 py-2 border-t border-border text-xs text-muted-foreground text-center">{uiText("Powered by Tenor")}</div>
     </motion.div>
   );
 }

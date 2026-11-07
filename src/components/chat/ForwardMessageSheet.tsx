@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Check, Loader2, Forward } from 'lucide-react';
@@ -28,19 +29,20 @@ interface ForwardMessageSheetProps {
   onClose?: () => void;
 }
 
-export function ForwardMessageSheet({ 
-  open, 
+export function ForwardMessageSheet({
+  open,
   onOpenChange,
-  message, 
+  message,
   messageIds = [],
   conversationId,
   onClose,
 }: ForwardMessageSheetProps) {
+  useUiLocale();
   const { user } = useAuth();
   const { toast } = useToast();
   const { conversations } = useConversations();
   const { messages: allMessages } = useMessages(conversationId || null);
-  
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [forwarding, setForwarding] = useState(false);
@@ -48,8 +50,8 @@ export function ForwardMessageSheet({
   const sourceIds = message ? [message.id] : [...new Set(messageIds)];
 
   // Get messages to forward
-  const messagesToForward = message 
-    ? [message] 
+  const messagesToForward = message
+    ? [message]
     : allMessages.filter(m => messageIds.includes(m.id)).map(m => ({
         id: m.id,
         content: m.content,
@@ -61,10 +63,10 @@ export function ForwardMessageSheet({
   const filteredConversations = conversations.filter((conv) => {
     if (!searchQuery.trim()) return true;
     const query = searchQuery.toLowerCase();
-    
+
     const otherParticipant = conv.participants?.find((p) => p.user_id !== user?.id)?.profile;
     const name = conv.type === 'group' ? conv.name : otherParticipant?.display_name;
-    
+
     return name?.toLowerCase().includes(query);
   });
 
@@ -74,7 +76,7 @@ export function ForwardMessageSheet({
       newSelected.delete(id);
     } else {
       if (newSelected.size >= 20) {
-        toast({ title: 'Seleciona até 20 conversas de cada vez' });
+        toast({ title: uiText("Seleciona até 20 conversas de cada vez") });
         return;
       }
       newSelected.add(id);
@@ -94,12 +96,12 @@ export function ForwardMessageSheet({
         p_conversation_ids: Array.from(selectedIds),
       });
       if (error) throw error;
-      if (data !== sourceIds.length * selectedIds.size) throw new Error('Encaminhamento não confirmado');
+      if (data !== sourceIds.length * selectedIds.size) throw new Error(uiText("Encaminhamento não confirmado"));
 
       const msgCount = sourceIds.length;
       const convCount = selectedIds.size;
       toast({
-        title: 'Mensagens reencaminhadas',
+        title: uiText("Mensagens reencaminhadas"),
         description: `${msgCount} mensagem(ns) enviada(s) para ${convCount} conversa(s)`,
       });
 
@@ -107,8 +109,8 @@ export function ForwardMessageSheet({
       handleClose();
     } catch {
       toast({
-        title: 'Erro',
-        description: 'Não foi possível reencaminhar. A seleção foi mantida para tentares novamente.',
+        title: uiText("Erro"),
+        description: uiText("Não foi possível reencaminhar. A seleção foi mantida para tentares novamente."),
         variant: 'destructive',
       });
     } finally {
@@ -131,8 +133,7 @@ export function ForwardMessageSheet({
       className="h-[75vh] rounded-t-3xl sm:max-w-lg"
       title={
         <span className="flex items-center gap-2">
-          <Forward className="w-5 h-5" />
-          Reencaminhar {sourceIds.length > 1 ? `${sourceIds.length} mensagens` : 'mensagem'}
+          <Forward className="w-5 h-5" />{uiText("Reencaminhar ")}{sourceIds.length > 1 ? `${sourceIds.length} mensagens` : uiText("mensagem")}
         </span>
       }
     >
@@ -140,21 +141,20 @@ export function ForwardMessageSheet({
         {/* Message Preview */}
         {messagesToForward.length > 0 && (
           <div className="p-3 mb-4 rounded-xl bg-secondary/50 border border-border/50">
-            <p className="text-sm text-muted-foreground mb-1">A reencaminhar:</p>
+            <p className="text-sm text-muted-foreground mb-1">{uiText("A reencaminhar:")}</p>
             {messagesToForward.length === 1 ? (
               <p className="text-sm line-clamp-2">
                 {messagesToForward[0].message_type === 'image'
-                  ? '📷 Foto'
+                  ? uiText("📷 Foto")
                   : messagesToForward[0].message_type === 'voice'
-                  ? '🎤 Mensagem de voz'
+                  ? uiText("🎤 Mensagem de voz")
                   : messagesToForward[0].message_type === 'video'
-                  ? '🎥 Vídeo'
-                  : messagesToForward[0].content || 'Mensagem'}
+                  ? uiText("🎥 Vídeo")
+                  : messagesToForward[0].content || uiText("Mensagem")}
               </p>
             ) : (
               <p className="text-sm">
-                {messagesToForward.length} mensagens selecionadas
-              </p>
+                {messagesToForward.length}{uiText(" mensagens selecionadas")}</p>
             )}
           </div>
         )}
@@ -165,7 +165,7 @@ export function ForwardMessageSheet({
           <Input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Procurar conversas..."
+            placeholder={uiText("Procurar conversas...")}
             className="pl-10 h-11 rounded-xl"
           />
         </div>
@@ -211,7 +211,7 @@ export function ForwardMessageSheet({
                   <span className="font-semibold truncate block">{displayName}</span>
                   {conv.last_message && (
                     <span className="text-sm text-muted-foreground truncate block">
-                      {conv.last_message.content || 'Media'}
+                      {conv.last_message.content || uiText("Media")}
                     </span>
                   )}
                 </div>
@@ -230,12 +230,9 @@ export function ForwardMessageSheet({
           >
             <div className="flex-1">
               <span className="text-sm text-muted-foreground">
-                {selectedIds.size} selecionada(s)
-              </span>
+                {selectedIds.size}{uiText(" selecionada(s)")}</span>
             </div>
-            <Button variant="outline" onClick={handleClose} disabled={forwarding}>
-              Cancelar
-            </Button>
+            <Button variant="outline" onClick={handleClose} disabled={forwarding}>{uiText("Cancelar")}</Button>
             <Button
               onClick={handleForward}
               disabled={forwarding || !sourceIds.length}
@@ -245,9 +242,7 @@ export function ForwardMessageSheet({
                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
               ) : (
                 <Forward className="w-4 h-4 mr-2" />
-              )}
-              Reencaminhar
-            </Button>
+              )}{uiText("Reencaminhar")}</Button>
           </motion.div>
         )}
     </ResponsiveModal>

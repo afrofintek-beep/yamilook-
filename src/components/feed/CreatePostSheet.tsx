@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { genderCtx } from '@/lib/i18n-gender';
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -84,6 +85,7 @@ interface CreatePostSheetProps {
 }
 
 export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
+  useUiLocale();
   const viewport = useKeyboardViewport(open);
   const { t } = useTranslation();
   const { user, profile } = useAuth();
@@ -96,7 +98,7 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
     { value: 'close_friends', label: t('privacy.closeFriends', genderCtx(profile?.gender)), icon: Circle },
     { value: 'only_me', label: t('privacy.onlyMe'), icon: Lock },
   ];
-  
+
   const [content, setContent] = useState('');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [filePreviews, setFilePreviews] = useState<string[]>([]);
@@ -192,11 +194,11 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
             `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=14&addressdetails=1`
           );
           const data = await response.json();
-          
+
           // Build location string
           const address = data.address;
           const locationParts = [];
-          
+
           if (address.suburb || address.neighbourhood || address.district) {
             locationParts.push(address.suburb || address.neighbourhood || address.district);
           }
@@ -206,11 +208,11 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
           if (address.country) {
             locationParts.push(address.country);
           }
-          
+
           const locationName = locationParts.length > 0
             ? locationParts.slice(0, 2).join(', ')
             : 'Local marcado';
-          
+
           setLocation(locationName);
           toast({
             title: t('feed.locationAdded'),
@@ -393,7 +395,7 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
 
           if (!moderationError && moderationResult && moderationResult.approved === false) {
             toast({
-              title: '⚠️ Conteúdo não permitido',
+              title: uiText("⚠️ Conteúdo não permitido"),
               description: moderationResult.reason || 'O teu post viola as regras da comunidade. Por favor, revê o conteúdo.',
               variant: 'destructive',
             });
@@ -406,7 +408,7 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
         }
       }
 
-      const type = selectedFiles.length > 0 
+      const type = selectedFiles.length > 0
         ? chatMediaType(selectedFiles[0]) === 'video' ? 'video' : 'photo'
         : 'text';
 
@@ -500,9 +502,9 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
             {t('feed.cancel')}
           </Button>
           <SheetTitle className="min-w-0 flex-1 truncate text-center text-sm sm:text-lg text-foreground">{t('feed.createPost')}</SheetTitle>
-          <Button 
+          <Button
             data-testid="muxi-publish-button"
-            size="sm" 
+            size="sm"
             className="bg-primary text-primary-foreground rounded-full px-4 min-h-11 shrink-0"
             disabled={!canPost || isSubmitting || isPreparingFiles}
             onClick={handleSubmit}
@@ -606,8 +608,7 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
                             className="absolute bottom-2 left-2 h-7 rounded-full bg-black/60 text-white border-0 text-[11px] gap-1 px-2.5 hover:bg-black/80"
                             onClick={(e) => { e.stopPropagation(); setEditingVideoIndex(index); }}
                           >
-                            <Scissors className="w-3 h-3" /> Editar
-                          </Button>
+                            <Scissors className="w-3 h-3" />{uiText(" Editar")}</Button>
                         </div>
                       ) : (
                         <img
@@ -653,15 +654,15 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
         {/* Bottom actions */}
         <div className="relative shrink-0 px-4 pt-2 border-t bg-background" style={{ paddingBottom: viewport.compact ? '8px' : 'max(8px, env(safe-area-inset-bottom, 0px))' }}>
           <div className="flex items-center gap-2" data-testid="post-action-buttons">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               size="icon"
               onClick={() => fileInputRef.current?.click()}
             >
               <Image className="w-5 h-5 text-green-500" />
             </Button>
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               size="icon"
               onClick={() => {
                 const input = fileInputRef.current;
@@ -674,7 +675,7 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
             >
               <Video className="w-5 h-5 text-purple-500" />
             </Button>
-            <Button 
+            <Button
               variant={location ? "default" : "ghost"}
               size="icon"
               onClick={handleGetLocation}
@@ -698,7 +699,7 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
                   <Smile className="w-5 h-5 text-yellow-500" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent 
+              <PopoverContent
                 className="w-72 p-2 bg-card border border-border z-[100]"
                 side="top"
                 align="start"

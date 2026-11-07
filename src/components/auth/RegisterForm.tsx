@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { communityReturn } from '@/features/academia/community-links';
 import { getYamilookPublicUrl } from '@/lib/public-site';
 import { captureReferralCode, getReferralCode, clearReferralCode } from '@/lib/referral';
@@ -27,6 +28,7 @@ import { triggerCelebrationConfetti } from '@/lib/confetti';
 
 
 export function RegisterForm() {
+  useUiLocale();
   const { t } = useTranslation();
   const [isInvitationSignup] = useState(() => hasInviteCodeInSearch(window.location.search));
   const registerSchema = useMemo(() => createRegisterSchema(isInvitationSignup), [isInvitationSignup]);
@@ -160,7 +162,7 @@ export function RegisterForm() {
       triggerCelebrationConfetti();
       clearReferralCode();
       if (!authData.session) {
-        toast.success('Conta criada. Confirma o teu email antes de entrar.');
+        toast.success(uiText("Conta criada. Confirma o teu email antes de entrar."));
         navigate(`/login${communitySearch}`);
         return;
       }
@@ -170,7 +172,7 @@ export function RegisterForm() {
           .update({ onboarding_completed: true, app_tour_completed: true })
           .eq('id', userId);
         if (profileError) {
-          toast.error('A conta foi criada, mas o perfil não ficou concluído. Entra novamente para continuar.');
+          toast.error(uiText("A conta foi criada, mas o perfil não ficou concluído. Entra novamente para continuar."));
           navigate(`/login${communitySearch}`);
           return;
         }
@@ -186,7 +188,7 @@ export function RegisterForm() {
 
   return (
     <Form {...form}>
-      <motion.form 
+      <motion.form
         onSubmit={form.handleSubmit(onSubmit, (errors) => {
           const firstError = Object.values(errors)[0];
           toast.error(firstError?.message || 'Verifica os campos assinalados acima.');
@@ -198,13 +200,11 @@ export function RegisterForm() {
       >
         {/* Aviso de fase MVP */}
         <div className="rounded-xl border border-primary/30 bg-primary/10 px-4 py-3 text-sm text-foreground">
-          🚀 {isInvitationSignup ? 'Convite individual: usa o email que recebeu este link. O perfil pode ser completado depois.' : t('auth.mvpBanner', 'A Yamilook está em fase de lançamento fechado (MVP): a inscrição requer um código de convite de um membro. A data de lançamento pública será anunciada brevemente.')}
+          🚀 {isInvitationSignup ? uiText("Convite individual: usa o email que recebeu este link. O perfil pode ser completado depois.") : t('auth.mvpBanner', 'A Yamilook está em fase de lançamento fechado (MVP): a inscrição requer um código de convite de um membro. A data de lançamento pública será anunciada brevemente.')}
         </div>
 
         {isInvitationSignup ? (
-          <div className="rounded-xl border border-primary/20 bg-secondary/40 px-4 py-3 text-sm text-center" role="note">
-            O convite é individual e de utilização única. Introduz o email ao qual foi enviado.
-            {codeValid === false && <p className="mt-2 text-destructive">Este convite é inválido ou já foi utilizado. Pede um novo convite.</p>}
+          <div className="rounded-xl border border-primary/20 bg-secondary/40 px-4 py-3 text-sm text-center" role="note">{uiText("O convite é individual e de utilização única. Introduz o email ao qual foi enviado.")}{codeValid === false && <p className="mt-2 text-destructive">{uiText("Este convite é inválido ou já foi utilizado. Pede um novo convite.")}</p>}
           </div>
         ) : (
           <>
@@ -226,7 +226,7 @@ export function RegisterForm() {
                       <FormControl>
                         <Input
                           {...field}
-                          placeholder="XXXX-XXXX"
+                          placeholder={uiText("XXXX-XXXX")}
                           autoCapitalize="characters"
                           autoCorrect="off"
                           spellCheck={false}
@@ -255,10 +255,10 @@ export function RegisterForm() {
                     </div>
                   </div>
                 {codeValid === false && (
-                  <p className="text-sm text-destructive">Código inválido ou já utilizado</p>
+                  <p className="text-sm text-destructive">{uiText("Código inválido ou já utilizado")}</p>
                 )}
                 {codeValid === true && (
-                  <p className="text-sm text-green-600">✓ Código válido!</p>
+                  <p className="text-sm text-green-600">{uiText("✓ Código válido!")}</p>
                 )}
                 <FormMessage />
               </FormItem>
@@ -368,7 +368,7 @@ export function RegisterForm() {
             name="email"
             render={({ field, fieldState }) => (
               <FormItem>
-                <FormLabel>{isInvitationSignup ? 'Email do convite' : t('auth.email')}</FormLabel>
+                <FormLabel>{isInvitationSignup ? uiText("Email do convite") : t('auth.email')}</FormLabel>
                   <div className={fieldState.error ? "animate-shake" : ""}>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />

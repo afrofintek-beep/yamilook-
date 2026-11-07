@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { createChatConversation } from '@/lib/chat-conversations';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -59,6 +60,7 @@ export function ContactCard({
   onBlock,
   onUpdateNickname,
 }: ContactCardProps) {
+  useUiLocale();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -69,7 +71,7 @@ export function ContactCard({
   const [nicknameDialogOpen, setNicknameDialogOpen] = useState(false);
   const [newNickname, setNewNickname] = useState(contact.nickname || '');
   const [loading, setLoading] = useState(false);
-  
+
   const isInCloseFriends = isCloseFriend(contact.contact_user_id);
   const contactGender = contact.profile?.gender as 'male' | 'female' | 'other' | null | undefined;
   const closeFriendLabel = getCloseFriendLabel(contactGender);
@@ -84,10 +86,10 @@ export function ContactCard({
       });
     } else {
       toast({
-        title: isInCloseFriends 
-          ? `Removido dos ${closeFriendLabel}s` 
+        title: isInCloseFriends
+          ? `Removido dos ${closeFriendLabel}s`
           : `Adicionado aos ${closeFriendLabel}s`,
-        description: isInCloseFriends 
+        description: isInCloseFriends
           ? `Esta pessoa já não verá os teus estados de ${closeFriendLabel}s`
           : `Esta pessoa verá os teus estados de ${closeFriendLabel}s`,
       });
@@ -104,10 +106,10 @@ export function ContactCard({
 
   const handleStartChat = async () => {
     if (!user) return;
-    
+
     const { data, error } = await createChatConversation([contact.contact_user_id]);
     if (error || !data) {
-      toast({ title: 'Não foi possível abrir a conversa', variant: 'destructive' });
+      toast({ title: uiText("Não foi possível abrir a conversa"), variant: 'destructive' });
       return;
     }
     navigate(`/chat/${data.id}`);
@@ -152,30 +154,30 @@ export function ContactCard({
             )}
           </div>
           <p className="text-sm text-muted-foreground truncate">
-            @{contact.profile?.username || 'unknown'}
+            @{contact.profile?.username || uiText("unknown")}
           </p>
         </div>
 
         <div className="flex items-center gap-1">
-          <Button 
-            variant="ghost" 
-            size="icon" 
+          <Button
+            variant="ghost"
+            size="icon"
             className="rounded-full h-9 w-9"
             onClick={handleStartChat}
           >
             <MessageCircle className="w-5 h-5" />
           </Button>
-          <Button 
-            variant="ghost" 
-            size="icon" 
+          <Button
+            variant="ghost"
+            size="icon"
             className="rounded-full h-9 w-9"
             onClick={() => startCall?.(contact.contact_user_id, 'voice')}
           >
             <Phone className="w-5 h-5" />
           </Button>
-          <Button 
-            variant="ghost" 
-            size="icon" 
+          <Button
+            variant="ghost"
+            size="icon"
             className="rounded-full h-9 w-9"
             onClick={() => startCall?.(contact.contact_user_id, 'video')}
           >
@@ -203,29 +205,24 @@ export function ContactCard({
                     isInCloseFriends ? 'text-primary' : ''
                   }`}
                 />
-                {isInCloseFriends 
+                {isInCloseFriends
                   ? `Tirar dos ${closeFriendLabel}s`
                   : `Pôr nos ${closeFriendLabel}s`}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setNicknameDialogOpen(true)}>
                 <Edit2 className="w-4 h-4 mr-2" />
-                {t('common.edit')} nickname
-              </DropdownMenuItem>
+                {t('common.edit')}{uiText(" nickname")}</DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() => onRemove(contact.id)}
                 className="text-destructive"
               >
-                <UserMinus className="w-4 h-4 mr-2" />
-                Remove contact
-              </DropdownMenuItem>
+                <UserMinus className="w-4 h-4 mr-2" />{uiText("Remove contact")}</DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => onBlock(contact.id)}
                 className="text-destructive"
               >
-                <Ban className="w-4 h-4 mr-2" />
-                Block user
-              </DropdownMenuItem>
+                <Ban className="w-4 h-4 mr-2" />{uiText("Block user")}</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -234,20 +231,18 @@ export function ContactCard({
       <Dialog open={nicknameDialogOpen} onOpenChange={setNicknameDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Edit Nickname</DialogTitle>
+            <DialogTitle>{uiText("Edit Nickname")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="nickname">Nickname for {contact.profile?.display_name}</Label>
+              <Label htmlFor="nickname">{uiText("Nickname for ")}{contact.profile?.display_name}</Label>
               <Input
                 id="nickname"
                 value={newNickname}
                 onChange={(e) => setNewNickname(e.target.value)}
-                placeholder="Enter a nickname"
+                placeholder={uiText("Enter a nickname")}
               />
-              <p className="text-xs text-muted-foreground">
-                Only you will see this nickname
-              </p>
+              <p className="text-xs text-muted-foreground">{uiText("Only you will see this nickname")}</p>
             </div>
           </div>
           <DialogFooter>
@@ -255,16 +250,12 @@ export function ContactCard({
               variant="outline"
               onClick={() => setNicknameDialogOpen(false)}
               disabled={loading}
-            >
-              Cancel
-            </Button>
+            >{uiText("Cancel")}</Button>
             <Button
               onClick={handleNicknameSave}
               disabled={loading}
               className="bg-gradient-primary text-white"
-            >
-              Save
-            </Button>
+            >{uiText("Save")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

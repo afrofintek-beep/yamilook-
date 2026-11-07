@@ -1,3 +1,4 @@
+import { uiText } from '@/i18n/ui-copy';
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -45,13 +46,13 @@ export function useArchivedPosts() {
           .eq('post_id', postId)
           .eq('user_id', user.id);
         if (error) throw error;
-        toast({ title: 'Publicação desarquivada' });
+        toast({ title: uiText("Publicação desarquivada") });
       } else {
         const { error } = await supabase
           .from('post_archives')
           .insert({ post_id: postId, user_id: user.id });
         if (error) throw error;
-        toast({ title: 'Publicação arquivada' });
+        toast({ title: uiText("Publicação arquivada") });
       }
     } catch (err) {
       // Revert on failure
@@ -64,7 +65,7 @@ export function useArchivedPosts() {
         }
         return next;
       });
-      toast({ title: 'Erro', description: 'Não foi possível atualizar o arquivo', variant: 'destructive' });
+      toast({ title: uiText("Erro"), description: uiText("Não foi possível atualizar o arquivo"), variant: 'destructive' });
     }
   }, [user, archivedPostIds, toast]);
 

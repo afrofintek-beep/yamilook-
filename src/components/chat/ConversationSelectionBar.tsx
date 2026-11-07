@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { motion } from 'framer-motion';
 import { X, Archive, Pin, BellOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -17,6 +18,7 @@ export function ConversationSelectionBar({
   onPin,
   onMute,
 }: ConversationSelectionBarProps) {
+  useUiLocale();
   return (
     <motion.div
       initial={{ y: 100, opacity: 0 }}
@@ -31,12 +33,12 @@ export function ConversationSelectionBar({
             size="icon"
             className="rounded-full"
             onClick={onCancel}
-            aria-label="Cancelar seleção"
+            aria-label={uiText("Cancelar seleção")}
           >
             <X className="w-5 h-5" />
           </Button>
           <span className="font-medium text-sm truncate">
-            {selectedCount} {selectedCount === 1 ? 'selecionada' : 'selecionadas'}
+            {selectedCount} {selectedCount === 1 ? uiText("selecionada") : uiText("selecionadas")}
           </span>
         </div>
 
@@ -46,7 +48,7 @@ export function ConversationSelectionBar({
             size="icon"
             className="rounded-full"
             onClick={onPin}
-            title="Fixar" aria-label="Fixar conversas"
+            title={uiText("Fixar")} aria-label={uiText("Fixar conversas")}
           >
             <Pin className="w-5 h-5" />
           </Button>
@@ -55,7 +57,7 @@ export function ConversationSelectionBar({
             size="icon"
             className="rounded-full"
             onClick={onMute}
-            title="Silenciar" aria-label="Silenciar conversas"
+            title={uiText("Silenciar")} aria-label={uiText("Silenciar conversas")}
           >
             <BellOff className="w-5 h-5" />
           </Button>
@@ -64,7 +66,7 @@ export function ConversationSelectionBar({
             size="icon"
             className="rounded-full"
             onClick={onArchive}
-            title="Arquivar" aria-label="Arquivar conversas"
+            title={uiText("Arquivar")} aria-label={uiText("Arquivar conversas")}
           >
             <Archive className="w-5 h-5" />
           </Button>

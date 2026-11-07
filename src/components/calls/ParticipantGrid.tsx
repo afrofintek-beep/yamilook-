@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import React from 'react';
 import { CallRemoteMedia, CallVideoOnly } from './CallRemoteMedia';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -39,12 +40,13 @@ export function ParticipantGrid({
   callType,
   onSelectParticipant,
 }: ParticipantGridProps) {
+  useUiLocale();
   const [selectedUserId, setSelectedUserId] = React.useState<string | null>(null);
   // CRITICAL: Merge database participants with any streams we have
   // This ensures we show video/audio even if DB hasn't synced yet
   const participantUserIds = new Set(participants.map(p => p.user_id));
   const streamOnlyUserIds = Array.from(remoteStreams.keys()).filter(userId => !participantUserIds.has(userId));
-  
+
   // Create placeholder participants for streams without DB entries
   const streamOnlyParticipants: Participant[] = streamOnlyUserIds.map(userId => ({
     id: `stream-${userId}`,
@@ -57,7 +59,7 @@ export function ParticipantGrid({
     is_hand_raised: false,
     is_spotlight: false,
   }));
-  
+
   const allParticipants = [...participants, ...streamOnlyParticipants];
 
   React.useEffect(() => {
@@ -83,11 +85,11 @@ export function ParticipantGrid({
   const getGridClass = () => {
     // Local user is rendered as PiP overlay in VideoCall, not in this grid
     const count = allParticipants.length;
-    
+
     if (isScreenSharing) {
       return 'grid-cols-1';
     }
-    
+
     switch (count) {
       case 1:
         return 'grid-cols-1';
@@ -129,12 +131,10 @@ export function ParticipantGrid({
     )} style={hasFocus ? { gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` } : undefined}>
       {sharedScreen && <div key="shared-screen" data-testid="shared-screen" className="relative min-h-0 min-w-0 row-start-1 bg-black" style={{ gridColumn: `1 / ${columns + 1}` }}>
         <CallVideoOnly stream={sharedScreen} contain />
-        <span className="absolute left-3 top-3 rounded-full bg-black/60 px-3 py-1 text-sm text-white">Ecrã partilhado</span>
+        <span className="absolute left-3 top-3 rounded-full bg-black/60 px-3 py-1 text-sm text-white">{uiText("Ecrã partilhado")}</span>
       </div>}
       {selectedUserId && !isSingleRemote && !hasScreen && (
-        <button type="button" onClick={() => setSelectedUserId(null)} className="absolute left-3 bottom-28 z-20 rounded-full bg-black/70 px-3 py-2 text-sm text-white">
-          Ver todos
-        </button>
+        <button type="button" onClick={() => setSelectedUserId(null)} className="absolute left-3 bottom-28 z-20 rounded-full bg-black/70 px-3 py-2 text-sm text-white">{uiText("Ver todos")}</button>
       )}
       {/* Remote participants (from DB + stream-only) */}
       {allParticipants.map(participant => (
@@ -151,7 +151,7 @@ export function ParticipantGrid({
           />
         </div>
       ))}
-      
+
       {/* Local user (if only one, show full screen) */}
       {!hasScreen && allParticipants.length === 0 && localStream && callType === 'video' && (
         <div className="relative w-full h-full bg-muted overflow-hidden">
@@ -164,9 +164,7 @@ export function ParticipantGrid({
               if (el) el.srcObject = localStream;
             }}
           />
-          <div className="absolute bottom-4 left-4 bg-black/50 px-3 py-1 rounded-full text-white text-sm">
-            You
-          </div>
+          <div className="absolute bottom-4 left-4 bg-black/50 px-3 py-1 rounded-full text-white text-sm">{uiText("You")}</div>
         </div>
       )}
     </div>
@@ -182,6 +180,7 @@ interface ParticipantTileProps {
 }
 
 function ParticipantTile({ participant, stream, callType, isSpotlight, onSelect }: ParticipantTileProps) {
+  useUiLocale();
   // Check if stream has active video track - don't rely only on database state
   const hasVideoTrack = stream?.getVideoTracks().some(track => track.enabled && track.readyState === 'live');
   const hasAudioTrack = stream?.getAudioTracks().some(track => track.enabled);
@@ -206,7 +205,7 @@ function ParticipantTile({ participant, stream, callType, isSpotlight, onSelect 
     )}>
       {/* Always render video/audio element if we have a stream - even for voice calls (for audio) */}
       {hasStream && <CallRemoteMedia stream={stream!} showVideo={showVideo} />}
-      
+
       {/* Show avatar when no video (or voice call) */}
       {!showVideo && (
         <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/50">

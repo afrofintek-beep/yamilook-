@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -24,12 +25,13 @@ interface GuideProfileSheetProps {
   isCurrentUserGuide: boolean;
 }
 
-export function GuideProfileSheet({ 
-  open, 
-  onOpenChange, 
+export function GuideProfileSheet({
+  open,
+  onOpenChange,
   guide,
-  isCurrentUserGuide 
+  isCurrentUserGuide
 }: GuideProfileSheetProps) {
+  useUiLocale();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -47,7 +49,7 @@ export function GuideProfileSheet({
 
     try {
       setIsSubmitting(true);
-      
+
       const { error } = await supabase
         .from('profiles')
         .update({
@@ -59,12 +61,12 @@ export function GuideProfileSheet({
 
       if (error) throw error;
 
-      toast.success('Perfil atualizado com sucesso!');
+      toast.success(uiText("Perfil atualizado com sucesso!"));
       onOpenChange(false);
       navigate(`/profile/${user.id}`);
     } catch (error) {
       console.error('Error updating profile:', error);
-      toast.error('Erro ao atualizar perfil');
+      toast.error(uiText("Erro ao atualizar perfil"));
     } finally {
       setIsSubmitting(false);
     }
@@ -82,8 +84,8 @@ export function GuideProfileSheet({
       <SheetContent side="bottom" className="bg-palco-bg border-palco-border rounded-t-[24px] max-h-[90vh] overflow-y-auto">
         <SheetHeader className="flex flex-row items-center justify-between pb-4">
           <SheetTitle className="text-palco-text">
-            {isCurrentUserGuide && !hasCompleteProfile 
-              ? 'Complete o seu Perfil' 
+            {isCurrentUserGuide && !hasCompleteProfile
+              ? uiText("Complete o seu Perfil")
               : t('palco.guideProfile')
             }
           </SheetTitle>
@@ -110,7 +112,7 @@ export function GuideProfileSheet({
               <h3 className="font-semibold text-palco-text text-lg">
                 {guide?.display_name || t('palco.guide')}
               </h3>
-              <p className="text-sm text-palco-text-secondary">{t('palco.guide')} do PALCO</p>
+              <p className="text-sm text-palco-text-secondary">{t('palco.guide')}{uiText(" do PALCO")}</p>
             </div>
           </div>
 
@@ -119,50 +121,42 @@ export function GuideProfileSheet({
             <div className="space-y-4">
               <div className="flex items-center gap-2 p-3 bg-palco-accent/10 rounded-[12px] border border-palco-accent/30">
                 <Info className="w-5 h-5 text-palco-accent flex-shrink-0" />
-                <p className="text-sm text-palco-text">
-                  Complete o seu perfil para que os participantes possam conhecê-lo melhor.
-                </p>
+                <p className="text-sm text-palco-text">{uiText("Complete o seu perfil para que os participantes possam conhecê-lo melhor.")}</p>
               </div>
 
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="display_name" className="text-palco-text flex items-center gap-2">
-                    <User className="w-4 h-4" />
-                    Nome de exibição
-                  </Label>
+                    <User className="w-4 h-4" />{uiText("Nome de exibição")}</Label>
                   <Input
                     id="display_name"
                     value={formData.display_name}
                     onChange={(e) => setFormData(prev => ({ ...prev, display_name: e.target.value }))}
-                    placeholder="Como quer ser chamado?"
+                    placeholder={uiText("Como quer ser chamado?")}
                     className="bg-palco-surface border-palco-border text-palco-text"
                   />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="bio" className="text-palco-text flex items-center gap-2">
-                    <Mail className="w-4 h-4" />
-                    Sobre você
-                  </Label>
+                    <Mail className="w-4 h-4" />{uiText("Sobre você")}</Label>
                   <Textarea
                     id="bio"
                     value={formData.bio}
                     onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
-                    placeholder="Fale um pouco sobre você e a sua experiência..."
+                    placeholder={uiText("Fale um pouco sobre você e a sua experiência...")}
                     className="bg-palco-surface border-palco-border text-palco-text min-h-[100px]"
                   />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="location" className="text-palco-text flex items-center gap-2">
-                    <MapPin className="w-4 h-4" />
-                    Localização
-                  </Label>
+                    <MapPin className="w-4 h-4" />{uiText("Localização")}</Label>
                   <Input
                     id="location"
                     value={formData.location}
                     onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
-                    placeholder="Ex: Luanda, Angola"
+                    placeholder={uiText("Ex: Luanda, Angola")}
                     className="bg-palco-surface border-palco-border text-palco-text"
                   />
                 </div>
@@ -173,15 +167,13 @@ export function GuideProfileSheet({
                   variant="outline"
                   className="flex-1 border-palco-border text-palco-text rounded-full"
                   onClick={() => onOpenChange(false)}
-                >
-                  Mais tarde
-                </Button>
+                >{uiText("Mais tarde")}</Button>
                 <Button
                   className="flex-1 bg-palco-accent hover:bg-palco-accent/90 text-white rounded-full"
                   onClick={handleSubmit}
                   disabled={isSubmitting || !formData.display_name.trim()}
                 >
-                  {isSubmitting ? 'A guardar...' : 'Guardar'}
+                  {isSubmitting ? uiText("A guardar...") : uiText("Guardar")}
                 </Button>
               </div>
             </div>
@@ -192,14 +184,10 @@ export function GuideProfileSheet({
                 <Button
                   className="w-full bg-palco-accent hover:bg-palco-accent/90 text-white rounded-full h-12"
                   onClick={handleViewProfile}
-                >
-                  Ver Perfil Completo
-                </Button>
+                >{uiText("Ver Perfil Completo")}</Button>
               ) : (
                 <div className="text-center p-4 bg-palco-surface rounded-[16px] border border-palco-border">
-                  <p className="text-palco-text-secondary text-sm">
-                    Este {t('palco.guide').toLowerCase()} ainda não completou o perfil na Yamilook.
-                  </p>
+                  <p className="text-palco-text-secondary text-sm">{uiText("Este ")}{t('palco.guide').toLowerCase()}{uiText(" ainda não completou o perfil na Yamilook.")}</p>
                 </div>
               )}
 
@@ -208,9 +196,7 @@ export function GuideProfileSheet({
                   variant="outline"
                   className="w-full border-palco-accent text-palco-accent rounded-full h-12"
                   onClick={() => navigate('/settings')}
-                >
-                  Editar Meu Perfil
-                </Button>
+                >{uiText("Editar Meu Perfil")}</Button>
               )}
             </div>
           )}

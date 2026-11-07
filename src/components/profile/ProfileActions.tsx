@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { motion } from 'framer-motion';
 import { Edit3, Rss, MessageCircle, UserPlus, UserCheck, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -24,6 +25,7 @@ export function ProfileActions({
   primaryLabel,
   secondaryLabel,
 }: ProfileActionsProps) {
+  useUiLocale();
   const { t } = useTranslation();
 
   const getOwnerActions = () => (
@@ -33,7 +35,7 @@ export function ProfileActions({
         className="flex-1 h-12 rounded-full bg-foreground text-background hover:bg-foreground/90 font-semibold shadow-lg hover:shadow-xl transition-all duration-200 gap-2"
       >
         <Rss className="w-4 h-4" />
-        {primaryLabel || 'Ver Muxi'}
+        {primaryLabel || uiText("Ver Muxi")}
       </Button>
       <Button
         onClick={onSecondaryAction}

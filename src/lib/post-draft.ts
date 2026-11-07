@@ -1,3 +1,4 @@
+import { uiText } from '@/i18n/ui-copy';
 export type PostDraftPrivacy = 'everyone' | 'contacts' | 'close_friends' | 'only_me';
 
 export interface PostDraft {
@@ -19,7 +20,7 @@ const keyFor = (userId: string) => `yamilook_post_draft_v${VERSION}:${userId}`;
 
 const openDraftDb = (): Promise<IDBDatabase> => new Promise((resolve, reject) => {
   if (!globalThis.indexedDB) {
-    reject(new Error('IndexedDB unavailable'));
+    reject(new Error(uiText("IndexedDB unavailable")));
     return;
   }
   const request = indexedDB.open(DB_NAME, VERSION);
@@ -29,7 +30,7 @@ const openDraftDb = (): Promise<IDBDatabase> => new Promise((resolve, reject) =>
     }
   };
   request.onsuccess = () => resolve(request.result);
-  request.onerror = () => reject(request.error || new Error('Unable to open draft storage'));
+  request.onerror = () => reject(request.error || new Error(uiText("Unable to open draft storage")));
 });
 
 const putFiles = async (userId: string, files: File[]) => {
@@ -39,8 +40,8 @@ const putFiles = async (userId: string, files: File[]) => {
       const transaction = db.transaction(STORE_NAME, 'readwrite');
       transaction.objectStore(STORE_NAME).put(files, userId);
       transaction.oncomplete = () => resolve();
-      transaction.onerror = () => reject(transaction.error || new Error('Unable to save draft media'));
-      transaction.onabort = () => reject(transaction.error || new Error('Unable to save draft media'));
+      transaction.onerror = () => reject(transaction.error || new Error(uiText("Unable to save draft media")));
+      transaction.onabort = () => reject(transaction.error || new Error(uiText("Unable to save draft media")));
     });
   } finally {
     db.close();
@@ -53,7 +54,7 @@ const getFiles = async (userId: string): Promise<File[]> => {
     return await new Promise<File[]>((resolve, reject) => {
       const request = db.transaction(STORE_NAME, 'readonly').objectStore(STORE_NAME).get(userId);
       request.onsuccess = () => resolve(Array.isArray(request.result) ? request.result : []);
-      request.onerror = () => reject(request.error || new Error('Unable to load draft media'));
+      request.onerror = () => reject(request.error || new Error(uiText("Unable to load draft media")));
     });
   } finally {
     db.close();
@@ -67,8 +68,8 @@ const deleteFiles = async (userId: string) => {
       const transaction = db.transaction(STORE_NAME, 'readwrite');
       transaction.objectStore(STORE_NAME).delete(userId);
       transaction.oncomplete = () => resolve();
-      transaction.onerror = () => reject(transaction.error || new Error('Unable to clear draft media'));
-      transaction.onabort = () => reject(transaction.error || new Error('Unable to clear draft media'));
+      transaction.onerror = () => reject(transaction.error || new Error(uiText("Unable to clear draft media")));
+      transaction.onabort = () => reject(transaction.error || new Error(uiText("Unable to clear draft media")));
     });
   } finally {
     db.close();

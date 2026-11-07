@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { ArrowLeft, Compass, Newspaper } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -21,8 +22,8 @@ interface EmptyStateBackProps {
 }
 
 const DEFAULT_ACTIONS: EmptyStateAction[] = [
-  { label: 'Ir para o Feed', to: '/muxi', icon: Newspaper, variant: 'default' },
-  { label: 'Explorar', to: '/discover', icon: Compass, variant: 'outline' },
+  { get label() { return uiText("Ir para o Feed"); }, to: '/muxi', icon: Newspaper, variant: 'default' },
+  { get label() { return uiText("Explorar"); }, to: '/discover', icon: Compass, variant: 'outline' },
 ];
 
 /**
@@ -35,6 +36,7 @@ export function EmptyStateBack({
   title = 'Voltar',
   actions = DEFAULT_ACTIONS,
 }: EmptyStateBackProps) {
+  useUiLocale();
   const navigate = useNavigate();
 
   const handleBack = () => {
@@ -48,7 +50,7 @@ export function EmptyStateBack({
         <div className="flex items-center gap-3 h-14">
           <button
             onClick={handleBack}
-            aria-label="Voltar"
+            aria-label={uiText("Voltar")}
             className="p-1 -ml-1 rounded-lg hover:bg-card transition-colors"
           >
             <ArrowLeft className="h-5 w-5 text-foreground" />

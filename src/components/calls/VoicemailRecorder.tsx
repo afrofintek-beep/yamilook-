@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, MicOff, Send, X, Pause, Play, Trash2 } from 'lucide-react';
@@ -24,6 +25,7 @@ export function VoicemailRecorder({
   onClose,
   onSent,
 }: VoicemailRecorderProps) {
+  useUiLocale();
   const { user } = useAuth();
   const { toast } = useToast();
   const [isRecording, setIsRecording] = useState(false);
@@ -33,7 +35,7 @@ export function VoicemailRecorder({
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isSending, setIsSending] = useState(false);
-  
+
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -55,36 +57,36 @@ export function VoicemailRecorder({
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
-      
+
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType: 'audio/webm;codecs=opus'
       });
-      
+
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
-      
+
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
           chunksRef.current.push(event.data);
         }
       };
-      
+
       mediaRecorder.onstop = () => {
         const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
         setAudioBlob(blob);
         const url = URL.createObjectURL(blob);
         setAudioUrl(url);
-        
+
         // Stop all tracks
         if (streamRef.current) {
           streamRef.current.getTracks().forEach(track => track.stop());
         }
       };
-      
+
       mediaRecorder.start(1000); // Collect data every second
       setIsRecording(true);
       setDuration(0);
-      
+
       // Start timer
       timerRef.current = setInterval(() => {
         setDuration(d => {
@@ -96,12 +98,12 @@ export function VoicemailRecorder({
           return d + 1;
         });
       }, 1000);
-      
+
     } catch (error) {
       console.error('Error accessing microphone:', error);
       toast({
-        title: 'Erro',
-        description: 'Não foi possível aceder ao microfone',
+        title: uiText("Erro"),
+        description: uiText("Não foi possível aceder ao microfone"),
         variant: 'destructive',
       });
     }
@@ -160,9 +162,9 @@ export function VoicemailRecorder({
 
   const sendVoicemail = async () => {
     if (!audioBlob || !user) return;
-    
+
     setIsSending(true);
-    
+
     try {
       // Upload to storage
       const fileName = `${user.id}/${Date.now()}.webm`;
@@ -193,18 +195,18 @@ export function VoicemailRecorder({
       if (insertError) throw insertError;
 
       toast({
-        title: 'Mensagem enviada!',
+        title: uiText("Mensagem enviada!"),
         description: `A tua mensagem de voz foi enviada para ${toUserName}`,
       });
 
       onSent?.();
       onClose();
-      
+
     } catch (error) {
       console.error('Error sending voicemail:', error);
       toast({
-        title: 'Erro',
-        description: 'Não foi possível enviar a mensagem de voz',
+        title: uiText("Erro"),
+        description: uiText("Não foi possível enviar a mensagem de voz"),
         variant: 'destructive',
       });
     } finally {
@@ -237,24 +239,23 @@ export function VoicemailRecorder({
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold">Deixar mensagem de voz</h3>
+            <h3 className="text-lg font-semibold">{uiText("Deixar mensagem de voz")}</h3>
             <Button variant="ghost" size="icon" onClick={onClose}>
               <X className="w-5 h-5" />
             </Button>
           </div>
 
           <p className="text-muted-foreground text-sm mb-6">
-            {toUserName} não atendeu. Deixa uma mensagem de voz.
-          </p>
+            {toUserName}{uiText(" não atendeu. Deixa uma mensagem de voz.")}</p>
 
           <div className="flex flex-col items-center gap-4">
             {/* Recording visualization */}
             <div className={cn(
               "w-32 h-32 rounded-full flex items-center justify-center transition-all",
-              isRecording && !isPaused 
-                ? "bg-red-500/20 animate-pulse" 
-                : audioBlob 
-                  ? "bg-primary/20" 
+              isRecording && !isPaused
+                ? "bg-red-500/20 animate-pulse"
+                : audioBlob
+                  ? "bg-primary/20"
                   : "bg-secondary"
             )}>
               {isRecording ? (
@@ -296,7 +297,7 @@ export function VoicemailRecorder({
             <div className="text-2xl font-mono">
               {formatTime(duration)}
               {duration >= 120 && (
-                <span className="text-xs text-muted-foreground ml-2">máx.</span>
+                <span className="text-xs text-muted-foreground ml-2">{uiText("máx.")}</span>
               )}
             </div>
 

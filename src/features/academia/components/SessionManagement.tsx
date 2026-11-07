@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState } from 'react';
 import { MoreHorizontal } from 'lucide-react';
 import { toast } from 'sonner';
@@ -15,6 +16,7 @@ const descriptions: Record<SessionAction, string> = {
   delete: 'Só é permitido eliminar sessões sem inscrições, avaliações ou movimentos de Kumbu. A sessão deixa de estar acessível e a ação fica registada.',
 };
 export function SessionManagement({ session }: { session: AcademiaSession }) {
+  useUiLocale();
   const mutation = useManageAcademiaSession();
   const [action, setAction] = useState<SessionAction | null>(null);
   const [reason, setReason] = useState('');
@@ -28,16 +30,16 @@ export function SessionManagement({ session }: { session: AcademiaSession }) {
     <Dialog open={!!action} onOpenChange={open => { if (!open && !mutation.isPending) setAction(null); }}>
       <DialogContent>
         <DialogHeader><DialogTitle>{action ? labels[action] : ''}: {session.title}</DialogTitle><DialogDescription>{action ? descriptions[action] : ''}</DialogDescription></DialogHeader>
-        {action === 'cancel' && <div><label htmlFor={`cancel-reason-${session.id}`}>Motivo do cancelamento</label><Textarea id={`cancel-reason-${session.id}`} value={reason} maxLength={1000} onChange={e => setReason(e.target.value)} /></div>}
+        {action === 'cancel' && <div><label htmlFor={`cancel-reason-${session.id}`}>{uiText("Motivo do cancelamento")}</label><Textarea id={`cancel-reason-${session.id}`} value={reason} maxLength={1000} onChange={e => setReason(e.target.value)} /></div>}
         <DialogFooter>
-          <Button variant="outline" disabled={mutation.isPending} onClick={() => setAction(null)}>Voltar</Button>
+          <Button variant="outline" disabled={mutation.isPending} onClick={() => setAction(null)}>{uiText("Voltar")}</Button>
           <Button disabled={mutation.isPending || (action === 'cancel' && reason.trim().length < 3)} onClick={() => {
             if (!action) return;
             mutation.mutate({ sessionId: session.id, action, reason: action === 'cancel' ? reason.trim() : undefined }, {
-              onSuccess: () => { toast.success('Sessão atualizada.'); setAction(null); },
+              onSuccess: () => { toast.success(uiText("Sessão atualizada.")); setAction(null); },
               onError: error => toast.error(error.message),
             });
-          }}>{mutation.isPending ? 'A processar…' : 'Confirmar'}</Button>
+          }}>{mutation.isPending ? uiText("A processar…") : uiText("Confirmar")}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import KosololaLogo from '@/components/brand/KosololaLogo';
 import { useTranslation } from 'react-i18next';
 import i18n from '@/i18n';
@@ -7,14 +8,15 @@ import { NavLink } from "react-router-dom";
 import { Home, Flame, GraduationCap, User, Users, Phone, Settings } from "lucide-react";
 
 const navItems = [
-  { to: "/muxi", label: "Muxi", Icon: Flame },
-  { to: "/mokubico", label: "Mokubico", Icon: Home },
-  { to: "/academia", label: "Academia", Icon: GraduationCap },
+  { to: "/muxi", get label() { return uiText("Muxi"); }, Icon: Flame },
+  { to: "/mokubico", get label() { return uiText("Mokubico"); }, Icon: Home },
+  { to: "/academia", get label() { return uiText("Academia"); }, Icon: GraduationCap },
   { to: "/papos", label: "KOSOLOLA", Icon: KosololaLogo },
-  { to: "/perfil", label: "Perfil", Icon: User },
+  { to: "/perfil", get label() { return uiText("Perfil"); }, Icon: User },
 ];
 
 export default function BottomNav({ layout = 'default' }: { layout?: 'default' | 'feed' }) {
+  useUiLocale();
   useTranslation();
   const surface = useAppSurface();
   const items = surface === 'papos' ? [

@@ -1,3 +1,4 @@
+import { uiText, useUiLocale, uiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -16,8 +17,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { 
-  MapPin, 
+import {
+  MapPin,
   Phone,
   BadgeCheck,
   Sparkles,
@@ -47,21 +48,22 @@ interface AdPreviewDialogProps {
   onViewBudget?: () => void;
 }
 
-export function AdPreviewDialog({ 
-  open, 
-  onOpenChange, 
-  ad, 
+export function AdPreviewDialog({
+  open,
+  onOpenChange,
+  ad,
   businessProfile,
   onConfirmActivate,
   onViewCredits,
   onViewBudget
 }: AdPreviewDialogProps) {
+  useUiLocale();
   const { updateAdvertisement } = useAdvertising();
   const [isActivating, setIsActivating] = useState(false);
   const [activated, setActivated] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  
+
   // Editable fields
   const [editTitle, setEditTitle] = useState(ad.title || '');
   const [editDescription, setEditDescription] = useState(ad.description || '');
@@ -82,11 +84,11 @@ export function AdPreviewDialog({
 
   // Use ad-specific data first, then fall back to business profile
   const business = ad.business || businessProfile;
-  
+
   // For display, prefer ad-specific title/description over business defaults
   const displayTitle = ad.title || business?.business_name || 'Negócio local';
   const displayDescription = ad.description || business?.description || '';
-  
+
   const currentBudget = isEditing ? editBudget : ad.total_budget;
   const hasEnoughCredits = (businessProfile?.credit_balance || 0) >= currentBudget;
 
@@ -107,9 +109,9 @@ export function AdPreviewDialog({
         total_budget: editBudget,
       });
       setIsEditing(false);
-      toast.success('Alterações guardadas!');
+      toast.success(uiText("Alterações guardadas!"));
     } catch (error) {
-      toast.error('Erro ao guardar alterações');
+      toast.error(uiText("Erro ao guardar alterações"));
     } finally {
       setIsSaving(false);
     }
@@ -152,24 +154,22 @@ export function AdPreviewDialog({
                 <ArrowLeft className="w-5 h-5" />
               </Button>
               <Eye className="w-5 h-5 text-primary" />
-              {isEditing ? 'Editar Destaque' : 'Prévia do Destaque'}
+              {isEditing ? uiText("Editar Destaque") : uiText("Prévia do Destaque")}
             </span>
             {!isEditing && !activated && (
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 size="sm"
                 onClick={() => setIsEditing(true)}
                 className="h-8"
               >
-                <Pencil className="w-4 h-4 mr-1" />
-                Editar
-              </Button>
+                <Pencil className="w-4 h-4 mr-1" />{uiText("Editar")}</Button>
             )}
           </DialogTitle>
           <DialogDescription>
-            {isEditing 
-              ? 'Edita os detalhes do teu anúncio antes de ativar' 
-              : 'Revisa como o teu anúncio vai aparecer para os utilizadores'
+            {isEditing
+              ? uiText("Edita os detalhes do teu anúncio antes de ativar")
+              : uiText("Revisa como o teu anúncio vai aparecer para os utilizadores")
             }
           </DialogDescription>
         </DialogHeader>
@@ -188,40 +188,40 @@ export function AdPreviewDialog({
                   {/* Edit Form */}
                   <div className="space-y-3">
                     <div>
-                      <Label htmlFor="edit-title" className="text-xs">Título do anúncio</Label>
+                      <Label htmlFor="edit-title" className="text-xs">{uiText("Título do anúncio")}</Label>
                       <Input
                         id="edit-title"
                         value={editTitle}
                         onChange={(e) => setEditTitle(e.target.value)}
-                        placeholder="Ex: Promoção de Verão!"
+                        placeholder={uiText("Ex: Promoção de Verão!")}
                         className="mt-1"
                       />
                     </div>
 
                     <div>
-                      <Label htmlFor="edit-description" className="text-xs">Descrição</Label>
+                      <Label htmlFor="edit-description" className="text-xs">{uiText("Descrição")}</Label>
                       <Textarea
                         id="edit-description"
                         value={editDescription}
                         onChange={(e) => setEditDescription(e.target.value)}
-                        placeholder="Descreve o teu negócio ou promoção..."
+                        placeholder={uiText("Descreve o teu negócio ou promoção...")}
                         className="mt-1 min-h-[80px]"
                       />
                     </div>
 
                     <div>
-                      <Label htmlFor="edit-cta" className="text-xs">Botão de ação (opcional)</Label>
+                      <Label htmlFor="edit-cta" className="text-xs">{uiText("Botão de ação (opcional)")}</Label>
                       <Input
                         id="edit-cta"
                         value={editCta}
                         onChange={(e) => setEditCta(e.target.value)}
-                        placeholder="Ex: Ver mais, Contactar, Reservar..."
+                        placeholder={uiText("Ex: Ver mais, Contactar, Reservar...")}
                         className="mt-1"
                       />
                     </div>
 
                     <div>
-                      <Label htmlFor="edit-budget" className="text-xs">Orçamento em créditos</Label>
+                      <Label htmlFor="edit-budget" className="text-xs">{uiText("Orçamento em créditos")}</Label>
                       <div className="flex items-center gap-2 mt-1">
                         <Input
                           id="edit-budget"
@@ -242,7 +242,7 @@ export function AdPreviewDialog({
                           }}
                           className="w-32"
                         />
-                        <span className="text-xs text-muted-foreground">mínimo 100</span>
+                        <span className="text-xs text-muted-foreground">{uiText("mínimo 100")}</span>
                       </div>
                     </div>
                   </div>
@@ -252,9 +252,7 @@ export function AdPreviewDialog({
                   {/* Preview with edits */}
                   <div>
                     <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
-                      <Eye className="w-3 h-3" />
-                      Prévia das alterações
-                    </p>
+                      <Eye className="w-3 h-3" />{uiText("Prévia das alterações")}</p>
                     <Card className="overflow-hidden border border-dashed">
                       <div className="p-3">
                         <div className="flex items-start gap-3 mb-2">
@@ -266,10 +264,10 @@ export function AdPreviewDialog({
                           </Avatar>
                           <div className="flex-1 min-w-0">
                             <h3 className="font-semibold text-sm truncate">
-                              {business?.business_name || 'Negócio local'}
+                              {business?.business_name || uiText("Negócio local")}
                             </h3>
                             <p className="text-xs text-muted-foreground line-clamp-2">
-                              {editDescription || business?.description || 'Sem descrição'}
+                              {editDescription || business?.description || uiText("Sem descrição")}
                             </p>
                           </div>
                         </div>
@@ -284,16 +282,14 @@ export function AdPreviewDialog({
 
                   {/* Edit Actions */}
                   <div className="flex gap-2">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       className="flex-1"
                       onClick={handleCancelEdit}
                       disabled={isSaving}
                     >
-                      <X className="w-4 h-4 mr-1" />
-                      Cancelar
-                    </Button>
-                    <Button 
+                      <X className="w-4 h-4 mr-1" />{uiText("Cancelar")}</Button>
+                    <Button
                       className="flex-1"
                       onClick={handleSaveEdits}
                       disabled={isSaving}
@@ -307,9 +303,7 @@ export function AdPreviewDialog({
                         </motion.div>
                       ) : (
                         <>
-                          <Save className="w-4 h-4 mr-1" />
-                          Guardar
-                        </>
+                          <Save className="w-4 h-4 mr-1" />{uiText("Guardar")}</>
                       )}
                     </Button>
                   </div>
@@ -328,10 +322,8 @@ export function AdPreviewDialog({
                     className="mb-4"
                   >
                     <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
-                      <Sparkles className="w-3 h-3" />
-                      Assim aparecerá na secção "Destaques Locais"
-                    </p>
-                    
+                      <Sparkles className="w-3 h-3" />{uiText("Assim aparecerá na secção \"Destaques Locais\"")}</p>
+
                     <Card className="overflow-hidden border-2 border-primary/20">
                       {/* Cover image */}
                       {business?.cover_image_url ? (
@@ -341,26 +333,22 @@ export function AdPreviewDialog({
                             alt=""
                             className="w-full h-full object-cover"
                           />
-                          <Badge 
-                            className="absolute top-2 right-2 text-[10px] bg-primary/10 text-primary border-0" 
+                          <Badge
+                            className="absolute top-2 right-2 text-[10px] bg-primary/10 text-primary border-0"
                             variant="secondary"
                           >
-                            <Sparkles className="w-3 h-3 mr-1" />
-                            Destaque Local
-                          </Badge>
+                            <Sparkles className="w-3 h-3 mr-1" />{uiText("Destaque Local")}</Badge>
                         </div>
                       ) : (
                         <div className="relative h-28 bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
                           <span className="text-4xl font-bold text-primary/30">
                             {business?.business_name?.charAt(0) || 'N'}
                           </span>
-                          <Badge 
-                            className="absolute top-2 right-2 text-[10px] bg-primary/10 text-primary border-0" 
+                          <Badge
+                            className="absolute top-2 right-2 text-[10px] bg-primary/10 text-primary border-0"
                             variant="secondary"
                           >
-                            <Sparkles className="w-3 h-3 mr-1" />
-                            Destaque Local
-                          </Badge>
+                            <Sparkles className="w-3 h-3 mr-1" />{uiText("Destaque Local")}</Badge>
                         </div>
                       )}
 
@@ -406,15 +394,15 @@ export function AdPreviewDialog({
                           {business?.phone && (
                             <div className="flex items-center gap-1">
                               <Phone className="w-3 h-3" />
-                              <span>Contactar</span>
+                              <span>{uiText("Contactar")}</span>
                             </div>
                           )}
                         </div>
 
                         {ad.call_to_action && (
-                          <Button 
-                            className="w-full mt-3" 
-                            size="sm" 
+                          <Button
+                            className="w-full mt-3"
+                            size="sm"
                             variant="outline"
                             onClick={() => {
                               if (ad.cta_url) {
@@ -443,10 +431,8 @@ export function AdPreviewDialog({
                     className="mb-4"
                   >
                     <h4 className="font-semibold text-sm flex items-center gap-1.5 mb-3">
-                      <TrendingUp className="w-4 h-4 text-primary" />
-                      Estimativa de alcance
-                    </h4>
-                    
+                      <TrendingUp className="w-4 h-4 text-primary" />{uiText("Estimativa de alcance")}</h4>
+
                     <Card className="p-4 bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
@@ -454,20 +440,20 @@ export function AdPreviewDialog({
                             <Users className="w-5 h-5 text-primary" />
                           </div>
                           <div>
-                            <p className="text-xs text-muted-foreground">Impressões previstas</p>
+                            <p className="text-xs text-muted-foreground">{uiText("Impressões previstas")}</p>
                             <p className="text-xl font-bold text-primary">
-                              {estimatedImpressions.toLocaleString('pt-AO')}
+                              {estimatedImpressions.toLocaleString(uiLocale())}
                             </p>
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="text-xs text-muted-foreground">Pessoas alcançadas</p>
+                          <p className="text-xs text-muted-foreground">{uiText("Pessoas alcançadas")}</p>
                           <p className="text-sm font-semibold">
-                            {estimatedReachMin.toLocaleString('pt-AO')} - {estimatedReachMax.toLocaleString('pt-AO')}
+                            {estimatedReachMin.toLocaleString(uiLocale())} - {estimatedReachMax.toLocaleString(uiLocale())}
                           </p>
                         </div>
                       </div>
-                      
+
                       {/* Visual progress bar */}
                       <div className="relative h-2 bg-muted rounded-full overflow-hidden">
                         <motion.div
@@ -479,14 +465,14 @@ export function AdPreviewDialog({
                       </div>
                       <div className="flex justify-between mt-1 text-[10px] text-muted-foreground">
                         <span>0</span>
-                        <span>Orçamento: {currentBudget} créditos</span>
+                        <span>{uiText("Orçamento: ")}{currentBudget}{uiText(" créditos")}</span>
                         <span>1000+</span>
                       </div>
                     </Card>
 
                     {/* Budget Comparison */}
                     <div className="mt-4">
-                      <h5 className="text-xs font-medium text-muted-foreground mb-2">Compare orçamentos sugeridos:</h5>
+                      <h5 className="text-xs font-medium text-muted-foreground mb-2">{uiText("Compare orçamentos sugeridos:")}</h5>
                       <div className="grid grid-cols-3 gap-2">
                         {/* Economic */}
                         <motion.button
@@ -494,20 +480,20 @@ export function AdPreviewDialog({
                           whileTap={{ scale: 0.98 }}
                           onClick={() => isEditing && setEditBudget(200)}
                           className={`p-3 rounded-lg border-2 transition-all text-left ${
-                            currentBudget === 200 
-                              ? 'border-success bg-success/10' 
+                            currentBudget === 200
+                              ? 'border-success bg-success/10'
                               : 'border-muted hover:border-success/50 bg-muted/30'
                           } ${!isEditing && 'cursor-default'}`}
                         >
                           <div className="flex items-center gap-1 mb-1">
                             <Coins className="w-3 h-3 text-success" />
-                            <span className="text-[10px] font-semibold text-success">Económico</span>
+                            <span className="text-[10px] font-semibold text-success">{uiText("Económico")}</span>
                           </div>
                           <p className="text-sm font-bold">200</p>
-                          <p className="text-[10px] text-muted-foreground">créditos</p>
+                          <p className="text-[10px] text-muted-foreground">{uiText("créditos")}</p>
                           <div className="mt-2 pt-2 border-t border-muted">
-                            <p className="text-[10px] text-muted-foreground">~{Math.round((200 / CPM_ESTIMATE) * 1000).toLocaleString('pt-AO')} impressões</p>
-                            <p className="text-[10px] text-muted-foreground">~{Math.round((200 / CPM_ESTIMATE) * 1000 * 0.5).toLocaleString('pt-AO')} pessoas</p>
+                            <p className="text-[10px] text-muted-foreground">~{Math.round((200 / CPM_ESTIMATE) * 1000).toLocaleString(uiLocale())}{uiText(" impressões")}</p>
+                            <p className="text-[10px] text-muted-foreground">~{Math.round((200 / CPM_ESTIMATE) * 1000 * 0.5).toLocaleString(uiLocale())}{uiText(" pessoas")}</p>
                           </div>
                         </motion.button>
 
@@ -517,23 +503,21 @@ export function AdPreviewDialog({
                           whileTap={{ scale: 0.98 }}
                           onClick={() => isEditing && setEditBudget(500)}
                           className={`p-3 rounded-lg border-2 transition-all text-left relative overflow-hidden ${
-                            currentBudget === 500 
-                              ? 'border-primary bg-primary/10' 
+                            currentBudget === 500
+                              ? 'border-primary bg-primary/10'
                               : 'border-primary/30 hover:border-primary/60 bg-primary/5'
                           } ${!isEditing && 'cursor-default'}`}
                         >
-                          <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-[8px] px-1.5 py-0.5 rounded-bl font-medium">
-                            Popular
-                          </div>
+                          <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-[8px] px-1.5 py-0.5 rounded-bl font-medium">{uiText("Popular")}</div>
                           <div className="flex items-center gap-1 mb-1">
                             <Star className="w-3 h-3 text-primary" />
-                            <span className="text-[10px] font-semibold text-primary">Recomendado</span>
+                            <span className="text-[10px] font-semibold text-primary">{uiText("Recomendado")}</span>
                           </div>
                           <p className="text-sm font-bold">500</p>
-                          <p className="text-[10px] text-muted-foreground">créditos</p>
+                          <p className="text-[10px] text-muted-foreground">{uiText("créditos")}</p>
                           <div className="mt-2 pt-2 border-t border-primary/20">
-                            <p className="text-[10px] text-muted-foreground">~{Math.round((500 / CPM_ESTIMATE) * 1000).toLocaleString('pt-AO')} impressões</p>
-                            <p className="text-[10px] text-muted-foreground">~{Math.round((500 / CPM_ESTIMATE) * 1000 * 0.5).toLocaleString('pt-AO')} pessoas</p>
+                            <p className="text-[10px] text-muted-foreground">~{Math.round((500 / CPM_ESTIMATE) * 1000).toLocaleString(uiLocale())}{uiText(" impressões")}</p>
+                            <p className="text-[10px] text-muted-foreground">~{Math.round((500 / CPM_ESTIMATE) * 1000 * 0.5).toLocaleString(uiLocale())}{uiText(" pessoas")}</p>
                           </div>
                         </motion.button>
 
@@ -543,47 +527,43 @@ export function AdPreviewDialog({
                           whileTap={{ scale: 0.98 }}
                           onClick={() => isEditing && setEditBudget(1000)}
                           className={`p-3 rounded-lg border-2 transition-all text-left ${
-                            currentBudget === 1000 
-                              ? 'border-amber-500 bg-amber-500/10' 
+                            currentBudget === 1000
+                              ? 'border-amber-500 bg-amber-500/10'
                               : 'border-amber-500/30 hover:border-amber-500/60 bg-amber-500/5'
                           } ${!isEditing && 'cursor-default'}`}
                         >
                           <div className="flex items-center gap-1 mb-1">
                             <Zap className="w-3 h-3 text-amber-500" />
-                            <span className="text-[10px] font-semibold text-amber-500">Premium</span>
+                            <span className="text-[10px] font-semibold text-amber-500">{uiText("Premium")}</span>
                           </div>
                           <p className="text-sm font-bold">1000</p>
-                          <p className="text-[10px] text-muted-foreground">créditos</p>
+                          <p className="text-[10px] text-muted-foreground">{uiText("créditos")}</p>
                           <div className="mt-2 pt-2 border-t border-amber-500/20">
-                            <p className="text-[10px] text-muted-foreground">~{Math.round((1000 / CPM_ESTIMATE) * 1000).toLocaleString('pt-AO')} impressões</p>
-                            <p className="text-[10px] text-muted-foreground">~{Math.round((1000 / CPM_ESTIMATE) * 1000 * 0.5).toLocaleString('pt-AO')} pessoas</p>
+                            <p className="text-[10px] text-muted-foreground">~{Math.round((1000 / CPM_ESTIMATE) * 1000).toLocaleString(uiLocale())}{uiText(" impressões")}</p>
+                            <p className="text-[10px] text-muted-foreground">~{Math.round((1000 / CPM_ESTIMATE) * 1000 * 0.5).toLocaleString(uiLocale())}{uiText(" pessoas")}</p>
                           </div>
                         </motion.button>
                       </div>
                       {isEditing && (
-                        <p className="text-[10px] text-muted-foreground mt-2 text-center">
-                          Clique num plano para selecionar ou use o campo acima para um valor personalizado
-                        </p>
+                        <p className="text-[10px] text-muted-foreground mt-2 text-center">{uiText("Clique num plano para selecionar ou use o campo acima para um valor personalizado")}</p>
                       )}
                     </div>
-                    
-                    <p className="text-[10px] text-muted-foreground mt-3 italic">
-                      * Estimativa baseada no custo médio de ~{CPM_ESTIMATE} créditos por 1.000 impressões
-                    </p>
+
+                    <p className="text-[10px] text-muted-foreground mt-3 italic">{uiText("* Estimativa baseada no custo médio de ~")}{CPM_ESTIMATE}{uiText(" créditos por 1.000 impressões")}</p>
                   </motion.div>
 
                   <Separator className="my-4" />
 
                   {/* Cost Summary */}
                   <div className="space-y-3 mb-4">
-                    <h4 className="font-semibold text-sm">Resumo de custos</h4>
-                    
+                    <h4 className="font-semibold text-sm">{uiText("Resumo de custos")}</h4>
+
                     <div className="grid grid-cols-2 gap-3">
                       <motion.div
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                       >
-                        <Card 
+                        <Card
                           className="p-3 bg-secondary/50 cursor-pointer hover:bg-secondary/70 transition-colors"
                           onClick={() => {
                             if (onViewBudget) {
@@ -592,7 +572,7 @@ export function AdPreviewDialog({
                             }
                           }}
                         >
-                          <p className="text-xs text-muted-foreground">Orçamento total</p>
+                          <p className="text-xs text-muted-foreground">{uiText("Orçamento total")}</p>
                           <p className="text-lg font-bold flex items-center gap-1">
                             <Coins className="w-4 h-4 text-primary" />
                             {ad.total_budget}
@@ -603,7 +583,7 @@ export function AdPreviewDialog({
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                       >
-                        <Card 
+                        <Card
                           className="p-3 bg-secondary/50 cursor-pointer hover:bg-secondary/70 transition-colors"
                           onClick={() => {
                             if (onViewCredits) {
@@ -612,7 +592,7 @@ export function AdPreviewDialog({
                             }
                           }}
                         >
-                          <p className="text-xs text-muted-foreground">Teus créditos</p>
+                          <p className="text-xs text-muted-foreground">{uiText("Teus créditos")}</p>
                           <p className={`text-lg font-bold flex items-center gap-1 ${!hasEnoughCredits ? 'text-destructive' : ''}`}>
                             <Coins className="w-4 h-4" />
                             {businessProfile?.credit_balance || 0}
@@ -623,7 +603,7 @@ export function AdPreviewDialog({
 
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <MapPin className="w-3 h-3" />
-                      <span>Público-alvo: {ad.target_city}{ad.target_neighborhood ? ` - ${ad.target_neighborhood}` : ''}</span>
+                      <span>{uiText("Público-alvo: ")}{ad.target_city}{ad.target_neighborhood ? ` - ${ad.target_neighborhood}` : ''}</span>
                     </div>
                   </div>
 
@@ -638,9 +618,7 @@ export function AdPreviewDialog({
                         className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive mb-4"
                       >
                         <AlertTriangle className="w-4 h-4 shrink-0" />
-                        <p className="text-xs">
-                          Créditos insuficientes. Precisas de {ad.total_budget - (businessProfile?.credit_balance || 0)} créditos adicionais.
-                        </p>
+                        <p className="text-xs">{uiText("Créditos insuficientes. Precisas de ")}{ad.total_budget - (businessProfile?.credit_balance || 0)}{uiText(" créditos adicionais.")}</p>
                       </motion.div>
                     ) : activated ? (
                       <motion.div
@@ -650,24 +628,20 @@ export function AdPreviewDialog({
                         className="flex items-center gap-2 p-3 rounded-lg bg-green-500/10 text-green-600 mb-4"
                       >
                         <CheckCircle2 className="w-4 h-4 shrink-0" />
-                        <p className="text-xs font-medium">
-                          Destaque ativado com sucesso! 🎉
-                        </p>
+                        <p className="text-xs font-medium">{uiText("Destaque ativado com sucesso! 🎉")}</p>
                       </motion.div>
                     ) : null}
                   </AnimatePresence>
 
                   {/* Actions */}
                   <div className="flex gap-3">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       className="flex-1"
                       onClick={() => onOpenChange(false)}
                       disabled={isActivating}
-                    >
-                      Cancelar
-                    </Button>
-                    <Button 
+                    >{uiText("Cancelar")}</Button>
+                    <Button
                       className="flex-1 bg-gradient-to-r from-primary to-primary/80"
                       onClick={handleActivate}
                       disabled={!hasEnoughCredits || isActivating || activated}
@@ -681,9 +655,7 @@ export function AdPreviewDialog({
                         </motion.div>
                       ) : (
                         <>
-                          <Zap className="w-4 h-4 mr-1" />
-                          Ativar por {ad.total_budget} créditos
-                        </>
+                          <Zap className="w-4 h-4 mr-1" />{uiText("Ativar por ")}{ad.total_budget}{uiText(" créditos")}</>
                       )}
                     </Button>
                   </div>

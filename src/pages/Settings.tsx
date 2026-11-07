@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import AuthorizedAfrolocLink from '@/components/account-link/AuthorizedAfrolocLink';
 import { genderCtx } from '@/lib/i18n-gender';
 import React, { useState, useCallback } from 'react';
@@ -122,6 +123,7 @@ const getLanguageFlag = (code: string): string => {
 };
 
 export default function Settings() {
+  useUiLocale();
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const { user, profile, signOut, updateProfile } = useAuth();
@@ -151,12 +153,12 @@ export default function Settings() {
     if (settings?.vibration_enabled) {
       if (isVibrationSupported) {
         triggerVibration('message');
-        toast({ title: '🔔 Notificação de teste enviada', description: 'Se ouviste o som e sentiste a vibração, está a funcionar!' });
+        toast({ title: uiText("🔔 Notificação de teste enviada"), description: uiText("Se ouviste o som e sentiste a vibração, está a funcionar!") });
       } else {
-        toast({ title: '🔔 Som de notificação enviado', description: 'A vibração não é suportada neste dispositivo (iOS).' });
+        toast({ title: uiText("🔔 Som de notificação enviado"), description: uiText("A vibração não é suportada neste dispositivo (iOS).") });
       }
     } else {
-      toast({ title: '🔔 Notificação de teste enviada', description: 'Se ouviste o som, está a funcionar!' });
+      toast({ title: uiText("🔔 Notificação de teste enviada"), description: uiText("Se ouviste o som, está a funcionar!") });
     }
   }, [settings, playNotificationSound, triggerVibration, toast, isVibrationSupported]);
 
@@ -199,7 +201,7 @@ export default function Settings() {
     applyTheme(theme as ThemePref); // apply immediately (also persists to localStorage)
     const { error } = await updateSettings({ theme });
     if (error) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      toast({ title: uiText("Error"), description: error.message, variant: 'destructive' });
     } else {
       toast({ title: t('settings.themeUpdated', 'Tema atualizado') });
     }
@@ -209,14 +211,14 @@ export default function Settings() {
     if (!settings) return;
     const { error } = await updateSettings({ [key]: value });
     if (!error) {
-      toast({ title: 'Setting updated' });
+      toast({ title: uiText("Setting updated") });
     }
   };
 
   const handlePrivacyToggle = async (key: string, value: boolean) => {
     const { error } = await updateProfile({ [key]: value });
     if (!error) {
-      toast({ title: 'Privacy setting updated' });
+      toast({ title: uiText("Privacy setting updated") });
     }
   };
 
@@ -242,9 +244,10 @@ export default function Settings() {
     badge,
     delay = 0,
   }, ref) => {
+  useUiLocale();
     // Check if there's a rightElement with interactive controls
     const hasInteractiveRightElement = rightElement !== undefined;
-    
+
     const content = (
       <>
         <div
@@ -367,7 +370,7 @@ export default function Settings() {
               </Avatar>
             </div>
             <div className="flex-1 min-w-0 text-left">
-              <span className="font-semibold text-lg block truncate">{profile?.display_name || 'User'}</span>
+              <span className="font-semibold text-lg block truncate">{profile?.display_name || uiText("User")}</span>
               <span className="text-muted-foreground block truncate">
                 {profile?.status_message || t('profile.editProfile')}
               </span>
@@ -400,9 +403,7 @@ export default function Settings() {
           <Separator />
 
           <Button variant="ghost" className="w-full justify-start gap-3 px-4 h-14 rounded-none" onClick={() => navigate('/install')}>
-            <Smartphone className="w-5 h-5" />
-            Instalar Yamilook · modo aplicação
-            <ChevronRight className="w-4 h-4 ml-auto" />
+            <Smartphone className="w-5 h-5" />{uiText("Instalar Yamilook · modo aplicação")}<ChevronRight className="w-4 h-4 ml-auto" />
           </Button>
 
           {/* Appearance */}
@@ -439,11 +440,11 @@ export default function Settings() {
           <SettingItem
             icon={Globe}
             label={t('settings.language')}
-            description={languages.find(l => l.code === (settings?.language || i18n.language))?.nativeName || 'Português'}
+            description={languages.find(l => l.code === (settings?.language || i18n.language))?.nativeName || uiText("Português")}
             delay={0.14}
             rightElement={
-              <Select 
-                value={settings?.language || i18n.language || 'pt'} 
+              <Select
+                value={settings?.language || i18n.language || 'pt'}
                 onValueChange={handleLanguageChange}
               >
                 <SelectTrigger className="w-20 h-8 rounded-lg border-border bg-card px-2 text-sm [&>svg]:hidden">
@@ -461,8 +462,8 @@ export default function Settings() {
                     </span>
                   </div>
                   {languages.map((lang) => (
-                    <SelectItem 
-                      key={lang.code} 
+                    <SelectItem
+                      key={lang.code}
                       value={lang.code}
                       className="py-2.5 px-3 cursor-pointer"
                     >
@@ -521,7 +522,7 @@ export default function Settings() {
           <SettingItem
             icon={Smartphone}
             label="Dispositivos ligados"
-            description="Gerir acessos à YAMILOOK e à KOSOLOLA"
+            description={uiText("Gerir acessos à YAMILOOK e à KOSOLOLA")}
             delay={0.25}
             onClick={() => setDevicesOpen(true)}
           />
@@ -546,7 +547,7 @@ export default function Settings() {
           <SettingItem
             icon={Archive}
             label="Conversas Arquivadas"
-            description="Ver e restaurar conversas arquivadas"
+            description={uiText("Ver e restaurar conversas arquivadas")}
             delay={0.31}
             onClick={() => setArchivedChatsOpen(true)}
           />
@@ -570,7 +571,7 @@ export default function Settings() {
           <SettingItem
             icon={Database}
             label={t('settings.storageUsage')}
-            description="Consultar utilização real (apenas ficheiros atribuídos)"
+            description={uiText("Consultar utilização real (apenas ficheiros atribuídos)")}
             delay={0.36}
             onClick={() => setStorageOpen(true)}
           />
@@ -611,14 +612,14 @@ export default function Settings() {
           <Separator />
 
           {/* Advertising */}
-          <SectionHeader title={t('settings.advertising') || 'Publicidade'} delay={0.41} />
+          <SectionHeader title={t('settings.advertising') || uiText("Publicidade")} delay={0.41} />
           <SettingItem
             icon={Megaphone}
             label={t('settings.advertisingSettings') || 'Publicidade'}
             description={
-              businessProfile 
-                ? t('settings.manageAds') || 'Gerir anúncios e créditos'
-                : t('settings.promoteYourBusiness') || 'Promova o seu negócio'
+              businessProfile
+                ? t('settings.manageAds') || uiText("Gerir anúncios e créditos")
+                : t('settings.promoteYourBusiness') || uiText("Promova o seu negócio")
             }
             delay={0.42}
             onClick={() => navigate('/advertising')}
@@ -626,7 +627,7 @@ export default function Settings() {
             rightElement={
               !businessProfile ? (
                 <Badge variant="default" className="bg-primary text-primary-foreground">
-                  {t('common.activate') || 'Ativar'}
+                  {t('common.activate') || uiText("Ativar")}
                 </Badge>
               ) : undefined
             }
@@ -660,11 +661,11 @@ export default function Settings() {
           {isAdmin && (
             <>
               <Separator />
-              <SectionHeader title="Administração" delay={0.49} />
+              <SectionHeader title={uiText("Administração")} delay={0.49} />
               <SettingItem
                 icon={Shield}
                 label="Painel de Admin"
-                description="Gerir dados e utilizadores"
+                description={uiText("Gerir dados e utilizadores")}
                 delay={0.5}
                 onClick={() => navigate('/admin')}
               />
@@ -732,8 +733,8 @@ export default function Settings() {
                     window.location.href =
                       `mailto:contacto@afrofintek.com?subject=Pedido%20de%20elimina%C3%A7%C3%A3o%20de%20conta&body=${body}`;
                     toast({
-                      title: 'Pedido de eliminação iniciado',
-                      description: 'Abrimos o teu email para confirmares o pedido ao suporte.',
+                      title: uiText("Pedido de eliminação iniciado"),
+                      description: uiText("Abrimos o teu email para confirmares o pedido ao suporte."),
                     });
                   }}
                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-xl"
@@ -751,7 +752,7 @@ export default function Settings() {
             transition={{ delay: 0.6 }}
             className="text-center py-8 text-muted-foreground text-sm"
           >
-            <p>Yamilook Messenger</p>
+            <p>{uiText("Yamilook Messenger")}</p>
             <p className="text-xs mt-1">{t('settings.version')} 1.0.0 • {t('settings.madeWith')}</p>
           </motion.div>
         </div>
@@ -822,9 +823,7 @@ export default function Settings() {
                       testNotification();
                     }}
                   >
-                    <Bell className="h-4 w-4" />
-                    Testar Notificação
-                  </Button>
+                    <Bell className="h-4 w-4" />{uiText("Testar Notificação")}</Button>
                 </div>
               </div>
 
@@ -832,11 +831,11 @@ export default function Settings() {
 
               {/* Call/Ringtone Settings */}
               <div className="space-y-2">
-                <h4 className="text-sm font-medium text-muted-foreground px-1">{t('settings.callSettings') || 'Chamadas'}</h4>
+                <h4 className="text-sm font-medium text-muted-foreground px-1">{t('settings.callSettings') || uiText("Chamadas")}</h4>
                 <SettingItem
                   icon={Phone}
                   label={t('settings.ringtoneEnabled') || 'Toque de chamada'}
-                  description={t('settings.playRingtone') || 'Reproduzir som ao receber chamadas'}
+                  description={t('settings.playRingtone') || uiText("Reproduzir som ao receber chamadas")}
                   rightElement={
                     <Switch
                       checked={settings?.ringtone_enabled ?? true}
@@ -844,7 +843,7 @@ export default function Settings() {
                     />
                   }
                 />
-                
+
                 {settings?.ringtone_enabled && (
                   <>
                     <SettingItem
@@ -866,31 +865,31 @@ export default function Settings() {
                       icon={BellRing}
                       label={t('settings.ringtonePattern') || 'Padrão do toque'}
                       rightElement={
-                        <Select 
-                          value={settings?.ringtone_pattern || 'default'} 
+                        <Select
+                          value={settings?.ringtone_pattern || 'default'}
                           onValueChange={(v) => updateSettings({ ringtone_pattern: v })}
                         >
                           <SelectTrigger className="w-28 h-9 rounded-xl">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="default">{t('settings.patternDefault') || 'Padrão'}</SelectItem>
-                            <SelectItem value="classic">{t('settings.patternClassic') || 'Clássico'}</SelectItem>
-                            <SelectItem value="modern">{t('settings.patternModern') || 'Moderno'}</SelectItem>
-                            <SelectItem value="gentle">{t('settings.patternGentle') || 'Suave'}</SelectItem>
-                            <SelectItem value="urgent">{t('settings.patternUrgent') || 'Urgente'}</SelectItem>
-                            <SelectItem value="silent">{t('settings.patternSilent') || 'Silencioso'}</SelectItem>
+                            <SelectItem value="default">{t('settings.patternDefault') || uiText("Padrão")}</SelectItem>
+                            <SelectItem value="classic">{t('settings.patternClassic') || uiText("Clássico")}</SelectItem>
+                            <SelectItem value="modern">{t('settings.patternModern') || uiText("Moderno")}</SelectItem>
+                            <SelectItem value="gentle">{t('settings.patternGentle') || uiText("Suave")}</SelectItem>
+                            <SelectItem value="urgent">{t('settings.patternUrgent') || uiText("Urgente")}</SelectItem>
+                            <SelectItem value="silent">{t('settings.patternSilent') || uiText("Silencioso")}</SelectItem>
                           </SelectContent>
                         </Select>
                       }
                     />
                   </>
                 )}
-                
+
                 <SettingItem
                   icon={Vibrate}
                   label={t('settings.callVibration') || 'Vibração nas chamadas'}
-                  description={t('settings.vibrateOnCalls') || 'Vibrar ao receber chamadas'}
+                  description={t('settings.vibrateOnCalls') || uiText("Vibrar ao receber chamadas")}
                   rightElement={
                     <Switch
                       checked={settings?.call_vibration_enabled ?? true}
@@ -920,11 +919,11 @@ export default function Settings() {
                   <div className="px-4 py-2 space-y-4">
                     <div className="flex justify-between items-center">
                       <span className="text-sm">{t('settings.start')}</span>
-                      <span className="text-sm font-medium">10:00 PM</span>
+                      <span className="text-sm font-medium">{uiText("10:00 PM")}</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm">{t('settings.end')}</span>
-                      <span className="text-sm font-medium">7:00 AM</span>
+                      <span className="text-sm font-medium">{uiText("7:00 AM")}</span>
                     </div>
                   </div>
                 )}
@@ -1145,7 +1144,7 @@ export default function Settings() {
             </motion.div>
             <h2 className="text-2xl font-bold mb-1">Yamilook</h2>
             <p className="text-muted-foreground mb-6">{t('settings.version')} 1.0.0</p>
-            
+
             <div className="space-y-3 text-left">
               <Button
                 variant="outline" className="w-full rounded-xl justify-between"
@@ -1164,24 +1163,22 @@ export default function Settings() {
               </Button>
             </div>
 
-            <p className="text-xs text-muted-foreground mt-8">
-              © 2025 Yamilook. All rights reserved.
-            </p>
+            <p className="text-xs text-muted-foreground mt-8">{uiText("© 2025 Yamilook. All rights reserved.")}</p>
           </div>
         </SheetContent>
       </Sheet>
 
       <Sheet open={devicesOpen} onOpenChange={setDevicesOpen}>
         <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto pt-[env(safe-area-inset-top,0px)]">
-          <SheetHeader className="mb-4 pr-8"><SheetTitle>Segurança da conta</SheetTitle></SheetHeader>
+          <SheetHeader className="mb-4 pr-8"><SheetTitle>{uiText("Segurança da conta")}</SheetTitle></SheetHeader>
           {devicesOpen && <ConnectedDevices />}
         </SheetContent>
       </Sheet>
 
       {/* Change Password Sheet */}
-      <ChangePasswordSheet 
-        open={changePasswordOpen} 
-        onOpenChange={setChangePasswordOpen} 
+      <ChangePasswordSheet
+        open={changePasswordOpen}
+        onOpenChange={setChangePasswordOpen}
       />
 
       {/* Chat Wallpaper Sheet */}

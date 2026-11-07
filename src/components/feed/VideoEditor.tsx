@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useRef, useEffect } from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -61,10 +62,10 @@ const TEXT_COLORS = [
 type EditorTab = 'trim' | 'filters' | 'text' | 'music';
 
 const TABS: { id: EditorTab; icon: typeof Scissors; label: string }[] = [
-  { id: 'trim', icon: Scissors, label: 'Cortar' },
-  { id: 'filters', icon: Sparkles, label: 'Filtros' },
-  { id: 'text', icon: Type, label: 'Texto' },
-  { id: 'music', icon: Music, label: 'Música' },
+  { id: 'trim', icon: Scissors, get label() { return uiText("Cortar"); } },
+  { id: 'filters', icon: Sparkles, get label() { return uiText("Filtros"); } },
+  { id: 'text', icon: Type, get label() { return uiText("Texto"); } },
+  { id: 'music', icon: Music, get label() { return uiText("Música"); } },
 ];
 
 const MUSIC_TRACKS = [
@@ -73,6 +74,7 @@ const MUSIC_TRACKS = [
 ];
 
 export function VideoEditor({ file, onSave, onCancel }: VideoEditorProps) {
+  useUiLocale();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -112,7 +114,7 @@ export function VideoEditor({ file, onSave, onCancel }: VideoEditorProps) {
   const [exportError, setExportError] = useState('');
   const exportingRef = useRef(false);
   const getMixer = () => {
-    if (!videoRef.current) throw new Error('Vídeo indisponível');
+    if (!videoRef.current) throw new Error(uiText("Vídeo indisponível"));
     const mixer = mixerRef.current ??= new VideoEditorAudio(videoRef.current);
     mixer.setVolumes(originalVolume, musicVolume);
     return mixer;
@@ -277,7 +279,7 @@ export function VideoEditor({ file, onSave, onCancel }: VideoEditorProps) {
     setProcessProgress(0);
 
     try {
-      if (!Number.isFinite(duration) || duration <= 0) throw new Error('Video not ready');
+      if (!Number.isFinite(duration) || duration <= 0) throw new Error(uiText("Video not ready"));
       const startSec = (trimStart / 100) * duration;
       const endSec = (trimEnd / 100) * duration;
       const totalDuration = endSec - startSec;
@@ -308,12 +310,12 @@ export function VideoEditor({ file, onSave, onCancel }: VideoEditorProps) {
       };
 
       const exportDone = new Promise<Blob>((resolve, reject) => {
-        activeRecorder.onerror = () => reject(new Error('Recording failed'));
+        activeRecorder.onerror = () => reject(new Error(uiText("Recording failed")));
         activeRecorder.onstop = () => {
           const type = activeRecorder.mimeType || chunks[0]?.type;
           const blob = new Blob(chunks, { type });
           if (blob.size) resolve(blob);
-          else reject(new Error('Empty recording'));
+          else reject(new Error(uiText("Empty recording")));
         };
       });
 
@@ -323,7 +325,7 @@ export function VideoEditor({ file, onSave, onCancel }: VideoEditorProps) {
         await new Promise<void>((resolve, reject) => {
           const timeout = window.setTimeout(() => {
             v.removeEventListener('seeked', onSeeked);
-            reject(new Error('Video seek timed out'));
+            reject(new Error(uiText("Video seek timed out")));
           }, 10000);
           const onSeeked = () => { window.clearTimeout(timeout); resolve(); };
           v.addEventListener('seeked', onSeeked, { once: true });
@@ -410,17 +412,17 @@ export function VideoEditor({ file, onSave, onCancel }: VideoEditorProps) {
     >
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3">
-        <Button variant="ghost" size="icon" onClick={onCancel} disabled={isProcessing} aria-label="Voltar à publicação" className="text-white">
+        <Button variant="ghost" size="icon" onClick={onCancel} disabled={isProcessing} aria-label={uiText("Voltar à publicação")} className="text-white">
           <ChevronLeft className="w-6 h-6" />
         </Button>
-        <DialogPrimitive.Title className="text-white font-semibold text-sm">Editar Vídeo</DialogPrimitive.Title>
+        <DialogPrimitive.Title className="text-white font-semibold text-sm">{uiText("Editar Vídeo")}</DialogPrimitive.Title>
         <Button
           size="sm"
           className="bg-[#D4AF37] text-black font-semibold rounded-full px-5 hover:bg-[#c9a432]"
           onClick={handleSave}
           disabled={isProcessing || musicLoading}
         >
-          {isProcessing ? `${Math.round(processProgress)}%` : 'Guardar'}
+          {isProcessing ? `${Math.round(processProgress)}%` : uiText("Guardar")}
         </Button>
       </div>
 
@@ -469,7 +471,7 @@ export function VideoEditor({ file, onSave, onCancel }: VideoEditorProps) {
 
         {/* Play/Pause button overlay */}
         <button
-          aria-label={isPlaying ? "Pausar vídeo" : "Reproduzir vídeo"}
+          aria-label={isPlaying ? uiText("Pausar vídeo") : uiText("Reproduzir vídeo")}
           className="absolute inset-0 flex items-center justify-center"
           onClick={togglePlay}
         >
@@ -497,7 +499,7 @@ export function VideoEditor({ file, onSave, onCancel }: VideoEditorProps) {
                 transition={{ duration: 0.3 }}
               />
             </div>
-            <span className="text-white/80 text-sm">A processar vídeo…</span>
+            <span className="text-white/80 text-sm">{uiText("A processar vídeo…")}</span>
           </div>
         )}
       </div>
@@ -557,15 +559,14 @@ export function VideoEditor({ file, onSave, onCancel }: VideoEditorProps) {
           {activeTab === 'trim' && (
             <div className="space-y-4">
               <div className="flex items-center justify-between text-white/60 text-xs">
-                <span>Início: {formatTime(trimStartSec)}</span>
-                <span className="text-[#D4AF37] font-medium">
-                  Duração: {formatTime(trimDuration)}
+                <span>{uiText("Início: ")}{formatTime(trimStartSec)}</span>
+                <span className="text-[#D4AF37] font-medium">{uiText("Duração: ")}{formatTime(trimDuration)}
                 </span>
-                <span>Fim: {formatTime(trimEndSec)}</span>
+                <span>{uiText("Fim: ")}{formatTime(trimEndSec)}</span>
               </div>
               <div className="space-y-3">
                 <div className="space-y-1">
-                  <label className="text-[11px] text-white/40">Início</label>
+                  <label className="text-[11px] text-white/40">{uiText("Início")}</label>
                   <Slider
                     value={[trimStart]}
                     onValueChange={([v]) => {
@@ -578,7 +579,7 @@ export function VideoEditor({ file, onSave, onCancel }: VideoEditorProps) {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[11px] text-white/40">Fim</label>
+                  <label className="text-[11px] text-white/40">{uiText("Fim")}</label>
                   <Slider
                     value={[trimEnd]}
                     onValueChange={([v]) => {
@@ -597,8 +598,7 @@ export function VideoEditor({ file, onSave, onCancel }: VideoEditorProps) {
                 className="text-white/40 text-xs"
                 onClick={() => { setTrimStart(0); setTrimEnd(100); }}
               >
-                <RotateCcw className="w-3 h-3 mr-1" /> Repor
-              </Button>
+                <RotateCcw className="w-3 h-3 mr-1" />{uiText(" Repor")}</Button>
             </div>
           )}
 
@@ -640,17 +640,17 @@ export function VideoEditor({ file, onSave, onCancel }: VideoEditorProps) {
               {/* Add new text */}
               <div className="flex gap-2">
                 <Input
-                  aria-label="Texto para o vídeo"
+                  aria-label={uiText("Texto para o vídeo")}
                   value={newText}
                   onChange={e => setNewText(e.target.value)}
-                  placeholder="Escreve aqui…"
+                  placeholder={uiText("Escreve aqui…")}
                   className="bg-white/5 border-white/10 text-white placeholder:text-white/30 text-sm"
                   onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addTextOverlay(); } }}
                 />
                 <Button
                   size="icon"
                   className="bg-[#D4AF37] text-black shrink-0"
-                  aria-label="Adicionar texto"
+                  aria-label={uiText("Adicionar texto")}
                   onClick={addTextOverlay}
                   disabled={!newText.trim()}
                 >
@@ -675,8 +675,7 @@ export function VideoEditor({ file, onSave, onCancel }: VideoEditorProps) {
                       className="text-red-400 h-6 text-xs"
                       onClick={() => removeOverlay(editingOverlay.id)}
                     >
-                      <X className="w-3 h-3 mr-1" /> Remover
-                    </Button>
+                      <X className="w-3 h-3 mr-1" />{uiText(" Remover")}</Button>
                   </div>
 
                   {/* Font size */}
@@ -749,7 +748,7 @@ export function VideoEditor({ file, onSave, onCancel }: VideoEditorProps) {
 
                   {/* Position */}
                   <div className="space-y-1">
-                    <label className="text-[10px] text-white/30">Posição vertical</label>
+                    <label className="text-[10px] text-white/30">{uiText("Posição vertical")}</label>
                     <Slider
                       value={[editingOverlay.y]}
                       onValueChange={([v]) => updateOverlay(editingOverlay.id, { y: v })}
@@ -791,7 +790,7 @@ export function VideoEditor({ file, onSave, onCancel }: VideoEditorProps) {
                 <Volume2 className="w-4 h-4 text-white/40 shrink-0" />
                 <div className="flex-1 space-y-1">
                   <div className="flex justify-between text-[10px] text-white/30">
-                    <span>Volume original</span>
+                    <span>{uiText("Volume original")}</span>
                     <span>{originalVolume}%</span>
                   </div>
                   <Slider
@@ -809,12 +808,12 @@ export function VideoEditor({ file, onSave, onCancel }: VideoEditorProps) {
 
               <div className="w-full h-px bg-white/5" />
 
-              <input ref={musicInputRef} type="file" accept="audio/*,.mp3,.m4a,.wav" className="sr-only" aria-label="Carregar música do telefone"
+              <input ref={musicInputRef} type="file" accept="audio/*,.mp3,.m4a,.wav" className="sr-only" aria-label={uiText("Carregar música do telefone")}
                 onChange={event => { void uploadMusic(event.target.files?.[0]); event.target.value = ''; }} />
               <Button variant="outline" className="w-full border-white/20 text-white bg-transparent" disabled={musicLoading || isProcessing} onClick={() => musicInputRef.current?.click()}>
-                <Plus className="w-4 h-4 mr-2" />{musicLoading ? 'A preparar áudio…' : 'Adicionar música do telefone'}
+                <Plus className="w-4 h-4 mr-2" />{musicLoading ? uiText("A preparar áudio…") : uiText("Adicionar música do telefone")}
               </Button>
-              <p className="text-xs text-white/50">Escolhe uma música e toca em reproduzir para ouvir. A música acompanha o corte e repete até ao fim do vídeo.</p>
+              <p className="text-xs text-white/50">{uiText("Escolhe uma música e toca em reproduzir para ouvir. A música acompanha o corte e repete até ao fim do vídeo.")}</p>
               {uploadedMusic && <div className="flex items-center gap-2 text-sm text-[#D4AF37]"><Music className="w-4 h-4 shrink-0" /><span className="min-w-0 truncate">{uploadedMusic}</span><Check className="w-4 h-4 shrink-0" /></div>}
               {/* Track list */}
               <div className="space-y-1">
@@ -867,7 +866,7 @@ export function VideoEditor({ file, onSave, onCancel }: VideoEditorProps) {
                   <Music className="w-4 h-4 text-[#D4AF37] shrink-0" />
                   <div className="flex-1 space-y-1">
                     <div className="flex justify-between text-[10px] text-white/30">
-                      <span>Volume da música</span>
+                      <span>{uiText("Volume da música")}</span>
                       <span>{musicVolume}%</span>
                     </div>
                     <Slider

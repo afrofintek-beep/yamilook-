@@ -1,13 +1,14 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ArrowLeft, 
-  UserPlus, 
-  Heart, 
-  MessageCircle, 
-  Phone, 
+import {
+  ArrowLeft,
+  UserPlus,
+  Heart,
+  MessageCircle,
+  Phone,
   PhoneMissed,
   Eye,
   Check,
@@ -46,6 +47,7 @@ interface Notification {
 }
 
 export default function Notifications() {
+  useUiLocale();
   const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -110,9 +112,9 @@ export default function Notifications() {
             avatar_url: sender?.avatar_url,
             created_at: req.created_at,
             read: false,
-            action_data: { 
+            action_data: {
               sender_id: req.sender_id,
-              request_id: req.id 
+              request_id: req.id
             }
           });
         });
@@ -154,7 +156,7 @@ export default function Notifications() {
             avatar_url: receiver?.avatar_url,
             created_at: req.updated_at,
             read: true,
-            action_data: { 
+            action_data: {
               sender_id: req.receiver_id
             }
           });
@@ -200,7 +202,7 @@ export default function Notifications() {
               avatar_url: reactor?.avatar_url,
               created_at: reaction.created_at,
               read: true,
-              action_data: { 
+              action_data: {
                 post_id: reaction.post_id,
                 reaction_type: reaction.reaction_type
               }
@@ -272,7 +274,7 @@ export default function Notifications() {
             avatar_url: caller?.avatar_url,
             created_at: call.created_at,
             read: true,
-            action_data: { 
+            action_data: {
               call_id: call.id,
               sender_id: call.caller_id
             }
@@ -333,7 +335,7 @@ export default function Notifications() {
       }
 
       // Sort all notifications by date
-      allNotifications.sort((a, b) => 
+      allNotifications.sort((a, b) =>
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
 
@@ -354,10 +356,10 @@ export default function Notifications() {
 
       if (error) throw error;
 
-      toast({ title: 'Pedido aceite!' });
+      toast({ title: uiText("Pedido aceite!") });
       setNotifications(prev => prev.filter(n => n.action_data?.request_id !== requestId));
     } catch (error) {
-      toast({ title: 'Erro ao aceitar pedido', variant: 'destructive' });
+      toast({ title: uiText("Erro ao aceitar pedido"), variant: 'destructive' });
     }
   };
 
@@ -370,10 +372,10 @@ export default function Notifications() {
 
       if (error) throw error;
 
-      toast({ title: 'Pedido rejeitado' });
+      toast({ title: uiText("Pedido rejeitado") });
       setNotifications(prev => prev.filter(n => n.action_data?.request_id !== requestId));
     } catch (error) {
-      toast({ title: 'Erro ao rejeitar pedido', variant: 'destructive' });
+      toast({ title: uiText("Erro ao rejeitar pedido"), variant: 'destructive' });
     }
   };
 
@@ -396,8 +398,8 @@ export default function Notifications() {
     }
   };
 
-  const filteredNotifications = activeTab === 'all' 
-    ? notifications 
+  const filteredNotifications = activeTab === 'all'
+    ? notifications
     : notifications.filter(n => n.type === activeTab);
 
   const pendingRequests = notifications.filter(n => n.type === 'friend_request');
@@ -407,15 +409,15 @@ export default function Notifications() {
       {/* Header */}
       <header className="shrink-0 relative z-50 bg-card/95 backdrop-blur-sm border-b border-border safe-top">
         <div className="flex items-center gap-3 px-4 py-3">
-          <Button 
-            variant="ghost" 
-            size="icon" 
+          <Button
+            variant="ghost"
+            size="icon"
             className="rounded-full"
             onClick={() => navigate(-1)}
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <h1 className="text-lg font-semibold">Notificações</h1>
+          <h1 className="text-lg font-semibold">{uiText("Notificações")}</h1>
           {pendingRequests.length > 0 && (
             <span className="ml-auto bg-primary text-primary-foreground text-xs font-medium px-2 py-0.5 rounded-full">
               {pendingRequests.length}
@@ -426,30 +428,22 @@ export default function Notifications() {
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="w-full justify-start gap-1 px-4 pb-2 bg-transparent h-auto">
-            <TabsTrigger 
-              value="all" 
+            <TabsTrigger
+              value="all"
               className="rounded-full px-4 py-1.5 text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-            >
-              Todas
-            </TabsTrigger>
-            <TabsTrigger 
-              value="friend_request" 
+            >{uiText("Todas")}</TabsTrigger>
+            <TabsTrigger
+              value="friend_request"
               className="rounded-full px-4 py-1.5 text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-            >
-              Pedidos
-            </TabsTrigger>
-            <TabsTrigger 
-              value="post_reaction" 
+            >{uiText("Pedidos")}</TabsTrigger>
+            <TabsTrigger
+              value="post_reaction"
               className="rounded-full px-4 py-1.5 text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-            >
-              Reações
-            </TabsTrigger>
-            <TabsTrigger 
-              value="comment" 
+            >{uiText("Reações")}</TabsTrigger>
+            <TabsTrigger
+              value="comment"
               className="rounded-full px-4 py-1.5 text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-            >
-              Comentários
-            </TabsTrigger>
+            >{uiText("Comentários")}</TabsTrigger>
           </TabsList>
         </Tabs>
       </header>
@@ -473,10 +467,8 @@ export default function Notifications() {
             <div className="w-16 h-16 rounded-2xl bg-secondary flex items-center justify-center mb-4">
               <Heart className="w-8 h-8 text-muted-foreground" />
             </div>
-            <h3 className="text-lg font-semibold mb-2">Sem notificações</h3>
-            <p className="text-muted-foreground text-sm">
-              As tuas notificações aparecerão aqui
-            </p>
+            <h3 className="text-lg font-semibold mb-2">{uiText("Sem notificações")}</h3>
+            <p className="text-muted-foreground text-sm">{uiText("As tuas notificações aparecerão aqui")}</p>
           </div>
         ) : (
           <div className="divide-y divide-border/30">
@@ -492,7 +484,7 @@ export default function Notifications() {
                     }
                     return;
                   }
-                  
+
                   switch (notification.type) {
                     case 'post_reaction':
                     case 'mention':
@@ -519,7 +511,7 @@ export default function Notifications() {
                 };
 
                 const isClickable = notification.type !== 'missed_call' || !notification.action_data?.sender_id;
-                
+
                 return (
                   <motion.div
                     key={notification.id}
@@ -552,9 +544,9 @@ export default function Notifications() {
                             <span className="text-muted-foreground">{notification.message}</span>
                           </p>
                           <p className="text-xs text-muted-foreground mt-1">
-                            {formatDistanceToNow(new Date(notification.created_at), { 
-                              addSuffix: true, 
-                              locale: pt 
+                            {formatDistanceToNow(new Date(notification.created_at), {
+                              addSuffix: true,
+                              locale: pt
                             })}
                           </p>
                         </div>
@@ -563,30 +555,26 @@ export default function Notifications() {
                       {/* Friend request actions */}
                       {notification.type === 'friend_request' && notification.action_data?.request_id && (
                         <div className="flex gap-2 mt-3" onClick={(e) => e.stopPropagation()}>
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             className="rounded-full flex-1 bg-primary hover:bg-primary/90"
                             onClick={() => handleAcceptRequest(notification.action_data!.request_id!)}
                           >
-                            <Check className="w-4 h-4 mr-1" />
-                            Aceitar
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
+                            <Check className="w-4 h-4 mr-1" />{uiText("Aceitar")}</Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
                             className="rounded-full flex-1"
                             onClick={() => handleRejectRequest(notification.action_data!.request_id!)}
                           >
-                            <X className="w-4 h-4 mr-1" />
-                            Recusar
-                          </Button>
+                            <X className="w-4 h-4 mr-1" />{uiText("Recusar")}</Button>
                         </div>
                       )}
 
                       {/* Missed call action */}
                       {notification.type === 'missed_call' && notification.action_data?.sender_id && (
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           variant="outline"
                           className="rounded-full mt-3"
                           onClick={(e) => {
@@ -594,9 +582,7 @@ export default function Notifications() {
                             navigate(`/call/${notification.action_data?.sender_id}`);
                           }}
                         >
-                          <Phone className="w-4 h-4 mr-1" />
-                          Ligar de volta
-                        </Button>
+                          <Phone className="w-4 h-4 mr-1" />{uiText("Ligar de volta")}</Button>
                       )}
                     </div>
                   </motion.div>

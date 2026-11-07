@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -25,6 +26,7 @@ interface PublicProfileData {
 }
 
 export default function PublicProfile() {
+  useUiLocale();
   const { username } = useParams<{ username: string }>();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<PublicProfileData | null>(null);
@@ -65,9 +67,9 @@ export default function PublicProfile() {
   if (!profile) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 px-6 text-center">
-        <p role={loadError ? 'alert' : 'status'} className="text-sm text-muted-foreground">{loadError ? 'Não foi possível carregar o perfil. Verifica a ligação e tenta novamente.' : 'Perfil não encontrado.'}</p>
-        {loadError && <Button onClick={() => setAttempt(value => value + 1)}>Tentar novamente</Button>}
-        <Button onClick={() => navigate('/')}>Ir para o Yamilook</Button>
+        <p role={loadError ? 'alert' : 'status'} className="text-sm text-muted-foreground">{loadError ? uiText("Não foi possível carregar o perfil. Verifica a ligação e tenta novamente.") : uiText("Perfil não encontrado.")}</p>
+        {loadError && <Button onClick={() => setAttempt(value => value + 1)}>{uiText("Tentar novamente")}</Button>}
+        <Button onClick={() => navigate('/')}>{uiText("Ir para o Yamilook")}</Button>
       </div>
     );
   }
@@ -95,18 +97,16 @@ export default function PublicProfile() {
           <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5">
             {profile.founder_number != null && (
               <span className="inline-flex items-center gap-1 rounded-full bg-[#C9A23F]/15 px-2.5 py-1 text-[11px] font-semibold text-[#C9A23F]">
-                <Crown className="h-3 w-3" /> Fundador #{profile.founder_number}
+                <Crown className="h-3 w-3" />{uiText(" Fundador #")}{profile.founder_number}
               </span>
             )}
             {profile.is_creator && (
               <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2.5 py-1 text-[11px] font-semibold text-primary">
-                <BadgeCheck className="h-3 w-3" /> Criador Verificado
-              </span>
+                <BadgeCheck className="h-3 w-3" />{uiText(" Criador Verificado")}</span>
             )}
             {profile.afroloc_certified && (
               <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2.5 py-1 text-[11px] font-semibold text-emerald-500">
-                <MapPin className="h-3 w-3" /> AFROLOC verificado
-              </span>
+                <MapPin className="h-3 w-3" />{uiText(" AFROLOC verificado")}</span>
             )}
           </div>
 
@@ -119,16 +119,14 @@ export default function PublicProfile() {
             </div>
           )}
 
-          <p className="mt-4 text-[11px] text-muted-foreground">
-            Membro desde {format(new Date(profile.created_at), 'MMMM yyyy', { locale: pt })}
+          <p className="mt-4 text-[11px] text-muted-foreground">{uiText("Membro desde ")}{format(new Date(profile.created_at), 'MMMM yyyy', { locale: pt })}
           </p>
         </div>
 
         {/* CTA */}
-        <Button className="mt-4 w-full h-12 rounded-xl gap-2" onClick={() => navigate('/login')}>
-          Ver no Yamilook <ArrowRight className="h-4 w-4" />
+        <Button className="mt-4 w-full h-12 rounded-xl gap-2" onClick={() => navigate('/login')}>{uiText("Ver no Yamilook ")}<ArrowRight className="h-4 w-4" />
         </Button>
-        <p className="mt-3 text-center text-[11px] text-muted-foreground">Yamilook · a rede social de Angola</p>
+        <p className="mt-3 text-center text-[11px] text-muted-foreground">{uiText("Yamilook · a rede social de Angola")}</p>
       </div>
     </div>
   );

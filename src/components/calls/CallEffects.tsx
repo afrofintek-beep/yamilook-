@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { X, Sparkles, Sun, Moon, Palette, Volume2, Mic } from 'lucide-react';
@@ -49,6 +50,7 @@ const FACE_MAP: Record<string, FaceFilter> = {
 };
 
 export function CallEffects({ onClose }: CallEffectsProps) {
+  useUiLocale();
   const { user } = useAuth();
   const { setCallEffects, setAudioProcessing } = useActiveCallRequired();
   const [settings, setSettings] = useState<CallSettings>({
@@ -133,7 +135,7 @@ export function CallEffects({ onClose }: CallEffectsProps) {
       className="absolute right-0 top-0 bottom-0 w-80 bg-background/95 backdrop-blur-lg border-l z-40 overflow-y-auto"
     >
       <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-background/95 backdrop-blur-lg">
-        <h3 className="font-semibold">Call Effects</h3>
+        <h3 className="font-semibold">{uiText("Call Effects")}</h3>
         <Button variant="ghost" size="icon" onClick={onClose}>
           <X className="h-4 w-4" />
         </Button>
@@ -143,17 +145,13 @@ export function CallEffects({ onClose }: CallEffectsProps) {
         {/* Video Enhancements */}
         <div className="space-y-4">
           <h4 className="font-medium flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-primary" />
-            Video Enhancements
-          </h4>
+            <Sparkles className="h-4 w-4 text-primary" />{uiText("Video Enhancements")}</h4>
 
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <Label htmlFor="beauty-mode" className="flex-1">
-                <span className="block">Beauty Mode</span>
-                <span className="text-xs text-muted-foreground">
-                  Smooth skin and enhance appearance
-                </span>
+                <span className="block">{uiText("Beauty Mode")}</span>
+                <span className="text-xs text-muted-foreground">{uiText("Smooth skin and enhance appearance")}</span>
               </Label>
               <Switch
                 id="beauty-mode"
@@ -164,7 +162,7 @@ export function CallEffects({ onClose }: CallEffectsProps) {
 
             {settings.beautyMode && (
               <div className="pl-4 space-y-2">
-                <Label className="text-sm">Touch Up Level</Label>
+                <Label className="text-sm">{uiText("Touch Up Level")}</Label>
                 <Slider
                   value={[settings.touchUpLevel]}
                   onValueChange={([val]) => updateSetting('touchUpLevel', val)}
@@ -177,12 +175,8 @@ export function CallEffects({ onClose }: CallEffectsProps) {
             <div className="flex items-center justify-between">
               <Label htmlFor="low-light" className="flex-1">
                 <span className="block flex items-center gap-2">
-                  <Moon className="h-3 w-3" />
-                  Low Light Boost
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  AI enhancement for dark environments
-                </span>
+                  <Moon className="h-3 w-3" />{uiText("Low Light Boost")}</span>
+                <span className="text-xs text-muted-foreground">{uiText("AI enhancement for dark environments")}</span>
               </Label>
               <Switch
                 id="low-light"
@@ -194,12 +188,8 @@ export function CallEffects({ onClose }: CallEffectsProps) {
             <div className="flex items-center justify-between">
               <Label htmlFor="color-correction" className="flex-1">
                 <span className="block flex items-center gap-2">
-                  <Sun className="h-3 w-3" />
-                  Auto Color Correction
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  Auto white balance adjustment
-                </span>
+                  <Sun className="h-3 w-3" />{uiText("Auto Color Correction")}</span>
+                <span className="text-xs text-muted-foreground">{uiText("Auto white balance adjustment")}</span>
               </Label>
               <Switch
                 id="color-correction"
@@ -213,9 +203,7 @@ export function CallEffects({ onClose }: CallEffectsProps) {
         {/* Color Filters */}
         <div className="space-y-3">
           <h4 className="font-medium flex items-center gap-2">
-            <Palette className="h-4 w-4 text-primary" />
-            Color Filters
-          </h4>
+            <Palette className="h-4 w-4 text-primary" />{uiText("Color Filters")}</h4>
 
           <div className="grid grid-cols-3 gap-2">
             {COLOR_FILTERS.map((filter) => (
@@ -239,7 +227,7 @@ export function CallEffects({ onClose }: CallEffectsProps) {
 
         {/* Face Filters */}
         <div className="space-y-3">
-          <h4 className="font-medium">Face Filters</h4>
+          <h4 className="font-medium">{uiText("Face Filters")}</h4>
 
           <div className="grid grid-cols-3 gap-2">
             {FACE_FILTERS.map((filter) => (
@@ -262,17 +250,13 @@ export function CallEffects({ onClose }: CallEffectsProps) {
         {/* Audio Settings */}
         <div className="space-y-4">
           <h4 className="font-medium flex items-center gap-2">
-            <Volume2 className="h-4 w-4 text-primary" />
-            Audio Settings
-          </h4>
+            <Volume2 className="h-4 w-4 text-primary" />{uiText("Audio Settings")}</h4>
 
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <Label htmlFor="noise-suppression" className="flex-1">
-                <span className="block">Noise Suppression</span>
-                <span className="text-xs text-muted-foreground">
-                  AI-powered noise cancellation
-                </span>
+                <span className="block">{uiText("Noise Suppression")}</span>
+                <span className="text-xs text-muted-foreground">{uiText("AI-powered noise cancellation")}</span>
               </Label>
               <Switch
                 id="noise-suppression"
@@ -283,10 +267,8 @@ export function CallEffects({ onClose }: CallEffectsProps) {
 
             <div className="flex items-center justify-between">
               <Label htmlFor="echo-cancel" className="flex-1">
-                <span className="block">Echo Cancellation</span>
-                <span className="text-xs text-muted-foreground">
-                  Prevent audio feedback
-                </span>
+                <span className="block">{uiText("Echo Cancellation")}</span>
+                <span className="text-xs text-muted-foreground">{uiText("Prevent audio feedback")}</span>
               </Label>
               <Switch
                 id="echo-cancel"
@@ -298,12 +280,8 @@ export function CallEffects({ onClose }: CallEffectsProps) {
             <div className="flex items-center justify-between">
               <Label htmlFor="voice-enhance" className="flex-1">
                 <span className="block flex items-center gap-2">
-                  <Mic className="h-3 w-3" />
-                  Voice Enhancement
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  Clearer voice audio
-                </span>
+                  <Mic className="h-3 w-3" />{uiText("Voice Enhancement")}</span>
+                <span className="text-xs text-muted-foreground">{uiText("Clearer voice audio")}</span>
               </Label>
               <Switch
                 id="voice-enhance"

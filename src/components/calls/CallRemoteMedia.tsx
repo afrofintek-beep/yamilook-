@@ -1,9 +1,11 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { attachCallVideo, sameTracks } from '@/lib/call-media';
 import { Volume2 } from 'lucide-react';
 
 /** Video has its own attachment lifecycle; changing it must never pause audio. */
 export function CallVideoOnly({ stream, contain = false }: { stream: MediaStream; contain?: boolean }) {
+  useUiLocale();
   const ref = useRef<HTMLVideoElement>(null);
   useEffect(() => {
     const video = ref.current;
@@ -17,6 +19,7 @@ export function CallVideoOnly({ stream, contain = false }: { stream: MediaStream
 }
 
 export function CallRemoteMedia({ stream, showVideo }: { stream: MediaStream; showVideo: boolean }) {
+  useUiLocale();
   const audioRef = useRef<HTMLAudioElement>(null);
   const audioTracks = useRef<MediaStreamTrack[]>([]);
   const audioGeneration = useRef(0);
@@ -54,7 +57,6 @@ export function CallRemoteMedia({ stream, showVideo }: { stream: MediaStream; sh
     <audio ref={audioRef} autoPlay />
     {showVideo && <CallVideoOnly stream={stream} />}
     {blocked && <button type="button" onClick={() => void playAudio()} className="absolute inset-x-3 top-12 z-30 rounded-full bg-primary px-3 py-2 text-primary-foreground">
-      <Volume2 className="inline h-4 w-4 mr-2" />Activar som da chamada
-    </button>}
+      <Volume2 className="inline h-4 w-4 mr-2" />{uiText("Activar som da chamada")}</button>}
   </>;
 }

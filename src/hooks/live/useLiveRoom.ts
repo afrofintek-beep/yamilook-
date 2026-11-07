@@ -1,3 +1,4 @@
+import { uiText } from '@/i18n/ui-copy';
 import { useState, useCallback, useRef, useEffect } from 'react';
 import {
   Room,
@@ -130,7 +131,7 @@ export function useLiveStream(): UseLiveStreamReturn {
       session = refreshed.session;
     }
     if (!session?.access_token) {
-      toast({ title: 'Sessão expirada', description: 'Inicia sessão novamente para entrar na live.', variant: 'destructive' });
+      toast({ title: uiText("Sessão expirada"), description: uiText("Inicia sessão novamente para entrar na live."), variant: 'destructive' });
       return null;
     }
     const authHeaders = { Authorization: `Bearer ${session.access_token}` };
@@ -148,14 +149,14 @@ export function useLiveStream(): UseLiveStreamReturn {
           throw error;
         }
         if (data?.token) return { token: data.token, url: data.url };
-        throw new Error('No token in response');
+        throw new Error(uiText("No token in response"));
       } catch (error) {
         lastError = error;
         if (attempt < 2) await new Promise((r) => setTimeout(r, 1200 * (attempt + 1)));
       }
     }
     logger.error('Token error', 'live', lastError);
-    toast({ title: 'Erro de ligação', description: 'Não foi possível obter as credenciais da live.', variant: 'destructive' });
+    toast({ title: uiText("Erro de ligação"), description: uiText("Não foi possível obter as credenciais da live."), variant: 'destructive' });
     return null;
   }, [user, profile, toast]);
 
@@ -183,7 +184,7 @@ export function useLiveStream(): UseLiveStreamReturn {
   }, []);
 
   const startStream = useCallback(async (title: string, description?: string, localTracks?: LocalTrack[]): Promise<string | null> => {
-    if (!user) { toast({ title: 'Please log in to start streaming', variant: 'destructive' }); return null; }
+    if (!user) { toast({ title: uiText("Please log in to start streaming"), variant: 'destructive' }); return null; }
     setLoading(true);
     setStreamError(null);
     let createdSessionId: string | null = null;
@@ -198,7 +199,7 @@ export function useLiveStream(): UseLiveStreamReturn {
       createdSessionId = session.id;
 
       const credentials = await getToken(roomName, true);
-      if (!credentials) { setStreamError({ code: 'TOKEN_FAILED', message: 'Failed to get streaming credentials' }); throw new Error('No credentials'); }
+      if (!credentials) { setStreamError({ code: 'TOKEN_FAILED', message: 'Failed to get streaming credentials' }); throw new Error(uiText("No credentials")); }
 
       const newRoom = new Room({ adaptiveStream: true, dynacast: true, videoCaptureDefaults: { resolution: VideoPresets.h720.resolution } });
       setupRoom(newRoom);
@@ -220,7 +221,7 @@ export function useLiveStream(): UseLiveStreamReturn {
       });
       setIsHost(true);
       sessionIdRef.current = session.id;
-      toast({ title: 'You are now live!' });
+      toast({ title: uiText("You are now live!") });
 
       await new Promise<void>(r => typeof requestAnimationFrame === 'function' ? requestAnimationFrame(() => r()) : setTimeout(r, 0));
       return session.id;
@@ -231,7 +232,7 @@ export function useLiveStream(): UseLiveStreamReturn {
       }
       const friendly = describeLiveError(error);
       if (!streamError) { setStreamError({ code: 'UNKNOWN', message: 'Failed to start stream', details: friendly }); }
-      toast({ title: 'Não foi possível abrir o Palco', description: friendly, variant: 'destructive' });
+      toast({ title: uiText("Não foi possível abrir o Palco"), description: friendly, variant: 'destructive' });
       return null;
     } finally {
       setLoading(false);
@@ -239,12 +240,12 @@ export function useLiveStream(): UseLiveStreamReturn {
   }, [user, profile, getToken, setupRoom, toast, streamError]);
 
   const joinStream = useCallback(async (sessionId: string): Promise<boolean> => {
-    if (!user) { toast({ title: 'Please log in to join', variant: 'destructive' }); return false; }
+    if (!user) { toast({ title: uiText("Please log in to join"), variant: 'destructive' }); return false; }
     setLoading(true);
     try {
       const { data: session, error: sessionError } = await supabase.from('live_sessions').select('*, host:public_profiles!live_sessions_host_id_fkey(id, display_name, avatar_url)').eq('id', sessionId).single();
       if (sessionError) throw sessionError;
-      if (session.status !== 'live') { toast({ title: 'This stream has ended', variant: 'destructive' }); return false; }
+      if (session.status !== 'live') { toast({ title: uiText("This stream has ended"), variant: 'destructive' }); return false; }
 
       const credentials = await getToken(session.livekit_room_name!, false);
       // No credentials = not authorized yet → let Live.tsx show the request gate
@@ -270,7 +271,7 @@ export function useLiveStream(): UseLiveStreamReturn {
       return true;
     } catch (error) {
       logger.error('Error joining stream', 'live', error);
-      toast({ title: 'Não foi possível entrar na live', description: describeLiveError(error), variant: 'destructive' });
+      toast({ title: uiText("Não foi possível entrar na live"), description: describeLiveError(error), variant: 'destructive' });
       return false;
     } finally {
       setLoading(false);
@@ -293,29 +294,29 @@ export function useLiveStream(): UseLiveStreamReturn {
     if (!isHost || !sessionIdRef.current) return;
     await supabase.from('live_sessions').update({ status: 'ended', ended_at: new Date().toISOString() }).eq('id', sessionIdRef.current);
     await leaveStream();
-    toast({ title: 'Stream ended' });
+    toast({ title: uiText("Stream ended") });
   }, [isHost, leaveStream, toast]);
 
   const forceEndSession = useCallback(async (sessionId: string): Promise<boolean> => {
     if (!user) return false;
     try {
       const { data: session } = await supabase.from('live_sessions').select('host_id, status').eq('id', sessionId).single();
-      if (!session) { toast({ title: 'Session not found', variant: 'destructive' }); return false; }
-      if (session.status === 'ended') { toast({ title: 'Session already ended' }); return true; }
+      if (!session) { toast({ title: uiText("Session not found"), variant: 'destructive' }); return false; }
+      if (session.status === 'ended') { toast({ title: uiText("Session already ended") }); return true; }
 
       const isOwner = session.host_id === user.id;
       const { data: isAdminData } = await supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' });
-      if (!isOwner && isAdminData !== true) { toast({ title: 'Permission denied', variant: 'destructive' }); return false; }
+      if (!isOwner && isAdminData !== true) { toast({ title: uiText("Permission denied"), variant: 'destructive' }); return false; }
 
       const { error } = await supabase.from('live_sessions').update({ status: 'ended', ended_at: new Date().toISOString() }).eq('id', sessionId);
-      if (error) { logger.error('Error ending session', 'live', error); toast({ title: 'Error', description: 'Failed to end session', variant: 'destructive' }); return false; }
+      if (error) { logger.error('Error ending session', 'live', error); toast({ title: uiText("Error"), description: uiText("Failed to end session"), variant: 'destructive' }); return false; }
       if (sessionIdRef.current === sessionId) await leaveStream();
-      toast({ title: 'Session ended successfully' });
+      toast({ title: uiText("Session ended successfully") });
       await fetchLiveSessions();
       return true;
     } catch (error) {
       logger.error('Error in forceEndSession', 'live', error);
-      toast({ title: 'Error', description: 'Failed to end session', variant: 'destructive' });
+      toast({ title: uiText("Error"), description: uiText("Failed to end session"), variant: 'destructive' });
       return false;
     }
   }, [user, toast, leaveStream, fetchLiveSessions]);
@@ -340,7 +341,7 @@ export function useLiveStream(): UseLiveStreamReturn {
       }
     } catch (e) {
       logger.error('Failed to toggle camera', 'live', e);
-      toast({ title: 'Camera Error', description: 'Could not toggle camera.', variant: 'destructive' });
+      toast({ title: uiText("Camera Error"), description: uiText("Could not toggle camera."), variant: 'destructive' });
     }
   }, [room, localParticipant, isCameraEnabled, toast]);
 
@@ -364,7 +365,7 @@ export function useLiveStream(): UseLiveStreamReturn {
       }
     } catch (e) {
       logger.error('Failed to toggle microphone', 'live', e);
-      toast({ title: 'Microphone Error', description: 'Could not toggle microphone.', variant: 'destructive' });
+      toast({ title: uiText("Microphone Error"), description: uiText("Could not toggle microphone."), variant: 'destructive' });
     }
   }, [room, localParticipant, isMicrophoneEnabled, toast]);
 
@@ -386,7 +387,7 @@ export function useLiveStream(): UseLiveStreamReturn {
       setIsCameraEnabled(true);
     } catch (e) {
       logger.error('Failed to flip camera', 'live', e);
-      toast({ title: 'Camera Error', description: 'Could not switch camera.', variant: 'destructive' });
+      toast({ title: uiText("Camera Error"), description: uiText("Could not switch camera."), variant: 'destructive' });
     }
   }, [room, localParticipant, toast]);
 

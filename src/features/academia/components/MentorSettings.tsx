@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -9,6 +10,7 @@ import { toast } from 'sonner';
 import { mentorStatus, useMyMentor, useRefreshMentors } from '../hooks/useMentorGovernance';
 
 export function MentorSettings() {
+  useUiLocale();
   const { data: mentor, isError, refetch } = useMyMentor();
   const refresh = useRefreshMentors();
   const [editing, setEditing] = useState(false);
@@ -25,7 +27,7 @@ export function MentorSettings() {
       return data ?? [];
     },
   });
-  if (isError) return <Button variant="outline" onClick={() => refetch()}>Tentar carregar candidatura novamente</Button>;
+  if (isError) return <Button variant="outline" onClick={() => refetch()}>{uiText("Tentar carregar candidatura novamente")}</Button>;
   if (!mentor) return null;
   const resubmit = ['rejected', 'inactive'].includes(mentor.status);
   async function save() {
@@ -42,25 +44,25 @@ export function MentorSettings() {
     try {
       const { error } = await supabase.rpc('academia_manage_mentor', { p_user: mentor.user_id, p_action: 'request_deactivation', p_reason: reason });
       if (error) throw error;
-      await refresh(); setReason(''); toast.success('Pedido enviado. O suporte irá verificar os compromissos pendentes.');
+      await refresh(); setReason(''); toast.success(uiText("Pedido enviado. O suporte irá verificar os compromissos pendentes."));
     } catch (error) { toast.error((error as Error).message); } finally { setBusy(false); }
   }
-  return <section className="rounded-xl border p-4 space-y-3" aria-label="O meu perfil de mentor">
-    <h2 className="font-semibold">O meu perfil de mentor</h2>
-    <p>{mentorStatus[mentor.status] ?? mentor.status}{mentor.is_verified_mentor ? ' · Verificado para cobrar' : ''}</p>
-    {mentor.status !== 'active' && <p className="text-sm text-muted-foreground">Novas sessões exigem aprovação. O histórico mantém-se disponível. Completa a tua apresentação para a revisão.</p>}
-    {decisions.find(d => d.reason)?.reason && <p className="text-sm">Última indicação: {decisions.find(d => d.reason)?.reason}</p>}
-    {!editing ? <Button variant="outline" onClick={() => { setSpecialty(mentor.specialty); setBio(mentor.mentor_bio ?? ''); setExperience(mentor.experience); setEditing(true); }}>{resubmit ? 'Actualizar e recandidatar-me' : 'Editar apresentação'}</Button> : <div className="space-y-3">
-      <Label htmlFor="edit-specialty">Especialidade</Label><Input id="edit-specialty" maxLength={120} value={specialty} onChange={e => setSpecialty(e.target.value)} />
-      <Label htmlFor="edit-bio">Biografia</Label><Textarea id="edit-bio" maxLength={2000} value={bio} onChange={e => setBio(e.target.value)} />
-      <Label htmlFor="edit-experience">Experiência</Label><Textarea id="edit-experience" maxLength={2000} value={experience} onChange={e => setExperience(e.target.value)} />
-      <p className="text-xs text-muted-foreground">Biografia e experiência: mínimo de 10 caracteres cada.</p>
-      <div className="flex flex-wrap gap-2"><Button disabled={busy || specialty.trim().length < 2 || bio.trim().length < 10 || experience.trim().length < 10} onClick={save}>{resubmit ? 'Reenviar candidatura' : 'Guardar'}</Button><Button variant="ghost" disabled={busy} onClick={() => setEditing(false)}>Cancelar</Button></div>
+  return <section className="rounded-xl border p-4 space-y-3" aria-label={uiText("O meu perfil de mentor")}>
+    <h2 className="font-semibold">{uiText("O meu perfil de mentor")}</h2>
+    <p>{mentorStatus[mentor.status] ?? mentor.status}{mentor.is_verified_mentor ? uiText(" · Verificado para cobrar") : ''}</p>
+    {mentor.status !== 'active' && <p className="text-sm text-muted-foreground">{uiText("Novas sessões exigem aprovação. O histórico mantém-se disponível. Completa a tua apresentação para a revisão.")}</p>}
+    {decisions.find(d => d.reason)?.reason && <p className="text-sm">{uiText("Última indicação: ")}{decisions.find(d => d.reason)?.reason}</p>}
+    {!editing ? <Button variant="outline" onClick={() => { setSpecialty(mentor.specialty); setBio(mentor.mentor_bio ?? ''); setExperience(mentor.experience); setEditing(true); }}>{resubmit ? uiText("Actualizar e recandidatar-me") : uiText("Editar apresentação")}</Button> : <div className="space-y-3">
+      <Label htmlFor="edit-specialty">{uiText("Especialidade")}</Label><Input id="edit-specialty" maxLength={120} value={specialty} onChange={e => setSpecialty(e.target.value)} />
+      <Label htmlFor="edit-bio">{uiText("Biografia")}</Label><Textarea id="edit-bio" maxLength={2000} value={bio} onChange={e => setBio(e.target.value)} />
+      <Label htmlFor="edit-experience">{uiText("Experiência")}</Label><Textarea id="edit-experience" maxLength={2000} value={experience} onChange={e => setExperience(e.target.value)} />
+      <p className="text-xs text-muted-foreground">{uiText("Biografia e experiência: mínimo de 10 caracteres cada.")}</p>
+      <div className="flex flex-wrap gap-2"><Button disabled={busy || specialty.trim().length < 2 || bio.trim().length < 10 || experience.trim().length < 10} onClick={save}>{resubmit ? uiText("Reenviar candidatura") : uiText("Guardar")}</Button><Button variant="ghost" disabled={busy} onClick={() => setEditing(false)}>{uiText("Cancelar")}</Button></div>
     </div>}
-    {mentor.status !== 'inactive' && <details><summary className="cursor-pointer py-3">Pedir desactivação</summary>
-      <p className="text-sm">A conta YAMILOOK e o histórico serão preservados. O suporte deverá resolver as sessões, turmas e planos pendentes antes de desactivar.</p>
-      <Label htmlFor="exit-reason">Motivo</Label><Textarea id="exit-reason" maxLength={1000} value={reason} onChange={e => setReason(e.target.value)} />
-      <Button variant="outline" disabled={busy || reason.trim().length < 3} onClick={requestExit}>Enviar pedido de desactivação</Button>
+    {mentor.status !== 'inactive' && <details><summary className="cursor-pointer py-3">{uiText("Pedir desactivação")}</summary>
+      <p className="text-sm">{uiText("A conta YAMILOOK e o histórico serão preservados. O suporte deverá resolver as sessões, turmas e planos pendentes antes de desactivar.")}</p>
+      <Label htmlFor="exit-reason">{uiText("Motivo")}</Label><Textarea id="exit-reason" maxLength={1000} value={reason} onChange={e => setReason(e.target.value)} />
+      <Button variant="outline" disabled={busy || reason.trim().length < 3} onClick={requestExit}>{uiText("Enviar pedido de desactivação")}</Button>
     </details>}
   </section>;
 }

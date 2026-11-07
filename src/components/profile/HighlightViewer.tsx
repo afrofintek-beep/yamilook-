@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -27,6 +28,7 @@ export function HighlightViewer({
   onAddItem,
   onDeleteHighlight,
 }: HighlightViewerProps) {
+  useUiLocale();
   const { t } = useTranslation();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [progress, setProgress] = useState(0);
@@ -47,7 +49,7 @@ export function HighlightViewer({
     if (isPaused) return;
 
     const startTime = Date.now();
-    
+
     const updateProgress = () => {
       const elapsed = Date.now() - startTime;
       const newProgress = Math.min((elapsed / STORY_DURATION) * 100, 100);
@@ -98,9 +100,9 @@ export function HighlightViewer({
     setUploading(true);
     try {
       await onAddItem(file);
-      toast.success('Adicionado ao destaque!');
+      toast.success(uiText("Adicionado ao destaque!"));
     } catch (error) {
-      toast.error('Erro ao adicionar');
+      toast.error(uiText("Erro ao adicionar"));
     } finally {
       setUploading(false);
     }
@@ -108,13 +110,13 @@ export function HighlightViewer({
 
   const handleDelete = async () => {
     if (!onDeleteHighlight) return;
-    
+
     try {
       await onDeleteHighlight();
       onOpenChange(false);
-      toast.success('Destaque eliminado');
+      toast.success(uiText("Destaque eliminado"));
     } catch (error) {
-      toast.error('Erro ao eliminar');
+      toast.error(uiText("Erro ao eliminar"));
     }
   };
 
@@ -238,16 +240,14 @@ export function HighlightViewer({
             </AnimatePresence>
           ) : (
             <div className="flex flex-col items-center gap-4 text-white/70">
-              <p>Sem conteúdo ainda</p>
+              <p>{uiText("Sem conteúdo ainda")}</p>
               {isOwner && (
                 <Button
                   variant="outline"
                   className="border-white/30 text-white hover:bg-white/20"
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Adicionar
-                </Button>
+                  <Plus className="w-4 h-4 mr-2" />{uiText("Adicionar")}</Button>
               )}
             </div>
           )}

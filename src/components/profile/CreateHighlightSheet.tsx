@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -24,6 +25,7 @@ export function CreateHighlightSheet({
   onOpenChange,
   onCreateHighlight,
 }: CreateHighlightSheetProps) {
+  useUiLocale();
   const { t } = useTranslation();
   const [title, setTitle] = useState('');
   const [coverFile, setCoverFile] = useState<File | null>(null);
@@ -45,19 +47,19 @@ export function CreateHighlightSheet({
 
   const handleCreate = async () => {
     if (!title.trim()) {
-      toast.error('Título é obrigatório');
+      toast.error(uiText("Título é obrigatório"));
       return;
     }
 
     setLoading(true);
     try {
       await onCreateHighlight(title.trim(), coverFile || undefined);
-      toast.success('Momambo criado!');
+      toast.success(uiText("Momambo criado!"));
       onOpenChange(false);
       resetForm();
     } catch (error) {
       console.error('Error creating momambo:', error);
-      toast.error('Erro ao criar Momambo');
+      toast.error(uiText("Erro ao criar Momambo"));
     } finally {
       setLoading(false);
     }
@@ -78,9 +80,7 @@ export function CreateHighlightSheet({
     <Sheet open={open} onOpenChange={handleClose}>
       <SheetContent side="bottom" className="h-[85vh] rounded-t-3xl">
         <SheetHeader className="pb-4">
-          <SheetTitle className="text-center">
-            Criar Momambo
-          </SheetTitle>
+          <SheetTitle className="text-center">{uiText("Criar Momambo")}</SheetTitle>
         </SheetHeader>
 
         <div className="space-y-6 px-2">
@@ -95,7 +95,7 @@ export function CreateHighlightSheet({
                   <motion.img
                     key="preview"
                     src={coverPreview}
-                    alt="Cover preview"
+                    alt={uiText("Cover preview")}
                     className="w-full h-full object-cover"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -110,16 +110,16 @@ export function CreateHighlightSheet({
                     exit={{ opacity: 0 }}
                   >
                     <ImageIcon className="w-8 h-8" />
-                    <span className="text-xs">Capa</span>
+                    <span className="text-xs">{uiText("Capa")}</span>
                   </motion.div>
                 )}
               </AnimatePresence>
-              
+
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                 <Plus className="w-6 h-6 text-white" />
               </div>
             </button>
-            
+
             <input
               ref={fileInputRef}
               type="file"
@@ -127,22 +127,18 @@ export function CreateHighlightSheet({
               onChange={handleFileSelect}
               className="hidden"
             />
-            
-            <p className="text-xs text-muted-foreground mt-2">
-              Toque para adicionar capa (opcional)
-            </p>
+
+            <p className="text-xs text-muted-foreground mt-2">{uiText("Toque para adicionar capa (opcional)")}</p>
           </div>
 
           {/* Title input */}
           <div className="space-y-2">
-            <Label htmlFor="momambo-title">
-              Nome do Momambo
-            </Label>
+            <Label htmlFor="momambo-title">{uiText("Nome do Momambo")}</Label>
             <Input
               id="momambo-title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Ex: Viagens, Família, Projetos..."
+              placeholder={uiText("Ex: Viagens, Família, Projetos...")}
               className="h-12 rounded-xl"
               maxLength={30}
             />
@@ -160,7 +156,7 @@ export function CreateHighlightSheet({
             {loading ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
-              'Criar Momambo'
+              uiText("Criar Momambo")
             )}
           </Button>
         </div>

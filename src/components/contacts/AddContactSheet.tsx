@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect, useCallback } from 'react';
 import { Search, UserPlus, Loader2, MailPlus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -40,6 +41,7 @@ export function AddContactSheet({
   existingContactIds,
   pendingRequestIds,
 }: AddContactSheetProps) {
+  useUiLocale();
   const brand = useAppSurface() === 'papos' ? 'KOSOLOLA' : 'Yamilook';
   const { toast } = useToast();
   const { i18n } = useTranslation();
@@ -78,13 +80,13 @@ export function AddContactSheet({
 
     if (error) {
       toast({
-        title: 'Error',
+        title: uiText("Error"),
         description: error.message,
         variant: 'destructive',
       });
     } else {
       toast({
-        title: 'Request sent',
+        title: uiText("Request sent"),
         description: `Friend request sent to ${selectedUser.display_name}`,
       });
       setSelectedUser(null);
@@ -116,7 +118,7 @@ export function AddContactSheet({
     <Sheet open={open} onOpenChange={(next) => { if (!next) handleClose(); }}>
       <SheetContent side="bottom" className="h-[85dvh] max-h-[calc(100dvh-env(safe-area-inset-top,0px))] rounded-t-3xl overflow-y-auto pb-[calc(1rem+env(safe-area-inset-bottom,0px))]">
         <SheetHeader className="mb-4">
-          <SheetTitle className="text-xl">{pt ? 'Adicionar contacto' : 'Add contact'}</SheetTitle>
+          <SheetTitle className="text-xl">{pt ? uiText("Adicionar contacto") : uiText("Add contact")}</SheetTitle>
         </SheetHeader>
 
         {selectedUser ? (
@@ -141,12 +143,12 @@ export function AddContactSheet({
 
             <div className="space-y-2">
               <label className="text-sm font-medium">
-                {pt ? 'Mensagem (opcional)' : 'Add a message (optional)'}
+                {pt ? uiText("Mensagem (opcional)") : uiText("Add a message (optional)")}
               </label>
               <Textarea
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                placeholder="Hey! I'd like to connect with you..."
+                placeholder={uiText("Hey! I'd like to connect with you...")}
                 className="resize-none"
                 rows={3}
               />
@@ -158,7 +160,7 @@ export function AddContactSheet({
                 className="flex-1"
                 onClick={() => setSelectedUser(null)}
               >
-                {pt ? 'Voltar' : 'Back'}
+                {pt ? uiText("Voltar") : uiText("Back")}
               </Button>
               <Button
                 className="flex-1 bg-gradient-primary text-white"
@@ -170,7 +172,7 @@ export function AddContactSheet({
                 ) : (
                   <UserPlus className="w-4 h-4 mr-2" />
                 )}
-                {pt ? 'Enviar pedido' : 'Send request'}
+                {pt ? uiText("Enviar pedido") : uiText("Send request")}
               </Button>
             </div>
           </div>
@@ -181,7 +183,7 @@ export function AddContactSheet({
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={pt ? 'Pesquisar por nome ou utilizador...' : 'Search by name or username...'}
+                placeholder={pt ? uiText("Pesquisar por nome ou utilizador...") : uiText("Search by name or username...")}
                 className="pl-10 h-12 rounded-xl"
               />
             </div>
@@ -194,7 +196,7 @@ export function AddContactSheet({
               ) : results.length === 0 ? (
                 searchQuery.trim() ? (
                   <div className="text-center py-12 text-muted-foreground">
-                    <p>{pt ? 'Nenhum utilizador encontrado' : 'No users found'}</p>
+                    <p>{pt ? uiText("Nenhum utilizador encontrado") : uiText("No users found")}</p>
                     <p className="text-sm">{pt ? `Tenta outra pesquisa ou convida a pessoa para a ${brand}.` : `Try another search or invite the person to ${brand}.`}</p>
                   </div>
                 ) : (
@@ -236,12 +238,12 @@ export function AddContactSheet({
                         </div>
                         {status === 'contact' && (
                           <span className="text-xs px-2 py-1 rounded-full bg-success/10 text-success">
-                            {pt ? 'Contacto' : 'Contact'}
+                            {pt ? uiText("Contacto") : uiText("Contact")}
                           </span>
                         )}
                         {status === 'pending' && (
                           <span className="text-xs px-2 py-1 rounded-full bg-warning/10 text-warning">
-                            {pt ? 'Pendente' : 'Pending'}
+                            {pt ? uiText("Pendente") : uiText("Pending")}
                           </span>
                         )}
                         {!status && (
@@ -259,7 +261,7 @@ export function AddContactSheet({
                 <MailPlus className="w-4 h-4 mr-2" />
                 {pt ? `Convidar para a ${brand}` : `Invite to ${brand}`}
               </Button>
-              <p className="text-xs text-muted-foreground">{pt ? 'Escolhe um contacto no WhatsApp ou email, sem indicar previamente o seu email.' : 'Choose a WhatsApp or email contact without entering their email first.'}</p>
+              <p className="text-xs text-muted-foreground">{pt ? uiText("Escolhe um contacto no WhatsApp ou email, sem indicar previamente o seu email.") : uiText("Choose a WhatsApp or email contact without entering their email first.")}</p>
             </div>
           </div>
         )}

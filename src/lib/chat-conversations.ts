@@ -1,3 +1,4 @@
+import { uiText } from '@/i18n/ui-copy';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 
@@ -35,7 +36,7 @@ export async function createChatConversation(participants: string[], name?: stri
   });
   if (error) return { data: null, error: new Error(error.message) };
   if (!data || typeof data !== 'object' || Array.isArray(data) || typeof data.id !== 'string') {
-    return { data: null, error: new Error('Resposta inválida ao criar conversa') };
+    return { data: null, error: new Error(uiText("Resposta inválida ao criar conversa")) };
   }
   return { data: data as unknown as Conversation, error: null };
 }

@@ -1,3 +1,4 @@
+import { uiText, useUiLocale, uiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -27,13 +28,14 @@ import { useAfrolocCertification } from '../hooks/useAfrolocCertification';
 const MIN_PAYOUT_KUMBU = 1000;
 
 const STATUS_MAP: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' }> = {
-  pending: { label: 'Pendente', variant: 'secondary' },
-  approved: { label: 'Aprovado', variant: 'default' },
-  processed: { label: 'Processado', variant: 'default' },
-  rejected: { label: 'Rejeitado', variant: 'destructive' },
+  pending: { get label() { return uiText("Pendente"); }, variant: 'secondary' },
+  approved: { get label() { return uiText("Aprovado"); }, variant: 'default' },
+  processed: { get label() { return uiText("Processado"); }, variant: 'default' },
+  rejected: { get label() { return uiText("Rejeitado"); }, variant: 'destructive' },
 };
 
 export default function Payouts() {
+  useUiLocale();
   const navigate = useNavigate();
   const { user, profile } = useAuth();
   const { isCertified } = useAfrolocCertification();
@@ -47,7 +49,7 @@ export default function Payouts() {
   const [aoaFactor, setAoaFactor] = useState<number | null>(null); // AOA per 1 Kumbu
 
   const kumbuAvailable = balance;
-  const fmtKz = (n: number) => new Intl.NumberFormat('pt-AO').format(Math.round(n)) + ' Kz';
+  const fmtKz = (n: number) => new Intl.NumberFormat(uiLocale()).format(Math.round(n)) + ' Kz';
 
   useEffect(() => {
     if (!user) return;
@@ -94,7 +96,7 @@ export default function Payouts() {
     const kumbu = parseInt(amount, 10);
     if (!user || isNaN(kumbu) || kumbu <= 0) return;
     if (kumbu > kumbuAvailable) {
-      toast.error('Saldo insuficiente.');
+      toast.error(uiText("Saldo insuficiente."));
       return;
     }
 
@@ -128,7 +130,7 @@ export default function Payouts() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-sm text-muted-foreground">A carregar…</p>
+        <p className="text-sm text-muted-foreground">{uiText("A carregar…")}</p>
       </div>
     );
   }
@@ -140,16 +142,12 @@ export default function Payouts() {
           <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-lg font-semibold">Payouts</h1>
+          <h1 className="text-lg font-semibold">{uiText("Payouts")}</h1>
         </header>
         <main className="max-w-lg mx-auto px-4 pt-8 text-center space-y-3">
           <Banknote className="h-10 w-10 text-muted-foreground mx-auto" />
-          <p className="text-sm text-muted-foreground">
-            A funcionalidade de payouts está disponível apenas para criadores e mentores verificados.
-          </p>
-          <Button variant="secondary" onClick={() => navigate('/creator/apply')}>
-            Candidatar-me como criador
-          </Button>
+          <p className="text-sm text-muted-foreground">{uiText("A funcionalidade de payouts está disponível apenas para criadores e mentores verificados.")}</p>
+          <Button variant="secondary" onClick={() => navigate('/creator/apply')}>{uiText("Candidatar-me como criador")}</Button>
         </main>
       </div>
     );
@@ -162,7 +160,7 @@ export default function Payouts() {
           <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-lg font-semibold">Payouts</h1>
+          <h1 className="text-lg font-semibold">{uiText("Payouts")}</h1>
         </header>
         <main className="max-w-lg mx-auto px-4 pt-4">
           <AfrolocCertificationGate action="pedir payout">
@@ -179,38 +177,32 @@ export default function Payouts() {
         <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h1 className="text-lg font-semibold flex-1">Payouts</h1>
-        <Button size="sm" onClick={() => setShowModal(true)}>
-          Novo pedido
-        </Button>
+        <h1 className="text-lg font-semibold flex-1">{uiText("Payouts")}</h1>
+        <Button size="sm" onClick={() => setShowModal(true)}>{uiText("Novo pedido")}</Button>
       </header>
 
       <main className="max-w-lg mx-auto px-4 pt-4 space-y-4">
         <Card className="border-none shadow-sm">
           <CardContent className="p-5 flex items-center justify-between">
             <div>
-              <p className="text-xs text-muted-foreground">Kumbu disponível</p>
+              <p className="text-xs text-muted-foreground">{uiText("Kumbu disponível")}</p>
               <p className="text-2xl font-semibold">{kumbuAvailable}</p>
               {aoaFactor && kumbuAvailable > 0 && (
                 <p className="text-xs text-muted-foreground mt-0.5">≈ {fmtKz(kumbuAvailable * aoaFactor)}</p>
               )}
             </div>
-            <p className="text-xs text-muted-foreground max-w-[160px] text-right leading-relaxed">
-              Mínimo 1000 Kumbu · sujeito a verificação.
-            </p>
+            <p className="text-xs text-muted-foreground max-w-[160px] text-right leading-relaxed">{uiText("Mínimo 1000 Kumbu · sujeito a verificação.")}</p>
           </CardContent>
         </Card>
 
         {/* History */}
         <Card className="border-none shadow-sm">
           <CardHeader className="pb-2 px-5 pt-5">
-            <CardTitle className="text-base">Histórico</CardTitle>
+            <CardTitle className="text-base">{uiText("Histórico")}</CardTitle>
           </CardHeader>
           <CardContent className="px-5 pb-5">
             {payouts.length === 0 && (
-              <p className="text-sm text-muted-foreground py-4 text-center">
-                Sem pedidos registados.
-              </p>
+              <p className="text-sm text-muted-foreground py-4 text-center">{uiText("Sem pedidos registados.")}</p>
             )}
             <ul className="divide-y">
               {payouts.map((p) => {
@@ -238,25 +230,20 @@ export default function Payouts() {
       <Dialog open={showModal} onOpenChange={setShowModal}>
         <DialogContent className="max-w-sm rounded-xl">
           <DialogHeader>
-            <DialogTitle className="text-base">Novo pedido de payout</DialogTitle>
-            <DialogDescription className="text-xs">
-              Conversão mensal — sujeito a verificação.
-            </DialogDescription>
+            <DialogTitle className="text-base">{uiText("Novo pedido de payout")}</DialogTitle>
+            <DialogDescription className="text-xs">{uiText("Conversão mensal — sujeito a verificação.")}</DialogDescription>
           </DialogHeader>
 
           {kumbuAvailable < MIN_PAYOUT_KUMBU ? (
             // Below the minimum: no valid amount exists, so explain instead of
             // showing a permanently-disabled button with contradictory labels.
-            <div className="rounded-lg bg-muted/60 p-4 text-sm text-muted-foreground my-2">
-              Precisas de pelo menos <span className="font-semibold text-foreground">{MIN_PAYOUT_KUMBU} Kumbu</span> para
-              pedir um payout. Tens <span className="font-semibold text-foreground">{kumbuAvailable}</span> —
-              faltam <span className="font-semibold text-foreground">{MIN_PAYOUT_KUMBU - kumbuAvailable}</span>.
+            <div className="rounded-lg bg-muted/60 p-4 text-sm text-muted-foreground my-2">{uiText("Precisas de pelo menos ")}<span className="font-semibold text-foreground">{MIN_PAYOUT_KUMBU} Kumbu</span>{uiText(" para pedir um payout. Tens ")}<span className="font-semibold text-foreground">{kumbuAvailable}</span>{uiText(" — faltam ")}<span className="font-semibold text-foreground">{MIN_PAYOUT_KUMBU - kumbuAvailable}</span>.
             </div>
           ) : (
             <>
               <div className="space-y-3 py-2">
                 <div className="space-y-1.5">
-                  <Label htmlFor="amount" className="text-sm">Quantidade (Kumbu)</Label>
+                  <Label htmlFor="amount" className="text-sm">{uiText("Quantidade (Kumbu)")}</Label>
                   <Input
                     id="amount"
                     type="number"
@@ -266,11 +253,10 @@ export default function Payouts() {
                     onChange={(e) => setAmount(e.target.value)}
                     placeholder={`Entre ${MIN_PAYOUT_KUMBU} e ${kumbuAvailable}`}
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Mínimo {MIN_PAYOUT_KUMBU} Kumbu · máximo {kumbuAvailable}.
+                  <p className="text-xs text-muted-foreground">{uiText("Mínimo ")}{MIN_PAYOUT_KUMBU}{uiText(" Kumbu · máximo ")}{kumbuAvailable}.
                   </p>
                   {aoaFactor && parseInt(amount) > 0 && (
-                    <p className="text-xs text-muted-foreground">Vais receber ≈ {fmtKz(parseInt(amount) * aoaFactor)}</p>
+                    <p className="text-xs text-muted-foreground">{uiText("Vais receber ≈ ")}{fmtKz(parseInt(amount) * aoaFactor)}</p>
                   )}
                 </div>
               </div>
@@ -281,9 +267,7 @@ export default function Payouts() {
                   disabled={!amount || parseInt(amount) < MIN_PAYOUT_KUMBU || parseInt(amount) > kumbuAvailable || submitting}
                   onClick={handleSubmit}
                 >
-                  {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                  Solicitar payout
-                </Button>
+                  {submitting && <Loader2 className="h-4 w-4 animate-spin" />}{uiText("Solicitar payout")}</Button>
               </DialogFooter>
             </>
           )}

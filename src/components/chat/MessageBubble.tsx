@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { motion } from 'framer-motion';
@@ -43,6 +44,7 @@ export function MessageBubble({
   isGroupChat = false,
   onDelete,
 }: MessageBubbleProps) {
+  useUiLocale();
   const { toast } = useToast();
   const [showMenu, setShowMenu] = useState(false);
 
@@ -57,7 +59,7 @@ export function MessageBubble({
   const handleCopy = () => {
     if (message.content) {
       navigator.clipboard.writeText(message.content);
-      toast({ title: 'Copied to clipboard' });
+      toast({ title: uiText("Copied to clipboard") });
     }
   };
 
@@ -75,9 +77,7 @@ export function MessageBubble({
         className={`flex gap-2 px-4 py-1 ${isOwn ? 'justify-end' : 'justify-start'}`}
       >
         {!isOwn && showAvatar && <div className="w-8" />}
-        <div className="px-4 py-2 rounded-2xl bg-muted/50 italic text-muted-foreground text-sm">
-          This message was deleted
-        </div>
+        <div className="px-4 py-2 rounded-2xl bg-muted/50 italic text-muted-foreground text-sm">{uiText("This message was deleted")}</div>
       </motion.div>
     );
   }
@@ -117,14 +117,10 @@ export function MessageBubble({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={handleCopy}>
-                  <Copy className="w-4 h-4 mr-2" />
-                  Copy
-                </DropdownMenuItem>
+                  <Copy className="w-4 h-4 mr-2" />{uiText("Copy")}</DropdownMenuItem>
                 {onDelete && (
                   <DropdownMenuItem onClick={handleDelete} className="text-destructive">
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Delete
-                  </DropdownMenuItem>
+                    <Trash2 className="w-4 h-4 mr-2" />{uiText("Delete")}</DropdownMenuItem>
                 )}
               </DropdownMenuContent>
             </DropdownMenu>
@@ -153,9 +149,7 @@ export function MessageBubble({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
                 <DropdownMenuItem onClick={handleCopy}>
-                  <Copy className="w-4 h-4 mr-2" />
-                  Copy
-                </DropdownMenuItem>
+                  <Copy className="w-4 h-4 mr-2" />{uiText("Copy")}</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           )}
@@ -166,7 +160,7 @@ export function MessageBubble({
             {format(new Date(message.created_at), 'h:mm a')}
           </span>
           {message.is_edited && (
-            <span className="text-[10px] text-muted-foreground italic">edited</span>
+            <span className="text-[10px] text-muted-foreground italic">{uiText("edited")}</span>
           )}
           {isOwn && (
             Array.isArray(message.read_by) && message.read_by.length > 0 ? (

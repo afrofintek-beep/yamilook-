@@ -1,3 +1,4 @@
+import { uiText } from '@/i18n/ui-copy';
 import { updateModeratedProfile } from '@/lib/profile-moderation';
 import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -190,7 +191,7 @@ export function useStrikes() {
       await supabase.from('moderation_notifications').insert({
         user_id: userId,
         notification_type: 'suspension',
-        title: 'Conta banida',
+        title: uiText("Conta banida"),
         message: 'A tua conta foi permanentemente banida devido a violações repetidas das normas da comunidade.',
         action_url: '/settings',
       });
@@ -230,7 +231,7 @@ export function useStrikes() {
       .eq('id', strikeId);
 
     if (error) throw error;
-    toast.success('Strike revogado');
+    toast.success(uiText("Strike revogado"));
   }, [user]);
 
   const fetchThresholds = useCallback(async () => {

@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useForm } from "react-hook-form";
@@ -31,6 +32,7 @@ const applySchema = z.object({
 type ApplyFormValues = z.infer<typeof applySchema>;
 
 export default function Apply() {
+  useUiLocale();
   const [submitted, setSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -61,16 +63,16 @@ export default function Apply() {
 
       if (error) {
         if (error.code === "23505") {
-          toast.error("Este email já foi submetido. Aguarda a nossa resposta!");
+          toast.error(uiText("Este email já foi submetido. Aguarda a nossa resposta!"));
         } else {
-          toast.error("Erro ao enviar candidatura. Tenta novamente.");
+          toast.error(uiText("Erro ao enviar candidatura. Tenta novamente."));
         }
         return;
       }
 
       setSubmitted(true);
     } catch {
-      toast.error("Erro inesperado. Tenta novamente.");
+      toast.error(uiText("Erro inesperado. Tenta novamente."));
     } finally {
       setIsLoading(false);
     }
@@ -101,19 +103,11 @@ export default function Apply() {
               <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-6">
                 <CheckCircle2 className="w-10 h-10 text-primary" />
               </div>
-              <h2 className="text-2xl font-bold text-foreground mb-3">
-                Candidatura enviada! 🎉
-              </h2>
-              <p className="text-muted-foreground mb-2">
-                Recebemos a tua candidatura para o MVP do Yamilook.
-              </p>
-              <p className="text-muted-foreground text-sm">
-                Se fores selecionado, receberás um email com o teu código de acesso exclusivo. Mantém o olho na caixa de entrada!
-              </p>
+              <h2 className="text-2xl font-bold text-foreground mb-3">{uiText("Candidatura enviada! 🎉")}</h2>
+              <p className="text-muted-foreground mb-2">{uiText("Recebemos a tua candidatura para o MVP do Yamilook.")}</p>
+              <p className="text-muted-foreground text-sm">{uiText("Se fores selecionado, receberás um email com o teu código de acesso exclusivo. Mantém o olho na caixa de entrada!")}</p>
               <div className="mt-8 p-4 bg-secondary/50 rounded-2xl w-full">
-                <p className="text-xs text-muted-foreground">
-                  📧 Verifica também a pasta de spam caso não recebas nada em 5-7 dias úteis.
-                </p>
+                <p className="text-xs text-muted-foreground">{uiText("📧 Verifica também a pasta de spam caso não recebas nada em 5-7 dias úteis.")}</p>
               </div>
             </motion.div>
           ) : (
@@ -125,12 +119,8 @@ export default function Apply() {
               className="w-full max-w-md"
             >
               <div className="text-center mb-8">
-                <h1 className="text-2xl font-bold text-foreground mb-2">
-                  Candidatura MVP 🇦🇴
-                </h1>
-                <p className="text-muted-foreground text-sm">
-                  Faz parte dos primeiros a experimentar o Yamilook. Preenche o formulário e entraremos em contacto se fores selecionado.
-                </p>
+                <h1 className="text-2xl font-bold text-foreground mb-2">{uiText("Candidatura MVP 🇦🇴")}</h1>
+                <p className="text-muted-foreground text-sm">{uiText("Faz parte dos primeiros a experimentar o Yamilook. Preenche o formulário e entraremos em contacto se fores selecionado.")}</p>
               </div>
 
               <Form {...form}>
@@ -141,13 +131,13 @@ export default function Apply() {
                     name="full_name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Nome completo *</FormLabel>
+                        <FormLabel>{uiText("Nome completo *")}</FormLabel>
                           <div className="relative">
                             <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                             <FormControl>
                               <Input
                                 {...field}
-                                placeholder="O teu nome"
+                                placeholder={uiText("O teu nome")}
                                 className="pl-10 h-12 rounded-xl bg-secondary/50 border-0 focus:ring-2 focus:ring-primary"
                                 disabled={isLoading}
                               />
@@ -164,7 +154,7 @@ export default function Apply() {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Email *</FormLabel>
+                        <FormLabel>{uiText("Email *")}</FormLabel>
                           <div className="relative">
                             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                             <FormControl>
@@ -189,13 +179,13 @@ export default function Apply() {
                       name="phone"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Telefone</FormLabel>
+                          <FormLabel>{uiText("Telefone")}</FormLabel>
                             <div className="relative">
                               <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                               <FormControl>
                                 <Input
                                   {...field}
-                                  placeholder="+244 9xx..."
+                                  placeholder={uiText("+244 9xx...")}
                                   className="pl-10 h-12 rounded-xl bg-secondary/50 border-0 focus:ring-2 focus:ring-primary"
                                   disabled={isLoading}
                                 />
@@ -210,13 +200,13 @@ export default function Apply() {
                       name="city"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Cidade</FormLabel>
+                          <FormLabel>{uiText("Cidade")}</FormLabel>
                             <div className="relative">
                               <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                               <FormControl>
                                 <Input
                                   {...field}
-                                  placeholder="Luanda..."
+                                  placeholder={uiText("Luanda...")}
                                   className="pl-10 h-12 rounded-xl bg-secondary/50 border-0 focus:ring-2 focus:ring-primary"
                                   disabled={isLoading}
                                 />
@@ -234,13 +224,13 @@ export default function Apply() {
                     name="social_handle"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Instagram / TikTok</FormLabel>
+                        <FormLabel>{uiText("Instagram / TikTok")}</FormLabel>
                           <div className="relative">
                             <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                             <FormControl>
                               <Input
                                 {...field}
-                                placeholder="@o_teu_username"
+                                placeholder={uiText("@o_teu_username")}
                                 className="pl-10 h-12 rounded-xl bg-secondary/50 border-0 focus:ring-2 focus:ring-primary"
                                 disabled={isLoading}
                               />
@@ -257,13 +247,13 @@ export default function Apply() {
                     name="motivation"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Porque queres fazer parte do MVP? *</FormLabel>
+                        <FormLabel>{uiText("Porque queres fazer parte do MVP? *")}</FormLabel>
                           <div className="relative">
                             <MessageSquare className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
                             <FormControl>
                               <Textarea
                                 {...field}
-                                placeholder="Conta-nos o que te motiva a fazer parte desta fase inicial do Yamilook..."
+                                placeholder={uiText("Conta-nos o que te motiva a fazer parte desta fase inicial do Yamilook...")}
                                 className="pl-10 min-h-[120px] rounded-xl bg-secondary/50 border-0 focus:ring-2 focus:ring-primary resize-none"
                                 disabled={isLoading}
                               />
@@ -281,26 +271,17 @@ export default function Apply() {
                   >
                     {isLoading ? (
                       <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        A enviar candidatura...
-                      </>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />{uiText("A enviar candidatura...")}</>
                     ) : (
                       <>
-                        <Send className="w-4 h-4 mr-2" />
-                        Enviar Candidatura
-                      </>
+                        <Send className="w-4 h-4 mr-2" />{uiText("Enviar Candidatura")}</>
                     )}
                   </Button>
 
-                  <p className="text-xs text-muted-foreground text-center pt-1">
-                    Ao submeter, aceitas os nossos{" "}
-                    <a href="/terms" className="underline hover:text-foreground">
-                      Termos de Serviço
-                    </a>{" "}
+                  <p className="text-xs text-muted-foreground text-center pt-1">{uiText("Ao submeter, aceitas os nossos")}{" "}
+                    <a href="/terms" className="underline hover:text-foreground">{uiText("Termos de Serviço")}</a>{" "}
                     e{" "}
-                    <a href="/privacy" className="underline hover:text-foreground">
-                      Política de Privacidade
-                    </a>
+                    <a href="/privacy" className="underline hover:text-foreground">{uiText("Política de Privacidade")}</a>
                     .
                   </p>
                 </form>

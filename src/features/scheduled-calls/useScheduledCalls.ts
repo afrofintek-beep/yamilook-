@@ -1,3 +1,4 @@
+import { uiText } from '@/i18n/ui-copy';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
 import { scheduledAction, type ScheduledCall, type ScheduleInput } from './api';
@@ -5,7 +6,7 @@ export function useScheduledCalls(){
  const {user}=useAuth();const cache=useQueryClient();
  const query=useQuery({queryKey:['scheduled-calls',user?.id],enabled:!!user,queryFn:()=>scheduledAction<ScheduledCall[]>('list'),refetchInterval:15000,refetchOnWindowFocus:true});
  const mutate=async<T,>(action:string,id:string|null,payload:object={})=>{
-  if(!user)throw new Error('Inicia sessão novamente.');
+  if(!user)throw new Error(uiText("Inicia sessão novamente."));
   const data=await scheduledAction<T>(action,id,payload);
   await cache.invalidateQueries({queryKey:['scheduled-calls']});
   await cache.invalidateQueries({queryKey:['scheduled-detail']});

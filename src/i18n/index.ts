@@ -6,6 +6,9 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 
 // Only load Portuguese (default) synchronously, others will be lazy-loaded
 import pt from './locales/pt.json';
+import ptInterface from './interface/pt.json';
+
+const interfaceLoaders = import.meta.glob('./interface/*.json', { import: 'default' }) as Record<string, () => Promise<Record<string, string>>>;
 
 export const languages = appLanguages;
 
@@ -75,8 +78,12 @@ const loadBaseLanguage = async (lng: string): Promise<{ translation: Record<stri
 };
 
 const loadLanguage = async (lng: string) => {
-  const resources = await loadBaseLanguage(lng);
-  return { translation: { ...resources.translation, entry: entryTranslations[normalizeAppLanguage(lng)] || entryTranslations.pt } };
+  const code = normalizeAppLanguage(lng);
+  const [resources, interfaceCopy] = await Promise.all([
+    loadBaseLanguage(lng),
+    interfaceLoaders[`./interface/${code}.json`]?.() ?? Promise.resolve(ptInterface),
+  ]);
+  return { translation: { ...resources.translation, entry: entryTranslations[code] || entryTranslations.pt }, interface: interfaceCopy };
 };
 
 i18n
@@ -84,7 +91,7 @@ i18n
   .use(initReactI18next)
   .init({
     resources: {
-      pt: { translation: { ...pt, entry: entryTranslations.pt } },
+      pt: { translation: { ...pt, entry: entryTranslations.pt }, interface: ptInterface },
     },
     fallbackLng: { yo: ['en', 'pt'], sn: ['en', 'pt'], zu: ['en', 'pt'], default: ['pt'] },
     interpolation: {
@@ -106,10 +113,14 @@ export async function changeAppLanguage(language: string) {
   const request = ++languageRequest;
   const code = normalizeAppLanguage(language);
   if (['yo', 'sn', 'zu'].includes(code) && !i18n.hasResourceBundle('en', 'translation')) {
-    i18n.addResourceBundle('en', 'translation', (await loadLanguage('en')).translation);
+    const english = await loadLanguage('en');
+    i18n.addResourceBundle('en', 'translation', english.translation);
+    i18n.addResourceBundle('en', 'interface', english.interface);
   }
   if (!i18n.hasResourceBundle(code, 'translation')) {
-    i18n.addResourceBundle(code, 'translation', (await loadLanguage(code)).translation);
+    const resources = await loadLanguage(code);
+    i18n.addResourceBundle(code, 'translation', resources.translation);
+    i18n.addResourceBundle(code, 'interface', resources.interface);
   }
   if (request === languageRequest) await i18n.changeLanguage(code);
 }

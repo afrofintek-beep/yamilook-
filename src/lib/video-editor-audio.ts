@@ -1,3 +1,4 @@
+import { uiText } from '@/i18n/ui-copy';
 // Original, locally synthesised instrumentals; no external catalogue or artist recordings.
 export const EDITOR_TRACKS = [
   { id: 'banda', name: 'Batida da Banda', bpm: 108, notes: [130.81, 155.56, 174.61, 155.56] },
@@ -7,7 +8,7 @@ export const EDITOR_TRACKS = [
 
 export function createInstrumental(context: AudioContext, id: string): AudioBuffer {
   const track = EDITOR_TRACKS.find(track => track.id === id);
-  if (!track) throw new Error('Instrumental desconhecido');
+  if (!track) throw new Error(uiText("Instrumental desconhecido"));
   const beat = 60 / track.bpm;
   const buffer = context.createBuffer(1, Math.ceil(beat * 16 * context.sampleRate), context.sampleRate);
   const pcm = buffer.getChannelData(0);

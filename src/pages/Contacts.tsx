@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { genderCtx } from '@/lib/i18n-gender';
 import { lazy, Suspense, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -31,6 +32,7 @@ import { useToast } from '@/hooks/use-toast';
 const CreateGroupSheet = lazy(() => import('@/components/chat/CreateGroupSheet').then(m => ({default:m.CreateGroupSheet})));
 
 export default function Contacts() {
+  useUiLocale();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { user, profile } = useAuth();
@@ -104,55 +106,55 @@ export default function Contacts() {
   const handleToggleFavorite = async (id: string) => {
     const { error } = await toggleFavorite(id);
     if (error) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      toast({ title: uiText("Error"), description: error.message, variant: 'destructive' });
     }
   };
 
   const handleRemove = async (id: string) => {
     const { error } = await removeContact(id);
     if (error) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      toast({ title: uiText("Error"), description: error.message, variant: 'destructive' });
     } else {
-      toast({ title: 'Contact removed' });
+      toast({ title: uiText("Contact removed") });
     }
   };
 
   const handleBlock = async (id: string) => {
     const { error } = await blockContact(id);
     if (error) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      toast({ title: uiText("Error"), description: error.message, variant: 'destructive' });
     } else {
-      toast({ title: 'User blocked' });
+      toast({ title: uiText("User blocked") });
     }
   };
 
   const handleUpdateNickname = async (id: string, nickname: string) => {
     const { error } = await updateNickname(id, nickname);
     if (error) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      toast({ title: uiText("Error"), description: error.message, variant: 'destructive' });
     }
   };
 
   const handleAcceptRequest = async (id: string) => {
     const { error } = await acceptFriendRequest(id);
     if (error) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      toast({ title: uiText("Error"), description: error.message, variant: 'destructive' });
     } else {
-      toast({ title: 'Friend request accepted!' });
+      toast({ title: uiText("Friend request accepted!") });
     }
   };
 
   const handleRejectRequest = async (id: string) => {
     const { error } = await rejectFriendRequest(id);
     if (error) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      toast({ title: uiText("Error"), description: error.message, variant: 'destructive' });
     }
   };
 
   const handleCancelRequest = async (id: string) => {
     const { error } = await cancelFriendRequest(id);
     if (error) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      toast({ title: uiText("Error"), description: error.message, variant: 'destructive' });
     }
   };
 
@@ -236,7 +238,7 @@ export default function Contacts() {
               className="flex-1 py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
             >
               <Users className="w-4 h-4 mr-2" />
-              {t('contacts.all') || 'All'}
+              {t('contacts.all') || uiText("All")}
             </TabsTrigger>
             <TabsTrigger
               value="bradas"
@@ -255,7 +257,7 @@ export default function Contacts() {
               className="flex-1 py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
             >
               <Star className="w-4 h-4 mr-2" />
-              {t('contacts.favorites') || 'Favorites'}
+              {t('contacts.favorites') || uiText("Favorites")}
             </TabsTrigger>
             <TabsTrigger
               value="requests"
@@ -294,9 +296,9 @@ export default function Contacts() {
                 <div className="w-16 h-16 rounded-2xl bg-secondary flex items-center justify-center mb-4">
                   <Clock className="w-8 h-8 text-muted-foreground" />
                 </div>
-                <h3 className="text-lg font-semibold mb-2">{t('contacts.noPendingRequests') || 'No pending requests'}</h3>
+                <h3 className="text-lg font-semibold mb-2">{t('contacts.noPendingRequests') || uiText("No pending requests")}</h3>
                 <p className="text-muted-foreground text-sm">
-                  {t('contacts.requestsAppearHere') || 'Friend requests will appear here'}
+                  {t('contacts.requestsAppearHere') || uiText("Friend requests will appear here")}
                 </p>
               </div>
             ) : (
@@ -305,7 +307,7 @@ export default function Contacts() {
                   <div>
                     <div className="px-4 py-2 bg-secondary/30">
                       <span className="text-sm font-medium text-muted-foreground">
-                        {t('contacts.received') || 'Received'} ({receivedRequests.length})
+                        {t('contacts.received') || uiText("Received")} ({receivedRequests.length})
                       </span>
                     </div>
                     <AnimatePresence>
@@ -333,7 +335,7 @@ export default function Contacts() {
                   <div>
                     <div className="px-4 py-2 bg-secondary/30">
                       <span className="text-sm font-medium text-muted-foreground">
-                        {t('contacts.sent') || 'Sent'} ({sentRequests.length})
+                        {t('contacts.sent') || uiText("Sent")} ({sentRequests.length})
                       </span>
                     </div>
                     <AnimatePresence>
@@ -370,17 +372,17 @@ export default function Contacts() {
             </div>
             <h3 className="text-lg font-semibold mb-2">
               {searchQuery
-                ? t('contacts.noContactsFound') || 'No contacts found'
+                ? t('contacts.noContactsFound') || uiText("No contacts found")
                 : activeTab === 'bradas'
-                ? t('social.closeFriendsNoContacts') || 'No close friends yet'
+                ? t('social.closeFriendsNoContacts') || uiText("No close friends yet")
                 : activeTab === 'favorites'
-                ? t('contacts.noFavorites') || 'No favorites yet'
+                ? t('contacts.noFavorites') || uiText("No favorites yet")
                 : t('contacts.noContacts')}
             </h3>
             <p className="text-muted-foreground text-sm mb-6">
               {searchQuery
-                ? t('contacts.tryDifferentSearch') || 'Try a different search term'
-                : t('contacts.addFriendsToChat') || 'Add friends to start chatting'}
+                ? t('contacts.tryDifferentSearch') || uiText("Try a different search term")
+                : t('contacts.addFriendsToChat') || uiText("Add friends to start chatting")}
             </p>
             {!searchQuery && (
               <Button

@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -18,6 +19,7 @@ interface GroupInfo {
 }
 
 export default function JoinGroup() {
+  useUiLocale();
   const { code } = useParams<{ code: string }>();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
@@ -31,7 +33,7 @@ export default function JoinGroup() {
   useEffect(() => {
     if (!code) {
       setStatus('error');
-      setError('Código de convite inválido');
+      setError(uiText("Código de convite inválido"));
       return;
     }
 
@@ -49,12 +51,12 @@ export default function JoinGroup() {
     if (!code) return;
 
     setStatus('loading');
-    
+
     const { data, error } = await supabase.rpc('preview_chat_invite', { invite_code: code });
     const result = data as { success?: boolean; conversation_id?: string; name?: string; avatar_url?: string | null; member_count?: number } | null;
     if (error || !result?.success || !result.conversation_id) {
       setStatus('error');
-      setError('Link de convite inválido ou expirado');
+      setError(uiText("Link de convite inválido ou expirado"));
       return;
     }
     setGroupInfo({ name: result.name || 'Grupo', avatar_url: result.avatar_url || null, member_count: result.member_count || 0 });
@@ -73,7 +75,7 @@ export default function JoinGroup() {
 
     if (error) {
       setStatus('error');
-      setError('Erro ao entrar no grupo');
+      setError(uiText("Erro ao entrar no grupo"));
       return;
     }
 
@@ -89,14 +91,14 @@ export default function JoinGroup() {
       setStatus('already_member');
       setConversationId(result.conversation_id || null);
       toast({
-        title: 'Já és membro!',
-        description: 'Já fazes parte deste grupo.',
+        title: uiText("Já és membro!"),
+        description: uiText("Já fazes parte deste grupo."),
       });
     } else {
       setStatus('success');
       setConversationId(result.conversation_id || null);
       toast({
-        title: 'Bem-vindo ao grupo!',
+        title: uiText("Bem-vindo ao grupo!"),
         description: `Entraste no grupo "${groupInfo?.name}".`,
       });
     }
@@ -132,7 +134,7 @@ export default function JoinGroup() {
             {status === 'loading' && (
               <>
                 <Loader2 className="w-12 h-12 mx-auto mb-4 animate-spin text-primary" />
-                <CardTitle>A verificar convite...</CardTitle>
+                <CardTitle>{uiText("A verificar convite...")}</CardTitle>
               </>
             )}
 
@@ -141,7 +143,7 @@ export default function JoinGroup() {
                 <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-destructive/10 flex items-center justify-center">
                   <XCircle className="w-8 h-8 text-destructive" />
                 </div>
-                <CardTitle>Convite Inválido</CardTitle>
+                <CardTitle>{uiText("Convite Inválido")}</CardTitle>
                 <CardDescription>{error}</CardDescription>
               </>
             )}
@@ -151,10 +153,8 @@ export default function JoinGroup() {
                 <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
                   <Users className="w-8 h-8 text-primary" />
                 </div>
-                <CardTitle>Convite para Grupo</CardTitle>
-                <CardDescription>
-                  Precisas de iniciar sessão para entrar no grupo
-                </CardDescription>
+                <CardTitle>{uiText("Convite para Grupo")}</CardTitle>
+                <CardDescription>{uiText("Precisas de iniciar sessão para entrar no grupo")}</CardDescription>
               </>
             )}
 
@@ -173,7 +173,7 @@ export default function JoinGroup() {
                 )}
                 <CardTitle>{groupInfo.name}</CardTitle>
                 <CardDescription>
-                  {groupInfo.member_count} {groupInfo.member_count === 1 ? 'membro' : 'membros'}
+                  {groupInfo.member_count} {groupInfo.member_count === 1 ? uiText("membro") : uiText("membros")}
                 </CardDescription>
               </>
             )}
@@ -181,7 +181,7 @@ export default function JoinGroup() {
             {status === 'joining' && (
               <>
                 <Loader2 className="w-12 h-12 mx-auto mb-4 animate-spin text-primary" />
-                <CardTitle>A entrar no grupo...</CardTitle>
+                <CardTitle>{uiText("A entrar no grupo...")}</CardTitle>
               </>
             )}
 
@@ -191,11 +191,11 @@ export default function JoinGroup() {
                   <CheckCircle className="w-8 h-8 text-green-500" />
                 </div>
                 <CardTitle>
-                  {status === 'already_member' ? 'Já és membro!' : 'Entraste no grupo!'}
+                  {status === 'already_member' ? uiText("Já és membro!") : uiText("Entraste no grupo!")}
                 </CardTitle>
                 <CardDescription>
                   {status === 'already_member'
-                    ? 'Já fazes parte deste grupo.'
+                    ? uiText("Já fazes parte deste grupo.")
                     : `Bem-vindo ao "${groupInfo?.name}"!`}
                 </CardDescription>
               </>
@@ -204,41 +204,33 @@ export default function JoinGroup() {
 
           <CardContent className="space-y-3">
             {status === 'error' && (
-              <Button 
-                className="w-full h-12 rounded-xl" 
+              <Button
+                className="w-full h-12 rounded-xl"
                 onClick={() => navigate('/')}
-              >
-                Voltar ao início
-              </Button>
+              >{uiText("Voltar ao início")}</Button>
             )}
 
             {status === 'ready' && !user && (
-              <Button 
-                className="w-full h-12 rounded-xl gap-2" 
+              <Button
+                className="w-full h-12 rounded-xl gap-2"
                 onClick={goToLogin}
               >
-                <LogIn className="w-5 h-5" />
-                Iniciar sessão para entrar
-              </Button>
+                <LogIn className="w-5 h-5" />{uiText("Iniciar sessão para entrar")}</Button>
             )}
 
             {status === 'ready' && user && (
-              <Button 
-                className="w-full h-12 rounded-xl gap-2" 
+              <Button
+                className="w-full h-12 rounded-xl gap-2"
                 onClick={handleJoin}
               >
-                <Users className="w-5 h-5" />
-                Entrar no grupo
-              </Button>
+                <Users className="w-5 h-5" />{uiText("Entrar no grupo")}</Button>
             )}
 
             {(status === 'success' || status === 'already_member') && (
-              <Button 
-                className="w-full h-12 rounded-xl gap-2" 
+              <Button
+                className="w-full h-12 rounded-xl gap-2"
                 onClick={goToGroup}
-              >
-                Ir para o grupo
-              </Button>
+              >{uiText("Ir para o grupo")}</Button>
             )}
           </CardContent>
         </Card>

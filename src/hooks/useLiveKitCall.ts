@@ -1,3 +1,4 @@
+import { uiText } from '@/i18n/ui-copy';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Room, Participant } from 'livekit-client';
 import { supabase } from '@/integrations/supabase/client';
@@ -103,7 +104,7 @@ export function useLiveKitCall() {
     });
     if (generation.current !== epoch) {
       stream.getTracks().forEach(track => track.stop());
-      throw new Error('Chamada cancelada.');
+      throw new Error(uiText("Chamada cancelada."));
     }
     const microphone = stream.getAudioTracks()[0];
     if (!microphone) {
@@ -161,12 +162,12 @@ export function useLiveKitCall() {
           body: { roomName: `call-${id}`, participantName: profile?.display_name || 'Utilizador', participantIdentity: user!.id },
           timeout: 15_000,
         });
-        if (error || !data?.token || !data?.url) throw new Error('Não foi possível obter acesso seguro à chamada.');
+        if (error || !data?.token || !data?.url) throw new Error(uiText("Não foi possível obter acesso seguro à chamada."));
         return data;
       }),
       setupStep('sdk', () => import('livekit-client')),
     ]);
-    if (generation.current !== epoch) throw new Error('Chamada cancelada.');
+    if (generation.current !== epoch) throw new Error(uiText("Chamada cancelada."));
     sdkRef.current = sdk;
     const { Room, RoomEvent } = sdk;
     const room = new Room({ adaptiveStream: true, dynacast: true,
@@ -212,7 +213,7 @@ export function useLiveKitCall() {
       }, 30_000);
     }, 60_000);
     await setupStep('room_connect', () => room.connect(data.url, data.token));
-    if (roomRef.current !== room || generation.current !== epoch) { await room.disconnect(); throw new Error('Chamada cancelada.'); }
+    if (roomRef.current !== room || generation.current !== epoch) { await room.disconnect(); throw new Error(uiText("Chamada cancelada.")); }
     return room;
   }, [user, profile?.display_name, refresh, fail]);
 
@@ -220,7 +221,7 @@ export function useLiveKitCall() {
     try { await room.localParticipant.setCameraEnabled(true); }
     catch {
       if (roomRef.current === room && generation.current === epoch) {
-        toast({ title: 'Câmara indisponível', description: 'A chamada continua por voz. Podes voltar a ligar a câmara.' });
+        toast({ title: uiText("Câmara indisponível"), description: uiText("A chamada continua por voz. Podes voltar a ligar a câmara.") });
       }
     }
     // Permission may resolve after hangup or after a different call has started.
@@ -237,7 +238,7 @@ export function useLiveKitCall() {
       connectRoom(id, type, target, initiator, epoch),
       microphoneReady,
     ]);
-    if (roomRef.current !== room || generation.current !== epoch) throw new Error('Chamada cancelada.');
+    if (roomRef.current !== room || generation.current !== epoch) throw new Error(uiText("Chamada cancelada."));
     setupStage.current = 'microphone_publish';
     const microphone = microphoneRef.current;
     if (!microphone || microphone.readyState === 'ended') throw new DOMException('Microfone indisponível.', 'NotReadableError');
@@ -245,7 +246,7 @@ export function useLiveKitCall() {
     await room.localParticipant.publishTrack(microphone, { source: sdkRef.current!.Track.Source.Microphone });
     if (roomRef.current !== room || generation.current !== epoch) {
       room.localParticipant.trackPublications.forEach(p => p.track?.stop());
-      await room.disconnect(); throw new Error('Chamada cancelada.');
+      await room.disconnect(); throw new Error(uiText("Chamada cancelada."));
     }
     microphonePublished.current = true;
     refresh(room);
@@ -254,8 +255,8 @@ export function useLiveKitCall() {
   }, [connectRoom, refresh, startCamera]);
 
   const initiateCall = useCallback(async (target: string, type: 'voice' | 'video', conversationId?: string) => {
-    if (!user || !target || target === user.id) throw new Error('Selecciona outro contacto para iniciar a chamada.');
-    if (busy.current || roomRef.current) throw new Error('Já existe uma chamada em curso.');
+    if (!user || !target || target === user.id) throw new Error(uiText("Selecciona outro contacto para iniciar a chamada."));
+    if (busy.current || roomRef.current) throw new Error(uiText("Já existe uma chamada em curso."));
     busy.current = true;
     releaseUpdate.current = holdCallUpdates();
     const epoch = ++generation.current;
@@ -268,7 +269,7 @@ export function useLiveKitCall() {
       id = await lifecycleRef.current.createCallInDB(target, type, conversationId, 'livekit');
       if (generation.current !== epoch) {
         await supabase.rpc('finish_direct_call', { p_call_id: id, p_outcome: 'cancelled' });
-        throw new Error('Chamada cancelada.');
+        throw new Error(uiText("Chamada cancelada."));
       }
       callRef.current = id;
       await connect(id, type, target, true, epoch, Promise.resolve());
@@ -280,8 +281,8 @@ export function useLiveKitCall() {
   }, [user, connect, fail, prepareMicrophone]);
 
   const answerCall = useCallback(async (id: string, type: 'voice' | 'video', target: string) => {
-    if (!user) throw new Error('Inicia sessão.');
-    if (busy.current || roomRef.current) throw new Error('Já existe uma chamada em curso.');
+    if (!user) throw new Error(uiText("Inicia sessão."));
+    if (busy.current || roomRef.current) throw new Error(uiText("Já existe uma chamada em curso."));
     busy.current = true;
     releaseUpdate.current = holdCallUpdates();
     const epoch = ++generation.current;
@@ -292,7 +293,7 @@ export function useLiveKitCall() {
         if (claimed) await supabase.rpc('finish_direct_call', { p_call_id: id, p_outcome: 'completed' });
         return;
       }
-      if (claimError || !claimed) throw new Error('A chamada já terminou ou foi atendida noutro dispositivo.');
+      if (claimError || !claimed) throw new Error(uiText("A chamada já terminou ou foi atendida noutro dispositivo."));
       callRef.current = id;
       // Claim first so a second device cannot open media for an answered call.
       // Then overlap permission/device setup with token, SDK and room connection.
@@ -304,12 +305,12 @@ export function useLiveKitCall() {
       const { data: accepted, error: acceptError } = await supabase.from('calls')
         .update({ status: 'ongoing', started_at: new Date().toISOString() })
         .eq('id', id).eq('status', 'connecting').select('id').maybeSingle();
-      if (acceptError || !accepted) throw new Error('A chamada já terminou ou não pode ser atendida.');
+      if (acceptError || !accepted) throw new Error(uiText("A chamada já terminou ou não pode ser atendida."));
       if (generation.current !== epoch) return;
       const { data: joined, error: joinError } = await supabase.from('call_participants')
         .update({ status: 'connected', joined_at: new Date().toISOString() })
         .eq('call_id', id).eq('user_id', user.id).in('status', ['ringing', 'connected']).select('id').maybeSingle();
-      if (joinError || !joined) throw new Error('Não foi possível confirmar a participação na chamada.');
+      if (joinError || !joined) throw new Error(uiText("Não foi possível confirmar a participação na chamada."));
     } catch (e) {
       if (generation.current === epoch) { const failure = setupFailure(setupStage.current, e); fail(failure.message, failure.reason); }
       throw e instanceof CallSetupError ? e.originalError : e;
@@ -325,7 +326,7 @@ export function useLiveKitCall() {
         if (error) throw error;
         void reconcileDirectCalls({ callId: id });
       }
-      catch { toast({ title: 'Chamada terminada neste dispositivo', description: 'Não foi possível confirmar o encerramento remoto.', variant: 'destructive' }); }
+      catch { toast({ title: uiText("Chamada terminada neste dispositivo"), description: uiText("Não foi possível confirmar o encerramento remoto."), variant: 'destructive' }); }
     }
   }, [release, user]);
 
@@ -361,7 +362,7 @@ export function useLiveKitCall() {
       await room.localParticipant.setMicrophoneEnabled(!room.localParticipant.isMicrophoneEnabled); refresh(room);
       if (callRef.current && user) await lifecycleRef.current.updateMediaStatus(callRef.current, user.id, !room.localParticipant.isMicrophoneEnabled);
     }
-    catch { toast({ title: 'Não foi possível alterar o microfone', variant: 'destructive' }); }
+    catch { toast({ title: uiText("Não foi possível alterar o microfone"), variant: 'destructive' }); }
   }, [refresh, user]);
   const toggleVideo = useCallback(async () => {
     const room = roomRef.current; if (!room) return;
@@ -373,7 +374,7 @@ export function useLiveKitCall() {
       await room.localParticipant.setCameraEnabled(!room.localParticipant.isCameraEnabled); refresh(room);
       if (callRef.current && user) await lifecycleRef.current.updateMediaStatus(callRef.current, user.id, undefined, room.localParticipant.isCameraEnabled);
     }
-    catch { toast({ title: 'Não foi possível alterar a câmara', variant: 'destructive' }); }
+    catch { toast({ title: uiText("Não foi possível alterar a câmara"), variant: 'destructive' }); }
   }, [refresh, user]);
   const toggleScreenShare = useCallback(async () => {
     const room = roomRef.current; if (!room) return;
@@ -381,7 +382,7 @@ export function useLiveKitCall() {
       await room.localParticipant.setScreenShareEnabled(!room.localParticipant.isScreenShareEnabled); refresh(room);
       if (callRef.current && user) await lifecycleRef.current.updateMediaStatus(callRef.current, user.id, undefined, undefined, room.localParticipant.isScreenShareEnabled);
     }
-    catch { toast({ title: 'Partilha de ecrã indisponível', variant: 'destructive' }); }
+    catch { toast({ title: uiText("Partilha de ecrã indisponível"), variant: 'destructive' }); }
   }, [refresh, user]);
   const flipCamera = useCallback(async () => {
     const room = roomRef.current;
@@ -416,7 +417,7 @@ export function useLiveKitCall() {
       if (generation.current !== epoch || !rawCamera.current) return;
       await track.replaceTrack(rawCamera.current, true);
       previous?.stop(); processor.current?.stop(); processor.current = null;
-      toast({ title: 'Efeito indisponível', description: 'Foi mantida a câmara original.' });
+      toast({ title: uiText("Efeito indisponível"), description: uiText("Foi mantida a câmara original.") });
     }
   }, [refresh]);
   const setAudioProcessing = useCallback(async (options: MediaTrackConstraints) => {
@@ -428,7 +429,7 @@ export function useLiveKitCall() {
       if (!user) return;
       const { data, error } = await supabase.rpc('finish_direct_call', { p_call_id: id, p_outcome: 'declined' });
       if (error) throw error;
-      if (!data) throw new Error('A chamada já terminou ou foi atendida.');
+      if (!data) throw new Error(uiText("A chamada já terminou ou foi atendida."));
     },
     markUserInteracted: () => { void roomRef.current?.startAudio(); },
     setVirtualBackground: (background: BgMode) => applyEffects({ background }),

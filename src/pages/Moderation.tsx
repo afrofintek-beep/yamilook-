@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -69,10 +70,10 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: typeof Clock }> = {
-  pending: { label: 'Pendente', color: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20', icon: Clock },
-  reviewing: { label: 'Em revisão', color: 'bg-blue-500/10 text-blue-600 border-blue-500/20', icon: Eye },
-  resolved: { label: 'Resolvida', color: 'bg-green-500/10 text-green-600 border-green-500/20', icon: CheckCircle },
-  dismissed: { label: 'Descartada', color: 'bg-muted text-muted-foreground border-border', icon: XCircle },
+  pending: { get label() { return uiText("Pendente"); }, color: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20', icon: Clock },
+  reviewing: { get label() { return uiText("Em revisão"); }, color: 'bg-blue-500/10 text-blue-600 border-blue-500/20', icon: Eye },
+  resolved: { get label() { return uiText("Resolvida"); }, color: 'bg-green-500/10 text-green-600 border-green-500/20', icon: CheckCircle },
+  dismissed: { get label() { return uiText("Descartada"); }, color: 'bg-muted text-muted-foreground border-border', icon: XCircle },
 };
 
 const ACTION_LABELS: Record<string, string> = {
@@ -92,6 +93,7 @@ const ACTION_LABELS: Record<string, string> = {
 };
 
 export default function Moderation() {
+  useUiLocale();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const {
@@ -179,8 +181,8 @@ export default function Moderation() {
     if (type === 'dismiss') {
       setActionDialog({
         open: true,
-        title: 'Descartar denúncia',
-        description: 'Tens a certeza que queres descartar esta denúncia?',
+        title: uiText("Descartar denúncia"),
+        description: uiText("Tens a certeza que queres descartar esta denúncia?"),
         action: async () => {
           await resolveReport(report.id, 'dismissed', 'Descartada pelo moderador');
           loadData();
@@ -254,12 +256,10 @@ export default function Moderation() {
             </Button>
             <div className="flex items-center gap-2">
               <Shield className="w-5 h-5 text-primary" />
-              <h1 className="text-lg font-bold">Moderação</h1>
+              <h1 className="text-lg font-bold">{uiText("Moderação")}</h1>
             </div>
           </div>
-          <Badge variant="outline" className="bg-orange-500/10 text-orange-600 border-orange-500/20">
-            Moderador
-          </Badge>
+          <Badge variant="outline" className="bg-orange-500/10 text-orange-600 border-orange-500/20">{uiText("Moderador")}</Badge>
         </div>
       </div>
 
@@ -276,7 +276,7 @@ export default function Moderation() {
                 <AlertTriangle className="w-5 h-5 text-yellow-500" />
                 <div>
                   <p className="text-xl font-bold">{stats.pending_reports}</p>
-                  <p className="text-xs text-muted-foreground">Pendentes</p>
+                  <p className="text-xs text-muted-foreground">{uiText("Pendentes")}</p>
                 </div>
               </div>
             </Card>
@@ -285,7 +285,7 @@ export default function Moderation() {
                 <CheckCircle className="w-5 h-5 text-green-500" />
                 <div>
                   <p className="text-xl font-bold">{stats.resolved_today}</p>
-                  <p className="text-xs text-muted-foreground">Resolvidas hoje</p>
+                  <p className="text-xs text-muted-foreground">{uiText("Resolvidas hoje")}</p>
                 </div>
               </div>
             </Card>
@@ -294,7 +294,7 @@ export default function Moderation() {
                 <EyeOff className="w-5 h-5 text-orange-500" />
                 <div>
                   <p className="text-xl font-bold">{stats.hidden_posts}</p>
-                  <p className="text-xs text-muted-foreground">Posts ocultos</p>
+                  <p className="text-xs text-muted-foreground">{uiText("Posts ocultos")}</p>
                 </div>
               </div>
             </Card>
@@ -303,7 +303,7 @@ export default function Moderation() {
                 <UserX className="w-5 h-5 text-red-500" />
                 <div>
                   <p className="text-xl font-bold">{stats.suspended_users}</p>
-                  <p className="text-xs text-muted-foreground">Suspensos</p>
+                  <p className="text-xs text-muted-foreground">{uiText("Suspensos")}</p>
                 </div>
               </div>
             </Card>
@@ -312,7 +312,7 @@ export default function Moderation() {
                 <History className="w-5 h-5 text-blue-500" />
                 <div>
                   <p className="text-xl font-bold">{stats.total_actions}</p>
-                  <p className="text-xs text-muted-foreground">Ações total</p>
+                  <p className="text-xs text-muted-foreground">{uiText("Ações total")}</p>
                 </div>
               </div>
             </Card>
@@ -323,21 +323,13 @@ export default function Moderation() {
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="w-full">
             <TabsTrigger value="reports" className="flex-1 gap-1">
-              <Flag className="w-4 h-4" />
-              Denúncias
-            </TabsTrigger>
+              <Flag className="w-4 h-4" />{uiText("Denúncias")}</TabsTrigger>
             <TabsTrigger value="strikes" className="flex-1 gap-1">
-              <Zap className="w-4 h-4" />
-              Strikes
-            </TabsTrigger>
+              <Zap className="w-4 h-4" />{uiText("Strikes")}</TabsTrigger>
             <TabsTrigger value="appeals" className="flex-1 gap-1">
-              <Scale className="w-4 h-4" />
-              Apelações
-            </TabsTrigger>
+              <Scale className="w-4 h-4" />{uiText("Apelações")}</TabsTrigger>
             <TabsTrigger value="audit" className="flex-1 gap-1">
-              <History className="w-4 h-4" />
-              Log
-            </TabsTrigger>
+              <History className="w-4 h-4" />{uiText("Log")}</TabsTrigger>
           </TabsList>
 
           {/* Reports Tab */}
@@ -352,7 +344,7 @@ export default function Moderation() {
                   onClick={() => setReportFilter(filter)}
                   className="flex-shrink-0"
                 >
-                  {filter === 'all' ? 'Todas' : STATUS_CONFIG[filter]?.label || filter}
+                  {filter === 'all' ? uiText("Todas") : STATUS_CONFIG[filter]?.label || filter}
                 </Button>
               ))}
             </div>
@@ -364,7 +356,7 @@ export default function Moderation() {
             ) : reports.length === 0 ? (
               <Card className="p-8 text-center">
                 <CheckCircle className="w-12 h-12 mx-auto mb-3 text-green-500/50" />
-                <p className="text-muted-foreground">Nenhuma denúncia {reportFilter !== 'all' ? STATUS_CONFIG[reportFilter]?.label.toLowerCase() : ''}</p>
+                <p className="text-muted-foreground">{uiText("Nenhuma denúncia ")}{reportFilter !== 'all' ? STATUS_CONFIG[reportFilter]?.label.toLowerCase() : ''}</p>
               </Card>
             ) : (
               <div className="space-y-3">
@@ -386,7 +378,7 @@ export default function Moderation() {
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 flex-wrap">
                                 <p className="font-medium text-sm">
-                                  {report.reporter?.display_name || 'Anónimo'}
+                                  {report.reporter?.display_name || uiText("Anónimo")}
                                 </p>
                                 <Badge variant="outline" className={statusCfg.color}>
                                   <StatusIcon className="w-3 h-3 mr-1" />
@@ -395,10 +387,10 @@ export default function Moderation() {
                               </div>
                               <div className="flex items-center gap-2 mt-1 flex-wrap">
                                 <Badge variant="secondary" className="text-xs">
-                                  {report.target_type === 'post' ? <FileText className="w-3 h-3 mr-1" /> : 
-                                   report.target_type === 'comment' ? <MessageSquare className="w-3 h-3 mr-1" /> : 
+                                  {report.target_type === 'post' ? <FileText className="w-3 h-3 mr-1" /> :
+                                   report.target_type === 'comment' ? <MessageSquare className="w-3 h-3 mr-1" /> :
                                    <Users className="w-3 h-3 mr-1" />}
-                                  {report.target_type === 'post' ? 'Post' : report.target_type === 'comment' ? 'Comentário' : 'Utilizador'}
+                                  {report.target_type === 'post' ? uiText("Post") : report.target_type === 'comment' ? uiText("Comentário") : uiText("Utilizador")}
                                 </Badge>
                                 <Badge variant="outline" className="text-xs">
                                   {CATEGORY_LABELS[report.category] || report.category}
@@ -425,15 +417,11 @@ export default function Moderation() {
                               <DropdownMenuContent align="end">
                                 {report.target_type === 'post' && (
                                   <DropdownMenuItem onClick={() => handleReportAction('hide_post', report)}>
-                                    <EyeOff className="w-4 h-4 mr-2" />
-                                    Ocultar post
-                                  </DropdownMenuItem>
+                                    <EyeOff className="w-4 h-4 mr-2" />{uiText("Ocultar post")}</DropdownMenuItem>
                                 )}
                                 {report.target_type === 'comment' && (
                                   <DropdownMenuItem onClick={() => handleReportAction('hide_comment', report)}>
-                                    <EyeOff className="w-4 h-4 mr-2" />
-                                    Ocultar comentário
-                                  </DropdownMenuItem>
+                                    <EyeOff className="w-4 h-4 mr-2" />{uiText("Ocultar comentário")}</DropdownMenuItem>
                                 )}
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem onClick={() => setIssueStrikeSheet({
@@ -443,33 +431,23 @@ export default function Moderation() {
                                   contentType: report.target_type,
                                   contentId: report.target_id,
                                 })}>
-                                  <Zap className="w-4 h-4 mr-2" />
-                                  Emitir Strike
-                                </DropdownMenuItem>
+                                  <Zap className="w-4 h-4 mr-2" />{uiText("Emitir Strike")}</DropdownMenuItem>
                                 {report.target_type === 'user' && (
                                   <>
                                     <DropdownMenuItem onClick={() => handleReportAction('suspend_24h', report)}>
-                                      <Clock className="w-4 h-4 mr-2" />
-                                      Suspender 24h
-                                    </DropdownMenuItem>
+                                      <Clock className="w-4 h-4 mr-2" />{uiText("Suspender 24h")}</DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => handleReportAction('suspend_7d', report)}>
-                                      <Clock className="w-4 h-4 mr-2" />
-                                      Suspender 7 dias
-                                    </DropdownMenuItem>
+                                      <Clock className="w-4 h-4 mr-2" />{uiText("Suspender 7 dias")}</DropdownMenuItem>
                                     <DropdownMenuItem
                                       onClick={() => handleReportAction('ban', report)}
                                       className="text-destructive"
                                     >
-                                      <Ban className="w-4 h-4 mr-2" />
-                                      Banir utilizador
-                                    </DropdownMenuItem>
+                                      <Ban className="w-4 h-4 mr-2" />{uiText("Banir utilizador")}</DropdownMenuItem>
                                     <DropdownMenuSeparator />
                                   </>
                                 )}
                                 <DropdownMenuItem onClick={() => handleReportAction('dismiss', report)}>
-                                  <XCircle className="w-4 h-4 mr-2" />
-                                  Descartar
-                                </DropdownMenuItem>
+                                  <XCircle className="w-4 h-4 mr-2" />{uiText("Descartar")}</DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
                           )}
@@ -501,10 +479,8 @@ export default function Moderation() {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
-                  <History className="w-4 h-4" />
-                  Log de Auditoria
-                </CardTitle>
-                <CardDescription>Todas as ações de moderação registadas</CardDescription>
+                  <History className="w-4 h-4" />{uiText("Log de Auditoria")}</CardTitle>
+                <CardDescription>{uiText("Todas as ações de moderação registadas")}</CardDescription>
               </CardHeader>
               <CardContent className="p-0">
                 {loadingData ? (
@@ -514,7 +490,7 @@ export default function Moderation() {
                 ) : auditLog.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
                     <History className="w-10 h-10 mx-auto mb-2 opacity-50" />
-                    <p>Nenhuma ação registada</p>
+                    <p>{uiText("Nenhuma ação registada")}</p>
                   </div>
                 ) : (
                   <ScrollArea className="max-h-[500px]">
@@ -529,13 +505,12 @@ export default function Moderation() {
                           </Avatar>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm">
-                              <span className="font-medium">{action.moderator?.display_name || 'Moderador'}</span>
+                              <span className="font-medium">{action.moderator?.display_name || uiText("Moderador")}</span>
                               {' '}
                               <span className="text-muted-foreground">{ACTION_LABELS[action.action_type] || action.action_type}</span>
                             </p>
                             {action.reason && (
-                              <p className="text-xs text-muted-foreground mt-1">
-                                Motivo: {action.reason}
+                              <p className="text-xs text-muted-foreground mt-1">{uiText("Motivo: ")}{action.reason}
                               </p>
                             )}
                             <p className="text-xs text-muted-foreground mt-1">
@@ -577,13 +552,11 @@ export default function Moderation() {
             <AlertDialogDescription>{actionDialog.description}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel>{uiText("Cancelar")}</AlertDialogCancel>
             <AlertDialogAction onClick={async () => {
               await actionDialog.action();
               setActionDialog(prev => ({ ...prev, open: false }));
-            }}>
-              Confirmar
-            </AlertDialogAction>
+            }}>{uiText("Confirmar")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -592,13 +565,11 @@ export default function Moderation() {
       <AlertDialog open={showReasonDialog} onOpenChange={setShowReasonDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Motivo da ação</AlertDialogTitle>
-            <AlertDialogDescription>
-              Indica o motivo para esta ação de moderação. Este registo ficará no log de auditoria.
-            </AlertDialogDescription>
+            <AlertDialogTitle>{uiText("Motivo da ação")}</AlertDialogTitle>
+            <AlertDialogDescription>{uiText("Indica o motivo para esta ação de moderação. Este registo ficará no log de auditoria.")}</AlertDialogDescription>
           </AlertDialogHeader>
           <Textarea
-            placeholder="Descreve o motivo..."
+            placeholder={uiText("Descreve o motivo...")}
             value={reasonInput}
             onChange={(e) => setReasonInput(e.target.value)}
             rows={3}
@@ -607,15 +578,11 @@ export default function Moderation() {
             <AlertDialogCancel onClick={() => {
               setPendingAction(null);
               setReasonInput('');
-            }}>
-              Cancelar
-            </AlertDialogCancel>
+            }}>{uiText("Cancelar")}</AlertDialogCancel>
             <AlertDialogAction
               disabled={!reasonInput.trim()}
               onClick={executeAction}
-            >
-              Confirmar ação
-            </AlertDialogAction>
+            >{uiText("Confirmar ação")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

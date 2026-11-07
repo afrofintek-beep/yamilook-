@@ -1,7 +1,8 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Shield, X, MicOff, UserMinus, Crown, Pin, 
+import {
+  Shield, X, MicOff, UserMinus, Crown, Pin,
   Lock, Unlock, Hand, Users, LayoutGrid
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -45,20 +46,21 @@ interface HostControlsPanelProps {
   onOpenBreakoutRooms: () => void;
 }
 
-export function HostControlsPanel({ 
-  callId, 
-  participants, 
-  isOpen, 
+export function HostControlsPanel({
+  callId,
+  participants,
+  isOpen,
   onClose,
   onOpenWaitingRoom,
   onOpenBreakoutRooms,
 }: HostControlsPanelProps) {
+  useUiLocale();
   const [callSettings, setCallSettings] = useState<CallSettings>({
     is_locked: false,
     waiting_room_enabled: false,
   });
   const [waitingCount, setWaitingCount] = useState(0);
-  
+
   const {
     muteAllParticipants,
     removeParticipant,
@@ -163,7 +165,7 @@ export function HostControlsPanel({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Shield className="h-5 w-5 text-primary" />
-              <h3 className="font-semibold">Host Controls</h3>
+              <h3 className="font-semibold">{uiText("Host Controls")}</h3>
             </div>
             <Button variant="ghost" size="icon" onClick={onClose}>
               <X className="h-4 w-4" />
@@ -174,16 +176,14 @@ export function HostControlsPanel({
         <ScrollArea className="flex-1 p-4">
           {/* Quick Actions */}
           <div className="space-y-3 mb-6">
-            <h4 className="text-sm font-medium text-muted-foreground">Quick Actions</h4>
-            
+            <h4 className="text-sm font-medium text-muted-foreground">{uiText("Quick Actions")}</h4>
+
             <Button
               variant="outline"
               className="w-full justify-start"
               onClick={muteAllParticipants}
             >
-              <MicOff className="h-4 w-4 mr-2" />
-              Mute All Participants
-            </Button>
+              <MicOff className="h-4 w-4 mr-2" />{uiText("Mute All Participants")}</Button>
 
             <Button
               variant="outline"
@@ -191,9 +191,7 @@ export function HostControlsPanel({
               onClick={lowerAllHands}
               disabled={raisedHandsCount === 0}
             >
-              <Hand className="h-4 w-4 mr-2" />
-              Lower All Hands
-              {raisedHandsCount > 0 && (
+              <Hand className="h-4 w-4 mr-2" />{uiText("Lower All Hands")}{raisedHandsCount > 0 && (
                 <Badge variant="secondary" className="ml-auto">
                   {raisedHandsCount}
                 </Badge>
@@ -205,9 +203,7 @@ export function HostControlsPanel({
               className="w-full justify-start"
               onClick={onOpenWaitingRoom}
             >
-              <Users className="h-4 w-4 mr-2" />
-              View Waiting Room
-              {waitingCount > 0 && (
+              <Users className="h-4 w-4 mr-2" />{uiText("View Waiting Room")}{waitingCount > 0 && (
                 <Badge variant="destructive" className="ml-auto">
                   {waitingCount}
                 </Badge>
@@ -219,15 +215,13 @@ export function HostControlsPanel({
               className="w-full justify-start"
               onClick={onOpenBreakoutRooms}
             >
-              <LayoutGrid className="h-4 w-4 mr-2" />
-              Manage Breakout Rooms
-            </Button>
+              <LayoutGrid className="h-4 w-4 mr-2" />{uiText("Manage Breakout Rooms")}</Button>
           </div>
 
           {/* Call Settings */}
           <div className="space-y-4 mb-6">
-            <h4 className="text-sm font-medium text-muted-foreground">Call Settings</h4>
-            
+            <h4 className="text-sm font-medium text-muted-foreground">{uiText("Call Settings")}</h4>
+
             <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/50">
               <div className="flex items-center gap-2">
                 {callSettings.is_locked ? (
@@ -236,10 +230,8 @@ export function HostControlsPanel({
                   <Unlock className="h-4 w-4" />
                 )}
                 <div>
-                  <p className="text-sm font-medium">Lock Call</p>
-                  <p className="text-xs text-muted-foreground">
-                    Prevent new participants
-                  </p>
+                  <p className="text-sm font-medium">{uiText("Lock Call")}</p>
+                  <p className="text-xs text-muted-foreground">{uiText("Prevent new participants")}</p>
                 </div>
               </div>
               <Switch
@@ -252,10 +244,8 @@ export function HostControlsPanel({
               <div className="flex items-center gap-2">
                 <Users className="h-4 w-4" />
                 <div>
-                  <p className="text-sm font-medium">Waiting Room</p>
-                  <p className="text-xs text-muted-foreground">
-                    Approve before joining
-                  </p>
+                  <p className="text-sm font-medium">{uiText("Waiting Room")}</p>
+                  <p className="text-xs text-muted-foreground">{uiText("Approve before joining")}</p>
                 </div>
               </div>
               <Switch
@@ -267,10 +257,9 @@ export function HostControlsPanel({
 
           {/* Participants List */}
           <div className="space-y-3">
-            <h4 className="text-sm font-medium text-muted-foreground">
-              Participants ({participants.length})
+            <h4 className="text-sm font-medium text-muted-foreground">{uiText("Participants (")}{participants.length})
             </h4>
-            
+
             {participants.map((participant) => (
               <motion.div
                 key={participant.id}
@@ -284,7 +273,7 @@ export function HostControlsPanel({
                     {participant.display_name.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                
+
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <p className="font-medium truncate">{participant.display_name}</p>
@@ -317,24 +306,20 @@ export function HostControlsPanel({
                       onClick={() => spotlightParticipant(participant.user_id, !participant.is_spotlight)}
                     >
                       <Pin className="h-4 w-4 mr-2" />
-                      {participant.is_spotlight ? 'Remove Spotlight' : 'Spotlight'}
+                      {participant.is_spotlight ? uiText("Remove Spotlight") : uiText("Spotlight")}
                     </DropdownMenuItem>
                     {participant.role === 'participant' && (
                       <DropdownMenuItem
                         onClick={() => makeCoHost(participant.user_id)}
                       >
-                        <Shield className="h-4 w-4 mr-2" />
-                        Make Co-Host
-                      </DropdownMenuItem>
+                        <Shield className="h-4 w-4 mr-2" />{uiText("Make Co-Host")}</DropdownMenuItem>
                     )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       className="text-destructive"
                       onClick={() => removeParticipant(participant.user_id)}
                     >
-                      <UserMinus className="h-4 w-4 mr-2" />
-                      Remove from Call
-                    </DropdownMenuItem>
+                      <UserMinus className="h-4 w-4 mr-2" />{uiText("Remove from Call")}</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </motion.div>

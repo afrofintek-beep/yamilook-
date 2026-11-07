@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { motion } from 'framer-motion';
 import { Crown, Medal } from 'lucide-react';
 
@@ -27,10 +28,11 @@ const positionStyle = (pos: number) => {
 };
 
 export default function Top10Card({ entries, weekLabel }: Props) {
+  useUiLocale();
   if (!entries.length) {
     return (
       <div className="rounded-2xl bg-card border border-border/30 p-6 text-center">
-        <p className="text-sm text-muted-foreground/50">Sem resultados para esta semana.</p>
+        <p className="text-sm text-muted-foreground/50">{uiText("Sem resultados para esta semana.")}</p>
       </div>
     );
   }
@@ -43,7 +45,7 @@ export default function Top10Card({ entries, weekLabel }: Props) {
       transition={{ delay: 0.1 }}
     >
       <div className="px-5 pt-5 pb-3">
-        <h3 className="text-sm font-bold text-foreground">Top 10 do Bairro</h3>
+        <h3 className="text-sm font-bold text-foreground">{uiText("Top 10 do Bairro")}</h3>
         {weekLabel && (
           <p className="text-[10px] text-muted-foreground/40 mt-0.5">{weekLabel}</p>
         )}

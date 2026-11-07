@@ -1,11 +1,12 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { 
-  MapPin, 
+import {
+  MapPin,
   Phone,
   ChevronRight,
   BadgeCheck,
@@ -23,6 +24,7 @@ interface FeaturedBusinessCardProps {
 }
 
 export function FeaturedBusinessCard({ ad, userMarket, compact = false, onAction }: FeaturedBusinessCardProps) {
+  useUiLocale();
   const { recordImpression, recordClick } = useAdvertising();
   const [hasRecordedImpression, setHasRecordedImpression] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -53,7 +55,7 @@ export function FeaturedBusinessCard({ ad, userMarket, compact = false, onAction
     recordClick(ad.id, 'view_profile');
     const action = resolveAdAction(ad);
     if (action.kind === 'none') {
-      toast.info('Este negócio ainda não tem contacto disponível.');
+      toast.info(uiText("Este negócio ainda não tem contacto disponível."));
     } else {
       window.open(action.href!, '_blank', 'noopener,noreferrer');
     }
@@ -70,7 +72,7 @@ export function FeaturedBusinessCard({ ad, userMarket, compact = false, onAction
         animate={{ opacity: 1, scale: 1 }}
         whileTap={{ scale: 0.98 }}
       >
-        <Card 
+        <Card
           className="p-3 cursor-pointer hover:shadow-md transition-shadow"
           onClick={handleClick}
         >
@@ -84,7 +86,7 @@ export function FeaturedBusinessCard({ ad, userMarket, compact = false, onAction
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1">
                 <span className="font-semibold text-sm truncate">
-                  {business?.business_name || 'Negócio local'}
+                  {business?.business_name || uiText("Negócio local")}
                 </span>
                 {business?.is_verified && (
                   <BadgeCheck className="w-4 h-4 text-primary shrink-0" />
@@ -109,7 +111,7 @@ export function FeaturedBusinessCard({ ad, userMarket, compact = false, onAction
       animate={{ opacity: 1, y: 0 }}
       whileTap={{ scale: 0.98 }}
     >
-      <Card 
+      <Card
         className="overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
         onClick={handleClick}
       >
@@ -121,26 +123,22 @@ export function FeaturedBusinessCard({ ad, userMarket, compact = false, onAction
               alt=""
               className="w-full h-full object-cover"
             />
-            <Badge 
-              className="absolute top-2 right-2 text-[10px] bg-primary/10 text-primary border-0" 
+            <Badge
+              className="absolute top-2 right-2 text-[10px] bg-primary/10 text-primary border-0"
               variant="secondary"
             >
-              <Sparkles className="w-3 h-3 mr-1" />
-              Destaque Local
-            </Badge>
+              <Sparkles className="w-3 h-3 mr-1" />{uiText("Destaque Local")}</Badge>
           </div>
         ) : (
           <div className="relative h-32 bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
             <span className="text-4xl font-bold text-primary/30">
               {business?.business_name?.charAt(0) || 'N'}
             </span>
-            <Badge 
-              className="absolute top-2 right-2 text-[10px] bg-primary/10 text-primary border-0" 
+            <Badge
+              className="absolute top-2 right-2 text-[10px] bg-primary/10 text-primary border-0"
               variant="secondary"
             >
-              <Sparkles className="w-3 h-3 mr-1" />
-              Destaque Local
-            </Badge>
+              <Sparkles className="w-3 h-3 mr-1" />{uiText("Destaque Local")}</Badge>
           </div>
         )}
 
@@ -156,7 +154,7 @@ export function FeaturedBusinessCard({ ad, userMarket, compact = false, onAction
             <div className="flex-1 min-w-0 pt-1">
               <div className="flex items-center gap-1">
                 <h3 className="font-semibold truncate">
-                  {business?.business_name || 'Negócio local'}
+                  {business?.business_name || uiText("Negócio local")}
                 </h3>
                 {business?.is_verified && (
                   <BadgeCheck className="w-4 h-4 text-primary shrink-0" />
@@ -186,7 +184,7 @@ export function FeaturedBusinessCard({ ad, userMarket, compact = false, onAction
             {business?.phone && (
               <div className="flex items-center gap-1">
                 <Phone className="w-3 h-3" />
-                <span>Contactar</span>
+                <span>{uiText("Contactar")}</span>
               </div>
             )}
           </div>

@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useResolvedMediaUrl } from './MediaPreview';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -20,13 +21,14 @@ export function ViewOnceMediaBubble({
   onView,
   isOwn = false,
 }: ViewOnceMediaProps) {
+  useUiLocale();
   const [showMedia, setShowMedia] = useState(false);
   const [isViewing, setIsViewing] = useState(false);
   const { resolvedUrl } = useResolvedMediaUrl(isOwn || showMedia ? url : '');
 
   const handleView = async () => {
     if (isOwn || isViewed || isViewing) return;
-    
+
     setIsViewing(true);
     setShowMedia(true);
     await onView();
@@ -44,8 +46,8 @@ export function ViewOnceMediaBubble({
       <div role="status" className="flex max-w-full items-center gap-3 px-4 py-3 rounded-2xl bg-primary/10">
         <Lock className="w-5 h-5 shrink-0" />
         <div className="text-sm">
-          <p>{type === 'image' ? 'Fotografia enviada' : 'Vídeo enviado'}</p>
-          <p className="text-xs text-muted-foreground">Visualização única — apenas para o destinatário</p>
+          <p>{type === 'image' ? uiText("Fotografia enviada") : uiText("Vídeo enviado")}</p>
+          <p className="text-xs text-muted-foreground">{uiText("Visualização única — apenas para o destinatário")}</p>
         </div>
       </div>
     );
@@ -56,8 +58,8 @@ export function ViewOnceMediaBubble({
       <div className="flex items-center gap-2 px-4 py-3 rounded-2xl bg-muted/50">
         <EyeOff className="w-5 h-5 text-muted-foreground" />
         <div className="text-sm">
-          <p className="text-muted-foreground italic">View once {type}</p>
-          <p className="text-xs text-muted-foreground">Opened</p>
+          <p className="text-muted-foreground italic">{uiText("View once ")}{type}</p>
+          <p className="text-xs text-muted-foreground">{uiText("Opened")}</p>
         </div>
       </div>
     );
@@ -75,17 +77,17 @@ export function ViewOnceMediaBubble({
           <div className="w-full h-full relative">
             <img
               src={resolvedUrl}
-              alt="View once media"
+              alt={uiText("View once media")}
               className="w-full h-full object-cover blur-md"
             />
             <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
               <div className="text-center text-white">
                 <Lock className="w-6 h-6 mx-auto mb-2" />
-                <p className="text-xs">View once {type}</p>
+                <p className="text-xs">{uiText("View once ")}{type}</p>
                 {isViewed ? (
-                  <p className="text-xs opacity-70 mt-1">Opened</p>
+                  <p className="text-xs opacity-70 mt-1">{uiText("Opened")}</p>
                 ) : (
-                  <p className="text-xs opacity-70 mt-1">Not opened yet</p>
+                  <p className="text-xs opacity-70 mt-1">{uiText("Not opened yet")}</p>
                 )}
               </div>
             </div>
@@ -96,8 +98,8 @@ export function ViewOnceMediaBubble({
               <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-3">
                 <Eye className="w-8 h-8 text-primary" />
               </div>
-              <p className="text-sm font-medium">View once {type}</p>
-              <p className="text-xs text-muted-foreground mt-1">Tap to open</p>
+              <p className="text-sm font-medium">{uiText("View once ")}{type}</p>
+              <p className="text-xs text-muted-foreground mt-1">{uiText("Tap to open")}</p>
             </div>
           </div>
         )}
@@ -126,7 +128,7 @@ export function ViewOnceMediaBubble({
                 {type === 'image' ? (
                   <img
                     src={resolvedUrl}
-                    alt="View once"
+                    alt={uiText("View once")}
                     className="max-w-full max-h-full object-contain"
                   />
                 ) : (
@@ -139,7 +141,7 @@ export function ViewOnceMediaBubble({
                 )}
 
                 <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white text-center">
-                  <p className="text-sm opacity-70">This media will disappear when closed</p>
+                  <p className="text-sm opacity-70">{uiText("This media will disappear when closed")}</p>
                 </div>
               </motion.div>
             </DialogContent>
@@ -157,6 +159,7 @@ interface ViewOnceToggleProps {
 }
 
 export function ViewOnceToggle({ enabled, onToggle }: ViewOnceToggleProps) {
+  useUiLocale();
   return (
     <button
       onClick={() => onToggle(!enabled)}
@@ -167,7 +170,7 @@ export function ViewOnceToggle({ enabled, onToggle }: ViewOnceToggleProps) {
       }`}
     >
       {enabled ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-      {enabled ? 'View once ON' : 'View once'}
+      {enabled ? uiText("View once ON") : uiText("View once")}
     </button>
   );
 }

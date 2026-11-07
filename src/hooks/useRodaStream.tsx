@@ -1,9 +1,10 @@
+import { uiText } from '@/i18n/ui-copy';
 /* @refresh reset */
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { 
-  Room, 
-  RoomEvent, 
-  RemoteParticipant, 
+import {
+  Room,
+  RoomEvent,
+  RemoteParticipant,
   LocalParticipant,
   Track,
   LocalTrack,
@@ -23,7 +24,7 @@ interface UseRodaStreamReturn {
   isHost: boolean;
   loading: boolean;
   error: string | null;
-  
+
   // Actions
   connectAsHost: (roomName: string) => Promise<boolean>;
   connectAsViewer: (roomName: string) => Promise<boolean>;
@@ -31,7 +32,7 @@ interface UseRodaStreamReturn {
   toggleCamera: () => Promise<void>;
   toggleMicrophone: () => Promise<void>;
   flipCamera: () => Promise<void>;
-  
+
   // Stream state
   isCameraEnabled: boolean;
   isMicrophoneEnabled: boolean;
@@ -40,7 +41,7 @@ interface UseRodaStreamReturn {
 export function useRodaStream(): UseRodaStreamReturn {
   const { user, profile } = useAuth();
   const { toast } = useToast();
-  
+
   const [room, setRoom] = useState<Room | null>(null);
   const [connectionState, setConnectionState] = useState<ConnectionState>(ConnectionState.Disconnected);
   const [localParticipant, setLocalParticipant] = useState<LocalParticipant | null>(null);
@@ -50,7 +51,7 @@ export function useRodaStream(): UseRodaStreamReturn {
   const [error, setError] = useState<string | null>(null);
   const [isCameraEnabled, setIsCameraEnabled] = useState(true);
   const [isMicrophoneEnabled, setIsMicrophoneEnabled] = useState(true);
-  
+
   const roomRef = useRef<Room | null>(null);
   const isHostRef = useRef(false);
   const currentFacingMode = useRef<'user' | 'environment'>('user');
@@ -84,7 +85,7 @@ export function useRodaStream(): UseRodaStreamReturn {
         const { data, error } = await supabase.functions.invoke('generate-livekit-token', { body });
         if (error) throw error;
         if (data?.token) return { token: data.token, url: data.url };
-        throw new Error('No token in response');
+        throw new Error(uiText("No token in response"));
       } catch (err) {
         lastError = err;
         if (attempt < 2) await new Promise((r) => setTimeout(r, 1200 * (attempt + 1)));
@@ -152,7 +153,7 @@ export function useRodaStream(): UseRodaStreamReturn {
 
   const connectAsHost = useCallback(async (roomName: string): Promise<boolean> => {
     if (!user) {
-      setError('Por favor, faça login para transmitir');
+      setError(uiText("Por favor, faça login para transmitir"));
       return false;
     }
 
@@ -163,7 +164,7 @@ export function useRodaStream(): UseRodaStreamReturn {
       // Get credentials
       const credentials = await getToken(roomName, true);
       if (!credentials) {
-        setError('Falha ao obter credenciais de transmissão');
+        setError(uiText("Falha ao obter credenciais de transmissão"));
         setLoading(false);
         return false;
       }
@@ -208,14 +209,14 @@ export function useRodaStream(): UseRodaStreamReturn {
       setLoading(false);
 
       toast({
-        title: 'Transmissão iniciada!',
-        description: 'Você está ao vivo.',
+        title: uiText("Transmissão iniciada!"),
+        description: uiText("Você está ao vivo."),
       });
 
       return true;
     } catch (err) {
       console.error('[RodaStream] Host connection failed:', err);
-      setError('Falha ao conectar. Verifique sua câmera e microfone.');
+      setError(uiText("Falha ao conectar. Verifique sua câmera e microfone."));
       setLoading(false);
       return false;
     }
@@ -223,7 +224,7 @@ export function useRodaStream(): UseRodaStreamReturn {
 
   const connectAsViewer = useCallback(async (roomName: string): Promise<boolean> => {
     if (!user) {
-      setError('Por favor, faça login para assistir');
+      setError(uiText("Por favor, faça login para assistir"));
       return false;
     }
 
@@ -233,7 +234,7 @@ export function useRodaStream(): UseRodaStreamReturn {
     try {
       const credentials = await getToken(roomName, false);
       if (!credentials) {
-        setError('Falha ao obter credenciais');
+        setError(uiText("Falha ao obter credenciais"));
         setLoading(false);
         return false;
       }
@@ -257,7 +258,7 @@ export function useRodaStream(): UseRodaStreamReturn {
       return true;
     } catch (err) {
       console.error('[RodaStream] Viewer connection failed:', err);
-      setError('Falha ao conectar à transmissão');
+      setError(uiText("Falha ao conectar à transmissão"));
       setLoading(false);
       return false;
     }
@@ -296,7 +297,7 @@ export function useRodaStream(): UseRodaStreamReturn {
 
     try {
       const newFacingMode = currentFacingMode.current === 'user' ? 'environment' : 'user';
-      
+
       // Find current camera track publication
       const cameraPub = [...room.localParticipant.videoTrackPublications.values()]
         .find(p => p.source === Track.Source.Camera && p.track);

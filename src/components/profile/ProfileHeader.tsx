@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { motion } from 'framer-motion';
 import { CheckCircle2, MapPin } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -27,6 +28,7 @@ export function ProfileHeader({
   showOnlineStatus = true,
   onAvatarClick,
 }: ProfileHeaderProps) {
+  useUiLocale();
   const getRingStyle = () => {
     switch (role) {
       case 'founder':
@@ -49,7 +51,7 @@ export function ProfileHeader({
       <button
         onClick={onAvatarClick}
         className="relative group mb-4"
-        aria-label="Ver foto de perfil"
+        aria-label={uiText("Ver foto de perfil")}
       >
         <Avatar
           className={`w-24 h-24 border-[3px] border-background shadow-xl ${getRingStyle()} transition-all duration-300`}

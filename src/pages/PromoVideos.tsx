@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Download } from 'lucide-react';
@@ -5,15 +6,16 @@ import { Button } from '@/components/ui/button';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 
 const promoVideos = [
-  { id: 'feed', title: 'Muxi & Stories', description: 'Partilha momentos com a tua banda', video: '/promo/feed-stories-promo.mp4' },
-  { id: 'ritmos', title: 'Ritmos', description: 'Vídeos curtos estilo TikTok', video: '/promo/ritmos-promo.mp4' },
-  { id: 'palco', title: 'Palco', description: 'Salas de áudio ao vivo', video: '/promo/palco-promo.mp4' },
-  { id: 'live', title: 'Live', description: 'Transmissões em direto', video: '/promo/live-promo.mp4' },
-  { id: 'reactions', title: 'African Reactions', description: 'Reações únicas africanas', video: '/promo/reactions-promo.mp4' },
-  { id: 'chat', title: 'Chat', description: 'Mensagens e chamadas', video: '/promo/chat-promo.mp4' },
+  { id: 'feed', get title() { return uiText("Muxi & Stories"); }, get description() { return uiText("Partilha momentos com a tua banda"); }, video: '/promo/feed-stories-promo.mp4' },
+  { id: 'ritmos', title: 'Ritmos', get description() { return uiText("Vídeos curtos estilo TikTok"); }, video: '/promo/ritmos-promo.mp4' },
+  { id: 'palco', title: 'Palco', get description() { return uiText("Salas de áudio ao vivo"); }, video: '/promo/palco-promo.mp4' },
+  { id: 'live', get title() { return uiText("Live"); }, get description() { return uiText("Transmissões em direto"); }, video: '/promo/live-promo.mp4' },
+  { id: 'reactions', get title() { return uiText("African Reactions"); }, get description() { return uiText("Reações únicas africanas"); }, video: '/promo/reactions-promo.mp4' },
+  { id: 'chat', get title() { return uiText("Chat"); }, get description() { return uiText("Mensagens e chamadas"); }, video: '/promo/chat-promo.mp4' },
 ];
 
 export default function PromoVideos() {
+  useUiLocale();
   const navigate = useNavigate();
 
   const handleDownload = async (videoUrl: string, title: string) => {
@@ -42,8 +44,8 @@ export default function PromoVideos() {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="font-semibold text-foreground">Vídeos Promocionais</h1>
-            <p className="text-xs text-muted-foreground">6 vídeos para marketing</p>
+            <h1 className="font-semibold text-foreground">{uiText("Vídeos Promocionais")}</h1>
+            <p className="text-xs text-muted-foreground">{uiText("6 vídeos para marketing")}</p>
           </div>
         </div>
       </header>
@@ -74,7 +76,7 @@ export default function PromoVideos() {
                 />
               </AspectRatio>
             </div>
-            
+
             <div className="space-y-1">
               <h3 className="font-medium text-sm text-foreground">{promo.title}</h3>
               <p className="text-xs text-muted-foreground">{promo.description}</p>
@@ -84,9 +86,7 @@ export default function PromoVideos() {
                 className="w-full mt-2"
                 onClick={() => handleDownload(promo.video, promo.title)}
               >
-                <Download className="w-3 h-3 mr-1" />
-                Download
-              </Button>
+                <Download className="w-3 h-3 mr-1" />{uiText("Download")}</Button>
             </div>
           </motion.div>
         ))}

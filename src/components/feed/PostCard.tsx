@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { PostText } from '@/components/feed/PostText';
 import { sharePostLink } from '@/lib/post-sharing';
 import { useState, useRef, useCallback, useEffect, memo, lazy, Suspense } from 'react';
@@ -39,8 +40,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { chooseAuthorAvatarUrl } from '@/lib/avatar-source';
-import { 
-  AfricanReactionType, 
+import {
+  AfricanReactionType,
   getReaction,
   ReactionCounts,
   getTotalReactions,
@@ -67,24 +68,25 @@ interface PostCardProps {
 const PostShareDialog = lazy(() => import('@/components/sharing/PostShareDialog'));
 
 export const PostCard = memo(function PostCard({ mediaPriority = false, post, onCommentClick, isArchived, onToggleArchive }: PostCardProps) {
+  useUiLocale();
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const dateLocale = ({ pt, en: enUS, fr, ar } as Record<string, typeof pt>)[(i18n.resolvedLanguage || i18n.language || 'pt').split('-')[0]] || pt;
   const { user, profile: currentProfile } = useAuth();
   const { toggleLike, toggleSave, deletePost, sharePost, updatePost } = usePosts({ autoLoad: false });
   const { toast } = useToast();
-  
+
   const [showShare, setShowShare] = useState(false);
   const [showReactions, setShowReactions] = useState(false);
   const [showReport, setShowReport] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [editEverOpened, setEditEverOpened] = useState(false);
   const [isLikeAnimating, setIsLikeAnimating] = useState(false);
-  
+
   // Long-press handling for mobile reaction picker
   const longPressTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isLongPressRef = useRef(false);
-  
+
   // Optimistic local state
   const [localLiked, setLocalLiked] = useState(post.is_liked);
   const [localReaction, setLocalReaction] = useState<string | null>(
@@ -114,11 +116,11 @@ export const PostCard = memo(function PostCard({ mediaPriority = false, post, on
   const handleReact = useCallback((reactionType: AfricanReactionType) => {
     setIsLikeAnimating(true);
     setShowReactions(false);
-    
+
     // Optimistic update for reaction counts
     setLocalReactionCounts(prev => {
       const newCounts = { ...prev };
-      
+
       if (localLiked) {
         if (localReaction === reactionType) {
           // Toggle off same reaction
@@ -139,10 +141,10 @@ export const PostCard = memo(function PostCard({ mediaPriority = false, post, on
         setLocalLiked(true);
         setLocalReaction(reactionType);
       }
-      
+
       return newCounts;
     });
-    
+
     // Fire and forget - don't await
     toggleLike(post.id, reactionType);
     setTimeout(() => setIsLikeAnimating(false), 300);
@@ -212,7 +214,7 @@ export const PostCard = memo(function PostCard({ mediaPriority = false, post, on
       if (isOwner) { setShowShare(true); return; }
       toast({
         title: t('publicPost.restricted', 'Publicação com visibilidade limitada'),
-        description: 'Só o autor pode enviar ficheiros desta publicação restrita.',
+        description: uiText("Só o autor pode enviar ficheiros desta publicação restrita."),
       });
       return;
     }
@@ -246,7 +248,7 @@ export const PostCard = memo(function PostCard({ mediaPriority = false, post, on
     >
       {/* Header */}
       <div className="flex items-center justify-between p-4 relative z-10 bg-card">
-        <div 
+        <div
           className="flex items-center gap-3 cursor-pointer flex-1 min-w-0"
           onClick={() => navigate(`/profile/${post.user_id}`)}
         >
@@ -279,20 +281,16 @@ export const PostCard = memo(function PostCard({ mediaPriority = false, post, on
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => void handleShare(true)}>
               <Link className="w-4 h-4 mr-2" />
-              {isOwner && post.privacy !== 'everyone' ? 'Partilhar ficheiro' : t('feed.copyLink')}
+              {isOwner && post.privacy !== 'everyone' ? uiText("Partilhar ficheiro") : t('feed.copyLink')}
             </DropdownMenuItem>
             {onToggleArchive && (
               <DropdownMenuItem onClick={() => onToggleArchive(post.id)}>
                 {isArchived ? (
                   <>
-                    <ArchiveRestore className="w-4 h-4 mr-2" />
-                    Desarquivar
-                  </>
+                    <ArchiveRestore className="w-4 h-4 mr-2" />{uiText("Desarquivar")}</>
                 ) : (
                   <>
-                    <Archive className="w-4 h-4 mr-2" />
-                    Arquivar
-                  </>
+                    <Archive className="w-4 h-4 mr-2" />{uiText("Arquivar")}</>
                 )}
               </DropdownMenuItem>
             )}
@@ -370,8 +368,8 @@ export const PostCard = memo(function PostCard({ mediaPriority = false, post, on
       {/* Reaction Summary - uses ReactionDisplay component */}
       {totalReactions > 0 && (
         <div className="px-4 pb-2">
-          <ReactionDisplay 
-            counts={localReactionCounts} 
+          <ReactionDisplay
+            counts={localReactionCounts}
             myReaction={localReaction}
             size="sm"
           />
@@ -382,13 +380,13 @@ export const PostCard = memo(function PostCard({ mediaPriority = false, post, on
       <div className="flex items-center justify-between px-3 py-1">
         <div className="flex items-center gap-2">
           {/* Reaction button with African reactions */}
-          <div 
+          <div
             className="relative"
             onMouseEnter={() => setShowReactions(true)}
             onMouseLeave={() => setShowReactions(false)}
           >
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               size="sm"
               className="gap-2 px-2 min-h-11 min-w-11"
               aria-pressed={!!localLiked}
@@ -416,7 +414,7 @@ export const PostCard = memo(function PostCard({ mediaPriority = false, post, on
                   {currentReaction.icon}
                 </motion.span>
               ) : (
-                <span className="text-xl" role="img" aria-label="React">💛</span>
+                <span className="text-xl" role="img" aria-label={uiText("React")}>💛</span>
               )}
             </Button>
 
@@ -434,8 +432,8 @@ export const PostCard = memo(function PostCard({ mediaPriority = false, post, on
           </div>
 
           {/* Comment button */}
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             size="sm"
             className="gap-2 px-2 min-h-11 min-w-11"
             aria-label={t('feed.comments', 'Comentários')}
@@ -446,8 +444,8 @@ export const PostCard = memo(function PostCard({ mediaPriority = false, post, on
           </Button>
 
           {/* Share button */}
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             size="sm"
             className="gap-2 px-2 min-h-11 min-w-11"
             aria-label={t('publicPost.share', 'Partilhar')}
@@ -458,8 +456,8 @@ export const PostCard = memo(function PostCard({ mediaPriority = false, post, on
         </div>
 
         {/* Save button */}
-        <Button 
-          variant="ghost" 
+        <Button
+          variant="ghost"
           size="sm"
           className="px-2 min-h-11 min-w-11"
           onClick={handleSave}

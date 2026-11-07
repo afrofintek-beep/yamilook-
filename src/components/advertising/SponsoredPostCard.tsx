@@ -1,13 +1,14 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { 
-  Heart, 
-  MessageCircle, 
-  Share2, 
+import {
+  Heart,
+  MessageCircle,
+  Share2,
   Bookmark,
   ExternalLink,
   MapPin,
@@ -25,6 +26,7 @@ interface SponsoredPostCardProps {
 }
 
 export function SponsoredPostCard({ ad, userMarket, onAction }: SponsoredPostCardProps) {
+  useUiLocale();
   const { recordImpression, recordClick } = useAdvertising();
   const [hasRecordedImpression, setHasRecordedImpression] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
@@ -58,7 +60,7 @@ export function SponsoredPostCard({ ad, userMarket, onAction }: SponsoredPostCar
     recordClick(ad.id, 'cta');
     const action = resolveAdAction(ad);
     if (action.kind === 'none') {
-      toast.info('Este anúncio ainda não tem link nem contacto.');
+      toast.info(uiText("Este anúncio ainda não tem link nem contacto."));
     } else {
       window.open(action.href!, '_blank', 'noopener,noreferrer');
     }
@@ -69,13 +71,13 @@ export function SponsoredPostCard({ ad, userMarket, onAction }: SponsoredPostCar
     setIsLiked(!isLiked);
     recordClick(ad.id, 'like');
     if (!isLiked) {
-      toast.success('Gostou do anúncio!');
+      toast.success(uiText("Gostou do anúncio!"));
     }
   };
 
   const handleComment = () => {
     recordClick(ad.id, 'comment');
-    toast.info('Comentários em breve!');
+    toast.info(uiText("Comentários em breve!"));
   };
 
   const handleShare = async () => {
@@ -94,7 +96,7 @@ export function SponsoredPostCard({ ad, userMarket, onAction }: SponsoredPostCar
       }
     } else {
       await navigator.clipboard.writeText(shareData.url);
-      toast.success('Link copiado!');
+      toast.success(uiText("Link copiado!"));
     }
   };
 
@@ -111,9 +113,7 @@ export function SponsoredPostCard({ ad, userMarket, onAction }: SponsoredPostCar
       <Card className="overflow-hidden border-primary/20 bg-gradient-to-b from-primary/5 to-transparent">
         {/* "Destaque Local" badge - non-aggressive */}
         <div className="px-4 pt-3 pb-2">
-          <Badge variant="secondary" className="text-[10px] font-normal bg-primary/10 text-primary border-0">
-            ✨ Destaque Local
-          </Badge>
+          <Badge variant="secondary" className="text-[10px] font-normal bg-primary/10 text-primary border-0">{uiText("✨ Destaque Local")}</Badge>
         </div>
 
         {/* Business header */}
@@ -127,7 +127,7 @@ export function SponsoredPostCard({ ad, userMarket, onAction }: SponsoredPostCar
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1">
               <span className="font-semibold text-sm truncate">
-                {business?.business_name || 'Negócio local'}
+                {business?.business_name || uiText("Negócio local")}
               </span>
               {business?.is_verified && (
                 <BadgeCheck className="w-4 h-4 text-primary shrink-0" />
@@ -171,8 +171,8 @@ export function SponsoredPostCard({ ad, userMarket, onAction }: SponsoredPostCar
 
           {/* CTA Button */}
           {ad.call_to_action && (
-            <Button 
-              className="w-full" 
+            <Button
+              className="w-full"
               onClick={handleCtaClick}
             >
               {ad.call_to_action}
@@ -183,33 +183,33 @@ export function SponsoredPostCard({ ad, userMarket, onAction }: SponsoredPostCar
 
         {/* Actions */}
         <div className="px-4 pb-4 flex items-center gap-4">
-          <Button 
-            variant="ghost" 
-            size="sm" 
+          <Button
+            variant="ghost"
+            size="sm"
             className="gap-2"
             onClick={handleLike}
           >
             <Heart className={`w-5 h-5 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
           </Button>
-          <Button 
-            variant="ghost" 
-            size="sm" 
+          <Button
+            variant="ghost"
+            size="sm"
             className="gap-2"
             onClick={handleComment}
           >
             <MessageCircle className="w-5 h-5" />
           </Button>
-          <Button 
-            variant="ghost" 
-            size="sm" 
+          <Button
+            variant="ghost"
+            size="sm"
             className="gap-2"
             onClick={handleShare}
           >
             <Share2 className="w-5 h-5" />
           </Button>
           <div className="flex-1" />
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             size="sm"
             onClick={handleSave}
           >

@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -76,6 +77,7 @@ export function GroupAdminSheet({
   groupAvatarUrl,
   onGroupUpdated,
 }: GroupAdminSheetProps) {
+  useUiLocale();
   const { user } = useAuth();
   const { contacts } = useContacts();
   const { toast } = useToast();
@@ -174,15 +176,15 @@ export function GroupAdminSheet({
       if (error) throw error;
       const result = data as { success: boolean; error?: string };
       if (!result.success) {
-        toast({ title: 'Erro', description: result.error, variant: 'destructive' });
+        toast({ title: uiText("Erro"), description: result.error, variant: 'destructive' });
         return;
       }
 
-      toast({ title: 'Nome do grupo atualizado' });
+      toast({ title: uiText("Nome do grupo atualizado") });
       setEditingName(false);
       onGroupUpdated();
     } catch (err) {
-      toast({ title: 'Erro', description: err instanceof Error ? err.message : String(err), variant: 'destructive' });
+      toast({ title: uiText("Erro"), description: err instanceof Error ? err.message : String(err), variant: 'destructive' });
     } finally {
       setSavingName(false);
     }
@@ -193,7 +195,7 @@ export function GroupAdminSheet({
     if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
-      toast({ title: 'Ficheiro muito grande', description: 'Máximo 5MB', variant: 'destructive' });
+      toast({ title: uiText("Ficheiro muito grande"), description: uiText("Máximo 5MB"), variant: 'destructive' });
       return;
     }
 
@@ -219,14 +221,14 @@ export function GroupAdminSheet({
       if (error) throw error;
       const result = data as { success: boolean; error?: string };
       if (!result.success) {
-        toast({ title: 'Erro', description: result.error, variant: 'destructive' });
+        toast({ title: uiText("Erro"), description: result.error, variant: 'destructive' });
         return;
       }
 
-      toast({ title: 'Foto do grupo atualizada' });
+      toast({ title: uiText("Foto do grupo atualizada") });
       onGroupUpdated();
     } catch (err) {
-      toast({ title: 'Erro', description: err instanceof Error ? err.message : String(err), variant: 'destructive' });
+      toast({ title: uiText("Erro"), description: err instanceof Error ? err.message : String(err), variant: 'destructive' });
     } finally {
       setUploadingPhoto(false);
     }
@@ -243,15 +245,15 @@ export function GroupAdminSheet({
       if (error) throw error;
       const result = data as { success: boolean; error?: string };
       if (!result.success) {
-        toast({ title: 'Erro', description: result.error, variant: 'destructive' });
+        toast({ title: uiText("Erro"), description: result.error, variant: 'destructive' });
         return;
       }
 
-      toast({ title: 'Membro adicionado' });
+      toast({ title: uiText("Membro adicionado") });
       fetchParticipants();
       onGroupUpdated();
     } catch (err) {
-      toast({ title: 'Erro', description: err instanceof Error ? err.message : String(err), variant: 'destructive' });
+      toast({ title: uiText("Erro"), description: err instanceof Error ? err.message : String(err), variant: 'destructive' });
     } finally {
       setAddingMember(null);
     }
@@ -260,7 +262,7 @@ export function GroupAdminSheet({
   const handleRemoveMember = async (userId: string, displayName: string) => {
     setConfirmDialog({
       open: true,
-      title: 'Remover membro',
+      title: uiText("Remover membro"),
       description: `Tens a certeza que queres remover ${displayName} do grupo?`,
       action: async () => {
         try {
@@ -272,15 +274,15 @@ export function GroupAdminSheet({
           if (error) throw error;
           const result = data as { success: boolean; error?: string };
           if (!result.success) {
-            toast({ title: 'Erro', description: result.error, variant: 'destructive' });
+            toast({ title: uiText("Erro"), description: result.error, variant: 'destructive' });
             return;
           }
 
-          toast({ title: 'Membro removido' });
+          toast({ title: uiText("Membro removido") });
           fetchParticipants();
           onGroupUpdated();
         } catch (err) {
-          toast({ title: 'Erro', description: err instanceof Error ? err.message : String(err), variant: 'destructive' });
+          toast({ title: uiText("Erro"), description: err instanceof Error ? err.message : String(err), variant: 'destructive' });
         }
       },
     });
@@ -303,14 +305,14 @@ export function GroupAdminSheet({
           if (error) throw error;
           const result = data as { success: boolean; error?: string };
           if (!result.success) {
-            toast({ title: 'Erro', description: result.error, variant: 'destructive' });
+            toast({ title: uiText("Erro"), description: result.error, variant: 'destructive' });
             return;
           }
 
           toast({ title: role === 'admin' ? 'Membro promovido a admin' : 'Admin removido' });
           fetchParticipants();
         } catch (err) {
-          toast({ title: 'Erro', description: err instanceof Error ? err.message : String(err), variant: 'destructive' });
+          toast({ title: uiText("Erro"), description: err instanceof Error ? err.message : String(err), variant: 'destructive' });
         }
       },
     });
@@ -319,7 +321,7 @@ export function GroupAdminSheet({
   // Filter contacts not in group for add member
   const participantIds = new Set(participants.map((p) => p.user_id));
   const availableContacts = contacts.filter(
-    (c) => !participantIds.has(c.contact_user_id) && 
+    (c) => !participantIds.has(c.contact_user_id) &&
            (c.profile?.display_name?.toLowerCase().includes(memberSearch.toLowerCase()) ||
             c.profile?.username?.toLowerCase().includes(memberSearch.toLowerCase()))
   );
@@ -332,9 +334,7 @@ export function GroupAdminSheet({
         <SheetContent side="right" className="w-full sm:max-w-md p-0">
           <SheetHeader className="p-4 border-b border-border">
             <SheetTitle className="flex items-center gap-2">
-              <Users className="w-5 h-5" />
-              Administrar Grupo
-            </SheetTitle>
+              <Users className="w-5 h-5" />{uiText("Administrar Grupo")}</SheetTitle>
           </SheetHeader>
 
           <ScrollArea className="h-[calc(100vh-80px)]">
@@ -345,7 +345,7 @@ export function GroupAdminSheet({
                   <Avatar className="w-24 h-24">
                     <AvatarImage src={groupAvatarUrl || undefined} />
                     <AvatarFallback className="text-2xl bg-primary/10 text-primary">
-                      {groupName?.slice(0, 2).toUpperCase() || 'GP'}
+                      {groupName?.slice(0, 2).toUpperCase() || uiText("GP")}
                     </AvatarFallback>
                   </Avatar>
                   {isAdmin && (
@@ -416,7 +416,7 @@ export function GroupAdminSheet({
                 )}
 
                 <p className="text-sm text-muted-foreground">
-                  {memberCount} {memberCount === 1 ? 'membro' : 'membros'}
+                  {memberCount} {memberCount === 1 ? uiText("membro") : uiText("membros")}
                 </p>
               </div>
 
@@ -427,16 +427,12 @@ export function GroupAdminSheet({
                   className="w-full"
                   onClick={() => setAddMemberOpen(true)}
                 >
-                  <UserPlus className="w-4 h-4 mr-2" />
-                  Adicionar Membro
-                </Button>
+                  <UserPlus className="w-4 h-4 mr-2" />{uiText("Adicionar Membro")}</Button>
               )}
 
               {/* Members List */}
               <div className="space-y-2">
-                <h3 className="text-sm font-medium text-muted-foreground px-1">
-                  Membros
-                </h3>
+                <h3 className="text-sm font-medium text-muted-foreground px-1">{uiText("Membros")}</h3>
 
                 {loading ? (
                   <div className="flex items-center justify-center py-8">
@@ -462,13 +458,11 @@ export function GroupAdminSheet({
                             <div className="flex items-center gap-2">
                               <span className="font-medium">
                                 {participant.profile.display_name}
-                                {participant.user_id === user?.id && ' (Tu)'}
+                                {participant.user_id === user?.id && uiText(" (Tu)")}
                               </span>
                               {participant.role === 'admin' && (
                                 <Badge variant="secondary" className="text-xs gap-1">
-                                  <Crown className="w-3 h-3" />
-                                  Admin
-                                </Badge>
+                                  <Crown className="w-3 h-3" />{uiText("Admin")}</Badge>
                               )}
                             </div>
                             <span className="text-sm text-muted-foreground">
@@ -495,9 +489,7 @@ export function GroupAdminSheet({
                                     )
                                   }
                                 >
-                                  <Shield className="w-4 h-4 mr-2" />
-                                  Promover a Admin
-                                </DropdownMenuItem>
+                                  <Shield className="w-4 h-4 mr-2" />{uiText("Promover a Admin")}</DropdownMenuItem>
                               ) : (
                                 <DropdownMenuItem
                                   onClick={() =>
@@ -508,9 +500,7 @@ export function GroupAdminSheet({
                                     )
                                   }
                                 >
-                                  <Shield className="w-4 h-4 mr-2" />
-                                  Remover Admin
-                                </DropdownMenuItem>
+                                  <Shield className="w-4 h-4 mr-2" />{uiText("Remover Admin")}</DropdownMenuItem>
                               )}
                               <DropdownMenuSeparator />
                               <DropdownMenuItem
@@ -522,9 +512,7 @@ export function GroupAdminSheet({
                                   )
                                 }
                               >
-                                <UserMinus className="w-4 h-4 mr-2" />
-                                Remover do Grupo
-                              </DropdownMenuItem>
+                                <UserMinus className="w-4 h-4 mr-2" />{uiText("Remover do Grupo")}</DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         )}
@@ -543,16 +531,14 @@ export function GroupAdminSheet({
         <SheetContent side="right" className="w-full sm:max-w-md p-0">
           <SheetHeader className="p-4 border-b border-border">
             <SheetTitle className="flex items-center gap-2">
-              <UserPlus className="w-5 h-5" />
-              Adicionar Membro
-            </SheetTitle>
+              <UserPlus className="w-5 h-5" />{uiText("Adicionar Membro")}</SheetTitle>
           </SheetHeader>
 
           <div className="p-4">
             <div className="relative mb-4">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Pesquisar Links..."
+                placeholder={uiText("Pesquisar Links...")}
                 value={memberSearch}
                 onChange={(e) => setMemberSearch(e.target.value)}
                 className="pl-10"
@@ -563,7 +549,7 @@ export function GroupAdminSheet({
               <div className="space-y-1">
                 {availableContacts.length === 0 ? (
                   <p className="text-center text-muted-foreground py-8">
-                    {memberSearch ? 'Nenhum Link encontrado' : 'Todos os Links já estão no grupo'}
+                    {memberSearch ? uiText("Nenhum Link encontrado") : uiText("Todos os Links já estão no grupo")}
                   </p>
                 ) : (
                   availableContacts.map((contact) => (
@@ -618,15 +604,13 @@ export function GroupAdminSheet({
             <AlertDialogDescription>{confirmDialog?.description}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel>{uiText("Cancelar")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
                 confirmDialog?.action();
                 setConfirmDialog(null);
               }}
-            >
-              Confirmar
-            </AlertDialogAction>
+            >{uiText("Confirmar")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

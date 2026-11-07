@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { genderCtx } from '@/lib/i18n-gender';
 import { useState, useEffect } from 'react';
 import { VISIBILITY_OPTIONS_SIMPLE } from '@/lib/visibility-options';
@@ -87,6 +88,7 @@ const profileSchema = z.object({
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
 export function ProfileEditSheet({ open, onOpenChange, profile, onUpdate }: ProfileEditSheetProps) {
+  useUiLocale();
   const { user, updateProfile, refreshProfile, profile: authProfile } = useAuth();
   const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
@@ -154,7 +156,7 @@ export function ProfileEditSheet({ open, onOpenChange, profile, onUpdate }: Prof
 
       // Update avatar URL in state
       setAvatarUrl(publicUrl);
-      
+
       // Also update the database immediately so the photo is saved
       const { error: updateError } = await supabase
         .from('profiles')
@@ -162,10 +164,10 @@ export function ProfileEditSheet({ open, onOpenChange, profile, onUpdate }: Prof
         .eq('id', profile.id);
 
       if (updateError) throw updateError;
-      
+
       // Refresh profile so UI updates everywhere
       await refreshProfile();
-      
+
       toast.success(t('profile.photoUpdated') || 'Photo updated!');
     } catch (error) {
       console.error('Upload error:', error);
@@ -211,11 +213,11 @@ export function ProfileEditSheet({ open, onOpenChange, profile, onUpdate }: Prof
 
       if (error) throw error;
 
-      toast.success('Profile updated!');
-      
+      toast.success(uiText("Profile updated!"));
+
       // Refresh global auth state so header/other components update
       await refreshProfile();
-      
+
       onUpdate();
       onOpenChange(false);
     } catch (error) {
@@ -229,7 +231,7 @@ export function ProfileEditSheet({ open, onOpenChange, profile, onUpdate }: Prof
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="h-[90vh] rounded-t-3xl">
         <SheetHeader className="pb-4">
-          <SheetTitle>Edit Profile</SheetTitle>
+          <SheetTitle>{uiText("Edit Profile")}</SheetTitle>
         </SheetHeader>
 
         <div className="overflow-y-auto h-[calc(100%-60px)] pb-8 -mx-6 px-6">
@@ -274,9 +276,7 @@ export function ProfileEditSheet({ open, onOpenChange, profile, onUpdate }: Prof
               {/* Theme Color */}
               <div className="space-y-3">
                 <Label className="flex items-center gap-2">
-                  <Palette className="w-4 h-4" />
-                  Profile Theme
-                </Label>
+                  <Palette className="w-4 h-4" />{uiText("Profile Theme")}</Label>
                 <div className="flex flex-wrap gap-3">
                   {themeColors.map((color) => (
                     <button
@@ -303,7 +303,7 @@ export function ProfileEditSheet({ open, onOpenChange, profile, onUpdate }: Prof
                 name="display_name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Display Name</FormLabel>
+                    <FormLabel>{uiText("Display Name")}</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
@@ -321,7 +321,7 @@ export function ProfileEditSheet({ open, onOpenChange, profile, onUpdate }: Prof
                 name="username"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Username</FormLabel>
+                    <FormLabel>{uiText("Username")}</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
@@ -339,11 +339,11 @@ export function ProfileEditSheet({ open, onOpenChange, profile, onUpdate }: Prof
                 name="status_message"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Status</FormLabel>
+                    <FormLabel>{uiText("Status")}</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
-                        placeholder="What's on your mind?"
+                        placeholder={uiText("What's on your mind?")}
                         className="h-12 rounded-xl bg-secondary/50 border-0"
                       />
                     </FormControl>
@@ -358,11 +358,11 @@ export function ProfileEditSheet({ open, onOpenChange, profile, onUpdate }: Prof
                 name="bio"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Bio</FormLabel>
+                    <FormLabel>{uiText("Bio")}</FormLabel>
                     <FormControl>
                       <Textarea
                         {...field}
-                        placeholder="Tell us about yourself..."
+                        placeholder={uiText("Tell us about yourself...")}
                         className="min-h-[100px] rounded-xl bg-secondary/50 border-0 resize-none"
                       />
                     </FormControl>
@@ -392,8 +392,7 @@ export function ProfileEditSheet({ open, onOpenChange, profile, onUpdate }: Prof
               {/* Banda (neighborhood) */}
               <div className="space-y-2 pt-4 border-t">
                 <Label className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4" /> A minha banda
-                </Label>
+                  <MapPin className="w-4 h-4" />{uiText(" A minha banda")}</Label>
                 <button
                   type="button"
                   onClick={() => setBandaOpen(true)}
@@ -401,10 +400,10 @@ export function ProfileEditSheet({ open, onOpenChange, profile, onUpdate }: Prof
                 >
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium truncate">
-                      {authProfile?.neighborhood || 'Definir a minha banda'}
+                      {authProfile?.neighborhood || uiText("Definir a minha banda")}
                       {authProfile?.city ? ` · ${authProfile.city}` : ''}
                     </div>
-                    <div className="text-xs text-muted-foreground">Mudaste-te? Atualiza aqui a tua vizinhança.</div>
+                    <div className="text-xs text-muted-foreground">{uiText("Mudaste-te? Atualiza aqui a tua vizinhança.")}</div>
                   </div>
                   <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
                 </button>
@@ -412,16 +411,16 @@ export function ProfileEditSheet({ open, onOpenChange, profile, onUpdate }: Prof
 
               {/* Privacy Settings */}
               <div className="space-y-4 pt-4 border-t">
-                <h3 className="font-semibold">{t('settings.privacy') || 'Privacy'}</h3>
-                
+                <h3 className="font-semibold">{t('settings.privacy') || uiText("Privacy")}</h3>
+
                 {/* Photos Visibility */}
                 <div className="space-y-2">
-                  <Label>{t('profile.photosVisibility') || 'Who can see my photos'}</Label>
+                  <Label>{t('profile.photosVisibility') || uiText("Who can see my photos")}</Label>
                   <Select value={photosVisibility} onValueChange={(v) => setPhotosVisibility(v as PhotosVisibility)}>
                     <SelectTrigger className="h-12 rounded-xl bg-secondary/50 border-2 border-primary/30">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent 
+                    <SelectContent
                       className="z-[9999] bg-popover border shadow-lg"
                       position="popper"
                       sideOffset={4}
@@ -437,9 +436,9 @@ export function ProfileEditSheet({ open, onOpenChange, profile, onUpdate }: Prof
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="show_online">{t('profile.showOnlineStatus') || 'Show Online Status'}</Label>
+                  <Label htmlFor="show_online">{t('profile.showOnlineStatus') || uiText("Show Online Status")}</Label>
                   <Switch
                     id="show_online"
                     checked={privacySettings.show_online_status}
@@ -450,7 +449,7 @@ export function ProfileEditSheet({ open, onOpenChange, profile, onUpdate }: Prof
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="show_last_seen">{t('profile.showLastSeen') || 'Show Last Seen'}</Label>
+                  <Label htmlFor="show_last_seen">{t('profile.showLastSeen') || uiText("Show Last Seen")}</Label>
                   <Switch
                     id="show_last_seen"
                     checked={privacySettings.show_last_seen}
@@ -461,7 +460,7 @@ export function ProfileEditSheet({ open, onOpenChange, profile, onUpdate }: Prof
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="show_read">{t('profile.readReceipts') || 'Read Receipts'}</Label>
+                  <Label htmlFor="show_read">{t('profile.readReceipts') || uiText("Read Receipts")}</Label>
                   <Switch
                     id="show_read"
                     checked={privacySettings.show_read_receipts}
@@ -472,7 +471,7 @@ export function ProfileEditSheet({ open, onOpenChange, profile, onUpdate }: Prof
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="show_typing">{t('profile.typingIndicators') || 'Typing Indicators'}</Label>
+                  <Label htmlFor="show_typing">{t('profile.typingIndicators') || uiText("Typing Indicators")}</Label>
                   <Switch
                     id="show_typing"
                     checked={privacySettings.show_typing_indicators}
@@ -491,11 +490,9 @@ export function ProfileEditSheet({ open, onOpenChange, profile, onUpdate }: Prof
               >
                 {isLoading ? (
                   <>
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    Saving...
-                  </>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />{uiText("Saving...")}</>
                 ) : (
-                  'Save Changes'
+                  uiText("Save Changes")
                 )}
               </Button>
             </form>

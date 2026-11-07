@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { prepareOwnedVideoExport } from '@/lib/owned-video-export';
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -6,6 +7,7 @@ import { mediaKind } from '../../../shared/owned-post-media.mjs';
 import { canShareVideo as canShareFile, sharePreparedVideo as shareFile } from '../../../shared/post-video-sharing.mjs';
 
 function FileActions({ id, index, kind, onShared }: { id: string; index: number; kind: string; onShared?: () => void }) {
+  useUiLocale();
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState('');
   const [download, setDownload] = useState<string | null>(null);
@@ -93,25 +95,26 @@ function FileActions({ id, index, kind, onShared }: { id: string; index: number;
   };
 
   return <div className="space-y-2">
-    {!file && <Button className="w-full" disabled={busy} onClick={() => void prepare()}>Preparar ficheiro</Button>}
-    {file && preview && kind === 'video' && <><video src={preview} controls playsInline preload="metadata" aria-label="Pré-visualização do MP4" className="max-h-[50svh] w-full rounded bg-black" /><p className="text-xs">MP4 · {(file.size / 1048576).toFixed(1)} MB · com áudio quando presente no original</p><Button asChild variant="outline" className="w-full"><a href={preview} download={file.name}>Guardar vídeo MP4</a></Button></>}
-    {file && canShareFile(file) && <Button className="w-full" disabled={busy} onClick={() => void share()}>Escolher aplicação</Button>}
-    {busy && request.current && <Button variant="ghost" className="w-full" onClick={cancel}>Cancelar preparação</Button>}
-    {(!file || kind !== 'video') && <Button variant="outline" className="w-full" disabled={busy} onClick={() => void prepare(true)}>Descarregar ficheiro</Button>}
-    {download && <Button asChild variant="outline" className="w-full"><a href={download} target="_blank" rel="noopener noreferrer" referrerPolicy="no-referrer">Guardar ficheiro</a></Button>}
+    {!file && <Button className="w-full" disabled={busy} onClick={() => void prepare()}>{uiText("Preparar ficheiro")}</Button>}
+    {file && preview && kind === 'video' && <><video src={preview} controls playsInline preload="metadata" aria-label={uiText("Pré-visualização do MP4")} className="max-h-[50svh] w-full rounded bg-black" /><p className="text-xs">{uiText("MP4 · ")}{(file.size / 1048576).toFixed(1)}{uiText(" MB · com áudio quando presente no original")}</p><Button asChild variant="outline" className="w-full"><a href={preview} download={file.name}>{uiText("Guardar vídeo MP4")}</a></Button></>}
+    {file && canShareFile(file) && <Button className="w-full" disabled={busy} onClick={() => void share()}>{uiText("Escolher aplicação")}</Button>}
+    {busy && request.current && <Button variant="ghost" className="w-full" onClick={cancel}>{uiText("Cancelar preparação")}</Button>}
+    {(!file || kind !== 'video') && <Button variant="outline" className="w-full" disabled={busy} onClick={() => void prepare(true)}>{uiText("Descarregar ficheiro")}</Button>}
+    {download && <Button asChild variant="outline" className="w-full"><a href={download} target="_blank" rel="noopener noreferrer" referrerPolicy="no-referrer">{uiText("Guardar ficheiro")}</a></Button>}
     <p role="status" aria-live="polite" className="text-sm">{status}</p>
   </div>;
 }
 
 export default function OwnedPostMediaShare({ id, mediaUrls, onShared }: { id: string; mediaUrls: string[]; onShared?: () => void }) {
+  useUiLocale();
   const media = mediaUrls.flatMap((url, index) => mediaKind(url) ? [{ index, kind: mediaKind(url) }] : []);
   const [selection, setSelection] = useState(media[0]?.index);
   const index = media.some(item => item.index === selection) ? selection : media[0]?.index;
-  if (!media.length) return <p className="mb-4 text-sm text-muted-foreground">Esta publicação não tem fotografias ou vídeos disponíveis para enviar como ficheiro.</p>;
-  return <section aria-label="Enviar ficheiro a amigos" className="mb-5 space-y-3 border-b pb-4">
-    <h3 className="font-semibold">Enviar ficheiro a amigos</h3>
-    <p className="text-sm text-muted-foreground">Envia uma cópia da fotografia ou do vídeo. Escolhe o destinatário na aplicação. Quem recebe pode guardar ou reencaminhar o ficheiro.</p>
-    {media.length > 1 && <label className="block text-sm">Ficheiro a enviar<select className="mt-1 min-h-11 w-full rounded border bg-background p-2" value={index} onChange={event => setSelection(Number(event.target.value))}>{media.map((item, position) => <option key={item.index} value={item.index}>{item.kind === 'video' ? 'Vídeo' : 'Fotografia'} {position + 1}</option>)}</select></label>}
+  if (!media.length) return <p className="mb-4 text-sm text-muted-foreground">{uiText("Esta publicação não tem fotografias ou vídeos disponíveis para enviar como ficheiro.")}</p>;
+  return <section aria-label={uiText("Enviar ficheiro a amigos")} className="mb-5 space-y-3 border-b pb-4">
+    <h3 className="font-semibold">{uiText("Enviar ficheiro a amigos")}</h3>
+    <p className="text-sm text-muted-foreground">{uiText("Envia uma cópia da fotografia ou do vídeo. Escolhe o destinatário na aplicação. Quem recebe pode guardar ou reencaminhar o ficheiro.")}</p>
+    {media.length > 1 && <label className="block text-sm">{uiText("Ficheiro a enviar")}<select className="mt-1 min-h-11 w-full rounded border bg-background p-2" value={index} onChange={event => setSelection(Number(event.target.value))}>{media.map((item, position) => <option key={item.index} value={item.index}>{item.kind === 'video' ? uiText("Vídeo") : uiText("Fotografia")} {position + 1}</option>)}</select></label>}
     <FileActions key={`${id}:${index}:${mediaUrls[index]}`} id={id} index={index} kind={media.find(item => item.index === index)?.kind || 'image'} onShared={onShared} />
   </section>;
 }

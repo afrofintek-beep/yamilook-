@@ -1,3 +1,4 @@
+import { uiText } from '@/i18n/ui-copy';
 /**
  * useMediaCapture - Handles getUserMedia and local stream management
  * Responsible for capturing audio/video from user devices
@@ -159,7 +160,7 @@ export function useMediaCapture(): UseMediaCaptureReturn {
       // Screen capture is unavailable on most mobile browsers (iOS Safari,
       // Android Chrome). Signal that clearly instead of failing silently.
       if (!navigator.mediaDevices?.getDisplayMedia) {
-        const e = new Error('Partilha de ecrã não é suportada neste dispositivo (ex.: telemóveis).');
+        const e = new Error(uiText("Partilha de ecrã não é suportada neste dispositivo (ex.: telemóveis)."));
         e.name = 'ScreenShareUnsupported';
         throw e;
       }

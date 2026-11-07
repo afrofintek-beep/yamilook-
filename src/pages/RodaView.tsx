@@ -1,11 +1,12 @@
+import { uiText, useUiLocale, uiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect, forwardRef, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { 
-  ArrowLeft, 
-  Radio, 
-  Users, 
+import {
+  ArrowLeft,
+  Radio,
+  Users,
   MessageSquare,
   Send,
   Mic,
@@ -42,11 +43,12 @@ import { RodaRecordingControls } from '@/components/palco/RodaRecordingControls'
 import { useCurrencyRates } from '@/hooks/useCurrencyRates';
 const voiceOptions = [
   { type: 'email' as const, icon: Mail, label: 'Email', desc: '24-72h', price: 1 },
-  { type: 'live' as const, icon: Mic, label: 'Ao Vivo', desc: 'Na Roda', price: 3 },
-  { type: 'highlight' as const, icon: Star, label: 'Destaque', desc: 'Prioridade', price: 7 },
+  { type: 'live' as const, icon: Mic, get label() { return uiText("Ao Vivo"); }, desc: 'Na Roda', price: 3 },
+  { type: 'highlight' as const, icon: Star, get label() { return uiText("Destaque"); }, desc: 'Prioridade', price: 7 },
 ];
 
 const RodaView = forwardRef<HTMLDivElement>((_, ref) => {
+  useUiLocale();
   const { palcoId, rodaId } = useParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -82,7 +84,7 @@ const RodaView = forwardRef<HTMLDivElement>((_, ref) => {
   };
 
   const roda = rodaData;
-  
+
   // Check if roda date has passed (2 hours after scheduled time)
   const isDatePassed = (() => {
     if (!roda?.scheduled_at) return false;
@@ -90,7 +92,7 @@ const RodaView = forwardRef<HTMLDivElement>((_, ref) => {
     const twoHoursAfter = new Date(scheduledDate.getTime() + 2 * 60 * 60 * 1000);
     return new Date() > twoHoursAfter;
   })();
-  
+
   const isLive = (roda?.phase === 'content' || roda?.phase === 'qa') && !isDatePassed;
   const isQA = roda?.phase === 'qa' && !isDatePassed;
   const isEnded = roda?.phase === 'ended' || isDatePassed;
@@ -115,7 +117,7 @@ const RodaView = forwardRef<HTMLDivElement>((_, ref) => {
 
     const connect = async () => {
       console.log('[RodaView] Connecting to room:', roda.livekit_room_name, 'as', isGuide ? 'host' : 'viewer');
-      
+
       const success = isGuide
         ? await rodaStream.connectAsHost(roda.livekit_room_name!)
         : await rodaStream.connectAsViewer(roda.livekit_room_name!);
@@ -178,20 +180,20 @@ const RodaView = forwardRef<HTMLDivElement>((_, ref) => {
     : [];
 
   // Find camera track - prefer by source, fallback to kind
-  const cameraPub = publications.find((p) => 
+  const cameraPub = publications.find((p) =>
     p.source === Track.Source.Camera && p.track && p.isSubscribed
-  ) ?? publications.find((p) => 
+  ) ?? publications.find((p) =>
     p.kind === Track.Kind.Video && p.track && p.isSubscribed
-  ) ?? publications.find((p) => 
+  ) ?? publications.find((p) =>
     p.kind === Track.Kind.Video && p.track
   );
 
   // Find microphone track - prefer by source, fallback to kind
-  const micPub = publications.find((p) => 
+  const micPub = publications.find((p) =>
     p.source === Track.Source.Microphone && p.track && p.isSubscribed
-  ) ?? publications.find((p) => 
+  ) ?? publications.find((p) =>
     p.kind === Track.Kind.Audio && p.track && p.isSubscribed
-  ) ?? publications.find((p) => 
+  ) ?? publications.find((p) =>
     p.kind === Track.Kind.Audio && p.track
   );
 
@@ -210,14 +212,14 @@ const RodaView = forwardRef<HTMLDivElement>((_, ref) => {
   if (isLoading) {
     return (
       <div ref={ref} className="min-h-screen bg-black flex items-center justify-center">
-        <div className="animate-pulse text-white">Carregando...</div>
+        <div className="animate-pulse text-white">{uiText("Carregando...")}</div>
       </div>
     );
   }
 
   const handleSubmitVoz = () => {
     if (!rodaId) return;
-    
+
     submitVoz.mutate({
       roda_id: rodaId,
       voice_type: selectedVoiceType,
@@ -267,13 +269,13 @@ const RodaView = forwardRef<HTMLDivElement>((_, ref) => {
         ) : isLive && rodaStream.loading ? (
           <div className="text-center">
             <Radio className="w-16 h-16 mx-auto mb-4 text-palco-accent animate-pulse" />
-            <p className="text-lg font-medium">Conectando...</p>
+            <p className="text-lg font-medium">{uiText("Conectando...")}</p>
           </div>
         ) : isLive ? (
           <div className="text-center">
             <Radio className="w-16 h-16 mx-auto mb-4 text-red-500 animate-pulse" />
             <p className="text-lg font-medium">
-              {isQA ? 'Sessão de Q&A' : 'Aguardando vídeo...'}
+              {isQA ? uiText("Sessão de Q&A") : uiText("Aguardando vídeo...")}
             </p>
             {rodaStream.error && (
               <p className="text-sm text-red-400 mt-2">{rodaStream.error}</p>
@@ -282,24 +284,22 @@ const RodaView = forwardRef<HTMLDivElement>((_, ref) => {
         ) : isEnded ? (
           <div className="text-center px-6">
             <CheckCircle className="w-16 h-16 mx-auto mb-4 text-palco-accent/70" />
-            <p className="text-xl font-semibold mb-2">Roda Terminada</p>
+            <p className="text-xl font-semibold mb-2">{uiText("Roda Terminada")}</p>
             <p className="text-sm text-white/60">
-              {isExpiredButNotEnded 
-                ? 'Esta sessão já passou da data agendada.'
-                : 'Esta sessão já foi realizada e terminou.'}
+              {isExpiredButNotEnded
+                ? uiText("Esta sessão já passou da data agendada.")
+                : uiText("Esta sessão já foi realizada e terminou.")}
             </p>
             {roda?.ended_at && !isExpiredButNotEnded && (
-              <p className="text-xs text-white/40 mt-2">
-                Encerrada há {formatDistanceToNow(new Date(roda.ended_at), { 
-                  locale: pt, 
-                  addSuffix: false 
+              <p className="text-xs text-white/40 mt-2">{uiText("Encerrada há ")}{formatDistanceToNow(new Date(roda.ended_at), {
+                  locale: pt,
+                  addSuffix: false
                 })}
               </p>
             )}
             {isExpiredButNotEnded && roda?.scheduled_at && (
-              <p className="text-xs text-white/40 mt-2">
-                Agendada para {new Date(roda.scheduled_at).toLocaleDateString('pt-PT', { 
-                  day: 'numeric', 
+              <p className="text-xs text-white/40 mt-2">{uiText("Agendada para ")}{new Date(roda.scheduled_at).toLocaleDateString(uiLocale(), {
+                  day: 'numeric',
                   month: 'long',
                   hour: '2-digit',
                   minute: '2-digit'
@@ -309,19 +309,16 @@ const RodaView = forwardRef<HTMLDivElement>((_, ref) => {
             <Button
               className="mt-6 bg-palco-accent hover:bg-palco-accent/90 text-palco-surface rounded-full"
               onClick={() => navigate(`/palco/${palcoId}`)}
-            >
-              Voltar ao Palco
-            </Button>
+            >{uiText("Voltar ao Palco")}</Button>
           </div>
         ) : (
           <div className="text-center">
             <Clock className="w-16 h-16 mx-auto mb-4 text-palco-accent/50" />
-            <p className="text-lg font-medium">Aguardando início</p>
+            <p className="text-lg font-medium">{uiText("Aguardando início")}</p>
             {roda?.scheduled_at && (
-              <p className="text-sm text-white/60 mt-2">
-                Começa daqui a {formatDistanceToNow(new Date(roda.scheduled_at), { 
-                  locale: pt, 
-                  addSuffix: false 
+              <p className="text-sm text-white/60 mt-2">{uiText("Começa daqui a ")}{formatDistanceToNow(new Date(roda.scheduled_at), {
+                  locale: pt,
+                  addSuffix: false
                 })}
               </p>
             )}
@@ -334,9 +331,9 @@ const RodaView = forwardRef<HTMLDivElement>((_, ref) => {
 
         {/* Top Bar */}
         <div className="absolute top-0 left-0 right-0 p-4 flex items-center justify-between z-10">
-          <Button 
-            size="icon" 
-            variant="ghost" 
+          <Button
+            size="icon"
+            variant="ghost"
             className="text-white hover:bg-white/10"
             onClick={() => navigate(-1)}
           >
@@ -346,13 +343,11 @@ const RodaView = forwardRef<HTMLDivElement>((_, ref) => {
           <div className="flex items-center gap-2">
             {isEnded ? (
               <div className="flex items-center gap-1.5 px-2.5 py-1 bg-palco-text-secondary/50 rounded-full text-xs font-medium">
-                <CheckCircle className="w-3 h-3" />
-                TERMINADA
-              </div>
+                <CheckCircle className="w-3 h-3" />{uiText("TERMINADA")}</div>
             ) : isLive ? (
               <div className="flex items-center gap-1.5 px-2.5 py-1 bg-red-500 rounded-full text-xs font-medium">
                 <Radio className="w-3 h-3 animate-pulse" />
-                {isQA ? 'Q&A' : 'LIVE'}
+                {isQA ? uiText("Q&A") : uiText("LIVE")}
               </div>
             ) : null}
             <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs">
@@ -437,7 +432,7 @@ const RodaView = forwardRef<HTMLDivElement>((_, ref) => {
 
       {/* Guide Vozes Panel (Side) - Tap to minimize, Double-tap to close */}
       {isGuide && isQA && showVozesPanel && (
-        <motion.div 
+        <motion.div
           className={cn(
             "absolute top-20 right-4 z-20 bg-black/60 backdrop-blur-md rounded-xl border border-white/10 cursor-pointer select-none",
             vozesPanelMinimized ? "w-auto p-2" : "w-64 max-h-[60vh] overflow-y-auto p-3"
@@ -448,7 +443,7 @@ const RodaView = forwardRef<HTMLDivElement>((_, ref) => {
           onTouchStart={(e) => {
             const now = Date.now();
             const DOUBLE_TAP_DELAY = 300;
-            
+
             if (now - lastTapRef.current < DOUBLE_TAP_DELAY) {
               // Double tap - close panel
               e.preventDefault();
@@ -512,13 +507,13 @@ const RodaView = forwardRef<HTMLDivElement>((_, ref) => {
           <div className="flex items-center gap-3">
             {/* Guide can start Q&A when in content phase */}
             {isGuide && roda?.phase === 'content' && (
-              <Button 
+              <Button
                 className="flex-1 bg-green-600 hover:bg-green-700 text-white rounded-full h-12"
                 onClick={() => rodaId && startQA.mutate(rodaId)}
                 disabled={startQA.isPending}
               >
                 <MessageSquare className="w-5 h-5 mr-2" />
-                {startQA.isPending ? 'Iniciando...' : 'Iniciar Q&A'}
+                {startQA.isPending ? uiText("Iniciando...") : uiText("Iniciar Q&A")}
               </Button>
             )}
 
@@ -527,35 +522,32 @@ const RodaView = forwardRef<HTMLDivElement>((_, ref) => {
               <div className="flex items-center gap-2 text-sm text-white">
                 {pendingVozesCount > 0 && (
                   <span className="px-2 py-1 bg-orange-500/20 text-orange-400 rounded-full text-xs">
-                    {pendingVozesCount} pendentes
-                  </span>
+                    {pendingVozesCount}{uiText(" pendentes")}</span>
                 )}
                 {activeVozesCount > 0 && (
                   <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded-full text-xs">
-                    {activeVozesCount} prontas
-                  </span>
+                    {activeVozesCount}{uiText(" prontas")}</span>
                 )}
               </div>
             )}
-            
+
             {/* Viewers see the Q&A button */}
             {!isGuide && (
-              <Button 
+              <Button
                 className="flex-1 bg-palco-accent hover:bg-palco-accent/90 text-white rounded-full h-12"
                 onClick={() => setShowVozSheet(true)}
                 disabled={!isQA}
               >
                 <MessageSquare className="w-5 h-5 mr-2" />
-                {isQA ? 'Enviar Voz' : 'Q&A não iniciado'}
+                {isQA ? uiText("Enviar Voz") : uiText("Q&A não iniciado")}
               </Button>
             )}
           </div>
 
           {!isQA && !isGuide && roda?.qa_start_at && (
-            <p className="text-center text-xs text-white/50 mt-2">
-              Q&A começa {formatDistanceToNow(new Date(roda.qa_start_at), { 
-                locale: pt, 
-                addSuffix: true 
+            <p className="text-center text-xs text-white/50 mt-2">{uiText("Q&A começa ")}{formatDistanceToNow(new Date(roda.qa_start_at), {
+                locale: pt,
+                addSuffix: true
               })}
             </p>
           )}
@@ -566,13 +558,13 @@ const RodaView = forwardRef<HTMLDivElement>((_, ref) => {
       <Sheet open={showVozSheet} onOpenChange={setShowVozSheet}>
         <SheetContent side="bottom" className="bg-palco-surface rounded-t-[24px] border-palco-border" hideCloseButton>
           <div className="w-12 h-1 bg-palco-border rounded-full mx-auto mb-4" />
-          
+
           <SheetHeader className="mb-6">
             <div className="flex items-center justify-between">
-              <SheetTitle className="text-palco-text">Enviar Voz</SheetTitle>
-              <Button 
-                size="icon" 
-                variant="ghost" 
+              <SheetTitle className="text-palco-text">{uiText("Enviar Voz")}</SheetTitle>
+              <Button
+                size="icon"
+                variant="ghost"
                 className="text-palco-text-secondary"
                 onClick={() => setShowVozSheet(false)}
               >
@@ -629,11 +621,9 @@ const RodaView = forwardRef<HTMLDivElement>((_, ref) => {
           {/* Custom Text */}
           {palco?.allow_custom_voice_text && (
             <div className="mb-6">
-              <label className="text-sm font-medium text-palco-text mb-2 block">
-                Sua pergunta (opcional)
-              </label>
+              <label className="text-sm font-medium text-palco-text mb-2 block">{uiText("Sua pergunta (opcional)")}</label>
               <Textarea
-                placeholder="Escreva sua pergunta aqui..."
+                placeholder={uiText("Escreva sua pergunta aqui...")}
                 value={customText}
                 onChange={(e) => setCustomText(e.target.value)}
                 className="bg-palco-bg border-palco-border resize-none"
@@ -643,18 +633,16 @@ const RodaView = forwardRef<HTMLDivElement>((_, ref) => {
           )}
 
           {/* Submit Button */}
-          <Button 
+          <Button
             className="w-full bg-palco-accent hover:bg-palco-accent/90 text-white rounded-full h-12"
             onClick={handleSubmitVoz}
             disabled={submitVoz.isPending}
           >
-            {submitVoz.isPending ? 'Enviando...' : 'Pagar e Enviar Voz'}
+            {submitVoz.isPending ? uiText("Enviando...") : uiText("Pagar e Enviar Voz")}
             <Send className="w-4 h-4 ml-2" />
           </Button>
 
-          <p className="text-center text-xs text-palco-text-secondary mt-3">
-            Pagamento via Multicaixa ou outros métodos
-          </p>
+          <p className="text-center text-xs text-palco-text-secondary mt-3">{uiText("Pagamento via Multicaixa ou outros métodos")}</p>
         </SheetContent>
       </Sheet>
     </div>

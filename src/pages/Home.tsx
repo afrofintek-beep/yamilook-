@@ -1,11 +1,12 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import PaposBrand from '@/features/papos/PaposBrand';
 import { useAppSurface } from '@/lib/app-surface';
 import { useState, useCallback, useEffect } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { 
-  MessageCircle, 
-  Search, 
+import {
+  MessageCircle,
+  Search,
   Plus,
   Bell,
   CheckSquare,
@@ -32,6 +33,7 @@ import { StatusList } from '@/components/status/StatusList';
 import { useActiveCall } from '@/components/calls/ActiveCallProvider';
 
 export default function Home() {
+  useUiLocale();
   const { t } = useTranslation();
   const surface = useAppSurface();
   const { user, profile, loading: authLoading } = useAuth();
@@ -89,7 +91,7 @@ export default function Home() {
 
   const handleBulkArchive = useCallback(async () => {
     if (!user?.id || selectedIds.size === 0) return;
-    
+
     const { data, error } = await supabase
       .from('conversation_participants')
       .update({ is_archived: true })
@@ -98,7 +100,7 @@ export default function Home() {
       .select('conversation_id');
 
     if (error || data?.length !== selectedIds.size) {
-      toast({ title: 'Erro', description: error?.message || 'Não foi possível confirmar o arquivo de todas as conversas. Tenta novamente.', variant: 'destructive' });
+      toast({ title: uiText("Erro"), description: error?.message || 'Não foi possível confirmar o arquivo de todas as conversas. Tenta novamente.', variant: 'destructive' });
     } else {
       toast({ title: `${selectedIds.size} conversa(s) arquivada(s)` });
       setSelectionMode(false);
@@ -109,7 +111,7 @@ export default function Home() {
 
   const handleBulkPin = useCallback(async () => {
     if (selectedIds.size === 0) return;
-    
+
     const { error } = await supabase
       .from('conversation_participants')
       .update({ is_pinned: true })
@@ -117,7 +119,7 @@ export default function Home() {
       .eq('user_id', user?.id);
 
     if (error) {
-      toast({ title: 'Erro', description: error.message, variant: 'destructive' });
+      toast({ title: uiText("Erro"), description: error.message, variant: 'destructive' });
     } else {
       toast({ title: `${selectedIds.size} conversa(s) fixada(s)` });
       setSelectionMode(false);
@@ -128,7 +130,7 @@ export default function Home() {
 
   const handleBulkMute = useCallback(async () => {
     if (selectedIds.size === 0) return;
-    
+
     const { error } = await supabase
       .from('conversation_participants')
       .update({ is_muted: true })
@@ -136,7 +138,7 @@ export default function Home() {
       .eq('user_id', user?.id);
 
     if (error) {
-      toast({ title: 'Erro', description: error.message, variant: 'destructive' });
+      toast({ title: uiText("Erro"), description: error.message, variant: 'destructive' });
     } else {
       toast({ title: `${selectedIds.size} conversa(s) silenciada(s)` });
       setSelectionMode(false);
@@ -157,9 +159,9 @@ export default function Home() {
       .single();
 
     if (error || !data) {
-      toast({ title: 'Erro', description: error?.message || 'Não foi possível confirmar o arquivo. Tenta novamente.', variant: 'destructive' });
+      toast({ title: uiText("Erro"), description: error?.message || 'Não foi possível confirmar o arquivo. Tenta novamente.', variant: 'destructive' });
     } else {
-      toast({ title: 'Conversa arquivada' });
+      toast({ title: uiText("Conversa arquivada") });
       refresh();
     }
   }, [user?.id, toast, refresh]);
@@ -174,7 +176,7 @@ export default function Home() {
     if (!error) {
       toast({ title: isPinned ? 'Chat desafixado' : 'Chat fixado' });
       refresh();
-    } else { toast({ title: 'Não foi possível fixar a conversa', variant: 'destructive' }); }
+    } else { toast({ title: uiText("Não foi possível fixar a conversa"), variant: 'destructive' }); }
   }, [user?.id, toast, refresh]);
 
   const handleMute = useCallback(async (conversationId: string, isMuted: boolean) => {
@@ -187,7 +189,7 @@ export default function Home() {
     if (!error) {
       toast({ title: isMuted ? 'Notificações ativadas' : 'Chat silenciado' });
       refresh();
-    } else { toast({ title: 'Não foi possível atualizar as notificações', variant: 'destructive' }); }
+    } else { toast({ title: uiText("Não foi possível atualizar as notificações"), variant: 'destructive' }); }
   }, [user?.id, toast, refresh]);
 
   const handleReply = useCallback((conversationId: string) => {
@@ -197,8 +199,8 @@ export default function Home() {
   const handleCopy = useCallback(async (conversation: Conversation) => {
     const lastMessage = conversation.last_message?.content;
     if (lastMessage) {
-      try { await navigator.clipboard.writeText(lastMessage); toast({ title: 'Mensagem copiada' }); }
-      catch { toast({ title: 'Não foi possível copiar a mensagem', variant: 'destructive' }); }
+      try { await navigator.clipboard.writeText(lastMessage); toast({ title: uiText("Mensagem copiada") }); }
+      catch { toast({ title: uiText("Não foi possível copiar a mensagem"), variant: 'destructive' }); }
     }
   }, [toast]);
 
@@ -208,7 +210,7 @@ export default function Home() {
       setMessageToForward(lastMessage);
       setForwardOpen(true);
     } else {
-      toast({ title: 'Sem mensagem para encaminhar', variant: 'destructive' });
+      toast({ title: uiText("Sem mensagem para encaminhar"), variant: 'destructive' });
     }
   }, [toast]);
 
@@ -233,36 +235,34 @@ export default function Home() {
                 <Button variant="ghost" size="icon" className="rounded-xl h-9 w-9" onClick={() => setSearchOpen(true)}>
                   <Search className="w-4.5 h-4.5" />
                 </Button>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
+                <Button
+                  variant="ghost"
+                  size="icon"
                   className="rounded-xl h-9 w-9 relative"
-                  aria-label={surface === 'papos' ? 'Instalar KOSOLOLA' : 'Notificações'}
+                  aria-label={surface === 'papos' ? uiText("Instalar KOSOLOLA") : uiText("Notificações")}
                   onClick={() => navigate(surface === 'papos' ? '/install' : '/notifications')}
                 >
                   <Bell className="w-4.5 h-4.5" />
                   {surface !== 'papos' && totalUnread > 0 && <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-destructive rounded-full" />}
                 </Button>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
+                <Button
+                  variant="ghost"
+                  size="icon"
                   className="rounded-xl h-9 w-9"
                   onClick={toggleSelectionMode}
-                  title="Selecionar conversas"
+                  title={uiText("Selecionar conversas")}
                 >
                   <CheckSquare className="w-4.5 h-4.5" />
                 </Button>
               </>
             )}
             {selectionMode && (
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 size="sm"
                 className="text-primary font-semibold"
                 onClick={toggleSelectionMode}
-              >
-                Cancelar
-              </Button>
+              >{uiText("Cancelar")}</Button>
             )}
           </div>
         </div>
@@ -278,9 +278,9 @@ export default function Home() {
             >
               {tabKey === 'chat' ? t('nav.chat') : tabKey === 'status' ? t('nav.status') : t('nav.calls')}
               {activeTab === tabKey && (
-                <motion.span 
+                <motion.span
                   layoutId="activeTabIndicator"
-                  className="absolute bottom-0 left-1/2 -translate-x-1/2 w-10 h-[2px] bg-primary rounded-full" 
+                  className="absolute bottom-0 left-1/2 -translate-x-1/2 w-10 h-[2px] bg-primary rounded-full"
                 />
               )}
             </button>
@@ -292,7 +292,7 @@ export default function Home() {
       {/* Tab Content */}
       <AnimatePresence mode="wait">
         {activeTab === 'chat' && (
-          <motion.div 
+          <motion.div
             key="chat"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -341,7 +341,7 @@ export default function Home() {
         )}
 
         {activeTab === 'status' && (
-          <motion.div 
+          <motion.div
             key="status"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -354,7 +354,7 @@ export default function Home() {
         )}
 
         {activeTab === 'calls' && (
-          <motion.div 
+          <motion.div
             key="calls"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -369,7 +369,7 @@ export default function Home() {
 
       {/* FAB */}
       {!selectionMode && (
-        <button 
+        <button
           className="fab-safe-bottom fixed right-5 w-13 h-13 rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/25 flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-200"
           onClick={() => {
             if (activeTab === 'chat') {

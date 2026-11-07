@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { X, Loader2 } from 'lucide-react';
@@ -23,6 +24,7 @@ interface EditMessageDialogProps {
 }
 
 export function EditMessageDialog({ open, onClose, message, onSave }: EditMessageDialogProps) {
+  useUiLocale();
   const [content, setContent] = useState(message?.content || '');
   const [saving, setSaving] = useState(false);
 
@@ -65,14 +67,12 @@ export function EditMessageDialog({ open, onClose, message, onSave }: EditMessag
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Edit Message</DialogTitle>
+          <DialogTitle>{uiText("Edit Message")}</DialogTitle>
         </DialogHeader>
 
         {!canEdit ? (
           <div className="py-6 text-center">
-            <p className="text-muted-foreground">
-              Messages can only be edited within 15 minutes of sending.
-            </p>
+            <p className="text-muted-foreground">{uiText("Messages can only be edited within 15 minutes of sending.")}</p>
           </div>
         ) : (
           <>
@@ -80,27 +80,22 @@ export function EditMessageDialog({ open, onClose, message, onSave }: EditMessag
               <Textarea
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                placeholder="Edit your message..."
+                placeholder={uiText("Edit your message...")}
                 className="min-h-[100px] resize-none"
                 autoFocus
               />
-              <p className="text-xs text-muted-foreground">
-                Time remaining to edit: {remainingMinutes}:{remainingSeconds.toString().padStart(2, '0')}
+              <p className="text-xs text-muted-foreground">{uiText("Time remaining to edit: ")}{remainingMinutes}:{remainingSeconds.toString().padStart(2, '0')}
               </p>
             </div>
 
             <DialogFooter>
-              <Button variant="outline" onClick={handleClose} disabled={saving}>
-                Cancel
-              </Button>
+              <Button variant="outline" onClick={handleClose} disabled={saving}>{uiText("Cancel")}</Button>
               <Button
                 onClick={handleSave}
                 disabled={saving || !content.trim() || content === message?.content}
                 className="bg-gradient-primary text-white"
               >
-                {saving && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-                Save
-              </Button>
+                {saving && <Loader2 className="w-4 h-4 animate-spin mr-2" />}{uiText("Save")}</Button>
             </DialogFooter>
           </>
         )}
