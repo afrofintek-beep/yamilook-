@@ -3,11 +3,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { InviteSheet } from './InviteSheet';
 const { rpc, invoke } = vi.hoisted(() => ({ rpc: vi.fn(), invoke: vi.fn() }));
 vi.mock('@/integrations/supabase/client', () => ({ supabase: { rpc, functions: { invoke } } }));
+vi.mock('./CampaignInvites', () => ({ CampaignInvites: () => <div>Campanhas disponíveis</div> }));
 vi.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: { id: 'inviter' } }) }));
 const code = 'A123456789ABCDEF';
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
-beforeEach(() => { rpc.mockReset(); invoke.mockReset(); invoke.mockResolvedValue({ data: { ok: true }, error: null }); rpc.mockImplementation((name: string) => Promise.resolve({ data: name === 'can_issue_user_invitation' ? true : { code }, error: null })); });
-const show = () => render(<InviteSheet open onOpenChange={() => {}} />);
+beforeEach(() => { rpc.mockReset(); invoke.mockReset(); invoke.mockResolvedValue({ data: { ok: true }, error: null }); rpc.mockImplementation((name: string) => Promise.resolve({ data: name === 'list_invitation_permissions' ? [] : name === 'can_issue_user_invitation' ? true : { code }, error: null })); });
+const show = () => render(<InviteSheet open isAdmin onOpenChange={() => {}} />);
 const generate = async () => {
   fireEvent.click(await screen.findByText('Convidar um email específico'));
   fireEvent.change(await screen.findByLabelText('Email da pessoa convidada'), { target: { value: 'new@example.com' } });
@@ -45,22 +46,21 @@ describe('Unique invitations', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Fechar convites' }));
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
-  it('lets the administrator grant and revoke invitation permission', async () => {
-    let authorized = false;
-    rpc.mockImplementation((name: string, args: { p_allowed?: boolean }) => {
-      if (name === 'set_invitation_permission') authorized = !!args.p_allowed;
+  it('only revokes legacy permissions and directs new authorization to campaigns', async () => {
+    let authorized = true;
+    rpc.mockImplementation((name: string) => {
+      if (name === 'set_invitation_permission') authorized = false;
       return Promise.resolve({ data: name === 'list_invitation_permissions' ? (authorized ? [{ email: 'delegate@example.com', granted_at: '' }] : []) : true, error: null });
     });
     render(<InviteSheet open isAdmin onOpenChange={() => {}} />);
-    fireEvent.change(screen.getByLabelText('Email do utilizador'), { target: { value: 'delegate@example.com' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Autorizar convites' }));
     await screen.findByText('delegate@example.com');
+    expect(screen.queryByRole('button', { name: 'Autorizar convites' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Retirar autorização' }));
     await waitFor(() => expect(screen.queryByText('delegate@example.com')).not.toBeInTheDocument());
     expect(rpc).toHaveBeenCalledWith('set_invitation_permission', { p_email: 'delegate@example.com', p_allowed: false });
   });
   it('blocks generation for a user without authorization', async () => {
-    rpc.mockResolvedValue({ data: false, error: null });
+    rpc.mockImplementation((name: string) => Promise.resolve({ data: name === 'list_invitation_permissions' ? [] : false, error: null }));
     show();
     await waitFor(() => expect(rpc).toHaveBeenCalledWith('can_issue_user_invitation', { p_user_id: 'inviter' }));
     expect(screen.queryByRole('button', { name: 'Gerar código único' })).not.toBeInTheDocument();
