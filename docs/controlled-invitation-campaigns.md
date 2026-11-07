@@ -1,11 +1,11 @@
-# Campanhas de convite controladas — proposta de 7 de novembro de 2026
+# Campanhas de convite controladas — instalação de 7 de novembro de 2026
 
-**Estado: patch para revisão. Não aplicado à produção.** Nenhuma campanha, participante, quota ou convite é criado pela migração. Base da análise: `27497e5f231739c7ef350faa73b12aeb8206a4ff` de `main`, complementada por consultas de leitura às funções, colunas, políticas e permissões da base de dados YAMILOOK.
+**Estado: aprovado e aplicado à produção em 7 de novembro de 2026.** Nenhuma campanha, participante, quota ou convite é criado pela migração. Base da análise: `27497e5f231739c7ef350faa73b12aeb8206a4ff` de `main`, complementada por consultas de leitura às funções, colunas, políticas e permissões da base de dados YAMILOOK.
 
-## Arquitetura verificada
+## Arquitetura anterior verificada
 
 - `user_invitations` já guarda códigos individuais, emitente, destinatário opcional, datas de criação/utilização/expiração, utilizador que consumiu e identificador do pedido.
-- `issue_user_invitation(email)` permite atualmente emissão por administradores ou pessoas em `invitation_permissions`. Reutiliza um convite pendente para o par emitente/email. Não possui quota por campanha.
+- `issue_user_invitation(email)` permitia emissão por administradores ou pessoas em `invitation_permissions`. Reutiliza um convite pendente para o par emitente/email. Não possui quota por campanha.
 - `issue_shareable_user_invitation(request_id)` emite códigos sem destinatário, válidos por sete dias, com idempotência e limite de 100 por emitente/24 horas. Esse limite não é a campanha inicial de 100 inscrições.
 - `consume_user_invitation_before_signup` executa antes da criação em `auth.users`: bloqueia a linha, verifica utilização, autorização, email e expiração; consome na mesma transação. Um erro posterior na criação do perfil reverte o consumo.
 - `validate_mvp_access_code` permite a pré-validação; a decisão definitiva permanece no trigger do servidor. O código individual é convertido no referral do emitente apenas dentro desse trigger para compatibilidade com `handle_new_user`.
@@ -14,7 +14,7 @@
 
 Referências: [PR inicial #1](https://github.com/afrofintek-beep/yamilook-/pull/1), `src/lib/referral.ts`, `src/lib/invite-delivery.ts`, migrações `single_use_invitations`, `mvp_invitation_permissions` e `shareable_contact_invitations`.
 
-## Comportamento proposto
+## Comportamento implementado
 
 | Controlo | Regra implementada |
 |---|---|
@@ -40,7 +40,7 @@ A expiração da verificação de presença, a revogação ou o banimento do emi
 
 ## Base de dados e API
 
-Migração: `supabase/migrations/20261107201231_controlled_invitation_campaigns.sql`.
+Migração: `supabase/migrations/20261107211714_controlled_invitation_campaigns.sql`.
 
 Novas tabelas: `invitation_campaigns`, `invitation_campaign_members`, `invitation_campaign_audit`. Todas têm RLS e nenhum acesso direto de escrita para `anon`/`authenticated`. Os registos de auditoria são anexados pelas funções; não se assume resistência a alterações por superutilizadores da base de dados.
 
@@ -67,11 +67,11 @@ A emissão obtém primeiro o bloqueio da linha da campanha; depois serializa o e
 - O novo fluxo não envia mensagens automaticamente. O envio automático já existente para o administrador e o fluxo inicial de 100 inscrições não são substituídos.
 - O texto novo segue a interface portuguesa existente. Traduções adicionais não fazem parte deste patch.
 
-## Compatibilidade e mudanças que exigem aprovação
+## Compatibilidade e mudanças aprovadas
 
 1. **Convites individuais anteriores:** continuam a ser validados/consumidos pelas regras anteriores, incluindo eventual expiração e autorização legada. Não são abrangidos pela suspensão de uma nova campanha.
 2. **Emissão antiga:** `issue_user_invitation` e `issue_shareable_user_invitation` passam a ser exclusivas do administrador. Delegados devem emitir pela RPC de campanha. As antigas permissões deixam de poder ser concedidas, mas podem ser retiradas para invalidar os convites individuais correspondentes.
-3. **Códigos pessoais reutilizáveis de delegados:** deixam de servir para novas inscrições, pois contornariam as quotas. Os códigos individuais já emitidos são preservados. Códigos reutilizáveis do administrador e códigos MVP clássicos mantêm a compatibilidade. Este é um ponto de decisão explícita antes de produção.
+3. **Códigos pessoais reutilizáveis de delegados:** deixam de servir para novas inscrições, pois contornariam as quotas. Os códigos individuais já emitidos são preservados. Códigos reutilizáveis do administrador e códigos MVP clássicos mantêm a compatibilidade. Esta alteração foi incluída na aplicação aprovada.
 4. **Campanha inicial de 100:** mantém as suas regras. Dois filtros passam a excluir tokens de novas campanhas das pesquisas/revalidações de convites administrativos. A migração adapta apenas os dois fragmentos inspecionados da função implantada; se a definição tiver mudado, aborta atomicamente e exige revisão. Não cria nem substitui esse serviço quando ausente.
 5. **Clientes antigos:** um delegado ainda com a interface antiga recebe recusa do servidor ao tentar emitir; os links individuais já enviados continuam válidos nas condições acima. É necessário publicar a interface junto com a migração.
 
@@ -83,9 +83,21 @@ A emissão obtém primeiro o bloqueio da linha da campanha; depois serializa o e
 - TypeScript, ESLint dos ficheiros alterados e compilação Vite. A compilação mantém avisos existentes de bundles grandes.
 - Novo workflow CI reproduz os testes em PostgreSQL 17.6 sem credenciais de produção.
 
-Os testes PostgreSQL aplicam as três migrações de convites existentes e a nova migração a contratos mínimos de Auth/perfis. Incluem o `handle_new_user` real do repositório e uma fixture dos dois fragmentos da função inicial de 100. **Não equivalem a um restauro integral da produção**, nem validam GoTrue, confirmação real por email, conectividade PostgREST ou entrega em WhatsApp. Não foram consumidos convites reais, criadas contas de produção, aplicadas migrações remotas ou publicados frontends de produção.
+Os testes PostgreSQL aplicam as três migrações de convites existentes e a nova migração a contratos mínimos de Auth/perfis. Incluem o `handle_new_user` real do repositório e uma fixture dos dois fragmentos da função inicial de 100. **Não equivalem a um restauro integral da produção**, nem validam GoTrue, confirmação real por email, conectividade PostgREST ou entrega em WhatsApp. Na validação local não foram consumidos convites reais nem criadas contas de produção. A validação remota e a instalação subsequentes estão descritas abaixo.
 
-## Sequência proposta para aplicação, sujeita a aprovação
+## Instalação e validação remota — 7 de novembro de 2026
+
+- A PR #187 foi integrada em `main` no commit `20417b26f98aac93b8e2b02db3ff8a733dc5f551`; os oito workflows de CI passaram. A publicação de produção na Vercel ficou `READY` e o recurso de Administração servido por `www.yamilook.com` inclui o novo painel.
+- Depois da aprovação explícita do utilizador, a migração foi aplicada à produção YAMILOOK (`rfayqekonkovfbkwjjum`). O Supabase registou-a como `20261107211714_controlled_invitation_campaigns`. O ficheiro do repositório foi renomeado, sem alterar o conteúdo SQL, para coincidir com essa versão e evitar uma reaplicação por divergência de histórico. Não reaplicar a versão antiga `20261107201231`.
+- A verificação posterior confirmou **107 convites individuais anteriores, dos quais 45 utilizados**, todos ainda sem `campaign_id`; os quatro registos existentes do serviço inicial de 100 mantiveram-se. Não se criaram convites ou contas de produção para testes. Não existiam delegações na tabela antiga.
+- Confirmados: proibição de emissão anónima, ausência de escrita direta nas autorizações, bloqueio do desvio pela função privada antiga e isolamento da campanha inicial de 100.
+- **Zero campanhas, zero participantes e zero entradas de auditoria** após a migração. A instalação não concede dez convites a ninguém. Datas, condições, participantes e ativação continuam dependentes de decisão administrativa.
+- A revisão dos advisors não introduziu novos avisos ou erros de segurança nas alterações da campanha; as três novas tabelas apresentam a informação esperada de RLS sem políticas, pois o acesso se faz exclusivamente pelas RPC restritas. Os avisos anteriores do projeto permanecem fora deste patch.
+- Num ramo de desenvolvimento existente (`pufcziszxmymoaodslii`), com dados sintéticos separados da produção, foram testados GoTrue e PostgREST reais: autenticação, permissões, rascunho/ativação, aprovação nominal, idempotência, relatórios, suspensão e concorrência. Com quota 3 e um convite emitido, oito pedidos simultâneos emitiram exatamente os dois restantes. A campanha sintética foi encerrada no fim.
+- **Limitação pendente:** a inscrição com o email correto chegou ao envio de confirmação, mas as credenciais SMTP do ambiente de desenvolvimento foram recusadas (`535 Authentication credentials invalid`). A criação da conta e o consumo do convite foram revertidos. A inscrição com email errado foi recusada pelo trigger. Não foi validado o ciclo completo de receção do email, confirmação e entrada na conta; a configuração SMTP de produção não foi alterada.
+- Antes de abrir uma campanha ao público, repetir o percurso completo de confirmação e entrada com o serviço de email de teste funcional. Não tratar o problema SMTP observado no ramo de desenvolvimento como diagnóstico do email de produção.
+
+## Procedimento de aplicação e operação
 
 1. Rever e aprovar especialmente a retirada de emissão legada e dos códigos reutilizáveis dos delegados, a suspensão do consumo e o modelo de atestação de presença.
 2. Em staging com dados sintéticos: verificar os contratos atuais, `private` fora dos esquemas expostos, políticas/grants, migração completa e advisors de segurança. Testar duas contas reais de teste através de PostgREST/Auth, incluindo confirmação de email, uma emissão concorrente, expiração e um convite antigo. Não substituir a confirmação humana da presença por um badge do perfil.
