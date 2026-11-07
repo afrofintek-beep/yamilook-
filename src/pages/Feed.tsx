@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import KosololaLogo from '@/components/brand/KosololaLogo';
 import { Plus, Search, MessageCircle, Radio, Loader2, ArrowUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -158,7 +159,7 @@ export default function Feed() {
               aria-label="Abrir conversas"
               onClick={() => navigate('/papos')}
             >
-              <MessageCircle className="w-5 h-5" />
+              <KosololaLogo className="w-6 h-6" />
             </Button>
           </div>
         </div>
