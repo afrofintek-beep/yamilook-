@@ -1,0 +1,49 @@
+name: Controlled invitation campaigns
+on:
+  pull_request:
+    paths:
+      - 'src/components/admin/InvitationCampaignAdmin*'
+      - 'src/components/settings/*Invite*'
+      - 'src/components/settings/CampaignInvites*'
+      - 'src/lib/invitation-campaigns*'
+      - 'src/lib/invite-delivery*'
+      - 'src/pages/Admin.tsx'
+      - 'supabase/migrations/*controlled_invitation_campaigns.sql'
+      - 'tests/invitation-campaigns/**'
+      - '.github/workflows/invitation-campaigns.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  postgres-and-interface:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17.6
+        env:
+          POSTGRES_PASSWORD: local-test-only
+          POSTGRES_DB: invitation_campaign_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      PGHOST: 127.0.0.1
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: local-test-only
+      PGDATABASE: invitation_campaign_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: npm ci --no-audit --no-fund
+      - run: python -m pip install 'psycopg[binary]==3.2.12'
+      - run: python -m unittest discover -s tests/invitation-campaigns -v
+      - run: npm test -- src/components/admin/InvitationCampaignAdmin.test.tsx src/components/settings/CampaignInvites.test.tsx src/components/settings/InviteSheet.test.tsx src/components/settings/ContactInviteActions.test.tsx src/lib/invite-delivery.test.ts src/lib/invitation-registration.test.ts src/lib/referral.test.ts src/test/integration/auth.test.tsx --reporter=dot
+      - run: npx tsc --noEmit -p tsconfig.app.json
+      - run: npx eslint src/components/admin/InvitationCampaignAdmin.tsx src/components/settings/CampaignInvites.tsx src/components/settings/InviteSheet.tsx src/lib/invitation-campaigns.ts src/lib/invite-delivery.ts

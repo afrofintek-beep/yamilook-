@@ -1,3 +1,4 @@
+import { CampaignInvites } from './CampaignInvites';
 import { useState, useEffect } from 'react';
 import { useAppSurface } from '@/lib/app-surface';
 import { ContactInviteActions } from './ContactInviteActions';
@@ -71,8 +72,7 @@ export function InviteSheet({ open, onOpenChange, isAdmin = false }: InviteSheet
   const { user } = useAuth();
   const userId = user?.id;
   const [allowedUser, setAllowedUser] = useState<string | null>(null);
-  const allowed = !!userId && allowedUser === userId;
-  const [delegateEmail, setDelegateEmail] = useState('');
+  const allowed = isAdmin && !!userId && allowedUser === userId;
   const [delegates, setDelegates] = useState<{ email: string; granted_at: string }[]>([]);
   const [managing, setManaging] = useState(false);
   useEffect(() => {
@@ -97,7 +97,6 @@ export function InviteSheet({ open, onOpenChange, isAdmin = false }: InviteSheet
       const result = await invitationClient.rpc('list_invitation_permissions', {});
       if (result.error) throw result.error;
       setDelegates(result.data ?? []);
-      setDelegateEmail('');
       setStatus(grant ? 'Autorização concedida.' : 'Autorização retirada.');
     } catch (error) {
       setStatus(invitationErrorMessage(error, 'Não foi possível alterar a autorização.'));
@@ -173,6 +172,7 @@ export function InviteSheet({ open, onOpenChange, isAdmin = false }: InviteSheet
         </SheetHeader>
         <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain break-words px-6 pt-4 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]">
           <SheetDescription>Convida alguém pelos contactos do telemóvel, por WhatsApp ou email. Cada convite só pode ser utilizado por uma pessoa.{isKosolola && ' O registo é feito na Yamilook, com a mesma conta para entrar na KOSOLOLA.'}</SheetDescription>
+        {open && userId && <CampaignInvites key={userId} />}
         {allowed ? <>
         {open && <ContactInviteActions key={userId} />}
         <details className="mt-6 border-t pt-4">
@@ -217,13 +217,8 @@ export function InviteSheet({ open, onOpenChange, isAdmin = false }: InviteSheet
         </> : <p className="mt-6">No MVP, apenas o administrador e as pessoas por ele autorizadas podem enviar convites.</p>}
         <p className="text-sm text-muted-foreground mt-4" role="status" aria-label="Estado do convite por email">{status}</p>
         {isAdmin && <section className="mt-8 space-y-3 border-t pt-4">
-          <h3 className="font-semibold">Pessoas autorizadas a convidar</h3>
-          <p className="text-sm text-muted-foreground">Autoriza uma conta existente. Esta permissão não dá acesso à administração.</p>
-          <form onSubmit={(event) => { event.preventDefault(); void managePermission(delegateEmail, true); }} className="space-y-3">
-            <label htmlFor="delegate-email">Email do utilizador</label>
-            <Input id="delegate-email" type="email" autoCapitalize="none" autoCorrect="off" required value={delegateEmail} onChange={(event) => setDelegateEmail(event.target.value)} disabled={managing} />
-            <Button type="submit" disabled={managing || !delegateEmail.trim()}>Autorizar convites</Button>
-          </form>
+          <h3 className="font-semibold">Autorizações anteriores</h3>
+          <p className="text-sm text-muted-foreground">Estas autorizações mantêm os convites individuais antigos válidos. Novas autorizações são feitas em Administração → Campanhas de convites.</p>
           {delegates.map((delegate) => <div key={delegate.email} className="flex items-center justify-between gap-2">
             <span className="break-all text-sm">{delegate.email}</span>
             <Button variant="outline" disabled={managing} onClick={() => void managePermission(delegate.email, false)}>Retirar autorização</Button>
