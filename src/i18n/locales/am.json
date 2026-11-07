@@ -577,5 +577,92 @@
     "conferenceLabel": "ስብሰባ",
     "participantCount": "ተሳታፊዎች፦ {{count}}",
     "addParticipant": "አክል"
+  },
+  "academiaPublic": {
+    "back": "ተመለስ",
+    "title": "የአካዳሚው ማህበረሰቦች",
+    "loadingCommunities": "ማህበረሰቦችን በመጫን ላይ…",
+    "communitiesError": "ማህበረሰቦችን መጫን አልተቻለም።",
+    "retry": "እንደገና ሞክር",
+    "heroTitle": "ችሎታህን እወቅ። ማድረግ የምትችለውን አሳይ።",
+    "heroBody": "አንድ ዘርፍ ምረጥ፣ ተግባራዊ ፈተና ፈልግ እና ከልምድ ባለቤቶች ተማር። ከግል ፍላጎትህ መጀመር፣ ለሥራ መዘጋጀት ወይም ንግድህን ማሻሻል ትችላለህ።",
+    "ownGoal": "የራሴን ግብ መወሰን እመርጣለሁ",
+    "areas": "የፍላጎት ዘርፎች",
+    "explore": "ተግባራዊ ፈተናዎችን አስስ",
+    "unavailable": "ይህ ማህበረሰብ አይገኝም።",
+    "starter": "ለመጀመር አንድ ውጤት",
+    "closeForm": "ቅጹን ዝጋ",
+    "openCohort": "እንደ አማካሪ ቡድን ክፈት",
+    "signIn": "ለመሳተፍ ግባ",
+    "cohorts": "የተግባራዊ ፈተና ቡድኖች",
+    "cohortsBody": "የጋራ እቅድ እና ለእያንዳንዱ ሥራ የግል ክትትል። መቀላቀል ነፃ ነው፤ ከመሳተፍህ በፊት የሚያስፈልጉትን ቁሳቁሶች አረጋግጥ።",
+    "level": "የመነሻ ደረጃ",
+    "allLevels": "ሁሉም ደረጃዎች",
+    "locality": "አካባቢ ወይም በመስመር ላይ",
+    "localityPlaceholder": "ለምሳሌ፦ በመስመር ላይ፣ ሉዋንዳ፣ ሁዋምቦ",
+    "loadingCohorts": "ቡድኖችን በመጫን ላይ…",
+    "cohortsError": "ቡድኖችን ማዘመን አልተቻለም።",
+    "noCohorts": "ለዚህ ምርጫ እስካሁን ቡድኖች የሉም። ሌላ ዘርፍ ማሰስ ወይም የራስህን ግብ መወሰን ትችላለህ።",
+    "mentor": "አማካሪ",
+    "closed": "ምዝገባ ተዘግቷል",
+    "seats": "ከ{{capacity}} ቦታዎች {{available}} ክፍት ናቸው",
+    "viewChallenge": "ተግባራዊ ፈተናውን እወቅ",
+    "sharedWorks": "የተጋሩ ሥራዎች",
+    "worksTitle": "ማህበረሰቡ ያከናወናቸው",
+    "worksBody": "የተረጋገጡ እና ተሳታፊዎች በፈቃዳቸው ያጋሯቸው ሥራዎች።",
+    "worksError": "ሥራዎቹን መጫን አልተቻለም።",
+    "noWorks": "የመጀመሪያዎቹ የተጋሩ ሥራዎች እዚህ ይታያሉ።",
+    "validatedBy": "በ{{mentor}} የተረጋገጠ",
+    "language": "ቋንቋ",
+    "languageError": "ቋንቋውን መቀየር አልተቻለም። እንደገና ሞክር።",
+    "levels": {
+      "beginner": "ለጀማሪዎች",
+      "practice": "ጥቂት ልምድ አለኝ",
+      "advanced": "በጥልቀት መማር እፈልጋለሁ"
+    },
+    "catalog": {
+      "beleza-moda": {
+        "title": "ውበት፣ ፋሽን እና ገጽታ",
+        "description": "የወንዶች ፀጉር አቆራረጥ፣ የፀጉር እንክብካቤ፣ ሹሩባ፣ ሜካፕ፣ ስፌት እና አገልግሎትን ማስተዋወቅ።",
+        "starter_title": "አገልግሎቴን ማስተዋወቅ",
+        "starter_instructions": "ስለ አገልግሎትህ መግለጫ አዘጋጅ እና ዋጋውን እንዴት እንዳሰላህ አብራራ።",
+        "starter_skill": "አገልግሎቶችን ማስተዋወቅ"
+      },
+      "cozinha-negocios": {
+        "title": "ምግብ ማብሰል እና የምግብ ንግድ",
+        "description": "ምግብ ማብሰል፣ ኬክና ጣፋጮች ማዘጋጀት፣ ለዝግጅቶች ምግብ ማቅረብ እና አነስተኛ የምግብ ንግዶች።",
+        "starter_title": "ዋጋ ያለው የሽያጭ ሀሳብ ማዘጋጀት",
+        "starter_instructions": "ምርትን፣ ግብዓቶቹን፣ ወጪዎቹን እና የታቀደውን ዋጋ አቅርብ።",
+        "starter_skill": "ዋጋ መወሰን"
+      },
+      "criacao-digital": {
+        "title": "ዲጂታል ፈጠራ እና ግንኙነት",
+        "description": "ፎቶግራፍ፣ ቪዲዮ፣ ዲዛይን፣ ማህበራዊ ሚዲያ እና ዲጂታል መሣሪያዎች።",
+        "starter_title": "ዲጂታል መግለጫ መፍጠር",
+        "starter_instructions": "ንግድን ለማስተዋወቅ ፎቶግራፍ፣ ፖስተር ወይም አጭር ቪዲዮ ፍጠር።",
+        "starter_skill": "ዲጂታል ግንኙነት"
+      },
+      "musica-expressao": {
+        "title": "ሙዚቃ፣ ዳንስ እና ስሜትን መግለጽ",
+        "description": "ሙዚቃ፣ ፕሮዳክሽን፣ ዲጄ፣ ዳንስ፣ ትርዒት እና ጥበባዊ አገላለጽ።",
+        "starter_title": "የፈጠርኩትን ሥራ ማሳየት",
+        "starter_instructions": "የፈጠራ ሥራ ወይም ትርዒት አቅርብ እና ማሻሻል የምትፈልገውን አብራራ።",
+        "starter_skill": "የፈጠራ አገላለጽ"
+      },
+      "oficios-solucoes": {
+        "title": "የእጅ ሙያዎች እና ተግባራዊ መፍትሄዎች",
+        "description": "ጥገና፣ አናጢነት፣ መካኒክ፣ ኃይል እና ሌሎች ሙያዎች ከተመራ ልምምድ ጋር።",
+        "starter_title": "የችግር ምርመራ እና የዋጋ ግምት ማቅረብ",
+        "starter_instructions": "በአማካሪው እርዳታ ችግሩን ግለጽ እና ከደረጃህ ጋር የሚስማማ የአገልግሎት ሀሳብ አዘጋጅ።",
+        "starter_skill": "የችግር ምርመራ እና የዋጋ ግምት"
+      },
+      "emprego-carreira": {
+        "title": "ቅጥር እና ሙያዊ እድገት",
+        "description": "ለሥራ መዘጋጀት፣ ቋንቋዎች፣ ሂሳብ አያያዝ፣ ሎጂስቲክስ እና ሙያዊ እድገት።",
+        "starter_title": "የሥራ ማመልከቻ ማዘጋጀት",
+        "starter_instructions": "የሥራ ማስረጃህን እና የመግቢያ ጽሑፍህን ከአንድ የተወሰነ ዕድል ጋር አስማማ።",
+        "starter_skill": "ሙያዊ ዝግጅት"
+      }
+    }
   }
 }

@@ -240,5 +240,92 @@
     "conferenceLabel": "Ìpè ẹgbẹ́",
     "participantCount": "Àwọn olùkópa: {{count}}",
     "addParticipant": "Fi kún"
+  },
+  "academiaPublic": {
+    "back": "Padà",
+    "title": "Àwọn àwùjọ Akadẹmi",
+    "loadingCommunities": "Ń gbé àwọn àwùjọ wọlé…",
+    "communitiesError": "A kò lè gbé àwọn àwùjọ wọlé.",
+    "retry": "Gbìyànjú lẹ́ẹ̀kan sí i",
+    "heroTitle": "Ṣàwárí ẹ̀bùn rẹ. Fi ohun tí o lè ṣe hàn.",
+    "heroBody": "Yan ẹ̀ka kan, wá iṣẹ́ ìdánwò, kí o sì kọ́ ẹ̀kọ́ lọ́dọ̀ àwọn tó ní ìrírí. O lè bẹ̀rẹ̀ pẹ̀lú ohun tí o nífẹ̀ẹ́ sí, múra sílẹ̀ fún iṣẹ́ tàbí mú okòwò rẹ dára sí i.",
+    "ownGoal": "Mo fẹ́ ṣètò góńgó tèmi fúnra mi",
+    "areas": "Àwọn ẹ̀ka ìfẹ́",
+    "explore": "Ṣàwárí àwọn iṣẹ́ ìdánwò",
+    "unavailable": "Àwùjọ yìí kò sí lárọ̀ọ́wọ́tó.",
+    "starter": "Àbájáde kan láti fi bẹ̀rẹ̀",
+    "closeForm": "Pa fọ́ọ̀mù dé",
+    "openCohort": "Ṣí kíláàsì gẹ́gẹ́ bí olùtọ́sọ́nà",
+    "signIn": "Wọlé láti kópa",
+    "cohorts": "Àwọn kíláàsì iṣẹ́ ìdánwò",
+    "cohortsBody": "Ètò àpapọ̀ àti ìtọ́sọ́nà aládàáni fún iṣẹ́ ẹnìkọ̀ọ̀kan. Dídarapọ̀ jẹ́ ọ̀fẹ́; wo àwọn ohun èlò tí a nílò kí o tó kópa.",
+    "level": "Ibi ìbẹ̀rẹ̀",
+    "allLevels": "Gbogbo ìpele",
+    "locality": "Agbègbè tàbí lórí ayélujára",
+    "localityPlaceholder": "Àp.: Lórí ayélujára, Luanda, Huambo",
+    "loadingCohorts": "Ń gbé àwọn kíláàsì wọlé…",
+    "cohortsError": "A kò lè ṣe àtúnṣe àkójọ kíláàsì.",
+    "noCohorts": "Kò tíì sí kíláàsì fún àṣàyàn yìí. O lè ṣàwárí ẹ̀ka mìíràn tàbí ṣètò góńgó tìrẹ.",
+    "mentor": "Olùtọ́sọ́nà",
+    "closed": "Ìforúkọsílẹ̀ ti parí",
+    "seats": "Ààyè {{available}} nínú {{capacity}} ló ṣì wà",
+    "viewChallenge": "Mọ iṣẹ́ ìdánwò náà",
+    "sharedWorks": "Àwọn iṣẹ́ tí a pín",
+    "worksTitle": "Ohun tí àwùjọ ti ṣe",
+    "worksBody": "Àwọn iṣẹ́ tí a fìdí múlẹ̀ tí àwọn olùkópa sì fi ìfẹ́ ara wọn tẹ̀ jáde.",
+    "worksError": "A kò lè gbé àwọn iṣẹ́ wọlé.",
+    "noWorks": "Àwọn iṣẹ́ àkọ́kọ́ tí a pín yóò hàn níbí.",
+    "validatedBy": "{{mentor}} ló fìdí rẹ̀ múlẹ̀",
+    "language": "Èdè",
+    "languageError": "A kò lè yí èdè padà. Gbìyànjú lẹ́ẹ̀kan sí i.",
+    "levels": {
+      "beginner": "Fún àwọn olùbẹ̀rẹ̀",
+      "practice": "Mo ti ní ìrírí díẹ̀",
+      "advanced": "Mo fẹ́ kọ́ ẹ̀kọ́ jinlẹ̀ sí i"
+    },
+    "catalog": {
+      "beleza-moda": {
+        "title": "Ẹwà, aṣọ àti ìrísí",
+        "description": "Gígé irun, ìtọ́jú irun, dídì irun, àṣaralóge, rírán aṣọ àti fífi iṣẹ́ hàn.",
+        "starter_title": "Fi iṣẹ́ mi hàn",
+        "starter_instructions": "Ṣètò ìfihàn iṣẹ́ rẹ kí o sì ṣàlàyé bí o ṣe ṣe ìṣirò owó rẹ̀.",
+        "starter_skill": "Fífi àwọn iṣẹ́ hàn"
+      },
+      "cozinha-negocios": {
+        "title": "Sísè àti okòwò oúnjẹ",
+        "description": "Sísè, ṣíṣe àkàrà oyinbo, pípèsè oúnjẹ fún ayẹyẹ àti okòwò oúnjẹ kékeré.",
+        "starter_title": "Ṣètò ohun tí o fẹ́ tà pẹ̀lú iye owó rẹ̀",
+        "starter_instructions": "Fi ọjà kan, àwọn èròjà rẹ̀, ìnáwó àti iye owó tí o fẹ́ tà á hàn.",
+        "starter_skill": "Ṣíṣe ìṣirò iye owó"
+      },
+      "criacao-digital": {
+        "title": "Ìṣẹ̀dá díjítà àti ìbánisọ̀rọ̀",
+        "description": "Fọ́tò, fídíò, àwòrán, ìkànnì àjọlò àti ohun èlò díjítà.",
+        "starter_title": "Ṣẹ̀dá ìfihàn díjítà",
+        "starter_instructions": "Ṣe fọ́tò, pátákó ìpolówó tàbí fídíò kúkúrú láti fi okòwò kan hàn.",
+        "starter_skill": "Ìbánisọ̀rọ̀ díjítà"
+      },
+      "musica-expressao": {
+        "title": "Orin, ijó àti ìfihàn ara ẹni",
+        "description": "Orin, ìṣelọpọ orin, DJ, ijó, eré àti ìfihàn iṣẹ́ ọnà.",
+        "starter_title": "Fi ohun tí mo ṣẹ̀dá hàn",
+        "starter_instructions": "Fi iṣẹ́ ìṣẹ̀dá tàbí eré kan hàn kí o sì ṣàlàyé ohun tí o fẹ́ mú dára sí i.",
+        "starter_skill": "Ìfihàn ìṣẹ̀dá"
+      },
+      "oficios-solucoes": {
+        "title": "Iṣẹ́ ọwọ́ àti ojútùú tó wúlò",
+        "description": "Àtúnṣe, iṣẹ́ gbẹ́nàgbẹ́nà, iṣẹ́ ẹ̀rọ, agbára àti iṣẹ́ ọwọ́ mìíràn pẹ̀lú ìdánilẹ́kọ̀ọ́.",
+        "starter_title": "Fi ìwádìí ìṣòro àti ìṣirò owó hàn",
+        "starter_instructions": "Pẹ̀lú ìrànlọ́wọ́ olùtọ́sọ́nà, ṣàlàyé ìṣòro kan kí o sì ṣètò àbá iṣẹ́ tó bá ìpele rẹ mu.",
+        "starter_skill": "Ìwádìí ìṣòro àti ìṣirò owó"
+      },
+      "emprego-carreira": {
+        "title": "Iṣẹ́ àti ìdàgbàsókè iṣẹ́",
+        "description": "Ìmúrasílẹ̀ fún iṣẹ́, àwọn èdè, ìṣirò owó, ètò ìgbésókè ọjà àti ìdàgbàsókè iṣẹ́.",
+        "starter_title": "Ṣètò ìbéèrè iṣẹ́",
+        "starter_instructions": "Ṣàtúnṣe CV àti ìfihàn ara rẹ fún àǹfààní iṣẹ́ kan pàtó.",
+        "starter_skill": "Ìmúrasílẹ̀ fún iṣẹ́"
+      }
+    }
   }
 }

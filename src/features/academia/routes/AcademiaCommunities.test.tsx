@@ -1,4 +1,6 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import i18n from 'i18next';
+import pt from '@/i18n/locales/pt.json';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, afterEach, expect, it, vi } from 'vitest';
 import type { Community, Cohort, PublicWork } from '../hooks/useAcademiaCommunity';
@@ -25,11 +27,27 @@ import AcademiaCohort from './AcademiaCohort';
 import AcademiaPublicWork from './AcademiaPublicWork';
 import { ShareValidatedWork } from '../components/ShareValidatedWork';
 function draw(path:string){render(<MemoryRouter initialEntries={[path]}><Routes><Route path="/academia/comunidades" element={<AcademiaCommunities/>}/><Route path="/academia/comunidades/:slug" element={<AcademiaCommunities/>}/><Route path="/academia/comunidades/:slug/turmas/:cohortId" element={<AcademiaCohort/>}/><Route path="/academia/trabalhos/:workId" element={<AcademiaPublicWork/>}/><Route path="/academia/percursos/new-goal" element={<p>O meu percurso privado</p>}/></Routes></MemoryRouter>);}
-beforeEach(()=>{vi.clearAllMocks();state.user='learner';state.mentor=false;state.cohort={...cohort};state.work=null;state.own=null;state.members=[];state.mutateAsync.mockResolvedValue('new-goal');});
+beforeEach(async()=>{await i18n.changeLanguage('pt');vi.clearAllMocks();state.user='learner';state.mentor=false;state.cohort={...cohort};state.work=null;state.own=null;state.members=[];state.mutateAsync.mockResolvedValue('new-goal');});
 afterEach(cleanup);
 it('lets visitors discover an area without signing in',()=>{
  state.user=null;draw('/academia/comunidades');
  expect(screen.getByRole('link',{name:/Criação digital e comunicação/})).toHaveAttribute('href','/academia/comunidades/criacao-digital');
+});
+it('updates real catalogue screens in all ten languages and preserves edited content', async()=>{
+ const locales=import.meta.glob('../../../i18n/locales/*.json',{eager:true,import:'default'}) as Record<string, typeof pt>;
+ state.user=null;state.cohort=null;
+ draw('/academia/comunidades/criacao-digital');
+ for(const code of ['pt','en','fr','ar','am','sw','ln','yo','sn','zu']) {
+  const locale=locales[`../../../i18n/locales/${code}.json`];
+  i18n.addResourceBundle(code,'translation',locale,true,true);
+  await act(async()=>{await i18n.changeLanguage(code);});
+  expect(screen.getByRole('heading',{level:1})).toHaveTextContent(locale.academiaPublic.catalog['criacao-digital'].title);
+  expect(screen.getByLabelText(locale.academiaPublic.language)).toHaveValue(code);
+  expect(screen.getByText(locale.academiaPublic.catalog['criacao-digital'].starter_title)).toBeVisible();
+  expect(screen.getByText(locale.academiaPublic.noCohorts)).toBeVisible();
+  expect(screen.getByText(community.description)).toBeVisible();
+  expect(screen.getByText(community.starter_instructions)).toBeVisible();
+ }
 });
 it('shows honest empty states without inventing participants or public work',()=>{
  state.cohort=null;draw('/academia/comunidades/criacao-digital');

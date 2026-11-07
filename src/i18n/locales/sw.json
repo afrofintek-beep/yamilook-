@@ -578,5 +578,92 @@
     "conferenceLabel": "Mkutano",
     "participantCount": "Washiriki: {{count}}",
     "addParticipant": "Ongeza"
+  },
+  "academiaPublic": {
+    "back": "Rudi",
+    "title": "Jumuiya za Akademia",
+    "loadingCommunities": "Inapakia jumuiya…",
+    "communitiesError": "Imeshindwa kupakia jumuiya.",
+    "retry": "Jaribu tena",
+    "heroTitle": "Gundua kipaji chako. Onyesha unachoweza kufanya.",
+    "heroBody": "Chagua eneo, tafuta changamoto na ujifunze kutoka kwa wenye uzoefu wa vitendo. Unaweza kuanza na jambo unalopenda, kujiandaa kwa kazi au kuboresha biashara yako.",
+    "ownGoal": "Napendelea kuweka lengo langu mwenyewe",
+    "areas": "Maeneo ya kuvutia",
+    "explore": "Gundua changamoto",
+    "unavailable": "Jumuiya hii haipatikani.",
+    "starter": "Matokeo ya kuanzia",
+    "closeForm": "Funga fomu",
+    "openCohort": "Anzisha darasa kama mshauri",
+    "signIn": "Ingia ili kushiriki",
+    "cohorts": "Madarasa ya changamoto",
+    "cohortsBody": "Mpango wa pamoja na mwongozo wa faragha kwa kila kazi. Kujiunga ni bure; angalia vifaa vinavyohitajika kabla ya kushiriki.",
+    "level": "Kiwango cha kuanzia",
+    "allLevels": "Viwango vyote",
+    "locality": "Mahali au mtandaoni",
+    "localityPlaceholder": "Mf.: Mtandaoni, Luanda, Huambo",
+    "loadingCohorts": "Inapakia madarasa…",
+    "cohortsError": "Imeshindwa kusasisha madarasa.",
+    "noCohorts": "Hakuna madarasa kwa chaguo hili bado. Unaweza kuchunguza eneo jingine au kuweka lengo lako mwenyewe.",
+    "mentor": "Mshauri",
+    "closed": "Usajili umefungwa",
+    "seats": "Nafasi {{available}} kati ya {{capacity}} zinapatikana",
+    "viewChallenge": "Fahamu changamoto",
+    "sharedWorks": "Kazi zilizoshirikiwa",
+    "worksTitle": "Mafanikio ya jumuiya",
+    "worksBody": "Kazi zilizothibitishwa na kuchapishwa kwa hiari na washiriki.",
+    "worksError": "Imeshindwa kupakia kazi.",
+    "noWorks": "Kazi za kwanza zilizoshirikiwa zitaonekana hapa.",
+    "validatedBy": "Imethibitishwa na {{mentor}}",
+    "language": "Lugha",
+    "languageError": "Imeshindwa kubadilisha lugha. Jaribu tena.",
+    "levels": {
+      "beginner": "Kwa wanaoanza",
+      "practice": "Nina uzoefu kidogo",
+      "advanced": "Nataka kujifunza kwa kina"
+    },
+    "catalog": {
+      "beleza-moda": {
+        "title": "Urembo, mitindo na mwonekano",
+        "description": "Kinyozi, utunzaji wa nywele, kusuka, vipodozi, ushonaji na kutambulisha huduma.",
+        "starter_title": "Kutambulisha huduma yangu",
+        "starter_instructions": "Andaa maelezo ya huduma yako na ueleze ulivyohesabu bei.",
+        "starter_skill": "Kutambulisha huduma"
+      },
+      "cozinha-negocios": {
+        "title": "Upishi na biashara za chakula",
+        "description": "Upishi, uokaji, huduma za chakula kwenye hafla na biashara ndogo za chakula.",
+        "starter_title": "Kuandaa ofa yenye bei",
+        "starter_instructions": "Wasilisha bidhaa, viungo vyake, gharama na bei unayopendekeza.",
+        "starter_skill": "Kupanga bei"
+      },
+      "criacao-digital": {
+        "title": "Ubunifu wa kidijitali na mawasiliano",
+        "description": "Upigaji picha, video, ubunifu, mitandao ya kijamii na zana za kidijitali.",
+        "starter_title": "Kuunda wasilisho la kidijitali",
+        "starter_instructions": "Tengeneza picha, bango au video fupi ya kutambulisha biashara.",
+        "starter_skill": "Mawasiliano ya kidijitali"
+      },
+      "musica-expressao": {
+        "title": "Muziki, ngoma na kujieleza",
+        "description": "Muziki, utayarishaji, kazi ya DJ, ngoma, maonyesho na kujieleza kisanii.",
+        "starter_title": "Kuonyesha ubunifu wangu",
+        "starter_instructions": "Wasilisha kazi ya ubunifu au onyesho na ueleze unachotaka kuboresha.",
+        "starter_skill": "Kujieleza kwa ubunifu"
+      },
+      "oficios-solucoes": {
+        "title": "Ufundi na suluhisho za vitendo",
+        "description": "Ukarabati, useremala, ufundi wa mitambo, nishati na ufundi mwingine wenye mazoezi yanayoongozwa.",
+        "starter_title": "Kuwasilisha uchunguzi na makadirio ya gharama",
+        "starter_instructions": "Kwa mwongozo wa mshauri, eleza tatizo na uandae pendekezo la huduma linalofaa kiwango chako.",
+        "starter_skill": "Uchunguzi na makadirio ya gharama"
+      },
+      "emprego-carreira": {
+        "title": "Ajira na maendeleo ya kitaaluma",
+        "description": "Maandalizi ya ajira, lugha, uhasibu, usafirishaji na maendeleo ya kitaaluma.",
+        "starter_title": "Kuandaa ombi la kazi",
+        "starter_instructions": "Rekebisha wasifu na maelezo yako ili yalingane na nafasi fulani.",
+        "starter_skill": "Maandalizi ya kitaaluma"
+      }
+    }
   }
 }

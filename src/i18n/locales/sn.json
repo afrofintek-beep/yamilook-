@@ -240,5 +240,92 @@
     "conferenceLabel": "Musangano",
     "participantCount": "Vatori vechikamu: {{count}}",
     "addParticipant": "Wedzera"
+  },
+  "academiaPublic": {
+    "back": "Dzokera",
+    "title": "Nharaunda dzeAkademi",
+    "loadingCommunities": "Tiri kurodha nharaunda…",
+    "communitiesError": "Hatina kukwanisa kurodha nharaunda.",
+    "retry": "Edza zvakare",
+    "heroTitle": "Ziva tarenda rako. Ratidza zvaunogona kuita.",
+    "heroBody": "Sarudza chikamu, tsvaga basa rekuyedza uye dzidza kubva kune vane ruzivo. Unogona kutanga nezvaunofarira, kugadzirira basa kana kuvandudza bhizinesi rako.",
+    "ownGoal": "Ndinoda kuisa chinangwa changu ndega",
+    "areas": "Zvikamu zvinokufadza",
+    "explore": "Ongorora mabasa ekuyedza",
+    "unavailable": "Nharaunda iyi haisi kuwanikwa.",
+    "starter": "Mhedzisiro yekutanga nayo",
+    "closeForm": "Vhara fomu",
+    "openCohort": "Vhura kirasi semurairidzi",
+    "signIn": "Pinda kuti utore chikamu",
+    "cohorts": "Makirasi emabasa ekuyedza",
+    "cohortsBody": "Hurongwa hwakafanana kune vose uye kutungamirirwa kwega pamabasa emumwe nemumwe. Kupinda hakubhadharwi; tarisa zvinhu zvinodiwa usati wapinda.",
+    "level": "Paunotangira",
+    "allLevels": "Matanho ose",
+    "locality": "Nzvimbo kana paindaneti",
+    "localityPlaceholder": "Semuyenzaniso: Paindaneti, Luanda, Huambo",
+    "loadingCohorts": "Tiri kurodha makirasi…",
+    "cohortsError": "Hatina kukwanisa kuvandudza runyorwa rwemakirasi.",
+    "noCohorts": "Hapana makirasi esarudzo iyi parizvino. Unogona kuongorora chimwe chikamu kana kuisa chinangwa chako ndega.",
+    "mentor": "Murairidzi",
+    "closed": "Kunyoresa kwavharwa",
+    "seats": "Nzvimbo {{available}} pa{{capacity}} dzichiripo",
+    "viewChallenge": "Ziva basa rekuyedza",
+    "sharedWorks": "Mabasa akagovaniswa",
+    "worksTitle": "Zvakaitwa nenharaunda",
+    "worksBody": "Mabasa akasimbiswa uye akaburitswa nevatori vechikamu vachizvidira.",
+    "worksError": "Hatina kukwanisa kurodha mabasa.",
+    "noWorks": "Mabasa ekutanga akagovaniswa achaonekwa pano.",
+    "validatedBy": "Zvakasimbiswa na{{mentor}}",
+    "language": "Mutauro",
+    "languageError": "Hatina kukwanisa kushandura mutauro. Edza zvakare.",
+    "levels": {
+      "beginner": "Kune vanotanga",
+      "practice": "Ndine ruzivo rushoma",
+      "advanced": "Ndinoda kudzidza zvakadzama"
+    },
+    "catalog": {
+      "beleza-moda": {
+        "title": "Runako, fashoni nechitarisiko",
+        "description": "Kugera, kugadzira bvudzi, kuruka, makeup, kusona uye kuratidza mabasa aunopa.",
+        "starter_title": "Kuratidza basa randinopa",
+        "starter_instructions": "Gadzirira tsananguro yebasa raunopa uye tsanangura maverengero awakaita mutengo.",
+        "starter_skill": "Kuratidza mabasa aunopa"
+      },
+      "cozinha-negocios": {
+        "title": "Kubika nemabhizinesi ezvekudya",
+        "description": "Kubika, kubheka, kugadzirira chikafu chezviitiko uye mabhizinesi madiki ezvekudya.",
+        "starter_title": "Kugadzirira chaunotengesa chine mutengo",
+        "starter_instructions": "Ratidza chigadzirwa, zvinoshandiswa, mari inodiwa uye mutengo waunoda kutengesa nawo.",
+        "starter_skill": "Kuisa mitengo"
+      },
+      "criacao-digital": {
+        "title": "Kugadzira nekutaurirana nedhijitari",
+        "description": "Kutora mifananidzo, mavhidhiyo, dhizaini, masocial media uye maturusi edhijitari.",
+        "starter_title": "Kugadzira mharidzo yedhijitari",
+        "starter_instructions": "Gadzira mufananidzo, posita kana vhidhiyo pfupi yekuratidza bhizinesi.",
+        "starter_skill": "Kutaurirana nedhijitari"
+      },
+      "musica-expressao": {
+        "title": "Mimhanzi, kutamba nekuzviratidza",
+        "description": "Mimhanzi, kugadzira mimhanzi, DJ, kutamba, kuratidzira uye kuzviratidza neunyanzvi.",
+        "starter_title": "Kuratidza chinhu chandakagadzira",
+        "starter_instructions": "Ratidza chinhu chawakagadzira kana mutambo uye tsanangura zvaunoda kuvandudza.",
+        "starter_skill": "Kuzviratidza nekugadzira"
+      },
+      "oficios-solucoes": {
+        "title": "Mabasa emaoko nemhinduro dzinoshanda",
+        "description": "Kugadzirisa, kuveza, makanika, simba uye mamwe mabasa emaoko ane kudzidzira kunotungamirirwa.",
+        "starter_title": "Kuratidza ongororo yedambudziko nefungidziro yemutengo",
+        "starter_instructions": "Uchitungamirirwa nemurairidzi, tsanangura dambudziko uye gadzirira pfungwa yebasa inoenderana nedanho rako.",
+        "starter_skill": "Kuongorora dambudziko nefungidziro yemutengo"
+      },
+      "emprego-carreira": {
+        "title": "Mabasa nekukura muunyanzvi",
+        "description": "Kugadzirira basa, mitauro, accounting, kufambisa zvinhu uye kusimudzira unyanzvi.",
+        "starter_title": "Kugadzirira chikumbiro chebasa",
+        "starter_instructions": "Gadzirisa CV netsananguro yako kuti zvienderane nemukana chaiwo.",
+        "starter_skill": "Kugadzirira basa"
+      }
+    }
   }
 }

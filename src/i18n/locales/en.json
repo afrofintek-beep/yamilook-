@@ -801,5 +801,92 @@
     "confirmLaterHint": "You can finish registration and participate. Confirm your address later in Profile → Validate my Banda.",
     "residenceNotice": "Your current presence does not prove residence. Territorial benefits require a validated Banda; traveling does not automatically change your Banda.",
     "confirmBanda": "Confirm Banda and continue"
+  },
+  "academiaPublic": {
+    "back": "Back",
+    "title": "Academy communities",
+    "loadingCommunities": "Loading communities…",
+    "communitiesError": "Could not load communities.",
+    "retry": "Try again",
+    "heroTitle": "Discover your talent. Show what you can do.",
+    "heroBody": "Choose an area, find a challenge and learn from people with practical experience. Start with a personal interest, prepare for a job or improve your business.",
+    "ownGoal": "I prefer to set my own goal",
+    "areas": "Areas of interest",
+    "explore": "Explore challenges",
+    "unavailable": "This community is not available.",
+    "starter": "An outcome to start with",
+    "closeForm": "Close form",
+    "openCohort": "Start a class as a mentor",
+    "signIn": "Sign in to participate",
+    "cohorts": "Challenge classes",
+    "cohortsBody": "A shared plan with private guidance on each person's work. Joining is free; check the required materials before participating.",
+    "level": "Starting point",
+    "allLevels": "All levels",
+    "locality": "Location or online",
+    "localityPlaceholder": "E.g.: Online, Luanda, Huambo",
+    "loadingCohorts": "Loading classes…",
+    "cohortsError": "Could not update classes.",
+    "noCohorts": "There are no classes for this selection yet. Explore another area or set your own goal.",
+    "mentor": "Mentor",
+    "closed": "Registration closed",
+    "seats": "{{available}} of {{capacity}} places available",
+    "viewChallenge": "View the challenge",
+    "sharedWorks": "Shared work",
+    "worksTitle": "What the community has achieved",
+    "worksBody": "Work validated and voluntarily published by participants.",
+    "worksError": "Could not load the shared work.",
+    "noWorks": "The first shared projects will appear here.",
+    "validatedBy": "Validated by {{mentor}}",
+    "language": "Language",
+    "languageError": "Could not change the language. Try again.",
+    "levels": {
+      "beginner": "Getting started",
+      "practice": "I have some experience",
+      "advanced": "I want to go further"
+    },
+    "catalog": {
+      "beleza-moda": {
+        "title": "Beauty, fashion and image",
+        "description": "Barbering, hair, braids, makeup, sewing and presenting services.",
+        "starter_title": "Present my service",
+        "starter_instructions": "Prepare a presentation of your service and explain how you calculated the price.",
+        "starter_skill": "Presenting services"
+      },
+      "cozinha-negocios": {
+        "title": "Cooking and food businesses",
+        "description": "Cooking, baking, catering and small food businesses.",
+        "starter_title": "Prepare a priced offer",
+        "starter_instructions": "Present a product, its ingredients, costs and proposed price.",
+        "starter_skill": "Pricing"
+      },
+      "criacao-digital": {
+        "title": "Digital creation and communication",
+        "description": "Photography, video, design, social media and digital tools.",
+        "starter_title": "Create a digital presentation",
+        "starter_instructions": "Create a photograph, poster or short video to present a business.",
+        "starter_skill": "Digital communication"
+      },
+      "musica-expressao": {
+        "title": "Music, dance and expression",
+        "description": "Music, production, DJing, dance, performance and artistic expression.",
+        "starter_title": "Show something I created",
+        "starter_instructions": "Present a creation or performance and explain what you want to improve.",
+        "starter_skill": "Creative expression"
+      },
+      "oficios-solucoes": {
+        "title": "Trades and practical solutions",
+        "description": "Repairs, carpentry, mechanics, energy and other trades with guided practice.",
+        "starter_title": "Present a diagnosis and quotation",
+        "starter_instructions": "With your mentor's guidance, describe a problem and prepare a service proposal suited to your level.",
+        "starter_skill": "Diagnosis and quotations"
+      },
+      "emprego-carreira": {
+        "title": "Employment and professional growth",
+        "description": "Job preparation, languages, accounting, logistics and professional development.",
+        "starter_title": "Prepare a job application",
+        "starter_instructions": "Adapt a CV and introduction to a specific opportunity.",
+        "starter_skill": "Career preparation"
+      }
+    }
   }
 }
