@@ -1,3 +1,4 @@
+import { PostText } from '@/components/feed/PostText';
 import { sharePostLink } from '@/lib/post-sharing';
 import { useState, useRef, useCallback, useEffect, memo, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -323,7 +324,7 @@ export const PostCard = memo(function PostCard({ mediaPriority = false, post, on
       {/* Content */}
       {post.content && (
         <div className="px-4 pb-3">
-          <p className="text-sm whitespace-pre-wrap">{post.content}</p>
+          <p className="text-sm whitespace-pre-wrap break-words"><PostText text={post.content} /></p>
         </div>
       )}
 

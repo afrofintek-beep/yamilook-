@@ -17,3 +17,6 @@ dialog{width:min(440px,calc(100% - 24px));max-height:88svh;overflow-y:auto;borde
 .linkedin-options>summary{cursor:pointer;display:list-item;list-style-position:inside}.linkedin-options>.share-options{padding:12px;border:1px solid #7775;border-radius:12px}.linkedin-options summary:focus-visible{outline:3px solid #dfb756;outline-offset:4px}
 
 .actions .view-yamilook{display:flex;align-items:center;justify-content:center;flex:1;min-height:46px;padding:12px 20px;border-radius:12px;background:#dfb756;color:#16130c;font-weight:650;text-align:center}.actions .share-icon{display:grid;place-items:center;flex:0 0 46px;padding:12px}
+
+.content .post-text-link{color:inherit;text-decoration:underline;text-underline-offset:3px;overflow-wrap:anywhere}
+.content .post-text-link:focus-visible{outline:2px solid currentColor;outline-offset:3px}

@@ -1,3 +1,4 @@
+import { PostText } from '@/components/feed/PostText';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Share2 } from 'lucide-react';
@@ -55,7 +56,7 @@ export default function PublicPost() {
               {post.author.avatar_url && <img src={post.author.avatar_url} alt="" className="h-12 w-12 rounded-full object-cover" />}
               <div><h1 className="font-semibold">{post.author.display_name}</h1><p className="text-sm text-muted-foreground">{t('publicPost.public', 'Publicação pública')}</p></div>
             </header>
-            {post.content && <p className="my-5 whitespace-pre-wrap break-words leading-relaxed">{post.content}</p>}
+            {post.content && <p className="my-5 whitespace-pre-wrap break-words leading-relaxed"><PostText text={post.content} /></p>}
 
             <div className="flex items-center gap-3">
               <Button asChild className="min-h-11 flex-1"><a href="/feed">{t('publicPost.viewInYamilook', 'Ver na Yamilook')}</a></Button>

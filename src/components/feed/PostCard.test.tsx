@@ -91,6 +91,16 @@ describe('PostCard', () => {
     mockSharePost.mockClear();
   });
 
+  it('renders campaign addresses as clickable links without opening the author profile', () => {
+    render(<PostCard post={{ ...mockPost, content: 'Explora https://novidades.yamilook.com/ e convites.yamilook.com.' }} />);
+    const link = screen.getByRole('link', { name: 'https://novidades.yamilook.com/' });
+    expect(link).toHaveAttribute('href', 'https://novidades.yamilook.com/');
+    expect(link).toHaveAttribute('target', '_blank');
+    expect(screen.getByRole('link', { name: 'convites.yamilook.com' })).toHaveAttribute('href', 'https://convites.yamilook.com/');
+    fireEvent.click(link);
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
   it('copies a canonical public link and records only successful sharing', async () => {
     render(<PostCard post={mockPost} />);
     fireEvent.click(screen.getByRole('button', { name: 'Partilhar' }));
