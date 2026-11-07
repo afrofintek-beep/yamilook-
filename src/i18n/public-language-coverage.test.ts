@@ -8,7 +8,7 @@ function flatten(object: Record<string, unknown>, prefix = ''): Record<string, s
     ? Object.entries(flatten(value as Record<string, unknown>, `${prefix}${key}.`))
     : [[`${prefix}${key}`, value as string]]));
 }
-const sections = ['auth.', 'common.', 'nav.', 'publicAuth.', 'onboardingFlow.'];
+const sections = ['auth.', 'common.', 'nav.', 'publicAuth.', 'onboardingFlow.', 'academiaPublic.'];
 const source = Object.entries(flatten(locales['./locales/pt.json'])).filter(([key]) => sections.some(section => key.startsWith(section)));
 const placeholders = (text: string) => [...text.matchAll(/{{\s*([^}]+)\s*}}/g)].map(match => match[1].trim()).sort();
 

@@ -575,5 +575,92 @@
     "conferenceLabel": "Lisolo ya etuluku",
     "participantCount": "Bato: {{count}}",
     "addParticipant": "Bakisa"
+  },
+  "academiaPublic": {
+    "back": "Zonga",
+    "title": "Masanga ya Akademi",
+    "loadingCommunities": "Kozwa masanga…",
+    "communitiesError": "Tokoki kozwa masanga te.",
+    "retry": "Meka lisusu",
+    "heroTitle": "Yeba likabo na yo. Lakisa oyo okoki kosala.",
+    "heroBody": "Pona eteni moko, luka mosala ya komeka mpe yekola epai ya bato oyo basalaka yango. Okoki kobanda na oyo olingaka, komibongisa mpo na mosala to kobongisa mombongo na yo.",
+    "ownGoal": "Nalingi kotya mokano na ngai moko",
+    "areas": "Biteni oyo esepelisaka yo",
+    "explore": "Tala misala ya komeka",
+    "unavailable": "Lisanga oyo ezali te.",
+    "starter": "Mbuma ya liboso ya koluka",
+    "closeForm": "Kanga formulaire",
+    "openCohort": "Fungola kelasi lokola moteyi",
+    "signIn": "Kota mpo na kosangana",
+    "cohorts": "Bakelasi ya misala ya komeka",
+    "cohortsBody": "Mwango moko mpo na bato nyonso mpe litambwisi ya nkuku mpo na mosala ya moto na moto. Kokota ezali ofele; tala bisaleli oyo esengeli liboso ya kosangana.",
+    "level": "Esika ya kobanda",
+    "allLevels": "Niveau nyonso",
+    "locality": "Esika to na internet",
+    "localityPlaceholder": "Ndakisa: Na internet, Luanda, Huambo",
+    "loadingCohorts": "Kozwa bakelasi…",
+    "cohortsError": "Tokoki kozongisa bakelasi na mikolo te.",
+    "noCohorts": "Bakelasi ezali naino te mpo na boponi oyo. Okoki kotala eteni mosusu to kotya mokano na yo moko.",
+    "mentor": "Moteyi",
+    "closed": "Bokomisi ekangami",
+    "seats": "Bisika {{available}} kati na {{capacity}} ezali polele",
+    "viewChallenge": "Yeba mosala ya komeka",
+    "sharedWorks": "Misala oyo bakaboli",
+    "worksTitle": "Oyo lisanga esali",
+    "worksBody": "Misala oyo endimami mpe bato babimisi na bolingi na bango moko.",
+    "worksError": "Tokoki kozwa misala te.",
+    "noWorks": "Misala ya liboso oyo bakaboli ekomonana awa.",
+    "validatedBy": "Endimami na {{mentor}}",
+    "language": "Lokota",
+    "languageError": "Tokoki kobongola lokota te. Meka lisusu.",
+    "levels": {
+      "beginner": "Mpo na kobanda",
+      "practice": "Nazali na mwa mayele",
+      "advanced": "Nalingi koyekola lisusu na mozindo"
+    },
+    "catalog": {
+      "beleza-moda": {
+        "title": "Kitoko, molato mpe lolenge ya komilakisa",
+        "description": "Kokata mpe kobongisa nsuki, kosala suki, maquillage, kotonga bilamba mpe kolakisa misala.",
+        "starter_title": "Kolakisa mosala na ngai",
+        "starter_instructions": "Bongisa ndenge ya kolakisa mosala na yo mpe limbola ndenge otangi ntalo.",
+        "starter_skill": "Kolakisa misala"
+      },
+      "cozinha-negocios": {
+        "title": "Kolamba mpe mombongo ya bilei",
+        "description": "Kolamba, kosala gato, kopesa bilei na bafeti mpe mombongo mike ya bilei.",
+        "starter_title": "Kobongisa likabo ya koteka na ntalo",
+        "starter_instructions": "Lakisa eloko ya koteka, biloko ya kosalela, mbongo oyo esengeli mpe ntalo oyo oponi.",
+        "starter_skill": "Kopona ntalo"
+      },
+      "criacao-digital": {
+        "title": "Bokeli ya nimero mpe bosololi",
+        "description": "Kokanga bafoto, video, design, ba réseaux sociaux mpe bisaleli ya nimero.",
+        "starter_title": "Kosala elakiseli ya nimero",
+        "starter_instructions": "Sala foto, affiche to video mokuse mpo na kolakisa mombongo moko.",
+        "starter_skill": "Bosololi na bisaleli ya nimero"
+      },
+      "musica-expressao": {
+        "title": "Miziki, mabina mpe komimonisa",
+        "description": "Miziki, production, DJ, mabina, kolakisa mpe komimonisa na mayele ya ntɔki.",
+        "starter_title": "Kolakisa eloko oyo nasali",
+        "starter_instructions": "Lakisa eloko oyo okeli to lisano mpe limbola oyo olingi kobongisa.",
+        "starter_skill": "Komimonisa na bokeli"
+      },
+      "oficios-solucoes": {
+        "title": "Misala ya maboko mpe biyano ya solo",
+        "description": "Kobongisa biloko, mosala ya mabaya, mécanique, énergie mpe misala mosusu oyo oyekolaka na litambwisi.",
+        "starter_title": "Kolakisa likambo ebebi mpe ntalo ya mosala",
+        "starter_instructions": "Na litambwisi ya moteyi, limbola mokakatano mpe bongisa likanisi ya mosala oyo ekokani na mayele na yo.",
+        "starter_skill": "Koyeba oyo ebebi mpe kotanga ntalo"
+      },
+      "emprego-carreira": {
+        "title": "Mosala mpe bokoli na mosala",
+        "description": "Komibongisa mpo na mosala, minoko, comptabilité, logistique mpe bokoli na mosala.",
+        "starter_title": "Kobongisa bosengi ya mosala",
+        "starter_instructions": "Bongisa CV mpe maloba ya komilakisa mpo na libaku moko ya mosala.",
+        "starter_skill": "Komibongisa mpo na mosala"
+      }
+    }
   }
 }

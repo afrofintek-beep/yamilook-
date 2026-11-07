@@ -1028,5 +1028,92 @@
     "confirmLaterHint": "Podes concluir a inscrição e participar. Confirma o endereço mais tarde em Perfil → Validar a minha Banda.",
     "residenceNotice": "A presença atual não prova residência. Os benefícios territoriais exigem uma Banda validada; viajar não altera automaticamente a tua Banda.",
     "confirmBanda": "Confirmar Banda e continuar"
+  },
+  "academiaPublic": {
+    "back": "Voltar",
+    "title": "Comunidades da Academia",
+    "loadingCommunities": "A carregar comunidades…",
+    "communitiesError": "Não foi possível carregar as comunidades.",
+    "retry": "Tentar novamente",
+    "heroTitle": "Descobre o teu talento. Mostra o que consegues.",
+    "heroBody": "Escolhe uma área, encontra um desafio e aprende com quem faz. Podes começar por interesse pessoal, preparar um emprego ou melhorar o teu negócio.",
+    "ownGoal": "Prefiro definir o meu próprio objetivo",
+    "areas": "Áreas de afinidade",
+    "explore": "Explorar desafios",
+    "unavailable": "Esta comunidade não está disponível.",
+    "starter": "Um resultado para começar",
+    "closeForm": "Fechar formulário",
+    "openCohort": "Abrir turma como mentor",
+    "signIn": "Entrar para participar",
+    "cohorts": "Turmas de desafios",
+    "cohortsBody": "Um plano comum e acompanhamento privado de cada trabalho. A entrada é gratuita; consulta o material necessário antes de participar.",
+    "level": "Ponto de partida",
+    "allLevels": "Todos os níveis",
+    "locality": "Localidade ou online",
+    "localityPlaceholder": "Ex.: Online, Luanda, Huambo",
+    "loadingCohorts": "A carregar turmas…",
+    "cohortsError": "Não foi possível atualizar as turmas.",
+    "noCohorts": "Ainda não há turmas para esta seleção. Podes explorar outra área ou criar o teu próprio objetivo.",
+    "mentor": "Mentor",
+    "closed": "Inscrições fechadas",
+    "seats": "{{available}} de {{capacity}} vagas disponíveis",
+    "viewChallenge": "Conhecer o desafio",
+    "sharedWorks": "Trabalhos partilhados",
+    "worksTitle": "O que a comunidade já realizou",
+    "worksBody": "Trabalhos validados e publicados voluntariamente pelos participantes.",
+    "worksError": "Não foi possível carregar os trabalhos.",
+    "noWorks": "Os primeiros trabalhos partilhados aparecerão aqui.",
+    "validatedBy": "Validado por {{mentor}}",
+    "language": "Idioma",
+    "languageError": "Não foi possível mudar o idioma. Tenta novamente.",
+    "levels": {
+      "beginner": "Para começar",
+      "practice": "Já tenho alguma prática",
+      "advanced": "Quero aprofundar"
+    },
+    "catalog": {
+      "beleza-moda": {
+        "title": "Beleza, moda e imagem",
+        "description": "Barbearia, cabelo, tranças, maquilhagem, costura e apresentação de serviços.",
+        "starter_title": "Apresentar o meu serviço",
+        "starter_instructions": "Prepara uma apresentação do teu serviço e explica como calculaste o preço.",
+        "starter_skill": "Apresentação de serviços"
+      },
+      "cozinha-negocios": {
+        "title": "Cozinha e negócios alimentares",
+        "description": "Cozinha, pastelaria, catering e pequenos negócios alimentares.",
+        "starter_title": "Preparar uma oferta com preço",
+        "starter_instructions": "Apresenta um produto, os ingredientes, os custos e o preço proposto.",
+        "starter_skill": "Formação de preços"
+      },
+      "criacao-digital": {
+        "title": "Criação digital e comunicação",
+        "description": "Fotografia, vídeo, design, redes sociais e ferramentas digitais.",
+        "starter_title": "Criar uma apresentação digital",
+        "starter_instructions": "Cria uma fotografia, cartaz ou vídeo curto para apresentar um negócio.",
+        "starter_skill": "Comunicação digital"
+      },
+      "musica-expressao": {
+        "title": "Música, dança e expressão",
+        "description": "Música, produção, DJ, dança, apresentação e expressão artística.",
+        "starter_title": "Mostrar uma criação minha",
+        "starter_instructions": "Apresenta uma criação ou interpretação e explica o que queres melhorar.",
+        "starter_skill": "Expressão criativa"
+      },
+      "oficios-solucoes": {
+        "title": "Ofícios e soluções práticas",
+        "description": "Reparação, carpintaria, mecânica, energia e outros ofícios com prática acompanhada.",
+        "starter_title": "Apresentar um diagnóstico e orçamento",
+        "starter_instructions": "Com o acompanhamento do mentor, descreve um problema e prepara uma proposta de serviço adequada ao teu nível.",
+        "starter_skill": "Diagnóstico e orçamento"
+      },
+      "emprego-carreira": {
+        "title": "Emprego e crescimento profissional",
+        "description": "Preparação para emprego, línguas, contabilidade, logística e desenvolvimento profissional.",
+        "starter_title": "Preparar uma candidatura",
+        "starter_instructions": "Adapta um CV e uma apresentação a uma oportunidade concreta.",
+        "starter_skill": "Preparação profissional"
+      }
+    }
   }
 }

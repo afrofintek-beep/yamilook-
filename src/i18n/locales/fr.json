@@ -668,5 +668,92 @@
     "conferenceLabel": "Conférence",
     "participantCount": "Participants : {{count}}",
     "addParticipant": "Ajouter"
+  },
+  "academiaPublic": {
+    "back": "Retour",
+    "title": "Communautés de l’Académie",
+    "loadingCommunities": "Chargement des communautés…",
+    "communitiesError": "Impossible de charger les communautés.",
+    "retry": "Réessayer",
+    "heroTitle": "Découvre ton talent. Montre ce que tu sais faire.",
+    "heroBody": "Choisis un domaine, trouve un défi et apprends auprès de personnes expérimentées. Tu peux partir d’un intérêt personnel, préparer un emploi ou améliorer ton activité.",
+    "ownGoal": "Je préfère définir mon propre objectif",
+    "areas": "Domaines d’intérêt",
+    "explore": "Explorer les défis",
+    "unavailable": "Cette communauté n’est pas disponible.",
+    "starter": "Un premier résultat à atteindre",
+    "closeForm": "Fermer le formulaire",
+    "openCohort": "Ouvrir un groupe en tant que mentor",
+    "signIn": "Se connecter pour participer",
+    "cohorts": "Groupes de défis",
+    "cohortsBody": "Un plan commun et un accompagnement privé pour chaque travail. L’inscription est gratuite ; consulte le matériel nécessaire avant de participer.",
+    "level": "Point de départ",
+    "allLevels": "Tous les niveaux",
+    "locality": "Localité ou en ligne",
+    "localityPlaceholder": "Ex. : En ligne, Luanda, Huambo",
+    "loadingCohorts": "Chargement des groupes…",
+    "cohortsError": "Impossible d’actualiser les groupes.",
+    "noCohorts": "Aucun groupe ne correspond encore à cette sélection. Tu peux explorer un autre domaine ou définir ton propre objectif.",
+    "mentor": "Mentor",
+    "closed": "Inscriptions fermées",
+    "seats": "{{available}} places disponibles sur {{capacity}}",
+    "viewChallenge": "Découvrir le défi",
+    "sharedWorks": "Travaux partagés",
+    "worksTitle": "Ce que la communauté a déjà réalisé",
+    "worksBody": "Travaux validés et publiés volontairement par les participants.",
+    "worksError": "Impossible de charger les travaux.",
+    "noWorks": "Les premiers travaux partagés apparaîtront ici.",
+    "validatedBy": "Validé par {{mentor}}",
+    "language": "Langue",
+    "languageError": "Impossible de changer de langue. Réessaie.",
+    "levels": {
+      "beginner": "Pour commencer",
+      "practice": "J’ai déjà un peu d’expérience",
+      "advanced": "Je veux approfondir"
+    },
+    "catalog": {
+      "beleza-moda": {
+        "title": "Beauté, mode et image",
+        "description": "Barbier, coiffure, tresses, maquillage, couture et présentation de services.",
+        "starter_title": "Présenter mon service",
+        "starter_instructions": "Prépare une présentation de ton service et explique comment tu as calculé le prix.",
+        "starter_skill": "Présentation de services"
+      },
+      "cozinha-negocios": {
+        "title": "Cuisine et activités alimentaires",
+        "description": "Cuisine, pâtisserie, restauration événementielle et petites entreprises alimentaires.",
+        "starter_title": "Préparer une offre avec un prix",
+        "starter_instructions": "Présente un produit, ses ingrédients, ses coûts et le prix proposé.",
+        "starter_skill": "Fixation des prix"
+      },
+      "criacao-digital": {
+        "title": "Création numérique et communication",
+        "description": "Photographie, vidéo, design, réseaux sociaux et outils numériques.",
+        "starter_title": "Créer une présentation numérique",
+        "starter_instructions": "Crée une photographie, une affiche ou une courte vidéo pour présenter une activité.",
+        "starter_skill": "Communication numérique"
+      },
+      "musica-expressao": {
+        "title": "Musique, danse et expression",
+        "description": "Musique, production, DJ, danse, scène et expression artistique.",
+        "starter_title": "Montrer une de mes créations",
+        "starter_instructions": "Présente une création ou une interprétation et explique ce que tu souhaites améliorer.",
+        "starter_skill": "Expression créative"
+      },
+      "oficios-solucoes": {
+        "title": "Métiers et solutions pratiques",
+        "description": "Réparation, menuiserie, mécanique, énergie et autres métiers avec une pratique accompagnée.",
+        "starter_title": "Présenter un diagnostic et un devis",
+        "starter_instructions": "Avec l’accompagnement du mentor, décris un problème et prépare une proposition de service adaptée à ton niveau.",
+        "starter_skill": "Diagnostic et devis"
+      },
+      "emprego-carreira": {
+        "title": "Emploi et évolution professionnelle",
+        "description": "Préparation à l’emploi, langues, comptabilité, logistique et développement professionnel.",
+        "starter_title": "Préparer une candidature",
+        "starter_instructions": "Adapte un CV et une présentation à une opportunité précise.",
+        "starter_skill": "Préparation professionnelle"
+      }
+    }
   }
 }

@@ -59,7 +59,7 @@ test('mentor opens a cohort, learner opts into a public proof, a peer joins from
    localStorage.setItem('undefined',session);localStorage.setItem('sb-127-auth-token',session);
   },user);
  }
- const contexts=await Promise.all(Array.from({length:4},()=>browser.newContext({...devices['iPhone 13'],baseURL:'http://localhost:8092',serviceWorkers:'block'})));
+ const contexts=await Promise.all(Array.from({length:4},()=>browser.newContext({...devices['iPhone 13'],baseURL:'http://localhost:8092',serviceWorkers:'block',locale:'pt-PT'})));
  try{
   const [teacher,student,guest,peer]=await Promise.all(contexts.map(c=>c.newPage()));
   await setup(teacher,teacherId);await setup(student,learnerId);await setup(guest,null);await setup(peer,peerId);

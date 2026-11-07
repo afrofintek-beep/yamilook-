@@ -240,5 +240,92 @@
     "conferenceLabel": "Ingqungquthela",
     "participantCount": "Abahlanganyeli: {{count}}",
     "addParticipant": "Engeza"
+  },
+  "academiaPublic": {
+    "back": "Buyela emuva",
+    "title": "Imiphakathi ye-Akhademi",
+    "loadingCommunities": "Kulayishwa imiphakathi…",
+    "communitiesError": "Ayikwazanga ukulayisha imiphakathi.",
+    "retry": "Zama futhi",
+    "heroTitle": "Thola ikhono lakho. Bonisa ongakwenza.",
+    "heroBody": "Khetha umkhakha, thola inselelo futhi ufunde kubantu abanolwazi. Ungaqala ngento oyithandayo, ulungiselele umsebenzi noma uthuthukise ibhizinisi lakho.",
+    "ownGoal": "Ngincamela ukuzibekela umgomo wami",
+    "areas": "Imikhakha oyithandayo",
+    "explore": "Hlola izinselelo",
+    "unavailable": "Lo mphakathi awutholakali.",
+    "starter": "Umphumela ongaqala ngawo",
+    "closeForm": "Vala ifomu",
+    "openCohort": "Vula ikilasi njengomeluleki",
+    "signIn": "Ngena ukuze ubambe iqhaza",
+    "cohorts": "Amakilasi ezinselelo",
+    "cohortsBody": "Uhlelo olufanayo kubo bonke nokwelulekwa ngasese ngomsebenzi womuntu ngamunye. Ukujoyina kumahhala; hlola izinto ezidingekayo ngaphambi kokubamba iqhaza.",
+    "level": "Izinga oqala kulo",
+    "allLevels": "Wonke amazinga",
+    "locality": "Indawo noma ku-inthanethi",
+    "localityPlaceholder": "Isib.: Ku-inthanethi, Luanda, Huambo",
+    "loadingCohorts": "Kulayishwa amakilasi…",
+    "cohortsError": "Ayikwazanga ukubuyekeza amakilasi.",
+    "noCohorts": "Awekho amakilasi alokhu okukhethile okwamanje. Ungahlola omunye umkhakha noma uzibekele umgomo wakho.",
+    "mentor": "Umeluleki",
+    "closed": "Ukubhalisa kuvaliwe",
+    "seats": "Kukhona izindawo ezingu-{{available}} kwezingu-{{capacity}}",
+    "viewChallenge": "Yazi inselelo",
+    "sharedWorks": "Imisebenzi eyabiwe",
+    "worksTitle": "Okufezwe umphakathi",
+    "worksBody": "Imisebenzi eqinisekisiwe futhi eshicilelwe ababambiqhaza ngokuzithandela.",
+    "worksError": "Ayikwazanga ukulayisha imisebenzi.",
+    "noWorks": "Imisebenzi yokuqala eyabiwe izovela lapha.",
+    "validatedBy": "Kuqinisekiswe ngu-{{mentor}}",
+    "language": "Ulimi",
+    "languageError": "Ayikwazanga ukushintsha ulimi. Zama futhi.",
+    "levels": {
+      "beginner": "Kwabaqalayo",
+      "practice": "Senginolwazi oluthile",
+      "advanced": "Ngifuna ukufunda kabanzi"
+    },
+    "catalog": {
+      "beleza-moda": {
+        "title": "Ubuhle, imfashini nokubukeka",
+        "description": "Ukugunda, ukulungisa izinwele, ukuluka, izimonyo, ukuthunga nokwethula izinsizakalo.",
+        "starter_title": "Ukwethula insizakalo yami",
+        "starter_instructions": "Lungiselela ukwethulwa kwensizakalo yakho bese uchaza indlela obale ngayo intengo.",
+        "starter_skill": "Ukwethula izinsizakalo"
+      },
+      "cozinha-negocios": {
+        "title": "Ukupheka namabhizinisi okudla",
+        "description": "Ukupheka, ukubhaka, ukuhlinzeka ngokudla emicimbini namabhizinisi amancane okudla.",
+        "starter_title": "Ukulungiselela okunikezwayo okunentengo",
+        "starter_instructions": "Yethula umkhiqizo, izithako, izindleko nentengo oyiphakamisayo.",
+        "starter_skill": "Ukubeka amanani"
+      },
+      "criacao-digital": {
+        "title": "Ukusungula nokuxhumana ngedijithali",
+        "description": "Izithombe, amavidiyo, ukuklama, izinkundla zokuxhumana namathuluzi edijithali.",
+        "starter_title": "Ukwakha isethulo sedijithali",
+        "starter_instructions": "Dala isithombe, iphosta noma ividiyo emfushane yokwethula ibhizinisi.",
+        "starter_skill": "Ukuxhumana ngedijithali"
+      },
+      "musica-expressao": {
+        "title": "Umculo, umdanso nokuziveza",
+        "description": "Umculo, ukukhiqiza, umsebenzi ka-DJ, umdanso, ukudlala nokuziveza ngobuciko.",
+        "starter_title": "Ukubonisa into engiyidalile",
+        "starter_instructions": "Yethula into oyidalile noma umdlalo bese uchaza ofuna ukukuthuthukisa.",
+        "starter_skill": "Ukuziveza ngobuciko"
+      },
+      "oficios-solucoes": {
+        "title": "Imisebenzi yezandla nezixazululo ezisebenzayo",
+        "description": "Ukulungisa, ukubaza, ubukhenikha, amandla neminye imisebenzi yezandla enokuqeqeshwa okuqondiswayo.",
+        "starter_title": "Ukwethula ukuhlolwa kwenkinga nesilinganiso sezindleko",
+        "starter_instructions": "Ngokuqondiswa umeluleki, chaza inkinga bese ulungiselela isiphakamiso sensizakalo esifanele izinga lakho.",
+        "starter_skill": "Ukuhlola inkinga nokulinganisa izindleko"
+      },
+      "emprego-carreira": {
+        "title": "Ukuqashwa nokukhula emsebenzini",
+        "description": "Ukulungiselela ukuqashwa, izilimi, ukubalwa kwezimali, ukuthuthwa kwempahla nokuthuthukiswa kwamakhono omsebenzi.",
+        "starter_title": "Ukulungiselela isicelo somsebenzi",
+        "starter_instructions": "Lungisa i-CV nesethulo sakho ukuze kuhambisane nethuba elithile.",
+        "starter_skill": "Ukulungiselela umsebenzi"
+      }
+    }
   }
 }
