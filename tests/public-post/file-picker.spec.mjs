@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test('each external destination invokes file sharing in the first tap with active user gesture', async ({ page }) => {
+test('file destinations retain the active gesture and LinkedIn offers an explicit handoff', async ({ page }) => {
   await page.addInitScript(() => {
     window.handoffs = [];
     Object.defineProperty(navigator, 'canShare', { configurable: true, value: data => data.files?.length === 1 });
@@ -12,6 +12,13 @@ test('each external destination invokes file sharing in the first tap with activ
   const destinations = ['WhatsApp', 'LinkedIn', 'TikTok', 'YouTube', 'Facebook', 'Instagram', 'Outros'];
   for (const [index, name] of destinations.entries()) {
     await page.getByRole('button', { name, exact: true }).tap();
+    if (name === 'LinkedIn') {
+      // LinkedIn deliberately opens its preparation panel instead of the native share sheet.
+      await expect(page.getByRole('region', { name: 'Publicar no LinkedIn' })).toBeVisible();
+      expect(await page.evaluate(() => window.handoffs.length)).toBe(index);
+      await expect(page.getByRole('link', { name: 'Abrir LinkedIn', exact: true })).toHaveAttribute('href', 'https://www.linkedin.com/feed/');
+      await page.getByRole('button', { name: 'Tentar partilha pelo menu do telemóvel' }).tap();
+    }
     await expect.poll(() => page.evaluate(() => window.handoffs.length)).toBe(index + 1);
     await expect(page.getByRole('button', { name, exact: true })).toHaveAttribute('aria-pressed', 'true');
   }
