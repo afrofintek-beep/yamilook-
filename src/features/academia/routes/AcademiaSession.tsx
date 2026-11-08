@@ -13,7 +13,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ReviewModal } from '../components/ReviewModal';
 import { EmptyStateBack } from '@/components/common/EmptyStateBack';
-import { ACADEMIA_COPY } from '../copy';
+import { ACADEMIA_COPY, sessionFormatLabel } from '../copy';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useSubmitAcademiaReview } from '../hooks/useAcademia';
@@ -118,14 +118,14 @@ export default function AcademiaSession() {
     onError: (err: unknown) => {
       const reason = err instanceof Error ? err.message : '';
       const msg: Record<string, string> = {
-        insufficient: 'Kumbu insuficiente para reservar esta sessão.',
-        already: 'Já reservaste esta sessão.',
-        full: 'Sessão lotada.',
-        past: 'Esta sessão já passou.',
-        closed: 'Esta sessão já foi encerrada.',
-        own_session: 'É a tua própria sessão.',
+        insufficient: uiText("Kumbu insuficiente para reservar esta sessão."),
+        already: uiText("Já reservaste esta sessão."),
+        full: uiText("Sessão lotada."),
+        past: uiText("Esta sessão já passou."),
+        closed: uiText("Esta sessão já foi encerrada."),
+        own_session: uiText("É a tua própria sessão."),
       };
-      toast.error(msg[reason] ?? 'Erro ao reservar. Tenta novamente.');
+      toast.error(msg[reason] ?? uiText("Erro ao reservar. Tenta novamente."));
     },
   });
 
@@ -141,7 +141,7 @@ export default function AcademiaSession() {
       return { refunded: amount > 0, amount, available: r.available != null ? Number(r.available) : null };
     },
     onSuccess: ({ refunded, amount, available }) => {
-      toast.success(refunded ? 'Reserva cancelada. Kumbu devolvido.' : 'Reserva cancelada.');
+      toast.success(refunded ? uiText("Reserva cancelada. Kumbu devolvido.") : uiText("Reserva cancelada."));
       queryClient.invalidateQueries({ queryKey: ['academia-session', sessionId] });
       queryClient.invalidateQueries({ queryKey: ['academia-reservation', sessionId] });
       queryClient.invalidateQueries({ queryKey: ['academia-sessions'] });
@@ -227,7 +227,7 @@ export default function AcademiaSession() {
   }
 
   if (!session) {
-    return <EmptyStateBack message="Sessão não encontrada." fallbackRoute="/academia" />;
+    return <EmptyStateBack message={uiText("Sessão não encontrada.")} fallbackRoute="/academia" />;
   }
 
   const isLive = session.status === 'live';
@@ -302,7 +302,7 @@ export default function AcademiaSession() {
                 <MonitorPlay className="h-4 w-4 text-primary shrink-0" />
                 <div>
                   <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{uiText("Formato")}</p>
-                  <p className="text-sm font-medium text-foreground capitalize">{session.format}</p>
+                  <p className="text-sm font-medium text-foreground capitalize">{sessionFormatLabel(session.format)}</p>
                 </div>
               </div>
               <div className="flex min-w-0 items-center gap-2.5 p-3 [&>div]:min-w-0 [&_p]:break-words">

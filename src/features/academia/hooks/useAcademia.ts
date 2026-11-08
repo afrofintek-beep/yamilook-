@@ -58,7 +58,7 @@ export function useAcademiaSessions() {
         if (profiles) {
           for (const p of profiles) {
             profileMap[p.id] = {
-              name: p.display_name || 'Anónimo',
+              name: p.display_name || uiText("Anónimo"),
               avatar: p.avatar_url ?? undefined,
             };
           }
@@ -72,7 +72,7 @@ export function useAcademiaSessions() {
           title: s.title,
           description: s.description,
           mentorId: s.mentor_id,
-          mentorName: profileMap[s.mentor_id]?.name ?? 'Anónimo',
+          mentorName: profileMap[s.mentor_id]?.name ?? uiText("Anónimo"),
           mentorAvatar: profileMap[s.mentor_id]?.avatar,
           date: format(dt, 'd MMM', { locale: pt }),
           time: format(dt, "HH:mm"),
@@ -175,8 +175,11 @@ export function useSubmitAcademiaReview() {
 }
 
 export function useAcademiaMentors() {
+  const locale = useUiLocale();
   return useQuery({
-    queryKey: MENTORS_QUERY_KEY,
+    queryKey: [...MENTORS_QUERY_KEY, locale],
+    staleTime: 0,
+    refetchOnWindowFocus: true,
     queryFn: async (): Promise<MentorCardProps[]> => {
       const { data: mentorProfiles, error } = await supabase
         .from('mentor_profiles')
@@ -228,6 +231,7 @@ export function useAcademiaMentors() {
           name: profileMap[m.user_id]?.name ?? 'Mentor',
           avatar: profileMap[m.user_id]?.avatar,
           specialty: m.specialty,
+          specialtyTranslations: m.translations?.specialty,
           rating: agg && agg.count > 0 ? agg.sum / agg.count : 0,
           sessionCount: sessionCounts[m.user_id] ?? 0,
           isVerified: m.is_verified_mentor,

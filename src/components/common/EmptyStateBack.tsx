@@ -33,7 +33,7 @@ const DEFAULT_ACTIONS: EmptyStateAction[] = [
 export function EmptyStateBack({
   message,
   fallbackRoute = '/',
-  title = 'Voltar',
+  title,
   actions = DEFAULT_ACTIONS,
 }: EmptyStateBackProps) {
   useUiLocale();
@@ -55,7 +55,7 @@ export function EmptyStateBack({
           >
             <ArrowLeft className="h-5 w-5 text-foreground" />
           </button>
-          <h1 className="text-sm font-bold text-foreground">{title}</h1>
+          <h1 className="text-sm font-bold text-foreground">{title ?? uiText("Voltar")}</h1>
         </div>
       </header>
       <div className="flex flex-1 items-center justify-center p-6">
