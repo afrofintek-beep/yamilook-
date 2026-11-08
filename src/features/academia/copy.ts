@@ -31,3 +31,9 @@ export const ACADEMIA_COPY = {
   get registrationClosed() { return uiText("Inscrições encerradas"); },
   get sessionEndedInfo() { return uiText("Esta sessão já terminou."); },
 } as const;
+
+export function sessionFormatLabel(format: string): string {
+  if (format === 'grupo') return ACADEMIA_COPY.formatGroup;
+  if (format === 'masterclass') return ACADEMIA_COPY.formatMasterclass;
+  return format;
+}

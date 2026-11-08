@@ -34,8 +34,11 @@ test('mentor lifecycle, role isolation, paid sessions, attendance, review integr
  insert into mentor_profiles(user_id,is_verified_mentor) values('${id(2)}',true);
  insert into academia_sessions(id,mentor_id,status) values('${id(10)}','${id(2)}','scheduled');
  insert into academia_reservations values('${id(10)}','${id(3)}','reserved');`);
- const file=(await readdir(new URL('../supabase/migrations/',import.meta.url))).find(f=>f.endsWith('_academia_mentor_governance.sql'));
- await db.exec(await readFile(new URL('../supabase/migrations/'+file,import.meta.url),'utf8'));
+ const files=await readdir(new URL('../supabase/migrations/',import.meta.url));
+ for (const suffix of ['_academia_mentor_governance.sql', '_academia_mentor_translations.sql']) {
+   const file=files.find(name=>name.endsWith(suffix));
+   await db.exec(await readFile(new URL('../supabase/migrations/'+file,import.meta.url),'utf8'));
+ }
  assert.deepEqual((await db.query('select status,is_verified_mentor from mentor_profiles')).rows,[{status:'review_required',is_verified_mentor:false}]);checks++;
  await as(2);
  await denied("update mentor_profiles set is_verified_mentor=true",/permission denied/);
@@ -56,7 +59,16 @@ test('mentor lifecycle, role isolation, paid sessions, attendance, review integr
  await denied(`update academia_sessions set price_coins=10 where id='${id(11)}'`,/Verificação/);
  await as(1);await ok(`select academia_manage_mentor('${id(2)}','verify','Credenciais verificadas')`);
  await as(2);await ok(`insert into academia_sessions(id,mentor_id,price_coins) values('${id(12)}','${id(2)}',10)`);
+ await db.exec('reset role');
+ await db.exec(`update academia_mentor_audit
+   set reason_translations='{"source":"Revisão concluída","values":{"en":"Review completed"}}'
+   where mentor_id='${id(2)}' and action='approve'`);
+ await as(2);
+ assert.equal((await db.query("select reason_translations->'values'->>'en' as copy from academia_mentor_audit where action='approve'")).rows[0].copy,'Review completed');checks++;
+ await denied("update academia_mentor_audit set reason_translations='{}'",/permission denied/);
+ await denied("update mentor_profiles set translations='{}'",/permission denied/);
  await as(3);
+ assert.equal((await db.query("select reason_translations from academia_mentor_audit where action='approve'")).rows.length,0);checks++;
  await denied(`select academia_confirm_attendance('${id(10)}','${id(3)}')`,/Apenas/);
  await denied(`insert into academia_attendance values('${id(10)}','${id(3)}','${id(3)}',now())`,/permission denied/);
  await denied(`insert into academia_reviews(session_id,mentor_id,reviewer_id,rating) values('${id(10)}','${id(2)}','${id(3)}',5)`,/row-level/);

@@ -50,8 +50,8 @@ export default function AcademiaLiveRoom() {
     finally{setEnding(false);}
   };
   if(isLoading)return <div className="h-screen-safe bg-background grid place-items-center">{uiText("A carregar sessão…")}</div>;
-  if(error&&!session)return <EmptyStateBack message="Não foi possível carregar a sessão." fallbackRoute="/academia" />;
-  if(!session)return <EmptyStateBack message="Sessão não encontrada." fallbackRoute="/academia" />;
+  if(error&&!session)return <EmptyStateBack message={uiText("Não foi possível carregar a sessão.")} fallbackRoute="/academia" />;
+  if(!session)return <EmptyStateBack message={uiText("Sessão não encontrada.")} fallbackRoute="/academia" />;
   return <main className="fixed inset-0 h-screen-safe overflow-hidden flex flex-col bg-background">
     <header className="shrink-0 safe-top border-b border-border bg-background"><div className="h-14 px-3 flex items-center gap-2">
       <Button variant="ghost" size="icon" aria-label={uiText("Sair da sala")} onClick={exit}><ArrowLeft /></Button>

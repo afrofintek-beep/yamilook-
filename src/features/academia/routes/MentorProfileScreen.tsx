@@ -1,4 +1,5 @@
 import { uiLocale, uiText, useUiLocale } from '@/i18n/ui-copy';
+import { academiaContent } from '../content-copy';
 import { mentorStatus } from '../hooks/useMentorGovernance';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, CheckCircle2, Star, GraduationCap, Calendar, Users } from 'lucide-react';
@@ -33,12 +34,13 @@ export default function MentorProfileScreen() {
 
       return {
         id: profile.id,
-        name: profile.display_name || 'Anónimo',
+        name: profile.display_name,
         avatar: profile.avatar_url ?? undefined,
         bio: profile.bio,
         level: profile.level,
         specialty: mentorProfile?.specialty || '',
         mentorBio: mentorProfile?.mentor_bio,
+        translations: mentorProfile?.translations,
         isVerifiedMentor: mentorProfile?.is_verified_mentor ?? false,
         status: mentorProfile?.status,
       };
@@ -97,7 +99,7 @@ export default function MentorProfileScreen() {
       const profileMap: Record<string, string> = {};
       if (profiles) {
         for (const p of profiles) {
-          profileMap[p.id] = p.display_name || 'Anónimo';
+          profileMap[p.id] = p.display_name;
         }
       }
 
@@ -105,7 +107,7 @@ export default function MentorProfileScreen() {
         id: r.id,
         rating: r.rating,
         comment: r.comment,
-        reviewerName: profileMap[r.reviewer_id] ?? 'Anónimo',
+        reviewerName: profileMap[r.reviewer_id],
         createdAt: r.created_at,
       }));
     },
@@ -149,8 +151,10 @@ export default function MentorProfileScreen() {
   }
 
   if (!mentor) {
-    return <EmptyStateBack message="Mentor não encontrado." fallbackRoute="/academia" />;
+    return <EmptyStateBack message={uiText("Mentor não encontrado.")} fallbackRoute="/academia" />;
   }
+
+  const mentorName = mentor.name || uiText("Anónimo");
 
   return (
     <div className="flex flex-col h-screen-safe overflow-hidden bg-background pb-[calc(5rem+env(safe-area-inset-bottom,0px))]">
@@ -167,12 +171,12 @@ export default function MentorProfileScreen() {
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-6 space-y-6">
         {/* Profile Header */}
         <div className="flex flex-col items-center text-center gap-3">
-          <Link to={`/profile/${mentor.id}`} aria-label={uiText("Abrir perfil de {{value1}}", { value1: (mentor.name) ?? "" })} className="relative rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+          <Link to={`/profile/${mentor.id}`} aria-label={uiText("Abrir perfil de {{value1}}", { value1: mentorName })} className="relative rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
             <div className="rounded-full p-[2px] bg-gradient-to-br from-primary/60 to-primary/20">
               <Avatar className="h-20 w-20 border-2 border-card">
                 <AvatarImage src={mentor.avatar} />
                 <AvatarFallback className="bg-secondary text-foreground text-lg font-semibold">
-                  {mentor.name.charAt(0)}
+                  {mentorName.charAt(0)}
                 </AvatarFallback>
               </Avatar>
             </div>
@@ -184,9 +188,9 @@ export default function MentorProfileScreen() {
           </Link>
 
           <div>
-            <Link to={`/profile/${mentor.id}`} className="text-lg font-bold text-foreground hover:underline focus-visible:underline">{mentor.name}</Link>
+            <Link to={`/profile/${mentor.id}`} className="text-lg font-bold text-foreground hover:underline focus-visible:underline">{mentorName}</Link>
             {mentor.specialty && (
-              <Badge variant="secondary" className="ml-2 text-xs rounded-full">{mentor.specialty}</Badge>
+              <Badge variant="secondary" dir="auto" className="max-w-full text-xs rounded-xl [overflow-wrap:anywhere]">{academiaContent(mentor.specialty, mentor.translations?.specialty)}</Badge>
             )}
           </div>
 
@@ -194,7 +198,7 @@ export default function MentorProfileScreen() {
 
           {mentor.status && <p className="text-sm text-muted-foreground">{mentorStatus[mentor.status] ?? mentor.status}</p>}
           {mentor.mentorBio && (
-            <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">{mentor.mentorBio}</p>
+            <p dir="auto" className="text-sm text-muted-foreground leading-relaxed max-w-xs [overflow-wrap:anywhere]">{academiaContent(mentor.mentorBio, mentor.translations?.biography)}</p>
           )}
         </div>
 
@@ -289,7 +293,7 @@ export default function MentorProfileScreen() {
                 <Card key={review.id} className="border-border/30 bg-card/50">
                   <CardContent className="p-3 space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-foreground">{review.reviewerName}</span>
+                      <span className="text-sm font-medium text-foreground">{review.reviewerName || uiText("Anónimo")}</span>
                       <div className="flex items-center gap-0.5">
                         {Array.from({ length: 5 }).map((_, i) => (
                           <Star

@@ -21,9 +21,9 @@ export type Database = {
         Relationships: []
       }
       academia_mentor_audit: {
-        Row: { id: string; mentor_id: string; actor_id: string | null; action: string; reason: string | null; created_at: string }
-        Insert: { id?: string; mentor_id: string; actor_id?: string | null; action: string; reason?: string | null; created_at?: string }
-        Update: { reason?: string | null }
+        Row: { id: string; mentor_id: string; actor_id: string | null; action: string; reason: string | null; reason_translations?: Json; created_at: string }
+        Insert: { id?: string; mentor_id: string; actor_id?: string | null; action: string; reason_translations?: Json; reason?: string | null; created_at?: string }
+        Update: { reason_translations?: Json; reason?: string | null }
         Relationships: []
       }
 
@@ -2504,6 +2504,7 @@ export type Database = {
       }
       mentor_profiles: {
         Row: {
+          translations?: { [key: string]: Json | undefined }
           status: string
           experience: string
           created_at: string
@@ -2515,6 +2516,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          translations?: { [key: string]: Json | undefined }
           status?: string
           experience?: string
           created_at?: string
@@ -2526,6 +2528,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          translations?: { [key: string]: Json | undefined }
           status?: string
           experience?: string
           created_at?: string

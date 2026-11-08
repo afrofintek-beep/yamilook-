@@ -1,4 +1,6 @@
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
+import type { Json } from '@/integrations/supabase/types';
+import { academiaContent } from '../content-copy';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -10,18 +12,19 @@ export interface MentorCardProps {
   name: string;
   avatar?: string;
   specialty: string;
+  specialtyTranslations?: Json;
   rating: number;
   sessionCount: number;
   isVerified?: boolean;
   onPress?: () => void;
 }
 
-export function MentorCard({ name, avatar, specialty, rating, sessionCount, isVerified, onPress }: MentorCardProps) {
+export function MentorCard({ name, avatar, specialty, specialtyTranslations, rating, sessionCount, isVerified, onPress }: MentorCardProps) {
   useUiLocale();
   return (
     <motion.div
       whileTap={{ scale: 0.96 }}
-      className="min-w-[150px] shrink-0"
+      className="w-48 shrink-0"
     >
       <Card
         className="border-border/30 bg-card cursor-pointer hover:border-primary/20 transition-colors duration-300 overflow-hidden"
@@ -49,8 +52,8 @@ export function MentorCard({ name, avatar, specialty, rating, sessionCount, isVe
           <span className="text-xs font-semibold text-foreground leading-tight">{name}</span>
 
           {/* Specialty badge */}
-          <Badge variant="secondary" className="text-[10px] px-2 py-0.5 rounded-full border-border/30">
-            {specialty}
+          <Badge variant="secondary" dir="auto" className="max-w-full justify-center text-[10px] px-2 py-0.5 rounded-xl border-border/30 [overflow-wrap:anywhere]">
+            {academiaContent(specialty, specialtyTranslations)}
           </Badge>
 
           {/* Stats row */}

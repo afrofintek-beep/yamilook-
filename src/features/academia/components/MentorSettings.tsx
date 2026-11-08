@@ -1,4 +1,6 @@
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
+import { academiaContent } from '../content-copy';
+import { uiServerMessage } from '@/i18n/server-copy';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -30,13 +32,15 @@ export function MentorSettings() {
   if (isError) return <Button variant="outline" onClick={() => refetch()}>{uiText("Tentar carregar candidatura novamente")}</Button>;
   if (!mentor) return null;
   const resubmit = ['rejected', 'inactive'].includes(mentor.status);
+  const lastDecision = decisions.find(decision => decision.reason);
+  const lastReason = academiaContent(lastDecision?.reason, lastDecision?.reason_translations);
   async function save() {
     setBusy(true);
     try {
       const { error } = await supabase.rpc('academia_save_mentor', { p_specialty: specialty, p_bio: bio, p_experience: experience, p_submit: resubmit });
       if (error) throw error;
-      await refresh(); setEditing(false); toast.success(resubmit ? 'Candidatura reenviada.' : 'Perfil actualizado.');
-    } catch (error) { toast.error((error as Error).message); } finally { setBusy(false); }
+      await refresh(); setEditing(false); toast.success(resubmit ? uiText("Candidatura reenviada.") : uiText("Perfil actualizado."));
+    } catch (error) { toast.error(uiServerMessage((error as Error).message, uiText("Não foi possível guardar as alterações."))); } finally { setBusy(false); }
   }
   async function requestExit() {
     if (!mentor) return;
@@ -45,13 +49,13 @@ export function MentorSettings() {
       const { error } = await supabase.rpc('academia_manage_mentor', { p_user: mentor.user_id, p_action: 'request_deactivation', p_reason: reason });
       if (error) throw error;
       await refresh(); setReason(''); toast.success(uiText("Pedido enviado. O suporte irá verificar os compromissos pendentes."));
-    } catch (error) { toast.error((error as Error).message); } finally { setBusy(false); }
+    } catch (error) { toast.error(uiServerMessage((error as Error).message, uiText("Não foi possível guardar as alterações."))); } finally { setBusy(false); }
   }
   return <section className="rounded-xl border p-4 space-y-3" aria-label={uiText("O meu perfil de mentor")}>
     <h2 className="font-semibold">{uiText("O meu perfil de mentor")}</h2>
     <p>{mentorStatus[mentor.status] ?? mentor.status}{mentor.is_verified_mentor ? uiText(" · Verificado para cobrar") : ''}</p>
     {mentor.status !== 'active' && <p className="text-sm text-muted-foreground">{uiText("Novas sessões exigem aprovação. O histórico mantém-se disponível. Completa a tua apresentação para a revisão.")}</p>}
-    {decisions.find(d => d.reason)?.reason && <p className="text-sm">{uiText("Última indicação: {{value1}}", { value1: (decisions.find(d => d.reason)?.reason) ?? "" })}</p>}
+    {lastReason && <p className="text-sm break-words">{uiText("Última indicação: {{value1}}", { value1: `\u2068${lastReason}\u2069` })}</p>}
     {!editing ? <Button variant="outline" onClick={() => { setSpecialty(mentor.specialty); setBio(mentor.mentor_bio ?? ''); setExperience(mentor.experience); setEditing(true); }}>{resubmit ? uiText("Actualizar e recandidatar-me") : uiText("Editar apresentação")}</Button> : <div className="space-y-3">
       <Label htmlFor="edit-specialty">{uiText("Especialidade")}</Label><Input id="edit-specialty" maxLength={120} value={specialty} onChange={e => setSpecialty(e.target.value)} />
       <Label htmlFor="edit-bio">{uiText("Biografia")}</Label><Textarea id="edit-bio" maxLength={2000} value={bio} onChange={e => setBio(e.target.value)} />
