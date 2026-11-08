@@ -23,6 +23,5 @@ export default function PaposLanguageSelector() {
       {appLanguages.map(language => <option key={language.code} value={language.code} lang={language.code}>{language.nativeName}</option>)}
     </select>
     {error && <p role="alert" className="text-sm text-destructive">{t('kosolola.languageError')}</p>}
-    {!['pt', 'pt-banda'].includes(current) && <p className="text-xs text-muted-foreground">{t('kosolola.incomplete')}</p>}
   </div>;
 }
