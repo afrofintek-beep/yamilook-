@@ -191,7 +191,7 @@ for (const [width, height, insets] of [
     await expect(panel.getByText('Conversa arquivada 29', { exact: true })).toBeAttached();
     await simulateInsets(page, insets);
     await panel.evaluate(el => Promise.all(el.getAnimations().map(animation => animation.finished)));
-    const close = panel.getByRole('button', { name: 'Close', exact: true });
+    const close = panel.getByRole('button', { name: 'Fechar', exact: true });
     const assertReachable = async () => {
       const box = await close.boundingBox();
       expect(box).not.toBeNull();

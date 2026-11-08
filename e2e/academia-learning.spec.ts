@@ -36,6 +36,7 @@ test('learner and mentor complete a private goal with revision on a mobile scree
       await route.fulfill({ json: data });
     });
     await page.addInitScript(userId => {
+      localStorage.setItem('i18nextLng', 'pt');
       const session = JSON.stringify({ access_token: btoa('{}') + '.' + btoa(JSON.stringify({ sub: userId, exp: Math.floor(Date.now() / 1000) + 3600 })) + '.signature', refresh_token: 'test-only', expires_at: Math.floor(Date.now() / 1000) + 3600, token_type: 'bearer', user: { id: userId, email: 'test@example.invalid' } });
       localStorage.setItem('undefined', session); localStorage.setItem('sb-127-auth-token', session);
     }, user);

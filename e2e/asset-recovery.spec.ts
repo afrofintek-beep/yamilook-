@@ -34,6 +34,7 @@ test('recovers a stale lazy route in WebKit and preserves the existing login', a
     await route.fulfill({ json: data });
   });
   await page.addInitScript(({ me, authKey }) => {
+    localStorage.setItem('i18nextLng', 'pt');
     // Seed once; a reload must preserve this session itself.
     if (sessionStorage.getItem('test-session-seeded')) return;
     sessionStorage.setItem('test-session-seeded', 'true');
