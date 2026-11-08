@@ -15,13 +15,15 @@ import { format } from '@/i18n/ui-date';
 import { pt } from 'date-fns/locale';
 
 export default function MentorProfileScreen() {
-  useUiLocale();
+  const locale = useUiLocale();
   const { mentorId } = useParams<{ mentorId: string }>();
   const navigate = useNavigate();
 
   // Fetch profile + mentor data
   const { data: mentor, isLoading } = useQuery({
-    queryKey: ['mentor-profile', mentorId],
+    queryKey: ['mentor-profile', mentorId, locale],
+    staleTime: 0,
+    refetchOnWindowFocus: true,
     enabled: !!mentorId,
     queryFn: async () => {
       const [{ data: profiles }, { data: mentorProfile }] = await Promise.all([

@@ -12,7 +12,7 @@ import { toast } from 'sonner';
 import { mentorStatus, useMyMentor, useRefreshMentors } from '../hooks/useMentorGovernance';
 
 export function MentorSettings() {
-  useUiLocale();
+  const locale = useUiLocale();
   const { data: mentor, isError, refetch } = useMyMentor();
   const refresh = useRefreshMentors();
   const [editing, setEditing] = useState(false);
@@ -22,7 +22,11 @@ export function MentorSettings() {
   const [reason, setReason] = useState('');
   const [busy, setBusy] = useState(false);
   const { data: decisions = [] } = useQuery({
-    queryKey: ['mentor-audit', mentor?.user_id], enabled: !!mentor,
+    queryKey: ['mentor-audit', mentor?.user_id, 'settings', locale], enabled: !!mentor,
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+    refetchInterval: 60_000,
     queryFn: async () => {
       const { data, error } = await supabase.from('academia_mentor_audit').select('*').eq('mentor_id', mentor!.user_id).order('created_at', { ascending: false }).limit(10);
       if (error) throw error;
@@ -33,7 +37,7 @@ export function MentorSettings() {
   if (!mentor) return null;
   const resubmit = ['rejected', 'inactive'].includes(mentor.status);
   const lastDecision = decisions.find(decision => decision.reason);
-  const lastReason = academiaContent(lastDecision?.reason, lastDecision?.reason_translations);
+  const lastReason = academiaContent(lastDecision?.reason, lastDecision?.reason_translations, locale);
   async function save() {
     setBusy(true);
     try {
