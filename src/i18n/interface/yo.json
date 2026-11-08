@@ -3433,5 +3433,10 @@
   "Cria a tua conta em {{url}} e insere o código {{code}}.": "Ṣẹda akọọlẹ rẹ ni {{url}} ki o tẹ koodu {{code}} sii.",
   "Este código é de utilização única.": "Koodu yii wa fun lilo ẹyọkan nikan.",
   "Bem-vindo(a)!": "Kaabo!",
-  "Equipa YAMILOOK": "YAMILOOK Egbe"
+  "Equipa YAMILOOK": "YAMILOOK Egbe",
+  "Endereço AFROLOC": "Àdírẹ́sì AFROLOC",
+  "Código AFROLOC": "Kóòdù AFROLOC",
+  "Abrir no NJILA": "Ṣí nínú NJILA",
+  "Código fornecido pelo remetente. O NJILA consulta a disponibilidade pública do endereço.": "Olùránṣẹ́ ló pèsè kóòdù náà. NJILA ń ṣàyẹ̀wò bóyá àdírẹ́sì náà wà fún gbogbo ènìyàn.",
+  "Partilha o código de um local público, como uma loja. Não é necessário partilhar a tua localização actual.": "Pín kóòdù ibi tí gbogbo ènìyàn lè lọ, bí ilé ìtajà. Kò ṣe dandan láti pín ibi tí o wà báyìí."
 }

@@ -3433,5 +3433,10 @@
   "Cria a tua conta em {{url}} e insere o código {{code}}.": "Salá compte na yo na {{url}} mpe kotia code {{code}}.",
   "Este código é de utilização única.": "Code oyo ezali kaka mpo na kosalela mbala moko.",
   "Bem-vindo(a)!": "Boyei malamu!",
-  "Equipa YAMILOOK": "Ekipi ya YAMILOOK"
+  "Equipa YAMILOOK": "Ekipi ya YAMILOOK",
+  "Endereço AFROLOC": "Adresi AFROLOC",
+  "Código AFROLOC": "Kode AFROLOC",
+  "Abrir no NJILA": "Fungola na NJILA",
+  "Código fornecido pelo remetente. O NJILA consulta a disponibilidade pública do endereço.": "Kode epesami na motindi. NJILA etalaka soki adresi ezali mpo na bato nyonso.",
+  "Partilha o código de um local público, como uma loja. Não é necessário partilhar a tua localização actual.": "Kabola kode ya esika ya bato nyonso, lokola magazini. Ozali na mposa te ya kokabola esika ozali sikoyo."
 }

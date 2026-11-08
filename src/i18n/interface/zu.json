@@ -3433,5 +3433,10 @@
   "Cria a tua conta em {{url}} e insere o código {{code}}.": "Dala i-akhawunti yakho ku-{{url}} bese ufaka ikhodi {{code}}.",
   "Este código é de utilização única.": "Le khodi isetshenziswa kanye kuphela.",
   "Bem-vindo(a)!": "Siyakwamukela!",
-  "Equipa YAMILOOK": "Iqembu le-YAMILOOK"
+  "Equipa YAMILOOK": "Iqembu le-YAMILOOK",
+  "Endereço AFROLOC": "Ikheli le-AFROLOC",
+  "Código AFROLOC": "Ikhodi ye-AFROLOC",
+  "Abrir no NJILA": "Vula ku-NJILA",
+  "Código fornecido pelo remetente. O NJILA consulta a disponibilidade pública do endereço.": "Ikhodi inikezwe umthumeli. I-NJILA ihlola ukuthi ikheli liyatholakala yini emphakathini.",
+  "Partilha o código de um local público, como uma loja. Não é necessário partilhar a tua localização actual.": "Yabelana ngekhodi yendawo yomphakathi, njengesitolo. Akudingeki wabelane ngendawo okuyo manje."
 }

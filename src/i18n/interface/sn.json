@@ -3433,5 +3433,10 @@
   "Cria a tua conta em {{url}} e insere o código {{code}}.": "Gadzira account yako pa{{url}} woisa iyo kodhi {{code}}.",
   "Este código é de utilização única.": "Iyi kodhi ndeyekushandisa kamwe chete.",
   "Bem-vindo(a)!": "Titambire!",
-  "Equipa YAMILOOK": "YAMILOOK Chikwata"
+  "Equipa YAMILOOK": "YAMILOOK Chikwata",
+  "Endereço AFROLOC": "Kero yeAFROLOC",
+  "Código AFROLOC": "Kodhi yeAFROLOC",
+  "Abrir no NJILA": "Vhura muNJILA",
+  "Código fornecido pelo remetente. O NJILA consulta a disponibilidade pública do endereço.": "Kodhi yapihwa nemutumiri. NJILA inoongorora kana kero ichiwanikwa neveruzhinji.",
+  "Partilha o código de um local público, como uma loja. Não é necessário partilhar a tua localização actual.": "Govera kodhi yenzvimbo yeruzhinji, sechitoro. Haufaniri kugovera nzvimbo yauri iye zvino."
 }

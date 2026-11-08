@@ -3433,5 +3433,10 @@
   "Cria a tua conta em {{url}} e insere o código {{code}}.": "Cria a tua conta em {{url}} e insere o código {{code}}.",
   "Este código é de utilização única.": "Este código é de utilização única.",
   "Bem-vindo(a)!": "Bem-vindo(a)!",
-  "Equipa YAMILOOK": "Equipa YAMILOOK"
+  "Equipa YAMILOOK": "Equipa YAMILOOK",
+  "Endereço AFROLOC": "Endereço AFROLOC",
+  "Código AFROLOC": "Código AFROLOC",
+  "Abrir no NJILA": "Abrir no NJILA",
+  "Código fornecido pelo remetente. O NJILA consulta a disponibilidade pública do endereço.": "Código fornecido pelo remetente. O NJILA consulta a disponibilidade pública do endereço.",
+  "Partilha o código de um local público, como uma loja. Não é necessário partilhar a tua localização actual.": "Partilha o código de um local público, como uma loja. Não é necessário partilhar a tua localização actual."
 }

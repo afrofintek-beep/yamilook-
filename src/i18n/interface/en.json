@@ -3433,5 +3433,10 @@
   "Cria a tua conta em {{url}} e insere o código {{code}}.": "Create your account at {{url}} and enter the code {{code}}.",
   "Este código é de utilização única.": "This code is for single use only.",
   "Bem-vindo(a)!": "Welcome!",
-  "Equipa YAMILOOK": "YAMILOOK Team"
+  "Equipa YAMILOOK": "YAMILOOK Team",
+  "Endereço AFROLOC": "AFROLOC address",
+  "Código AFROLOC": "AFROLOC code",
+  "Abrir no NJILA": "Open in NJILA",
+  "Código fornecido pelo remetente. O NJILA consulta a disponibilidade pública do endereço.": "Code provided by the sender. NJILA checks whether the address is publicly available.",
+  "Partilha o código de um local público, como uma loja. Não é necessário partilhar a tua localização actual.": "Share the code of a public place, such as a shop. You do not need to share your current location."
 }

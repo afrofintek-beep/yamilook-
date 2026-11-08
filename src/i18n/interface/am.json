@@ -3433,5 +3433,10 @@
   "Cria a tua conta em {{url}} e insere o código {{code}}.": "መለያዎን በ{{url}} ይፍጠሩ እና ኮዱን {{code}} ያስገቡ።",
   "Este código é de utilização única.": "ይህ ኮድ ለአንድ ነጠላ አገልግሎት ብቻ ነው።",
   "Bem-vindo(a)!": "እንኳን ደህና መጣህ!",
-  "Equipa YAMILOOK": "YAMILOOK ቡድን"
+  "Equipa YAMILOOK": "YAMILOOK ቡድን",
+  "Endereço AFROLOC": "የAFROLOC አድራሻ",
+  "Código AFROLOC": "የAFROLOC ኮድ",
+  "Abrir no NJILA": "በNJILA ክፈት",
+  "Código fornecido pelo remetente. O NJILA consulta a disponibilidade pública do endereço.": "ኮዱ በላኪው የቀረበ ነው። NJILA አድራሻው ለሕዝብ የሚገኝ መሆኑን ያረጋግጣል።",
+  "Partilha o código de um local público, como uma loja. Não é necessário partilhar a tua localização actual.": "እንደ ሱቅ ያለ የሕዝብ ቦታ ኮድ አጋራ። አሁን ያለህበትን ቦታ ማጋራት አያስፈልግም።"
 }
