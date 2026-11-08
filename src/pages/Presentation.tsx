@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import KosololaLogo from '@/components/brand/KosololaLogo';
 import { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -40,188 +41,188 @@ interface Slide {
   visual?: "logo" | "reactions" | "mokubico" | "closing";
 }
 
-const SLIDES: Slide[] = [
+const getSlides = (): Slide[] => [
   {
     id: "cover",
     title: "yamilook",
-    subtitle: "A vida como ela é.",
+    subtitle: uiText("A vida como ela é."),
     visual: "logo",
   },
   {
     id: "mission",
-    title: "A nossa missão",
+    title: uiText("A nossa missão"),
     subtitle:
-      "Criar a primeira super-app social africana — feita por angolanos, para a banda toda.",
+      uiText("Criar a primeira super-app social africana — feita por angolanos, para a banda toda."),
     bullets: [
-      "Comunidade local em primeiro lugar",
-      "Cultura africana como identidade, não decoração",
-      "Privacidade e respeito como valores fundamentais",
+      uiText("Comunidade local em primeiro lugar"),
+      uiText("Cultura africana como identidade, não decoração"),
+      uiText("Privacidade e respeito como valores fundamentais"),
     ],
     icon: <Heart className="h-10 w-10" />,
   },
   {
     id: "feed",
-    title: "Muxi — Feed Social",
-    subtitle: "Partilha momentos, ideias e vibes com a tua banda.",
+    title: uiText("Muxi — Feed Social"),
+    subtitle: uiText("Partilha momentos, ideias e vibes com a tua banda."),
     bullets: [
-      "Publicações com fotos, vídeos e texto",
-      "Sistema de Reações Africanas exclusivo",
-      "Tópicos de descoberta e trending",
-      "Stories que desaparecem em 24h",
+      uiText("Publicações com fotos, vídeos e texto"),
+      uiText("Sistema de Reações Africanas exclusivo"),
+      uiText("Tópicos de descoberta e trending"),
+      uiText("Stories que desaparecem em 24h"),
     ],
     icon: <Camera className="h-10 w-10" />,
   },
   {
     id: "reactions",
-    title: "Reações Africanas",
-    subtitle: "Emoções com significado cultural, não apenas emojis genéricos.",
+    title: uiText("Reações Africanas"),
+    subtitle: uiText("Emoções com significado cultural, não apenas emojis genéricos."),
     visual: "reactions",
     bullets: [
-      "🪘 Djembe — Celebração",
-      "❤️ Sankofa Love — Amor profundo",
-      "🤝 Ubuntu — Solidariedade",
-      "⚡ Shango — Poder e força",
-      "😤 Eish — Desconforto",
+      uiText("🪘 Djembe — Celebração"),
+      uiText("❤️ Sankofa Love — Amor profundo"),
+      uiText("🤝 Ubuntu — Solidariedade"),
+      uiText("⚡ Shango — Poder e força"),
+      uiText("😤 Eish — Desconforto"),
     ],
   },
   {
     id: "chat",
-    title: "KOSOLOLA — Conversas",
-    subtitle: "Conversas privadas e em grupo, com todo o mambo.",
+    title: uiText("KOSOLOLA — Conversas"),
+    subtitle: uiText("Conversas privadas e em grupo, com todo o mambo."),
     bullets: [
-      "Mensagens de texto, áudio e vídeo",
-      "Grupos com administração avançada",
-      "Mensagens que desaparecem",
-      "Reações, respostas e encaminhamento",
-      "GIFs, stickers e formatação rica",
+      uiText("Mensagens de texto, áudio e vídeo"),
+      uiText("Grupos com administração avançada"),
+      uiText("Mensagens que desaparecem"),
+      uiText("Reações, respostas e encaminhamento"),
+      uiText("GIFs, stickers e formatação rica"),
     ],
     icon: <KosololaLogo className="h-10 w-10" />,
   },
   {
     id: "calls",
-    title: "Chamadas",
-    subtitle: "Voz e vídeo de alta qualidade com a tua banda.",
+    title: uiText("Chamadas"),
+    subtitle: uiText("Voz e vídeo de alta qualidade com a tua banda."),
     bullets: [
-      "Chamadas individuais e em grupo",
-      "Vídeo com fundos virtuais",
-      "Gravação de chamadas",
-      "Sala de espera e controlo de anfitrião",
-      "Salas breakout para grupos grandes",
+      uiText("Chamadas individuais e em grupo"),
+      uiText("Vídeo com fundos virtuais"),
+      uiText("Gravação de chamadas"),
+      uiText("Sala de espera e controlo de anfitrião"),
+      uiText("Salas breakout para grupos grandes"),
     ],
     icon: <Phone className="h-10 w-10" />,
   },
   {
     id: "live",
-    title: "Live — Transmissões ao Vivo",
-    subtitle: "Vai ao vivo e conecta-te com a tua comunidade em tempo real.",
+    title: uiText("Live — Transmissões ao Vivo"),
+    subtitle: uiText("Vai ao vivo e conecta-te com a tua comunidade em tempo real."),
     bullets: [
-      "Streaming de áudio e vídeo",
-      "Chat ao vivo e reações",
-      "Gestão de participantes",
-      "Integração com Palco e Mokubico",
+      uiText("Streaming de áudio e vídeo"),
+      uiText("Chat ao vivo e reações"),
+      uiText("Gestão de participantes"),
+      uiText("Integração com Palco e Mokubico"),
     ],
     icon: <Radio className="h-10 w-10" />,
   },
   {
     id: "mokubico",
     title: "MOKUBICO",
-    subtitle: "Onde a tua banda vive — espaços de convívio por áudio.",
+    subtitle: uiText("Onde a tua banda vive — espaços de convívio por áudio."),
     visual: "mokubico",
     bullets: [
-      "🌴 Quintal — Conversas abertas para todos",
-      "🛋️ Sala — Rodas íntimas entre kambas",
-      "🍳 Cozinha das Sis — Espaço seguro feminino",
-      "🔒 Quarto — Privacidade total a dois",
+      uiText("🌴 Quintal — Conversas abertas para todos"),
+      uiText("🛋️ Sala — Rodas íntimas entre kambas"),
+      uiText("🍳 Cozinha das Sis — Espaço seguro feminino"),
+      uiText("🔒 Quarto — Privacidade total a dois"),
     ],
   },
   {
     id: "ritmos",
-    title: "Ritmos",
-    subtitle: "Vídeos curtos com o ritmo de Angola.",
+    title: uiText("Ritmos"),
+    subtitle: uiText("Vídeos curtos com o ritmo de Angola."),
     bullets: [
-      "Criação rápida de vídeos curtos",
-      "Efeitos e filtros africanos",
-      "Feed vertical tipo TikTok",
-      "Partilha direta para o feed e stories",
+      uiText("Criação rápida de vídeos curtos"),
+      uiText("Efeitos e filtros africanos"),
+      uiText("Feed vertical tipo TikTok"),
+      uiText("Partilha direta para o feed e stories"),
     ],
     icon: <Music className="h-10 w-10" />,
   },
   {
     id: "palco",
-    title: "Palco",
-    subtitle: "O teu espaço de criação e performance ao vivo.",
+    title: uiText("Palco"),
+    subtitle: uiText("O teu espaço de criação e performance ao vivo."),
     bullets: [
-      "Criação de palcos temáticos",
-      "Rodas de conversa moderadas",
-      "Sistema de Vozes para co-criação",
-      "Dashboard de gestão para criadores",
+      uiText("Criação de palcos temáticos"),
+      uiText("Rodas de conversa moderadas"),
+      uiText("Sistema de Vozes para co-criação"),
+      uiText("Dashboard de gestão para criadores"),
     ],
     icon: <Zap className="h-10 w-10" />,
   },
   {
     id: "academia",
-    title: "Academia da Banda",
-    subtitle: "Na Academia a banda cresce — mentorias e formação ao vivo.",
+    title: uiText("Academia da Banda"),
+    subtitle: uiText("Na Academia a banda cresce — mentorias e formação ao vivo."),
     bullets: [
-      "Sessões 1:1, Grupo e Masterclass",
-      "Mentores verificados da comunidade",
-      "Inscrição com regras de tempo (+10% tardia)",
-      "Avaliações e feedback pós-sessão",
+      uiText("Sessões 1:1, Grupo e Masterclass"),
+      uiText("Mentores verificados da comunidade"),
+      uiText("Inscrição com regras de tempo (+10% tardia)"),
+      uiText("Avaliações e feedback pós-sessão"),
     ],
     icon: <GraduationCap className="h-10 w-10" />,
   },
   {
     id: "kumbu",
-    title: "Kumbu — Economia da Participação",
-    subtitle: "Quem participa, ganha. Quem cria, monetiza.",
+    title: uiText("Kumbu — Economia da Participação"),
+    subtitle: uiText("Quem participa, ganha. Quem cria, monetiza."),
     bullets: [
-      "Moeda virtual Kumbu por interações",
-      "Níveis: Bronze → Prata → Ouro → KOTA",
-      "Conversão para dinheiro real",
-      "Ranking semanal da comunidade",
+      uiText("Moeda virtual Kumbu por interações"),
+      uiText("Níveis: Bronze → Prata → Ouro → KOTA"),
+      uiText("Conversão para dinheiro real"),
+      uiText("Ranking semanal da comunidade"),
     ],
     icon: <Coins className="h-10 w-10" />,
   },
   {
     id: "advertising",
-    title: "Publicidade Local",
-    subtitle: "Negócios locais a alcançar a banda certa.",
+    title: uiText("Publicidade Local"),
+    subtitle: uiText("Negócios locais a alcançar a banda certa."),
     bullets: [
-      "Perfis de negócio verificados",
-      "Anúncios patrocinados no feed",
-      "Segmentação por cidade e bairro",
-      "Dashboard de métricas em tempo real",
+      uiText("Perfis de negócio verificados"),
+      uiText("Anúncios patrocinados no feed"),
+      uiText("Segmentação por cidade e bairro"),
+      uiText("Dashboard de métricas em tempo real"),
     ],
     icon: <Megaphone className="h-10 w-10" />,
   },
   {
     id: "i18n",
-    title: "Multilingue & Multicultural",
-    subtitle: "12 idiomas, incluindo 5 línguas angolanas nativas.",
+    title: uiText("Multilingue & Multicultural"),
+    subtitle: uiText("10 línguas disponíveis na aplicação."),
     bullets: [
-      "Português (formal) e Yamilook da Banda (urbano)",
-      "Kimbundu, Umbundu, Kikongo, Tchokwe, Lingala",
-      "Inglês, Francês, Swahili, Amárico, Árabe",
-      "Seleção de tom no primeiro ecrã",
+      uiText("Português: Formal ou Urbano"),
+      uiText("Lingala, Yoruba, Shona e Zulu"),
+      uiText("Inglês, Francês, Swahili, Amárico, Árabe"),
+      uiText("Escolha de idioma nas definições; tom disponível em português"),
     ],
     icon: <Globe className="h-10 w-10" />,
   },
   {
     id: "moderation",
-    title: "Segurança & Moderação",
-    subtitle: "Uma comunidade segura é uma comunidade forte.",
+    title: uiText("Segurança & Moderação"),
+    subtitle: uiText("Uma comunidade segura é uma comunidade forte."),
     bullets: [
-      "Denúncia de conteúdo por categorias",
-      "Sistema de strikes com transparência",
-      "Painel de apelações para utilizadores",
-      "Moderação com IA e revisão humana",
+      uiText("Denúncia de conteúdo por categorias"),
+      uiText("Sistema de strikes com transparência"),
+      uiText("Painel de apelações para utilizadores"),
+      uiText("Moderação com IA e revisão humana"),
     ],
     icon: <Shield className="h-10 w-10" />,
   },
   {
     id: "closing",
-    title: "O mambo começa na banda.",
-    subtitle: "yamilook — A vida como ela é.",
+    title: uiText("O mambo começa na banda."),
+    subtitle: uiText("yamilook — A vida como ela é."),
     visual: "closing",
   },
 ];
@@ -229,6 +230,8 @@ const SLIDES: Slide[] = [
 /* ────────────────────── Presentation component ────────────────────── */
 
 export default function Presentation() {
+  const locale = useUiLocale();
+  const SLIDES = getSlides();
   const navigate = useNavigate();
   const [current, setCurrent] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -304,8 +307,8 @@ export default function Presentation() {
             variant="ghost"
             size="icon"
             className="text-white/70 hover:text-white hover:bg-white/10"
-            onClick={() => navigate("/apresentacao/pdf")}
-            title="Exportar PDF"
+            onClick={() => navigate(`/apresentacao/pdf?lang=${encodeURIComponent(locale)}`)}
+            title={uiText("Exportar PDF")}
           >
             <FileDown className="h-4 w-4" />
           </Button>

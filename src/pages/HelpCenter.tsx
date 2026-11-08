@@ -68,7 +68,7 @@ function FaqItem({ q, a }: { q: string; a: string }) {
 }
 
 export default function HelpCenter() {
-  useUiLocale();
+  const locale = useUiLocale();
   const navigate = useNavigate();
 
   return (
@@ -83,6 +83,9 @@ export default function HelpCenter() {
 
           <ScrollArea className="h-[calc(100vh-260px)]">
             <div className="space-y-3 pr-3">
+              <a href={`/guia/?lang=${encodeURIComponent(locale)}`} className="flex items-center gap-3 rounded-xl border border-border p-4 text-sm hover:bg-secondary/50">
+                <FileText className="h-4 w-4 text-primary" />{uiText("Guias da Yamilook")}
+              </a>
               {FAQ.map((item) => <FaqItem key={item.q} {...item} />)}
 
               {/* Contact & legal */}

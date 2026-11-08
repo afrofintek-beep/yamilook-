@@ -5,7 +5,9 @@ import { expect, it } from 'vitest';
 import portuguese from './interface/pt.json';
 import adminPortuguese from './admin-interface/pt.json';
 
-const copy = { ...portuguese, ...adminPortuguese };
+import manualPortuguese from './manuals/pt.json';
+
+const copy = { ...portuguese, ...adminPortuguese, ...manualPortuguese };
 
 it('has a dictionary entry for every fixed UI source and never translates a runtime value', () => {
   const root = process.cwd();
