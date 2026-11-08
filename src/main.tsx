@@ -142,6 +142,7 @@ async function setupPwaAutoUpdate() {
       onRegisteredSW(_swUrl, reg) {
         if (!reg) return;
         const check = () => reg.update().catch(() => {});
+        check();
         setInterval(check, 60 * 60 * 1000); // de hora a hora
         document.addEventListener("visibilitychange", () => {
           if (document.visibilityState === "visible") check(); // ao voltar ao 1º plano

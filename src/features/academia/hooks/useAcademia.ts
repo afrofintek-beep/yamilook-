@@ -175,8 +175,11 @@ export function useSubmitAcademiaReview() {
 }
 
 export function useAcademiaMentors() {
+  const locale = useUiLocale();
   return useQuery({
-    queryKey: MENTORS_QUERY_KEY,
+    queryKey: [...MENTORS_QUERY_KEY, locale],
+    staleTime: 0,
+    refetchOnWindowFocus: true,
     queryFn: async (): Promise<MentorCardProps[]> => {
       const { data: mentorProfiles, error } = await supabase
         .from('mentor_profiles')
