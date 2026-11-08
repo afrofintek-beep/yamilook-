@@ -1,4 +1,4 @@
-import { uiText, useUiLocale } from '@/i18n/ui-copy';
+import { uiText, uiLocale, useUiLocale } from '@/i18n/ui-copy';
 import { refreshCallPush } from '@/lib/call-push';
 import { deferCallUpdate } from '@/lib/call-update-guard';
 import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
@@ -38,7 +38,7 @@ export function PaposGate({ children }: { children: ReactNode }) {
   if (loading) return <Loading />;
   if (!user) return <Navigate to="/login" state={{ from: location.pathname + location.search }} replace />;
   if (!profile) return <main className="min-h-screen-safe safe-top p-6 space-y-4"><p>{uiText("Não foi possível carregar o perfil.")}</p><Button onClick={() => void refreshProfile()}>{uiText("Tentar novamente")}</Button></main>;
-  if (!profile.onboarding_completed) return <main className="min-h-screen-safe safe-top p-6 space-y-4"><h1 className="text-2xl font-bold">{uiText("Conclui a tua conta")}</h1><p>{uiText("A tua conta é partilhada com a Yamilook. Conclui os dados pendentes e volta à KOSOLOLA.")}</p><Button asChild><a href="https://www.yamilook.com/onboarding">{uiText("Continuar a inscrição")}</a></Button></main>;
+  if (!profile.onboarding_completed) return <main className="min-h-screen-safe safe-top p-6 space-y-4"><h1 className="text-2xl font-bold">{uiText("Conclui a tua conta")}</h1><p>{uiText("A tua conta é partilhada com a Yamilook. Conclui os dados pendentes e volta à KOSOLOLA.")}</p><Button asChild><a href={`https://www.yamilook.com/onboarding?lang=${encodeURIComponent(uiLocale())}`}>{uiText("Continuar a inscrição")}</a></Button></main>;
   return <>{children}</>;
 }
 export function PaposCallLayout() {
