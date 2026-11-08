@@ -18,7 +18,7 @@ const client = supabase as unknown as SupabaseClient<{
 }>;
 
 /** A fresh instance is mounted per sheet opening/account; retries reuse the request ID. */
-export function ContactInviteActions() {
+export function ContactInviteActions({ language = uiLocale() }: { language?: string }) {
   useUiLocale();
   const brand = useAppSurface() === 'papos' ? 'KOSOLOLA' : 'YAMILOOK';
   const requestId = useRef<string>();
@@ -27,7 +27,7 @@ export function ContactInviteActions() {
   const [invite, setInvite] = useState<{ code: string; expires_at: string } | null>(null);
   const [status, setStatus] = useState('');
   const [channel, setChannel] = useState<Channel>('whatsapp');
-  const url = invite ? buildInviteUrl(invite.code) : '';
+  const url = invite ? buildInviteUrl(invite.code, language) : '';
   const prepare = async (choice: Channel) => {
     if (busy.current) return;
     busy.current = true;
@@ -59,7 +59,7 @@ export function ContactInviteActions() {
     if (!invite) return;
     try {
       // Called directly from a click, without awaiting token creation (iOS activation).
-      await navigator.share({ title: uiText("Convite para a {{value1}}", { value1: (brand) ?? "" }), text: invitationMessage('', invite.code, brand), url });
+      await navigator.share({ title: uiText("Convite para a {{value1}}", { value1: brand }, language), text: invitationMessage('', invite.code, brand, invite.expires_at, language), url });
       setStatus(uiText("Partilha concluída na aplicação escolhida. A entrega não está confirmada."));
     } catch (error) {
       if ((error as { name?: string })?.name !== 'AbortError') {
@@ -81,8 +81,8 @@ export function ContactInviteActions() {
         <div className="mx-auto w-fit max-w-full rounded-lg bg-white p-4"><QRCodeSVG value={url} size={240} level="M" marginSize={4} title={uiText("Convite individual")} style={{ maxWidth: '100%', height: 'auto' }} /></div>
         <figcaption className="text-sm text-muted-foreground">{uiText("Lê com a câmara para te registares. Válido para uma pessoa; só fica utilizado após o registo bem-sucedido.")}</figcaption>
       </figure>}
-      <Button variant={channel === 'whatsapp' ? 'default' : 'outline'} className="w-full" asChild><a href={buildWhatsAppInviteUrl('', invite.code, brand)} target="_blank" rel="noopener noreferrer"><MessageCircle className="mr-2 h-4 w-4" />{uiText("Escolher contacto no WhatsApp")}</a></Button>
-      <Button variant={channel === 'email' ? 'default' : 'outline'} className="w-full" asChild><a href={buildEmailInviteDraftUrl('', invite.code, brand)}><Mail className="mr-2 h-4 w-4" />{uiText("Escolher contacto no email")}</a></Button>
+      <Button variant={channel === 'whatsapp' ? 'default' : 'outline'} className="w-full" asChild><a href={buildWhatsAppInviteUrl('', invite.code, brand, invite.expires_at, language)} target="_blank" rel="noopener noreferrer"><MessageCircle className="mr-2 h-4 w-4" />{uiText("Escolher contacto no WhatsApp")}</a></Button>
+      <Button variant={channel === 'email' ? 'default' : 'outline'} className="w-full" asChild><a href={buildEmailInviteDraftUrl('', invite.code, brand, invite.expires_at, language)}><Mail className="mr-2 h-4 w-4" />{uiText("Escolher contacto no email")}</a></Button>
       {typeof navigator.share === 'function' && <Button variant="outline" className="w-full" onClick={() => void share()}><Share2 className="mr-2 h-4 w-4" />{uiText("Partilhar pelo telemóvel")}</Button>}
       <Button variant={channel === 'copy' ? 'default' : 'outline'} className="w-full" onClick={() => void copy()}><Copy className="mr-2 h-4 w-4" />{uiText("Copiar ligação")}</Button>
       <label className="block text-sm" htmlFor="contact-invite-link">{uiText("Ligação para o teu contacto")}</label>

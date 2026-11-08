@@ -7,7 +7,7 @@ import { buildInviteUrl } from '@/lib/referral';
 import { buildWhatsAppInviteUrl, buildEmailInviteDraftUrl } from '@/lib/invite-delivery';
 import { useAppSurface } from '@/lib/app-surface';
 
-export function CampaignInvites() {
+export function CampaignInvites({ language = uiLocale() }: { language?: string }) {
   useUiLocale();
   const brand = useAppSurface() === 'papos' ? 'KOSOLOLA' : 'YAMILOOK';
   const [campaigns, setCampaigns] = useState<InvitationCampaign[]>([]);
@@ -81,10 +81,10 @@ export function CampaignInvites() {
         <Button disabled={busy || !canIssueCampaign(campaign)} type="submit">{busy ? uiText("A emitir…") : uiText("Emitir convite da campanha")}</Button>
       </form> : <div className="space-y-3">
         <label htmlFor="campaign-link">{uiText("Ligação individual")}</label>
-        <Input id="campaign-link" readOnly value={buildInviteUrl(invite.code)} onFocus={e => e.target.select()} />
+        <Input id="campaign-link" readOnly value={buildInviteUrl(invite.code, language)} onFocus={e => e.target.select()} />
         <p>{uiText("Válido até {{value1}}.", { value1: (new Date(invite.expires_at).toLocaleString(uiLocale())) ?? "" })}</p>
-        <Button asChild><a href={buildWhatsAppInviteUrl(email.trim(), invite.code, brand, invite.expires_at)} target="_blank" rel="noopener noreferrer">{uiText("Partilhar no WhatsApp")}</a></Button>
-        <Button variant="outline" asChild><a href={buildEmailInviteDraftUrl(email.trim(), invite.code, brand, invite.expires_at)}>{uiText("Preparar email")}</a></Button>
+        <Button asChild><a href={buildWhatsAppInviteUrl(email.trim(), invite.code, brand, invite.expires_at, language)} target="_blank" rel="noopener noreferrer">{uiText("Partilhar no WhatsApp")}</a></Button>
+        <Button variant="outline" asChild><a href={buildEmailInviteDraftUrl(email.trim(), invite.code, brand, invite.expires_at, language)}>{uiText("Preparar email")}</a></Button>
         <Button variant="ghost" onClick={() => { setInvite(undefined); setEmail(''); request.current = undefined; }}>{uiText("Novo destinatário")}</Button>
       </div>}
       {report && <div className="space-y-2">

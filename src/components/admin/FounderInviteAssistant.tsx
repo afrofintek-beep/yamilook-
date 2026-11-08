@@ -1,3 +1,4 @@
+import { ContentLanguageSelect, contentLanguage } from '@/components/ContentLanguageSelect';
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -5,18 +6,20 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { buildInviteUrl } from '@/lib/referral';
-import { buildFounderInviteMessage, type FounderInviteLanguage } from '@/lib/founder-invite';
+import { buildFounderInviteMessage } from '@/lib/founder-invite';
 
 type IssueResult = { code?: string };
 
 export function FounderInviteAssistant() {
-  useUiLocale();
+  const locale = useUiLocale();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [profession, setProfession] = useState('');
   const [reason, setReason] = useState('');
-  const [language, setLanguage] = useState<FounderInviteLanguage>('pt');
-  const [link, setLink] = useState('');
+  const [selectedLanguage, setSelectedLanguage] = useState<string>();
+  const language = selectedLanguage ?? contentLanguage(locale);
+  const [code, setCode] = useState('');
+  const link = code ? buildInviteUrl(code, language) : '';
   const [issuedEmail, setIssuedEmail] = useState('');
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState('');
@@ -25,7 +28,7 @@ export function FounderInviteAssistant() {
   const draft = buildFounderInviteMessage({ name, profession, reason, language, link });
   const message = customMessage ?? draft;
   const change = (update: () => void) => { update(); setCustomMessage(null); };
-  const updateEmail = (value: string) => { setEmail(value); setLink(''); setIssuedEmail(''); setStatus(''); setCustomMessage(null); };
+  const updateEmail = (value: string) => { setEmail(value); setCode(''); setIssuedEmail(''); setStatus(''); setCustomMessage(null); };
   const copy = async (value: string) => {
     try { await navigator.clipboard.writeText(value); setStatus(uiText('Copiado. Envia pessoalmente no canal escolhido.')); }
     catch { setStatus(uiText('Não foi possível copiar. Selecciona e copia o texto manualmente.')); }
@@ -42,7 +45,7 @@ export function FounderInviteAssistant() {
       if (error) throw error;
       const code = (data as IssueResult | null)?.code;
       if (!code) throw new Error('Não foi possível gerar o convite.');
-      setLink(buildInviteUrl(code));
+      setCode(code);
       setIssuedEmail(address);
       setCustomMessage(null);
       setStatus(uiText('Convite individual criado. Confirma o destinatário antes de partilhar.'));
@@ -64,14 +67,11 @@ export function FounderInviteAssistant() {
         </label>
         <label className="space-y-1 text-sm font-medium">{uiText("Profissão ou área")}<Input value={profession} maxLength={120} onChange={e => change(() => setProfession(e.target.value))} placeholder={uiText("Empreendedorismo, ensino...")} />
         </label>
-        <label className="space-y-1 text-sm font-medium">{uiText("Idioma")}<select className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-base sm:text-sm" value={language} onChange={e => change(() => setLanguage(e.target.value as FounderInviteLanguage))}>
-            <option value="pt">{uiText("Português")}</option><option value="en">{uiText("English")}</option><option value="fr">{uiText("Français")}</option>
-          </select>
-        </label>
+        <ContentLanguageSelect value={language} onChange={value => change(() => setSelectedLanguage(value))} />
       </div>
       <label className="block space-y-1 text-sm font-medium">{uiText("Porque escolheste esta pessoa?")}<Input value={reason} maxLength={240} onChange={e => change(() => setReason(e.target.value))} placeholder={uiText("A experiência dela em mentoria...")} />
       </label>
-      <label className="block space-y-1 text-sm font-medium">{uiText("Mensagem pessoal — podes editar antes de copiar")}<textarea aria-label={uiText("Mensagem pessoal")} className="min-h-56 w-full rounded-md border border-input bg-background px-3 py-2 text-base sm:text-sm" value={message} onChange={e => setCustomMessage(e.target.value)} />
+      <label className="block space-y-1 text-sm font-medium">{uiText("Mensagem pessoal — podes editar antes de copiar")}<textarea lang={language} dir={language === 'ar' ? 'rtl' : 'ltr'} aria-label={uiText("Mensagem pessoal")} className="min-h-56 w-full rounded-md border border-input bg-background px-3 py-2 text-base sm:text-sm" value={message} onChange={e => setCustomMessage(e.target.value)} />
       </label>
       {link && <div className="space-y-1 text-sm">
         <p className="font-medium">{uiText("Convite reservado ao email {{value1}}", { value1: (issuedEmail) ?? "" })}</p>

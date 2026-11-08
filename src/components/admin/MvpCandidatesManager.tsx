@@ -1,3 +1,5 @@
+import { ContentLanguageSelect, contentLanguage } from '@/components/ContentLanguageSelect';
+import { candidateInvitationEmail } from '../../../supabase/functions/_shared/invitation-copy';
 import { uiText, useUiLocale, uiLocale } from '@/i18n/ui-copy';
 import { uiServerMessage } from '@/i18n/server-copy';
 import { useState, useEffect, useCallback } from "react";
@@ -65,7 +67,9 @@ const statusConfig = {
 };
 
 export function MvpCandidatesManager() {
-  useUiLocale();
+  const locale = useUiLocale();
+  const [selectedLanguage, setSelectedLanguage] = useState<string>();
+  const language = selectedLanguage ?? contentLanguage(locale);
   const [loadError, setLoadError] = useState(false);
   const [sending, setSending] = useState<string | null>(null);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
@@ -185,31 +189,16 @@ export function MvpCandidatesManager() {
   };
 
   const copyEmailTemplate = (candidate: Candidate) => {
-    const template = `Olá ${candidate.full_name},
-
-Parabéns! A tua candidatura para o MVP do Yamilook foi aprovada! 🎉
-
-O teu código de acesso exclusivo é:
-
-${candidate.access_code}
-
-Para criar a tua conta:
-1. Acede a https://www.yamilook.com/register
-2. Clica em "Criar conta"
-3. Insere o teu código quando solicitado
-
-Bem-vindo(a) à nossa comunidade!
-
-Equipa Yamilook 🇦🇴`;
-
-    navigator.clipboard.writeText(template);
+    if (!candidate.access_code) return;
+    const { text } = candidateInvitationEmail(candidate.full_name, candidate.access_code, language);
+    navigator.clipboard.writeText(text);
     toast.success(uiText("Template de email copiado!"));
   };
 
   const sendCandidateEmail = async (candidate: Candidate) => {
     setSending(candidate.id);
     try {
-      const { data, error } = await supabase.functions.invoke('send-mvp-candidate-invitation', { body: { candidateId: candidate.id, language: uiLocale() } });
+      const { data, error } = await supabase.functions.invoke('send-mvp-candidate-invitation', { body: { candidateId: candidate.id, language } });
       if (error || !data?.accepted) throw error || new Error('Delivery failed');
       toast.success(uiText("Email aceite pelo serviço de envio. A entrega depende do destinatário."));
       await fetchCandidates();
@@ -218,7 +207,8 @@ Equipa Yamilook 🇦🇴`;
     } finally { setSending(null); }
   };
   const shareCandidate = (candidate: Candidate) => {
-    const text = `Olá ${candidate.full_name}, a tua candidatura à YAMILOOK foi aprovada!\n\nCria a tua conta em https://www.yamilook.com/register e insere o código ${candidate.access_code}.`;
+    if (!candidate.access_code) return;
+    const { text } = candidateInvitationEmail(candidate.full_name, candidate.access_code, language);
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
   };
 
@@ -257,6 +247,7 @@ Equipa Yamilook 🇦🇴`;
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
+          <ContentLanguageSelect value={language} onChange={setSelectedLanguage} disabled={!!sending} />
           {/* Stats */}
           <div className="grid grid-cols-4 gap-2">
             {(["all", "pending", "approved", "rejected"] as const).map((s) => (

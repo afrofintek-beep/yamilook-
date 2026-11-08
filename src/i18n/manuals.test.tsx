@@ -1,8 +1,9 @@
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, useLocation } from 'react-router-dom';
 import { afterEach, expect, it, vi } from 'vitest';
 import { changeAppLanguage } from './index';
 import UserAccountsManualPrint from '@/pages/UserAccountsManualPrint';
+import Presentation from '@/pages/Presentation';
 import PresentationPrint from '@/pages/PresentationPrint';
 import DocumentControls from '@/components/DocumentControls';
 
@@ -54,5 +55,29 @@ it('waits for fonts and the selected language before printing', async () => {
   } finally {
     if (previous) Object.defineProperty(document, 'fonts', previous);
     else Reflect.deleteProperty(document, 'fonts');
+  }
+});
+
+it('shares the interactive presentation in the chosen language independently of the app', async () => {
+  await changeAppLanguage('pt');
+  const writeText = vi.fn().mockResolvedValue(undefined);
+  const clipboard = Object.getOwnPropertyDescriptor(navigator, 'clipboard');
+  Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } });
+  const Location = () => <output>{useLocation().search}</output>;
+  try {
+    render(<MemoryRouter initialEntries={['/apresentacao?lang=fr']}><Presentation /><Location /></MemoryRouter>);
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Exportar PDF' })).toBeEnabled());
+    expect(screen.getByText(dictionaries['./manuals/fr.json']['A vida como ela é.'])).toBeInTheDocument();
+    const select = screen.getByRole('combobox', { name: 'Idioma' });
+    expect(select.querySelectorAll('option')).toHaveLength(10);
+    fireEvent.change(select, { target: { value: 'ar' } });
+    await screen.findByText('?lang=ar');
+    expect(screen.getByText(dictionaries['./manuals/ar.json']['A vida como ela é.']).closest('[lang]')).toHaveAttribute('dir', 'rtl');
+    expect(document.documentElement.lang).toBe('pt');
+    fireEvent.click(screen.getByRole('button', { name: 'Copiar ligação' }));
+    expect(writeText).toHaveBeenCalledWith('https://www.yamilook.com/apresentacao?lang=ar');
+  } finally {
+    if (clipboard) Object.defineProperty(navigator, 'clipboard', clipboard);
+    else Reflect.deleteProperty(navigator, 'clipboard');
   }
 });

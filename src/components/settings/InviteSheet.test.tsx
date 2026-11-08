@@ -73,7 +73,7 @@ describe('Unique invitations', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Copiar código' }));
     await waitFor(() => expect(screen.getByRole('status', { name: 'Estado do convite por email' })).toHaveTextContent('copia manualmente'));
     expect(screen.getByLabelText('Código único de convite')).toHaveValue(code);
-    expect(screen.getByLabelText('Link de convite')).toHaveValue(`https://www.yamilook.com/register?ref=${code}`);
+    expect(screen.getByLabelText('Link de convite')).toHaveValue(`https://www.yamilook.com/register?ref=${code}&lang=pt`);
   });
   it('offers optional email and WhatsApp without auto-sending after code generation', async () => {
     show(); await generate();
@@ -89,9 +89,17 @@ describe('Unique invitations', () => {
   });
   it('sends the invitation by email only after explicit click', async () => {
     show(); await generate();
+    const language = screen.getByRole('combobox', { name: 'Idioma' });
+    expect(language.querySelectorAll('option')).toHaveLength(10);
+    fireEvent.change(language, { target: { value: 'ar' } });
+    await waitFor(() => expect(language).toHaveValue('ar'));
+    expect(screen.getByLabelText('Link de convite')).toHaveValue(`https://www.yamilook.com/register?ref=${code}&lang=ar`);
+    const whatsapp = new URL(screen.getByRole('link', { name: 'Partilhar pelo WhatsApp' }).getAttribute('href')!);
+    expect(whatsapp.searchParams.get('text')).toMatch(/[؀-ۿ]/);
+    expect(whatsapp.searchParams.get('text')).toContain('&lang=ar');
     fireEvent.click(screen.getByRole('button', { name: 'Enviar por email' }));
     await waitFor(() => expect(invoke).toHaveBeenCalledWith('send-user-invitation', {
-      body: { email: 'new@example.com', code, language: 'pt' },
+      body: { email: 'new@example.com', code, language: 'ar' },
     }));
     expect(screen.getByRole('status', { name: 'Estado do convite por email' })).toHaveTextContent('aceitou o convite para envio');
   });

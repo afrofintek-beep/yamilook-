@@ -1,8 +1,12 @@
+import { ContentLanguageSelect, contentLanguage } from '@/components/ContentLanguageSelect';
+import { loadAppLanguage } from '@/i18n';
+import { toast } from 'sonner';
+import { getYamilookPublicUrl } from '@/lib/public-site';
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import KosololaLogo from '@/components/brand/KosololaLogo';
 import { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import YamilookLogo from "@/components/brand/YamilookLogo";
 import {
@@ -11,6 +15,7 @@ import {
   Maximize,
   Minimize,
   FileDown,
+  Link2,
   MessageCircle,
   Phone,
   Users,
@@ -41,7 +46,7 @@ interface Slide {
   visual?: "logo" | "reactions" | "mokubico" | "closing";
 }
 
-const getSlides = (): Slide[] => [
+const getSlides = (uiText: (source: string) => string): Slide[] => [
   {
     id: "cover",
     title: "yamilook",
@@ -230,9 +235,45 @@ const getSlides = (): Slide[] => [
 /* ────────────────────── Presentation component ────────────────────── */
 
 export default function Presentation() {
-  const locale = useUiLocale();
-  const SLIDES = getSlides();
+  const appLocale = useUiLocale();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requested = contentLanguage(searchParams.get('lang') || appLocale);
+  const [loaded, setLoaded] = useState<string>();
+  const [failed, setFailed] = useState(false);
+  const [showLink, setShowLink] = useState(false);
+  const ready = loaded === requested;
   const navigate = useNavigate();
+  const SLIDES = getSlides(source => uiText(source, undefined, requested));
+
+  useEffect(() => {
+    let active = true;
+    setFailed(false);
+    void loadAppLanguage(requested).then(() => {
+      if (active) setLoaded(requested);
+    }).catch(() => {
+      if (active) setFailed(true);
+    });
+    return () => { active = false; };
+  }, [requested]);
+
+  const selectLanguage = (language: string) => {
+    setSearchParams(params => {
+      params.set('lang', language);
+      return params;
+    }, { replace: true });
+    setLoaded(language);
+  };
+
+  const shareUrl = getYamilookPublicUrl(`/apresentacao?lang=${encodeURIComponent(requested)}`);
+  async function copyLink() {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setShowLink(false);
+      toast.success(uiText('Ligação copiada.'));
+    } catch {
+      setShowLink(true);
+    }
+  }
   const [current, setCurrent] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const total = SLIDES.length;
@@ -247,6 +288,8 @@ export default function Presentation() {
   // Keyboard nav
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLElement && e.target.closest("select, input, textarea")) return;
+      if (e.key === " " && e.target instanceof HTMLButtonElement) return;
       if (e.key === "ArrowRight" || e.key === " ") {
         e.preventDefault();
         next();
@@ -290,7 +333,7 @@ export default function Presentation() {
   return (
     <div className="fixed inset-0 bg-[#111111] text-white flex flex-col select-none">
       {/* Top bar */}
-      <header className="flex items-center justify-between px-4 py-2 z-20">
+      <header className="flex flex-wrap items-center justify-between gap-2 px-4 py-2 z-20">
         <Button
           variant="ghost"
           size="icon"
@@ -299,7 +342,12 @@ export default function Presentation() {
         >
           <X className="h-5 w-5" />
         </Button>
-        <div className="flex items-center gap-1">
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          <ContentLanguageSelect value={requested} onChange={selectLanguage} />
+          <Button variant="ghost" size="icon" disabled={!ready}
+            aria-label={uiText('Copiar ligação')} title={uiText('Copiar ligação')} onClick={() => void copyLink()}>
+            <Link2 className="h-4 w-4" />
+          </Button>
           <span className="text-xs text-white/50 font-mono">
             {current + 1} / {total}
           </span>
@@ -307,8 +355,10 @@ export default function Presentation() {
             variant="ghost"
             size="icon"
             className="text-white/70 hover:text-white hover:bg-white/10"
-            onClick={() => navigate(`/apresentacao/pdf?lang=${encodeURIComponent(locale)}`)}
+            disabled={!ready}
+            onClick={() => navigate(`/apresentacao/pdf?lang=${encodeURIComponent(requested)}`)}
             title={uiText("Exportar PDF")}
+            aria-label={uiText("Exportar PDF")}
           >
             <FileDown className="h-4 w-4" />
           </Button>
@@ -327,8 +377,17 @@ export default function Presentation() {
         </Button>
       </header>
 
+      {showLink && <label className="px-4 pb-2 text-sm">
+        {uiText('Não foi possível copiar automaticamente. Seleciona a ligação abaixo e copia-a.')}
+        <input readOnly value={shareUrl} onFocus={event => event.target.select()}
+          className="mt-1 w-full rounded border border-white/40 bg-transparent p-2" dir="ltr" />
+      </label>}
       {/* Slide area */}
-      <div className="flex-1 relative overflow-hidden" onClick={next}>
+      {!ready && <p className="p-4 text-center" role={failed ? 'alert' : 'status'}>
+        {failed ? uiText('Não foi possível carregar este idioma. Volte a selecionar o idioma para tentar novamente.') : uiText('A carregar…')}
+      </p>}
+      <div className="flex-1 relative overflow-hidden" onClick={next} lang={requested}
+        dir={requested === 'ar' ? 'rtl' : 'ltr'} style={{ visibility: ready ? 'visible' : 'hidden' }}>
         <AnimatePresence mode="wait">
           <motion.div
             key={slide.id}
