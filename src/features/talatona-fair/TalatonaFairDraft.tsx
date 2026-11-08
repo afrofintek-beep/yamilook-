@@ -17,7 +17,7 @@ function FairDraftContent() {
   const [condominium, setCondominium] = useState("");
 
   return (
-    <main lang="pt-AO" className="min-h-screen bg-background px-4 py-8 text-foreground sm:py-14">
+    <main lang="pt-AO" dir="ltr" className="min-h-screen bg-background px-4 py-8 text-foreground sm:py-14">
       <div className="mx-auto max-w-xl space-y-4">
         <div className="flex items-center justify-between gap-3">
           <YamilookLogo size="sm" showTagline={false} animate={false} />
@@ -25,7 +25,7 @@ function FairDraftContent() {
         </div>
 
         <header className="space-y-4 rounded-2xl bg-emerald-950 p-6 text-white sm:p-9">
-          <p className="text-sm font-semibold text-amber-300">Talatona · Luanda</p>
+          <p className="text-sm font-semibold text-amber-300">Talatona · Luanda · Angola</p>
           <h1 className="text-3xl font-bold tracking-tight sm:text-5xl">Feira de Natal Solidário</h1>
           <p>Este Natal, junte-se aos seus vizinhos numa feira da comunidade de Talatona.</p>
           <p className="flex items-center gap-2 text-sm text-emerald-100">
