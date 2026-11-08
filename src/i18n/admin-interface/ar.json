@@ -319,7 +319,6 @@
   "{{value1}} (hora local)": "{{value1}} (بالتوقيت المحلي)",
   "{{value1}} aprovado!": "تمت الموافقة على {{value1}}!",
   "{{value1}} foi aprovado. Envia-lhe o código abaixo.": "تمت الموافقة على {{value1}}. أرسل له الرمز أدناه.",
-  "{{value1}} pendente{{value2}}": "{{value1}} معلق {{value2}}",
   "{{value1}} sessões terminadas": "انتهت جلسات {{value1}}",
   "{{value1}} utilizadores encontrados · {{value2}}": "تم العثور على مستخدمي {{value1}} · {{value2}}",
   "{{value1}} é agora admin": "أصبح {{value1}} الآن مسؤولاً",

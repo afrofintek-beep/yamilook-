@@ -152,7 +152,7 @@ export function TopicSuggestionsManager() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Lightbulb className="w-5 h-5" />{uiText("Sugestões de Tópicos")}{pendingCount > 0 && (
-              <Badge variant="secondary" className="ml-2">{uiText("{{value1}} pendente{{value2}}", { value1: (pendingCount) ?? "", value2: (pendingCount !== 1 ? 's' : '') ?? "" })}</Badge>
+              <Badge variant="secondary" className="ml-2">{uiText("Pendentes")} · {pendingCount}</Badge>
             )}
           </CardTitle>
           <CardDescription>{uiText("Aprovar ou rejeitar sugestões de novos tópicos dos utilizadores")}</CardDescription>

@@ -319,7 +319,6 @@
   "{{value1}} (hora local)": "{{value1}} (heure locale)",
   "{{value1}} aprovado!": "Approuvé {{value1}} !",
   "{{value1}} foi aprovado. Envia-lhe o código abaixo.": "{{value1}} a été approuvé. Envoyez-lui le code ci-dessous.",
-  "{{value1}} pendente{{value2}}": "{{value1}} en attente{{value2}}",
   "{{value1}} sessões terminadas": "Sessions {{value1}} terminées",
   "{{value1}} utilizadores encontrados · {{value2}}": "Utilisateurs {{value1}} trouvés · {{value2}}",
   "{{value1}} é agora admin": "{{value1}} est désormais administrateur",

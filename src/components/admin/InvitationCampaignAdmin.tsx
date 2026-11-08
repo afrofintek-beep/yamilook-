@@ -120,7 +120,7 @@ export function InvitationCampaignAdmin() {
         </tbody></table></div>
         <h4 className="font-medium">{uiText("Histórico de auditoria")}</h4>
         {report.audit?.map(a => <details key={a.id} className="text-sm"><summary>{new Date(a.created_at).toLocaleString(uiLocale())} — {a.action}</summary><pre className="whitespace-pre-wrap break-all">{JSON.stringify(a.details, null, 2)}</pre></details>)}
-        <p className="text-xs">{uiText("Página {{value1}}: até 50 registos por lista.", { value1: (offset / 50 + 1) ?? "" })}</p>
+        <p className="text-xs">{uiText("Página {{value1}}: até 50 registos por lista.", { value1: offset / 50 + 1 })}</p>
         <Button variant="outline" disabled={!offset} onClick={() => setOffset(n => Math.max(0, n - 50))}>{uiText("Página anterior")}</Button>
         <Button variant="outline" disabled={report.invitations.length < 50 && (report.members?.length ?? 0) < 50 && (report.audit?.length ?? 0) < 50} onClick={() => setOffset(n => n + 50)}>{uiText("Página seguinte")}</Button>
       </div>}

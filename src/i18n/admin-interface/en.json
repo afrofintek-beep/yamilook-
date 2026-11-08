@@ -319,7 +319,6 @@
   "{{value1}} (hora local)": "{{value1}} (local time)",
   "{{value1}} aprovado!": "{{value1}} approved!",
   "{{value1}} foi aprovado. Envia-lhe o código abaixo.": "{{value1}} has been approved. Send him the code below.",
-  "{{value1}} pendente{{value2}}": "{{value1}} pending{{value2}}",
   "{{value1}} sessões terminadas": "{{value1}} sessions ended",
   "{{value1}} utilizadores encontrados · {{value2}}": "{{value1}} users found · {{value2}}",
   "{{value1}} é agora admin": "{{value1}} is now admin",

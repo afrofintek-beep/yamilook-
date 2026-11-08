@@ -319,7 +319,6 @@
   "{{value1}} (hora local)": "{{value1}} (የአካባቢ ሰዓት)",
   "{{value1}} aprovado!": "{{value1}} ጸድቋል!",
   "{{value1}} foi aprovado. Envia-lhe o código abaixo.": "{{value1}} ጸድቋል። ከዚህ በታች ያለውን ኮድ ላከው።",
-  "{{value1}} pendente{{value2}}": "{{value1}} በመጠባበቅ ላይ{{value2}}",
   "{{value1}} sessões terminadas": "{{value1}} ክፍለ-ጊዜዎች አብቅተዋል።",
   "{{value1}} utilizadores encontrados · {{value2}}": "{{value1}} ተጠቃሚዎች ተገኝተዋል · {{value2}}",
   "{{value1}} é agora admin": "{{value1}} አሁን አስተዳዳሪ ነው።",
