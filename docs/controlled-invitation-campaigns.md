@@ -97,6 +97,20 @@ Os testes PostgreSQL aplicam as três migrações de convites existentes e a nov
 - **Limitação pendente:** a inscrição com o email correto chegou ao envio de confirmação, mas as credenciais SMTP do ambiente de desenvolvimento foram recusadas (`535 Authentication credentials invalid`). A criação da conta e o consumo do convite foram revertidos. A inscrição com email errado foi recusada pelo trigger. Não foi validado o ciclo completo de receção do email, confirmação e entrada na conta; a configuração SMTP de produção não foi alterada.
 - Antes de abrir uma campanha ao público, repetir o percurso completo de confirmação e entrada com o serviço de email de teste funcional. Não tratar o problema SMTP observado no ramo de desenvolvimento como diagnóstico do email de produção.
 
+## Reteste SMTP — 8 de novembro de 2026
+
+Após introdução da credencial pelo responsável, o teste no ramo de desenvolvimento `pufcziszxmymoaodslii` passou às 12h32 de Luanda:
+- inscrição através de GoTrue devolveu HTTP 200, sem sessão antes da confirmação;
+- mensagem de confirmação recebida na caixa Gmail autorizada, na pasta de entrada;
+- ligação real recebida por email confirmou a conta (HTTP 303), sem confirmação administrativa nem alteração manual de `email_confirmed_at`;
+- entrada com palavra-passe devolveu HTTP 200 e uma sessão; `GET /auth/v1/user` confirmou a identidade e o email verificado;
+- tentativa de validar novamente o convite devolveu `valid=false`, com indicação de convite já utilizado;
+- logout global devolveu HTTP 204; campanha sintética encerrada. A conta sintética foi conservada apenas no desenvolvimento para rastreabilidade.
+
+**Âmbito:** confirmação e login foram testados através dos serviços reais Auth/PostgREST e do email entregue. Não foi validada a navegação completa no frontend. O redirecionamento do ramo aponta para `www.yamilook.com`, que usa produção; o teste não enviou a sessão de desenvolvimento para esse frontend. Antes de testes visuais completos, configurar um frontend isolado e o respetivo redirecionamento.
+
+**Entregabilidade:** o Gmail recebeu a mensagem, mas os cabeçalhos reportaram `dkim=fail` para `yamilook.com` e `spf=none` para `send.yamilook.com` (a assinatura de `amazonses.com` passou). Rever a autenticação DNS do domínio antes de escalar envios. Não foram alterados DNS nem SMTP de produção neste reteste. O bloqueio SMTP de credenciais descrito no registo de 7 de novembro foi ultrapassado no desenvolvimento.
+
 ## Procedimento de aplicação e operação
 
 1. Rever e aprovar especialmente a retirada de emissão legada e dos códigos reutilizáveis dos delegados, a suspensão do consumo e o modelo de atestação de presença.
