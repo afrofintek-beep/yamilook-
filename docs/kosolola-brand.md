@@ -7,7 +7,7 @@ The independent Papos application is presented as KOSOLOLA. Its existing `/papos
 - Teal `#006568`, amber `#F5A21A`, charcoal `#22282B`.
 - Local PNG icons derived from the supplied brand artwork at 192 and 512 pixels.
 - Dedicated stylesheet scoped to `html[data-brand="kosolola"]`; portals inherit the same tokens. Yamilook pages retain their existing theme.
-- Brand signature supports Portuguese, French, English, Lingala and Swahili with Portuguese fallback. Interface translations remain as previously implemented.
+- Brand signature uses the shared translation catalog in all ten enabled languages: Portuguese, French, English, Arabic, Amharic, Lingala, Swahili, Yoruba, Shona and Zulu. It updates when the selected language changes.
 - Native install metadata, opening state, login, navigation, profile, settings and installation instructions use the new name.
 
 ## Compatibility and rollout

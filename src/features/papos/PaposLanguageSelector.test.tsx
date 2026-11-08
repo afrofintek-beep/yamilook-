@@ -2,7 +2,8 @@ import { act, fireEvent, render, screen, waitFor, cleanup } from '@testing-libra
 import { afterEach, describe, expect, it } from 'vitest';
 import i18n, { changeAppLanguage } from '@/i18n';
 import PaposLanguageSelector from './PaposLanguageSelector';
-import { normalizeAppLanguage } from '@/i18n/afroloc-languages';
+import PaposBrand from './PaposBrand';
+import { appLanguages, normalizeAppLanguage } from '@/i18n/afroloc-languages';
 
 afterEach(async () => { cleanup(); await act(async () => { await changeAppLanguage('pt'); }); });
 describe('YAMILOOK language rollout', () => {
@@ -30,6 +31,29 @@ describe('YAMILOOK language rollout', () => {
     await changeAppLanguage('fr');
     expect(document.documentElement.dir).toBe('ltr');
     expect(i18n.t('auth.password')).not.toBe('Palavra-passe');
+  });
+  it('updates the visible brand slogan through the selector in every enabled language', async () => {
+    const slogans: Record<string, string> = {
+      pt: 'A conversa é nossa.',
+      en: 'The conversation is ours.',
+      fr: 'La conversation est à nous.',
+      ar: 'المحادثة لنا.',
+      am: 'ውይይቱ የእኛ ነው።',
+      sw: 'Mazungumzo ni yetu.',
+      ln: 'Lisolo ezali ya biso.',
+      yo: 'Ìjíròrò náà jẹ́ tiwa.',
+      sn: 'Hurukuro ndeyedu.',
+      zu: 'Ingxoxo ingeyethu.',
+    };
+    await changeAppLanguage('pt');
+    render(<><PaposLanguageSelector /><PaposBrand /></>);
+    for (const { code } of appLanguages) {
+      fireEvent.change(screen.getByRole('combobox'), { target: { value: code } });
+      await waitFor(() => expect(screen.getByText(slogans[code], { exact: true })).toBeVisible());
+      expect(i18n.getResource(code, 'translation', 'kosolola.tagline')).toBe(slogans[code]);
+      expect(document.documentElement.dir).toBe(code === 'ar' ? 'rtl' : 'ltr');
+      if (code !== 'pt') expect(screen.queryByText(slogans.pt, { exact: true })).not.toBeInTheDocument();
+    }
   });
   it('normalizes regional language codes while retaining legacy Yamilook choices', () => {
     expect(normalizeAppLanguage('fr-CD')).toBe('fr');

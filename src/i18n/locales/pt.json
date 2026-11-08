@@ -789,6 +789,7 @@
     "currentlyLive": "{{count}} em direto"
   },
   "kosolola": {
+    "tagline": "A conversa é nossa.",
     "back": "Voltar às conversas",
     "ecosystem": "Uma aplicação do ecossistema AFROFINTEK",
     "myProfile": "O meu perfil",

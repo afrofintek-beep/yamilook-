@@ -678,6 +678,7 @@
     "daysAgo": "siku {{count}} zilizopita"
   },
   "kosolola": {
+    "tagline": "Mazungumzo ni yetu.",
     "back": "Rudi kwenye mazungumzo",
     "ecosystem": "Programu katika mfumo wa AFROFINTEK",
     "myProfile": "Wasifu wangu",

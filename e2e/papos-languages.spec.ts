@@ -1,5 +1,13 @@
 import { test, expect } from '@playwright/test';
 
+const slogans: Record<string, string> = {
+  pt: 'A conversa é nossa.', en: 'The conversation is ours.',
+  fr: 'La conversation est à nous.', ar: 'المحادثة لنا.',
+  am: 'ውይይቱ የእኛ ነው።', sw: 'Mazungumzo ni yetu.',
+  ln: 'Lisolo ezali ya biso.', yo: 'Ìjíròrò náà jẹ́ tiwa.',
+  sn: 'Hurukuro ndeyedu.', zu: 'Ingxoxo ingeyethu.',
+};
+
 for (const width of [320, 390]) {
   test(`AFROLOC languages persist and fit at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 844 });
@@ -34,6 +42,8 @@ for (const width of [320, 390]) {
       await expect(page.locator('html')).toHaveAttribute('lang', language);
       await expect(page.getByRole('heading', { level: 1 })).toHaveAttribute('lang', language);
       await expect(page.getByRole('heading', { level: 1 })).not.toBeEmpty();
+      await expect(page.getByText(slogans[language], { exact: true })).toBeVisible();
+      if (language !== 'pt') await expect(page.getByText(slogans.pt, { exact: true })).toHaveCount(0);
       await expect(page.locator('html')).toHaveAttribute('dir', language === 'ar' ? 'rtl' : 'ltr');
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     }
