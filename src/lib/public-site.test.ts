@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, afterEach } from 'vitest';
-import { getYamilookPublicUrl, YAMILOOK_PUBLIC_ORIGIN } from './public-site';
+import { getYamilookPublicUrl, YAMILOOK_PUBLIC_ORIGIN, resolveYamilookPublicOrigin } from './public-site';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -14,5 +14,17 @@ describe('YAMILOOK public URLs', () => {
   });
   it('rejects protocol-relative destinations', () => {
     expect(() => getYamilookPublicUrl('//untrusted.example')).toThrow('Expected an application path');
+  });
+});
+
+ describe('Explicit staging origin', () => {
+  it('keeps the production default without configuration', () => {
+    expect(resolveYamilookPublicOrigin()).toBe('https://www.yamilook.com');
+  });
+  it('uses the explicitly configured isolated deployment', () => {
+    expect(resolveYamilookPublicOrigin('https://yamilook-invitations-staging.vercel.app/')).toBe('https://yamilook-invitations-staging.vercel.app');
+  });
+  it.each(['http://example.com','https://a:b@example.com','https://example.com/path','https://example.com/?token=1','https://example.com/#token'])('rejects unsafe or non-origin configuration: %s', (origin) => {
+    expect(() => resolveYamilookPublicOrigin(origin)).toThrow();
   });
 });
