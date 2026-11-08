@@ -71,6 +71,7 @@ const PalcoManage = lazy(() => import("./pages/PalcoManage"));
 const Welcome = lazy(() => import("./pages/Welcome"));
 const PromoVideos = lazy(() => import("./pages/PromoVideos"));
 const Apply = lazy(() => import("./pages/Apply"));
+const TalatonaFairDraft = lazy(() => import("./features/talatona-fair/TalatonaFairDraft"));
 const Install = lazy(() => import("./pages/Install"));
 const Presentation = lazy(() => import("./pages/Presentation"));
 const PresentationPrint = lazy(() => import("./pages/PresentationPrint"));
@@ -344,6 +345,9 @@ function AnimatedRoutes() {
           <Route path="/brand-book" element={<BrandBook />} />
           <Route path="/promo" element={<PromoVideos />} />
           <Route path="/apply" element={<Apply />} />
+          {import.meta.env.DEV || import.meta.env.VITE_TALATONA_FAIR_PREVIEW === "true" ? (
+            <Route path="/feira-natalicia-talatona" element={<TalatonaFairDraft />} />
+          ) : null}
           <Route path="/install" element={<Install />} />
           <Route path="/apresentacao" element={<Presentation />} />
           <Route path="/apresentacao/pdf" element={<PresentationPrint />} />
