@@ -16,6 +16,6 @@ export async function submitResidence(plan: ResidencePlan, country: string, city
     p_lat: plan.method === 'home' ? plan.lat : null, p_lng: plan.method === 'home' ? plan.lng : null,
     p_accuracy: plan.method === 'home' ? plan.accuracy : null,
   } as never);
-  if (error) throw new Error(error.message.includes('cooldown') ? 'A mudança de Banda ainda está no período de espera.' : 'Não foi possível guardar a Banda. Tenta novamente.');
+  if (error) throw new Error(error.message.includes('cooldown') ? uiText('A mudança de Banda ainda está no período de espera.') : uiText('Não foi possível guardar a Banda. Tenta novamente.'));
   return data;
 }

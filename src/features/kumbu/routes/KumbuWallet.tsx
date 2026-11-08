@@ -7,7 +7,6 @@ import { ArrowLeft, HelpCircle, History, Trophy, Sparkles, ChevronRight, Banknot
 import KumbuBalanceCard from '../components/KumbuBalanceCard';
 import KumbuHowToEarn from '../components/KumbuHowToEarn';
 import { BuyKumbuSheet } from '../components/BuyKumbuSheet';
-import { TAGLINE_FULL } from '../copy';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -95,7 +94,7 @@ export default function KumbuWallet() {
         </motion.button>
 
         <p className="text-[11px] text-muted-foreground/40 text-center leading-relaxed px-4 pt-2">
-          {TAGLINE_FULL}
+          {uiText('Mokubico é convivência. Academia é crescimento. Kumbu é valor.')}
         </p>
       </main>
 

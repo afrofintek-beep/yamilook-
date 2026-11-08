@@ -1,6 +1,7 @@
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { motion } from 'framer-motion';
 import { Crown, Medal } from 'lucide-react';
+import { kumbuLevelLabel } from '../copy';
 
 interface Entry {
   position: number;
@@ -77,7 +78,7 @@ export default function Top10Card({ entries, weekLabel }: Props) {
                 {e.displayName}
               </span>
               <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${levelColor}`}>
-                {e.level}
+                {kumbuLevelLabel(e.level)}
               </span>
             </motion.div>
           );
