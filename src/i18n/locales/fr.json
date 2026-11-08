@@ -678,6 +678,7 @@
     "daysAgo": "il y a {{count}}j"
   },
   "kosolola": {
+    "tagline": "La conversation est à nous.",
     "back": "Retour aux conversations",
     "ecosystem": "Une application de l’écosystème AFROFINTEK",
     "myProfile": "Mon profil",
