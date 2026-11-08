@@ -116,8 +116,7 @@ export default i18n;
 
 // Load before changing so the first render uses the requested translations.
 let languageRequest = 0;
-export async function changeAppLanguage(language: string) {
-  const request = ++languageRequest;
+export async function loadAppLanguage(language: string) {
   const code = normalizeAppLanguage(language);
   if (['yo', 'sn', 'zu'].includes(code) && !i18n.hasResourceBundle('en', 'translation')) {
     const english = await loadLanguage('en');
@@ -129,6 +128,12 @@ export async function changeAppLanguage(language: string) {
     i18n.addResourceBundle(code, 'translation', resources.translation);
     i18n.addResourceBundle(code, 'interface', resources.interface);
   }
+  return code;
+}
+
+export async function changeAppLanguage(language: string) {
+  const request = ++languageRequest;
+  const code = await loadAppLanguage(language);
   if (request === languageRequest) await i18n.changeLanguage(code);
 }
 function syncDocumentLanguage(language: string) {

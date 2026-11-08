@@ -16,7 +16,7 @@ describe('device contact invitations', () => {
     render(<ContactInviteActions />);
     await prepare('Gerar QR individual');
     expect(screen.getByLabelText('Convite individual por QR code').querySelector('svg')).toBeTruthy();
-    expect(screen.getByLabelText('Ligação para o teu contacto')).toHaveValue('https://www.yamilook.com/register?ref=' + invite.code);
+    expect(screen.getByLabelText('Ligação para o teu contacto')).toHaveValue(`https://www.yamilook.com/register?ref=${invite.code}&lang=pt`);
     fireEvent.click(screen.getByRole('button', { name: 'Mostrar QR individual' }));
     expect(rpc).toHaveBeenCalledTimes(1);
     fireEvent.click(screen.getByRole('button', { name: 'Convidar outra pessoa' }));
@@ -85,6 +85,6 @@ describe('device contact invitations', () => {
     render(<ContactInviteActions />); await prepare('Criar ligação de convite');
     fireEvent.click(screen.getByRole('button', { name: 'Copiar ligação' }));
     await screen.findByText(/copia manualmente/);
-    expect(screen.getByLabelText('Ligação para o teu contacto')).toHaveValue('https://www.yamilook.com/register?ref=' + invite.code);
+    expect(screen.getByLabelText('Ligação para o teu contacto')).toHaveValue(`https://www.yamilook.com/register?ref=${invite.code}&lang=pt`);
   });
 });

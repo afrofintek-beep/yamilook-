@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { appLanguages } from '@/i18n/afroloc-languages';
 import { buildFounderInviteMessage } from './founder-invite';
 
 describe('Founder invitation message', () => {
@@ -14,11 +15,16 @@ describe('Founder invitation message', () => {
     const url='https://www.yamilook.com/register?ref=ABC123';
     expect(buildFounderInviteMessage({name:'Ana',profession:'',reason:'',language:'pt',link:url})).toContain(url);
   });
-  it('supports English and French without requiring personal details', () => {
-    for (const language of ['en','fr'] as const) {
-      const text=buildFounderInviteMessage({name:'',profession:'',reason:'',language});
+  it('generates a distinct personal message in each of the ten app languages', () => {
+    const messages = appLanguages.map(({ code }) => {
+      const link = `https://www.yamilook.com/register?ref=ABC123&lang=${code}`;
+      const text = buildFounderInviteMessage({ name: 'Ana', profession: '', reason: '', language: code, link });
+      expect(text).toContain('Ana');
       expect(text).toContain('YAMILOOK');
       expect(text).toContain('António H. da Silva');
-    }
+      expect(text).toContain(link);
+      return text.replace(link, '');
+    });
+    expect(new Set(messages).size).toBe(10);
   });
 });

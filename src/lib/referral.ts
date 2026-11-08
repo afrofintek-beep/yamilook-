@@ -45,8 +45,9 @@ export function clearReferralCode(): void {
 const PUBLIC_INVITE_URL = getYamilookPublicUrl('/register');
 
 /** Link de convite pessoal para partilhar, sempre no domínio público. */
-export function buildInviteUrl(referralCode: string | null | undefined): string {
+export function buildInviteUrl(referralCode: string | null | undefined, language?: string): string {
   const url = new URL(PUBLIC_INVITE_URL);
   if (referralCode) url.searchParams.set('ref', referralCode);
+  if (language) url.searchParams.set('lang', language);
   return url.toString();
 }

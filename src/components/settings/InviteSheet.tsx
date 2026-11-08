@@ -1,5 +1,6 @@
+import { ContentLanguageSelect, contentLanguage } from '@/components/ContentLanguageSelect';
 import { uiServerMessage } from '@/i18n/server-copy';
-import { uiText, uiLocale, useUiLocale } from '@/i18n/ui-copy';
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { CampaignInvites } from './CampaignInvites';
 import { useState, useEffect } from 'react';
 import { useAppSurface } from '@/lib/app-surface';
@@ -44,7 +45,9 @@ interface InviteSheetProps {
 }
 
 export function InviteSheet({ open, onOpenChange, isAdmin = false }: InviteSheetProps) {
-  useUiLocale();
+  const locale = useUiLocale();
+  const [selectedLanguage, setSelectedLanguage] = useState<string>();
+  const language = selectedLanguage ?? contentLanguage(locale);
   const isKosolola = useAppSurface() === 'papos';
   const brand = isKosolola ? 'KOSOLOLA' : 'YAMILOOK';
   const [viewportStyle, setViewportStyle] = useState<{ top: number; height: number }>();
@@ -128,7 +131,7 @@ export function InviteSheet({ open, onOpenChange, isAdmin = false }: InviteSheet
       setIssuing(false);
     }
   };
-  const url = code ? buildInviteUrl(code) : '';
+  const url = code ? buildInviteUrl(code, language) : '';
 
   const copy = async (value: string) => {
     try {
@@ -145,7 +148,7 @@ export function InviteSheet({ open, onOpenChange, isAdmin = false }: InviteSheet
     setStatus('');
     try {
       const { data, error } = await supabase.functions.invoke('send-user-invitation', {
-        body: { email: issuedFor, code, language: uiLocale() },
+        body: { email: issuedFor, code, language },
       });
       if (error || !data?.ok) {
         const responseStatus = (error as { context?: { status?: number } } | null)?.context?.status;
@@ -175,9 +178,12 @@ export function InviteSheet({ open, onOpenChange, isAdmin = false }: InviteSheet
         </SheetHeader>
         <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain break-words px-6 pt-4 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]">
           <SheetDescription>{uiText("Convida alguém pelos contactos do telemóvel, por WhatsApp ou email. Cada convite só pode ser utilizado por uma pessoa.{{value1}}", { value1: (isKosolola && uiText(" O registo é feito na Yamilook, com a mesma conta para entrar na KOSOLOLA.")) ?? "" })}</SheetDescription>
-        {open && userId && <CampaignInvites key={userId} />}
+        {open && userId && <>
+          <div className="mt-4"><ContentLanguageSelect value={language} onChange={setSelectedLanguage} disabled={sendingEmail} /></div>
+          <CampaignInvites key={userId} language={language} />
+        </>}
         {allowed ? <>
-        {open && <ContactInviteActions key={userId} />}
+        {open && <ContactInviteActions key={userId} language={language} />}
         <details className="mt-6 border-t pt-4">
         <summary className="cursor-pointer font-medium">{uiText("Convidar um email específico")}</summary>
         <form className="space-y-3 mt-6" onSubmit={(event) => { event.preventDefault(); void issue(); }}>
@@ -203,10 +209,10 @@ export function InviteSheet({ open, onOpenChange, isAdmin = false }: InviteSheet
                 {sendingEmail ? uiText("A enviar email…") : uiText("Enviar por email")}
               </Button>
               <Button variant="outline" className="w-full" asChild>
-                <a href={buildWhatsAppInviteUrl(issuedFor, code, brand)} target="_blank" rel="noopener noreferrer">{uiText("Partilhar pelo WhatsApp")}</a>
+                <a href={buildWhatsAppInviteUrl(issuedFor, code, brand, undefined, language)} target="_blank" rel="noopener noreferrer">{uiText("Partilhar pelo WhatsApp")}</a>
               </Button>
               <Button variant="ghost" className="w-full" asChild>
-                <a href={buildEmailInviteDraftUrl(issuedFor, code, brand)}>{uiText("Preparar email manual")}</a>
+                <a href={buildEmailInviteDraftUrl(issuedFor, code, brand, undefined, language)}>{uiText("Preparar email manual")}</a>
               </Button>
               <p className="text-xs text-muted-foreground">{uiText("No WhatsApp e no email manual, confirma o destinatário e o envio na aplicação escolhida.")}</p>
             </div>
