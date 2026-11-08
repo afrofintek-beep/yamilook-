@@ -1,108 +1,84 @@
 # Feira de Natal Solidário de Talatona
 
-O rascunho em português está disponível em `/feira-natalicia-talatona` durante o desenvolvimento.
-Para revisão num ambiente de pré-visualização, compilar com `VITE_TALATONA_FAIR_PREVIEW=true`.
-A escolha do condomínio é temporária. O link AFROLOC abre o serviço sem parâmetros.
-A página não recebe inscrições, credenciais, códigos de endereço ou contactos.
+Implementação em `/feira-natalicia-talatona`, protegida por `VITE_SOCIAL_INITIATIVES_ENABLED=true`.
+A pré-visualização anterior continua disponível em desenvolvimento ou com `VITE_TALATONA_FAIR_PREVIEW=true`.
 
-## Antes de abrir as inscrições
+## Inscrição e convites
 
-1. A feira realiza-se a 5 e 6 de Dezembro de 2026, com entrada livre. Por indicação do
-   organizador, deixar por concluir o recinto exacto, o horário de cada dia, o prazo
-   de inscrição e o limite de participantes.
-   O prazo recebido para a segunda parcela da restauração foi 5 de Novembro de 2026 às
-   20h00, anterior ao prazo da primeira parcela, 20 de Novembro de 2026. A data da segunda
-   parcela fica por confirmar. Confirmar também se os valores de 5.000 Kz e 15.000 Kz
-   dos expositores se aplicam por dia ou à reserva completa.
-2. Rever o catálogo preliminar com a administração local e os gestores. A lista veio da
-   Angocasa, das imobiliárias Ree-Gera e Imponente, do Pactual Property Fund, do
-   Banco Económico, de referências locais no Patriota e do Governo Provincial de Luanda.
-   O Vale do Talatona está listado no Patriota. A delimitação da Rua do Dangereux
-   não comprova a existência ou localização de condomínios no bairro.
-3. Definir no servidor a regra de proximidade e confirmar os perímetros que serão usados.
-   Quem não vive num condomínio, ou mora num condomínio por cadastrar, pode seguir pela
-   regra de proximidade desde que o endereço seja elegível.
-4. Integrar o fluxo autorizado de criação ou associação do endereço AFROLOC. O titular
-   autoriza a consulta e o servidor confirma titularidade, estado e elegibilidade.
-   Uma escolha no formulário ou um código digitado não comprova residência.
-   A YAMILOOK recebe apenas a evidência e o resultado necessários para a campanha.
-5. Usar uma campanha própria com quota de 5. Confirmar no servidor a elegibilidade
-   da pessoa que convida e a do convidado ao aceitar. Aceitar quando existir correspondência
-   de condomínio verificado ou proximidade dentro do limite aprovado. Cada pessoa pode
-   aderir uma vez. A emissão e o consumo devem ser atómicos e os convites devem expirar.
-   Registar a decisão e o estado do convite sem incluir coordenadas, moradas ou documentos
-   no histórico apresentado aos participantes.
-6. Validar com duas contas de teste e incluir os casos de convite repetido, sexto convite,
-   morada fora da área, endereço revogado e falha de comunicação entre serviços.
-   Preparar as dez línguas antes de abrir a campanha pública.
+Uma inscrição persistente por conta e iniciativa, com email confirmado, consentimento,
+condomínio (ou outra zona) e endereço AFROLOC associado ao perfil. Um código digitado
+não constitui prova: a organização verifica a residência, regista uma referência de
+evidência e validade, e confirma o condomínio ou um grupo de proximidade geográfica.
+Esta decisão comprova elegibilidade na campanha; não emite um certificado AFROLOC.
+A integração automática com a autoridade AFROLOC continua dependente do serviço existente.
 
-As campanhas actuais controlam a quota e o registo YAMILOOK. A inscrição na feira
-também precisa de aceitar vizinhos que já têm conta e de validar a residência de
-cada convidado. O consumo do código no registo de conta não conclui a inscrição na feira.
+Após validação, cada participante pode emitir até cinco convites de utilização única,
+com validade máxima de sete dias, limitada ao fim da campanha. Repetir o mesmo pedido
+não consome outra vaga. Convites expirados continuam a contar para o limite de cinco.
+O limite é imposto também no endpoint genérico de convites. Novos utilizadores podem
+criar conta; utilizadores existentes podem aderir directamente. Criar conta não conclui
+a inscrição na feira: é necessário associar endereço e confirmar a inscrição.
 
-## Embaixador Social YAMILOOK
+Uma adesão conta para a meta apenas após validar ambos os endereços e a correspondência
+do condomínio confirmado ou do grupo de proximidade. Os grupos são definidos pela
+organização com evidência externa; não se infere distância a partir do texto do endereço.
+Uma alteração do endereço invalida a elegibilidade corrente até nova revisão.
+A entrada livre no recinto mantém-se independente desta campanha digital.
 
-A distinção reconhece metas cumpridas em iniciativas sociais, comunitárias, educativas
-ou noutras iniciativas aprovadas pela YAMILOOK. O título aparece no perfil a partir da
-primeira distinção válida. Cada iniciativa possui uma insígnia própria, com o nome,
-a edição e as metas que a justificam. Cada utilizador recebe essa insígnia uma única vez.
-Uma nova edição pode originar outra distinção se for registada como iniciativa própria.
+## Distinção e perfil
 
-O perfil terá uma área «Iniciativas e impacto social», que aproveita a apresentação
-existente de conquistas e insígnias. O titular acompanha as iniciativas em que participa,
-o progresso por meta, os prazos, as validações pendentes e as distinções conquistadas.
-Cada distinção mostra a iniciativa, a edição, as metas concluídas e a data de atribuição.
-A visibilidade pública fica ao critério do titular. Evidências e dados de residência
-ficam no processo de validação, com acesso limitado ao titular e aos validadores autorizados.
+A meta inicial é residência validada, cinco adesões elegíveis e participação confirmada.
+O administrador pode configurar entre zero e cinco adesões e exigir participação;
+os critérios ficam fixos após a primeira inscrição. A participação não pode ser
+confirmada antes de 5 de Dezembro de 2026, no fuso Africa/Luanda.
 
-O total de distinções corresponde ao número de iniciativas diferentes com distinção
-válida atribuída à pessoa. O total de iniciativas participadas é apresentado separadamente.
-Concluir três metas da mesma iniciativa contribui com uma distinção para o total.
-Um prémio ocultado pelo titular mantém-se no total pessoal. A apresentação pública
-conta apenas as distinções que o titular escolheu tornar públicas.
+Ao confirmar a última condição, o servidor atribui automaticamente uma distinção única
+por pessoa e iniciativa. O perfil mostra iniciativas e total acumulado de distinções.
+A visibilidade pública é uma escolha do titular, desligada por defeito; os totais
+públicos contam apenas as iniciativas publicadas. Endereço e evidências não são públicos.
 
-### Proposta para a Feira de Natal Solidário de Talatona
+Uma distinção conquistada permanece histórica após mudança de residência ou expiração
+da evidência. Uma correcção administrativa negativa recalcula a distinção da pessoa
+afectada e do seu convidante, com auditoria. Uma revalidação repõe a mesma distinção.
+Administradores não podem validar a sua própria residência ou participação.
 
-As metas sugeridas para revisão pela organização são a confirmação do endereço AFROLOC
-do participante, a participação na feira confirmada pela organização e a adesão concluída
-de cinco vizinhos elegíveis. Cada vizinho conta uma vez, e apenas para a pessoa cujo convite
-aceitou. O próprio participante e os convites ainda pendentes não contam para esta meta.
-A conquista é opcional e a participação na feira segue as condições de inscrição.
-As metas e o prazo precisam de ser publicados antes da abertura da iniciativa.
+## Administração e segurança
 
-### Implementação pendente
+A área administrativa permite configurar período e capacidade, suspender/encerrar a
+campanha, paginar inscrições, verificar residência e confirmar/corrigir participação.
+Todas as decisões e atribuições ficam registadas em `social_initiative_audit`.
+Tabelas com RLS sem acesso directo do cliente; operações passam por funções com
+verificação de identidade, permissões e elegibilidade. Bloqueios de linha serializam
+capacidade e quotas. A emissão e consumo reutilizam a infraestrutura de convites existente.
 
-Esta alteração acrescenta ao convite a proposta e um exemplo explícito de apresentação
-no perfil. A atribuição real, o histórico de iniciativas no perfil e os totais persistentes
-dependem da implementação seguinte.
+## Instalação e activação
 
-- O administrador cria a iniciativa com metas mensuráveis, unidades, prazos, condições
-  de elegibilidade e método de validação. Após a abertura, preservar a versão dos critérios
-  aplicável a quem já aderiu, com qualquer correcção registada e comunicada.
-- Reutilizar os eventos confirmados de cada módulo. Convites, participação e tarefas
-  concluídas precisam de validação na origem. Acções manuais são confirmadas por
-  um validador autorizado, diferente do beneficiário.
-- Registar adesão e progresso uma vez por pessoa e iniciativa. Atribuir a distinção
-  apenas quando todas as metas aplicáveis estiverem cumpridas. Usar uma restrição única
-  por utilizador e iniciativa e consumir cada evento de forma idempotente.
-- Calcular o total a partir das distinções válidas, respeitando a visibilidade. Uma repetição
-  de pedido ou de evento não pode aumentar a contagem. Uma correcção ou revogação fica
-  registada e actualiza a distinção existente e o total, sem criar um segundo prémio.
-- Proteger a atribuição no servidor e impedir a edição pelo titular. Reutilizar a
-  autenticação, as permissões, a auditoria e as componentes de perfil existentes.
-- Preparar as dez línguas e testar metas parciais, cumprimento completo, duplicações,
-  concorrência, revogação e visibilidade antes da publicação.
+1. Aplicar `supabase/migrations/20261108204823_social_initiatives.sql` depois das
+   migrações de convites existentes, primeiro em ambiente de teste.
+2. Publicar a função `social-initiatives` com a configuração presente em `config.toml`.
+   A função valida o utilizador e executa o RPC com a sessão dele, sem contornar permissões.
+3. Compilar com `VITE_SOCIAL_INITIATIVES_ENABLED=true`.
+4. No painel administrativo, definir período de inscrições e capacidade e activar.
+   A migração deixa a iniciativa em rascunho, sem inventar estes valores.
+5. Verificar criação de conta, confirmação por email, inscrição de conta existente,
+   validação por outro administrador, cinco convites e distinção no ambiente publicado.
 
-## Preparação do endereço no convite
+Não foram aplicadas alterações à base de dados de produção nesta implementação.
+Os testes locais PGlite exercitam funções SQL e o trigger de consumo de convite;
+não substituem testes de concorrência com ligações PostgreSQL independentes nem
+um ensaio completo de autenticação, email e AFROLOC no ambiente publicado.
 
-Após escolher o condomínio, a pré-visualização apresenta a etapa de residência.
-Quem já tem sessão pode abrir o formulário de residência existente. Guardar esse
-formulário actualiza a residência no perfil, sujeito às regras existentes de mudança.
-A ligação autorizada ao AFROLOC usa o componente existente e depende da activação
-explícita do serviço. A troca de conta reinicia o formulário e a escolha do condomínio.
-Visitantes recebem o acesso ao login e orientação para usar o convite YAMILOOK.
+## Dados que continuam por concluir
 
-A consulta da estrutura de produção em 8 de Novembro de 2026 confirmou a existência
- de residence_declarations e a ausência de afroloc_link_requests. A inscrição da feira,
- a persistência do condomínio e a verificação da sua área continuam pendentes. A edição
- da residência e a observação de um certificado não concluem uma inscrição na feira.
+A feira realiza-se a 5 e 6 de Dezembro de 2026. Conforme solicitado, recinto, horários,
+prazo de inscrição e capacidade permanecem por concluir no convite. Antes da activação,
+preencher período e capacidade no painel e actualizar as informações públicas.
+Confirmar a segunda parcela da restauração (o texto recebido indicava 5 de Novembro,
+anterior à primeira parcela de 20 de Novembro) e os períodos dos preços de 5.000 e
+15.000 Kz. A inscrição digital não reserva tendas nem processa pagamentos.
+
+O catálogo preliminar contém 32 condomínios, com opção de outra zona. Rever nomes e
+perímetros com a administração e gestores antes da abertura. Fontes da pesquisa inicial:
+Angocasa, Ree-Gera, Imponente, Pactual Property Fund, Banco Económico e referências
+locais do Patriota e do Governo Provincial de Luanda. A lista não prova residência.
+Esta primeira interface está em português; a tradução nas dez línguas fica pendente.

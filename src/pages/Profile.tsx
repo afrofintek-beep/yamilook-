@@ -1,3 +1,5 @@
+import ProfileInitiatives from "@/features/social-initiatives/ProfileInitiatives";
+import { socialInitiativesEnabled } from "@/features/social-initiatives/api";
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { ResidencePanel } from '@/components/residence/ResidencePanel';
 import { ProfileMuxi } from '@/components/profile/ProfileMuxi';
@@ -824,6 +826,7 @@ function ProfileContent() {
 
       {/* Achievements */}
       <ProfileAchievements achievements={getAchievements()} />
+      {socialInitiativesEnabled && targetUserId && <ProfileInitiatives userId={targetUserId} />}
 
       {/* Academia contributions */}
       <ProfileContributions

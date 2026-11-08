@@ -1,3 +1,4 @@
+import { communityReturn } from '@/features/academia/community-links';
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { recoverySession } from '@/lib/recovery-session';
 import { clearListCache } from '@/lib/list-cache';
@@ -386,7 +387,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email,
       password,
       options: {
-        emailRedirectTo: getYamilookPublicUrl('/onboarding'),
+        emailRedirectTo: getYamilookPublicUrl(communityReturn(window.location.search)?.startsWith('/feira-natalicia-talatona')
+          ? `/onboarding?next=${encodeURIComponent(communityReturn(window.location.search)!)}` : '/onboarding'),
         data: metadata,
       },
     });

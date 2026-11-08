@@ -1,3 +1,5 @@
+import ProfileInitiatives from "@/features/social-initiatives/ProfileInitiatives";
+import { socialInitiativesEnabled } from "@/features/social-initiatives/api";
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -80,6 +82,7 @@ export default function PublicProfile() {
   return (
     <div className="min-h-screen bg-background flex flex-col items-center px-4 py-10">
       <div className="w-full max-w-md">
+        {socialInitiativesEnabled && <ProfileInitiatives userId={profile.id} />}
         {/* Card */}
         <div className="rounded-3xl border border-border bg-card p-6 text-center shadow-sm">
           <div className="mx-auto mb-4 h-24 w-24 rounded-full overflow-hidden bg-primary/10 flex items-center justify-center ring-2 ring-primary/20">

@@ -1,0 +1,29 @@
+name: Social initiative registrations
+on:
+  pull_request:
+    paths:
+      - 'src/features/social-initiatives/**'
+      - 'src/features/talatona-fair/**'
+      - 'src/features/academia/community-links*'
+      - 'src/hooks/useAuth.tsx'
+      - 'supabase/migrations/*social_initiatives.sql'
+      - 'supabase/functions/social-initiatives/**'
+      - 'tests/social-initiatives/**'
+      - '.github/workflows/social-initiatives.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  registrations:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: node --test tests/social-initiatives/schema.test.mjs
+      - run: npm test -- src/features/social-initiatives/SocialParticipation.test.tsx src/features/talatona-fair/TalatonaFairDraft.test.tsx src/features/academia/community-links.test.ts src/lib/invitation-registration.test.ts src/test/integration/auth.test.tsx src/hooks/useAuth.revocation.test.tsx
+      - run: npx tsc --noEmit -p tsconfig.app.json
+      - run: npx eslint src/features/social-initiatives src/features/talatona-fair
