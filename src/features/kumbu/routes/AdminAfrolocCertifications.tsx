@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -26,6 +27,7 @@ const BADGE_VARIANT: Record<string, 'default' | 'secondary' | 'destructive'> = {
 };
 
 export default function AdminAfrolocCertifications() {
+  useUiLocale();
   const navigate = useNavigate();
   const [filter, setFilter] = useState<StatusFilter>('pending');
   const [rows, setRows] = useState<CertRow[]>([]);
@@ -72,9 +74,9 @@ export default function AdminAfrolocCertifications() {
     });
     const res = (data ?? {}) as { success?: boolean; error?: string };
     if (error || !res.success) {
-      toast.error(res.error === 'forbidden' ? 'Sem permissão (só autoridade/admin).' : 'Erro ao atualizar.');
+      toast.error(res.error === 'forbidden' ? uiText("Sem permissão (só autoridade/admin).") : uiText("Erro ao atualizar."));
     } else {
-      toast.success(certified ? 'Endereço certificado.' : 'Pedido rejeitado.');
+      toast.success(certified ? uiText("Endereço certificado.") : uiText("Pedido rejeitado."));
       fetchRows();
     }
     setActing(null);
@@ -86,35 +88,31 @@ export default function AdminAfrolocCertifications() {
         <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h1 className="text-lg font-semibold">Certificações AFROLOC</h1>
+        <h1 className="text-lg font-semibold">{uiText("Certificações AFROLOC")}</h1>
       </header>
 
       <main className="max-w-2xl mx-auto px-4 pt-4 space-y-4">
         <Alert>
           <ShieldAlert className="h-4 w-4" />
-          <AlertDescription className="text-sm">
-            Revisão manual local da YAMILOOK. Não substitui o certificado emitido pelo AFROLOC. Autoridade/admin — confirma a ligação entre utilizador e endereço antes de certificar. Um código introduzido ou uma leitura GPS, por si só, não provam residência.
-          </AlertDescription>
+          <AlertDescription className="text-sm">{uiText("Revisão manual local da YAMILOOK. Não substitui o certificado emitido pelo AFROLOC. Autoridade/admin — confirma a ligação entre utilizador e endereço antes de certificar. Um código introduzido ou uma leitura GPS, por si só, não provam residência.")}</AlertDescription>
         </Alert>
 
         <Tabs value={filter} onValueChange={(v) => setFilter(v as StatusFilter)}>
           <TabsList className="w-full">
-            <TabsTrigger value="pending" className="flex-1 text-xs">Pendentes</TabsTrigger>
-            <TabsTrigger value="certified" className="flex-1 text-xs">Certificados</TabsTrigger>
-            <TabsTrigger value="rejected" className="flex-1 text-xs">Rejeitados</TabsTrigger>
-            <TabsTrigger value="all" className="flex-1 text-xs">Todos</TabsTrigger>
+            <TabsTrigger value="pending" className="flex-1 text-xs">{uiText("Pendentes")}</TabsTrigger>
+            <TabsTrigger value="certified" className="flex-1 text-xs">{uiText("Certificados")}</TabsTrigger>
+            <TabsTrigger value="rejected" className="flex-1 text-xs">{uiText("Rejeitados")}</TabsTrigger>
+            <TabsTrigger value="all" className="flex-1 text-xs">{uiText("Todos")}</TabsTrigger>
           </TabsList>
         </Tabs>
 
-        {loading && <p className="text-sm text-muted-foreground text-center py-8">A carregar…</p>}
+        {loading && <p className="text-sm text-muted-foreground text-center py-8">{uiText("A carregar…")}</p>}
 
         {!loading && !loadError && rows.length === 0 && (
-          <p className="text-sm text-muted-foreground text-center py-8">Sem pedidos.</p>
+          <p className="text-sm text-muted-foreground text-center py-8">{uiText("Sem pedidos.")}</p>
         )}
 
-        {loadError && <Alert variant="destructive"><AlertDescription>
-          Não foi possível carregar os pedidos. Verifica a ligação e as permissões da conta.
-          <Button variant="outline" className="ml-2" onClick={() => {setLoading(true);void fetchRows();}}>Tentar novamente</Button>
+        {loadError && <Alert variant="destructive"><AlertDescription>{uiText("Não foi possível carregar os pedidos. Verifica a ligação e as permissões da conta.")}<Button variant="outline" className="ml-2" onClick={() => {setLoading(true);void fetchRows();}}>{uiText("Tentar novamente")}</Button>
         </AlertDescription></Alert>}
         <ul className="space-y-3">
           {rows.map((r) => (
@@ -131,11 +129,11 @@ export default function AdminAfrolocCertifications() {
 
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <MapPin className="h-3.5 w-3.5 shrink-0" />
-                <span className="font-mono truncate">{r.afroloc_code ?? 'sem endereço'}</span>
+                <span className="font-mono truncate">{r.afroloc_code ?? uiText("sem endereço")}</span>
               </div>
 
-              {declarations[r.id] && <p className="text-xs text-muted-foreground">Banda declarada: {declarations[r.id].neighborhood}, {declarations[r.id].city}. Origem: {declarations[r.id].method === 'home' ? 'captura no endereço' : declarations[r.id].method === 'existing' ? 'código indicado pelo utilizador' : 'confirmação adiada'}.</p>}
-              {r.afroloc_certification_status !== 'certified' && <label className="flex gap-2 text-xs"><input type="checkbox" checked={!!reviewed[r.id]} onChange={e=>setReviewed(p=>({...p,[r.id]:e.target.checked}))}/>Verifiquei a ligação do utilizador a este endereço e à Banda declarada.</label>}
+              {declarations[r.id] && <p className="text-xs text-muted-foreground">{uiText("Banda declarada: {{value1}}, {{value2}}. Origem: {{value3}}.", { value1: (declarations[r.id].neighborhood) ?? "", value2: (declarations[r.id].city) ?? "", value3: (declarations[r.id].method === 'home' ? uiText("captura no endereço") : declarations[r.id].method === 'existing' ? uiText("código indicado pelo utilizador") : uiText("confirmação adiada")) ?? "" })}</p>}
+              {r.afroloc_certification_status !== 'certified' && <label className="flex gap-2 text-xs"><input type="checkbox" checked={!!reviewed[r.id]} onChange={e=>setReviewed(p=>({...p,[r.id]:e.target.checked}))}/>{uiText("Verifiquei a ligação do utilizador a este endereço e à Banda declarada.")}</label>}
               {r.afroloc_certification_status !== 'certified' && (
                 <div className="flex gap-2 pt-1">
                   <Button
@@ -144,9 +142,7 @@ export default function AdminAfrolocCertifications() {
                     disabled={acting === r.id || !r.afroloc_code || !reviewed[r.id]}
                     onClick={() => act(r.id, true)}
                   >
-                    {acting === r.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <ShieldCheck className="h-3 w-3" />}
-                    Certificar
-                  </Button>
+                    {acting === r.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <ShieldCheck className="h-3 w-3" />}{uiText("Certificar")}</Button>
                   {r.afroloc_certification_status === 'pending' && (
                     <Button
                       size="sm"
@@ -154,9 +150,7 @@ export default function AdminAfrolocCertifications() {
                       className="h-8 text-xs flex-1"
                       disabled={acting === r.id}
                       onClick={() => act(r.id, false)}
-                    >
-                      Rejeitar
-                    </Button>
+                    >{uiText("Rejeitar")}</Button>
                   )}
                 </div>
               )}
@@ -168,9 +162,7 @@ export default function AdminAfrolocCertifications() {
                   className="h-8 text-xs"
                   disabled={acting === r.id}
                   onClick={() => act(r.id, false)}
-                >
-                  Revogar certificação
-                </Button>
+                >{uiText("Revogar certificação")}</Button>
               )}
             </li>
           ))}

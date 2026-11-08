@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -7,14 +8,15 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ShieldAlert, Users, Banknote, FileText, ShieldCheck, Crown } from 'lucide-react';
 
 export default function AdminMonetization() {
+  useUiLocale();
   const navigate = useNavigate();
 
   const links = [
-    { label: 'Gestão de Mentores', icon: Users, path: '/admin/mentors' },
-    { label: 'Mokubico Pro — Faturação', icon: Crown, path: '/admin/billing' },
-    { label: 'Candidaturas de Criadores', icon: Users, path: '/admin/applications' },
-    { label: 'Certificações AFROLOC', icon: ShieldCheck, path: '/admin/afroloc-certifications' },
-    { label: 'Pedidos de Payout', icon: Banknote, path: '/admin/payouts' },
+    { label: uiText("Gestão de Mentores"), icon: Users, path: '/admin/mentors' },
+    { label: uiText("Mokubico Pro — Faturação"), icon: Crown, path: '/admin/billing' },
+    { label: uiText("Candidaturas de Criadores"), icon: Users, path: '/admin/applications' },
+    { label: uiText("Certificações AFROLOC"), icon: ShieldCheck, path: '/admin/afroloc-certifications' },
+    { label: uiText("Pedidos de Payout"), icon: Banknote, path: '/admin/payouts' },
   ];
 
   return (
@@ -23,15 +25,13 @@ export default function AdminMonetization() {
         <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h1 className="text-lg font-semibold">Monetização — Admin</h1>
+        <h1 className="text-lg font-semibold">{uiText("Monetização — Admin")}</h1>
       </header>
 
       <main className="max-w-lg mx-auto px-4 pt-4 space-y-4">
         <Alert>
           <ShieldAlert className="h-4 w-4" />
-          <AlertDescription className="text-sm">
-            Área restrita a administradores. Acesso verificado por role.
-          </AlertDescription>
+          <AlertDescription className="text-sm">{uiText("Área restrita a administradores. Acesso verificado por role.")}</AlertDescription>
         </Alert>
 
         {links.map((l) => (

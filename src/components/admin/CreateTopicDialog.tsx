@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
@@ -31,6 +32,7 @@ export function CreateTopicDialog({
   onOpenChange, 
   onTopicCreated 
 }: CreateTopicDialogProps) {
+  useUiLocale();
   const { t } = useTranslation();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -54,12 +56,12 @@ export function CreateTopicDialog({
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      toast.error('Por favor seleciona uma imagem');
+      toast.error(uiText("Por favor seleciona uma imagem"));
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('A imagem deve ter no máximo 5MB');
+      toast.error(uiText("A imagem deve ter no máximo 5MB"));
       return;
     }
 
@@ -104,7 +106,7 @@ export function CreateTopicDialog({
       return publicUrl;
     } catch (error) {
       console.error('Error uploading image:', error);
-      toast.error('Erro ao fazer upload da imagem');
+      toast.error(uiText("Erro ao fazer upload da imagem"));
       return null;
     } finally {
       setUploading(false);
@@ -115,7 +117,7 @@ export function CreateTopicDialog({
     e.preventDefault();
 
     if (!name.trim()) {
-      toast.error('O nome do tópico é obrigatório');
+      toast.error(uiText("O nome do tópico é obrigatório"));
       return;
     }
 
@@ -143,20 +145,20 @@ export function CreateTopicDialog({
 
       if (error) {
         if (error.code === '23505') {
-          toast.error('Já existe um tópico com este nome');
+          toast.error(uiText("Já existe um tópico com este nome"));
         } else {
           throw error;
         }
         return;
       }
 
-      toast.success('Tópico criado com sucesso!');
+      toast.success(uiText("Tópico criado com sucesso!"));
       resetForm();
       onOpenChange(false);
       onTopicCreated();
     } catch (error) {
       console.error('Error creating topic:', error);
-      toast.error('Erro ao criar tópico');
+      toast.error(uiText("Erro ao criar tópico"));
     } finally {
       setSaving(false);
     }
@@ -180,19 +182,17 @@ export function CreateTopicDialog({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Criar Novo Tópico</DialogTitle>
-          <DialogDescription>
-            Adiciona um novo tópico para categorizar posts
-          </DialogDescription>
+          <DialogTitle>{uiText("Criar Novo Tópico")}</DialogTitle>
+          <DialogDescription>{uiText("Adiciona um novo tópico para categorizar posts")}</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Nome */}
           <div className="space-y-2">
-            <Label htmlFor="topic-name">Nome *</Label>
+            <Label htmlFor="topic-name">{uiText("Nome *")}</Label>
             <Input
               id="topic-name"
-              placeholder="Ex: Tecnologia"
+              placeholder={uiText("Ex: Tecnologia")}
               value={name}
               onChange={(e) => setName(e.target.value)}
               disabled={saving}
@@ -201,10 +201,10 @@ export function CreateTopicDialog({
 
           {/* Descrição */}
           <div className="space-y-2">
-            <Label htmlFor="topic-description">Descrição</Label>
+            <Label htmlFor="topic-description">{uiText("Descrição")}</Label>
             <Textarea
               id="topic-description"
-              placeholder="Descreve o tópico..."
+              placeholder={uiText("Descreve o tópico...")}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               disabled={saving}
@@ -214,13 +214,13 @@ export function CreateTopicDialog({
 
           {/* Imagem */}
           <div className="space-y-2">
-            <Label>Imagem do Tópico</Label>
+            <Label>{uiText("Imagem do Tópico")}</Label>
             
             {imagePreview ? (
               <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-border">
                 <img
                   src={imagePreview}
-                  alt="Preview"
+                  alt={uiText("Preview")}
                   className="w-full h-full object-cover"
                 />
                 <Button
@@ -240,12 +240,8 @@ export function CreateTopicDialog({
                 onClick={() => fileInputRef.current?.click()}
               >
                 <ImageIcon className="w-10 h-10 text-muted-foreground mb-2" />
-                <p className="text-sm text-muted-foreground">
-                  Clica para escolher uma imagem
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  PNG, JPG até 5MB
-                </p>
+                <p className="text-sm text-muted-foreground">{uiText("Clica para escolher uma imagem")}</p>
+                <p className="text-xs text-muted-foreground mt-1">{uiText("PNG, JPG até 5MB")}</p>
               </div>
             )}
 
@@ -261,8 +257,7 @@ export function CreateTopicDialog({
           {/* Slug preview */}
           {name && (
             <div className="p-2 bg-muted rounded-lg">
-              <p className="text-xs text-muted-foreground">
-                Slug: <code className="text-primary">{generateSlug(name)}</code>
+              <p className="text-xs text-muted-foreground">{uiText("Slug: ")}<code className="text-primary">{generateSlug(name)}</code>
               </p>
             </div>
           )}
@@ -274,20 +269,16 @@ export function CreateTopicDialog({
               variant="outline"
               onClick={() => handleClose(false)}
               disabled={saving}
-            >
-              Cancelar
-            </Button>
+            >{uiText("Cancelar")}</Button>
             <Button type="submit" disabled={saving || uploading}>
               {saving || uploading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  {uploading ? 'A fazer upload...' : 'A criar...'}
+                  {uploading ? uiText("A fazer upload...") : uiText("A criar...")}
                 </>
               ) : (
                 <>
-                  <Upload className="w-4 h-4 mr-2" />
-                  Criar Tópico
-                </>
+                  <Upload className="w-4 h-4 mr-2" />{uiText("Criar Tópico")}</>
               )}
             </Button>
           </div>

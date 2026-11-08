@@ -1,3 +1,4 @@
+import { uiText, useUiLocale, uiLocale } from '@/i18n/ui-copy';
 import { isRecentlyOnline } from '@/lib/online-presence';
 import { usePresenceClock } from '@/hooks/usePresenceClock';
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -91,6 +92,7 @@ interface UserWithRole extends UserProfile {
 }
 
 export default function Admin() {
+  useUiLocale();
   const presenceNow = usePresenceClock();
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -123,7 +125,7 @@ export default function Admin() {
 
   useEffect(() => {
     if (!adminLoading && !isAdmin && user) {
-      toast.error('Acesso negado. Apenas administradores.');
+      toast.error(uiText("Acesso negado. Apenas administradores."));
       navigate('/');
     }
   }, [isAdmin, adminLoading, user, navigate]);
@@ -143,7 +145,7 @@ export default function Admin() {
         || (userFilter === 'online' && isRecentlyOnline(profile.is_online, profile.last_seen, presenceNow));
       return matchesFilter && matchesAdminUser(profile, searchQuery);
     }),
-    [users, searchQuery, userFilter, presenceNow],
+    [users, searchQuery, userFilter, presenceNow, uiLocale()],
   );
 
   const fetchStats = async () => {
@@ -221,7 +223,7 @@ export default function Admin() {
       if (request !== usersRequest.current) return;
       setUsersError(true);
       console.error('Error fetching users:', error);
-      toast.error('Erro ao carregar utilizadores');
+      toast.error(uiText("Erro ao carregar utilizadores"));
     } finally {
       if (request === usersRequest.current) setLoadingUsers(false);
     }
@@ -229,16 +231,14 @@ export default function Admin() {
 
   const handleToggleAdmin = async (targetUser: UserWithRole) => {
     if (targetUser.id === user?.id) {
-      toast.error('Não podes remover o teu próprio acesso de admin');
+      toast.error(uiText("Não podes remover o teu próprio acesso de admin"));
       return;
     }
 
-    const action = targetUser.isAdmin ? 'remover admin de' : 'tornar admin';
-    
     setConfirmDialog({
       open: true,
-      title: targetUser.isAdmin ? 'Remover Admin' : 'Tornar Admin',
-      description: `Tens a certeza que queres ${action} ${targetUser.display_name}?`,
+      title: targetUser.isAdmin ? uiText("Remover Admin") : uiText("Tornar Admin"),
+      description: targetUser.isAdmin ? uiText("Remover a função de administrador de {{name}}?", { name: targetUser.display_name }) : uiText("Atribuir a função de administrador a {{name}}?", { name: targetUser.display_name }),
       action: async () => {
         setActionLoading(targetUser.id);
         try {
@@ -251,7 +251,7 @@ export default function Admin() {
               .eq('role', 'admin');
 
             if (error) throw error;
-            toast.success(`Admin removido de ${targetUser.display_name}`);
+            toast.success(uiText("Admin removido de {{value1}}", { value1: (targetUser.display_name) ?? "" }));
           } else {
             // Add admin role
             const { error } = await supabase
@@ -259,14 +259,14 @@ export default function Admin() {
               .insert({ user_id: targetUser.id, role: 'admin' });
 
             if (error) throw error;
-            toast.success(`${targetUser.display_name} é agora admin`);
+            toast.success(uiText("{{value1}} é agora admin", { value1: (targetUser.display_name) ?? "" }));
           }
 
           // Refresh users
           await fetchUsersWithRoles();
         } catch (error) {
           console.error('Error toggling admin:', error);
-          toast.error('Erro ao atualizar permissões');
+          toast.error(uiText("Erro ao atualizar permissões"));
         } finally {
           setActionLoading(null);
         }
@@ -275,12 +275,10 @@ export default function Admin() {
   };
 
   const handleToggleModerator = async (targetUser: UserWithRole) => {
-    const action = targetUser.isModerator ? 'remover moderador de' : 'tornar moderador';
-    
     setConfirmDialog({
       open: true,
-      title: targetUser.isModerator ? 'Remover Moderador' : 'Tornar Moderador',
-      description: `Tens a certeza que queres ${action} ${targetUser.display_name}?`,
+      title: targetUser.isModerator ? uiText("Remover Moderador") : uiText("Tornar Moderador"),
+      description: targetUser.isModerator ? uiText("Remover a função de moderador de {{name}}?", { name: targetUser.display_name }) : uiText("Atribuir a função de moderador a {{name}}?", { name: targetUser.display_name }),
       action: async () => {
         setActionLoading(targetUser.id);
         try {
@@ -291,18 +289,18 @@ export default function Admin() {
               .eq('user_id', targetUser.id)
               .eq('role', 'moderator');
             if (error) throw error;
-            toast.success(`Moderador removido de ${targetUser.display_name}`);
+            toast.success(uiText("Moderador removido de {{value1}}", { value1: (targetUser.display_name) ?? "" }));
           } else {
             const { error } = await supabase
               .from('user_roles')
               .insert({ user_id: targetUser.id, role: 'moderator' });
             if (error) throw error;
-            toast.success(`${targetUser.display_name} é agora moderador`);
+            toast.success(uiText("{{value1}} é agora moderador", { value1: (targetUser.display_name) ?? "" }));
           }
           await fetchUsersWithRoles();
         } catch (error) {
           console.error('Error toggling moderator:', error);
-          toast.error('Erro ao atualizar permissões');
+          toast.error(uiText("Erro ao atualizar permissões"));
         } finally {
           setActionLoading(null);
         }
@@ -320,22 +318,22 @@ export default function Admin() {
       }
 
       const results = response.data?.results;
-      toast.success('Dados de teste criados!', {
-        description: `${results?.posts || 0} posts, ${results?.messages || 0} mensagens, ${results?.conversations || 0} conversas`
+      toast.success(uiText("Dados de teste criados!"), {
+        description: uiText("{{posts}} publicações, {{messages}} mensagens, {{conversations}} conversas", { posts: results?.posts ?? 0, messages: results?.messages ?? 0, conversations: results?.conversations ?? 0 })
       });
       
       fetchStats();
       fetchUsersWithRoles();
     } catch (error) {
       console.error('Seed error:', error);
-      toast.error('Erro ao criar dados de teste');
+      toast.error(uiText("Erro ao criar dados de teste"));
     } finally {
       setSeeding(false);
     }
   };
 
   const handleClearTestData = async () => {
-    if (!confirm('Tens a certeza que queres apagar TODOS os dados de teste? Esta ação é irreversível.')) {
+    if (!confirm(uiText("Tens a certeza que queres apagar TODOS os dados de teste? Esta ação é irreversível."))) {
       return;
     }
 
@@ -358,15 +356,15 @@ export default function Admin() {
         await supabase.from('conversation_participants').delete().in('user_id', userIds);
         await supabase.from('contacts').delete().in('user_id', userIds);
 
-        toast.success('Dados de teste apagados!');
+        toast.success(uiText("Dados de teste apagados!"));
         fetchStats();
         fetchUsersWithRoles();
       } else {
-        toast.info('Não há dados de teste para apagar');
+        toast.info(uiText("Não há dados de teste para apagar"));
       }
     } catch (error) {
       console.error('Clear error:', error);
-      toast.error('Erro ao apagar dados de teste');
+      toast.error(uiText("Erro ao apagar dados de teste"));
     } finally {
       setClearingData(false);
     }
@@ -385,12 +383,12 @@ export default function Admin() {
   }
 
   const statCards = [
-    { label: 'Utilizadores', value: stats.users, icon: Users, color: 'text-blue-500' },
-    { label: 'Posts', value: stats.posts, icon: FileText, color: 'text-green-500' },
-    { label: 'Conversas', value: stats.conversations, icon: MessageSquare, color: 'text-purple-500' },
-    { label: 'Mensagens', value: stats.messages, icon: MessageSquare, color: 'text-orange-500' },
-    { label: 'Statuses', value: stats.statuses, icon: Clock, color: 'text-pink-500' },
-    { label: 'Links', value: stats.contacts, icon: UserPlus, color: 'text-cyan-500' },
+    { label: uiText("Utilizadores"), value: stats.users, icon: Users, color: 'text-blue-500' },
+    { label: uiText("Posts"), value: stats.posts, icon: FileText, color: 'text-green-500' },
+    { label: uiText("Conversas"), value: stats.conversations, icon: MessageSquare, color: 'text-purple-500' },
+    { label: uiText("Mensagens"), value: stats.messages, icon: MessageSquare, color: 'text-orange-500' },
+    { label: uiText("Statuses"), value: stats.statuses, icon: Clock, color: 'text-pink-500' },
+    { label: uiText("Links"), value: stats.contacts, icon: UserPlus, color: 'text-cyan-500' },
   ];
 
   const adminCount = users.filter((u) => u.isAdmin).length;
@@ -420,12 +418,10 @@ export default function Admin() {
             </Button>
             <div className="flex items-center gap-2">
               <Shield className="w-5 h-5 text-primary" />
-              <h1 className="text-lg font-bold">Painel de Admin</h1>
+              <h1 className="text-lg font-bold">{uiText("Painel de Admin")}</h1>
             </div>
           </div>
-          <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
-            Admin
-          </Badge>
+          <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">{uiText("Admin")}</Badge>
         </div>
       </div>
 
@@ -457,19 +453,15 @@ export default function Admin() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Shield className="w-5 h-5" />
-              Gestão
-            </CardTitle>
-            <CardDescription>
-              Candidaturas, monetização, certificações e pagamentos
-            </CardDescription>
+              <Shield className="w-5 h-5" />{uiText("Gestão")}</CardTitle>
+            <CardDescription>{uiText("Candidaturas, monetização, certificações e pagamentos")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
             {[
-              { label: 'Candidaturas de criador', icon: FileCheck, to: '/admin/applications' },
-              { label: 'Monetização', icon: Coins, to: '/admin/monetization' },
-              { label: 'Certificações AFROLOC', icon: Award, to: '/admin/afroloc-certifications' },
-              { label: 'Pagamentos (payouts)', icon: Wallet, to: '/admin/payouts' },
+              { label: uiText("Candidaturas de criador"), icon: FileCheck, to: '/admin/applications' },
+              { label: uiText("Monetização"), icon: Coins, to: '/admin/monetization' },
+              { label: uiText("Certificações AFROLOC"), icon: Award, to: '/admin/afroloc-certifications' },
+              { label: uiText("Pagamentos (payouts)"), icon: Wallet, to: '/admin/payouts' },
             ].map((item) => (
               <Button
                 key={item.to}
@@ -491,12 +483,8 @@ export default function Admin() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Database className="w-5 h-5" />
-              Dados de Teste
-            </CardTitle>
-            <CardDescription>
-              Gerir dados de teste para desenvolvimento
-            </CardDescription>
+              <Database className="w-5 h-5" />{uiText("Dados de Teste")}</CardTitle>
+            <CardDescription>{uiText("Gerir dados de teste para desenvolvimento")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <Button
@@ -509,7 +497,7 @@ export default function Admin() {
               ) : (
                 <RefreshCw className="w-4 h-4" />
               )}
-              {seeding ? 'A criar...' : 'Criar/Atualizar Dados de Teste'}
+              {seeding ? uiText("A criar...") : uiText("Criar/Atualizar Dados de Teste")}
             </Button>
             <Button
               variant="destructive"
@@ -522,7 +510,7 @@ export default function Admin() {
               ) : (
                 <Trash2 className="w-4 h-4" />
               )}
-              {clearingData ? 'A apagar...' : 'Apagar Dados de Teste'}
+              {clearingData ? uiText("A apagar...") : uiText("Apagar Dados de Teste")}
             </Button>
           </CardContent>
         </Card>
@@ -547,23 +535,19 @@ export default function Admin() {
         <Tabs defaultValue="users">
           <TabsList className="w-full">
             <TabsTrigger value="users" className="flex-1 gap-2">
-              <Users className="w-4 h-4" />
-              Utilizadores
-            </TabsTrigger>
+              <Users className="w-4 h-4" />{uiText("Utilizadores")}</TabsTrigger>
             <TabsTrigger value="activity" className="flex-1 gap-2">
-              <Activity className="w-4 h-4" />
-              Atividade
-            </TabsTrigger>
+              <Activity className="w-4 h-4" />{uiText("Atividade")}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="users" className="mt-4 space-y-4">
             {/* Quick filters — counts always describe the complete directory. */}
-            <div role="group" aria-label="Filtrar utilizadores" className="grid grid-cols-4 gap-2">
+            <div role="group" aria-label={uiText("Filtrar utilizadores")} className="grid grid-cols-4 gap-2">
               {([
-                { value: 'all', label: 'Total', name: 'Todos os utilizadores', count: users.length, color: '' },
-                { value: 'admins', label: 'Admins', name: 'Administradores', count: adminCount, color: 'text-primary' },
-                { value: 'moderators', label: 'Mods', name: 'Moderadores', count: moderatorCount, color: 'text-orange-500' },
-                { value: 'online', label: 'Online', name: 'Utilizadores online', count: onlineCount, color: 'text-green-500' },
+                { value: 'all', label: uiText("Total"), name: uiText("Todos os utilizadores"), count: users.length, color: '' },
+                { value: 'admins', label: uiText("Admins"), name: uiText("Administradores"), count: adminCount, color: 'text-primary' },
+                { value: 'moderators', label: uiText("Mods"), name: uiText("Moderadores"), count: moderatorCount, color: 'text-orange-500' },
+                { value: 'online', label: uiText("Online"), name: uiText("Utilizadores online"), count: onlineCount, color: 'text-green-500' },
               ] as const).map(filter => (
                 <button
                   key={filter.value}
@@ -585,8 +569,8 @@ export default function Admin() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Pesquisar nome, @utilizador ou email..."
-                aria-label="Pesquisar utilizadores"
+                placeholder={uiText("Pesquisar nome, @utilizador ou email...")}
+                aria-label={uiText("Pesquisar utilizadores")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
@@ -596,8 +580,8 @@ export default function Admin() {
             {/* Users List */}
             <Card id="admin-user-results">
               <CardHeader className="pb-2">
-                <CardTitle className="text-base">Gestão de Utilizadores</CardTitle>
-                <CardDescription aria-live="polite">{loadingUsers ? 'A carregar utilizadores...' : usersError ? 'Não foi possível carregar a lista completa.' : `${filteredUsers.length} utilizadores encontrados · ${userFilter === 'admins' ? 'Administradores' : userFilter === 'moderators' ? 'Moderadores' : userFilter === 'online' ? 'Online' : 'Todos'}`}</CardDescription>
+                <CardTitle className="text-base">{uiText("Gestão de Utilizadores")}</CardTitle>
+                <CardDescription aria-live="polite">{loadingUsers ? uiText("A carregar utilizadores...") : usersError ? uiText("Não foi possível carregar a lista completa.") : uiText("{{value1}} utilizadores encontrados · {{value2}}", { value1: (filteredUsers.length) ?? "", value2: (userFilter === 'admins' ? uiText('Administradores') : userFilter === 'moderators' ? uiText('Moderadores') : userFilter === 'online' ? uiText('Online') : uiText('Todos')) ?? "" })}</CardDescription>
               </CardHeader>
               <CardContent className="p-0">
                 {loadingUsers ? (
@@ -606,11 +590,11 @@ export default function Admin() {
                   </div>
                 ) : usersError ? (
                   <div role="alert" className="p-4 space-y-3">
-                    <p>Erro ao carregar utilizadores. Tenta novamente.</p>
-                    <Button variant="outline" onClick={() => void fetchUsersWithRoles()}>Tentar novamente</Button>
+                    <p>{uiText("Erro ao carregar utilizadores. Tenta novamente.")}</p>
+                    <Button variant="outline" onClick={() => void fetchUsersWithRoles()}>{uiText("Tentar novamente")}</Button>
                   </div>
                 ) : filteredUsers.length === 0 ? (
-                  <p className="p-4 text-sm text-muted-foreground">Nenhum utilizador corresponde aos filtros e à pesquisa.</p>
+                  <p className="p-4 text-sm text-muted-foreground">{uiText("Nenhum utilizador corresponde aos filtros e à pesquisa.")}</p>
                 ) : (
                   <div className="divide-y divide-border max-h-[400px] overflow-y-auto">
                     {filteredUsers.map((profile) => (
@@ -631,15 +615,11 @@ export default function Admin() {
                             <p className="font-medium truncate">{profile.display_name}</p>
                             {profile.isAdmin && (
                               <Badge variant="default" className="text-xs px-1.5 py-0">
-                                <ShieldCheck className="w-3 h-3 mr-1" />
-                                Admin
-                              </Badge>
+                                <ShieldCheck className="w-3 h-3 mr-1" />{uiText("Admin")}</Badge>
                             )}
                             {profile.isModerator && !profile.isAdmin && (
                               <Badge variant="outline" className="text-xs px-1.5 py-0 border-orange-500/30 text-orange-600">
-                                <Shield className="w-3 h-3 mr-1" />
-                                Mod
-                              </Badge>
+                                <Shield className="w-3 h-3 mr-1" />{uiText("Mod")}</Badge>
                             )}
                           </div>
                           <p className="text-sm text-muted-foreground truncate">
@@ -649,12 +629,10 @@ export default function Admin() {
                         <div className="flex items-center gap-2">
                           <div className="text-right mr-2">
                             <p className="text-xs text-muted-foreground">
-                              {new Date(profile.created_at).toLocaleDateString('pt')}
+                              {new Date(profile.created_at).toLocaleDateString(uiLocale())}
                             </p>
                             {profile.email?.includes('@yamilook.test') && (
-                              <Badge variant="secondary" className="text-xs mt-1">
-                                Teste
-                              </Badge>
+                              <Badge variant="secondary" className="text-xs mt-1">{uiText("Teste")}</Badge>
                             )}
                           </div>
                           <DropdownMenu>
@@ -679,14 +657,10 @@ export default function Admin() {
                               >
                                 {profile.isAdmin ? (
                                   <>
-                                    <ShieldOff className="w-4 h-4 mr-2" />
-                                    Remover Admin
-                                  </>
+                                    <ShieldOff className="w-4 h-4 mr-2" />{uiText("Remover Admin")}</>
                                 ) : (
                                   <>
-                                    <ShieldCheck className="w-4 h-4 mr-2" />
-                                    Tornar Admin
-                                  </>
+                                    <ShieldCheck className="w-4 h-4 mr-2" />{uiText("Tornar Admin")}</>
                                 )}
                               </DropdownMenuItem>
                               <DropdownMenuItem
@@ -694,23 +668,17 @@ export default function Admin() {
                               >
                                 {profile.isModerator ? (
                                   <>
-                                    <ShieldOff className="w-4 h-4 mr-2" />
-                                    Remover Moderador
-                                  </>
+                                    <ShieldOff className="w-4 h-4 mr-2" />{uiText("Remover Moderador")}</>
                                 ) : (
                                   <>
-                                    <Shield className="w-4 h-4 mr-2" />
-                                    Tornar Moderador
-                                  </>
+                                    <Shield className="w-4 h-4 mr-2" />{uiText("Tornar Moderador")}</>
                                 )}
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem
                                 onClick={() => navigate(`/profile/${profile.id}`)}
                               >
-                                <Users className="w-4 h-4 mr-2" />
-                                Ver Perfil
-                              </DropdownMenuItem>
+                                <Users className="w-4 h-4 mr-2" />{uiText("Ver Perfil")}</DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
@@ -725,13 +693,13 @@ export default function Admin() {
           <TabsContent value="activity" className="mt-4">
             <Card>
               <CardHeader>
-                <CardTitle>Atividade Recente</CardTitle>
-                <CardDescription>Últimas ações no sistema</CardDescription>
+                <CardTitle>{uiText("Atividade Recente")}</CardTitle>
+                <CardDescription>{uiText("Últimas ações no sistema")}</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="text-center py-8 text-muted-foreground">
                   <Activity className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                  <p>Logs de atividade em breve...</p>
+                  <p>{uiText("Logs de atividade em breve...")}</p>
                 </div>
               </CardContent>
             </Card>
@@ -747,15 +715,13 @@ export default function Admin() {
             <AlertDialogDescription>{confirmDialog.description}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel>{uiText("Cancelar")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={async () => {
                 await confirmDialog.action();
                 setConfirmDialog((prev) => ({ ...prev, open: false }));
               }}
-            >
-              Confirmar
-            </AlertDialogAction>
+            >{uiText("Confirmar")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

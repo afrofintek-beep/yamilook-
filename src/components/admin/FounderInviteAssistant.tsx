@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,6 +10,7 @@ import { buildFounderInviteMessage, type FounderInviteLanguage } from '@/lib/fou
 type IssueResult = { code?: string };
 
 export function FounderInviteAssistant() {
+  useUiLocale();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [profession, setProfession] = useState('');
@@ -25,8 +27,8 @@ export function FounderInviteAssistant() {
   const change = (update: () => void) => { update(); setCustomMessage(null); };
   const updateEmail = (value: string) => { setEmail(value); setLink(''); setIssuedEmail(''); setStatus(''); setCustomMessage(null); };
   const copy = async (value: string) => {
-    try { await navigator.clipboard.writeText(value); setStatus('Copiado. Envia pessoalmente no canal escolhido.'); }
-    catch { setStatus('Não foi possível copiar. Selecciona e copia o texto manualmente.'); }
+    try { await navigator.clipboard.writeText(value); setStatus(uiText('Copiado. Envia pessoalmente no canal escolhido.')); }
+    catch { setStatus(uiText('Não foi possível copiar. Selecciona e copia o texto manualmente.')); }
   };
   const issue = async () => {
     const address = email.trim().toLowerCase();
@@ -43,50 +45,44 @@ export function FounderInviteAssistant() {
       setLink(buildInviteUrl(code));
       setIssuedEmail(address);
       setCustomMessage(null);
-      setStatus('Convite individual criado. Confirma o destinatário antes de partilhar.');
+      setStatus(uiText('Convite individual criado. Confirma o destinatário antes de partilhar.'));
     } catch {
-      setStatus('Não foi possível criar o convite. Confirma a autorização de convites e o endereço de email.');
+      setStatus(uiText('Não foi possível criar o convite. Confirma a autorização de convites e o endereço de email.'));
     } finally { setBusy(false); }
   };
 
   return <Card>
     <CardHeader>
-      <CardTitle>Assistente de Convites do Fundador</CardTitle>
-      <CardDescription>Founding Circle — prepara uma mensagem pessoal, revê-a e partilha-a manualmente. A ligação individual exige o email de registo do convidado.</CardDescription>
+      <CardTitle>{uiText("Assistente de Convites do Fundador")}</CardTitle>
+      <CardDescription>{uiText("Founding Circle — prepara uma mensagem pessoal, revê-a e partilha-a manualmente. A ligação individual exige o email de registo do convidado.")}</CardDescription>
     </CardHeader>
     <CardContent className="space-y-4">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <label className="space-y-1 text-sm font-medium">Nome do convidado
-          <Input value={name} maxLength={100} onChange={e => change(() => setName(e.target.value))} placeholder="Primeiro nome" />
+        <label className="space-y-1 text-sm font-medium">{uiText("Nome do convidado")}<Input value={name} maxLength={100} onChange={e => change(() => setName(e.target.value))} placeholder={uiText("Primeiro nome")} />
         </label>
-        <label className="space-y-1 text-sm font-medium">Email de registo (para emitir o convite)
-          <Input value={email} type="email" autoCapitalize="none" maxLength={254} onChange={e => updateEmail(e.target.value)} placeholder="nome@exemplo.com" />
+        <label className="space-y-1 text-sm font-medium">{uiText("Email de registo (para emitir o convite)")}<Input value={email} type="email" autoCapitalize="none" maxLength={254} onChange={e => updateEmail(e.target.value)} placeholder="nome@exemplo.com" />
         </label>
-        <label className="space-y-1 text-sm font-medium">Profissão ou área
-          <Input value={profession} maxLength={120} onChange={e => change(() => setProfession(e.target.value))} placeholder="Empreendedorismo, ensino..." />
+        <label className="space-y-1 text-sm font-medium">{uiText("Profissão ou área")}<Input value={profession} maxLength={120} onChange={e => change(() => setProfession(e.target.value))} placeholder={uiText("Empreendedorismo, ensino...")} />
         </label>
-        <label className="space-y-1 text-sm font-medium">Idioma
-          <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-base sm:text-sm" value={language} onChange={e => change(() => setLanguage(e.target.value as FounderInviteLanguage))}>
-            <option value="pt">Português</option><option value="en">English</option><option value="fr">Français</option>
+        <label className="space-y-1 text-sm font-medium">{uiText("Idioma")}<select className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-base sm:text-sm" value={language} onChange={e => change(() => setLanguage(e.target.value as FounderInviteLanguage))}>
+            <option value="pt">{uiText("Português")}</option><option value="en">{uiText("English")}</option><option value="fr">{uiText("Français")}</option>
           </select>
         </label>
       </div>
-      <label className="block space-y-1 text-sm font-medium">Porque escolheste esta pessoa?
-        <Input value={reason} maxLength={240} onChange={e => change(() => setReason(e.target.value))} placeholder="A experiência dela em mentoria..." />
+      <label className="block space-y-1 text-sm font-medium">{uiText("Porque escolheste esta pessoa?")}<Input value={reason} maxLength={240} onChange={e => change(() => setReason(e.target.value))} placeholder={uiText("A experiência dela em mentoria...")} />
       </label>
-      <label className="block space-y-1 text-sm font-medium">Mensagem pessoal — podes editar antes de copiar
-        <textarea aria-label="Mensagem pessoal" className="min-h-56 w-full rounded-md border border-input bg-background px-3 py-2 text-base sm:text-sm" value={message} onChange={e => setCustomMessage(e.target.value)} />
+      <label className="block space-y-1 text-sm font-medium">{uiText("Mensagem pessoal — podes editar antes de copiar")}<textarea aria-label={uiText("Mensagem pessoal")} className="min-h-56 w-full rounded-md border border-input bg-background px-3 py-2 text-base sm:text-sm" value={message} onChange={e => setCustomMessage(e.target.value)} />
       </label>
       {link && <div className="space-y-1 text-sm">
-        <p className="font-medium">Convite reservado ao email {issuedEmail}</p>
-        <Input aria-label="Ligação de convite" readOnly value={link} onFocus={e => e.target.select()} />
+        <p className="font-medium">{uiText("Convite reservado ao email {{value1}}", { value1: (issuedEmail) ?? "" })}</p>
+        <Input aria-label={uiText("Ligação de convite")} readOnly value={link} onFocus={e => e.target.select()} />
       </div>}
       <div className="flex flex-wrap gap-2">
-        <Button type="button" onClick={() => void copy(message)}>Copiar mensagem</Button>
-        <Button type="button" variant="outline" disabled={!email.trim() || busy || !!link} onClick={() => void issue()}>{busy ? 'A gerar…' : 'Gerar convite individual'}</Button>
-        {link && <Button type="button" variant="outline" onClick={() => void copy(link)}>Copiar ligação</Button>}
+        <Button type="button" onClick={() => void copy(message)}>{uiText("Copiar mensagem")}</Button>
+        <Button type="button" variant="outline" disabled={!email.trim() || busy || !!link} onClick={() => void issue()}>{busy ? uiText("A gerar…") : uiText("Gerar convite individual")}</Button>
+        {link && <Button type="button" variant="outline" onClick={() => void copy(link)}>{uiText("Copiar ligação")}</Button>}
       </div>
-      <p className="text-xs text-muted-foreground">Não envia mensagens automaticamente pelo LinkedIn, WhatsApp ou email. A emissão exige permissão no servidor. O email indicado deve coincidir com o utilizado no registo; um convite emitido não pode ser reutilizado.</p>
+      <p className="text-xs text-muted-foreground">{uiText("Não envia mensagens automaticamente pelo LinkedIn, WhatsApp ou email. A emissão exige permissão no servidor. O email indicado deve coincidir com o utilizado no registo; um convite emitido não pode ser reutilizado.")}</p>
       <p role="status" className="text-sm text-muted-foreground">{status}</p>
     </CardContent>
   </Card>;

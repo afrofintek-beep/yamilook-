@@ -1,3 +1,5 @@
+import { uiText, useUiLocale, uiLocale } from '@/i18n/ui-copy';
+import { uiServerMessage } from '@/i18n/server-copy';
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,7 +11,6 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, ShieldAlert, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from '@/i18n/ui-date';
-import { pt } from 'date-fns/locale';
 
 type PayoutFilter = 'all' | 'pending' | 'approved' | 'processed' | 'rejected';
 
@@ -20,7 +21,15 @@ const BADGE_VARIANT: Record<string, 'default' | 'secondary' | 'destructive'> = {
   rejected: 'destructive',
 };
 
+const payoutStatus: Record<string, string> = {
+  get pending() { return uiText('Pendente'); },
+  get approved() { return uiText('Aprovado'); },
+  get processed() { return uiText('Pago'); },
+  get rejected() { return uiText('Rejeitado'); },
+};
+
 export default function AdminPayouts() {
+  useUiLocale();
   const navigate = useNavigate();
   const [filter, setFilter] = useState<PayoutFilter>('pending');
   const [payouts, setPayouts] = useState<Tables<'payout_requests'>[]>([]);
@@ -41,7 +50,7 @@ export default function AdminPayouts() {
 
   useEffect(() => { setLoading(true); fetchPayouts(); }, [fetchPayouts]);
 
-  const fmtKz = (n: number) => new Intl.NumberFormat('pt-AO').format(Math.round(n)) + ' Kz';
+  const fmtKz = (n: number) => new Intl.NumberFormat(uiLocale()).format(Math.round(n)) + ' Kz';
 
   // Server-side RPC: approve / mark paid / reject (reject refunds the creator's Kumbu).
   const runAction = async (id: string, action: 'approve' | 'process' | 'reject', reason?: string) => {
@@ -49,16 +58,16 @@ export default function AdminPayouts() {
     const { error } = await supabase.rpc('process_payout' as never, {
       p_payout_id: id, p_action: action, p_reason: reason ?? null,
     } as never);
-    if (error) toast.error(error.message);
+    if (error) toast.error(uiServerMessage(error.message, uiText('Não foi possível atualizar o pagamento.')));
     else {
-      toast.success(action === 'reject' ? 'Rejeitado — Kumbu devolvido.' : action === 'process' ? 'Marcado como pago.' : 'Aprovado.');
+      toast.success(action === 'reject' ? uiText("Rejeitado — Kumbu devolvido.") : action === 'process' ? uiText("Marcado como pago.") : uiText("Aprovado."));
       fetchPayouts();
     }
     setActing(null);
   };
 
   const reject = (id: string) => {
-    const reason = window.prompt('Motivo da rejeição (opcional). O Kumbu é devolvido ao criador:');
+    const reason = window.prompt(uiText('Motivo da rejeição (opcional). O Kumbu é devolvido ao criador:'));
     if (reason === null) return; // cancelled
     runAction(id, 'reject', reason || undefined);
   };
@@ -69,28 +78,28 @@ export default function AdminPayouts() {
         <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h1 className="text-lg font-semibold">Payouts — Admin</h1>
+        <h1 className="text-lg font-semibold">{uiText("Gestão de pagamentos")}</h1>
       </header>
 
       <main className="max-w-2xl mx-auto px-4 pt-4 space-y-4">
         <Alert>
           <ShieldAlert className="h-4 w-4" />
-          <AlertDescription className="text-sm">Admin only — acesso verificado por role.</AlertDescription>
+          <AlertDescription className="text-sm">{uiText("Acesso reservado a administradores.")}</AlertDescription>
         </Alert>
 
         <Tabs value={filter} onValueChange={(v) => setFilter(v as PayoutFilter)}>
           <TabsList className="w-full">
-            <TabsTrigger value="pending" className="flex-1 text-xs">Pendentes</TabsTrigger>
-            <TabsTrigger value="approved" className="flex-1 text-xs">Aprovados</TabsTrigger>
-            <TabsTrigger value="processed" className="flex-1 text-xs">Pagos</TabsTrigger>
-            <TabsTrigger value="all" className="flex-1 text-xs">Todos</TabsTrigger>
+            <TabsTrigger value="pending" className="flex-1 text-xs">{uiText("Pendentes")}</TabsTrigger>
+            <TabsTrigger value="approved" className="flex-1 text-xs">{uiText("Aprovados")}</TabsTrigger>
+            <TabsTrigger value="processed" className="flex-1 text-xs">{uiText("Pagos")}</TabsTrigger>
+            <TabsTrigger value="all" className="flex-1 text-xs">{uiText("Todos")}</TabsTrigger>
           </TabsList>
         </Tabs>
 
-        {loading && <p className="text-sm text-muted-foreground text-center py-8">A carregar…</p>}
+        {loading && <p className="text-sm text-muted-foreground text-center py-8">{uiText("A carregar…")}</p>}
 
         {!loading && payouts.length === 0 && (
-          <p className="text-sm text-muted-foreground text-center py-8">Sem pedidos.</p>
+          <p className="text-sm text-muted-foreground text-center py-8">{uiText("Sem pedidos.")}</p>
         )}
 
         <ul className="space-y-3">
@@ -107,31 +116,27 @@ export default function AdminPayouts() {
                       )}
                     </p>
                     <p className="text-[11px] text-muted-foreground">
-                      {format(new Date(p.created_at), "d MMM yyyy · HH:mm", { locale: pt })}
+                      {format(new Date(p.created_at), "d MMM yyyy · HH:mm")}
                     </p>
-                    <p className="text-[11px] text-muted-foreground truncate">User: {p.user_id}</p>
+                    <p className="text-[11px] text-muted-foreground truncate">{uiText("User: {{value1}}", { value1: (p.user_id) ?? "" })}</p>
                     {p.rejection_reason && (
-                      <p className="text-[11px] text-destructive truncate">Motivo: {p.rejection_reason}</p>
+                      <p className="text-[11px] text-destructive truncate">{uiText("Motivo: {{value1}}", { value1: (p.rejection_reason) ?? "" })}</p>
                     )}
                   </div>
-                  <Badge variant={st} className="text-xs shrink-0">{p.status}</Badge>
+                  <Badge variant={st} className="text-xs shrink-0">{payoutStatus[p.status] ?? p.status}</Badge>
                 </div>
 
                 {p.status === 'pending' && (
                   <div className="flex gap-2 pt-1">
                     <Button size="sm" className="h-8 text-xs flex-1" disabled={acting === p.id} onClick={() => runAction(p.id, 'approve')}>
-                      {acting === p.id && <Loader2 className="h-3 w-3 animate-spin" />} Aprovar
-                    </Button>
-                    <Button size="sm" variant="destructive" className="h-8 text-xs flex-1" disabled={acting === p.id} onClick={() => reject(p.id)}>
-                      Rejeitar
-                    </Button>
+                      {acting === p.id && <Loader2 className="h-3 w-3 animate-spin" />}{uiText(" Aprovar")}</Button>
+                    <Button size="sm" variant="destructive" className="h-8 text-xs flex-1" disabled={acting === p.id} onClick={() => reject(p.id)}>{uiText("Rejeitar")}</Button>
                   </div>
                 )}
 
                 {p.status === 'approved' && (
                   <Button size="sm" className="h-8 text-xs" disabled={acting === p.id} onClick={() => runAction(p.id, 'process')}>
-                    {acting === p.id && <Loader2 className="h-3 w-3 animate-spin" />} Marcar como Pago
-                  </Button>
+                    {acting === p.id && <Loader2 className="h-3 w-3 animate-spin" />}{uiText(" Marcar como Pago")}</Button>
                 )}
               </li>
             );

@@ -1,4 +1,5 @@
-import { uiLocale } from '@/i18n/ui-copy';
+import { uiText, useUiLocale, uiLocale } from '@/i18n/ui-copy';
+import { uiServerMessage } from '@/i18n/server-copy';
 import { useState, useEffect, useCallback } from "react";
 import {
   Users,
@@ -58,12 +59,13 @@ interface Candidate {
 }
 
 const statusConfig = {
-  pending: { label: "Pendente", color: "bg-yellow-500/15 text-yellow-600 border-yellow-500/30", icon: Clock },
-  approved: { label: "Aprovado", color: "bg-green-500/15 text-green-600 border-green-500/30", icon: CheckCircle },
-  rejected: { label: "Rejeitado", color: "bg-destructive/15 text-destructive border-destructive/30", icon: XCircle },
+  pending: { get label() { return uiText("Pendente"); }, color: "bg-yellow-500/15 text-yellow-600 border-yellow-500/30", icon: Clock },
+  approved: { get label() { return uiText("Aprovado"); }, color: "bg-green-500/15 text-green-600 border-green-500/30", icon: CheckCircle },
+  rejected: { get label() { return uiText("Rejeitado"); }, color: "bg-destructive/15 text-destructive border-destructive/30", icon: XCircle },
 };
 
 export function MvpCandidatesManager() {
+  useUiLocale();
   const [loadError, setLoadError] = useState(false);
   const [sending, setSending] = useState<string | null>(null);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
@@ -93,7 +95,7 @@ export function MvpCandidatesManager() {
 
     if (error) {
       setLoadError(true);
-      toast.error("Erro ao carregar candidatos");
+      toast.error(uiText("Erro ao carregar candidatos"));
     } else {
       setCandidates((data as Candidate[]) || []);
     }
@@ -116,7 +118,7 @@ export function MvpCandidatesManager() {
       const result = data as { success: boolean; error?: string; access_code?: string; candidate_name?: string; candidate_email?: string };
 
       if (!result.success) {
-        toast.error(result.error || "Erro ao aprovar");
+        toast.error(uiServerMessage(result.error ?? "", uiText("Erro ao aprovar")));
         return;
       }
 
@@ -133,9 +135,9 @@ export function MvpCandidatesManager() {
         email: result.candidate_email!,
       });
 
-      toast.success(`${candidate.full_name} aprovado!`);
+      toast.success(uiText("{{value1}} aprovado!", { value1: (candidate.full_name) ?? "" }));
     } catch {
-      toast.error("Erro inesperado ao aprovar candidato");
+      toast.error(uiText("Erro inesperado ao aprovar candidato"));
     } finally {
       setActionLoading(null);
     }
@@ -155,7 +157,7 @@ export function MvpCandidatesManager() {
       const result = data as { success: boolean; error?: string };
 
       if (!result.success) {
-        toast.error(result.error || "Erro ao rejeitar");
+        toast.error(uiServerMessage(result.error ?? "", uiText("Erro ao rejeitar")));
         return;
       }
 
@@ -167,11 +169,11 @@ export function MvpCandidatesManager() {
         )
       );
 
-      toast.success("Candidatura rejeitada");
+      toast.success(uiText("Candidatura rejeitada"));
       setRejectDialog({ open: false, candidate: null });
       setRejectReason("");
     } catch {
-      toast.error("Erro inesperado ao rejeitar candidato");
+      toast.error(uiText("Erro inesperado ao rejeitar candidato"));
     } finally {
       setActionLoading(null);
     }
@@ -179,7 +181,7 @@ export function MvpCandidatesManager() {
 
   const copyCode = (code: string) => {
     navigator.clipboard.writeText(code);
-    toast.success("Código copiado!");
+    toast.success(uiText("Código copiado!"));
   };
 
   const copyEmailTemplate = (candidate: Candidate) => {
@@ -201,7 +203,7 @@ Bem-vindo(a) à nossa comunidade!
 Equipa Yamilook 🇦🇴`;
 
     navigator.clipboard.writeText(template);
-    toast.success("Template de email copiado!");
+    toast.success(uiText("Template de email copiado!"));
   };
 
   const sendCandidateEmail = async (candidate: Candidate) => {
@@ -209,10 +211,10 @@ Equipa Yamilook 🇦🇴`;
     try {
       const { data, error } = await supabase.functions.invoke('send-mvp-candidate-invitation', { body: { candidateId: candidate.id, language: uiLocale() } });
       if (error || !data?.accepted) throw error || new Error('Delivery failed');
-      toast.success('Email aceite pelo serviço de envio. A entrega depende do destinatário.');
+      toast.success(uiText("Email aceite pelo serviço de envio. A entrega depende do destinatário."));
       await fetchCandidates();
     } catch {
-      toast.error('Não foi possível enviar o email. Podes copiar a mensagem ou partilhar pelo WhatsApp.');
+      toast.error(uiText("Não foi possível enviar o email. Podes copiar a mensagem ou partilhar pelo WhatsApp."));
     } finally { setSending(null); }
   };
   const shareCandidate = (candidate: Candidate) => {
@@ -246,12 +248,8 @@ Equipa Yamilook 🇦🇴`;
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="flex items-center gap-2 text-base">
-                <Users className="w-5 h-5 text-primary" />
-                Candidatos MVP
-              </CardTitle>
-              <CardDescription>
-                Gere as candidaturas para o acesso ao MVP
-              </CardDescription>
+                <Users className="w-5 h-5 text-primary" />{uiText("Candidatos MVP")}</CardTitle>
+              <CardDescription>{uiText("Gere as candidaturas para o acesso ao MVP")}</CardDescription>
             </div>
             <Button variant="ghost" size="icon" onClick={fetchCandidates} disabled={loading}>
               <RefreshCw className={cn("w-4 h-4", loading && "animate-spin")} />
@@ -274,7 +272,7 @@ Equipa Yamilook 🇦🇴`;
               >
                 <p className="text-lg font-bold">{counts[s]}</p>
                 <p className="text-xs capitalize">
-                  {s === "all" ? "Total" : s === "pending" ? "Pendentes" : s === "approved" ? "Aprovados" : "Rejeitados"}
+                  {s === "all" ? uiText("Total") : s === "pending" ? uiText("Pendentes") : s === "approved" ? uiText("Aprovados") : uiText("Rejeitados")}
                 </p>
               </button>
             ))}
@@ -284,7 +282,7 @@ Equipa Yamilook 🇦🇴`;
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="Pesquisar candidatos..."
+              placeholder={uiText("Pesquisar candidatos...")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
@@ -296,10 +294,10 @@ Equipa Yamilook 🇦🇴`;
             <div className="flex items-center justify-center py-8">
               <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
             </div>
-          ) : loadError ? (<div role="alert">Não foi possível carregar candidatos. <Button onClick={fetchCandidates}>Tentar novamente</Button></div>) : filtered.length === 0 ? (
+          ) : loadError ? (<div role="alert">{uiText("Não foi possível carregar candidatos. ")}<Button onClick={fetchCandidates}>{uiText("Tentar novamente")}</Button></div>) : filtered.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <Users className="w-10 h-10 mx-auto mb-2 opacity-40" />
-              <p className="text-sm">Nenhum candidato encontrado</p>
+              <p className="text-sm">{uiText("Nenhum candidato encontrado")}</p>
             </div>
           ) : (
             <div className="space-y-2 max-h-[600px] overflow-y-auto">
@@ -329,7 +327,7 @@ Equipa Yamilook 🇦🇴`;
                           </div>
                           <div className="flex items-center gap-2 shrink-0">
                             <p className="text-xs text-muted-foreground">
-                              {new Date(candidate.created_at).toLocaleDateString("pt")}
+                              {new Date(candidate.created_at).toLocaleDateString(uiLocale())}
                             </p>
                             <ChevronDown className="w-4 h-4 text-muted-foreground" />
                           </div>
@@ -367,8 +365,7 @@ Equipa Yamilook 🇦🇴`;
                           {candidate.motivation && (
                             <div className="bg-secondary/50 rounded-lg p-3">
                               <p className="text-xs font-medium mb-1 flex items-center gap-1">
-                                <MessageSquare className="w-3 h-3" /> Motivação
-                              </p>
+                                <MessageSquare className="w-3 h-3" />{uiText(" Motivação")}</p>
                               <p className="text-xs text-muted-foreground leading-relaxed">
                                 {candidate.motivation}
                               </p>
@@ -379,8 +376,7 @@ Equipa Yamilook 🇦🇴`;
                           {candidate.access_code && (
                             <div className="bg-primary/5 border border-primary/20 rounded-lg p-3">
                               <p className="text-xs font-medium mb-2 flex items-center gap-1 text-primary">
-                                <Key className="w-3 h-3" /> Código de Acesso
-                              </p>
+                                <Key className="w-3 h-3" />{uiText(" Código de Acesso")}</p>
                               <div className="flex items-center gap-2">
                                 <code className="flex-1 text-sm font-mono font-bold tracking-widest text-primary">
                                   {candidate.access_code}
@@ -395,29 +391,25 @@ Equipa Yamilook 🇦🇴`;
                                 </Button>
                               </div>
                               {candidate.code_used && (
-                                <p className="text-xs text-green-600 mt-1">
-                                  ✓ Utilizado em {new Date(candidate.code_used_at!).toLocaleDateString("pt")}
-                                </p>
+                                <p className="text-xs text-green-600 mt-1">{uiText("✓ Utilizado em {{value1}}", { value1: (new Date(candidate.code_used_at!).toLocaleDateString(uiLocale())) ?? "" })}</p>
                               )}
                               {!candidate.code_used && (<div className="flex flex-wrap gap-2 mt-2">
-                                <Button size="sm" disabled={sending === candidate.id} onClick={() => sendCandidateEmail(candidate)}>{sending === candidate.id ? 'A enviar…' : 'Enviar email'}</Button>
-                                <Button size="sm" variant="outline" onClick={() => shareCandidate(candidate)}>Partilhar WhatsApp</Button>
+                                <Button size="sm" disabled={sending === candidate.id} onClick={() => sendCandidateEmail(candidate)}>{sending === candidate.id ? uiText("A enviar…") : uiText("Enviar email")}</Button>
+                                <Button size="sm" variant="outline" onClick={() => shareCandidate(candidate)}>{uiText("Partilhar WhatsApp")}</Button>
                                 <Button
                                   size="sm"
                                   variant="outline"
                                   className="w-full mt-2 h-7 text-xs gap-1"
                                   onClick={() => copyEmailTemplate(candidate)}
                                 >
-                                  <Mail className="w-3 h-3" />
-                                  Copiar template de email
-                                </Button></div>
+                                  <Mail className="w-3 h-3" />{uiText("Copiar template de email")}</Button></div>
                               )}
                             </div>
                           )}
 
                           {candidate.rejection_reason && (
                             <div className="bg-destructive/5 border border-destructive/20 rounded-lg p-3">
-                              <p className="text-xs font-medium mb-1 text-destructive">Motivo de rejeição</p>
+                              <p className="text-xs font-medium mb-1 text-destructive">{uiText("Motivo de rejeição")}</p>
                               <p className="text-xs text-muted-foreground">{candidate.rejection_reason}</p>
                             </div>
                           )}
@@ -435,9 +427,7 @@ Equipa Yamilook 🇦🇴`;
                                   <Loader2 className="w-3 h-3 animate-spin" />
                                 ) : (
                                   <CheckCircle className="w-3 h-3" />
-                                )}
-                                Aprovar
-                              </Button>
+                                )}{uiText("Aprovar")}</Button>
                               <Button
                                 size="sm"
                                 variant="outline"
@@ -445,9 +435,7 @@ Equipa Yamilook 🇦🇴`;
                                 onClick={() => setRejectDialog({ open: true, candidate })}
                                 disabled={actionLoading === candidate.id}
                               >
-                                <XCircle className="w-3 h-3" />
-                                Rejeitar
-                              </Button>
+                                <XCircle className="w-3 h-3" />{uiText("Rejeitar")}</Button>
                             </div>
                           )}
                         </div>
@@ -473,23 +461,21 @@ Equipa Yamilook 🇦🇴`;
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Rejeitar candidatura</DialogTitle>
+            <DialogTitle>{uiText("Rejeitar candidatura")}</DialogTitle>
             <DialogDescription>
               {rejectDialog.candidate?.full_name} — {rejectDialog.candidate?.email}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <Textarea
-              placeholder="Motivo da rejeição (opcional, não será enviado ao candidato)..."
+              placeholder={uiText("Motivo da rejeição (opcional, não será enviado ao candidato)...")}
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
               className="min-h-[100px] resize-none"
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setRejectDialog({ open: false, candidate: null })}>
-              Cancelar
-            </Button>
+            <Button variant="outline" onClick={() => setRejectDialog({ open: false, candidate: null })}>{uiText("Cancelar")}</Button>
             <Button
               variant="destructive"
               onClick={handleReject}
@@ -499,9 +485,7 @@ Equipa Yamilook 🇦🇴`;
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
               ) : (
                 <XCircle className="w-4 h-4 mr-2" />
-              )}
-              Confirmar Rejeição
-            </Button>
+              )}{uiText("Confirmar Rejeição")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -513,14 +497,12 @@ Equipa Yamilook 🇦🇴`;
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>🎉 Candidato aprovado!</DialogTitle>
-            <DialogDescription>
-              {approvedDialog.name} foi aprovado. Envia-lhe o código abaixo.
-            </DialogDescription>
+            <DialogTitle>{uiText("🎉 Candidato aprovado!")}</DialogTitle>
+            <DialogDescription>{uiText("{{value1}} foi aprovado. Envia-lhe o código abaixo.", { value1: (approvedDialog.name) ?? "" })}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 text-center">
-              <p className="text-xs text-muted-foreground mb-2">Código de acesso</p>
+              <p className="text-xs text-muted-foreground mb-2">{uiText("Código de acesso")}</p>
               <code className="text-2xl font-mono font-bold tracking-widest text-primary">
                 {approvedDialog.code}
               </code>
@@ -530,9 +512,7 @@ Equipa Yamilook 🇦🇴`;
                 className="flex-1 gap-2"
                 onClick={() => copyCode(approvedDialog.code)}
               >
-                <Copy className="w-4 h-4" />
-                Copiar código
-              </Button>
+                <Copy className="w-4 h-4" />{uiText("Copiar código")}</Button>
               <Button
                 variant="outline"
                 className="flex-1 gap-2"
@@ -541,12 +521,9 @@ Equipa Yamilook 🇦🇴`;
                   if (candidate) copyEmailTemplate(candidate);
                 }}
               >
-                <Mail className="w-4 h-4" />
-                Copiar email
-              </Button>
+                <Mail className="w-4 h-4" />{uiText("Copiar email")}</Button>
             </div>
-            <p className="text-xs text-muted-foreground text-center">
-              Envia este código para <strong>{approvedDialog.email}</strong>
+            <p className="text-xs text-muted-foreground text-center">{uiText("Envia este código para ")}<strong>{approvedDialog.email}</strong>
             </p>
           </div>
         </DialogContent>

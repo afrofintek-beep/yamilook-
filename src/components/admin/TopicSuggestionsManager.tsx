@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -28,7 +29,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from '@/i18n/ui-date';
-import { pt } from 'date-fns/locale';
 
 interface TopicSuggestion {
   id: string;
@@ -45,6 +45,7 @@ interface TopicSuggestion {
 }
 
 export function TopicSuggestionsManager() {
+  useUiLocale();
   const { user } = useAuth();
   const [loadError, setLoadError] = useState(false);
   const [suggestions, setSuggestions] = useState<TopicSuggestion[]>([]);
@@ -107,11 +108,11 @@ export function TopicSuggestionsManager() {
       if (error) throw error;
       window.dispatchEvent(new Event('admin-topics-changed'));
 
-      toast.success(`Tópico "${suggestion.name}" aprovado e criado!`);
+      toast.success(uiText("Tópico \"{{value1}}\" aprovado e criado!", { value1: (suggestion.name) ?? "" }));
       setSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
     } catch (error) {
       console.error('Error approving suggestion:', error);
-      toast.error('Erro ao aprovar sugestão');
+      toast.error(uiText("Erro ao aprovar sugestão"));
     } finally {
       setProcessing(null);
     }
@@ -131,13 +132,13 @@ export function TopicSuggestionsManager() {
       const { error } = await supabase.rpc('admin_topic_action', { p_action: 'reject', p_id: suggestionToReject.id, p_reason: rejectionReason.trim() });
       if (error) throw error;
 
-      toast.success(`Sugestão "${suggestionToReject.name}" rejeitada`);
+      toast.success(uiText("Sugestão \"{{value1}}\" rejeitada", { value1: (suggestionToReject.name) ?? "" }));
       setSuggestions(prev => prev.filter(s => s.id !== suggestionToReject.id));
       setRejectDialogOpen(false);
       setSuggestionToReject(null);
     } catch (error) {
       console.error('Error rejecting suggestion:', error);
-      toast.error('Erro ao rejeitar sugestão');
+      toast.error(uiText("Erro ao rejeitar sugestão"));
     } finally {
       setProcessing(null);
     }
@@ -150,27 +151,21 @@ export function TopicSuggestionsManager() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Lightbulb className="w-5 h-5" />
-            Sugestões de Tópicos
-            {pendingCount > 0 && (
-              <Badge variant="secondary" className="ml-2">
-                {pendingCount} pendente{pendingCount !== 1 ? 's' : ''}
-              </Badge>
+            <Lightbulb className="w-5 h-5" />{uiText("Sugestões de Tópicos")}{pendingCount > 0 && (
+              <Badge variant="secondary" className="ml-2">{uiText("Pendentes")} · {pendingCount}</Badge>
             )}
           </CardTitle>
-          <CardDescription>
-            Aprovar ou rejeitar sugestões de novos tópicos dos utilizadores
-          </CardDescription>
+          <CardDescription>{uiText("Aprovar ou rejeitar sugestões de novos tópicos dos utilizadores")}</CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
             </div>
-          ) : loadError ? (<div role="alert">Não foi possível carregar sugestões. <Button onClick={fetchSuggestions}>Tentar novamente</Button></div>) : suggestions.length === 0 ? (
+          ) : loadError ? (<div role="alert">{uiText("Não foi possível carregar sugestões. ")}<Button onClick={fetchSuggestions}>{uiText("Tentar novamente")}</Button></div>) : suggestions.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <Lightbulb className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <p>Nenhuma sugestão pendente</p>
+              <p>{uiText("Nenhuma sugestão pendente")}</p>
             </div>
           ) : (
             <ScrollArea className="h-[300px]">
@@ -190,23 +185,20 @@ export function TopicSuggestionsManager() {
                           <Badge variant="outline" className="text-primary">
                             #{suggestion.name}
                           </Badge>
-                          <span className="text-xs text-muted-foreground">
-                            slug: {suggestion.slug}
-                          </span>
+                          <span className="text-xs text-muted-foreground">{uiText("slug: {{value1}}", { value1: (suggestion.slug) ?? "" })}</span>
                         </div>
                         
                         {/* User and time info */}
                         <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                           <div className="flex items-center gap-1">
                             <User className="w-3 h-3" />
-                            <span>{suggestion.suggestor?.display_name || 'Utilizador anónimo'}</span>
+                            <span>{suggestion.suggestor?.display_name || uiText("Utilizador anónimo")}</span>
                           </div>
                           <div className="flex items-center gap-1">
                             <Clock className="w-3 h-3" />
                             <span>
                               {formatDistanceToNow(new Date(suggestion.created_at), {
                                 addSuffix: true,
-                                locale: pt,
                               })}
                             </span>
                           </div>
@@ -221,9 +213,7 @@ export function TopicSuggestionsManager() {
                             onClick={() => openRejectDialog(suggestion)}
                             disabled={processing === suggestion.id}
                           >
-                            <X className="w-4 h-4" />
-                            Rejeitar
-                          </Button>
+                            <X className="w-4 h-4" />{uiText("Rejeitar")}</Button>
                           <Button
                             size="sm"
                             className="flex-1 gap-1"
@@ -234,9 +224,7 @@ export function TopicSuggestionsManager() {
                               <Loader2 className="w-4 h-4 animate-spin" />
                             ) : (
                               <Check className="w-4 h-4" />
-                            )}
-                            Aprovar
-                          </Button>
+                            )}{uiText("Aprovar")}</Button>
                         </div>
                       </div>
                     </motion.div>
@@ -252,25 +240,20 @@ export function TopicSuggestionsManager() {
       <AlertDialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Rejeitar Sugestão</AlertDialogTitle>
-            <AlertDialogDescription>
-              Rejeitar a sugestão de tópico "{suggestionToReject?.name}"?
-              Podes adicionar uma razão (opcional).
-            </AlertDialogDescription>
+            <AlertDialogTitle>{uiText("Rejeitar Sugestão")}</AlertDialogTitle>
+            <AlertDialogDescription>{uiText("Rejeitar a sugestão de tópico \"{{value1}}\"? Podes adicionar uma razão (opcional).", { value1: (suggestionToReject?.name) ?? "" })}</AlertDialogDescription>
           </AlertDialogHeader>
           <Input
-            placeholder="Razão da rejeição (opcional)"
+            placeholder={uiText("Razão da rejeição (opcional)")}
             value={rejectionReason}
             onChange={(e) => setRejectionReason(e.target.value)}
           />
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel>{uiText("Cancelar")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleReject}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Rejeitar
-            </AlertDialogAction>
+            >{uiText("Rejeitar")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

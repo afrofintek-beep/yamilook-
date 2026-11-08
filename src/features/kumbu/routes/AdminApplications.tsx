@@ -1,3 +1,5 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
+import { uiServerMessage } from '@/i18n/server-copy';
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,7 +11,6 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, ShieldAlert, ExternalLink, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from '@/i18n/ui-date';
-import { pt } from 'date-fns/locale';
 
 type StatusFilter = 'all' | 'pending' | 'approved' | 'rejected' | 'suspended';
 
@@ -20,7 +21,15 @@ const BADGE_VARIANT: Record<string, 'default' | 'secondary' | 'destructive'> = {
   suspended: 'destructive',
 };
 
+const applicationStatus: Record<string, string> = {
+  get pending() { return uiText('Pendente'); },
+  get approved() { return uiText('Aprovada'); },
+  get rejected() { return uiText('Rejeitada'); },
+  get suspended() { return uiText('Suspensa'); },
+};
+
 export default function AdminApplications() {
+  useUiLocale();
   const navigate = useNavigate();
   const [filter, setFilter] = useState<StatusFilter>('pending');
   const [apps, setApps] = useState<Tables<'creator_applications'>[]>([]);
@@ -47,8 +56,8 @@ export default function AdminApplications() {
       .from('creator_applications')
       .update({ status, reviewed_at: new Date().toISOString() })
       .eq('id', id);
-    if (error) toast.error(error.message);
-    else { toast.success(`Candidatura ${status}.`); fetch(); }
+    if (error) toast.error(uiServerMessage(error.message, uiText('Não foi possível atualizar a candidatura.')));
+    else { toast.success(uiText("Estado da candidatura atualizado.")); fetch(); }
     setActing(null);
   };
 
@@ -57,7 +66,7 @@ export default function AdminApplications() {
     // For private buckets, use createSignedUrl instead
     supabase.storage.from('creator-documents').createSignedUrl(path, 300).then(({ data: signed }) => {
       if (signed?.signedUrl) window.open(signed.signedUrl, '_blank');
-      else toast.error('Não foi possível abrir o documento.');
+      else toast.error(uiText("Não foi possível abrir o documento."));
     });
   };
 
@@ -67,28 +76,28 @@ export default function AdminApplications() {
         <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h1 className="text-lg font-semibold">Candidaturas</h1>
+        <h1 className="text-lg font-semibold">{uiText("Candidaturas")}</h1>
       </header>
 
       <main className="max-w-2xl mx-auto px-4 pt-4 space-y-4">
         <Alert>
           <ShieldAlert className="h-4 w-4" />
-          <AlertDescription className="text-sm">Admin only — acesso verificado por role.</AlertDescription>
+          <AlertDescription className="text-sm">{uiText("Acesso reservado a administradores.")}</AlertDescription>
         </Alert>
 
         <Tabs value={filter} onValueChange={(v) => setFilter(v as StatusFilter)}>
           <TabsList className="w-full">
-            <TabsTrigger value="pending" className="flex-1 text-xs">Pendentes</TabsTrigger>
-            <TabsTrigger value="approved" className="flex-1 text-xs">Aprovadas</TabsTrigger>
-            <TabsTrigger value="rejected" className="flex-1 text-xs">Rejeitadas</TabsTrigger>
-            <TabsTrigger value="all" className="flex-1 text-xs">Todas</TabsTrigger>
+            <TabsTrigger value="pending" className="flex-1 text-xs">{uiText("Pendentes")}</TabsTrigger>
+            <TabsTrigger value="approved" className="flex-1 text-xs">{uiText("Aprovadas")}</TabsTrigger>
+            <TabsTrigger value="rejected" className="flex-1 text-xs">{uiText("Rejeitadas")}</TabsTrigger>
+            <TabsTrigger value="all" className="flex-1 text-xs">{uiText("Todas")}</TabsTrigger>
           </TabsList>
         </Tabs>
 
-        {loading && <p className="text-sm text-muted-foreground text-center py-8">A carregar…</p>}
+        {loading && <p className="text-sm text-muted-foreground text-center py-8">{uiText("A carregar…")}</p>}
 
         {!loading && apps.length === 0 && (
-          <p className="text-sm text-muted-foreground text-center py-8">Sem candidaturas.</p>
+          <p className="text-sm text-muted-foreground text-center py-8">{uiText("Sem candidaturas.")}</p>
         )}
 
         <ul className="space-y-3">
@@ -98,11 +107,11 @@ export default function AdminApplications() {
                 <div className="min-w-0">
                   <p className="text-sm font-medium truncate">{a.full_name}</p>
                   <p className="text-[11px] text-muted-foreground">
-                    {format(new Date(a.created_at), "d MMM yyyy · HH:mm", { locale: pt })}
+                    {format(new Date(a.created_at), "d MMM yyyy · HH:mm")}
                   </p>
                 </div>
                 <Badge variant={BADGE_VARIANT[a.status] ?? 'secondary'} className="text-xs shrink-0">
-                  {a.status}
+                  {applicationStatus[a.status] ?? a.status}
                 </Badge>
               </div>
 
@@ -110,25 +119,19 @@ export default function AdminApplications() {
 
               {a.document_url && (
                 <Button variant="ghost" size="sm" className="gap-1 text-xs h-7 px-2" onClick={() => openDoc(a.document_url)}>
-                  <ExternalLink className="h-3 w-3" /> Ver documento
-                </Button>
+                  <ExternalLink className="h-3 w-3" />{uiText(" Ver documento")}</Button>
               )}
 
               {a.status === 'pending' && (
                 <div className="flex gap-2 pt-1">
                   <Button size="sm" className="h-8 text-xs flex-1" disabled={acting === a.id} onClick={() => updateStatus(a.id, 'approved')}>
-                    {acting === a.id && <Loader2 className="h-3 w-3 animate-spin" />} Aprovar
-                  </Button>
-                  <Button size="sm" variant="destructive" className="h-8 text-xs flex-1" disabled={acting === a.id} onClick={() => updateStatus(a.id, 'rejected')}>
-                    Rejeitar
-                  </Button>
+                    {acting === a.id && <Loader2 className="h-3 w-3 animate-spin" />}{uiText(" Aprovar")}</Button>
+                  <Button size="sm" variant="destructive" className="h-8 text-xs flex-1" disabled={acting === a.id} onClick={() => updateStatus(a.id, 'rejected')}>{uiText("Rejeitar")}</Button>
                 </div>
               )}
 
               {a.status === 'approved' && (
-                <Button size="sm" variant="outline" className="h-8 text-xs" disabled={acting === a.id} onClick={() => updateStatus(a.id, 'suspended')}>
-                  Suspender
-                </Button>
+                <Button size="sm" variant="outline" className="h-8 text-xs" disabled={acting === a.id} onClick={() => updateStatus(a.id, 'suspended')}>{uiText("Suspender")}</Button>
               )}
             </li>
           ))}
