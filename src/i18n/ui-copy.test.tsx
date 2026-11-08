@@ -10,6 +10,7 @@ import { invitationMessage } from '@/lib/invite-delivery';
 
 const languages = ['pt', 'en', 'fr', 'ar', 'am', 'sw', 'ln', 'yo', 'sn', 'zu'];
 const dictionaries = import.meta.glob('./interface/*.json', { eager: true, import: 'default' }) as Record<string, Record<string, string>>;
+const adminDictionaries = import.meta.glob('./admin-interface/*.json', { eager: true, import: 'default' }) as Record<string, Record<string, string>>;
 const locales = import.meta.glob('./locales/*.json', { eager: true, import: 'default' }) as Record<string, Record<string, unknown>>;
 const variables = (text: string) => [...text.matchAll(/{{\s*([^}]+)\s*}}/g)].map(m => m[1].trim()).sort();
 function flatten(value: Record<string, unknown>, prefix = ''): Record<string, string> {
@@ -20,8 +21,8 @@ afterEach(async () => { cleanup(); await changeAppLanguage('pt'); });
 
 describe('complete interface dictionaries', () => {
   for (const language of languages) it(`covers copy, variables and existing keys in ${language}`, () => {
-    const base = dictionaries['./interface/pt.json'];
-    const translated = dictionaries[`./interface/${language}.json`];
+    const base = { ...dictionaries['./interface/pt.json'], ...adminDictionaries['./admin-interface/pt.json'] };
+    const translated = { ...dictionaries[`./interface/${language}.json`], ...adminDictionaries[`./admin-interface/${language}.json`] };
     expect(Object.keys(translated).sort()).toEqual(Object.keys(base).sort());
     for (const [source, text] of Object.entries(translated)) {
       expect(text.trim(), source).not.toBe('');

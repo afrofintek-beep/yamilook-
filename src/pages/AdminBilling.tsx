@@ -1,3 +1,4 @@
+import { uiText, useUiLocale, uiLocale } from '@/i18n/ui-copy';
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -26,11 +27,12 @@ interface Overview { active: number; expiring_7d: number; monthly_price: number;
 interface ProUser { id: string; display_name: string; username: string; plan_expires_at: string | null; }
 interface Found { id: string; display_name: string; username: string; kyc_verified?: boolean; }
 
-const fmtKz = (n: number) => `${n.toLocaleString('pt-PT')} Kz`;
+const fmtKz = (n: number) => `${n.toLocaleString(uiLocale())} Kz`;
 const fmtDate = (iso: string | null) =>
-  iso ? new Date(iso).toLocaleDateString('pt-PT', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+  iso ? new Date(iso).toLocaleDateString(uiLocale(), { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 
 export default function AdminBilling() {
+  useUiLocale();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { isAdmin, loading: adminLoading } = useAdmin();
@@ -51,7 +53,7 @@ export default function AdminBilling() {
     if (!authLoading && !user) navigate('/login');
   }, [authLoading, user, navigate]);
   useEffect(() => {
-    if (!adminLoading && !isAdmin && user) { toast.error('Acesso negado. Apenas administradores.'); navigate('/'); }
+    if (!adminLoading && !isAdmin && user) { toast.error(uiText("Acesso negado. Apenas administradores.")); navigate('/'); }
   }, [adminLoading, isAdmin, user, navigate]);
 
   const load = useCallback(async () => {
@@ -81,10 +83,10 @@ export default function AdminBilling() {
         p_currency: cfg.currency,
       });
       if (error) throw error;
-      toast.success('Preço e limites guardados.');
+      toast.success(uiText("Preço e limites guardados."));
       await load();
     } catch {
-      toast.error('Não foi possível guardar.');
+      toast.error(uiText("Não foi possível guardar."));
     } finally {
       setSaving(false);
     }
@@ -92,7 +94,7 @@ export default function AdminBilling() {
 
   const search = async () => {
     const q = query.trim();
-    if (q.length < 2) { toast.info('Escreve pelo menos 2 letras.'); return; }
+    if (q.length < 2) { toast.info(uiText("Escreve pelo menos 2 letras.")); return; }
     setSearching(true);
     try {
       const { data } = await supabase
@@ -111,11 +113,11 @@ export default function AdminBilling() {
     try {
       const { error } = await supabase.rpc('admin_set_user_plan', { p_user_id: userId, p_plan: 'pro', p_months: months });
       if (error) throw error;
-      toast.success(`Pro concedido (${months} ${months === 1 ? 'mês' : 'meses'}).`);
+      toast.success(months === 1 ? uiText("Pro concedido por um mês.") : uiText("Pro concedido por {{months}} meses.", { months }));
       setResults([]); setQuery('');
       await load();
     } catch {
-      toast.error('Não foi possível conceder o Pro.');
+      toast.error(uiText("Não foi possível conceder o Pro."));
     } finally {
       setBusyId(null);
     }
@@ -126,10 +128,10 @@ export default function AdminBilling() {
     try {
       const { error } = await supabase.rpc('admin_set_user_plan', { p_user_id: userId, p_plan: 'free', p_months: 0 });
       if (error) throw error;
-      toast.success('Pro retirado.');
+      toast.success(uiText("Pro retirado."));
       await load();
     } catch {
-      toast.error('Não foi possível retirar.');
+      toast.error(uiText("Não foi possível retirar."));
     } finally {
       setBusyId(null);
     }
@@ -146,10 +148,10 @@ export default function AdminBilling() {
     try {
       const { error } = await supabase.rpc('admin_set_kyc_verified', { p_user: userId, p_verified: verified });
       if (error) throw error;
-      toast.success(verified ? 'Identidade verificada (KYC).' : 'Verificação KYC retirada.');
+      toast.success(verified ? uiText("Identidade verificada (KYC).") : uiText("Verificação KYC retirada."));
       setResults((rs) => rs.map((r) => (r.id === userId ? { ...r, kyc_verified: verified } : r)));
     } catch {
-      toast.error('Não foi possível atualizar o KYC.');
+      toast.error(uiText("Não foi possível atualizar o KYC."));
     } finally {
       setBusyId(null);
     }
@@ -161,15 +163,13 @@ export default function AdminBilling() {
     <div className="min-h-screen bg-background pb-24">
       <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-sm border-b px-4 py-3 flex items-center gap-3 safe-top">
         <Button variant="ghost" size="icon" onClick={() => navigate(-1)}><ArrowLeft className="h-5 w-5" /></Button>
-        <h1 className="text-lg font-semibold">Mokubico Pro — Faturação</h1>
+        <h1 className="text-lg font-semibold">{uiText("Mokubico Pro — Faturação")}</h1>
       </header>
 
       <main className="max-w-lg mx-auto px-4 pt-4 space-y-5">
         <Alert>
           <ShieldAlert className="h-4 w-4" />
-          <AlertDescription className="text-sm">
-            O preço e os limites do Pro são definidos aqui. Só o admin altera planos — o utilizador não se pode auto-promover.
-          </AlertDescription>
+          <AlertDescription className="text-sm">{uiText("O preço e os limites do Pro são definidos aqui. Só o admin altera planos — o utilizador não se pode auto-promover.")}</AlertDescription>
         </Alert>
 
         {/* Visão geral */}
@@ -177,33 +177,33 @@ export default function AdminBilling() {
           <Card className="border-none shadow-sm"><CardContent className="p-3 text-center">
             <Users className="h-4 w-4 mx-auto text-primary mb-1" />
             <div className="text-xl font-bold tabular-nums">{overview?.active ?? 0}</div>
-            <div className="text-[11px] text-muted-foreground">Pro ativos</div>
+            <div className="text-[11px] text-muted-foreground">{uiText("Pro ativos")}</div>
           </CardContent></Card>
           <Card className="border-none shadow-sm"><CardContent className="p-3 text-center">
             <Clock className="h-4 w-4 mx-auto text-amber-500 mb-1" />
             <div className="text-xl font-bold tabular-nums">{overview?.expiring_7d ?? 0}</div>
-            <div className="text-[11px] text-muted-foreground">Expiram &lt;7d</div>
+            <div className="text-[11px] text-muted-foreground">{uiText("Expiram em menos de 7 dias")}</div>
           </CardContent></Card>
           <Card className="border-none shadow-sm"><CardContent className="p-3 text-center">
             <TrendingUp className="h-4 w-4 mx-auto text-emerald-500 mb-1" />
             <div className="text-base font-bold tabular-nums leading-7">{fmtKz(overview?.est_mrr ?? 0)}</div>
-            <div className="text-[11px] text-muted-foreground">Receita/mês est.</div>
+            <div className="text-[11px] text-muted-foreground">{uiText("Receita/mês est.")}</div>
           </CardContent></Card>
         </div>
 
         {/* Preço & limites */}
         {cfg && (
           <Card className="border-none shadow-sm">
-            <CardHeader className="pb-2"><CardTitle className="text-base">Preço &amp; limites</CardTitle></CardHeader>
+            <CardHeader className="pb-2"><CardTitle className="text-base">{uiText("Preço e limites")}</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label className="text-xs">Mensal ({cfg.currency})</Label>
+                  <Label className="text-xs">{uiText("Mensal ({{value1}})", { value1: (cfg.currency) ?? "" })}</Label>
                   <Input type="number" inputMode="numeric" value={cfg.pro_monthly}
                     onChange={(e) => set({ pro_monthly: Number(e.target.value) })} className="h-11" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs">Anual ({cfg.currency})</Label>
+                  <Label className="text-xs">{uiText("Anual ({{value1}})", { value1: (cfg.currency) ?? "" })}</Label>
                   <Input type="number" inputMode="numeric" value={cfg.pro_annual}
                     onChange={(e) => set({ pro_annual: Number(e.target.value) })} className="h-11" />
                 </div>
@@ -211,22 +211,22 @@ export default function AdminBilling() {
 
               <div className="flex items-center justify-between">
                 <div>
-                  <Label className="text-sm">Vídeo em grupo</Label>
-                  <p className="text-[11px] text-muted-foreground">O grande custo. Desliga para Pro áudio-primeiro.</p>
+                  <Label className="text-sm">{uiText("Vídeo em grupo")}</Label>
+                  <p className="text-[11px] text-muted-foreground">{uiText("O grande custo. Desliga para Pro áudio-primeiro.")}</p>
                 </div>
                 <Switch checked={cfg.video_enabled} onCheckedChange={(v) => set({ video_enabled: v })} />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label className="text-xs">Máx. pessoas em vídeo</Label>
+                  <Label className="text-xs">{uiText("Máx. pessoas em vídeo")}</Label>
                   <Input type="number" inputMode="numeric" min={2} value={cfg.max_video_participants}
                     onChange={(e) => set({ max_video_participants: Number(e.target.value) })} className="h-11"
                     disabled={!cfg.video_enabled} />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs">Teto vídeo min/mês</Label>
-                  <Input type="number" inputMode="numeric" placeholder="ilimitado"
+                  <Label className="text-xs">{uiText("Teto vídeo min/mês")}</Label>
+                  <Input type="number" inputMode="numeric" placeholder={uiText("ilimitado")}
                     value={cfg.video_minutes_cap ?? ''}
                     onChange={(e) => set({ video_minutes_cap: e.target.value === '' ? null : Number(e.target.value) })}
                     className="h-11" disabled={!cfg.video_enabled} />
@@ -234,7 +234,7 @@ export default function AdminBilling() {
               </div>
 
               <Button className="w-full h-11 rounded-xl" onClick={saveConfig} disabled={saving}>
-                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Guardar preço e limites'}
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : uiText("Guardar preço e limites")}
               </Button>
             </CardContent>
           </Card>
@@ -242,21 +242,21 @@ export default function AdminBilling() {
 
         {/* Conceder Pro */}
         <Card className="border-none shadow-sm">
-          <CardHeader className="pb-2"><CardTitle className="text-base">Conceder Pro</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-base">{uiText("Conceder Pro")}</CardTitle></CardHeader>
           <CardContent className="space-y-3">
             <div className="flex gap-2">
               {[1, 3, 12].map((m) => (
                 <button key={m} onClick={() => setMonths(m)}
                   className={`flex-1 h-9 rounded-lg text-sm font-medium border transition-colors ${
                     months === m ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary/50 border-border'}`}>
-                  {m === 12 ? '1 ano' : `${m} ${m === 1 ? 'mês' : 'meses'}`}
+                  {m === 12 ? uiText("1 ano") : `${m} ${m === 1 ? 'mês' : 'meses'}`}
                 </button>
               ))}
             </div>
             <div className="flex gap-2">
               <Input value={query} onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') search(); }}
-                placeholder="Procurar por nome ou username" className="h-11" />
+                placeholder={uiText("Procurar por nome ou username")} className="h-11" />
               <Button variant="secondary" className="h-11 px-4" onClick={search} disabled={searching}>
                 {searching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
               </Button>
@@ -277,10 +277,10 @@ export default function AdminBilling() {
                   disabled={busyId === r.id}
                   onClick={() => toggleKyc(r.id, !r.kyc_verified)}
                 >
-                  {busyId === r.id ? <Loader2 className="w-4 h-4 animate-spin" /> : (r.kyc_verified ? 'KYC ✓' : 'Verificar KYC')}
+                  {busyId === r.id ? <Loader2 className="w-4 h-4 animate-spin" /> : (r.kyc_verified ? uiText("KYC ✓") : uiText("Verificar KYC"))}
                 </Button>
                 <Button size="sm" className="h-8" onClick={() => grant(r.id)} disabled={busyId === r.id}>
-                  {busyId === r.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Crown className="w-3.5 h-3.5 mr-1" /> Pro</>}
+                  {busyId === r.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Crown className="w-3.5 h-3.5 mr-1" />{uiText(" Pro")}</>}
                 </Button>
               </div>
             ))}
@@ -290,16 +290,16 @@ export default function AdminBilling() {
         {/* Subscritores atuais */}
         <Card className="border-none shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Subscritores Pro ({subs.length})</CardTitle>
+            <CardTitle className="text-base">{uiText("Subscritores Pro ({{value1}})", { value1: (subs.length) ?? "" })}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            {subs.length === 0 && <p className="text-sm text-muted-foreground text-center py-3">Ainda sem subscritores.</p>}
+            {subs.length === 0 && <p className="text-sm text-muted-foreground text-center py-3">{uiText("Ainda sem subscritores.")}</p>}
             {subs.map((s) => (
               <div key={s.id} className="flex items-center gap-2 py-1.5 border-b border-border last:border-0">
                 <Crown className="w-4 h-4 text-amber-500 shrink-0" />
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium truncate">{s.display_name} <span className="text-muted-foreground font-normal">@{s.username}</span></div>
-                  <div className="text-[11px] text-muted-foreground">expira {fmtDate(s.plan_expires_at)}</div>
+                  <div className="text-[11px] text-muted-foreground">{uiText("expira {{value1}}", { value1: (fmtDate(s.plan_expires_at)) ?? "" })}</div>
                 </div>
                 <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => revoke(s.id)} disabled={busyId === s.id}>
                   {busyId === s.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <X className="w-4 h-4" />}
@@ -309,7 +309,7 @@ export default function AdminBilling() {
           </CardContent>
         </Card>
 
-        <Button variant="outline" onClick={() => navigate('/admin/mentors')}>Gestão de Mentores</Button>
+        <Button variant="outline" onClick={() => navigate('/admin/mentors')}>{uiText("Gestão de Mentores")}</Button>
       </main>
     </div>
   );

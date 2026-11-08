@@ -1,3 +1,4 @@
+import { uiText, useUiLocale, uiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
@@ -106,6 +107,7 @@ function SortableTopicItem({
   onEdit: (topic: Topic) => void;
   onDelete: (topic: Topic) => void;
 }) {
+  useUiLocale();
   const {
     attributes,
     listeners,
@@ -166,16 +168,12 @@ function SortableTopicItem({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => onEdit(topic)}>
-              <Pencil className="w-4 h-4 mr-2" />
-              Editar
-            </DropdownMenuItem>
+              <Pencil className="w-4 h-4 mr-2" />{uiText("Editar")}</DropdownMenuItem>
             <DropdownMenuItem 
               onClick={() => onDelete(topic)}
               className="text-destructive"
             >
-              <Trash2 className="w-4 h-4 mr-2" />
-              Eliminar
-            </DropdownMenuItem>
+              <Trash2 className="w-4 h-4 mr-2" />{uiText("Eliminar")}</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </Badge>
@@ -197,6 +195,7 @@ interface Post {
 }
 
 export function TopicPostManager() {
+  useUiLocale();
   const { t } = useTranslation();
   const [loadError, setLoadError] = useState(false);
   const [postCounts, setPostCounts] = useState<Record<string, number>>({});
@@ -359,11 +358,11 @@ export function TopicPostManager() {
         )
       );
 
-      toast.success('Tópicos atualizados com sucesso!');
+      toast.success(uiText("Tópicos atualizados com sucesso!"));
       setDialogOpen(false);
     } catch (error) {
       console.error('Error saving topics:', error);
-      toast.error('Erro ao guardar tópicos');
+      toast.error(uiText("Erro ao guardar tópicos"));
     } finally {
       setSaving(false);
     }
@@ -387,14 +386,14 @@ export function TopicPostManager() {
       const { error } = await supabase.rpc('admin_topic_action', { p_action: 'delete', p_id: topicToDelete.id });
       if (error) throw error;
 
-      toast.success('Tópico eliminado com sucesso!');
+      toast.success(uiText("Tópico eliminado com sucesso!"));
       setDeleteDialogOpen(false);
       setTopicToDelete(null);
       fetchTopics();
       fetchPosts(); // Refresh posts to update topic associations
     } catch (error) {
       console.error('Error deleting topic:', error);
-      toast.error('Erro ao eliminar tópico');
+      toast.error(uiText("Erro ao eliminar tópico"));
     } finally {
       setDeleting(false);
     }
@@ -417,10 +416,10 @@ export function TopicPostManager() {
         const { error } = await supabase.rpc('admin_topic_action', { p_action: 'reorder', p_ids: newTopics.map(t => t.id) });
         if (error) throw error;
 
-        toast.success('Ordem dos tópicos atualizada!');
+        toast.success(uiText("Ordem dos tópicos atualizada!"));
       } catch (error) {
         console.error('Error saving order:', error);
-        toast.error('Erro ao guardar ordem');
+        toast.error(uiText("Erro ao guardar ordem"));
         // Revert on error
         fetchTopics();
       } finally {
@@ -455,37 +454,27 @@ export function TopicPostManager() {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="flex items-center gap-2">
-                <Hash className="w-5 h-5" />
-                Gestão de Tópicos em Posts
-              </CardTitle>
-              <CardDescription>
-                Associar tópicos a posts para melhor descoberta
-              </CardDescription>
+                <Hash className="w-5 h-5" />{uiText("Gestão de Tópicos em Posts")}</CardTitle>
+              <CardDescription>{uiText("Associar tópicos a posts para melhor descoberta")}</CardDescription>
             </div>
             <Button 
               onClick={() => setCreateTopicOpen(true)}
               className="gap-2"
             >
-              <PlusCircle className="w-4 h-4" />
-              Novo Tópico
-            </Button>
+              <PlusCircle className="w-4 h-4" />{uiText("Novo Tópico")}</Button>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {loadError && <div role="alert">Não foi possível carregar todos os dados. <Button variant="outline" onClick={() => { setLoadError(false); fetchTopics(); fetchPosts(); }}>Tentar novamente</Button></div>}
-          <p className="text-xs text-muted-foreground">São apresentados os 100 posts mais recentes. As contagens dos tópicos incluem todas as associações.</p>
+          {loadError && <div role="alert">{uiText("Não foi possível carregar todos os dados. ")}<Button variant="outline" onClick={() => { setLoadError(false); fetchTopics(); fetchPosts(); }}>{uiText("Tentar novamente")}</Button></div>}
+          <p className="text-xs text-muted-foreground">{uiText("São apresentados os 100 posts mais recentes. As contagens dos tópicos incluem todas as associações.")}</p>
           {/* Drag-and-drop Topics */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <p className="text-sm text-muted-foreground flex items-center gap-2">
-                <GripVertical className="w-4 h-4" />
-                Arrasta para reordenar os tópicos
-              </p>
+                <GripVertical className="w-4 h-4" />{uiText("Arrasta para reordenar os tópicos")}</p>
               {savingOrder && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  A guardar ordem...
-                </div>
+                  <Loader2 className="w-4 h-4 animate-spin" />{uiText("A guardar ordem...")}</div>
               )}
             </div>
             <div className="flex flex-wrap gap-2">
@@ -528,7 +517,7 @@ export function TopicPostManager() {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="Pesquisar posts..."
+            placeholder={uiText("Pesquisar posts...")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
@@ -561,15 +550,15 @@ export function TopicPostManager() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="font-medium text-sm truncate">
-                          {post.profile?.display_name || 'Utilizador'}
+                          {post.profile?.display_name || uiText("Utilizador")}
                         </span>
                         {getPostTypeIcon(post.type)}
                         <span className="text-xs text-muted-foreground ml-auto">
-                          {new Date(post.created_at).toLocaleDateString('pt')}
+                          {new Date(post.created_at).toLocaleDateString(uiLocale())}
                         </span>
                       </div>
                       <p className="text-sm text-muted-foreground line-clamp-2">
-                        {post.content || '(Sem texto)'}
+                        {post.content || uiText("(Sem texto)")}
                       </p>
                       {post.topics.length > 0 && (
                         <div className="flex flex-wrap gap-1 mt-2">
@@ -598,7 +587,7 @@ export function TopicPostManager() {
               {!loadError && filteredPosts.length === 0 && (
                 <div className="text-center py-8 text-muted-foreground">
                   <FileText className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                  <p>Nenhum post encontrado</p>
+                  <p>{uiText("Nenhum post encontrado")}</p>
                 </div>
               )}
             </div>
@@ -609,10 +598,8 @@ export function TopicPostManager() {
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Editar Tópicos do Post</DialogTitle>
-              <DialogDescription>
-                Seleciona os tópicos para associar a este post
-              </DialogDescription>
+              <DialogTitle>{uiText("Editar Tópicos do Post")}</DialogTitle>
+              <DialogDescription>{uiText("Seleciona os tópicos para associar a este post")}</DialogDescription>
             </DialogHeader>
             
             {selectedPost && (
@@ -627,12 +614,12 @@ export function TopicPostManager() {
                       </AvatarFallback>
                     </Avatar>
                     <span className="font-medium text-sm">
-                      {selectedPost.profile?.display_name || 'Utilizador'}
+                      {selectedPost.profile?.display_name || uiText("Utilizador")}
                     </span>
                     {getPostTypeIcon(selectedPost.type)}
                   </div>
                   <p className="text-sm text-muted-foreground line-clamp-3">
-                    {selectedPost.content || '(Sem texto)'}
+                    {selectedPost.content || uiText("(Sem texto)")}
                   </p>
                 </div>
 
@@ -665,17 +652,13 @@ export function TopicPostManager() {
 
                 {/* Save button */}
                 <div className="flex justify-end gap-2">
-                  <Button variant="outline" onClick={() => setDialogOpen(false)}>
-                    Cancelar
-                  </Button>
+                  <Button variant="outline" onClick={() => setDialogOpen(false)}>{uiText("Cancelar")}</Button>
                   <Button onClick={saveTopics} disabled={saving}>
                     {saving ? (
                       <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        A guardar...
-                      </>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />{uiText("A guardar...")}</>
                     ) : (
-                      'Guardar Tópicos'
+                      uiText("Guardar Tópicos")
                     )}
                   </Button>
                 </div>
@@ -702,14 +685,11 @@ export function TopicPostManager() {
     <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Eliminar Tópico</AlertDialogTitle>
-          <AlertDialogDescription>
-            Tens a certeza que queres eliminar o tópico "{topicToDelete?.name}"? 
-            Esta ação irá remover o tópico de todos os posts associados e não pode ser desfeita.
-          </AlertDialogDescription>
+          <AlertDialogTitle>{uiText("Eliminar Tópico")}</AlertDialogTitle>
+          <AlertDialogDescription>{uiText("Tens a certeza que queres eliminar o tópico \"{{value1}}\"? Esta ação irá remover o tópico de todos os posts associados e não pode ser desfeita.", { value1: (topicToDelete?.name) ?? "" })}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+          <AlertDialogCancel disabled={deleting}>{uiText("Cancelar")}</AlertDialogCancel>
           <AlertDialogAction 
             onClick={confirmDeleteTopic}
             disabled={deleting}
@@ -717,11 +697,9 @@ export function TopicPostManager() {
           >
             {deleting ? (
               <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                A eliminar...
-              </>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />{uiText("A eliminar...")}</>
             ) : (
-              'Eliminar'
+              uiText("Eliminar")
             )}
           </AlertDialogAction>
         </AlertDialogFooter>

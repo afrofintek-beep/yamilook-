@@ -3,6 +3,9 @@ import { join, relative } from 'node:path';
 import ts from 'typescript';
 import { expect, it } from 'vitest';
 import portuguese from './interface/pt.json';
+import adminPortuguese from './admin-interface/pt.json';
+
+const copy = { ...portuguese, ...adminPortuguese };
 
 it('has a dictionary entry for every fixed UI source and never translates a runtime value', () => {
   const root = process.cwd();
@@ -26,7 +29,7 @@ it('has a dictionary entry for every fixed UI source and never translates a runt
         const argument = node.arguments[0];
         const location = `${relative(root, path)}:${source.getLineAndCharacterOfPosition(node.getStart()).line + 1}`;
         if (!argument || !ts.isStringLiteral(argument)) dynamic.push(location);
-        else if (!Object.prototype.hasOwnProperty.call(portuguese, argument.text)) missing.push(`${location}: ${argument.text}`);
+        else if (!Object.prototype.hasOwnProperty.call(copy, argument.text)) missing.push(`${location}: ${argument.text}`);
       }
       ts.forEachChild(node, visit);
     };

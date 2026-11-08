@@ -7,7 +7,9 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 // Only load Portuguese (default) synchronously, others will be lazy-loaded
 import pt from './locales/pt.json';
 import ptInterface from './interface/pt.json';
+import ptAdminInterface from './admin-interface/pt.json';
 
+const adminInterfaceLoaders = import.meta.glob('./admin-interface/*.json', { import: 'default' }) as Record<string, () => Promise<Record<string, string>>>;
 const interfaceLoaders = import.meta.glob('./interface/*.json', { import: 'default' }) as Record<string, () => Promise<Record<string, string>>>;
 
 export const languages = appLanguages;
@@ -79,11 +81,12 @@ const loadBaseLanguage = async (lng: string): Promise<{ translation: Record<stri
 
 const loadLanguage = async (lng: string) => {
   const code = normalizeAppLanguage(lng);
-  const [resources, interfaceCopy] = await Promise.all([
+  const [resources, interfaceCopy, adminCopy] = await Promise.all([
     loadBaseLanguage(lng),
     interfaceLoaders[`./interface/${code}.json`]?.() ?? Promise.resolve(ptInterface),
+    adminInterfaceLoaders[`./admin-interface/${code}.json`]?.() ?? Promise.resolve(ptAdminInterface),
   ]);
-  return { translation: { ...resources.translation, entry: entryTranslations[code] || entryTranslations.pt }, interface: interfaceCopy };
+  return { translation: { ...resources.translation, entry: entryTranslations[code] || entryTranslations.pt }, interface: { ...interfaceCopy, ...adminCopy } };
 };
 
 i18n
@@ -91,7 +94,7 @@ i18n
   .use(initReactI18next)
   .init({
     resources: {
-      pt: { translation: { ...pt, entry: entryTranslations.pt }, interface: ptInterface },
+      pt: { translation: { ...pt, entry: entryTranslations.pt }, interface: { ...ptInterface, ...ptAdminInterface } },
     },
     fallbackLng: { yo: ['en', 'pt'], sn: ['en', 'pt'], zu: ['en', 'pt'], default: ['pt'] },
     interpolation: {

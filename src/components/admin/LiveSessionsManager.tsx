@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect, useCallback } from 'react';
 import { Radio, Users, X, RefreshCw, Loader2, Clock } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,7 +19,6 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from '@/i18n/ui-date';
-import { pt } from 'date-fns/locale';
 
 interface LiveSession {
   id: string;
@@ -35,6 +35,7 @@ interface LiveSession {
 }
 
 export function LiveSessionsManager() {
+  useUiLocale();
   const [loadError, setLoadError] = useState(false);
   const [confirmAll, setConfirmAll] = useState(false);
   const [sessions, setSessions] = useState<LiveSession[]>([]);
@@ -67,7 +68,7 @@ export function LiveSessionsManager() {
     } catch (error) {
       setLoadError(true);
       console.error('Error fetching live sessions:', error);
-      toast.error('Erro ao carregar sessões');
+      toast.error(uiText("Erro ao carregar sessões"));
     } finally {
       setLoading(false);
     }
@@ -90,11 +91,11 @@ export function LiveSessionsManager() {
 
       if (error) throw error;
 
-      toast.success(`Sessão "${session.title}" terminada`);
+      toast.success(uiText("Sessão \"{{value1}}\" terminada", { value1: (session.title) ?? "" }));
       setSessions((prev) => prev.filter((s) => s.id !== session.id));
     } catch (error) {
       console.error('Error ending session:', error);
-      toast.error('Erro ao terminar sessão');
+      toast.error(uiText("Erro ao terminar sessão"));
     } finally {
       setEndingSession(null);
       setConfirmDialog({ open: false, session: null });
@@ -116,11 +117,11 @@ export function LiveSessionsManager() {
 
       if (error) throw error;
 
-      toast.success(`${ended?.length ?? 0} sessões terminadas`);
+      toast.success(uiText("{{value1}} sessões terminadas", { value1: (ended?.length ?? 0) ?? "" }));
       await fetchSessions();
     } catch (error) {
       console.error('Error ending all sessions:', error);
-      toast.error('Erro ao terminar sessões');
+      toast.error(uiText("Erro ao terminar sessões"));
     } finally {
       setLoading(false);
       setConfirmAll(false);
@@ -133,12 +134,8 @@ export function LiveSessionsManager() {
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <div>
             <CardTitle className="text-lg flex items-center gap-2">
-              <Radio className="w-5 h-5 text-destructive" />
-              Sessões Live
-            </CardTitle>
-            <CardDescription>
-              Gerir transmissões em direto
-            </CardDescription>
+              <Radio className="w-5 h-5 text-destructive" />{uiText("Sessões Live")}</CardTitle>
+            <CardDescription>{uiText("Gerir transmissões em direto")}</CardDescription>
           </div>
           <div className="flex items-center gap-2">
             <Button
@@ -155,9 +152,7 @@ export function LiveSessionsManager() {
                 size="sm"
                 onClick={() => setConfirmAll(true)}
                 disabled={loading}
-              >
-                Terminar Todas
-              </Button>
+              >{uiText("Terminar Todas")}</Button>
             )}
           </div>
         </CardHeader>
@@ -166,10 +161,10 @@ export function LiveSessionsManager() {
             <div className="flex items-center justify-center py-8">
               <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
             </div>
-          ) : loadError ? (<div role="alert">Não foi possível carregar sessões. <Button onClick={fetchSessions}>Tentar novamente</Button></div>) : sessions.length === 0 ? (
+          ) : loadError ? (<div role="alert">{uiText("Não foi possível carregar sessões. ")}<Button onClick={fetchSessions}>{uiText("Tentar novamente")}</Button></div>) : sessions.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <Radio className="w-10 h-10 mx-auto mb-2 opacity-50" />
-              <p>Nenhuma sessão em direto</p>
+              <p>{uiText("Nenhuma sessão em direto")}</p>
             </div>
           ) : (
             <ScrollArea className="h-[300px]">
@@ -189,7 +184,7 @@ export function LiveSessionsManager() {
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">{session.title}</p>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <span>{session.host?.display_name || 'Unknown'}</span>
+                        <span>{session.host?.display_name || uiText("Unknown")}</span>
                         <span>•</span>
                         <span className="flex items-center gap-1">
                           <Users className="w-3 h-3" />
@@ -202,7 +197,6 @@ export function LiveSessionsManager() {
                               <Clock className="w-3 h-3" />
                               {formatDistanceToNow(new Date(session.started_at), {
                                 addSuffix: false,
-                                locale: pt,
                               })}
                             </span>
                           </>
@@ -211,9 +205,7 @@ export function LiveSessionsManager() {
                     </div>
 
                     <Badge variant="destructive" className="flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
-                      LIVE
-                    </Badge>
+                      <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />{uiText("LIVE")}</Badge>
 
                     <Button
                       variant="ghost"
@@ -237,7 +229,7 @@ export function LiveSessionsManager() {
       </Card>
 
       <AlertDialog open={confirmAll} onOpenChange={setConfirmAll}>
-        <AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Terminar todas as sessões apresentadas?</AlertDialogTitle><AlertDialogDescription>Esta ação termina as transmissões listadas.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction onClick={handleEndAllSessions}>Terminar</AlertDialogAction></AlertDialogFooter></AlertDialogContent>
+        <AlertDialogContent><AlertDialogHeader><AlertDialogTitle>{uiText("Terminar todas as sessões apresentadas?")}</AlertDialogTitle><AlertDialogDescription>{uiText("Esta ação termina as transmissões listadas.")}</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>{uiText("Cancelar")}</AlertDialogCancel><AlertDialogAction onClick={handleEndAllSessions}>{uiText("Terminar")}</AlertDialogAction></AlertDialogFooter></AlertDialogContent>
       </AlertDialog>
       <AlertDialog
         open={confirmDialog.open}
@@ -245,20 +237,15 @@ export function LiveSessionsManager() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Terminar Sessão</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tens a certeza que queres terminar "{confirmDialog.session?.title}"?
-              Todos os espectadores serão desconectados.
-            </AlertDialogDescription>
+            <AlertDialogTitle>{uiText("Terminar Sessão")}</AlertDialogTitle>
+            <AlertDialogDescription>{uiText("Tens a certeza que queres terminar \"{{value1}}\"? Todos os espectadores serão desconectados.", { value1: (confirmDialog.session?.title) ?? "" })}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel>{uiText("Cancelar")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => confirmDialog.session && handleEndSession(confirmDialog.session)}
               className="bg-destructive hover:bg-destructive/90"
-            >
-              Terminar Sessão
-            </AlertDialogAction>
+            >{uiText("Terminar Sessão")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

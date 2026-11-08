@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useRef, useEffect } from 'react';
 import { 
   Loader2, 
@@ -43,6 +44,7 @@ export function EditTopicDialog({
   topic,
   onTopicUpdated 
 }: EditTopicDialogProps) {
+  useUiLocale();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [isTrending, setIsTrending] = useState(false);
@@ -77,12 +79,12 @@ export function EditTopicDialog({
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      toast.error('Por favor seleciona uma imagem');
+      toast.error(uiText("Por favor seleciona uma imagem"));
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('A imagem deve ter no máximo 5MB');
+      toast.error(uiText("A imagem deve ter no máximo 5MB"));
       return;
     }
 
@@ -127,7 +129,7 @@ export function EditTopicDialog({
       return publicUrl;
     } catch (error) {
       console.error('Error uploading image:', error);
-      toast.error('Erro ao fazer upload da imagem');
+      toast.error(uiText("Erro ao fazer upload da imagem"));
       return null;
     } finally {
       setUploading(false);
@@ -140,7 +142,7 @@ export function EditTopicDialog({
     if (!topic) return;
 
     if (!name.trim()) {
-      toast.error('O nome do tópico é obrigatório');
+      toast.error(uiText("O nome do tópico é obrigatório"));
       return;
     }
 
@@ -168,19 +170,19 @@ export function EditTopicDialog({
 
       if (error) {
         if (error.code === '23505') {
-          toast.error('Já existe um tópico com este nome');
+          toast.error(uiText("Já existe um tópico com este nome"));
         } else {
           throw error;
         }
         return;
       }
 
-      toast.success('Tópico atualizado com sucesso!');
+      toast.success(uiText("Tópico atualizado com sucesso!"));
       onOpenChange(false);
       onTopicUpdated();
     } catch (error) {
       console.error('Error updating topic:', error);
-      toast.error('Erro ao atualizar tópico');
+      toast.error(uiText("Erro ao atualizar tópico"));
     } finally {
       setSaving(false);
     }
@@ -194,19 +196,17 @@ export function EditTopicDialog({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Editar Tópico</DialogTitle>
-          <DialogDescription>
-            Atualiza as informações do tópico
-          </DialogDescription>
+          <DialogTitle>{uiText("Editar Tópico")}</DialogTitle>
+          <DialogDescription>{uiText("Atualiza as informações do tópico")}</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Nome */}
           <div className="space-y-2">
-            <Label htmlFor="edit-topic-name">Nome *</Label>
+            <Label htmlFor="edit-topic-name">{uiText("Nome *")}</Label>
             <Input
               id="edit-topic-name"
-              placeholder="Ex: Tecnologia"
+              placeholder={uiText("Ex: Tecnologia")}
               value={name}
               onChange={(e) => setName(e.target.value)}
               disabled={saving}
@@ -215,10 +215,10 @@ export function EditTopicDialog({
 
           {/* Descrição */}
           <div className="space-y-2">
-            <Label htmlFor="edit-topic-description">Descrição</Label>
+            <Label htmlFor="edit-topic-description">{uiText("Descrição")}</Label>
             <Textarea
               id="edit-topic-description"
-              placeholder="Descreve o tópico..."
+              placeholder={uiText("Descreve o tópico...")}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               disabled={saving}
@@ -229,10 +229,8 @@ export function EditTopicDialog({
           {/* Trending toggle */}
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label htmlFor="trending-toggle">Em Destaque</Label>
-              <p className="text-xs text-muted-foreground">
-                Mostrar este tópico como trending
-              </p>
+              <Label htmlFor="trending-toggle">{uiText("Em Destaque")}</Label>
+              <p className="text-xs text-muted-foreground">{uiText("Mostrar este tópico como trending")}</p>
             </div>
             <Switch
               id="trending-toggle"
@@ -244,13 +242,13 @@ export function EditTopicDialog({
 
           {/* Imagem */}
           <div className="space-y-2">
-            <Label>Imagem do Tópico</Label>
+            <Label>{uiText("Imagem do Tópico")}</Label>
             
             {imagePreview ? (
               <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-border">
                 <img
                   src={imagePreview}
-                  alt="Preview"
+                  alt={uiText("Preview")}
                   className="w-full h-full object-cover"
                 />
                 <Button
@@ -270,12 +268,8 @@ export function EditTopicDialog({
                 onClick={() => fileInputRef.current?.click()}
               >
                 <ImageIcon className="w-10 h-10 text-muted-foreground mb-2" />
-                <p className="text-sm text-muted-foreground">
-                  Clica para escolher uma imagem
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  PNG, JPG até 5MB
-                </p>
+                <p className="text-sm text-muted-foreground">{uiText("Clica para escolher uma imagem")}</p>
+                <p className="text-xs text-muted-foreground mt-1">{uiText("PNG, JPG até 5MB")}</p>
               </div>
             )}
 
@@ -291,8 +285,7 @@ export function EditTopicDialog({
           {/* Slug preview */}
           {name && (
             <div className="p-2 bg-muted rounded-lg">
-              <p className="text-xs text-muted-foreground">
-                Slug: <code className="text-primary">{generateSlug(name)}</code>
+              <p className="text-xs text-muted-foreground">{uiText("Slug: ")}<code className="text-primary">{generateSlug(name)}</code>
               </p>
             </div>
           )}
@@ -304,20 +297,16 @@ export function EditTopicDialog({
               variant="outline"
               onClick={() => handleClose(false)}
               disabled={saving}
-            >
-              Cancelar
-            </Button>
+            >{uiText("Cancelar")}</Button>
             <Button type="submit" disabled={saving || uploading}>
               {saving || uploading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  {uploading ? 'A fazer upload...' : 'A guardar...'}
+                  {uploading ? uiText("A fazer upload...") : uiText("A guardar...")}
                 </>
               ) : (
                 <>
-                  <Save className="w-4 h-4 mr-2" />
-                  Guardar Alterações
-                </>
+                  <Save className="w-4 h-4 mr-2" />{uiText("Guardar Alterações")}</>
               )}
             </Button>
           </div>
