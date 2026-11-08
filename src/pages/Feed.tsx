@@ -161,7 +161,7 @@ export default function Feed() {
               aria-label={uiText("Abrir conversas")}
               onClick={() => navigate('/papos')}
             >
-              <KosololaLogo className="w-6 h-6" />
+              <KosololaLogo color="currentColor" className="w-6 h-6" />
             </Button>
           </div>
         </div>

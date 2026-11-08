@@ -2,12 +2,13 @@ import { useId } from 'react';
 import { cn } from '@/lib/utils';
 import { useAppSurface } from '@/lib/app-surface';
 
-/** Keep the original mark; match Yamilook's yellow while preserving standalone branding. */
-export default function KosololaLogo({ className, alt = '', width = 24, height = width }: {
+/** Keep the original mark; allow navigation to inherit its active/inactive color. */
+export default function KosololaLogo({ className, alt = '', width = 24, height = width, color = '#e9bd3d' }: {
   className?: string;
   alt?: string;
   width?: number;
   height?: number;
+  color?: string;
 }) {
   const surface = useAppSurface();
   const id = useId().replace(/:/g, '');
@@ -28,6 +29,6 @@ export default function KosololaLogo({ className, alt = '', width = 24, height =
         <image href="/papos-app/kosolola-icon-512.png" width="512" height="512" filter={`url(#${id}-silhouette)`} />
       </mask>
     </defs>
-    <rect width="512" height="512" fill="#e9bd3d" mask={`url(#${id}-mask)`} />
+    <rect width="512" height="512" fill={color} mask={`url(#${id}-mask)`} />
   </svg>;
 }

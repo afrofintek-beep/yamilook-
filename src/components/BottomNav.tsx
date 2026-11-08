@@ -44,7 +44,7 @@ export default function BottomNav({ layout = 'default' }: { layout?: 'default' |
             {({ isActive }) => (
               <>
                 <div className={`relative rounded-lg p-1 transition-all duration-150 ${isActive ? 'bg-primary/10' : ''}`}>
-                  <Icon className={`h-5 w-5 transition-transform duration-150 ${isActive ? 'scale-110' : ''}`} />
+                  <Icon color="currentColor" className={`h-5 w-5 transition-transform duration-150 ${isActive ? 'scale-110' : ''}`} />
                   {isActive && (
                     <span className="absolute -bottom-1.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-primary animate-scale-in" />
                   )}
