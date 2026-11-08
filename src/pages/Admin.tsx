@@ -1,3 +1,5 @@
+import InitiativeAdmin from "@/features/social-initiatives/InitiativeAdmin";
+import { socialInitiativesEnabled } from "@/features/social-initiatives/api";
 import { uiText, useUiLocale, uiLocale } from '@/i18n/ui-copy';
 import { isRecentlyOnline } from '@/lib/online-presence';
 import { usePresenceClock } from '@/hooks/usePresenceClock';
@@ -518,6 +520,7 @@ export default function Admin() {
         {/* Founder invitation workflow — uses server-authorized invitation RPC */}
         <FounderInviteAssistant />
         <InvitationCampaignAdmin />
+        {socialInitiativesEnabled && <InitiativeAdmin />}
 
         {/* MVP Candidates Manager */}
         <MvpCandidatesManager />

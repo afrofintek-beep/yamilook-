@@ -58,3 +58,6 @@ verify_jwt = false
 # Auth validates the JWT and account_current_session_id rejects revoked sessions.
 [functions.owned-post-media]
 verify_jwt = false
+
+[functions.social-initiatives]
+verify_jwt = false

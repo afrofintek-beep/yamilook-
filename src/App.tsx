@@ -345,7 +345,7 @@ function AnimatedRoutes() {
           <Route path="/brand-book" element={<BrandBook />} />
           <Route path="/promo" element={<PromoVideos />} />
           <Route path="/apply" element={<Apply />} />
-          {import.meta.env.DEV || import.meta.env.VITE_TALATONA_FAIR_PREVIEW === "true" ? (
+          {import.meta.env.DEV || import.meta.env.VITE_TALATONA_FAIR_PREVIEW === "true" || import.meta.env.VITE_SOCIAL_INITIATIVES_ENABLED === "true" ? (
             <Route path="/feira-natalicia-talatona" element={<TalatonaFairDraft />} />
           ) : null}
           <Route path="/install" element={<Install />} />

@@ -1,3 +1,5 @@
+import SocialParticipation from "@/features/social-initiatives/SocialParticipation";
+import { socialInitiativesEnabled } from "@/features/social-initiatives/api";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import FairAddressStep from "./FairAddressStep";
@@ -19,7 +21,7 @@ function FairDraftContent() {
       <div className="mx-auto max-w-xl space-y-4">
         <div className="flex items-center justify-between gap-3">
           <YamilookLogo size="sm" showTagline={false} animate={false} />
-          <span className="rounded-full border px-3 py-1 text-xs font-medium">Pré-visualização</span>
+          <span className="rounded-full border px-3 py-1 text-xs font-medium">{socialInitiativesEnabled ? "Iniciativa solidária" : "Pré-visualização"}</span>
         </div>
 
         <header className="space-y-4 rounded-2xl bg-emerald-950 p-6 text-white sm:p-9">
@@ -90,7 +92,7 @@ function FairDraftContent() {
           </div>
         </section>
 
-        <section aria-labelledby="fair-address" className="space-y-4 rounded-2xl border bg-card p-5 sm:p-6">
+        {socialInitiativesEnabled ? <SocialParticipation /> : <section aria-labelledby="fair-address" className="space-y-4 rounded-2xl border bg-card p-5 sm:p-6">
           <h2 id="fair-address" className="flex items-center gap-2 text-xl font-semibold">
             <MapPin className="h-5 w-5 shrink-0" aria-hidden="true" />
             Escolha onde mora
@@ -121,7 +123,7 @@ function FairDraftContent() {
           </Button>
           <p className="text-xs text-muted-foreground">A escolha do condomínio nesta pré-visualização fica apenas no ecrã.</p>
           {condominium && <FairAddressStep />}
-        </section>
+        </section>}
 
         <section aria-labelledby="fair-neighbours" className="space-y-3 rounded-2xl border bg-card p-5 sm:p-6">
           <h2 id="fair-neighbours" className="flex items-center gap-2 text-xl font-semibold">
@@ -132,7 +134,7 @@ function FairDraftContent() {
             Após a confirmação do seu endereço, poderá convidar até cinco pessoas do mesmo condomínio ou das proximidades.
             Cada convidado fará a sua própria adesão com o seu endereço AFROLOC.
           </p>
-          <p className="text-sm font-medium">Inscrições e convites ainda por abrir.</p>
+          {!socialInitiativesEnabled && <p className="text-sm font-medium">Inscrições e convites ainda por abrir.</p>}
         </section>
 
         <section aria-labelledby="fair-ambassador" className="space-y-4 rounded-2xl border bg-card p-5 sm:p-6">
@@ -148,7 +150,7 @@ function FairDraftContent() {
             As suas iniciativas, o progresso das metas e as distinções conquistadas farão parte
             do seu perfil. Cada nova distinção soma ao total acumulado.
           </p>
-          <details className="rounded-xl border p-4 text-sm">
+          {!socialInitiativesEnabled && <><details className="rounded-xl border p-4 text-sm">
             <summary className="cursor-pointer font-medium">Proposta de meta para esta feira</summary>
             <ul className="mt-3 list-disc space-y-2 pl-5">
               <li>Ter o endereço AFROLOC associado e confirmado.</li>
@@ -165,7 +167,7 @@ function FairDraftContent() {
             <p className="font-semibold">Embaixador Social · 1 distinção</p>
             <p className="text-sm">Feira de Natal Solidário · Metas cumpridas</p>
             <p className="text-xs text-muted-foreground">1 iniciativa participada · 1 distinção conquistada</p>
-          </div>
+          </div></>}
         </section>
       </div>
     </main>

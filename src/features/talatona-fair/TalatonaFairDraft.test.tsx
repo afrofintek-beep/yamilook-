@@ -5,6 +5,7 @@ const auth = vi.hoisted(() => ({
   profile: null as { id: string } | null,
   loading: false,
 }));
+vi.mock("@/integrations/supabase/client", () => ({ supabase: { functions: { invoke: vi.fn() } } }));
 vi.mock("@/hooks/useAuth", () => ({ useAuth: () => auth }));
 afterEach(() => {
   auth.user = null;

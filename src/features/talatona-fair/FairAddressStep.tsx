@@ -37,7 +37,7 @@ export default function FairAddressStep() {
           )}
         </div>
       )}
-      <p>A inscrição na feira aguarda a abertura da campanha e a validação da área de residência.</p>
+      <p>A organização verifica a residência para confirmar a elegibilidade nesta iniciativa.</p>
     </div>
   );
 }
