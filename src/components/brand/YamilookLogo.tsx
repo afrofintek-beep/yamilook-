@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useTranslation } from 'react-i18next';
 import { YAMILOOK_LOGO_LIGHT as logoLight, YAMILOOK_LOGO_DARK as logoDark } from '@/lib/brand-assets';
 // Two wordmarks: a dark-ink logo for light backgrounds and a light logo for dark.
 
@@ -26,6 +27,7 @@ const YamilookLogo = ({
   className = "",
   bgClassName = "bg-background"
 }: YamilookLogoProps) => {
+  const { t } = useTranslation();
   const sizes = {
     sm: { width: 100, tagline: "text-xs", gap: "mt-2" },
     md: { width: 150, tagline: "text-sm", gap: "mt-3" },
@@ -79,7 +81,7 @@ const YamilookLogo = ({
           transition={{ duration: 0.4, delay: 0.5 }}
           style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
         >
-          A vida como ela é.
+          {t('brandTagline')}
         </motion.p>
       )}
     </div>
