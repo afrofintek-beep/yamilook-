@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -16,6 +17,7 @@ interface PendingRow {
 /** Host-only: pending join requests (approve/deny, realtime) + pre-authorize
  *  contacts for a banda-restricted live. */
 export function LivePendingRequests({ sessionId }: { sessionId: string }) {
+  useUiLocale();
   const [pending, setPending] = useState<PendingRow[]>([]);
   const [inviteOpen, setInviteOpen] = useState(false);
   // user_ids already seen — so we alert the host only about NEW requests.
@@ -42,7 +44,7 @@ export function LivePendingRequests({ sessionId }: { sessionId: string }) {
     // Notify the host about newly-arrived requests (not on the first load).
     if (seenRef.current) {
       for (const r of list) {
-        if (!seenRef.current.has(r.user_id)) toast.info(`${r.name} pediu para entrar na live.`);
+        if (!seenRef.current.has(r.user_id)) toast.info(uiText("{{value1}} pediu para entrar na live.", { value1: (r.name) ?? "" }));
       }
     }
     seenRef.current = new Set(list.map((r) => r.user_id));
@@ -61,7 +63,7 @@ export function LivePendingRequests({ sessionId }: { sessionId: string }) {
   const decide = async (id: string, status: 'approved' | 'denied') => {
     setPending((prev) => prev.filter((r) => r.id !== id)); // optimistic
     const { error } = await supabase.from('live_access').update({ status, updated_at: new Date().toISOString() }).eq('id', id);
-    if (error) { toast.error('Não foi possível responder ao pedido.'); load(); }
+    if (error) { toast.error(uiText("Não foi possível responder ao pedido.")); load(); }
   };
 
   const preAuthorize = async (users: InvitedUser[]) => {
@@ -69,23 +71,21 @@ export function LivePendingRequests({ sessionId }: { sessionId: string }) {
     // Convite (status 'invited') — a pessoa recebe e tem de ACEITAR para entrar,
     // já não é entrada directa.
     const { error } = await supabase.rpc('live_invite', { p_session: sessionId, p_user_ids: users.map((u) => u.id) });
-    if (error) { toast.error('Não foi possível convidar.'); return; }
+    if (error) { toast.error(uiText("Não foi possível convidar.")); return; }
     toast.success(`${users.length} ${users.length === 1 ? 'pessoa convidada' : 'pessoas convidadas'}.`);
   };
 
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold text-white/90">
-          Pedidos {pending.length > 0 && <span className="ml-1 rounded-full bg-amber-400 px-1.5 text-black font-bold">{pending.length}</span>}
+        <span className="text-xs font-semibold text-white/90">{uiText("Pedidos ")}{pending.length > 0 && <span className="ml-1 rounded-full bg-amber-400 px-1.5 text-black font-bold">{pending.length}</span>}
         </span>
         <button
           type="button"
           onClick={() => setInviteOpen(true)}
           className="flex items-center gap-1 text-xs font-medium text-white/90 hover:text-white"
         >
-          <UserPlus className="w-3.5 h-3.5" /> Convidar
-        </button>
+          <UserPlus className="w-3.5 h-3.5" />{uiText(" Convidar")}</button>
       </div>
 
       {pending.map((r) => (

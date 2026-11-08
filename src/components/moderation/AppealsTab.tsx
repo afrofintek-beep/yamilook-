@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect, useCallback } from 'react';
 import {
   Loader2,
@@ -24,14 +25,14 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { useAppeals, Appeal } from '@/hooks/useAppeals';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from '@/i18n/ui-date';
 import { pt } from 'date-fns/locale';
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: typeof Clock }> = {
-  pending: { label: 'Pendente', color: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20', icon: Clock },
-  under_review: { label: 'Em análise', color: 'bg-blue-500/10 text-blue-600 border-blue-500/20', icon: Eye },
-  approved: { label: 'Aprovada', color: 'bg-green-500/10 text-green-600 border-green-500/20', icon: CheckCircle },
-  rejected: { label: 'Rejeitada', color: 'bg-red-500/10 text-red-600 border-red-500/20', icon: XCircle },
+  pending: { get label() { return uiText("Pendente"); }, color: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20', icon: Clock },
+  under_review: { get label() { return uiText("Em análise"); }, color: 'bg-blue-500/10 text-blue-600 border-blue-500/20', icon: Eye },
+  approved: { get label() { return uiText("Aprovada"); }, color: 'bg-green-500/10 text-green-600 border-green-500/20', icon: CheckCircle },
+  rejected: { get label() { return uiText("Rejeitada"); }, color: 'bg-red-500/10 text-red-600 border-red-500/20', icon: XCircle },
 };
 
 const APPEAL_TYPE_LABELS: Record<string, string> = {
@@ -42,6 +43,7 @@ const APPEAL_TYPE_LABELS: Record<string, string> = {
 };
 
 export default function AppealsTab() {
+  useUiLocale();
   const { fetchAppeals, reviewAppeal } = useAppeals();
   const [appeals, setAppeals] = useState<Appeal[]>([]);
   const [loading, setLoading] = useState(true);
@@ -93,7 +95,7 @@ export default function AppealsTab() {
             onClick={() => setFilter(f)}
             className="flex-shrink-0"
           >
-            {f === 'all' ? 'Todas' : STATUS_CONFIG[f]?.label || f}
+            {f === 'all' ? uiText("Todas") : STATUS_CONFIG[f]?.label || f}
           </Button>
         ))}
       </div>
@@ -105,7 +107,7 @@ export default function AppealsTab() {
       ) : appeals.length === 0 ? (
         <Card className="p-8 text-center">
           <Scale className="w-12 h-12 mx-auto mb-3 text-blue-500/50" />
-          <p className="text-muted-foreground">Nenhuma apelação {filter !== 'all' ? STATUS_CONFIG[filter]?.label.toLowerCase() : ''}</p>
+          <p className="text-muted-foreground">{uiText("Nenhuma apelação {{value1}}", { value1: (filter !== 'all' ? STATUS_CONFIG[filter]?.label.toLowerCase() : '') ?? "" })}</p>
         </Card>
       ) : (
         <div className="space-y-3">
@@ -127,7 +129,7 @@ export default function AppealsTab() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <p className="font-medium text-sm">
-                            {appeal.user_profile?.display_name || 'Utilizador'}
+                            {appeal.user_profile?.display_name || uiText("Utilizador")}
                           </p>
                           <Badge variant="outline" className={statusCfg.color}>
                             <StatusIcon className="w-3 h-3 mr-1" />
@@ -143,7 +145,7 @@ export default function AppealsTab() {
                         )}
                         {appeal.resolution_note && (
                           <div className="mt-2 p-2 bg-muted/50 rounded text-xs">
-                            <strong>Resolução:</strong> {appeal.resolution_note}
+                            <strong>{uiText("Resolução:")}</strong> {appeal.resolution_note}
                             {appeal.reviewer_profile && (
                               <span className="text-muted-foreground"> — {appeal.reviewer_profile.display_name}</span>
                             )}
@@ -162,7 +164,7 @@ export default function AppealsTab() {
                           size="icon"
                           className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-500/10"
                           onClick={() => setReviewDialog({ open: true, appealId: appeal.id, decision: 'approved' })}
-                          title="Aprovar"
+                          title={uiText("Aprovar")}
                         >
                           <CheckCircle className="w-4 h-4" />
                         </Button>
@@ -171,7 +173,7 @@ export default function AppealsTab() {
                           size="icon"
                           className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-500/10"
                           onClick={() => setReviewDialog({ open: true, appealId: appeal.id, decision: 'rejected' })}
-                          title="Rejeitar"
+                          title={uiText("Rejeitar")}
                         >
                           <XCircle className="w-4 h-4" />
                         </Button>
@@ -190,24 +192,24 @@ export default function AppealsTab() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {reviewDialog.decision === 'approved' ? 'Aprovar apelação' : 'Rejeitar apelação'}
+              {reviewDialog.decision === 'approved' ? uiText("Aprovar apelação") : uiText("Rejeitar apelação")}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {reviewDialog.decision === 'approved'
-                ? 'Ao aprovar, o strike associado será automaticamente revogado.'
-                : 'Ao rejeitar, o strike permanecerá ativo.'}
+                ? uiText("Ao aprovar, o strike associado será automaticamente revogado.")
+                : uiText("Ao rejeitar, o strike permanecerá ativo.")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <Textarea
-            placeholder="Nota de resolução..."
+            placeholder={uiText("Nota de resolução...")}
             value={reviewNote}
             onChange={(e) => setReviewNote(e.target.value)}
             rows={3}
           />
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setReviewNote('')}>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => setReviewNote('')}>{uiText("Cancelar")}</AlertDialogCancel>
             <AlertDialogAction disabled={!reviewNote.trim()} onClick={handleReview}>
-              {reviewDialog.decision === 'approved' ? 'Aprovar' : 'Rejeitar'}
+              {reviewDialog.decision === 'approved' ? uiText("Aprovar") : uiText("Rejeitar")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

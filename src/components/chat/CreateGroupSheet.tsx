@@ -1,13 +1,14 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useAuth } from '@/hooks/useAuth';
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { useKeyboardViewport } from '@/hooks/useKeyboardViewport';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Search, 
-  Users, 
-  Loader2, 
-  Camera, 
-  X, 
+import {
+  Search,
+  Users,
+  Loader2,
+  Camera,
+  X,
   Check,
   ChevronRight,
   ImagePlus
@@ -31,6 +32,7 @@ interface CreateGroupSheetProps {
 const MAX_GROUP_MEMBERS = 255;
 
 export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) {
+  useUiLocale();
   const { style: viewportStyle, compact } = useKeyboardViewport(open);
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -77,8 +79,8 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
       } else {
         if (newSet.size >= MAX_GROUP_MEMBERS) {
           toast({
-            title: 'Limite atingido',
-            description: `O grupo pode ter no máximo ${MAX_GROUP_MEMBERS + 1} membros.`,
+            title: uiText("Limite atingido"),
+            description: uiText("O grupo pode ter no máximo {{value1}} membros.", { value1: (MAX_GROUP_MEMBERS + 1) }),
             variant: 'destructive',
           });
           return prev;
@@ -156,7 +158,7 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
         avatarUrl
       );
 
-      if (error || !data) throw error || new Error('Resposta inválida');
+      if (error || !data) throw error || new Error(uiText("Resposta inválida"));
       setCreatedConversationId(data.id);
       // Keep completion inside the existing modal: a second dialog can sit
       // behind its overlay and leave the user unable to open their new group.
@@ -202,14 +204,14 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
       >
           <div className="flex shrink-0 items-center gap-2 border-b border-border/50 px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top,0px))]">
             {step === 'details' && (
-              <Button variant="ghost" size="icon" disabled={creating} aria-label="Voltar à seleção de contactos" onClick={() => setStep('select')} className="h-11 w-11 shrink-0 rounded-full">
+              <Button variant="ghost" size="icon" disabled={creating} aria-label={uiText("Voltar à seleção de contactos")} onClick={() => setStep('select')} className="h-11 w-11 shrink-0 rounded-full">
                 <ChevronRight className="h-5 w-5 rotate-180" />
               </Button>
             )}
-            <h2 ref={headingRef} tabIndex={-1} className="min-w-0 flex-1 text-lg font-semibold">{step === 'select' ? 'Novo Grupo' : step === 'created' ? 'Grupo criado' : 'Detalhes do Grupo'}</h2>
+            <h2 ref={headingRef} tabIndex={-1} className="min-w-0 flex-1 text-lg font-semibold">{step === 'select' ? uiText("Novo Grupo") : step === 'created' ? uiText("Grupo criado") : uiText("Detalhes do Grupo")}</h2>
             {step === 'select' && <Badge variant="secondary" className="shrink-0 font-mono">{selectedContacts.size}/{MAX_GROUP_MEMBERS}</Badge>}
-            <Button variant="ghost" disabled={creating} onClick={resetAndClose} className="h-11 shrink-0 gap-1 rounded-full px-2" aria-label="Fechar criação do grupo">
-              <X className="h-4 w-4" /><span>Fechar</span>
+            <Button variant="ghost" disabled={creating} onClick={resetAndClose} className="h-11 shrink-0 gap-1 rounded-full px-2" aria-label={uiText("Fechar criação do grupo")}>
+              <X className="h-4 w-4" /><span>{uiText("Fechar")}</span>
             </Button>
           </div>
           <AnimatePresence mode="wait">
@@ -250,7 +252,7 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
                                   </AvatarFallback>
                                 </Avatar>
                                 <button
-                                  aria-label={`Remover ${displayName}`}
+                                  aria-label={uiText("Remover {{value1}}", { value1: (displayName) ?? "" })}
                                   onClick={() => toggleContact(contact.contact_user_id)}
                                   className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center"
                                 >
@@ -275,7 +277,7 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
                     <Input
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Pesquisar contactos..."
+                      placeholder={uiText("Pesquisar contactos...")}
                       className="pl-10 h-12 rounded-xl text-base"
                     />
                   </div>
@@ -290,12 +292,12 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
                   ) : filteredContacts.length === 0 ? (
                     <div className="text-center py-12 text-muted-foreground">
                       {searchQuery ? (
-                        <p>Nenhum contacto encontrado</p>
+                        <p>{uiText("Nenhum contacto encontrado")}</p>
                       ) : (
                         <>
                           <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                          <p>Sem contactos</p>
-                          <p className="text-sm">Adiciona contactos primeiro</p>
+                          <p>{uiText("Sem contactos")}</p>
+                          <p className="text-sm">{uiText("Adiciona contactos primeiro")}</p>
                         </>
                       )}
                     </div>
@@ -335,7 +337,7 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
                                 {displayName}
                               </span>
                               <span className="text-sm text-muted-foreground truncate block">
-                                @{contact.profile?.username || 'unknown'}
+                                @{contact.profile?.username || uiText("unknown")}
                               </span>
                             </div>
                             <div
@@ -362,9 +364,7 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
                     onClick={() => setStep('details')}
                     disabled={!canProceed}
                     className="w-full h-12 rounded-xl gap-2"
-                  >
-                    Continuar · {selectedContacts.size} {selectedContacts.size === 1 ? 'selecionado' : 'selecionados'}
-                    <ChevronRight className="w-5 h-5" />
+                  >{uiText("Continuar · {{value1}} {{value2}}", { value1: (selectedContacts.size) ?? "", value2: (selectedContacts.size === 1 ? uiText("selecionado") : uiText("selecionados")) ?? "" })}<ChevronRight className="w-5 h-5" />
                   </Button>
                 </div>
               </motion.div>
@@ -384,7 +384,7 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
                         {groupPhotoPreview ? (
                           <img
                             src={groupPhotoPreview}
-                            alt="Group"
+                            alt={uiText("Group")}
                             className="w-full h-full object-cover"
                           />
                         ) : (
@@ -396,27 +396,25 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
                       </div>
                       <input
                         type="file"
-                        aria-label="Foto do grupo"
+                        aria-label={uiText("Foto do grupo")}
                         disabled={creating}
                         accept="image/*"
                         onChange={handlePhotoChange}
                         className="hidden"
                       />
                     </label>
-                    <span className="text-sm text-muted-foreground">
-                      Adicionar foto do grupo
-                    </span>
+                    <span className="text-sm text-muted-foreground">{uiText("Adicionar foto do grupo")}</span>
                   </div>
 
                   {/* Group name */}
                   <div className="space-y-2">
-                    <label htmlFor="new-group-name" className="text-sm font-medium">Nome do grupo</label>
+                    <label htmlFor="new-group-name" className="text-sm font-medium">{uiText("Nome do grupo")}</label>
                     <Input
                       id="new-group-name"
                       disabled={creating}
                       value={groupName}
                       onChange={(e) => setGroupName(e.target.value.slice(0, 100))}
-                      placeholder="Ex: Família, Trabalho, Amigos..."
+                      placeholder={uiText("Ex: Família, Trabalho, Amigos...")}
                       className="h-12 rounded-xl text-base scroll-my-4"
                       maxLength={100}
                     />
@@ -428,7 +426,7 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
                   {/* Members summary */}
                   <div className={compact ? "hidden" : "bg-secondary/50 rounded-xl p-4 space-y-3"}>
                     <div className="flex items-center justify-between">
-                      <span className="font-medium">Membros</span>
+                      <span className="font-medium">{uiText("Membros")}</span>
                       <Badge variant="secondary">{selectedContacts.size + 1}</Badge>
                     </div>
                     <div className="flex -space-x-2 overflow-hidden">
@@ -451,10 +449,7 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
                         </div>
                       )}
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      Tu e mais {selectedContacts.size}{' '}
-                      {selectedContacts.size === 1 ? 'pessoa' : 'pessoas'}
-                    </p>
+                    <p className="text-xs text-muted-foreground">{uiText("Tu e mais {{value1}}{{value2}}{{value3}}", { value1: (selectedContacts.size) ?? "", value2: (' '), value3: (selectedContacts.size === 1 ? uiText("pessoa") : uiText("pessoas")) ?? "" })}</p>
                   </div>
                 </div>
 
@@ -472,14 +467,10 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
                   >
                     {creating ? (
                       <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        A criar...
-                      </>
+                        <Loader2 className="w-5 h-5 animate-spin" />{uiText("A criar...")}</>
                     ) : (
                       <>
-                        <Users className="w-5 h-5" />
-                        Criar Grupo
-                      </>
+                        <Users className="w-5 h-5" />{uiText("Criar Grupo")}</>
                     )}
                   </Button>
                 </div>
@@ -495,13 +486,11 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
                   <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
                     <Check className="h-8 w-8" aria-hidden="true" />
                   </div>
-                  <p>O grupo “{groupName.trim()}” foi criado com {selectedContacts.size + 1} membros.</p>
-                  <p className="mt-2 text-sm text-muted-foreground">Já podes enviar mensagens e iniciar chamadas em grupo.</p>
+                  <p>{uiText("O grupo “{{value1}}” foi criado com {{value2}} membros.", { value1: (groupName.trim()) ?? "", value2: (selectedContacts.size + 1) })}</p>
+                  <p className="mt-2 text-sm text-muted-foreground">{uiText("Já podes enviar mensagens e iniciar chamadas em grupo.")}</p>
                 </div>
                 <div className="shrink-0 border-t border-border/50 bg-background px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))]">
-                  <Button onClick={handleOpenCreatedGroup} className="w-full h-12 rounded-xl gap-2">
-                    Abrir grupo
-                    <ChevronRight className="h-5 w-5" />
+                  <Button onClick={handleOpenCreatedGroup} className="w-full h-12 rounded-xl gap-2">{uiText("Abrir grupo")}<ChevronRight className="h-5 w-5" />
                   </Button>
                 </div>
               </motion.div>

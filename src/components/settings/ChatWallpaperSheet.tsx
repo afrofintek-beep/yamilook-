@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -82,6 +83,7 @@ const patterns = [
 ];
 
 export function ChatWallpaperSheet({ open, onOpenChange }: ChatWallpaperSheetProps) {
+  useUiLocale();
   const { t } = useTranslation();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -91,7 +93,7 @@ export function ChatWallpaperSheet({ open, onOpenChange }: ChatWallpaperSheetPro
   const [customWallpapers, setCustomWallpapers] = useState<CustomWallpaper[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   // Crop dialog state
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [imageToCrop, setImageToCrop] = useState<string | null>(null);
@@ -121,7 +123,7 @@ export function ChatWallpaperSheet({ open, onOpenChange }: ChatWallpaperSheetPro
         const { data: urlData } = supabase.storage
           .from('chat-wallpapers')
           .getPublicUrl(`${user.id}/${file.name}`);
-        
+
         return {
           id: `custom-${file.name}`,
           name: file.name.replace(/\.[^/.]+$/, ''),
@@ -241,7 +243,7 @@ export function ChatWallpaperSheet({ open, onOpenChange }: ChatWallpaperSheetPro
     }
 
     setCustomWallpapers(prev => prev.filter(w => w.id !== wallpaper.id));
-    
+
     if (selectedWallpaper === wallpaper.url) {
       setSelectedWallpaper('default');
     }
@@ -384,8 +386,8 @@ export function ChatWallpaperSheet({ open, onOpenChange }: ChatWallpaperSheetPro
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent 
-        side="bottom" 
+      <SheetContent
+        side="bottom"
         className="h-[75dvh] max-h-[75dvh] rounded-t-3xl flex flex-col"
         style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom, 0px))' }}
       >
@@ -397,16 +399,16 @@ export function ChatWallpaperSheet({ open, onOpenChange }: ChatWallpaperSheetPro
         </SheetHeader>
 
         {/* Preview - reduced height for mobile */}
-        <div 
+        <div
           className="relative h-24 sm:h-28 rounded-xl overflow-hidden mb-3 border border-border shrink-0"
           style={getWallpaperStyle(selectedWallpaper)}
         >
           <div className="absolute inset-0 flex flex-col justify-end p-2.5 gap-1.5">
             <div className="self-start max-w-[70%] bg-secondary/90 backdrop-blur-sm rounded-2xl rounded-bl-sm px-3 py-1.5">
-              <p className="text-sm">Hello! 👋</p>
+              <p className="text-sm">{uiText("Hello! 👋")}</p>
             </div>
             <div className="self-end max-w-[70%] bg-primary text-primary-foreground rounded-2xl rounded-br-sm px-3 py-1.5">
-              <p className="text-sm">Hi there!</p>
+              <p className="text-sm">{uiText("Hi there!")}</p>
             </div>
           </div>
         </div>

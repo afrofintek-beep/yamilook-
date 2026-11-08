@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import ReactCrop, { Crop, PixelCrop, centerCrop, makeAspectCrop } from 'react-image-crop';
@@ -48,6 +49,7 @@ export function ImageCropDialog({
   onCropComplete,
   aspectRatio: initialAspectRatio,
 }: ImageCropDialogProps) {
+  useUiLocale();
   const { t } = useTranslation();
   const imgRef = useRef<HTMLImageElement>(null);
   const [crop, setCrop] = useState<Crop>();
@@ -124,7 +126,7 @@ export function ImageCropDialog({
             resolve(blob);
           } else {
             console.error('Canvas toBlob returned null');
-            reject(new Error('Failed to create blob from canvas'));
+            reject(new Error(uiText("Failed to create blob from canvas")));
           }
         },
         'image/jpeg',
@@ -178,7 +180,7 @@ export function ImageCropDialog({
             <img
               ref={imgRef}
               src={imageSrc}
-              alt="Crop preview"
+              alt={uiText("Crop preview")}
               onLoad={onImageLoad}
               style={{
                 transform: `scale(${scale}) rotate(${rotate}deg)`,

@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { ResidencePanel } from '@/components/residence/ResidencePanel';
 import { ProfileMuxi } from '@/components/profile/ProfileMuxi';
 import { useUserStatus } from '@/hooks/useOnlineStatus';
@@ -92,12 +93,14 @@ interface ProfilePhoto {
 type RelationshipStatus = 'none' | 'pending_sent' | 'pending_received' | 'friends';
 
 export default function Profile() {
+  useUiLocale();
   const { userId } = useParams();
   // Each visited profile owns its sheets, photos, loading state and badges.
   return <ProfileContent key={userId || 'self'} />;
 }
 
 function ProfileContent() {
+  useUiLocale();
   useEffect(() => { window.scrollTo(0, 0); }, []);
   const { userId } = useParams();
   const navigate = useNavigate();
@@ -117,7 +120,7 @@ function ProfileContent() {
   const [isQROpen, setIsQROpen] = useState(false);
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
   const [followLoading, setFollowLoading] = useState(false);
-  
+
   // Stats for profile
   const [postsCount, setPostsCount] = useState(0);
   const [ritmosCount, setRitmosCount] = useState(0);
@@ -125,7 +128,7 @@ function ProfileContent() {
   const [sessionsCreated, setSessionsCreated] = useState(0);
   const [sessionsAttended, setSessionsAttended] = useState(0);
   const [userRole, setUserRole] = useState<'founder' | 'verified_creator' | 'default'>('default');
-  
+
   // Highlights state
   const [isCreateHighlightOpen, setIsCreateHighlightOpen] = useState(false);
   const [isHighlightViewerOpen, setIsHighlightViewerOpen] = useState(false);
@@ -136,17 +139,17 @@ function ProfileContent() {
   const isOwnProfile = !userId || userId === user?.id;
   const targetUserId = userId || user?.id;
   const livePresence = useUserStatus(targetUserId ?? null);
-  
+
   // Highlights hook
-  const { 
-    highlights, 
-    loading: highlightsLoading, 
-    createHighlight, 
-    deleteHighlight, 
-    addItemToHighlight, 
+  const {
+    highlights,
+    loading: highlightsLoading,
+    createHighlight,
+    deleteHighlight,
+    addItemToHighlight,
     getHighlightItems,
     reorderHighlights,
-    refresh: refreshHighlights 
+    refresh: refreshHighlights
   } = useHighlights(targetUserId);
 
   // Determine relationship status with this user
@@ -214,7 +217,7 @@ function ProfileContent() {
 
     const { data, error } = await createConversation([targetUserId]);
     if (error || !data) {
-      toast.error('Não foi possível abrir o chat');
+      toast.error(uiText("Não foi possível abrir o chat"));
       return;
     }
 
@@ -276,7 +279,7 @@ function ProfileContent() {
       .eq('user_id', targetUserId)
       .eq('is_active', true)
       .maybeSingle();
-    
+
     if (!userBanda?.banda_id) return;
 
     const { data: banda } = await supabase
@@ -284,7 +287,7 @@ function ProfileContent() {
       .select('name, city')
       .eq('id', userBanda.banda_id)
       .maybeSingle();
-    
+
     if (banda) {
       const parts = [banda.name, banda.city].filter(Boolean);
       setBandaName(parts.join(', ') || null);
@@ -293,25 +296,25 @@ function ProfileContent() {
 
   const fetchPublicStats = async () => {
     if (!targetUserId) return;
-    
+
     // Fetch posts count (public data)
     const { count: posts } = await supabase
       .from('posts')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', targetUserId);
-    
+
     // Fetch ritmos count (public data)
     const { count: ritmos } = await supabase
       .from('ritmos')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', targetUserId);
-    
+
     // Fetch momambos count (profile highlights)
     const { count: momambos } = await supabase
       .from('profile_highlights')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', targetUserId);
-    
+
     setPostsCount(posts || 0);
     setRitmosCount(ritmos || 0);
     setMomambosCount(momambos || 0);
@@ -319,29 +322,29 @@ function ProfileContent() {
 
   const fetchAcademiaStats = async () => {
     if (!targetUserId) return;
-    
+
     const { count: created } = await supabase
       .from('academia_sessions')
       .select('*', { count: 'exact', head: true })
       .eq('mentor_id', targetUserId);
-    
+
     const { count: attended } = await supabase
       .from('academia_reservations')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', targetUserId);
-    
+
     setSessionsCreated(created || 0);
     setSessionsAttended(attended || 0);
   };
 
   const fetchUserRole = async () => {
     if (!targetUserId) return;
-    
+
     const { data } = await supabase
       .from('user_roles')
       .select('role')
       .eq('user_id', targetUserId);
-    
+
     // Note: user_roles is RLS-restricted to self/admin, so this only resolves on
     // your own profile. The "Criador Verificado" badge is driven by the PUBLIC
     // profiles.is_creator flag instead (see displayRole), so others can see it too.
@@ -409,7 +412,7 @@ function ProfileContent() {
     if (canNativeShare) {
       try {
         await navigator.share({
-          title: `${profileData?.display_name} on Yamilook`,
+          title: uiText("{{value1}} on Yamilook", { value1: (profileData?.display_name) ?? "" }),
           text: `Check out ${profileData?.display_name}'s profile on Yamilook`,
           url: shareUrl,
         });
@@ -489,13 +492,13 @@ function ProfileContent() {
       badges.push({ type: 'founder', label: `Fundador #${profileData.founder_number}` });
     }
     if (displayRole === 'verified_creator') {
-      badges.push({ type: 'verified', label: 'Criador Verificado' });
+      badges.push({ type: 'verified', label: uiText("Criador Verificado") });
     }
     if (sessionsCreated > 0) {
-      badges.push({ type: 'creator', label: 'Mentor' });
+      badges.push({ type: 'creator', label: uiText("Mentor") });
     }
     if (contacts.length >= 10) {
-      badges.push({ type: 'community', label: 'Comunidade' });
+      badges.push({ type: 'community', label: uiText("Comunidade") });
     }
     return badges;
   };
@@ -532,11 +535,11 @@ function ProfileContent() {
       coverUrl: h.cover_url,
     }));
   };
-  
+
   const handleCreateHighlight = async (title: string, coverFile?: File) => {
     await createHighlight(title, coverFile);
   };
-  
+
   const handleHighlightClick = async (id: string) => {
     // Handle YAMILOOK branded Momambo
     if (id === 'm_yamilook') {
@@ -556,7 +559,7 @@ function ProfileContent() {
         const visibility = ownerSettings?.journey_visibility || 'everyone';
 
         if (visibility === 'nobody') {
-          toast.error('Esta jornada é privada');
+          toast.error(uiText("Esta jornada é privada"));
           return;
         }
 
@@ -569,7 +572,7 @@ function ProfileContent() {
             .maybeSingle();
 
           if (!isKamba) {
-            toast.error('Só os kambas podem ver esta jornada');
+            toast.error(uiText("Só os kambas podem ver esta jornada"));
             return;
           }
 
@@ -582,7 +585,7 @@ function ProfileContent() {
               .maybeSingle();
 
             if (!isBrada) {
-              toast.error('Só os bradas podem ver esta jornada');
+              toast.error(uiText("Só os bradas podem ver esta jornada"));
               return;
             }
           }
@@ -590,29 +593,29 @@ function ProfileContent() {
 
         setIsYamilookJourneyOpen(true);
       } catch {
-        toast.error('Erro ao verificar acesso');
+        toast.error(uiText("Erro ao verificar acesso"));
       }
       return;
     }
-    
+
     const highlight = highlights.find(h => h.id === id);
     if (!highlight) return;
-    
+
     setSelectedHighlight({
       id: highlight.id,
       title: highlight.title,
       cover_url: highlight.cover_url,
     });
-    
+
     try {
       const items = await getHighlightItems(id);
       setHighlightItems(items);
       setIsHighlightViewerOpen(true);
     } catch (error) {
-      toast.error('Erro ao carregar Momambo');
+      toast.error(uiText("Erro ao carregar Momambo"));
     }
   };
-  
+
   const handleAddItemToHighlight = async (file: File) => {
     if (!selectedHighlight) return;
     await addItemToHighlight(selectedHighlight.id, file);
@@ -620,7 +623,7 @@ function ProfileContent() {
     setHighlightItems(items);
     refreshHighlights();
   };
-  
+
   const handleDeleteHighlight = async () => {
     if (!selectedHighlight) return;
     await deleteHighlight(selectedHighlight.id);
@@ -640,8 +643,8 @@ function ProfileContent() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="space-y-3 text-center">
           <p role="alert" className="text-muted-foreground">{profileError ? t('profile.failedToLoad') : t('errors.notFound')}</p>
-          {profileError && <Button onClick={() => void fetchProfile()}>Tentar novamente</Button>}
-          <Button variant="ghost" onClick={() => navigate('/feed', { replace: true })}>Voltar ao início</Button>
+          {profileError && <Button onClick={() => void fetchProfile()}>{uiText("Tentar novamente")}</Button>}
+          <Button variant="ghost" onClick={() => navigate('/feed', { replace: true })}>{uiText("Voltar ao início")}</Button>
         </div>
       </div>
     );
@@ -650,7 +653,7 @@ function ProfileContent() {
   return (
     <div className="h-screen-safe w-full min-w-0 flex flex-col overflow-hidden bg-gradient-to-b from-background via-background to-muted/20 pb-[calc(5rem+env(safe-area-inset-bottom,0px))]">
       {/* Header */}
-      <header aria-label="Barra do perfil" className="relative z-30 shrink-0 flex items-center justify-between px-4 pb-3 safe-top bg-background border-b border-border/30">
+      <header aria-label={uiText("Barra do perfil")} className="relative z-30 shrink-0 flex items-center justify-between px-4 pb-3 safe-top bg-background border-b border-border/30">
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -661,7 +664,7 @@ function ProfileContent() {
             size="icon"
             className="rounded-full hover:bg-muted/80"
             onClick={() => navigate(-1)}
-            aria-label="Voltar"
+            aria-label={uiText("Voltar")}
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
@@ -677,7 +680,7 @@ function ProfileContent() {
             size="icon"
             className="rounded-full hover:bg-muted/80"
             onClick={() => setIsQROpen(true)}
-            aria-label="Código QR do perfil"
+            aria-label={uiText("Código QR do perfil")}
           >
             <QrCode className="w-5 h-5" />
           </Button>
@@ -760,7 +763,7 @@ function ProfileContent() {
         </motion.div>
       </header>
 
-      <main aria-label="Conteúdo do perfil" className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain pt-4 pb-4">
+      <main aria-label={uiText("Conteúdo do perfil")} className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain pt-4 pb-4">
       {/* Profile Header */}
       <ProfileHeader
         avatarUrl={profileData.avatar_url}
@@ -795,7 +798,7 @@ function ProfileContent() {
         onSecondaryAction={isOwnProfile ? () => setIsEditOpen(true) : handleOpenChat}
       />
 
-      {!isOwnProfile && <Button variant="outline" className="mx-4 mb-4" onClick={() => document.getElementById('profile-muxi')?.scrollIntoView({ behavior: 'smooth' })}>Ver Muxi</Button>}
+      {!isOwnProfile && <Button variant="outline" className="mx-4 mb-4" onClick={() => document.getElementById('profile-muxi')?.scrollIntoView({ behavior: 'smooth' })}>{uiText("Ver Muxi")}</Button>}
 
       {isOwnProfile && <ResidencePanel />}
 
@@ -832,14 +835,14 @@ function ProfileContent() {
       {/* Momambos */}
       <div id="momambo-section">
         <ProfileHighlights
-          title="MOMAMBO"
+          title={uiText("MOMAMBO")}
           subtitle="Momentos que ficam"
           items={getHighlightsForDisplay()}
           isOwner={isOwnProfile}
           loading={highlightsLoading}
           emptyState={{
-            title: 'Sem Momambos ainda',
-            subtitle: 'Momentos, projetos e ideias que contam.',
+            title: uiText("Sem Momambos ainda"),
+            subtitle: uiText("Momentos, projetos e ideias que contam."),
           }}
           onCreateHighlight={() => setIsCreateHighlightOpen(true)}
           onHighlightClick={handleHighlightClick}
@@ -860,14 +863,14 @@ function ProfileContent() {
       <HighlightViewer
         open={isHighlightViewerOpen}
         onOpenChange={setIsHighlightViewerOpen}
-        highlight={selectedHighlight ? { 
-          id: selectedHighlight.id, 
-          user_id: targetUserId || '', 
-          title: selectedHighlight.title, 
-          cover_url: selectedHighlight.cover_url, 
-          created_at: '', 
-          updated_at: '', 
-          display_order: 0 
+        highlight={selectedHighlight ? {
+          id: selectedHighlight.id,
+          user_id: targetUserId || '',
+          title: selectedHighlight.title,
+          cover_url: selectedHighlight.cover_url,
+          created_at: '',
+          updated_at: '',
+          display_order: 0
         } : null}
         items={highlightItems}
         isOwner={isOwnProfile}

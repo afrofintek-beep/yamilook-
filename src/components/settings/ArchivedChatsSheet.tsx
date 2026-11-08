@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Archive, ArchiveRestore, Trash2, Loader2 } from 'lucide-react';
@@ -42,6 +43,7 @@ interface ArchivedChatsSheetProps {
 }
 
 export function ArchivedChatsSheet({ open, onOpenChange }: ArchivedChatsSheetProps) {
+  useUiLocale();
   const { user } = useAuth();
   const { toast } = useToast();
   const [archivedChats, setArchivedChats] = useState<ArchivedChat[]>([]);
@@ -64,7 +66,7 @@ export function ArchivedChatsSheet({ open, onOpenChange }: ArchivedChatsSheetPro
       if (partError) throw partError;
 
       const conversationIds = participations?.map(p => p.conversation_id) || [];
-      
+
       if (conversationIds.length === 0) {
         setArchivedChats([]);
         setLoading(false);
@@ -120,7 +122,7 @@ export function ArchivedChatsSheet({ open, onOpenChange }: ArchivedChatsSheetPro
       setArchivedChats(mapped);
     } catch (error) {
       console.error('Error fetching archived chats:', error);
-      toast({ title: 'Erro ao carregar conversas arquivadas', variant: 'destructive' });
+      toast({ title: uiText("Erro ao carregar conversas arquivadas"), variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -145,13 +147,13 @@ export function ArchivedChatsSheet({ open, onOpenChange }: ArchivedChatsSheetPro
         .select('conversation_id')
         .single();
 
-      if (error || !data) throw error || new Error('Restauro não confirmado');
+      if (error || !data) throw error || new Error(uiText("Restauro não confirmado"));
 
       setArchivedChats(prev => prev.filter(c => c.id !== conversationId));
-      toast({ title: 'Conversa restaurada' });
+      toast({ title: uiText("Conversa restaurada") });
     } catch (error) {
       console.error('Error restoring chat:', error);
-      toast({ title: 'Erro ao restaurar', variant: 'destructive' });
+      toast({ title: uiText("Erro ao restaurar"), variant: 'destructive' });
     } finally {
       setActionLoading(null);
     }
@@ -172,10 +174,10 @@ export function ArchivedChatsSheet({ open, onOpenChange }: ArchivedChatsSheetPro
       if (error) throw error;
 
       setArchivedChats(prev => prev.filter(c => c.id !== conversationId));
-      toast({ title: 'Conversa eliminada' });
+      toast({ title: uiText("Conversa eliminada") });
     } catch (error) {
       console.error('Error deleting chat:', error);
-      toast({ title: 'Erro ao eliminar', variant: 'destructive' });
+      toast({ title: uiText("Erro ao eliminar"), variant: 'destructive' });
     } finally {
       setActionLoading(null);
       setDeleteConfirmId(null);
@@ -211,9 +213,7 @@ export function ArchivedChatsSheet({ open, onOpenChange }: ArchivedChatsSheetPro
         <SheetContent side="right" className="flex h-[100dvh] w-full flex-col gap-0 overflow-hidden p-0 pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)] pl-[env(safe-area-inset-left,0px)] pr-[env(safe-area-inset-right,0px)] sm:max-w-md">
           <SheetHeader className="shrink-0 p-4 border-b border-border">
             <SheetTitle className="flex items-center gap-2">
-              <Archive className="w-5 h-5" />
-              Conversas Arquivadas
-            </SheetTitle>
+              <Archive className="w-5 h-5" />{uiText("Conversas Arquivadas")}</SheetTitle>
           </SheetHeader>
 
           <ScrollArea className="min-h-0 flex-1">
@@ -226,10 +226,8 @@ export function ArchivedChatsSheet({ open, onOpenChange }: ArchivedChatsSheetPro
                 <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
                   <Archive className="w-8 h-8 text-muted-foreground" />
                 </div>
-                <h3 className="font-semibold text-lg mb-2">Sem conversas arquivadas</h3>
-                <p className="text-muted-foreground text-sm">
-                  As conversas que arquivares aparecerão aqui
-                </p>
+                <h3 className="font-semibold text-lg mb-2">{uiText("Sem conversas arquivadas")}</h3>
+                <p className="text-muted-foreground text-sm">{uiText("As conversas que arquivares aparecerão aqui")}</p>
               </div>
             ) : (
               <div className="divide-y divide-border">
@@ -259,7 +257,7 @@ export function ArchivedChatsSheet({ open, onOpenChange }: ArchivedChatsSheetPro
                         <div className="flex-1 min-w-0">
                           <p className="font-medium truncate">{displayName}</p>
                           <p className="text-xs text-muted-foreground">
-                            {chat.type === 'group' ? 'Grupo' : 'Conversa'}
+                            {chat.type === 'group' ? uiText("Grupo") : uiText("Conversa")}
                           </p>
                         </div>
 
@@ -300,19 +298,15 @@ export function ArchivedChatsSheet({ open, onOpenChange }: ArchivedChatsSheetPro
       <AlertDialog open={!!deleteConfirmId} onOpenChange={() => setDeleteConfirmId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Eliminar conversa?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Esta ação não pode ser desfeita. A conversa será permanentemente removida.
-            </AlertDialogDescription>
+            <AlertDialogTitle>{uiText("Eliminar conversa?")}</AlertDialogTitle>
+            <AlertDialogDescription>{uiText("Esta ação não pode ser desfeita. A conversa será permanentemente removida.")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel>{uiText("Cancelar")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deleteConfirmId && handleDelete(deleteConfirmId)}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Eliminar
-            </AlertDialogAction>
+            >{uiText("Eliminar")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

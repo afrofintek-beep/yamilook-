@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ChevronUp } from 'lucide-react';
@@ -13,6 +14,7 @@ export function ProfileBio({
   expandable = false,
   expandedText,
 }: ProfileBioProps) {
+  useUiLocale();
   const [isExpanded, setIsExpanded] = useState(false);
 
   if (!lines || lines.length === 0) return null;
@@ -63,12 +65,10 @@ export function ProfileBio({
             className="flex items-center justify-center gap-1 w-full mt-3 text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
             {isExpanded ? (
-              <>
-                Ver menos <ChevronUp className="w-3 h-3" />
+              <>{uiText("Ver menos ")}<ChevronUp className="w-3 h-3" />
               </>
             ) : (
-              <>
-                Ver mais <ChevronDown className="w-3 h-3" />
+              <>{uiText("Ver mais ")}<ChevronDown className="w-3 h-3" />
               </>
             )}
           </button>

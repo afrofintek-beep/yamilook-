@@ -135,7 +135,7 @@ for (const [width,height,insets] of [
 ] as [number,number,number[]][]) {
   test(`media ${width}x${height} insets ${insets}`, async ({ page }) => {
     await page.setViewportSize({width,height});
-    await page.goto('/e2e/fixtures/media.html');
+    await page.goto('/e2e/fixtures/media.html?lang=pt');
     await page.getByRole('button',{name:'Abrir media'}).click();
     await expect(page.getByRole('dialog')).toBeVisible();
     await simulateInsets(page,insets);
@@ -191,7 +191,7 @@ for (const [width, height, insets] of [
     await expect(panel.getByText('Conversa arquivada 29', { exact: true })).toBeAttached();
     await simulateInsets(page, insets);
     await panel.evaluate(el => Promise.all(el.getAnimations().map(animation => animation.finished)));
-    const close = panel.getByRole('button', { name: 'Close', exact: true });
+    const close = panel.getByRole('button', { name: 'Fechar', exact: true });
     const assertReachable = async () => {
       const box = await close.boundingBox();
       expect(box).not.toBeNull();
@@ -303,7 +303,7 @@ test('call chat, media and hangup occupy separate areas through keyboard resize'
       await expect(page.getByTestId('call-stage')).not.toBeVisible();
       expect((await page.getByRole('log', { name: 'Mensagens da conversa' }).boundingBox())!.height).toBeGreaterThanOrEqual(120);
       expect(hangup!.y + hangup!.height).toBeLessThanOrEqual(panel!.y + 1);
-      await expect(page.getByRole('button', { name: 'Open reactions', exact: true })).toHaveCount(0);
+      await expect(page.getByRole('button', { name: 'Abrir reações', exact: true })).toHaveCount(0);
     } else {
       expect(panel!.y + panel!.height).toBeLessThanOrEqual(toolbar!.y + 1);
       expect(input!.y + input!.height).toBeLessThanOrEqual(toolbar!.y + 1);
@@ -317,7 +317,7 @@ test('call chat, media and hangup occupy separate areas through keyboard resize'
   await page.getByRole('button', { name: 'Voltar à chamada', exact: true }).click();
   for (const width of [390, 320]) {
     await page.setViewportSize({ width, height: 430 });
-    await page.getByRole('button', { name: 'Open reactions', exact: true }).click();
+    await page.getByRole('button', { name: 'Abrir reações', exact: true }).click();
     const reactionButtons = page.locator('button[aria-label]').filter({ has: page.locator('span[role="img"]') });
     await expect(reactionButtons).toHaveCount(5);
     for (const button of await reactionButtons.all()) {

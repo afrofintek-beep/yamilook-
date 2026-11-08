@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState } from 'react';
 import { Flag, AlertTriangle, MessageSquareWarning, UserX, Skull, Ban, HelpCircle, Bot, Loader2 } from 'lucide-react';
 import {
@@ -20,17 +21,18 @@ interface ReportContentSheetProps {
 }
 
 const REPORT_CATEGORIES = [
-  { value: 'spam', label: 'Spam', icon: Bot, description: 'Conteúdo repetitivo ou comercial indesejado' },
-  { value: 'harassment', label: 'Assédio', icon: MessageSquareWarning, description: 'Intimidação ou bullying' },
-  { value: 'hate_speech', label: 'Discurso de ódio', icon: Skull, description: 'Discriminação ou incitação ao ódio' },
-  { value: 'nudity', label: 'Nudez', icon: Ban, description: 'Conteúdo sexual ou nudez' },
-  { value: 'violence', label: 'Violência', icon: AlertTriangle, description: 'Conteúdo violento ou perturbador' },
-  { value: 'misinformation', label: 'Desinformação', icon: HelpCircle, description: 'Informação falsa ou enganosa' },
-  { value: 'impersonation', label: 'Personificação', icon: UserX, description: 'Fingir ser outra pessoa' },
-  { value: 'other', label: 'Outro', icon: Flag, description: 'Outro motivo não listado' },
+  { value: 'spam', get label() { return uiText("Spam"); }, icon: Bot, get description() { return uiText("Conteúdo repetitivo ou comercial indesejado"); } },
+  { value: 'harassment', get label() { return uiText("Assédio"); }, icon: MessageSquareWarning, get description() { return uiText("Intimidação ou bullying"); } },
+  { value: 'hate_speech', get label() { return uiText("Discurso de ódio"); }, icon: Skull, get description() { return uiText("Discriminação ou incitação ao ódio"); } },
+  { value: 'nudity', get label() { return uiText("Nudez"); }, icon: Ban, get description() { return uiText("Conteúdo sexual ou nudez"); } },
+  { value: 'violence', get label() { return uiText("Violência"); }, icon: AlertTriangle, get description() { return uiText("Conteúdo violento ou perturbador"); } },
+  { value: 'misinformation', get label() { return uiText("Desinformação"); }, icon: HelpCircle, get description() { return uiText("Informação falsa ou enganosa"); } },
+  { value: 'impersonation', get label() { return uiText("Personificação"); }, icon: UserX, get description() { return uiText("Fingir ser outra pessoa"); } },
+  { value: 'other', get label() { return uiText("Outro"); }, icon: Flag, get description() { return uiText("Outro motivo não listado"); } },
 ] as const;
 
 export function ReportContentSheet({ open, onOpenChange, targetType, targetId }: ReportContentSheetProps) {
+  useUiLocale();
   const { submitReport } = useModeration();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [description, setDescription] = useState('');
@@ -71,13 +73,11 @@ export function ReportContentSheet({ open, onOpenChange, targetType, targetId }:
       <SheetContent side="bottom" className="h-[85vh] rounded-t-3xl">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
-            <Flag className="w-5 h-5 text-destructive" />
-            Denunciar {targetType === 'post' ? 'publicação' : targetType === 'comment' ? 'comentário' : targetType === 'user' ? 'utilizador' : 'conteúdo'}
-          </SheetTitle>
+            <Flag className="w-5 h-5 text-destructive" />{uiText("Denunciar {{value1}}", { value1: (targetType === 'post' ? uiText("publicação") : targetType === 'comment' ? uiText("comentário") : targetType === 'user' ? uiText("utilizador") : uiText("conteúdo")) ?? "" })}</SheetTitle>
           <SheetDescription>
             {step === 'category'
-              ? 'Seleciona o motivo da denúncia'
-              : 'Adiciona mais detalhes (opcional)'}
+              ? uiText("Seleciona o motivo da denúncia")
+              : uiText("Adiciona mais detalhes (opcional)")}
           </SheetDescription>
         </SheetHeader>
 
@@ -103,12 +103,10 @@ export function ReportContentSheet({ open, onOpenChange, targetType, targetId }:
           ) : (
             <>
               <div className="bg-muted/50 rounded-xl p-3 mb-4">
-                <p className="text-sm font-medium">
-                  Categoria: {REPORT_CATEGORIES.find(c => c.value === selectedCategory)?.label}
-                </p>
+                <p className="text-sm font-medium">{uiText("Categoria: {{value1}}", { value1: (REPORT_CATEGORIES.find(c => c.value === selectedCategory)?.label) ?? "" })}</p>
               </div>
               <Textarea
-                placeholder="Descreve o problema com mais detalhe..."
+                placeholder={uiText("Descreve o problema com mais detalhe...")}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={4}
@@ -119,17 +117,13 @@ export function ReportContentSheet({ open, onOpenChange, targetType, targetId }:
                   variant="outline"
                   className="flex-1"
                   onClick={() => setStep('category')}
-                >
-                  Voltar
-                </Button>
+                >{uiText("Voltar")}</Button>
                 <Button
                   className="flex-1"
                   disabled={submitting}
                   onClick={handleSubmit}
                 >
-                  {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                  Enviar denúncia
-                </Button>
+                  {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}{uiText("Enviar denúncia")}</Button>
               </div>
             </>
           )}

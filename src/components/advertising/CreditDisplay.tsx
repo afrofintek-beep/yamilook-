@@ -1,3 +1,4 @@
+import { uiLocale, uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState } from 'react';
 import { Coins, RefreshCw } from 'lucide-react';
 import { Card } from '@/components/ui/card';
@@ -5,7 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { CurrencySelector } from './CurrencySelector';
 import { useCurrencyRates } from '@/hooks/useCurrencyRates';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from '@/i18n/ui-date';
 import { pt } from 'date-fns/locale';
 
 interface CreditDisplayProps {
@@ -25,6 +26,7 @@ export function CreditDisplay({
   size = 'md',
   variant = 'default'
 }: CreditDisplayProps) {
+  useUiLocale();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const {
     currencies,
@@ -66,17 +68,17 @@ export function CreditDisplay({
       <div className="flex items-center gap-2">
         <Coins className={`text-primary ${size === 'lg' ? 'w-6 h-6' : size === 'md' ? 'w-5 h-5' : 'w-4 h-4'}`} />
         <span className={`font-bold text-primary ${sizeClasses[size].credits}`}>
-          {credits.toLocaleString()}
+          {credits.toLocaleString(uiLocale())}
         </span>
-        <span className={`text-muted-foreground ${sizeClasses[size].equivalent}`}>créditos</span>
+        <span className={`text-muted-foreground ${sizeClasses[size].equivalent}`}>{uiText("créditos")}</span>
       </div>
-      
+
       {showEquivalent && selectedCurrency && (
         <div className="flex items-center gap-2 flex-wrap">
           <span className={`text-muted-foreground ${sizeClasses[size].equivalent}`}>
             ≈ {formatMoney(credits)}
           </span>
-          
+
           {showSelector && (
             <CurrencySelector
               currencies={currencies}
@@ -87,7 +89,7 @@ export function CreditDisplay({
               compact
             />
           )}
-          
+
           {showRefresh && (
             <Button
               variant="ghost"
@@ -95,7 +97,7 @@ export function CreditDisplay({
               onClick={handleRefresh}
               disabled={isRefreshing}
               className="h-6 px-2"
-              title={lastUpdate ? `Última atualização: ${formatDistanceToNow(lastUpdate, { addSuffix: true, locale: pt })}` : 'Atualizar taxas'}
+              title={lastUpdate ? uiText("Última atualização: {{value1}}", { value1: (formatDistanceToNow(lastUpdate, { addSuffix: true, locale: pt })) ?? "" }) : uiText("Atualizar taxas")}
             >
               <RefreshCw className={`h-3 w-3 ${isRefreshing ? 'animate-spin' : ''}`} />
             </Button>

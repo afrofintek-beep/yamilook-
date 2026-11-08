@@ -1,3 +1,4 @@
+import { uiText } from '@/i18n/ui-copy';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 
@@ -29,7 +30,7 @@ function hex(bytes: Uint8Array): string {
   return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
 }
 function fromHex(value: string): Uint8Array {
-  if (!/^[0-9a-f]{64}$/i.test(value)) throw new Error('A chave de recuperação deve ter 64 caracteres hexadecimais.');
+  if (!/^[0-9a-f]{64}$/i.test(value)) throw new Error(uiText("A chave de recuperação deve ter 64 caracteres hexadecimais."));
   return Uint8Array.from(value.match(/../g)!, v => parseInt(v, 16));
 }
 function toBase64(bytes: Uint8Array): string {
@@ -71,11 +72,11 @@ export async function hasDeviceKey(userId: string): Promise<boolean> {
 }
 async function getDeviceKey(userId: string): Promise<CryptoKey> {
   const key = await withKeyStore('readonly',store => store.get(userId));
-  if (!key) throw new Error('Configure a chave de recuperação deste dispositivo.');
+  if (!key) throw new Error(uiText("Configure a chave de recuperação deste dispositivo."));
   return key as CryptoKey;
 }
 export async function generateRecoveryKey(userId: string): Promise<string> {
-  if (await hasDeviceKey(userId)) throw new Error('Já existe uma chave neste dispositivo. Guarde a chave original, não crie outra.');
+  if (await hasDeviceKey(userId)) throw new Error(uiText("Já existe uma chave neste dispositivo. Guarde a chave original, não crie outra."));
   const raw=crypto.getRandomValues(new Uint8Array(32));
   await storeKey(userId,raw);
   localStorage.removeItem(confirmationKey(userId));
@@ -87,21 +88,21 @@ export async function importRecoveryKey(userId: string, recoveryKey: string): Pr
   const files=await listCloudBackups(userId);
   const existingKey=await hasDeviceKey(userId);
   if (existingKey && files.length===0)
-    throw new Error('Não é permitido substituir a chave atual sem uma cópia na nuvem que permita validá-la.');
+    throw new Error(uiText("Não é permitido substituir a chave atual sem uma cópia na nuvem que permita validá-la."));
   if(files.length>0) {
     // Validate the candidate against the newest authenticated, owner-scoped snapshot
     // before storing it. This makes recovery-key correction safe and reversible.
     const {data,error}=await supabase.storage.from(BACKUP_BUCKET).download(userId+'/'+files[0].name);
-    if (error||!data) throw error || new Error('Não foi possível validar a cópia.');
+    if (error||!data) throw error || new Error(uiText("Não foi possível validar a cópia."));
     const archive=JSON.parse(await data.text()) as BackupArchive;
-    if(archive.version!==1||archive.owner!==userId||data.size>MAX_BYTES*2) throw new Error('Cópia inválida.');
+    if(archive.version!==1||archive.owner!==userId||data.size>MAX_BYTES*2) throw new Error(uiText("Cópia inválida."));
     const key=await crypto.subtle.importKey('raw',raw as BufferSource,{name:'AES-GCM'},false,['decrypt']);
     try {
       const decrypted=await crypto.subtle.decrypt({name:'AES-GCM',iv:fromBase64(archive.iv) as BufferSource,
         additionalData:new TextEncoder().encode(userId)},key,fromBase64(archive.encrypted) as BufferSource);
-      if(JSON.parse(new TextDecoder().decode(decrypted)).userId!==userId) throw new Error('Conta incompatível.');
+      if(JSON.parse(new TextDecoder().decode(decrypted)).userId!==userId) throw new Error(uiText("Conta incompatível."));
     } catch {
-      throw new Error('Esta chave não decifra a cópia mais recente. Verifique a chave antes de continuar.');
+      throw new Error(uiText("Esta chave não decifra a cópia mais recente. Verifique a chave antes de continuar."));
     }
   }
   await storeKey(userId,raw);
@@ -127,7 +128,7 @@ export function canBackupOnConnection(wifiOnly: boolean): boolean {
 }
 async function verifiedUser(expectedUserId: string) {
   const {data,error}=await supabase.auth.getUser();
-  if (error || !data.user || data.user.id!==expectedUserId) throw new Error('Sessão inválida ou conta diferente.');
+  if (error || !data.user || data.user.id!==expectedUserId) throw new Error(uiText("Sessão inválida ou conta diferente."));
 }
 export async function usageForAccount(userId: string): Promise<BackupUsage> {
   await verifiedUser(userId);
@@ -143,7 +144,7 @@ export async function listCloudBackups(userId: string): Promise<BackupFile[]> {
 }
 async function encryptSnapshot(userId: string, content: unknown): Promise<BackupArchive> {
   const plain = new TextEncoder().encode(JSON.stringify(content));
-  if (plain.length>MAX_BYTES) throw new Error('Exportação superior a 6 MB. Requer cópias segmentadas.');
+  if (plain.length>MAX_BYTES) throw new Error(uiText("Exportação superior a 6 MB. Requer cópias segmentadas."));
   const iv=crypto.getRandomValues(new Uint8Array(12));
   const encrypted=await crypto.subtle.encrypt(
     {name:'AES-GCM',iv,additionalData:new TextEncoder().encode(userId)},
@@ -153,27 +154,27 @@ async function encryptSnapshot(userId: string, content: unknown): Promise<Backup
 }
 export async function decryptArchive(userId:string,archive:BackupArchive):Promise<Record<string,unknown>> {
   if (!archive || archive.version!==1 || archive.owner!==userId || typeof archive.encrypted!=='string')
-    throw new Error('Cópia incompatível ou pertencente a outra conta.');
-  if (archive.encrypted.length>MAX_BYTES*2) throw new Error('Cópia demasiado grande.');
+    throw new Error(uiText("Cópia incompatível ou pertencente a outra conta."));
+  if (archive.encrypted.length>MAX_BYTES*2) throw new Error(uiText("Cópia demasiado grande."));
   const plaintext=await crypto.subtle.decrypt({
     name:'AES-GCM',
     iv:fromBase64(archive.iv) as BufferSource,
     additionalData:new TextEncoder().encode(userId)
   },await getDeviceKey(userId),fromBase64(archive.encrypted) as BufferSource);
   const data=JSON.parse(new TextDecoder().decode(plaintext));
-  if (!data || data.userId!==userId) throw new Error('Identidade da cópia não corresponde à conta.');
+  if (!data || data.userId!==userId) throw new Error(uiText("Identidade da cópia não corresponde à conta."));
   return data;
 }
 let backupInProgress=false;
 export async function createCloudBackup(userId: string, wifiOnly: boolean):Promise<string> {
-  if (backupInProgress) throw new Error('Já existe um backup em curso.');
-  if (!canBackupOnConnection(wifiOnly)) throw new Error('Wi-Fi não confirmado neste dispositivo. Desative a restrição para permitir usar esta ligação.');
+  if (backupInProgress) throw new Error(uiText("Já existe um backup em curso."));
+  if (!canBackupOnConnection(wifiOnly)) throw new Error(uiText("Wi-Fi não confirmado neste dispositivo. Desative a restrição para permitir usar esta ligação."));
   backupInProgress=true;
   try {
     await verifiedUser(userId);
-    if(!isRecoveryKeyConfirmed(userId)) throw new Error('Confirme primeiro que guardou a chave de recuperação.');
+    if(!isRecoveryKeyConfirmed(userId)) throw new Error(uiText("Confirme primeiro que guardou a chave de recuperação."));
     const {data,error}=await supabase.functions.invoke('export-user-data');
-    if (error || !data || data.userId!==userId) throw new Error('Não foi possível obter uma exportação autenticada.');
+    if (error || !data || data.userId!==userId) throw new Error(uiText("Não foi possível obter uma exportação autenticada."));
     // Ephemeral and deleted/view-once material must never be resurrected by a backup.
     const snapshot={...data,deviceSessions:undefined,messagesSent:Array.isArray(data.messagesSent)
       ? data.messagesSent.filter((m:{is_deleted?:boolean;is_view_once?:boolean;expires_at?:string}) =>
@@ -192,30 +193,30 @@ export async function createCloudBackup(userId: string, wifiOnly: boolean):Promi
   } finally { backupInProgress=false; }
 }
 export async function readCloudBackup(userId:string,name:string):Promise<Record<string,unknown>> {
-  if (!/^snapshot-\d+-[a-f0-9-]+\.json$/.test(name)) throw new Error('Nome de ficheiro inválido.');
+  if (!/^snapshot-\d+-[a-f0-9-]+\.json$/.test(name)) throw new Error(uiText("Nome de ficheiro inválido."));
   await verifiedUser(userId);
   const {data,error}=await supabase.storage.from(BACKUP_BUCKET).download(userId+'/'+name);
-  if(error||!data) throw error || new Error('Cópia indisponível');
-  if(data.size>MAX_BYTES*2) throw new Error('Cópia demasiado grande.');
+  if(error||!data) throw error || new Error(uiText("Cópia indisponível"));
+  if(data.size>MAX_BYTES*2) throw new Error(uiText("Cópia demasiado grande."));
   return decryptArchive(userId,JSON.parse(await data.text()) as BackupArchive);
 }
 export async function restoreBackupPreferences(userId:string,snapshot:Record<string,unknown>) {
   await verifiedUser(userId);
-  if(snapshot.userId!==userId) throw new Error('O backup pertence a outra conta.');
+  if(snapshot.userId!==userId) throw new Error(uiText("O backup pertence a outra conta."));
   const raw = snapshot.settings as Record<string,unknown>|null;
-  if(!raw) throw new Error('O backup não contém preferências.');
+  if(!raw) throw new Error(uiText("O backup não contém preferências."));
   const patch: Database['public']['Tables']['user_settings']['Update']={};
   const texts=['theme','language','language_variant','font_size','notification_sound','auto_download_media'] as const;
   const booleans=['vibration_enabled','enter_to_send','data_saver_mode'] as const;
   for(const field of texts) if(typeof raw[field]==='string') patch[field]=raw[field] as string;
   for(const field of booleans) if(typeof raw[field]==='boolean') patch[field]=raw[field] as boolean;
-  if(!Object.keys(patch).length) throw new Error('Sem preferências recuperáveis.');
+  if(!Object.keys(patch).length) throw new Error(uiText("Sem preferências recuperáveis."));
   const {error}=await supabase.from('user_settings').update(patch).eq('user_id',userId);
   if(error) throw error;
   return Object.keys(patch).length;
 }
 export function downloadSnapshot(userId:string,snapshot:Record<string,unknown>) {
-  if(snapshot.userId!==userId) throw new Error('Identidade incorreta.');
+  if(snapshot.userId!==userId) throw new Error(uiText("Identidade incorreta."));
   const blob=new Blob([JSON.stringify(snapshot,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob),a=document.createElement('a');
   a.href=url;a.download='yamilook-recovered-'+new Date().toISOString().slice(0,10)+'.json';

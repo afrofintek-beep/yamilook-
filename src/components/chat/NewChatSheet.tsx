@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, MessageCircle, Loader2, Users } from 'lucide-react';
@@ -15,6 +16,7 @@ interface NewChatSheetProps {
 }
 
 export function NewChatSheet({ open, onOpenChange }: NewChatSheetProps) {
+  useUiLocale();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { contacts, loading: contactsLoading } = useContacts();
@@ -41,7 +43,7 @@ export function NewChatSheet({ open, onOpenChange }: NewChatSheetProps) {
 
     if (error) {
       toast({
-        title: 'Error',
+        title: uiText("Error"),
         description: error.message,
         variant: 'destructive',
       });
@@ -57,7 +59,7 @@ export function NewChatSheet({ open, onOpenChange }: NewChatSheetProps) {
         open={open}
         onOpenChange={onOpenChange}
         className="h-[85vh] rounded-t-3xl sm:max-w-lg"
-        title={<span className="text-xl font-semibold">New Chat</span>}
+        title={<span className="text-xl font-semibold">{uiText("New Chat")}</span>}
       >
           <div className="space-y-4">
             {/* Create Group Button */}
@@ -72,8 +74,8 @@ export function NewChatSheet({ open, onOpenChange }: NewChatSheetProps) {
                 <Users className="w-6 h-6 text-primary-foreground" />
               </div>
               <div className="flex-1">
-                <span className="font-semibold block">Novo Grupo</span>
-                <span className="text-sm text-muted-foreground">Até 256 membros</span>
+                <span className="font-semibold block">{uiText("Novo Grupo")}</span>
+                <span className="text-sm text-muted-foreground">{uiText("Até 256 membros")}</span>
               </div>
             </button>
 
@@ -82,7 +84,7 @@ export function NewChatSheet({ open, onOpenChange }: NewChatSheetProps) {
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search contacts..."
+                placeholder={uiText("Search contacts...")}
                 className="pl-10 h-12 rounded-xl"
               />
             </div>
@@ -95,12 +97,12 @@ export function NewChatSheet({ open, onOpenChange }: NewChatSheetProps) {
               ) : filteredContacts.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground">
                   {searchQuery ? (
-                    <p>No contacts found</p>
+                    <p>{uiText("No contacts found")}</p>
                   ) : (
                     <>
                       <MessageCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                      <p>No contacts yet</p>
-                      <p className="text-sm">Add contacts to start chatting</p>
+                      <p>{uiText("No contacts yet")}</p>
+                      <p className="text-sm">{uiText("Add contacts to start chatting")}</p>
                     </>
                   )}
                 </div>
@@ -139,7 +141,7 @@ export function NewChatSheet({ open, onOpenChange }: NewChatSheetProps) {
                             {displayName}
                           </span>
                           <span className="text-sm text-muted-foreground truncate block">
-                            @{contact.profile?.username || 'unknown'}
+                            @{contact.profile?.username || uiText("unknown")}
                           </span>
                         </div>
                         {creating === contact.contact_user_id ? (

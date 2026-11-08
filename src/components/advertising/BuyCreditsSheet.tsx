@@ -1,3 +1,4 @@
+import { uiText, useUiLocale, uiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -8,12 +9,12 @@ import { Coins, Loader2, Check, Smartphone, Receipt } from 'lucide-react';
 
 // Keep in sync with the PACKAGES map in the create-appypay-payment edge function.
 const PACKAGES = [
-  { id: 'start', credits: 1000, kwanza: 9000, label: 'Início' },
-  { id: 'pro', credits: 5000, kwanza: 42000, label: 'Pro', popular: true },
-  { id: 'max', credits: 12000, kwanza: 96000, label: 'Máximo' },
+  { id: 'start', credits: 1000, kwanza: 9000, get label() { return uiText("Início"); } },
+  { id: 'pro', credits: 5000, kwanza: 42000, get label() { return uiText("Pro"); }, popular: true },
+  { id: 'max', credits: 12000, kwanza: 96000, get label() { return uiText("Máximo"); } },
 ];
 
-const kz = (n: number) => new Intl.NumberFormat('pt-AO').format(n) + ' Kz';
+const kz = (n: number) => new Intl.NumberFormat(uiLocale()).format(n) + ' Kz';
 
 interface RefResult {
   method: 'REF';
@@ -31,6 +32,7 @@ interface Props {
 }
 
 export function BuyCreditsSheet({ open, onOpenChange, onDone }: Props) {
+  useUiLocale();
   const [sel, setSel] = useState('pro');
   const [method, setMethod] = useState<'GPO' | 'REF'>('GPO');
   const [phone, setPhone] = useState('');
@@ -49,12 +51,12 @@ export function BuyCreditsSheet({ open, onOpenChange, onDone }: Props) {
     });
     if (!silent) setChecking(false);
     if ((data as { credited?: number })?.credited) {
-      toast.success('Pagamento confirmado! Créditos adicionados. ✅');
+      toast.success(uiText("Pagamento confirmado! Créditos adicionados. ✅"));
       onDone?.();
       close(false);
       return true;
     }
-    if (!silent) toast.info('Ainda não recebemos a confirmação do pagamento. Tenta novamente daqui a pouco.');
+    if (!silent) toast.info(uiText("Ainda não recebemos a confirmação do pagamento. Tenta novamente daqui a pouco."));
     return false;
   };
 
@@ -69,7 +71,7 @@ export function BuyCreditsSheet({ open, onOpenChange, onDone }: Props) {
   const buy = async () => {
     const digits = phone.replace(/\D/g, '');
     if (method === 'GPO' && digits.length < 9) {
-      toast.error('Indica o número de telemóvel do Multicaixa Express.');
+      toast.error(uiText("Indica o número de telemóvel do Multicaixa Express."));
       return;
     }
 
@@ -88,14 +90,14 @@ export function BuyCreditsSheet({ open, onOpenChange, onDone }: Props) {
 
     const status = (data as { status?: string })?.status;
     if (status === 'gateway_pending') {
-      toast.info('Compra registada. O pagamento AppyPay ainda está a ser ativado.');
+      toast.info(uiText("Compra registada. O pagamento AppyPay ainda está a ser ativado."));
       onDone?.();
       onOpenChange(false);
       return;
     }
 
     if (status === 'paid') {
-      toast.success('Pagamento confirmado! Créditos adicionados. ✅');
+      toast.success(uiText("Pagamento confirmado! Créditos adicionados. ✅"));
       onDone?.();
       onOpenChange(false);
       return;
@@ -110,7 +112,7 @@ export function BuyCreditsSheet({ open, onOpenChange, onDone }: Props) {
     }
 
     // GPO — a push was sent to the phone.
-    toast.success('Confirma o pagamento no teu telemóvel (Multicaixa Express).');
+    toast.success(uiText("Confirma o pagamento no teu telemóvel (Multicaixa Express)."));
     onDone?.();
     onOpenChange(false);
   };
@@ -124,52 +126,44 @@ export function BuyCreditsSheet({ open, onOpenChange, onDone }: Props) {
       <SheetContent side="right" className="w-full sm:max-w-md p-0 overflow-y-auto">
         <SheetHeader className="p-5 border-b border-border">
           <SheetTitle className="flex items-center gap-2">
-            <Coins className="w-5 h-5 text-primary" /> Comprar créditos
-          </SheetTitle>
+            <Coins className="w-5 h-5 text-primary" />{uiText(" Comprar créditos")}</SheetTitle>
         </SheetHeader>
 
         {refResult ? (
           <div className="p-5 space-y-4">
             <div className="flex items-center gap-2 text-primary">
               <Receipt className="w-5 h-5" />
-              <span className="font-semibold">Referência gerada</span>
+              <span className="font-semibold">{uiText("Referência gerada")}</span>
             </div>
-            <p className="text-sm text-muted-foreground">
-              Paga esta referência no Multicaixa Express, ATM ou Internet Banking. Os créditos entram
-              automaticamente após o pagamento.
-            </p>
+            <p className="text-sm text-muted-foreground">{uiText("Paga esta referência no Multicaixa Express, ATM ou Internet Banking. Os créditos entram automaticamente após o pagamento.")}</p>
             <div className="rounded-xl border border-border divide-y divide-border">
               <div className="flex items-center justify-between p-3">
-                <span className="text-xs text-muted-foreground">Entidade</span>
+                <span className="text-xs text-muted-foreground">{uiText("Entidade")}</span>
                 <span className="font-bold tabular-nums">{refResult.entity ?? '—'}</span>
               </div>
               <div className="flex items-center justify-between p-3">
-                <span className="text-xs text-muted-foreground">Referência</span>
+                <span className="text-xs text-muted-foreground">{uiText("Referência")}</span>
                 <span className="font-bold tabular-nums">{refResult.reference ?? '—'}</span>
               </div>
               <div className="flex items-center justify-between p-3">
-                <span className="text-xs text-muted-foreground">Montante</span>
+                <span className="text-xs text-muted-foreground">{uiText("Montante")}</span>
                 <span className="font-bold tabular-nums">{kz(refResult.amountKwanza ?? 0)}</span>
               </div>
             </div>
-            <p className="text-[11px] text-muted-foreground text-center">
-              A verificar o pagamento automaticamente… assim que pagares, os créditos entram sozinhos.
-            </p>
+            <p className="text-[11px] text-muted-foreground text-center">{uiText("A verificar o pagamento automaticamente… assim que pagares, os créditos entram sozinhos.")}</p>
             <Button
               variant="outline"
               className="w-full h-12 rounded-xl"
               onClick={() => verifyPayment(false)}
               disabled={checking}
             >
-              {checking ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Já paguei — verificar agora'}
+              {checking ? <Loader2 className="w-4 h-4 animate-spin" /> : uiText("Já paguei — verificar agora")}
             </Button>
-            <Button className="w-full h-12 rounded-xl" onClick={() => close(false)}>Concluído</Button>
+            <Button className="w-full h-12 rounded-xl" onClick={() => close(false)}>{uiText("Concluído")}</Button>
           </div>
         ) : (
           <div className="p-5 space-y-5">
-            <p className="text-sm text-muted-foreground">
-              Os créditos servem para promover os teus posts e o teu negócio no feed. Escolhe um pacote.
-            </p>
+            <p className="text-sm text-muted-foreground">{uiText("Os créditos servem para promover os teus posts e o teu negócio no feed. Escolhe um pacote.")}</p>
 
             <div className="space-y-2">
               {PACKAGES.map((p) => (
@@ -185,12 +179,8 @@ export function BuyCreditsSheet({ open, onOpenChange, onDone }: Props) {
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <div className="font-semibold flex items-center gap-2">
-                        {p.credits.toLocaleString('pt-AO')} créditos
-                        {p.popular && (
-                          <span className="text-[10px] font-bold text-primary bg-primary/10 rounded-full px-2 py-0.5">
-                            POPULAR
-                          </span>
+                      <div className="font-semibold flex items-center gap-2">{uiText("{{value1}} créditos", { value1: (p.credits.toLocaleString(uiLocale())) ?? "" })}{p.popular && (
+                          <span className="text-[10px] font-bold text-primary bg-primary/10 rounded-full px-2 py-0.5">{uiText("POPULAR")}</span>
                         )}
                       </div>
                       <div className="text-xs text-muted-foreground">{p.label}</div>
@@ -205,7 +195,7 @@ export function BuyCreditsSheet({ open, onOpenChange, onDone }: Props) {
             </div>
 
             <div>
-              <div className="text-xs font-medium text-muted-foreground mb-2">Método de pagamento</div>
+              <div className="text-xs font-medium text-muted-foreground mb-2">{uiText("Método de pagamento")}</div>
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
@@ -213,44 +203,37 @@ export function BuyCreditsSheet({ open, onOpenChange, onDone }: Props) {
                   className={`rounded-lg border p-3 text-sm font-medium ${
                     method === 'GPO' ? 'border-primary bg-primary/5' : 'border-border'
                   }`}
-                >
-                  Multicaixa Express
-                </button>
+                >{uiText("Multicaixa Express")}</button>
                 <button
                   type="button"
                   onClick={() => setMethod('REF')}
                   className={`rounded-lg border p-3 text-sm font-medium ${
                     method === 'REF' ? 'border-primary bg-primary/5' : 'border-border'
                   }`}
-                >
-                  Referência
-                </button>
+                >{uiText("Referência")}</button>
               </div>
             </div>
 
             {method === 'GPO' && (
               <div>
                 <label className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1.5">
-                  <Smartphone className="w-3.5 h-3.5" /> Telemóvel Multicaixa Express
-                </label>
+                  <Smartphone className="w-3.5 h-3.5" />{uiText(" Telemóvel Multicaixa Express")}</label>
                 <Input
                   type="tel"
                   inputMode="numeric"
-                  placeholder="9XX XXX XXX"
+                  placeholder={uiText("9XX XXX XXX")}
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   className="h-11"
                 />
-                <p className="text-[11px] text-muted-foreground mt-1.5">
-                  Vais receber um pedido de confirmação neste número.
-                </p>
+                <p className="text-[11px] text-muted-foreground mt-1.5">{uiText("Vais receber um pedido de confirmação neste número.")}</p>
               </div>
             )}
 
             <Button className="w-full h-12 rounded-xl" onClick={buy} disabled={loading}>
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Pagar com AppyPay'}
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : uiText("Pagar com AppyPay")}
             </Button>
-            <p className="text-[11px] text-muted-foreground text-center">Pagamento seguro via AppyPay · valores em AOA</p>
+            <p className="text-[11px] text-muted-foreground text-center">{uiText("Pagamento seguro via AppyPay · valores em AOA")}</p>
           </div>
         )}
       </SheetContent>

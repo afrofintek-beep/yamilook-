@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { motion } from 'framer-motion';
 import { X, Trash2, Forward, Copy, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -21,6 +22,7 @@ export function MessageSelectionBar({
   onStar,
   canDelete,
 }: MessageSelectionBarProps) {
+  useUiLocale();
   return (
     <motion.div
       initial={{ y: 100, opacity: 0 }}
@@ -39,7 +41,7 @@ export function MessageSelectionBar({
             <X className="w-5 h-5" />
           </Button>
           <span className="font-medium">
-            {selectedCount} {selectedCount === 1 ? 'selecionada' : 'selecionadas'}
+            {selectedCount} {selectedCount === 1 ? uiText("selecionada") : uiText("selecionadas")}
           </span>
         </div>
 
@@ -49,7 +51,7 @@ export function MessageSelectionBar({
             size="icon"
             className="rounded-full"
             onClick={onCopy}
-            title="Copiar"
+            title={uiText("Copiar")}
           >
             <Copy className="w-5 h-5" />
           </Button>
@@ -58,7 +60,7 @@ export function MessageSelectionBar({
             size="icon"
             className="rounded-full"
             onClick={onStar}
-            title="Estrelar"
+            title={uiText("Estrelar")}
           >
             <Star className="w-5 h-5" />
           </Button>
@@ -67,7 +69,7 @@ export function MessageSelectionBar({
             size="icon"
             className="rounded-full"
             onClick={onForward}
-            title="Reencaminhar"
+            title={uiText("Reencaminhar")}
           >
             <Forward className="w-5 h-5" />
           </Button>
@@ -77,7 +79,7 @@ export function MessageSelectionBar({
               size="icon"
               className="rounded-full text-destructive hover:text-destructive"
               onClick={onDelete}
-              title="Apagar"
+              title={uiText("Apagar")}
             >
               <Trash2 className="w-5 h-5" />
             </Button>

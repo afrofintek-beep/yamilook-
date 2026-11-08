@@ -1,3 +1,4 @@
+import { uiText } from '@/i18n/ui-copy';
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -38,7 +39,7 @@ export function useCloseFriends() {
   }, [fetchCloseFriends]);
 
   const addCloseFriend = async (friendId: string) => {
-    if (!user) return { error: new Error('Not authenticated') };
+    if (!user) return { error: new Error(uiText("Not authenticated")) };
 
     const { error } = await supabase
       .from('close_friends')
@@ -52,7 +53,7 @@ export function useCloseFriends() {
   };
 
   const removeCloseFriend = async (friendId: string) => {
-    if (!user) return { error: new Error('Not authenticated') };
+    if (!user) return { error: new Error(uiText("Not authenticated")) };
 
     const { error } = await supabase
       .from('close_friends')

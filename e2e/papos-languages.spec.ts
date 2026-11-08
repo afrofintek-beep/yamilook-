@@ -29,5 +29,13 @@ for (const width of [320, 390]) {
     await select.selectOption('pt');
     await expect(page.locator('html')).toHaveAttribute('dir', 'ltr');
     await expect(page.getByRole('button', { name: 'Entrar na KOSOLOLA' })).toBeVisible();
+    for (const language of ['en', 'fr', 'ar', 'am', 'sw', 'ln', 'yo', 'sn', 'zu', 'pt']) {
+      await select.selectOption(language);
+      await expect(page.locator('html')).toHaveAttribute('lang', language);
+      await expect(page.getByRole('heading', { level: 1 })).toHaveAttribute('lang', language);
+      await expect(page.getByRole('heading', { level: 1 })).not.toBeEmpty();
+      await expect(page.locator('html')).toHaveAttribute('dir', language === 'ar' ? 'rtl' : 'ltr');
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    }
   });
 }

@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, X } from 'lucide-react';
@@ -12,7 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Ritmo } from '@/hooks/useRitmos';
 import { AfricanReactionType, AFRICAN_REACTIONS, getReactionIcon } from '@/lib/reactions';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from '@/i18n/ui-date';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { useLongPress } from '@/hooks/useLongPress';
@@ -46,6 +47,7 @@ interface RitmosCommentsSheetProps {
 }
 
 export function RitmosCommentsSheet({ open, onOpenChange, ritmo }: RitmosCommentsSheetProps) {
+  useUiLocale();
   const { user } = useAuth();
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(false);
@@ -163,7 +165,7 @@ export function RitmosCommentsSheet({ open, onOpenChange, ritmo }: RitmosComment
       setNewComment('');
     } catch (error) {
       console.error('Error posting comment:', error);
-      toast.error('Failed to post comment');
+      toast.error(uiText("Failed to post comment"));
     } finally {
       setSubmitting(false);
     }
@@ -172,7 +174,7 @@ export function RitmosCommentsSheet({ open, onOpenChange, ritmo }: RitmosComment
   // React to comment
   const handleReactToComment = async (commentId: string, type: AfricanReactionType) => {
     if (!user) {
-      toast.error('Please sign in to react');
+      toast.error(uiText("Please sign in to react"));
       return;
     }
 
@@ -217,9 +219,7 @@ export function RitmosCommentsSheet({ open, onOpenChange, ritmo }: RitmosComment
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="h-[70vh] rounded-t-3xl p-0">
         <SheetHeader className="px-4 py-3 border-b border-border">
-          <SheetTitle className="text-center">
-            {comments.length} Comments
-          </SheetTitle>
+          <SheetTitle className="text-center">{uiText("{{value1}} Comments", { value1: (comments.length) ?? "" })}</SheetTitle>
         </SheetHeader>
 
         <ScrollArea className="flex-1 h-[calc(70vh-8rem)]">
@@ -237,8 +237,8 @@ export function RitmosCommentsSheet({ open, onOpenChange, ritmo }: RitmosComment
               ))
             ) : comments.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-muted-foreground">No comments yet</p>
-                <p className="text-sm text-muted-foreground/60">Be the first to comment!</p>
+                <p className="text-muted-foreground">{uiText("No comments yet")}</p>
+                <p className="text-sm text-muted-foreground/60">{uiText("Be the first to comment!")}</p>
               </div>
             ) : (
               <AnimatePresence>
@@ -259,7 +259,7 @@ export function RitmosCommentsSheet({ open, onOpenChange, ritmo }: RitmosComment
         <div className="absolute bottom-0 left-0 right-0 p-4 bg-card border-t border-border safe-bottom">
           <div className="flex items-center gap-2">
             <MentionInput
-              placeholder="Add a comment..."
+              placeholder={uiText("Add a comment...")}
               value={newComment}
               onValueChange={setNewComment}
               onSubmit={handleSubmit}
@@ -282,15 +282,16 @@ export function RitmosCommentsSheet({ open, onOpenChange, ritmo }: RitmosComment
 }
 
 // Comment item component
-function CommentItem({ 
-  comment, 
+function CommentItem({
+  comment,
   onReact,
   onNavigate
-}: { 
+}: {
   comment: Comment;
   onNavigate: () => void;
   onReact: (type: AfricanReactionType) => void;
 }) {
+  useUiLocale();
   const [showPicker, setShowPicker] = useState(false);
 
   const { handlers: longPressHandlers } = useLongPress({
@@ -322,7 +323,7 @@ function CommentItem({
       <div className="flex-1">
         <div className="flex items-center gap-2 mb-1">
           <span className="font-medium text-sm">
-            {comment.user?.username || comment.user?.display_name || 'User'}
+            {comment.user?.username || comment.user?.display_name || uiText("User")}
           </span>
           <span className="text-xs text-muted-foreground">
             {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}

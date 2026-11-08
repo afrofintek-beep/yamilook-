@@ -1,3 +1,4 @@
+import { uiText } from '@/i18n/ui-copy';
 import { Component, type ReactNode, type ErrorInfo } from 'react';
 import { renderDiagnostic } from '@/lib/render-diagnostic';
 import { logger } from '@/lib/logger';
@@ -15,12 +16,12 @@ export class IncomingCallBoundary extends Component<Props, { failed: boolean; di
   }
   render() {
     if (!this.state.failed) return this.props.children;
-    return <div role="dialog" aria-modal={!this.props.waiting} aria-label={this.props.waitingLabel || 'Chamada recebida'} className={this.props.waiting ? 'fixed top-4 left-3 right-3 z-[200] rounded-2xl border bg-background p-4 space-y-3' : 'fixed inset-0 z-[100] bg-background flex flex-col items-center justify-center gap-6 p-6'}>
-      <h1 className="text-xl font-semibold">{this.props.waitingLabel || 'Chamada recebida'}</h1>
-      <details><summary>Diagnóstico técnico</summary><pre className="max-h-40 overflow-auto whitespace-pre-wrap break-all text-xs">{this.state.diagnostic}</pre></details>
-      <p>Pode atender ou recusar a chamada.</p>
-      <button type="button" disabled={this.props.busy} className="rounded-full bg-green-600 text-white px-8 py-4" onClick={this.props.onAnswer}>{this.props.answerLabel || 'Atender'}</button>
-      <button type="button" disabled={this.props.busy} className="rounded-full bg-red-600 text-white px-8 py-4" onClick={this.props.onDecline}>Recusar</button>
+    return <div role="dialog" aria-modal={!this.props.waiting} aria-label={this.props.waitingLabel || uiText("Chamada recebida")} className={this.props.waiting ? 'fixed top-4 left-3 right-3 z-[200] rounded-2xl border bg-background p-4 space-y-3' : 'fixed inset-0 z-[100] bg-background flex flex-col items-center justify-center gap-6 p-6'}>
+      <h1 className="text-xl font-semibold">{this.props.waitingLabel || uiText("Chamada recebida")}</h1>
+      <details><summary>{uiText("Diagnóstico técnico")}</summary><pre className="max-h-40 overflow-auto whitespace-pre-wrap break-all text-xs">{this.state.diagnostic}</pre></details>
+      <p>{uiText("Pode atender ou recusar a chamada.")}</p>
+      <button type="button" disabled={this.props.busy} className="rounded-full bg-green-600 text-white px-8 py-4" onClick={this.props.onAnswer}>{this.props.answerLabel || uiText("Atender")}</button>
+      <button type="button" disabled={this.props.busy} className="rounded-full bg-red-600 text-white px-8 py-4" onClick={this.props.onDecline}>{uiText("Recusar")}</button>
     </div>;
   }
 }

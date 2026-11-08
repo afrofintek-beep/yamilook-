@@ -31,6 +31,7 @@ test('incoming call survives session refresh with history open and slow unsubscr
     await route.fulfill({ json: data });
   });
   await page.addInitScript(({ me }) => {
+    localStorage.setItem('i18nextLng', 'pt');
     localStorage.setItem('sb-127-papos-auth-token', JSON.stringify({
       access_token: btoa('{}') + '.' + btoa(JSON.stringify({ sub: me, exp: Math.floor(Date.now() / 1000) + 3600 })) + '.signature',
       refresh_token: 'test-only', expires_at: Math.floor(Date.now() / 1000) + 3600, token_type: 'bearer', user: { id: me, email: 'test@example.invalid' },

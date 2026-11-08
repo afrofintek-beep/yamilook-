@@ -1,3 +1,4 @@
+import { loadingText } from '@/i18n/startup-copy';
 import { communityReturn } from './features/academia/community-links';
 import { AppLoadingScreen } from '@/components/AppStartupBoundary';
 import { recoverApplicationAssets } from '@/lib/app-assets';
@@ -176,22 +177,22 @@ class LazyLoadErrorBoundary extends Component<
           <div className="w-16 h-16 rounded-2xl bg-destructive/10 flex items-center justify-center mb-2">
             <span className="text-3xl">⚠️</span>
           </div>
-          <h2 className="text-lg font-semibold text-foreground">Erro ao carregar a página</h2>
+          <h2 className="text-lg font-semibold text-foreground">{loadingText("Erro ao carregar a página")}</h2>
           <p className="text-sm text-muted-foreground max-w-xs">
-            Não foi possível apresentar esta página. Tenta novamente ou recarrega a aplicação.
+            {loadingText("Não foi possível apresentar esta página. Tenta novamente ou recarrega a aplicação.")}
           </p>
           <div className="flex gap-3">
             <button
               onClick={this.handleRetry}
               className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium"
             >
-              Tentar novamente
+              {loadingText("Tentar novamente")}
             </button>
             <button
               onClick={this.handleReload}
               className="px-4 py-2 rounded-xl bg-secondary text-secondary-foreground text-sm font-medium"
             >
-              Recarregar
+              {loadingText("Recarregar")}
             </button>
           </div>
         </div>
@@ -236,10 +237,10 @@ function ProtectedRoute({ children, skipOnboardingCheck }: { children: React.Rea
         {profileError && (
           <>
             <button type="button" onClick={() => void refreshProfile()} className="rounded-lg bg-primary px-5 py-3 text-primary-foreground">
-              Tentar novamente
+              {loadingText("Tentar novamente")}
             </button>
             <button type="button" onClick={() => void signOut('local')} className="rounded-lg px-5 py-2 underline">
-              Iniciar sessão novamente
+              {loadingText("Iniciar sessão novamente")}
             </button>
           </>
         )}

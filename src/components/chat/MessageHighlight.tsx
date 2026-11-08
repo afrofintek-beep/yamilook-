@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState } from 'react';
 import { Highlighter, Tag, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -29,6 +30,7 @@ export function MessageHighlightPicker({
   onHighlight,
   onRemove,
 }: MessageHighlightProps) {
+  useUiLocale();
   const [selectedColor, setSelectedColor] = useState(currentColor || '');
   const [label, setLabel] = useState(currentLabel || '');
   const [isOpen, setIsOpen] = useState(false);
@@ -50,7 +52,7 @@ export function MessageHighlightPicker({
       <PopoverContent className="w-64 p-3" align="start">
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">Highlight message</span>
+            <span className="text-sm font-medium">{uiText("Highlight message")}</span>
             {currentColor && (
               <Button
                 variant="ghost"
@@ -60,9 +62,7 @@ export function MessageHighlightPicker({
                   await onRemove();
                   setIsOpen(false);
                 }}
-              >
-                Remove
-              </Button>
+              >{uiText("Remove")}</Button>
             )}
           </div>
 
@@ -83,7 +83,7 @@ export function MessageHighlightPicker({
           <div className="flex items-center gap-2">
             <Tag className="w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="Add label (optional)"
+              placeholder={uiText("Add label (optional)")}
               value={label}
               onChange={(e) => setLabel(e.target.value)}
               className="h-8 text-sm"
@@ -95,9 +95,7 @@ export function MessageHighlightPicker({
             className="w-full"
             onClick={handleSave}
             disabled={!selectedColor}
-          >
-            Save highlight
-          </Button>
+          >{uiText("Save highlight")}</Button>
         </div>
       </PopoverContent>
     </Popover>
@@ -124,6 +122,7 @@ interface HighlightBadgeProps {
 }
 
 export function HighlightBadge({ color, label }: HighlightBadgeProps) {
+  useUiLocale();
   const colorMap: Record<string, string> = {
     yellow: 'bg-yellow-200 text-yellow-800',
     blue: 'bg-blue-200 text-blue-800',
@@ -141,7 +140,7 @@ export function HighlightBadge({ color, label }: HighlightBadgeProps) {
       )}
     >
       <Highlighter className="w-2.5 h-2.5" />
-      {label || 'Highlighted'}
+      {label || uiText("Highlighted")}
     </span>
   );
 }

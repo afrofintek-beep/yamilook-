@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { EmptyStateBack } from '@/components/common/EmptyStateBack';
@@ -10,6 +11,7 @@ import { useSpaceConversas } from '../hooks/useMokubicoConversas';
 import BottomNav from '@/components/BottomNav';
 
 export default function MokubicoSpace() {
+  useUiLocale();
   const { space } = useParams<{ space: string }>();
   const navigate = useNavigate();
   const [newOpen, setNewOpen] = useState(false);
@@ -45,7 +47,7 @@ export default function MokubicoSpace() {
 
         <div className="pb-3 -mt-1">
           <p className="text-xs text-muted-foreground">{config.description}</p>
-          <p className="text-[10px] text-muted-foreground/70 tracking-wide mt-1">Acesso: {config.access}</p>
+          <p className="text-[10px] text-muted-foreground/70 tracking-wide mt-1">{uiText("Acesso: ")}{config.access}</p>
         </div>
       </header>
 
@@ -63,7 +65,7 @@ export default function MokubicoSpace() {
               <span className="text-2xl">{config.emoji}</span>
             </div>
             <p className="text-sm text-muted-foreground">{MOKUBICO_COPY.emptySpace}</p>
-            <p className="text-xs text-muted-foreground/70">Abre a primeira conversa deste espaço.</p>
+            <p className="text-xs text-muted-foreground/70">{uiText("Abre a primeira conversa deste espaço.")}</p>
           </div>
         ) : (
           conversas.map((c) => (
@@ -78,12 +80,11 @@ export default function MokubicoSpace() {
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-semibold truncate">{c.title}</div>
                 <div className="text-xs text-muted-foreground truncate">
-                  {c.isHost ? 'A tua conversa' : c.hostName}
+                  {c.isHost ? uiText("A tua conversa") : c.hostName}
                 </div>
               </div>
               <span className="shrink-0 rounded-full bg-primary/10 text-primary text-xs font-semibold px-3 py-1.5 flex items-center gap-1">
-                <Users className="h-3 w-3" /> Entrar
-              </span>
+                <Users className="h-3 w-3" />{uiText(" Entrar")}</span>
             </button>
           ))
         )}
@@ -91,9 +92,7 @@ export default function MokubicoSpace() {
 
       {/* Fixed bottom CTA */}
       <div className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom,0px)+0.75rem)] left-0 right-0 z-40 p-4">
-        <Button className="w-full rounded-full shadow-glow" onClick={() => setNewOpen(true)}>
-          Abrir conversa
-        </Button>
+        <Button className="w-full rounded-full shadow-glow" onClick={() => setNewOpen(true)}>{uiText("Abrir conversa")}</Button>
       </div>
 
       <NewConversaSheet open={newOpen} onOpenChange={setNewOpen} space={config.key} spaceTitle={config.title} />

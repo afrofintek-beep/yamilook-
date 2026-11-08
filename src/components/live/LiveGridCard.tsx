@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { Eye, PhoneOff } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +15,7 @@ interface LiveGridCardProps {
 }
 
 export function LiveGridCard({ session, onClick, isLarge = false, isOwnLive = false, onEnd }: LiveGridCardProps) {
+  useUiLocale();
   return (
     <div className={`relative ${isLarge ? 'row-span-2 col-span-2' : ''}`}>
       <button
@@ -53,15 +55,13 @@ export function LiveGridCard({ session, onClick, isLarge = false, isOwnLive = fa
 
           {/* Guia label for host (large card only) — hidden when we show the Terminar button */}
           {isLarge && !isOwnLive && (
-            <Badge className="absolute top-2 right-2 bg-primary/90 text-primary-foreground text-[10px] px-1.5 py-0.5 border-0">
-              Guia
-            </Badge>
+            <Badge className="absolute top-2 right-2 bg-primary/90 text-primary-foreground text-[10px] px-1.5 py-0.5 border-0">{uiText("Guia")}</Badge>
           )}
 
           {/* Bottom info */}
           <div className="absolute bottom-0 left-0 right-0 p-2">
             <p className="text-white text-xs font-medium truncate">
-              {session.host?.display_name || 'Anónimo'}
+              {session.host?.display_name || uiText("Anónimo")}
             </p>
             {isLarge && session.title && (
               <p className="text-white/70 text-[10px] truncate mt-0.5">
@@ -85,12 +85,10 @@ export function LiveGridCard({ session, onClick, isLarge = false, isOwnLive = fa
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); onEnd(); }}
-          aria-label="Terminar a minha live"
+          aria-label={uiText("Terminar a minha live")}
           className="absolute top-1.5 right-1.5 z-10 flex items-center gap-1 bg-destructive text-destructive-foreground rounded-full pl-1.5 pr-2 py-1 text-[10px] font-semibold shadow-lg hover:bg-destructive/90 active:scale-95 transition"
         >
-          <PhoneOff className="w-3 h-3" />
-          Terminar
-        </button>
+          <PhoneOff className="w-3 h-3" />{uiText("Terminar")}</button>
       )}
     </div>
   );

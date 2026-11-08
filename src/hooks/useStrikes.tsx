@@ -1,3 +1,4 @@
+import { uiText } from '@/i18n/ui-copy';
 import { updateModeratedProfile } from '@/lib/profile-moderation';
 import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -158,12 +159,12 @@ export function useStrikes() {
     await supabase.from('moderation_notifications').insert({
       user_id: params.userId,
       notification_type: 'strike_issued',
-      title: `Strike ${strikeCount} — ${VIOLATION_LABELS[params.violationCategory] || params.violationCategory}`,
+      title: uiText("Strike {{value1}} — {{value2}}", { value1: (strikeCount) ?? "", value2: (VIOLATION_LABELS[params.violationCategory] || params.violationCategory) ?? "" }),
       message: params.reason,
       action_url: '/settings',
     });
 
-    toast.success(`Strike #${strikeCount} aplicado`);
+    toast.success(uiText("Strike #{{value1}} aplicado", { value1: (strikeCount) ?? "" }));
     return strikeCount;
   }, [user, getActiveStrikeCount]);
 
@@ -190,7 +191,7 @@ export function useStrikes() {
       await supabase.from('moderation_notifications').insert({
         user_id: userId,
         notification_type: 'suspension',
-        title: 'Conta banida',
+        title: uiText("Conta banida"),
         message: 'A tua conta foi permanentemente banida devido a violações repetidas das normas da comunidade.',
         action_url: '/settings',
       });
@@ -209,7 +210,7 @@ export function useStrikes() {
       await supabase.from('moderation_notifications').insert({
         user_id: userId,
         notification_type: 'suspension',
-        title: `Conta suspensa (${threshold.description})`,
+        title: uiText("Conta suspensa ({{value1}})", { value1: (threshold.description) ?? "" }),
         message: `A tua conta foi suspensa automaticamente. Podes apelar desta decisão.`,
         action_url: '/settings',
       });
@@ -230,7 +231,7 @@ export function useStrikes() {
       .eq('id', strikeId);
 
     if (error) throw error;
-    toast.success('Strike revogado');
+    toast.success(uiText("Strike revogado"));
   }, [user]);
 
   const fetchThresholds = useCallback(async () => {

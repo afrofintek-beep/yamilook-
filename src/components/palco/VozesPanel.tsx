@@ -1,12 +1,13 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  MessageSquare, 
-  Mail, 
-  Mic, 
-  Star, 
-  CheckCircle, 
-  Clock, 
+import {
+  MessageSquare,
+  Mail,
+  Mic,
+  Star,
+  CheckCircle,
+  Clock,
   X,
   ChevronDown,
   ChevronUp,
@@ -17,7 +18,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Voz } from '@/hooks/usePalco';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from '@/i18n/ui-date';
 import { pt } from 'date-fns/locale';
 
 interface VozesPanelProps {
@@ -32,16 +33,16 @@ interface VozesPanelProps {
 
 const typeConfig = {
   email: { icon: Mail, label: 'Email', color: 'text-blue-500', bg: 'bg-blue-500/10' },
-  live: { icon: Mic, label: 'Live', color: 'text-green-500', bg: 'bg-green-500/10' },
-  highlight: { icon: Star, label: 'Destaque', color: 'text-palco-accent', bg: 'bg-palco-accent/10' },
+  live: { icon: Mic, get label() { return uiText("Live"); }, color: 'text-green-500', bg: 'bg-green-500/10' },
+  highlight: { icon: Star, get label() { return uiText("Destaque"); }, color: 'text-palco-accent', bg: 'bg-palco-accent/10' },
 };
 
 const statusConfig: Record<string, { label: string; color: string; bg?: string; border?: string }> = {
-  pending: { label: 'Pendente', color: 'text-orange-500', border: 'border-orange-500' },
-  paid: { label: 'Pago', color: 'text-green-500', bg: 'bg-green-500' },
-  queued: { label: 'Na Fila', color: 'text-palco-accent', border: 'border-palco-accent' },
-  answered: { label: 'Respondido', color: 'text-gray-500', bg: 'bg-gray-500' },
-  refunded: { label: 'Reembolsado', color: 'text-red-500', border: 'border-red-500' },
+  pending: { get label() { return uiText("Pendente"); }, color: 'text-orange-500', border: 'border-orange-500' },
+  paid: { get label() { return uiText("Pago"); }, color: 'text-green-500', bg: 'bg-green-500' },
+  queued: { get label() { return uiText("Na Fila"); }, color: 'text-palco-accent', border: 'border-palco-accent' },
+  answered: { get label() { return uiText("Respondido"); }, color: 'text-gray-500', bg: 'bg-gray-500' },
+  refunded: { get label() { return uiText("Reembolsado"); }, color: 'text-red-500', border: 'border-red-500' },
 };
 
 export function VozesPanel({
@@ -53,6 +54,7 @@ export function VozesPanel({
   answeringId,
   isCompact = false,
 }: VozesPanelProps) {
+  useUiLocale();
   const [expanded, setExpanded] = useState(true);
 
   // Group vozes by status priority for guides
@@ -62,7 +64,7 @@ export function VozesPanel({
   const answeredVozes = vozes.filter(v => v.status === 'answered');
 
   // For live view, show queue first
-  const orderedVozes = isCompact 
+  const orderedVozes = isCompact
     ? [...queuedVozes, ...paidVozes].slice(0, 5)
     : [...queuedVozes, ...paidVozes, ...pendingVozes, ...answeredVozes];
 
@@ -73,9 +75,7 @@ export function VozesPanel({
         isCompact ? "py-4" : "py-8"
       )}>
         <MessageSquare className="w-8 h-8 text-palco-accent/40 mb-2" />
-        <p className="text-sm text-palco-text-secondary">
-          Nenhuma voz recebida ainda
-        </p>
+        <p className="text-sm text-palco-text-secondary">{uiText("Nenhuma voz recebida ainda")}</p>
       </div>
     );
   }
@@ -83,15 +83,13 @@ export function VozesPanel({
   if (isCompact) {
     return (
       <div className="space-y-2">
-        <button 
+        <button
           onClick={() => setExpanded(!expanded)}
           className="w-full flex items-center justify-between px-2 py-1"
         >
           <div className="flex items-center gap-2">
             <MessageSquare className="w-4 h-4 text-palco-accent" />
-            <span className="text-xs font-medium text-white">
-              Vozes ({paidVozes.length + queuedVozes.length})
-            </span>
+            <span className="text-xs font-medium text-white">{uiText("Vozes ({{value1}})", { value1: (paidVozes.length + queuedVozes.length) })}</span>
           </div>
           {expanded ? (
             <ChevronDown className="w-4 h-4 text-white/60" />
@@ -99,7 +97,7 @@ export function VozesPanel({
             <ChevronUp className="w-4 h-4 text-white/60" />
           )}
         </button>
-        
+
         <AnimatePresence>
           {expanded && (
             <motion.div
@@ -109,9 +107,9 @@ export function VozesPanel({
               className="space-y-1 overflow-hidden"
             >
               {orderedVozes.map((voz) => (
-                <CompactVozCard 
-                  key={voz.id} 
-                  voz={voz} 
+                <CompactVozCard
+                  key={voz.id}
+                  voz={voz}
                   isGuide={isGuide}
                   onMarkAnswered={onMarkAnswered}
                   isAnswering={answeringId === voz.id}
@@ -130,13 +128,11 @@ export function VozesPanel({
       {isGuide && pendingVozes.length > 0 && (
         <div>
           <h4 className="text-xs font-medium text-orange-500 mb-2 flex items-center gap-1">
-            <Clock className="w-3 h-3" />
-            Aguardando Confirmação ({pendingVozes.length})
-          </h4>
+            <Clock className="w-3 h-3" />{uiText("Aguardando Confirmação ({{value1}})", { value1: (pendingVozes.length) ?? "" })}</h4>
           <div className="space-y-2">
             {pendingVozes.map((voz) => (
-              <FullVozCard 
-                key={voz.id} 
+              <FullVozCard
+                key={voz.id}
                 voz={voz}
                 isGuide={isGuide}
                 onConfirmPayment={onConfirmPayment}
@@ -151,13 +147,11 @@ export function VozesPanel({
       {(paidVozes.length > 0 || queuedVozes.length > 0) && (
         <div>
           <h4 className="text-xs font-medium text-green-500 mb-2 flex items-center gap-1">
-            <CheckCircle className="w-3 h-3" />
-            Prontas para Responder ({paidVozes.length + queuedVozes.length})
-          </h4>
+            <CheckCircle className="w-3 h-3" />{uiText("Prontas para Responder ({{value1}})", { value1: (paidVozes.length + queuedVozes.length) })}</h4>
           <div className="space-y-2">
             {[...queuedVozes, ...paidVozes].map((voz) => (
-              <FullVozCard 
-                key={voz.id} 
+              <FullVozCard
+                key={voz.id}
                 voz={voz}
                 isGuide={isGuide}
                 onMarkAnswered={onMarkAnswered}
@@ -171,9 +165,7 @@ export function VozesPanel({
       {/* Answered */}
       {answeredVozes.length > 0 && (
         <div>
-          <h4 className="text-xs font-medium text-palco-text-secondary mb-2">
-            Respondidas ({answeredVozes.length})
-          </h4>
+          <h4 className="text-xs font-medium text-palco-text-secondary mb-2">{uiText("Respondidas ({{value1}})", { value1: (answeredVozes.length) ?? "" })}</h4>
           <div className="space-y-2">
             {answeredVozes.slice(0, 5).map((voz) => (
               <FullVozCard key={voz.id} voz={voz} isGuide={isGuide} />
@@ -185,17 +177,18 @@ export function VozesPanel({
   );
 }
 
-function CompactVozCard({ 
-  voz, 
+function CompactVozCard({
+  voz,
   isGuide,
   onMarkAnswered,
-  isAnswering 
-}: { 
-  voz: Voz; 
+  isAnswering
+}: {
+  voz: Voz;
   isGuide: boolean;
   onMarkAnswered?: (id: string) => void;
   isAnswering?: boolean;
 }) {
+  useUiLocale();
   const config = typeConfig[voz.voice_type];
   const status = statusConfig[voz.status];
   const Icon = config.icon;
@@ -209,10 +202,10 @@ function CompactVozCard({
       <div className={cn("w-6 h-6 rounded-full flex items-center justify-center", config.bg)}>
         <Icon className={cn("w-3 h-3", config.color)} />
       </div>
-      
+
       <div className="flex-1 min-w-0">
         <p className="text-xs text-white truncate">
-          {voz.custom_text || 'Pergunta não especificada'}
+          {voz.custom_text || uiText("Pergunta não especificada")}
         </p>
       </div>
 
@@ -224,28 +217,29 @@ function CompactVozCard({
           onClick={() => onMarkAnswered(voz.id)}
           disabled={isAnswering}
         >
-          {isAnswering ? '...' : 'Responder'}
+          {isAnswering ? '...' : uiText("Responder")}
         </Button>
       )}
     </motion.div>
   );
 }
 
-function FullVozCard({ 
-  voz, 
+function FullVozCard({
+  voz,
   isGuide,
   onConfirmPayment,
   onMarkAnswered,
   isConfirming,
   isAnswering
-}: { 
-  voz: Voz; 
+}: {
+  voz: Voz;
   isGuide: boolean;
   onConfirmPayment?: (id: string) => void;
   onMarkAnswered?: (id: string) => void;
   isConfirming?: boolean;
   isAnswering?: boolean;
 }) {
+  useUiLocale();
   const config = typeConfig[voz.voice_type];
   const status = statusConfig[voz.status];
   const Icon = config.icon;
@@ -256,13 +250,13 @@ function FullVozCard({
         <div className={cn("w-10 h-10 rounded-full flex items-center justify-center shrink-0", config.bg)}>
           <Icon className={cn("w-5 h-5", config.color)} />
         </div>
-        
+
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2 mb-1">
             <span className="text-xs text-palco-text-secondary">
               {formatDistanceToNow(new Date(voz.created_at), { locale: pt, addSuffix: true })}
             </span>
-            <Badge 
+            <Badge
               variant={status.bg ? 'default' : 'outline'}
               className={cn(
                 "text-[10px]",
@@ -272,9 +266,9 @@ function FullVozCard({
               {status.label}
             </Badge>
           </div>
-          
+
           <p className="text-sm text-palco-text line-clamp-2 mb-2">
-            {voz.custom_text || 'Pergunta não especificada'}
+            {voz.custom_text || uiText("Pergunta não especificada")}
           </p>
 
           {voz.amount_paid && (
@@ -295,10 +289,10 @@ function FullVozCard({
                   disabled={isConfirming}
                 >
                   <CheckCircle className="w-3 h-3 mr-1" />
-                  {isConfirming ? 'Confirmando...' : 'Confirmar Pagamento'}
+                  {isConfirming ? uiText("Confirmando...") : uiText("Confirmar Pagamento")}
                 </Button>
               )}
-              
+
               {(voz.status === 'paid' || voz.status === 'queued') && onMarkAnswered && (
                 <Button
                   size="sm"
@@ -307,7 +301,7 @@ function FullVozCard({
                   disabled={isAnswering}
                 >
                   <Mic className="w-3 h-3 mr-1" />
-                  {isAnswering ? 'Marcando...' : 'Marcar Respondida'}
+                  {isAnswering ? uiText("Marcando...") : uiText("Marcar Respondida")}
                 </Button>
               )}
             </div>

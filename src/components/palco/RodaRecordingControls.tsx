@@ -1,7 +1,8 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Circle, Pause, Play, Square, 
+import {
+  Circle, Pause, Play, Square,
   AlertCircle, Video
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -27,13 +28,14 @@ interface RodaRecordingControlsProps {
   className?: string;
 }
 
-export function RodaRecordingControls({ 
-  rodaId, 
-  palcoId, 
+export function RodaRecordingControls({
+  rodaId,
+  palcoId,
   isHost,
   room,
-  className 
+  className
 }: RodaRecordingControlsProps) {
+  useUiLocale();
   const { user } = useAuth();
   const [isRecording, setIsRecording] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -42,7 +44,7 @@ export function RodaRecordingControls({
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [showStopDialog, setShowStopDialog] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  
+
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
@@ -63,7 +65,7 @@ export function RodaRecordingControls({
         setRecordingId(data.id);
         setIsRecording(data.status === 'recording');
         setIsPaused(data.status === 'paused');
-        
+
         if (data.started_at) {
           const started = new Date(data.started_at).getTime();
           const elapsed = Math.floor((Date.now() - started) / 1000);
@@ -91,7 +93,7 @@ export function RodaRecordingControls({
     const hrs = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-    
+
     if (hrs > 0) {
       return `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     }
@@ -127,7 +129,7 @@ export function RodaRecordingControls({
   const uploadRecording = async (blob: Blob, recId: string): Promise<string | null> => {
     try {
       const fileName = `${palcoId}/${rodaId}/${recId}.webm`;
-      
+
       const { data, error } = await supabase.storage
         .from('roda-recordings')
         .upload(fileName, blob, {
@@ -152,8 +154,8 @@ export function RodaRecordingControls({
       const stream = getCombinedStream();
       if (!stream) {
         toast({
-          title: 'Erro',
-          description: 'Não foi possível capturar o stream. Verifique câmera/microfone.',
+          title: uiText("Erro"),
+          description: uiText("Não foi possível capturar o stream. Verifique câmera/microfone."),
           variant: 'destructive',
         });
         return;
@@ -212,15 +214,15 @@ export function RodaRecordingControls({
       setShowConfirmDialog(false);
 
       toast({
-        title: 'Gravação iniciada',
-        description: 'A sessão está sendo gravada.',
+        title: uiText("Gravação iniciada"),
+        description: uiText("A sessão está sendo gravada."),
       });
 
     } catch (error) {
       console.error('Error starting recording:', error);
       toast({
-        title: 'Erro',
-        description: 'Falha ao iniciar gravação',
+        title: uiText("Erro"),
+        description: uiText("Falha ao iniciar gravação"),
         variant: 'destructive',
       });
     }
@@ -231,7 +233,7 @@ export function RodaRecordingControls({
     if (!recordingId || !mediaRecorderRef.current) return;
 
     const recorder = mediaRecorderRef.current;
-    
+
     if (isPaused) {
       recorder.resume();
     } else {
@@ -265,7 +267,7 @@ export function RodaRecordingControls({
 
     try {
       const recorder = mediaRecorderRef.current;
-      
+
       // Stop the MediaRecorder if it's still active
       if (recorder && recorder.state !== 'inactive') {
         await new Promise<void>((resolve) => {
@@ -302,7 +304,7 @@ export function RodaRecordingControls({
       // Always update the database record, even if upload failed
       const { error: updateError } = await supabase
         .from('roda_recordings')
-        .update({ 
+        .update({
           status: storagePath ? 'completed' : 'failed',
           completed_at: new Date().toISOString(),
           duration_seconds: recordingDuration,
@@ -336,13 +338,13 @@ export function RodaRecordingControls({
 
       if (storagePath) {
         toast({
-          title: 'Gravação concluída',
-          description: 'A gravação foi salva com sucesso.',
+          title: uiText("Gravação concluída"),
+          description: uiText("A gravação foi salva com sucesso."),
         });
       } else {
         toast({
-          title: 'Gravação terminada',
-          description: fileSizeBytes > 0 
+          title: uiText("Gravação terminada"),
+          description: fileSizeBytes > 0
             ? 'A gravação terminou mas houve um erro ao guardar o ficheiro. Tente novamente.'
             : 'Nenhum conteúdo foi capturado.',
           variant: 'destructive',
@@ -352,8 +354,8 @@ export function RodaRecordingControls({
     } catch (error) {
       console.error('[Recording] Error stopping recording:', error);
       toast({
-        title: 'Erro',
-        description: 'Falha ao parar gravação. Verifique a ligação à internet.',
+        title: uiText("Erro"),
+        description: uiText("Falha ao parar gravação. Verifique a ligação à internet."),
         variant: 'destructive',
       });
     } finally {
@@ -382,9 +384,9 @@ export function RodaRecordingControls({
             >
               <Circle className={cn("h-3 w-3", isPaused ? "fill-white/50" : "fill-current")} />
             </motion.div>
-            <span className="font-medium">{isPaused ? 'PAUSADO' : 'REC'}</span>
+            <span className="font-medium">{isPaused ? uiText("PAUSADO") : uiText("REC")}</span>
             <span className="font-mono text-sm">{formatDuration(recordingDuration)}</span>
-            
+
             <div className="flex items-center gap-1 ml-2 border-l border-white/30 pl-2">
               <Button
                 variant="ghost"
@@ -420,45 +422,32 @@ export function RodaRecordingControls({
           onClick={() => setShowConfirmDialog(true)}
           disabled={!room}
         >
-          <Video className="h-4 w-4" />
-          Gravar
-        </Button>
+          <Video className="h-4 w-4" />{uiText("Gravar")}</Button>
       )}
 
       <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Video className="h-5 w-5 text-destructive" />
-              Iniciar Gravação
-            </DialogTitle>
-            <DialogDescription>
-              Deseja iniciar a gravação desta Roda?
-            </DialogDescription>
+              <Video className="h-5 w-5 text-destructive" />{uiText("Iniciar Gravação")}</DialogTitle>
+            <DialogDescription>{uiText("Deseja iniciar a gravação desta Roda?")}</DialogDescription>
           </DialogHeader>
 
           <div className="py-4 space-y-4">
             <div className="p-4 rounded-lg bg-muted">
-              <p className="text-sm">
-                A gravação capturará o conteúdo da sua transmissão (vídeo e áudio). 
-                Você pode pausar ou parar a qualquer momento.
-              </p>
+              <p className="text-sm">{uiText("A gravação capturará o conteúdo da sua transmissão (vídeo e áudio). Você pode pausar ou parar a qualquer momento.")}</p>
             </div>
 
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <AlertCircle className="h-4 w-4" />
-              <span>A gravação será salva no seu painel após finalizada</span>
+              <span>{uiText("A gravação será salva no seu painel após finalizada")}</span>
             </div>
           </div>
 
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setShowConfirmDialog(false)}>
-              Cancelar
-            </Button>
+            <Button variant="outline" onClick={() => setShowConfirmDialog(false)}>{uiText("Cancelar")}</Button>
             <Button onClick={startRecording} className="bg-destructive hover:bg-destructive/90">
-              <Circle className="h-4 w-4 mr-2 fill-current" />
-              Iniciar Gravação
-            </Button>
+              <Circle className="h-4 w-4 mr-2 fill-current" />{uiText("Iniciar Gravação")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -467,40 +456,30 @@ export function RodaRecordingControls({
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Square className="h-5 w-5 text-destructive" />
-              Parar Gravação
-            </DialogTitle>
-            <DialogDescription>
-              Tem certeza que deseja parar a gravação?
-            </DialogDescription>
+              <Square className="h-5 w-5 text-destructive" />{uiText("Parar Gravação")}</DialogTitle>
+            <DialogDescription>{uiText("Tem certeza que deseja parar a gravação?")}</DialogDescription>
           </DialogHeader>
 
           <div className="py-4">
             <div className="p-4 rounded-lg bg-muted flex items-center justify-between">
-              <span className="text-sm">Duração da gravação:</span>
+              <span className="text-sm">{uiText("Duração da gravação:")}</span>
               <span className="font-mono font-medium">{formatDuration(recordingDuration)}</span>
             </div>
           </div>
 
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setShowStopDialog(false)} disabled={isUploading}>
-              Continuar Gravando
-            </Button>
+            <Button variant="outline" onClick={() => setShowStopDialog(false)} disabled={isUploading}>{uiText("Continuar Gravando")}</Button>
             <Button onClick={stopRecording} variant="destructive" disabled={isUploading}>
               {isUploading ? (
                 <>
-                  <motion.div 
-                    animate={{ rotate: 360 }} 
+                  <motion.div
+                    animate={{ rotate: 360 }}
                     transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
                     className="h-4 w-4 mr-2 border-2 border-white border-t-transparent rounded-full"
-                  />
-                  Salvando...
-                </>
+                  />{uiText("Salvando...")}</>
               ) : (
                 <>
-                  <Square className="h-4 w-4 mr-2" />
-                  Parar e Salvar
-                </>
+                  <Square className="h-4 w-4 mr-2" />{uiText("Parar e Salvar")}</>
               )}
             </Button>
           </DialogFooter>

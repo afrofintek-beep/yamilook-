@@ -1,3 +1,4 @@
+import { uiLocale, uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useGroupConference } from '@/features/group-calls/GroupConferenceProvider';
 import { isRecentlyOnline } from '@/lib/online-presence';
 import { usePresenceClock } from '@/hooks/usePresenceClock';
@@ -68,6 +69,7 @@ import { useAppSurface } from '@/lib/app-surface';
 import { mediaCaption } from '@/lib/chat-media';
 
 export default function Chat() {
+  useUiLocale();
   const navigate = useNavigate();
   const isKosolola = useAppSurface() === 'papos';
   const { t } = useTranslation();
@@ -81,7 +83,7 @@ export default function Chat() {
   const groupConference = useGroupConference();
   const { settings } = useSettings();
   const { conversations, loading: conversationsLoading, refresh: refreshConversations, createConversation } = useConversations();
-  
+
   // Get wallpaper styles
   const wallpaperStyles = getWallpaperStyles(settings?.chat_wallpaper);
   const {
@@ -138,7 +140,7 @@ export default function Chat() {
   const [collectionColor, setCollectionColor] = useState('');
   const [collectionType, setCollectionType] = useState('all');
   const [collectionDate, setCollectionDate] = useState('');
-  
+
   // Multi-select state
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedMessages, setSelectedMessages] = useState<Set<string>>(new Set());
@@ -177,7 +179,7 @@ export default function Chat() {
       }
     })();
   }, [user, conversationId, conversationsLoading, conversation, resolvingChat, createConversation, navigate]);
-  
+
   // Real-time online status state
   const [otherUserOnline, setOtherUserOnline] = useState(otherParticipantFromConv?.is_online || false);
   const [otherUserLastSeen, setOtherUserLastSeen] = useState(otherParticipantFromConv?.last_seen || null);
@@ -185,7 +187,7 @@ export default function Chat() {
   const [otherUserShowOnlineStatus, setOtherUserShowOnlineStatus] = useState<boolean>(otherParticipantFromConv?.show_online_status !== false);
   const [otherUserShowLastSeen, setOtherUserShowLastSeen] = useState<boolean>(otherParticipantFromConv?.show_last_seen !== false);
   const [otherUserShowTypingIndicators, setOtherUserShowTypingIndicators] = useState<boolean>(true);
-  
+
   // Combine profile data with real-time status
   const otherParticipant = otherParticipantFromConv ? {
     ...otherParticipantFromConv,
@@ -200,7 +202,7 @@ export default function Chat() {
         otherParticipantFromConv?.id ||
         messages.find((m) => m.sender_id !== user?.id)?.sender_id)
     : undefined;
-  
+
   const displayName = isGroup ? conversation?.name || 'Group Chat' : otherParticipant?.display_name || 'Chat';
   const avatarUrl = isGroup ? conversation?.avatar_url : otherParticipant?.avatar_url;
   // Only show online if the other user allows it
@@ -218,15 +220,15 @@ export default function Chat() {
     setOtherUserShowLastSeen(otherParticipantFromConv?.show_last_seen !== false);
   }, [otherParticipantFromConv?.id, otherParticipantFromConv?.is_online, otherParticipantFromConv?.last_seen,
     otherParticipantFromConv?.show_online_status, otherParticipantFromConv?.show_last_seen]);
-  
+
   // Subscribe to real-time online status updates AND fetch privacy settings
   useEffect(() => {
     if (!otherParticipantFromConv?.id || isGroup) return;
-    
+
     // Initialize with current value
     setOtherUserOnline(otherParticipantFromConv.is_online || false);
     setOtherUserLastSeen(otherParticipantFromConv.last_seen || null);
-    
+
     // Fetch the other user's privacy settings
     const fetchPrivacySettings = async () => {
       const { data } = await supabase
@@ -234,16 +236,16 @@ export default function Chat() {
         .select('show_online_status, show_last_seen, show_typing_indicators')
         .eq('id', otherParticipantFromConv.id)
         .single();
-      
+
       if (data) {
         setOtherUserShowOnlineStatus(data.show_online_status ?? true);
         setOtherUserShowLastSeen(data.show_last_seen ?? true);
         setOtherUserShowTypingIndicators(data.show_typing_indicators ?? true);
       }
     };
-    
+
     fetchPrivacySettings();
-    
+
     const channel = supabase
       .channel(`profile-status-${otherParticipantFromConv.id}`)
       .on('postgres_changes', {
@@ -252,8 +254,8 @@ export default function Chat() {
         table: 'profile_presence',
         filter: `id=eq.${otherParticipantFromConv.id}`,
       }, (payload) => {
-        const updated = payload.new as { 
-          is_online?: boolean; 
+        const updated = payload.new as {
+          is_online?: boolean;
           last_seen?: string | null;
           show_online_status?: boolean;
           show_last_seen?: boolean;
@@ -276,7 +278,7 @@ export default function Chat() {
         }
       })
       .subscribe();
-    
+
     return () => {
       supabase.removeChannel(channel);
     };
@@ -292,7 +294,7 @@ export default function Chat() {
     const fetchHighlights = async () => {
       setHighlights({});
       if (!user?.id || !conversationId) return;
-      
+
       const messageIds: string[] = JSON.parse(highlightedMessageIdsKey);
       if (messageIds.length === 0) return;
 
@@ -385,17 +387,17 @@ export default function Chat() {
   };
 
   const handleSend = async (
-    content: string, 
-    type?: string, 
-    mediaUrl?: string, 
-    replyToId?: string, 
+    content: string,
+    type?: string,
+    mediaUrl?: string,
+    replyToId?: string,
     duration?: number,
     isViewOnce?: boolean,
     thumbnailUrl?: string
   ): Promise<{ messageId?: string }> => {
     const { error, messageId } = await sendMessage(content, type, mediaUrl, replyToId || replyTo?.id, duration, isViewOnce, thumbnailUrl);
     if (error) {
-      toast({ title: 'Mensagem não enviada', description: error.message, variant: 'destructive' });
+      toast({ title: uiText("Mensagem não enviada"), description: error.message, variant: 'destructive' });
       return {};
     }
     setReplyTo(null);
@@ -410,7 +412,7 @@ export default function Chat() {
       setClearHistoryOpen(false);
       toast({ title: restore ? 'Histórico restaurado' : 'Histórico limpo só para ti' });
     } catch {
-      toast({ title: 'Não foi possível atualizar o histórico', variant: 'destructive' });
+      toast({ title: uiText("Não foi possível atualizar o histórico"), variant: 'destructive' });
     } finally {
       setClearingHistory(false);
     }
@@ -439,26 +441,26 @@ export default function Chat() {
     });
 
     if (error) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      toast({ title: uiText("Error"), description: error.message, variant: 'destructive' });
     } else {
-      toast({ title: 'Message scheduled' });
+      toast({ title: uiText("Message scheduled") });
     }
   };
 
   const handleDelete = async (messageId: string) => {
     const { error } = await deleteMessage(messageId);
     if (error) {
-      toast({ title: 'Não foi possível apagar a mensagem', description: error.message, variant: 'destructive' });
+      toast({ title: uiText("Não foi possível apagar a mensagem"), description: error.message, variant: 'destructive' });
       throw error;
     } else {
-      toast({ title: 'Mensagem apagada' });
+      toast({ title: uiText("Mensagem apagada") });
     }
   };
 
   const handleDeleteForMe = async (messageId: string) => {
     const { error } = await deleteMessageForMe(messageId);
     if (error) throw error;
-    toast({ title: 'Mensagem apagada só para ti' });
+    toast({ title: uiText("Mensagem apagada só para ti") });
   };
 
   const handleReact = async (messageId: string, emoji: string) => {
@@ -480,7 +482,7 @@ export default function Chat() {
 
     // Check if already highlighted
     const existing = highlights[messageId];
-    
+
     if (existing) {
       // Update
       await supabase
@@ -502,7 +504,7 @@ export default function Chat() {
       ...prev,
       [messageId]: { color, label },
     }));
-    toast({ title: 'Message highlighted' });
+    toast({ title: uiText("Message highlighted") });
   };
 
   const handleRemoveHighlight = async (messageId: string) => {
@@ -519,7 +521,7 @@ export default function Chat() {
       delete next[messageId];
       return next;
     });
-    toast({ title: 'Highlight removed' });
+    toast({ title: uiText("Highlight removed") });
   };
 
   const handleSearch = async () => {
@@ -576,7 +578,7 @@ export default function Chat() {
     });
 
     if (ownMessages.length === 0) {
-      toast({ title: 'Só podes apagar as tuas mensagens', variant: 'destructive' });
+      toast({ title: uiText("Só podes apagar as tuas mensagens"), variant: 'destructive' });
       return;
     }
 
@@ -588,9 +590,9 @@ export default function Chat() {
     const deleted = ownMessages.length - failed.size;
     if (failed.size) {
       setSelectedMessages(failed);
-      toast({ title: `${deleted} apagada(s); ${failed.size} não confirmada(s)`, description: 'As mensagens que falharam continuam selecionadas. Tenta novamente.', variant: 'destructive' });
+      toast({ title: uiText("{{value1}} apagada(s); {{value2}} não confirmada(s)", { value1: (deleted) ?? "", value2: (failed.size) ?? "" }), description: uiText("As mensagens que falharam continuam selecionadas. Tenta novamente."), variant: 'destructive' });
     } else {
-      toast({ title: `${deleted} mensagem(ns) apagada(s)` });
+      toast({ title: uiText("{{value1}} mensagem(ns) apagada(s)", { value1: (deleted) ?? "" }) });
       handleCancelSelection();
     }
   };
@@ -604,13 +606,13 @@ export default function Chat() {
     const selectedMsgs = messages
       .filter(m => selectedMessages.has(m.id))
       .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-    
+
     const text = selectedMsgs
       .map(m => m.content || '[media]')
       .join('\n');
-    
+
     navigator.clipboard.writeText(text);
-    toast({ title: 'Mensagens copiadas' });
+    toast({ title: uiText("Mensagens copiadas") });
     handleCancelSelection();
   };
 
@@ -618,7 +620,7 @@ export default function Chat() {
     for (const id of selectedMessages) {
       await toggleStar(id);
     }
-    toast({ title: `${selectedMessages.size} mensagem(ns) com estrela` });
+    toast({ title: uiText("{{value1}} mensagem(ns) com estrela", { value1: (selectedMessages.size) ?? "" }) });
     handleCancelSelection();
   };
 
@@ -629,7 +631,7 @@ export default function Chat() {
 
   const handleMuteToggle = async () => {
     if (!conversationId || !user) return;
-    
+
     const { data: current } = await supabase
       .from('conversation_participants')
       .select('is_muted')
@@ -659,10 +661,10 @@ export default function Chat() {
       .single();
 
     if (error || !data) {
-      toast({ title: 'Não foi possível arquivar a conversa', variant: 'destructive' });
+      toast({ title: uiText("Não foi possível arquivar a conversa"), variant: 'destructive' });
       return;
     }
-    toast({ title: 'Conversa arquivada' });
+    toast({ title: uiText("Conversa arquivada") });
     navigate('/papos', { replace: true });
   };
 
@@ -681,10 +683,10 @@ export default function Chat() {
           {selectionMode ? (
             // Selection mode header
             <div className="flex items-center gap-3 flex-1">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="rounded-full" 
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-full"
                 onClick={handleCancelSelection}
               >
                 <ChevronLeft className="w-6 h-6" />
@@ -694,14 +696,14 @@ export default function Chat() {
                   {selectedMessages.size}
                 </div>
                 <span className="font-medium text-foreground">
-                  {selectedMessages.size === 1 ? 'selecionada' : 'selecionadas'}
+                  {selectedMessages.size === 1 ? uiText("selecionada") : uiText("selecionadas")}
                 </span>
               </div>
             </div>
           ) : (
             // Normal header
             <div className="flex min-w-0 flex-1 items-center gap-2">
-              <Button variant="ghost" size="icon" aria-label="Voltar" className="shrink-0 rounded-full" onClick={() => navigate(-1)}>
+              <Button variant="ghost" size="icon" aria-label={uiText("Voltar")} className="shrink-0 rounded-full" onClick={() => navigate(-1)}>
                 <ChevronLeft className="w-6 h-6" />
               </Button>
               <button
@@ -725,7 +727,7 @@ export default function Chat() {
                       : isOnline
                       ? t('chat.online')
                       : otherUserShowLastSeen && otherParticipant?.last_seen
-                      ? `Visto ${formatLastSeen(otherParticipant.last_seen)}`
+                      ? uiText("Visto {{value1}}", { value1: (formatLastSeen(otherParticipant.last_seen)) ?? "" })
                       : !isGroup && otherUserShowOnlineStatus
                       ? t('chat.offline')
                       : ''}
@@ -734,24 +736,24 @@ export default function Chat() {
               </button>
             </div>
           )}
-          
+
           {!selectionMode && (
             <div className="flex shrink-0 items-center">
               <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setSearchOpen(true)}>
                 <Search className="w-5 h-5" />
               </Button>
-              <Button 
-                variant="ghost" 
-                size="icon" 
+              <Button
+                variant="ghost"
+                size="icon"
                 className="rounded-full"
                 aria-label={t('groupCalls.startVoice')}
                 onClick={() => isGroup && conversationId ? groupConference?.open({conversationId, name:displayName, type:'voice'}) : otherParticipant && startCall?.(otherParticipant.id, 'voice', conversationId)}
               >
                 <Phone className="w-5 h-5" />
               </Button>
-              <Button 
-                variant="ghost" 
-                size="icon" 
+              <Button
+                variant="ghost"
+                size="icon"
                 className="rounded-full"
                 aria-label={t('groupCalls.startVideo')}
                 onClick={() => isGroup && conversationId ? groupConference?.open({conversationId, name:displayName, type:'video'}) : otherParticipant && startCall?.(otherParticipant.id, 'video', conversationId)}
@@ -771,54 +773,44 @@ export default function Chat() {
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setMediaGalleryOpen(true)}>
                     <Image className="w-4 h-4 mr-2" />
-                    {t('chat.mediaFiles') || 'Media, files & links'}
+                    {t('chat.mediaFiles') || uiText("Media, files & links")}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setScheduledMessagesOpen(true)}>
                     <Clock className="w-4 h-4 mr-2" />
-                    {t('chat.scheduledMessages') || 'Scheduled messages'}
+                    {t('chat.scheduledMessages') || uiText("Scheduled messages")}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => showCollection('starred')}>
                     <Star className="w-4 h-4 mr-2" />
-                    {t('chat.starredMessages') || 'Mensagens com estrela'}
+                    {t('chat.starredMessages') || uiText("Mensagens com estrela")}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => showCollection('highlights')}>
-                    <Highlighter className="w-4 h-4 mr-2" />
-                    Destaques
-                  </DropdownMenuItem>
+                    <Highlighter className="w-4 h-4 mr-2" />{uiText("Destaques")}</DropdownMenuItem>
                   {isGroup && (
                     <>
                       <DropdownMenuItem onClick={() => setAdminSheetOpen(true)}>
-                        <Users className="w-4 h-4 mr-2" />
-                        Administrar grupo
-                      </DropdownMenuItem>
+                        <Users className="w-4 h-4 mr-2" />{uiText("Administrar grupo")}</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => setInviteSheetOpen(true)}>
-                        <Link2 className="w-4 h-4 mr-2" />
-                        Convites por link
-                      </DropdownMenuItem>
+                        <Link2 className="w-4 h-4 mr-2" />{uiText("Convites por link")}</DropdownMenuItem>
                     </>
                   )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => setDisappearingOpen(true)}>
                     <Clock className="w-4 h-4 mr-2" />
-                    {t('chat.disappearingMessages') || 'Disappearing messages'}
+                    {t('chat.disappearingMessages') || uiText("Disappearing messages")}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleMuteToggle}>
                     <BellOff className="w-4 h-4 mr-2" />
-                    {t('chat.muteNotifications') || 'Mute notifications'}
+                    {t('chat.muteNotifications') || uiText("Mute notifications")}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleArchive}>
                     <Archive className="w-4 h-4 mr-2" />
-                    {t('chat.archiveChat') || 'Archive chat'}
+                    {t('chat.archiveChat') || uiText("Archive chat")}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => setClearHistoryOpen(true)}>
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Limpar histórico só para mim
-                  </DropdownMenuItem>
+                    <Trash2 className="w-4 h-4 mr-2" />{uiText("Limpar histórico só para mim")}</DropdownMenuItem>
                   {historyClearedAt && (
-                    <DropdownMenuItem disabled={clearingHistory} onClick={() => void handleClearHistory(true)}>
-                      Restaurar histórico
-                    </DropdownMenuItem>
+                    <DropdownMenuItem disabled={clearingHistory} onClick={() => void handleClearHistory(true)}>{uiText("Restaurar histórico")}</DropdownMenuItem>
                   )}
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -830,15 +822,13 @@ export default function Chat() {
         {pinnedMessages.length > 0 && (
           <div className="flex items-center gap-2 px-4 py-2 bg-primary/5 border-b border-border/30">
             <Pin className="w-4 h-4 text-primary" />
-            <span className="text-sm text-muted-foreground">
-              {pinnedMessages.length} pinned message{pinnedMessages.length > 1 ? 's' : ''}
-            </span>
+            <span className="text-sm text-muted-foreground">{uiText("{{value1}} pinned message{{value2}}", { value1: (pinnedMessages.length) ?? "", value2: (pinnedMessages.length > 1 ? 's' : '') })}</span>
           </div>
         )}
       </header>
 
       {/* Messages */}
-      <div 
+      <div
         ref={messagesViewportRef}
         className="min-h-0 flex-1 overflow-y-auto overscroll-contain py-4 relative"
         onScroll={handleScroll}
@@ -848,19 +838,17 @@ export default function Chat() {
           <div className="flex justify-center px-3 pb-3">
             <Button variant="outline" size="sm" disabled={loadingOlder}
               onClick={() => void handleLoadEarlier()}>
-              {loadingOlder ? 'A carregar mensagens anteriores…' : 'Carregar mensagens anteriores'}
+              {loadingOlder ? uiText("A carregar mensagens anteriores…") : uiText("Carregar mensagens anteriores")}
             </Button>
           </div>
         )}
         {loadError && !loading && messages.length === 0 ? (
           <div role="alert" className="mx-4 space-y-3 rounded-xl border border-border bg-background/85 p-4 text-sm">
-            <p>Não foi possível sincronizar esta conversa. Verifica a ligação e tenta novamente.</p>
-            <Button variant="outline" size="sm" onClick={() => void refreshMessages()}>Tentar novamente</Button>
+            <p>{uiText("Não foi possível sincronizar esta conversa. Verifica a ligação e tenta novamente.")}</p>
+            <Button variant="outline" size="sm" onClick={() => void refreshMessages()}>{uiText("Tentar novamente")}</Button>
           </div>
         ) : loading && slowInitialLoad ? (
-          <div role="status" className="mx-4 rounded-xl border border-border bg-background/85 p-4 text-sm text-muted-foreground">
-            A ligação está lenta. Estamos a sincronizar esta conversa; o histórico surgirá assim que o servidor responder.
-          </div>
+          <div role="status" className="mx-4 rounded-xl border border-border bg-background/85 p-4 text-sm text-muted-foreground">{uiText("A ligação está lenta. Estamos a sincronizar esta conversa; o histórico surgirá assim que o servidor responder.")}</div>
         ) : loading ? (
           <div className="space-y-4 px-4">
             {[...Array(5)].map((_, i) => (
@@ -951,16 +939,13 @@ export default function Chat() {
       <AlertDialog open={clearHistoryOpen} onOpenChange={setClearHistoryOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Limpar o histórico só para ti?</AlertDialogTitle>
-            <AlertDialogDescription>
-              As mensagens atuais deixam de aparecer no teu histórico. Continuam disponíveis para a outra pessoa.
-              Podes restaurar o teu histórico no menu da conversa.
-            </AlertDialogDescription>
+            <AlertDialogTitle>{uiText("Limpar o histórico só para ti?")}</AlertDialogTitle>
+            <AlertDialogDescription>{uiText("As mensagens atuais deixam de aparecer no teu histórico. Continuam disponíveis para a outra pessoa. Podes restaurar o teu histórico no menu da conversa.")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={clearingHistory}>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel disabled={clearingHistory}>{uiText("Cancelar")}</AlertDialogCancel>
             <Button disabled={clearingHistory} onClick={() => void handleClearHistory()}>
-              {clearingHistory ? 'A limpar…' : 'Limpar só para mim'}
+              {clearingHistory ? uiText("A limpar…") : uiText("Limpar só para mim")}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -994,7 +979,7 @@ export default function Chat() {
                 >
                   <p className="text-sm">{msg.content}</p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {new Date(msg.created_at).toLocaleString()}
+                    {new Date(msg.created_at).toLocaleString(uiLocale())}
                   </p>
                 </button>
               ))}
@@ -1007,23 +992,21 @@ export default function Chat() {
       <Sheet open={collectionsOpen} onOpenChange={setCollectionsOpen}>
         <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md">
           <SheetHeader>
-            <SheetTitle>{collectionTab === 'highlights' ? 'Destaques' : 'Mensagens com estrela'}</SheetTitle>
+            <SheetTitle>{collectionTab === 'highlights' ? uiText("Destaques") : uiText("Mensagens com estrela")}</SheetTitle>
           </SheetHeader>
-          <p className="mt-2 text-xs text-muted-foreground">
-            Mensagens já carregadas desta conversa. Os destaques e as estrelas são pessoais.
-          </p>
-          <div className="mt-4 flex gap-2" role="group" aria-label="Tipo de mensagens guardadas">
+          <p className="mt-2 text-xs text-muted-foreground">{uiText("Mensagens já carregadas desta conversa. Os destaques e as estrelas são pessoais.")}</p>
+          <div className="mt-4 flex gap-2" role="group" aria-label={uiText("Tipo de mensagens guardadas")}>
             <Button size="sm" variant={collectionTab === 'highlights' ? 'default' : 'outline'}
-              onClick={() => showCollection('highlights')}>Destaques</Button>
+              onClick={() => showCollection('highlights')}>{uiText("Destaques")}</Button>
             <Button size="sm" variant={collectionTab === 'starred' ? 'default' : 'outline'}
-              onClick={() => showCollection('starred')}>Estrelas</Button>
+              onClick={() => showCollection('starred')}>{uiText("Estrelas")}</Button>
           </div>
           {collectionTab === 'highlights' && (
             <div className="mt-3 space-y-2">
-              <Input aria-label="Pesquisar destaques" placeholder="Pesquisar etiqueta ou mensagem"
+              <Input aria-label={uiText("Pesquisar destaques")} placeholder={uiText("Pesquisar etiqueta ou mensagem")}
                 value={collectionSearch} onChange={e => setCollectionSearch(e.target.value)}
                 className="h-11 text-base" />
-              <div className="flex flex-wrap gap-2" role="group" aria-label="Filtrar por cor">
+              <div className="flex flex-wrap gap-2" role="group" aria-label={uiText("Filtrar por cor")}>
                 {[['', 'Todas'], ['yellow', 'Amarelo'], ['blue', 'Azul'], ['green', 'Verde'], ['pink', 'Rosa'], ['orange', 'Laranja'], ['purple', 'Roxo']].map(([color, label]) => (
                   <button type="button" key={color || 'all'} aria-pressed={collectionColor === color}
                     onClick={() => setCollectionColor(color)}
@@ -1033,14 +1016,14 @@ export default function Chat() {
                 ))}
               </div>
               <div className="grid grid-cols-2 gap-2">
-                <select aria-label="Tipo de conteúdo" value={collectionType} onChange={e => setCollectionType(e.target.value)}
+                <select aria-label={uiText("Tipo de conteúdo")} value={collectionType} onChange={e => setCollectionType(e.target.value)}
                   className="h-11 min-w-0 rounded-md border border-input bg-background px-2 text-base text-foreground">
-                  <option value="all">Todos os tipos</option>
-                  <option value="text">Texto</option>
-                  <option value="media">Fotos e vídeos</option>
-                  <option value="file">Ficheiros e áudio</option>
+                  <option value="all">{uiText("Todos os tipos")}</option>
+                  <option value="text">{uiText("Texto")}</option>
+                  <option value="media">{uiText("Fotos e vídeos")}</option>
+                  <option value="file">{uiText("Ficheiros e áudio")}</option>
                 </select>
-                <input type="date" aria-label="Filtrar por data" value={collectionDate}
+                <input type="date" aria-label={uiText("Filtrar por data")} value={collectionDate}
                   onChange={e => setCollectionDate(e.target.value)}
                   className="h-11 min-w-0 rounded-md border border-input bg-background px-2 text-base text-foreground" />
               </div>
@@ -1048,7 +1031,7 @@ export default function Chat() {
           )}
           <div className="mt-4 space-y-2 pb-8">
             {collectionMessages.length === 0 && (
-              <p className="py-8 text-center text-sm text-muted-foreground">Não há mensagens guardadas com estes filtros.</p>
+              <p className="py-8 text-center text-sm text-muted-foreground">{uiText("Não há mensagens guardadas com estes filtros.")}</p>
             )}
             {collectionMessages.map(message => {
               const mark = highlights[message.id];
@@ -1065,12 +1048,12 @@ export default function Chat() {
                     {collectionTab === 'highlights' && mark && (
                       <span className="inline-flex items-center gap-1 text-xs font-medium text-foreground">
                         <Highlighter aria-hidden="true" className="h-3 w-3" />
-                        {mark.label || 'Sem etiqueta'} · {mark.color}
+                        {mark.label || uiText("Sem etiqueta")} · {mark.color}
                       </span>
                     )}
                     {collectionTab === 'starred' && <Star aria-hidden="true" className="h-3 w-3 text-amber-500" />}
                     <time className="ml-auto shrink-0 text-xs text-muted-foreground" dateTime={message.created_at}>
-                      {new Date(message.created_at).toLocaleDateString()}
+                      {new Date(message.created_at).toLocaleDateString(uiLocale())}
                     </time>
                   </div>
                   <p className="mt-1 line-clamp-2 break-words text-sm text-foreground">{summary}</p>

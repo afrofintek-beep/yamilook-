@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Users, Radio, Shuffle } from 'lucide-react';
@@ -18,6 +19,7 @@ interface LivePreviewTooltipProps {
 }
 
 export function LivePreviewTooltip({ children, activeStreams, hasActiveStreams }: LivePreviewTooltipProps) {
+  useUiLocale();
   const navigate = useNavigate();
   const { t } = useTranslation();
 
@@ -51,8 +53,8 @@ export function LivePreviewTooltip({ children, activeStreams, hasActiveStreams }
         <TooltipTrigger asChild>
           {children}
         </TooltipTrigger>
-        <TooltipContent 
-          side="bottom" 
+        <TooltipContent
+          side="bottom"
           className="w-64 p-0 bg-card border-border shadow-lg"
           sideOffset={8}
         >
@@ -88,7 +90,7 @@ export function LivePreviewTooltip({ children, activeStreams, hasActiveStreams }
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground truncate">
-                    {stream.host?.display_name || 'Unknown'}
+                    {stream.host?.display_name || uiText("Unknown")}
                   </p>
                   <p className="text-xs text-muted-foreground truncate">
                     {stream.title}

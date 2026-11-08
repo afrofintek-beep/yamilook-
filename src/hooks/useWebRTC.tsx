@@ -1,3 +1,4 @@
+import { uiText } from '@/i18n/ui-copy';
 /* @refresh reset */
 /**
  * useWebRTC - Main orchestrator hook for WebRTC calling
@@ -416,10 +417,10 @@ export function useWebRTC(options: UseWebRTCOptions = {}) {
     callType: 'voice' | 'video',
     conversationId?: string
   ): Promise<string> => {
-    if (!user) throw new Error('Not authenticated');
+    if (!user) throw new Error(uiText("Not authenticated"));
     // Reject impossible destinations before ICE negotiation or asking for microphone/camera.
-    if (!targetUserId?.trim()) throw new Error('Seleciona um contacto para iniciar a chamada.');
-    if (targetUserId === user.id) throw new Error('Não podes iniciar uma chamada para a tua própria conta.');
+    if (!targetUserId?.trim()) throw new Error(uiText("Seleciona um contacto para iniciar a chamada."));
+    if (targetUserId === user.id) throw new Error(uiText("Não podes iniciar uma chamada para a tua própria conta."));
 
     // Track whether the call was created in DB so we can clean it up on failure
     let createdCallId: string | null = null;
@@ -440,7 +441,7 @@ export function useWebRTC(options: UseWebRTCOptions = {}) {
         noiseSuppression: true,
         echoCancellation: true,
       });
-      if (!capturedStream) throw new Error('Falha ao aceder ao microfone');
+      if (!capturedStream) throw new Error(uiText("Falha ao aceder ao microfone"));
 
       // Diagnose audio track state for the initiator (desktop A)
       const initiatorAudioTracks = capturedStream.getAudioTracks();
@@ -483,7 +484,7 @@ export function useWebRTC(options: UseWebRTCOptions = {}) {
       // on some mobile browsers (returns {} when serialized).
       const finalOffer = pc.localDescription;
       if (!finalOffer) {
-        throw new Error('Falha ao criar descrição local WebRTC');
+        throw new Error(uiText("Falha ao criar descrição local WebRTC"));
       }
 
       const offerPayload = { type: finalOffer.type, sdp: finalOffer.sdp };
@@ -495,7 +496,7 @@ export function useWebRTC(options: UseWebRTCOptions = {}) {
         await new Promise(r => setTimeout(r, 500));
         offerSent = await sendSignalForCall(callId, targetUserId, 'offer', offerPayload);
         if (!offerSent) {
-          throw new Error('Falha ao enviar sinal de chamada');
+          throw new Error(uiText("Falha ao enviar sinal de chamada"));
         }
       }
       console.log('[WebRTC] ✅ Offer sent successfully');
@@ -577,7 +578,7 @@ export function useWebRTC(options: UseWebRTCOptions = {}) {
         noiseSuppression: true,
         echoCancellation: true,
       });
-      if (!mediaCapture.localStreamRef.current) throw new Error('Failed to get local media stream');
+      if (!mediaCapture.localStreamRef.current) throw new Error(uiText("Failed to get local media stream"));
 
       // Verify audio track is not hardware-muted (OS/browser permission block)
       const audioTracks = answererStream?.getAudioTracks() ?? [];
@@ -657,7 +658,7 @@ export function useWebRTC(options: UseWebRTCOptions = {}) {
       async () => { if (id && user) await lifecycle.endCallInDB(id, user.id); },
     );
     if (results.some(result => result.status === 'rejected' || result.value === false)) {
-      toast({ title: 'Chamada terminada neste dispositivo', description: 'Não foi possível confirmar o encerramento no outro dispositivo. Verifica a ligação.', variant: 'destructive' });
+      toast({ title: uiText("Chamada terminada neste dispositivo"), description: uiText("Não foi possível confirmar o encerramento no outro dispositivo. Verifica a ligação."), variant: 'destructive' });
     }
   }, [state.callId, state.targetUserId, user, signaling, lifecycle, cleanupCall, telemetry]);
 
@@ -680,7 +681,7 @@ export function useWebRTC(options: UseWebRTCOptions = {}) {
       await mediaCapture.toggleScreenShare();
     } catch (e) {
       const msg = e instanceof Error && e.message ? e.message : 'Não foi possível partilhar o ecrã.';
-      toast({ title: 'Partilha de ecrã', description: msg, variant: 'destructive' });
+      toast({ title: uiText("Partilha de ecrã"), description: msg, variant: 'destructive' });
       return;
     }
 
@@ -753,7 +754,7 @@ export function useWebRTC(options: UseWebRTCOptions = {}) {
         vbgProcessorRef.current.setEffects(cfg);
       }
       const processedTrack = vbgProcessorRef.current.outputStream.getVideoTracks()[0];
-      if (!processedTrack) throw new Error('no processed track');
+      if (!processedTrack) throw new Error(uiText("no processed track"));
       replaceOutgoingVideo(processedTrack);
       const preview = new MediaStream();
       preview.addTrack(processedTrack);
@@ -811,7 +812,7 @@ export function useWebRTC(options: UseWebRTCOptions = {}) {
 
   // Cleanup on unmount ONLY — empty deps ensures this cleanup never fires when
   // cleanupCall's identity changes mid-call (which would destroy the PC just created by answerCall).
-   
+
   useEffect(() => { return () => { cleanupCallRef.current(); }; }, []);
 
   // Sync media state

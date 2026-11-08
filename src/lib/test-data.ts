@@ -1,3 +1,4 @@
+import { uiText } from '@/i18n/ui-copy';
 // Test data and mock data for development/testing ONLY
 // This module is excluded from production builds via the DEV guard below.
 
@@ -83,11 +84,11 @@ export const MOCK_POSTS = [
 
 // Bairros de Luanda
 export const BAIRROS = [
-  { name: 'Talatona', description: 'Zona moderna e comercial' },
-  { name: 'Patriota', description: 'Bairro residencial tradicional' },
-  { name: 'Dangeroux', description: 'Área vibrante e cultural' },
-  { name: 'Miramar', description: 'Zona costeira' },
-  { name: 'Maianga', description: 'Centro histórico' }
+  { name: 'Talatona', get description() { return uiText("Zona moderna e comercial"); } },
+  { name: 'Patriota', get description() { return uiText("Bairro residencial tradicional"); } },
+  { name: 'Dangeroux', get description() { return uiText("Área vibrante e cultural"); } },
+  { name: 'Miramar', get description() { return uiText("Zona costeira"); } },
+  { name: 'Maianga', get description() { return uiText("Centro histórico"); } }
 ];
 
 // Create test user
@@ -98,7 +99,7 @@ export async function createTestUser(userKey: string) {
   }
   const user = TEST_USERS[userKey as keyof typeof TEST_USERS];
   if (!user) return null;
-  
+
   const { data, error } = await supabase.auth.signUp({
     email: user.email,
     password: user.password,
@@ -109,12 +110,12 @@ export async function createTestUser(userKey: string) {
       }
     }
   });
-  
+
   if (error) {
     console.error(`Error creating test user ${userKey}:`, error);
     return null;
   }
-  
+
   return data;
 }
 
@@ -126,24 +127,24 @@ export async function loginAsTestUser(userKey: string) {
   }
   const user = TEST_USERS[userKey as keyof typeof TEST_USERS];
   if (!user) return null;
-  
+
   const { data, error } = await supabase.auth.signInWithPassword({
     email: user.email,
     password: user.password
   });
-  
+
   if (error) {
     console.error(`Error logging in as ${userKey}:`, error);
     return null;
   }
-  
+
   return data;
 }
 
 // Seed mock posts for a user
 export async function seedMockPosts(userId: string) {
   if (!DEV_ONLY) return null;
-  
+
   const postsToInsert = MOCK_POSTS.map(post => ({
     ...post,
     user_id: userId,
@@ -152,28 +153,28 @@ export async function seedMockPosts(userId: string) {
     comments_count: Math.floor(Math.random() * 10),
     shares_count: Math.floor(Math.random() * 5)
   }));
-  
+
   const { data, error } = await supabase
     .from('posts')
     .insert(postsToInsert)
     .select();
-  
+
   if (error) {
     console.error('Error seeding posts:', error);
     return null;
   }
-  
+
   return data;
 }
 
 // Seed all test data
 export async function seedTestData() {
   if (!DEV_ONLY) return [];
-  
+
   console.log('🌱 Seeding test data...');
-  
+
   const createdUsers: { key: string; userId: string }[] = [];
-  
+
   // Create all test users
   for (const key of Object.keys(TEST_USERS)) {
     const result = await createTestUser(key);
@@ -188,21 +189,21 @@ export async function seedTestData() {
         .select('id')
         .eq('email', user.email)
         .single();
-      
+
       if (data) {
         createdUsers.push({ key, userId: data.id });
         console.log(`ℹ️ User already exists: ${key}`);
       }
     }
   }
-  
+
   // Seed posts for the first user
   if (createdUsers.length > 0) {
     const firstUser = createdUsers[0];
     await seedMockPosts(firstUser.userId);
     console.log(`✅ Seeded posts for ${firstUser.key}`);
   }
-  
+
   console.log('🎉 Test data seeding complete!');
   return createdUsers;
 }
@@ -210,21 +211,21 @@ export async function seedTestData() {
 // Clean up test data
 export async function cleanTestData() {
   if (!DEV_ONLY) return;
-  
+
   console.log('🧹 Cleaning test data...');
-  
+
   for (const user of Object.values(TEST_USERS)) {
     const { data: profile } = await supabase
       .from('profiles')
       .select('id')
       .eq('email', user.email)
       .single();
-    
+
     if (profile) {
       await supabase.from('posts').delete().eq('user_id', profile.id);
       await supabase.from('statuses').delete().eq('user_id', profile.id);
     }
   }
-  
+
   console.log('🎉 Test data cleanup complete!');
 }

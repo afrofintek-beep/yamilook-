@@ -1,3 +1,4 @@
+import { uiLocale, uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Users, Check, X, UserPlus } from 'lucide-react';
@@ -23,6 +24,7 @@ interface WaitingRoomPanelProps {
 }
 
 export function WaitingRoomPanel({ callId, isOpen, onClose }: WaitingRoomPanelProps) {
+  useUiLocale();
   const [waitingParticipants, setWaitingParticipants] = useState<WaitingParticipant[]>([]);
   const { admitParticipant, admitAllParticipants } = useHostControls(callId);
 
@@ -110,7 +112,7 @@ export function WaitingRoomPanel({ callId, isOpen, onClose }: WaitingRoomPanelPr
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Users className="h-5 w-5 text-primary" />
-              <h3 className="font-semibold">Waiting Room</h3>
+              <h3 className="font-semibold">{uiText("Waiting Room")}</h3>
               {waitingParticipants.length > 0 && (
                 <Badge variant="secondary" className="ml-2">
                   {waitingParticipants.length}
@@ -128,7 +130,7 @@ export function WaitingRoomPanel({ callId, isOpen, onClose }: WaitingRoomPanelPr
           {waitingParticipants.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
               <Users className="h-12 w-12 mb-4 opacity-50" />
-              <p className="text-sm">No one is waiting</p>
+              <p className="text-sm">{uiText("No one is waiting")}</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -147,9 +149,7 @@ export function WaitingRoomPanel({ callId, isOpen, onClose }: WaitingRoomPanelPr
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <p className="font-medium truncate">{participant.display_name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      Waiting since {new Date(participant.created_at).toLocaleTimeString()}
-                    </p>
+                    <p className="text-xs text-muted-foreground">{uiText("Waiting since {{value1}}", { value1: (new Date(participant.created_at).toLocaleTimeString(uiLocale())) ?? "" })}</p>
                   </div>
                   <div className="flex gap-2">
                     <Button
@@ -182,9 +182,7 @@ export function WaitingRoomPanel({ callId, isOpen, onClose }: WaitingRoomPanelPr
               className="w-full"
               onClick={admitAllParticipants}
             >
-              <UserPlus className="h-4 w-4 mr-2" />
-              Admit All ({waitingParticipants.length})
-            </Button>
+              <UserPlus className="h-4 w-4 mr-2" />{uiText("Admit All ({{value1}})", { value1: (waitingParticipants.length) ?? "" })}</Button>
           </div>
         )}
       </motion.div>

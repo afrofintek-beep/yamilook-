@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Settings, X, Languages, Type } from 'lucide-react';
@@ -48,6 +49,7 @@ const LANGUAGES = [
 ];
 
 export function LiveCaptions({ callId }: LiveCaptionsProps) {
+  useUiLocale();
   const { user } = useAuth();
   const [captions, setCaptions] = useState<Caption[]>([]);
   const [settings, setSettings] = useState({
@@ -110,7 +112,7 @@ export function LiveCaptions({ callId }: LiveCaptionsProps) {
   useEffect(() => {
     const interval = setInterval(() => {
       const now = new Date();
-      setCaptions(prev => 
+      setCaptions(prev =>
         prev.filter(c => now.getTime() - c.timestamp.getTime() < 10000)
       );
     }, 1000);
@@ -129,7 +131,7 @@ export function LiveCaptions({ callId }: LiveCaptionsProps) {
           settings.position === 'bottom' ? 'bottom-36' : 'top-20'
         )}
       >
-        <div 
+        <div
           className="max-w-3xl mx-auto rounded-lg px-4 py-3"
           style={{
             backgroundColor: `rgba(0, 0, 0, ${settings.opacity / 100})`,
@@ -167,16 +169,14 @@ export function LiveCaptions({ callId }: LiveCaptionsProps) {
           </SheetTrigger>
           <SheetContent side="right" className="w-80">
             <SheetHeader>
-              <SheetTitle>Caption Settings</SheetTitle>
+              <SheetTitle>{uiText("Caption Settings")}</SheetTitle>
             </SheetHeader>
 
             <div className="space-y-6 pt-6">
               {/* Language */}
               <div className="space-y-2">
                 <label className="text-sm font-medium flex items-center gap-2">
-                  <Languages className="h-4 w-4" />
-                  Language
-                </label>
+                  <Languages className="h-4 w-4" />{uiText("Language")}</label>
                 <Select
                   value={settings.language}
                   onValueChange={(value) => {
@@ -200,9 +200,7 @@ export function LiveCaptions({ callId }: LiveCaptionsProps) {
               {/* Font Size */}
               <div className="space-y-3">
                 <label className="text-sm font-medium flex items-center gap-2">
-                  <Type className="h-4 w-4" />
-                  Font Size: {settings.fontSize}px
-                </label>
+                  <Type className="h-4 w-4" />{uiText("Font Size: {{value1}}px", { value1: (settings.fontSize) ?? "" })}</label>
                 <Slider
                   value={[settings.fontSize]}
                   onValueChange={([val]) => {
@@ -217,9 +215,7 @@ export function LiveCaptions({ callId }: LiveCaptionsProps) {
 
               {/* Background Opacity */}
               <div className="space-y-3">
-                <label className="text-sm font-medium">
-                  Background Opacity: {settings.opacity}%
-                </label>
+                <label className="text-sm font-medium">{uiText("Background Opacity: {{value1}}%", { value1: (settings.opacity) ?? "" })}</label>
                 <Slider
                   value={[settings.opacity]}
                   onValueChange={([val]) => {
@@ -233,24 +229,20 @@ export function LiveCaptions({ callId }: LiveCaptionsProps) {
 
               {/* Position */}
               <div className="space-y-2">
-                <label className="text-sm font-medium">Position</label>
+                <label className="text-sm font-medium">{uiText("Position")}</label>
                 <div className="flex gap-2">
                   <Button
                     variant={settings.position === 'top' ? 'default' : 'outline'}
                     size="sm"
                     className="flex-1"
                     onClick={() => setSettings(prev => ({ ...prev, position: 'top' }))}
-                  >
-                    Top
-                  </Button>
+                  >{uiText("Top")}</Button>
                   <Button
                     variant={settings.position === 'bottom' ? 'default' : 'outline'}
                     size="sm"
                     className="flex-1"
                     onClick={() => setSettings(prev => ({ ...prev, position: 'bottom' }))}
-                  >
-                    Bottom
-                  </Button>
+                  >{uiText("Bottom")}</Button>
                 </div>
               </div>
             </div>

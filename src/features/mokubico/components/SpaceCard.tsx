@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Radio, Users, ChevronRight, Lock } from 'lucide-react';
@@ -50,6 +51,7 @@ interface SpaceCardProps {
 }
 
 export function SpaceCard({ space, isLive = false, activeCount = 0, index = 0 }: SpaceCardProps) {
+  useUiLocale();
   const navigate = useNavigate();
   const cover = COVERS[space.key];
   const accent = SPACE_ACCENTS[space.key] ?? SPACE_ACCENTS.quintal;
@@ -127,9 +129,7 @@ export function SpaceCard({ space, isLive = false, activeCount = 0, index = 0 }:
             {space.access}
           </span>
           {isLive && (
-            <span className="text-[10px] text-white/50">
-              Roda ativa agora
-            </span>
+            <span className="text-[10px] text-white/50">{uiText("Roda ativa agora")}</span>
           )}
         </div>
       </div>

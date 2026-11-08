@@ -1,11 +1,12 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import BottomNav from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
-import { 
-  Radio, 
-  Clock, 
+import {
+  Radio,
+  Clock,
   Plus,
   ChevronRight,
   Sparkles,
@@ -16,7 +17,8 @@ import { usePalcos, Palco, VoiceType } from '@/hooks/usePalco';
 import { usePalcoThemes } from '@/hooks/useDiscoverTopics';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
-import { format, formatDistanceToNow, isToday, isTomorrow } from 'date-fns';
+import { isToday, isTomorrow } from 'date-fns';
+import { format, formatDistanceToNow } from '@/i18n/ui-date';
 import { pt } from 'date-fns/locale';
 import { PalcoIcon } from '@/components/icons/PalcoIcon';
 import YamilookLogo from '@/components/brand/YamilookLogo';
@@ -35,6 +37,7 @@ const sampleQuestions = [
 ];
 
 export default function PalcoDiscover() {
+  useUiLocale();
   const navigate = useNavigate();
   const [selectedTheme, setSelectedTheme] = useState<string | null>(null);
   const { data: palcos, isLoading } = usePalcos(selectedTheme ? { theme: selectedTheme } : undefined);
@@ -45,25 +48,25 @@ export default function PalcoDiscover() {
 
   const featuredPalco = palcos?.find(p => p.featured || p.status === 'live');
   const otherPalcos = palcos?.filter(p => p.id !== featuredPalco?.id) || [];
-  
+
   // Auto-detect currency based on GPS location
   useEffect(() => {
     if (gpsAttemptedRef.current || currencies.length === 0) return;
-    
+
     // Check if user already has a preferred currency set
     const storedCurrency = localStorage.getItem('preferred_currency');
     if (storedCurrency && storedCurrency !== 'USD') {
       gpsAttemptedRef.current = true;
       return;
     }
-    
+
     if (!navigator.geolocation) {
       gpsAttemptedRef.current = true;
       return;
     }
-    
+
     gpsAttemptedRef.current = true;
-    
+
     // Only use GPS if permission was already granted — never trigger the popup
     const checkAndDetect = async () => {
       try {
@@ -76,9 +79,9 @@ export default function PalcoDiscover() {
       } catch {
         return;
       }
-      
+
       const timeout = setTimeout(() => {}, 5000);
-      
+
       navigator.geolocation.getCurrentPosition(
         (position) => {
           clearTimeout(timeout);
@@ -86,7 +89,7 @@ export default function PalcoDiscover() {
           const latitude = _cell.lat;
           const longitude = _cell.lng;
           const country = getNearestCountry(latitude, longitude);
-          
+
           if (country) {
             const currencyCode = getCurrencyForCountry(country.countryCode);
             const found = currencies.find(c => c.currency_code === currencyCode);
@@ -102,41 +105,41 @@ export default function PalcoDiscover() {
         { timeout: 5000, enableHighAccuracy: false }
       );
     };
-    
+
     checkAndDetect();
   }, [currencies, changeCurrency]);
 
   // Countdown timer for featured palco
   useEffect(() => {
     if (!featuredPalco?.roda?.scheduled_at && featuredPalco?.status !== 'live') return;
-    
+
     const updateCountdown = () => {
       if (featuredPalco.status === 'live') {
         // For live sessions, show remaining time (mock 30min session)
         setCountdown('32:12');
         return;
       }
-      
+
       const scheduledTime = new Date(featuredPalco.roda!.scheduled_at!);
       const now = new Date();
       const diff = scheduledTime.getTime() - now.getTime();
-      
+
       if (diff <= 0) {
         setCountdown('Ao vivo');
         return;
       }
-      
+
       const hours = Math.floor(diff / (1000 * 60 * 60));
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-      
+
       if (hours > 0) {
         setCountdown(`${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
       } else {
         setCountdown(`${minutes}:${seconds.toString().padStart(2, '0')}`);
       }
     };
-    
+
     updateCountdown();
     const interval = setInterval(updateCountdown, 1000);
     return () => clearInterval(interval);
@@ -154,22 +157,18 @@ export default function PalcoDiscover() {
           <PalcoIcon className="w-7 h-7 text-palco-accent" filled />
           <h1 className="text-3xl font-bold text-palco-text tracking-tight">PALCO</h1>
         </div>
-        <p className="text-sm text-palco-text-secondary">
-          O teu espaço. A tua voz.
-        </p>
-        
+        <p className="text-sm text-palco-text-secondary">{uiText("O teu espaço. A tua voz.")}</p>
+
         {/* Action buttons */}
         <div className="flex items-center justify-center gap-2 mt-4">
-          <Button 
-            size="sm" 
+          <Button
+            size="sm"
             variant="outline"
             className="border-palco-accent text-palco-accent hover:bg-palco-accent/10 rounded-full"
             onClick={() => navigate('/palco/dashboard')}
-          >
-            Meus Palcos
-          </Button>
-          <Button 
-            size="icon" 
+          >{uiText("Meus Palcos")}</Button>
+          <Button
+            size="icon"
             className="bg-palco-accent text-palco-surface hover:bg-palco-accent/90 rounded-full"
             onClick={() => navigate('/palco/create')}
           >
@@ -187,27 +186,25 @@ export default function PalcoDiscover() {
                 onClick={() => setSelectedTheme(null)}
                 className={cn(
                   "flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all",
-                  !selectedTheme 
-                    ? "bg-palco-accent text-palco-surface" 
+                  !selectedTheme
+                    ? "bg-palco-accent text-palco-surface"
                     : "bg-palco-surface text-palco-text-secondary border border-palco-border"
                 )}
-              >
-                Todos
-              </button>
+              >{uiText("Todos")}</button>
               {themes.map((t) => (
                 <button
                   key={t.id}
                   onClick={() => setSelectedTheme(selectedTheme === t.slug ? null : t.slug)}
                   className={cn(
                     "flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium transition-all",
-                    selectedTheme === t.slug 
-                      ? "bg-palco-accent text-palco-surface" 
+                    selectedTheme === t.slug
+                      ? "bg-palco-accent text-palco-surface"
                       : "bg-palco-surface text-palco-text-secondary border border-palco-border hover:border-palco-accent/50"
                   )}
                 >
                   {t.image_url && (
-                    <img 
-                      src={t.image_url} 
+                    <img
+                      src={t.image_url}
                       alt={t.name}
                       className="w-5 h-5 rounded-full object-cover"
                     />
@@ -225,9 +222,9 @@ export default function PalcoDiscover() {
 
         {/* Featured Palco Card */}
         {featuredPalco && (
-          <FeaturedPalcoCard 
-            palco={featuredPalco} 
-            countdown={countdown} 
+          <FeaturedPalcoCard
+            palco={featuredPalco}
+            countdown={countdown}
           />
         )}
 
@@ -235,9 +232,9 @@ export default function PalcoDiscover() {
         {otherPalcos.length > 0 && (
           <section>
             <h3 className="text-lg font-semibold text-palco-text mb-3">
-              {selectedTheme 
-                ? `Palcos de ${themes?.find(t => t.slug === selectedTheme)?.name || selectedTheme}` 
-                : 'Outros Palcos'}
+              {selectedTheme
+                ? uiText("Palcos de {{value1}}", { value1: (themes?.find(t => t.slug === selectedTheme)?.name || selectedTheme) ?? "" })
+                : uiText("Outros Palcos")}
             </h3>
             <div className="grid grid-cols-2 gap-3">
               {otherPalcos.map((palco, index) => (
@@ -253,19 +250,13 @@ export default function PalcoDiscover() {
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-palco-accent/10 flex items-center justify-center">
               <PalcoIcon className="w-8 h-8 text-palco-accent" />
             </div>
-            <h3 className="text-lg font-medium text-palco-text mb-2">
-              Nenhum palco encontrado
-            </h3>
-            <p className="text-sm text-palco-text-secondary mb-4">
-              Seja o primeiro a abrir a Banda ao Vivo!
-            </p>
-            <Button 
+            <h3 className="text-lg font-medium text-palco-text mb-2">{uiText("Nenhum palco encontrado")}</h3>
+            <p className="text-sm text-palco-text-secondary mb-4">{uiText("Seja o primeiro a abrir a Banda ao Vivo!")}</p>
+            <Button
               className="bg-palco-accent text-palco-surface rounded-full"
               onClick={() => navigate('/palco/create')}
             >
-              <Plus className="w-4 h-4 mr-2" />
-              Abrir Banda ao Vivo
-            </Button>
+              <Plus className="w-4 h-4 mr-2" />{uiText("Abrir Banda ao Vivo")}</Button>
           </div>
         )}
       </main>
@@ -277,6 +268,7 @@ export default function PalcoDiscover() {
 
 // Featured Palco Card with new design
 function FeaturedPalcoCard({ palco, countdown }: { palco: Palco; countdown: string }) {
+  useUiLocale();
   const navigate = useNavigate();
   const isLive = palco.status === 'live';
 
@@ -290,8 +282,8 @@ function FeaturedPalcoCard({ palco, countdown }: { palco: Palco; countdown: stri
       <div className="relative">
         <div className="aspect-[4/3] relative">
           {palco.cover_url ? (
-            <img 
-              src={palco.cover_url} 
+            <img
+              src={palco.cover_url}
               alt={palco.title}
               className="w-full h-full object-cover"
             />
@@ -300,16 +292,14 @@ function FeaturedPalcoCard({ palco, countdown }: { palco: Palco; countdown: stri
               <Sparkles className="w-16 h-16 text-palco-accent/30" />
             </div>
           )}
-          
+
           {/* Gradient overlay for text legibility */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
-          
+
           {/* Live Badge */}
           {isLive && (
             <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 bg-palco-accent text-palco-surface rounded-full text-sm font-semibold shadow-md">
-              <Lock className="w-3.5 h-3.5" />
-              AO VIVO • {countdown} restantes
-            </div>
+              <Lock className="w-3.5 h-3.5" />{uiText("AO VIVO • {{value1}} restantes", { value1: (countdown) ?? "" })}</div>
           )}
 
           {/* Content overlay */}
@@ -317,7 +307,7 @@ function FeaturedPalcoCard({ palco, countdown }: { palco: Palco; countdown: stri
             <h2 className="text-2xl font-bold text-palco-surface mb-2">
               {palco.title}
             </h2>
-            
+
             <div className="flex items-center gap-2 mb-3">
               <Avatar className="w-8 h-8 border-2 border-palco-surface">
                 <AvatarImage src={palco.guide?.avatar_url || ''} />
@@ -330,22 +320,18 @@ function FeaturedPalcoCard({ palco, countdown }: { palco: Palco; countdown: stri
               </span>
             </div>
 
-            <Button 
+            <Button
               className="bg-palco-surface text-palco-text hover:bg-palco-surface/90 rounded-full px-6 font-semibold shadow-md"
               onClick={() => navigate(`/palco/${palco.id}`)}
-            >
-              Entrar na Roda
-            </Button>
+            >{uiText("Entrar na Roda")}</Button>
           </div>
         </div>
       </div>
 
       {/* Voices info */}
       <div className="px-4 py-3 border-t border-palco-border">
-        <p className="text-sm text-palco-accent font-semibold mb-3">
-          + {palco.total_voices || 20} Vozes pagas
-        </p>
-        
+        <p className="text-sm text-palco-accent font-semibold mb-3">{uiText("+{{value1}} Vozes pagas", { value1: (palco.total_voices || 20) ?? "" })}</p>
+
         {/* Sample questions list */}
         <div className="space-y-2 mb-3">
           <VoiceQuestionsList palco={palco} />
@@ -354,9 +340,9 @@ function FeaturedPalcoCard({ palco, countdown }: { palco: Palco; countdown: stri
         {/* Highlight tip */}
         <div className="flex items-center gap-2 text-xs text-palco-text-secondary bg-palco-bg rounded-xl px-3 py-2">
           <span>🌿</span>
-          <span>Com perguntas mais aprofundadas</span>
+          <span>{uiText("Com perguntas mais aprofundadas")}</span>
           <span>🏆</span>
-          <span>, a tua voz ganha destaque.</span>
+          <span>{uiText(", a tua voz ganha destaque.")}</span>
         </div>
       </div>
     </motion.div>
@@ -365,9 +351,10 @@ function FeaturedPalcoCard({ palco, countdown }: { palco: Palco; countdown: stri
 
 // Palco Card for grid display
 function PalcoCard({ palco, index }: { palco: Palco; index: number }) {
+  useUiLocale();
   const navigate = useNavigate();
   const { selectedCurrency } = useCurrencyRates();
-  
+
   // Format price with user's selected currency
   const formatPrice = (price: number) => {
     if (!selectedCurrency) return `$${price}`;
@@ -375,7 +362,7 @@ function PalcoCard({ palco, index }: { palco: Palco; index: number }) {
     const localValue = price / selectedCurrency.rate_to_usd;
     return `${selectedCurrency.symbol}${Math.round(localValue)}`;
   };
-  
+
   const getDateLabel = () => {
     if (!palco.roda?.scheduled_at) return null;
     const date = new Date(palco.roda.scheduled_at);
@@ -407,8 +394,8 @@ function PalcoCard({ palco, index }: { palco: Palco; index: number }) {
       {/* Cover */}
       <div className="relative aspect-[4/3] bg-gradient-to-br from-palco-accent/10 to-palco-accent/5">
         {palco.cover_url ? (
-          <img 
-            src={palco.cover_url} 
+          <img
+            src={palco.cover_url}
             alt={palco.title}
             className="w-full h-full object-cover"
           />
@@ -421,9 +408,7 @@ function PalcoCard({ palco, index }: { palco: Palco; index: number }) {
         {/* Live badge */}
         {palco.status === 'live' && (
           <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-0.5 bg-destructive text-destructive-foreground rounded-full text-[10px] font-medium">
-            <Radio className="w-2.5 h-2.5 animate-pulse" />
-            LIVE
-          </div>
+            <Radio className="w-2.5 h-2.5 animate-pulse" />{uiText("LIVE")}</div>
         )}
       </div>
 
@@ -435,22 +420,20 @@ function PalcoCard({ palco, index }: { palco: Palco; index: number }) {
             {metaParts.join(' • ')}
           </p>
         )}
-        
+
         <h4 className="font-semibold text-[13px] leading-tight text-palco-text line-clamp-2 mb-2">
           {palco.title}
         </h4>
-        
+
         {/* Voices available */}
         <p className="text-xs mb-2">
-          <span className="text-palco-accent font-semibold">+{palco.total_voices || 17} Vozes</span>
-          <span className="text-palco-text-secondary"> Disponíveis</span>
+          <span className="text-palco-accent font-semibold">{uiText("+{{value1}} Vozes", { value1: (palco.total_voices || 17) ?? "" })}</span>
+          <span className="text-palco-text-secondary">{uiText(" Disponíveis")}</span>
         </p>
 
         {/* Price - single clear display */}
         <div className="flex items-center justify-between">
-          <span className="text-[11px] text-palco-text-secondary">
-            A partir de
-          </span>
+          <span className="text-[11px] text-palco-text-secondary">{uiText("A partir de")}</span>
           <span className="text-base font-bold text-palco-accent">
             {formatPrice(palco.min_price || 1)}
           </span>
@@ -462,8 +445,9 @@ function PalcoCard({ palco, index }: { palco: Palco; index: number }) {
 
 // Component for voice questions list with currency conversion
 function VoiceQuestionsList({ palco }: { palco: Palco }) {
+  useUiLocale();
   const { selectedCurrency } = useCurrencyRates();
-  
+
   const formatPrice = (price: number) => {
     if (!selectedCurrency) return `$${price}`;
     // Prices are stored in USD, convert to local currency

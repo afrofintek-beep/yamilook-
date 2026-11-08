@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { recoverySession } from '@/lib/recovery-session';
 import { clearListCache } from '@/lib/list-cache';
 import { getYamilookPublicUrl } from '@/lib/public-site';
@@ -69,6 +70,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  useUiLocale();
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -260,7 +262,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const event = unread[0];
         securityToast.warning(unread.length === 1
           ? 'Novo acesso à sua conta'
-          : `${unread.length} novos acessos à sua conta`, {
+          : uiText("{{value1}} novos acessos à sua conta", { value1: (unread.length) ?? "" }), {
           id: `account-login-alert-${user.id}`,
           description: `${event.device_label} · ${event.app_surface === 'kosolola' ? 'KOSOLOLA' : 'YAMILOOK'}`,
           duration: 3000,
@@ -327,7 +329,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setProfileError(false);
         setLoading(false);
         securityToast.warning('Acesso terminado neste dispositivo', {
-          description: 'A sessão foi encerrada remotamente. Inicie sessão novamente.',
+          description: uiText("A sessão foi encerrada remotamente. Inicie sessão novamente."),
         });
         try {
           await signOut('local');
@@ -419,7 +421,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     clearListCache();
     await clearLegacyPrivateCache();
     const { error } = await supabase.auth.signOut({ scope });
-    
+
     const msg = (error?.message || '').toLowerCase();
     const isExpectedLogoutError =
       msg.includes('session not found') ||
@@ -437,7 +439,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const updateProfile = async (updates: TablesUpdate<'profiles'>) => {
     if (!user) {
-      return { error: new Error('No user logged in') };
+      return { error: new Error(uiText("No user logged in")) };
     }
 
     const { error } = await supabase
@@ -474,7 +476,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 }

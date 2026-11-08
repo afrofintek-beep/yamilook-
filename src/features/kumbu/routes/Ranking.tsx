@@ -1,3 +1,4 @@
+import { uiText, useUiLocale, uiLocale } from '@/i18n/ui-copy';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -7,6 +8,7 @@ import Top10Card from '../components/Top10Card';
 import WeeklyResultsEvent from '../components/WeeklyResultsEvent';
 
 export default function RankingPage() {
+  useUiLocale();
   const navigate = useNavigate();
   const { data: userBanda, isLoading: bandaLoading } = useUserBanda();
   const bandaId = userBanda?.banda_id;
@@ -18,7 +20,7 @@ export default function RankingPage() {
   const loading = bandaLoading || rankingLoading;
 
   const weekLabel = ranking
-    ? `${new Date(ranking.weekStart).toLocaleDateString('pt', { day: 'numeric', month: 'short' })} – ${new Date(ranking.weekEnd).toLocaleDateString('pt', { day: 'numeric', month: 'short' })}`
+    ? `${new Date(ranking.weekStart).toLocaleDateString(uiLocale(), { day: 'numeric', month: 'short' })} – ${new Date(ranking.weekEnd).toLocaleDateString(uiLocale(), { day: 'numeric', month: 'short' })}`
     : undefined;
 
   return (
@@ -28,7 +30,7 @@ export default function RankingPage() {
           <Button variant="ghost" size="icon" className="rounded-xl h-9 w-9" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-4.5 w-4.5" />
           </Button>
-          <h1 className="text-base font-bold flex-1 tracking-tight">Ranking</h1>
+          <h1 className="text-base font-bold flex-1 tracking-tight">{uiText("Ranking")}</h1>
         </div>
       </header>
 
@@ -40,9 +42,7 @@ export default function RankingPage() {
             animate={{ opacity: 1 }}
           >
             <MapPin className="h-4 w-4 text-muted-foreground/40 shrink-0" />
-            <p className="text-[13px] text-muted-foreground/60">
-              Confirma o teu bairro nas definições para veres o ranking local.
-            </p>
+            <p className="text-[13px] text-muted-foreground/60">{uiText("Confirma o teu bairro nas definições para veres o ranking local.")}</p>
           </motion.div>
         )}
 
@@ -56,7 +56,7 @@ export default function RankingPage() {
         {loading && (
           <div className="py-12 text-center">
             <div className="w-8 h-8 rounded-full bg-muted animate-pulse mx-auto mb-2" />
-            <p className="text-[11px] text-muted-foreground/40">A carregar…</p>
+            <p className="text-[11px] text-muted-foreground/40">{uiText("A carregar…")}</p>
           </div>
         )}
 
@@ -74,9 +74,7 @@ export default function RankingPage() {
             transition={{ delay: 0.2 }}
           >
             <div className="px-5 pt-4 pb-2">
-              <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/40">
-                Histórico
-              </p>
+              <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/40">{uiText("Histórico")}</p>
             </div>
             <div className="px-5 pb-4 space-y-1.5">
               {history.map((h) => {
@@ -85,11 +83,11 @@ export default function RankingPage() {
                 return (
                   <div key={h.id} className="flex justify-between text-[12px] py-1.5">
                     <span className="text-muted-foreground/50">
-                      {new Date(h.week_start).toLocaleDateString('pt', { day: 'numeric', month: 'short' })}
+                      {new Date(h.week_start).toLocaleDateString(uiLocale(), { day: 'numeric', month: 'short' })}
                       {' – '}
-                      {new Date(h.week_end).toLocaleDateString('pt', { day: 'numeric', month: 'short' })}
+                      {new Date(h.week_end).toLocaleDateString(uiLocale(), { day: 'numeric', month: 'short' })}
                     </span>
-                    <span className="text-foreground/60 font-medium tabular-nums">{count} participantes</span>
+                    <span className="text-foreground/60 font-medium tabular-nums">{uiText("{{value1}} participantes", { value1: (count) ?? "" })}</span>
                   </div>
                 );
               })}

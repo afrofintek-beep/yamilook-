@@ -1,3 +1,4 @@
+import { uiText } from '@/i18n/ui-copy';
 import { notifyIncomingCall } from '@/lib/call-push';
 import { reconcileDirectCalls } from '@/lib/direct-call-reconciliation';
 /**
@@ -48,7 +49,7 @@ export interface UseCallLifecycleReturn {
 export function useCallLifecycle(options: UseCallLifecycleOptions): UseCallLifecycleReturn {
   const { user } = useAuth();
   const { onCallEnded, onRingTimeout } = options;
-  
+
   const ringTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const config = getWebRTCConfig();
 
@@ -77,7 +78,7 @@ export function useCallLifecycle(options: UseCallLifecycleOptions): UseCallLifec
     }
 
     if (!callId) {
-      throw new Error('Failed to create call');
+      throw new Error(uiText("Failed to create call"));
     }
 
     logger.debug('Call created', 'CallLifecycle', callId);
@@ -148,18 +149,18 @@ export function useCallLifecycle(options: UseCallLifecycleOptions): UseCallLifec
 
     ringTimeoutRef.current = setTimeout(async () => {
       logger.debug('⏰ Ring timeout - no answer received', 'CallLifecycle');
-      
+
       await supabase
         .from('calls')
         .update({ status: 'ended', ended_at: new Date().toISOString(), end_reason: 'no_answer' })
         .eq('id', callId);
-      
+
       await supabase
         .from('call_participants')
         .update({ status: 'declined', left_at: new Date().toISOString() })
         .eq('call_id', callId)
         .eq('status', 'ringing');
-      
+
       onRingTimeout(callId);
       onCallEnded();
     }, config.ringTimeoutMs);
@@ -204,7 +205,7 @@ export function useCallLifecycle(options: UseCallLifecycleOptions): UseCallLifec
         end_reason: 'completed',
       })
       .eq('id', callId).select('id').maybeSingle();
-    if (endError || !ended) throw endError || new Error('Call end was not confirmed');
+    if (endError || !ended) throw endError || new Error(uiText("Call end was not confirmed"));
 
     // Update participant
     const { error: participantError } = await supabase

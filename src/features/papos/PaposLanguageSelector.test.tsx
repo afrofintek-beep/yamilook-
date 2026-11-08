@@ -20,7 +20,7 @@ describe('YAMILOOK language rollout', () => {
     await waitFor(() => expect(i18n.language).toBe('yo'));
     expect(i18n.t('auth.login')).toBe('Wọle');
     expect(localStorage.setItem).toHaveBeenCalledWith('i18nextLng', 'yo');
-    expect(screen.getByText(/Àwọn ìtumọ̀ ṣì ń lọ lọ́wọ́/)).toBeInTheDocument();
+    expect(screen.queryByText(/Àwọn ìtumọ̀ ṣì ń lọ lọ́wọ́/)).not.toBeInTheDocument();
     expect(i18n.t('auth.enterCredentials')).toBe('Tẹ àlàyé rẹ sílẹ̀ láti tẹ̀síwájú');
   });
   it('updates and restores document direction', async () => {

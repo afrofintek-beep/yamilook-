@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useCallback, useRef } from 'react';
 import { motion, useMotionValue, useTransform, PanInfo } from 'framer-motion';
 import { Archive, Forward, Copy, Reply, Star, Pin, BellOff } from 'lucide-react';
@@ -71,6 +72,7 @@ export function SwipeableConversationItem({
   onMute,
   onArchive,
 }: SwipeableConversationItemProps) {
+  useUiLocale();
   const [isOpen, setIsOpen] = useState<'left' | 'right' | null>(null);
   const x = useMotionValue(0);
   const isDragging = useRef(false);
@@ -171,7 +173,7 @@ export function SwipeableConversationItem({
           <Checkbox
             checked={isSelected}
             onCheckedChange={() => { if (!wasLongPress()) onSelect?.(conversation.id); }}
-            className="w-5 h-5" aria-label="Selecionar conversa"
+            className="w-5 h-5" aria-label={uiText("Selecionar conversa")}
           />
         </div>
         <div className="flex-1 min-w-0" onClick={event => event.stopPropagation()}>
@@ -186,7 +188,7 @@ export function SwipeableConversationItem({
   }
 
   return (
-    <div 
+    <div
       className={cn("relative w-full min-w-0 max-w-full overflow-hidden touch-pan-y select-none", isPressed && "bg-muted/50")}
       onContextMenu={event => event.preventDefault()}
     >
@@ -201,7 +203,7 @@ export function SwipeableConversationItem({
           className="flex flex-col items-center justify-center w-14 h-full py-2 bg-primary text-primary-foreground first:rounded-l-lg"
         >
           <Reply className="w-5 h-5 mb-1" />
-          <span className="text-[10px] font-medium">Responder</span>
+          <span className="text-[10px] font-medium">{uiText("Responder")}</span>
         </button>
         <button
           onClick={() => handleAction(onCopy)}
@@ -209,7 +211,7 @@ export function SwipeableConversationItem({
           className="flex flex-col items-center justify-center w-14 h-full py-2 bg-accent text-accent-foreground"
         >
           <Copy className="w-5 h-5 mb-1" />
-          <span className="text-[10px] font-medium">Copiar</span>
+          <span className="text-[10px] font-medium">{uiText("Copiar")}</span>
         </button>
         <button
           onClick={() => handleAction(onForward)}
@@ -217,7 +219,7 @@ export function SwipeableConversationItem({
           className="flex flex-col items-center justify-center w-14 h-full py-2 bg-secondary text-secondary-foreground"
         >
           <Forward className="w-5 h-5 mb-1" />
-          <span className="text-[10px] font-medium">Encaminhar</span>
+          <span className="text-[10px] font-medium">{uiText("Encaminhar")}</span>
         </button>
         {onStar && (
         <button
@@ -229,7 +231,7 @@ export function SwipeableConversationItem({
           )}
         >
           <Star className={cn("w-5 h-5 mb-1", isStarred && "fill-current")} />
-          <span className="text-[10px] font-medium">{isStarred ? 'Remover destaque' : 'Destacar'}</span>
+          <span className="text-[10px] font-medium">{isStarred ? uiText("Remover destaque") : uiText("Destacar")}</span>
         </button>
         )}
       </motion.div>
@@ -248,7 +250,7 @@ export function SwipeableConversationItem({
           )}
         >
           <Pin className={cn("w-5 h-5 mb-1", isPinned && "fill-current")} />
-          <span className="text-[10px] font-medium">{isPinned ? 'Desafixar' : 'Fixar'}</span>
+          <span className="text-[10px] font-medium">{isPinned ? uiText("Desafixar") : uiText("Fixar")}</span>
         </button>
         <button
           onClick={() => handleAction(onMute)}
@@ -259,7 +261,7 @@ export function SwipeableConversationItem({
           )}
         >
           <BellOff className="w-5 h-5 mb-1" />
-          <span className="text-[10px] font-medium">{isMuted ? 'Ativar som' : 'Silenciar'}</span>
+          <span className="text-[10px] font-medium">{isMuted ? uiText("Ativar som") : uiText("Silenciar")}</span>
         </button>
         <button
           onClick={() => handleAction(onArchive)}
@@ -267,7 +269,7 @@ export function SwipeableConversationItem({
           className="flex flex-col items-center justify-center w-14 h-full py-2 bg-destructive text-destructive-foreground last:rounded-r-lg"
         >
           <Archive className="w-5 h-5 mb-1" />
-          <span className="text-[10px] font-medium">Arquivar</span>
+          <span className="text-[10px] font-medium">{uiText("Arquivar")}</span>
         </button>
       </motion.div>
 

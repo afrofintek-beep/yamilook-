@@ -1,5 +1,6 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect, useRef } from 'react';
-import { format } from 'date-fns';
+import { format } from '@/i18n/ui-date';
 import { pt } from 'date-fns/locale';
 import { Calendar as CalendarIcon, Clock, Video, Phone, Users, Repeat, X } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -42,23 +43,24 @@ interface ScheduleCallSheetProps {
 }
 
 const durationOptions = [
-  { value: '15', label: '15 minutos' },
-  { value: '30', label: '30 minutos' },
-  { value: '45', label: '45 minutos' },
-  { value: '60', label: '1 hora' },
-  { value: '90', label: '1 hora e 30 minutos' },
-  { value: '120', label: '2 horas' },
+  { value: '15', get label() { return uiText("15 minutos"); } },
+  { value: '30', get label() { return uiText("30 minutos"); } },
+  { value: '45', get label() { return uiText("45 minutos"); } },
+  { value: '60', get label() { return uiText("1 hora"); } },
+  { value: '90', get label() { return uiText("1 hora e 30 minutos"); } },
+  { value: '120', get label() { return uiText("2 horas"); } },
 ];
 
 const recurrenceOptions = [
-  { value: 'none', label: 'Não se repete' },
-  { value: 'daily', label: 'Diariamente' },
-  { value: 'weekly', label: 'Semanalmente' },
-  { value: 'biweekly', label: 'A cada 2 semanas' },
-  { value: 'monthly', label: 'Mensalmente' },
+  { value: 'none', get label() { return uiText("Não se repete"); } },
+  { value: 'daily', get label() { return uiText("Diariamente"); } },
+  { value: 'weekly', get label() { return uiText("Semanalmente"); } },
+  { value: 'biweekly', get label() { return uiText("A cada 2 semanas"); } },
+  { value: 'monthly', get label() { return uiText("Mensalmente"); } },
 ];
 
 export function ScheduleCallSheet({ open, onOpenChange, existingCall }: ScheduleCallSheetProps) {
+  useUiLocale();
   const { contacts } = useContacts();
   const { save } = useScheduledCalls();
   const requestId = useRef(crypto.randomUUID());
@@ -103,8 +105,8 @@ export function ScheduleCallSheet({ open, onOpenChange, existingCall }: Schedule
   },[open,existingCall?.id]);
 
   const toggleInvitee = (userId: string) => {
-    setSelectedInvitees(prev => 
-      prev.includes(userId) 
+    setSelectedInvitees(prev =>
+      prev.includes(userId)
         ? prev.filter(id => id !== userId)
         : [...prev, userId]
     );
@@ -114,8 +116,8 @@ export function ScheduleCallSheet({ open, onOpenChange, existingCall }: Schedule
     if(submitting.current || loadingInvitees || loadError) return;
     if (!title.trim()) {
       toast({
-        title: 'Título obrigatório',
-        description: 'Introduz um título para a chamada',
+        title: uiText("Título obrigatório"),
+        description: uiText("Introduz um título para a chamada"),
         variant: 'destructive',
       });
       return;
@@ -123,8 +125,8 @@ export function ScheduleCallSheet({ open, onOpenChange, existingCall }: Schedule
 
     if (!date) {
       toast({
-        title: 'Data obrigatória',
-        description: 'Seleciona uma data para a chamada',
+        title: uiText("Data obrigatória"),
+        description: uiText("Seleciona uma data para a chamada"),
         variant: 'destructive',
       });
       return;
@@ -138,8 +140,8 @@ export function ScheduleCallSheet({ open, onOpenChange, existingCall }: Schedule
       const scheduledDate = new Date(date);
       scheduledDate.setHours(hours, minutes, 0, 0);
 
-      if (scheduledDate.getTime() <= Date.now()) throw new Error('Escolhe uma data e hora futuras.');
-      if (scheduledDate.getHours() !== hours || scheduledDate.getMinutes() !== minutes) throw new Error('Esta hora não existe devido à mudança de horário.');
+      if (scheduledDate.getTime() <= Date.now()) throw new Error(uiText("Escolhe uma data e hora futuras."));
+      if (scheduledDate.getHours() !== hours || scheduledDate.getMinutes() !== minutes) throw new Error(uiText("Esta hora não existe devido à mudança de horário."));
       await save({
         title: title.trim(), scheduled_at: scheduledDate.toISOString(), call_type: callType,
         description: description || undefined, timezone,
@@ -151,7 +153,7 @@ export function ScheduleCallSheet({ open, onOpenChange, existingCall }: Schedule
 
       toast({
         title: existingCall ? 'Agendamento atualizado' : 'Chamada agendada',
-        description: `Chamada de ${callType === 'video' ? 'vídeo' : 'voz'} agendada para ${format(scheduledDate, 'dd/MM/yyyy HH:mm', { locale: pt })}`,
+        description: uiText("Chamada de {{value1}} agendada para {{value2}}", { value1: (callType === 'video' ? 'vídeo' : 'voz'), value2: (format(scheduledDate, 'dd/MM/yyyy HH:mm', { locale: pt })) ?? "" }),
       });
 
       // Reset form
@@ -167,7 +169,7 @@ export function ScheduleCallSheet({ open, onOpenChange, existingCall }: Schedule
       onOpenChange(false);
     } catch (error) {
       toast({
-        title: 'Não foi possível agendar',
+        title: uiText("Não foi possível agendar"),
         description: error instanceof Error ? error.message : 'Não foi possível agendar. Tenta novamente.',
         variant: 'destructive',
       });
@@ -181,20 +183,20 @@ export function ScheduleCallSheet({ open, onOpenChange, existingCall }: Schedule
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="flex h-[90dvh] max-h-[calc(100dvh-env(safe-area-inset-top,0px))] flex-col gap-3 overflow-hidden rounded-t-3xl px-4 pt-2 pb-[max(1rem,env(safe-area-inset-bottom,0px))] sm:px-6">
         <SheetHeader className="shrink-0">
-          <SheetTitle className="text-xl">{existingCall ? 'Editar esta ocorrência' : 'Agendar chamada'}</SheetTitle>
+          <SheetTitle className="text-xl">{existingCall ? uiText("Editar esta ocorrência") : uiText("Agendar chamada")}</SheetTitle>
         </SheetHeader>
 
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-1 pb-4">
           <div className="space-y-6">
             {loadError && <p role="alert">{loadError}</p>}
-            <p className="text-sm text-muted-foreground">Horários no fuso {timezone}. Lembrete na aplicação 15 minutos antes. {existingCall && 'As alterações aplicam-se apenas a esta ocorrência.'}</p>
+            <p className="text-sm text-muted-foreground">{uiText("Horários no fuso {{value1}}. Lembrete na aplicação 15 minutos antes. {{value2}}", { value1: (timezone) ?? "", value2: (existingCall && uiText("As alterações aplicam-se apenas a esta ocorrência.")) ?? "" })}</p>
             {/* Title */}
             <div className="space-y-2">
-              <Label htmlFor="title">Título *</Label>
+              <Label htmlFor="title">{uiText("Título *")}</Label>
               <Input
                 id="title"
                 maxLength={120}
-                placeholder="Reunião semanal da equipa"
+                placeholder={uiText("Reunião semanal da equipa")}
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
               />
@@ -202,11 +204,11 @@ export function ScheduleCallSheet({ open, onOpenChange, existingCall }: Schedule
 
             {/* Description */}
             <div className="space-y-2">
-              <Label htmlFor="description">Descrição</Label>
+              <Label htmlFor="description">{uiText("Descrição")}</Label>
               <Textarea
                 id="description"
                 maxLength={2000}
-                placeholder="Adiciona uma descrição..."
+                placeholder={uiText("Adiciona uma descrição...")}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={3}
@@ -215,7 +217,7 @@ export function ScheduleCallSheet({ open, onOpenChange, existingCall }: Schedule
 
             {/* Call Type */}
             <div className="space-y-2">
-              <Label>Tipo de chamada</Label>
+              <Label>{uiText("Tipo de chamada")}</Label>
               <div className="flex gap-2">
                 <Button
                   type="button"
@@ -226,9 +228,7 @@ export function ScheduleCallSheet({ open, onOpenChange, existingCall }: Schedule
                   )}
                   onClick={() => setCallType('video')}
                 >
-                  <Video className="w-4 h-4 mr-2" />
-                  Vídeo
-                </Button>
+                  <Video className="w-4 h-4 mr-2" />{uiText("Vídeo")}</Button>
                 <Button
                   type="button"
                   variant={callType === 'voice' ? 'default' : 'outline'}
@@ -238,16 +238,14 @@ export function ScheduleCallSheet({ open, onOpenChange, existingCall }: Schedule
                   )}
                   onClick={() => setCallType('voice')}
                 >
-                  <Phone className="w-4 h-4 mr-2" />
-                  Voz
-                </Button>
+                  <Phone className="w-4 h-4 mr-2" />{uiText("Voz")}</Button>
               </div>
             </div>
 
             {/* Date & Time */}
             <div className="grid grid-cols-1 gap-4 min-[400px]:grid-cols-2">
               <div className="space-y-2">
-                <Label>Data *</Label>
+                <Label>{uiText("Data *")}</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
@@ -255,7 +253,7 @@ export function ScheduleCallSheet({ open, onOpenChange, existingCall }: Schedule
                       className="h-11 w-full min-w-0 justify-start rounded-xl text-left font-normal"
                     >
                       <CalendarIcon className="mr-2 h-4 w-4 shrink-0" />
-                      <span className="truncate">{date ? format(date, 'dd/MM/yyyy', { locale: pt }) : 'Seleciona a data'}</span>
+                      <span className="truncate">{date ? format(date, 'dd/MM/yyyy', { locale: pt }) : uiText("Seleciona a data")}</span>
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
@@ -272,14 +270,14 @@ export function ScheduleCallSheet({ open, onOpenChange, existingCall }: Schedule
               </div>
 
               <div className="space-y-2">
-                <Label>Hora *</Label>
-                <Input type="time" aria-label="Hora" className="h-11 min-w-0" value={time} onChange={e=>setTime(e.target.value)} />
+                <Label>{uiText("Hora *")}</Label>
+                <Input type="time" aria-label={uiText("Hora")} className="h-11 min-w-0" value={time} onChange={e=>setTime(e.target.value)} />
               </div>
             </div>
 
             {/* Duration */}
             <div className="space-y-2">
-              <Label>Duração</Label>
+              <Label>{uiText("Duração")}</Label>
               <Select value={duration} onValueChange={setDuration}>
                 <SelectTrigger className="h-11 min-w-0 rounded-xl">
                   <SelectValue />
@@ -297,9 +295,7 @@ export function ScheduleCallSheet({ open, onOpenChange, existingCall }: Schedule
             {/* Recurrence */}
             <div className="space-y-2">
               <Label className="flex items-center gap-2">
-                <Repeat className="w-4 h-4" />
-                Repetição
-              </Label>
+                <Repeat className="w-4 h-4" />{uiText("Repetição")}</Label>
               <Select disabled={!!existingCall} value={recurrence} onValueChange={setRecurrence}>
                 <SelectTrigger className="h-11 min-w-0 rounded-xl">
                   <SelectValue />
@@ -315,17 +311,15 @@ export function ScheduleCallSheet({ open, onOpenChange, existingCall }: Schedule
             </div>
 
             {!existingCall && recurrence !== 'none' && <div className="space-y-2">
-              <Label htmlFor="occurrences">Número de ocorrências (incluindo a primeira)</Label>
+              <Label htmlFor="occurrences">{uiText("Número de ocorrências (incluindo a primeira)")}</Label>
               <Input id="occurrences" type="number" min={2} max={52} value={occurrences} onChange={e=>setOccurrences(e.target.value)} />
-              <p className="text-xs text-muted-foreground">A mesma hora local em cada ocorrência. Até 52 chamadas.</p>
+              <p className="text-xs text-muted-foreground">{uiText("A mesma hora local em cada ocorrência. Até 52 chamadas.")}</p>
             </div>}
             {/* Waiting Room */}
             <div className="flex items-center justify-between gap-3 p-4 rounded-xl bg-secondary/50">
               <div>
-                <p className="font-medium">Sala de espera</p>
-                <p className="text-sm text-muted-foreground">
-                  Os participantes aguardam até os admitires
-                </p>
+                <p className="font-medium">{uiText("Sala de espera")}</p>
+                <p className="text-sm text-muted-foreground">{uiText("Os participantes aguardam até os admitires")}</p>
               </div>
               <Switch
                 checked={waitingRoom}
@@ -336,9 +330,7 @@ export function ScheduleCallSheet({ open, onOpenChange, existingCall }: Schedule
             {/* Invite Participants */}
             <div className="space-y-3">
               <Label className="flex items-center gap-2">
-                <Users className="w-4 h-4" />
-                Convidar participantes
-              </Label>
+                <Users className="w-4 h-4" />{uiText("Convidar participantes")}</Label>
 
               {/* Selected invitees */}
               {selectedInvitees.length > 0 && (
@@ -351,10 +343,10 @@ export function ScheduleCallSheet({ open, onOpenChange, existingCall }: Schedule
                         variant="secondary"
                         className="pr-1 rounded-full"
                       >
-                        {contact?.profile?.display_name || 'Sem nome'}
+                        {contact?.profile?.display_name || uiText("Sem nome")}
                         <button
                           type="button"
-                          aria-label="Remover participante"
+                          aria-label={uiText("Remover participante")}
                           onClick={() => toggleInvitee(userId)}
                           className="ml-1 flex h-11 w-11 items-center justify-center rounded-full hover:bg-muted"
                         >
@@ -412,9 +404,7 @@ export function ScheduleCallSheet({ open, onOpenChange, existingCall }: Schedule
                 })}
 
                 {contacts.length === 0 && (
-                  <p className="text-center text-muted-foreground py-4">
-                    Não há contactos para convidar
-                  </p>
+                  <p className="text-center text-muted-foreground py-4">{uiText("Não há contactos para convidar")}</p>
                 )}
               </div>
             </div>
@@ -428,7 +418,7 @@ export function ScheduleCallSheet({ open, onOpenChange, existingCall }: Schedule
             onClick={handleSubmit}
             disabled={isSubmitting || loadingInvitees || !!loadError}
           >
-            {isSubmitting ? 'A guardar...' : existingCall ? 'Guardar alterações' : 'Agendar chamada'}
+            {isSubmitting ? uiText("A guardar...") : existingCall ? uiText("Guardar alterações") : uiText("Agendar chamada")}
           </Button>
         </div>
       </SheetContent>

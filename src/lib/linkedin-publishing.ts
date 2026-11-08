@@ -1,3 +1,4 @@
+import { uiText } from '@/i18n/ui-copy';
 import { supabase } from '@/integrations/supabase/client';
 const messages: Record<string, string> = {
   integration_disabled: 'A ligação direta ao LinkedIn ainda não está disponível.',
@@ -30,6 +31,6 @@ export async function linkedinRequest(action: string, input?: Record<string, unk
 export async function connectLinkedIn() {
   const { url } = await linkedinRequest('connect', { returnPath: location.pathname + location.search });
   const destination = new URL(url);
-  if (destination.origin !== 'https://www.linkedin.com' || destination.pathname !== '/oauth/v2/authorization') throw new Error('Destino de autorização inválido.');
+  if (destination.origin !== 'https://www.linkedin.com' || destination.pathname !== '/oauth/v2/authorization') throw new Error(uiText("Destino de autorização inválido."));
   location.assign(destination.href);
 }

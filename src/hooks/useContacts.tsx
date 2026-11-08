@@ -1,3 +1,4 @@
+import { uiText } from '@/i18n/ui-copy';
 import { useCachedList } from './useCachedList';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -256,10 +257,10 @@ export function useContacts() {
   type FriendRequestLite = Pick<FriendRequest, 'id' | 'sender_id' | 'receiver_id' | 'status'>;
 
   const acceptFriendRequestInternal = async (request: FriendRequestLite) => {
-    if (!user) return { error: new Error('Not authenticated') };
+    if (!user) return { error: new Error(uiText("Not authenticated")) };
 
     if (request.receiver_id !== user.id) {
-      return { error: new Error('Not authorized to accept this request') };
+      return { error: new Error(uiText("Not authorized to accept this request")) };
     }
 
     // First, add MY contact (current user -> sender) - this uses "Users can insert own contacts" policy
@@ -309,7 +310,7 @@ export function useContacts() {
   };
 
   const sendFriendRequest = async (receiverId: string, message?: string) => {
-    if (!user) return { error: new Error('Not authenticated') };
+    if (!user) return { error: new Error(uiText("Not authenticated")) };
 
     // Check if a request already exists between these users (either direction)
     const { data: existingRequests, error: existingError } = await supabase
@@ -335,7 +336,7 @@ export function useContacts() {
       // Heal legacy data: if friendship exists but contact row wasn't created, create it now
       await syncContactsFromAcceptedFriendRequests();
       await fetchContacts();
-      return { error: new Error('You are already friends with this user') };
+      return { error: new Error(uiText("You are already friends with this user")) };
     }
 
     // If the other user already sent you a request, accept it instead of creating a duplicate "cross" request
@@ -344,7 +345,7 @@ export function useContacts() {
     }
 
     if (outgoing && outgoing.status === 'pending') {
-      return { error: new Error('You already sent a friend request to this user') };
+      return { error: new Error(uiText("You already sent a friend request to this user")) };
     }
 
     const { error } = await supabase.from('friend_requests').insert({
@@ -361,23 +362,23 @@ export function useContacts() {
     // Map unique constraint errors to a friendlier message
     if (String(error.message).includes('friend_requests_sender_id_receiver_id_key')) {
       await fetchFriendRequests();
-      return { error: new Error('You already sent a friend request to this user') };
+      return { error: new Error(uiText("You already sent a friend request to this user")) };
     }
 
     return { error: new Error(error.message) };
   };
 
   const acceptFriendRequest = async (requestId: string) => {
-    if (!user) return { error: new Error('Not authenticated') };
+    if (!user) return { error: new Error(uiText("Not authenticated")) };
 
     const request = friendRequests.find((r) => r.id === requestId);
-    if (!request) return { error: new Error('Request not found') };
+    if (!request) return { error: new Error(uiText("Request not found")) };
 
     return await acceptFriendRequestInternal(request);
   };
 
   const rejectFriendRequest = async (requestId: string) => {
-    if (!user) return { error: new Error('Not authenticated') };
+    if (!user) return { error: new Error(uiText("Not authenticated")) };
 
     const { error } = await supabase
       .from('friend_requests')
@@ -392,7 +393,7 @@ export function useContacts() {
   };
 
   const cancelFriendRequest = async (requestId: string) => {
-    if (!user) return { error: new Error('Not authenticated') };
+    if (!user) return { error: new Error(uiText("Not authenticated")) };
 
     const { error } = await supabase
       .from('friend_requests')
@@ -408,10 +409,10 @@ export function useContacts() {
   };
 
   const removeContact = async (contactId: string) => {
-    if (!user) return { error: new Error('Not authenticated') };
+    if (!user) return { error: new Error(uiText("Not authenticated")) };
 
     const contact = contacts.find((c) => c.id === contactId);
-    if (!contact) return { error: new Error('Contact not found') };
+    if (!contact) return { error: new Error(uiText("Contact not found")) };
 
     // Remove from both sides
     const { error } = await supabase
@@ -427,10 +428,10 @@ export function useContacts() {
   };
 
   const toggleFavorite = async (contactId: string) => {
-    if (!user) return { error: new Error('Not authenticated') };
+    if (!user) return { error: new Error(uiText("Not authenticated")) };
 
     const contact = contacts.find((c) => c.id === contactId);
-    if (!contact) return { error: new Error('Contact not found') };
+    if (!contact) return { error: new Error(uiText("Contact not found")) };
 
     const { error } = await supabase
       .from('contacts')
@@ -445,10 +446,10 @@ export function useContacts() {
   };
 
   const blockContact = async (contactId: string) => {
-    if (!user) return { error: new Error('Not authenticated') };
+    if (!user) return { error: new Error(uiText("Not authenticated")) };
 
     const contact = contacts.find((c) => c.id === contactId);
-    if (!contact) return { error: new Error('Contact not found') };
+    if (!contact) return { error: new Error(uiText("Contact not found")) };
 
     // Add to blocked_users table
     const { error: blockError } = await supabase.from('blocked_users').insert({
@@ -472,7 +473,7 @@ export function useContacts() {
   };
 
   const updateNickname = async (contactId: string, nickname: string) => {
-    if (!user) return { error: new Error('Not authenticated') };
+    if (!user) return { error: new Error(uiText("Not authenticated")) };
 
     const { error } = await supabase
       .from('contacts')

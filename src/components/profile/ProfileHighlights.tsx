@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -60,6 +61,7 @@ interface SortableHighlightProps {
 }
 
 function SortableHighlight({ item, index, isEditMode, onClick }: SortableHighlightProps) {
+  useUiLocale();
   const {
     attributes,
     listeners,
@@ -110,7 +112,7 @@ function SortableHighlight({ item, index, isEditMode, onClick }: SortableHighlig
             </div>
           )}
         </motion.div>
-        
+
         {/* Drag indicator in edit mode */}
         <AnimatePresence>
           {isEditMode && (
@@ -143,6 +145,7 @@ export function ProfileHighlights({
   onHighlightClick,
   onReorder,
 }: ProfileHighlightsProps) {
+  useUiLocale();
   const { t } = useTranslation();
   const hasItems = items && items.length > 0;
   const [isEditMode, setIsEditMode] = useState(false);
@@ -231,7 +234,7 @@ export function ProfileHighlights({
             <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>
           )}
         </div>
-        
+
         {/* Save button in edit mode */}
         <AnimatePresence>
           {isEditMode && (
@@ -242,9 +245,7 @@ export function ProfileHighlights({
               onClick={handleSaveOrder}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-medium"
             >
-              <Check className="w-3.5 h-3.5" />
-              Guardar
-            </motion.button>
+              <Check className="w-3.5 h-3.5" />{uiText("Guardar")}</motion.button>
           )}
         </AnimatePresence>
       </div>
@@ -262,9 +263,7 @@ export function ProfileHighlights({
                 whileTap={{ scale: 0.95 }}
               >
                 <div className="w-16 h-16 rounded-full ring-2 ring-[#F2A900]/50 ring-offset-2 ring-offset-background overflow-hidden flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg, #F2A900 0%, #E67E22 50%, #C0392B 100%)' }}>
-                  <span className="text-white text-[8px] font-light tracking-tight" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
-                    yamilook
-                  </span>
+                  <span className="text-white text-[8px] font-light tracking-tight" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>{uiText("yamilook")}</span>
                 </div>
                 <span className="text-[10px] text-foreground font-medium">
                   YAMILOOK
@@ -284,12 +283,8 @@ export function ProfileHighlights({
                   <Plus className="w-5 h-5 text-primary" />
                 </div>
                 <div className="flex flex-col items-center">
-                  <span className="text-[10px] text-foreground font-semibold leading-tight">
-                    Novo
-                  </span>
-                  <span className="text-[9px] text-muted-foreground leading-tight">
-                    Momambo
-                  </span>
+                  <span className="text-[10px] text-foreground font-semibold leading-tight">{uiText("Novo")}</span>
+                  <span className="text-[9px] text-muted-foreground leading-tight">{uiText("Momambo")}</span>
                 </div>
               </motion.button>
             )}
@@ -376,12 +371,10 @@ export function ProfileHighlights({
           </div>
         )
       )}
-      
+
       {/* Edit mode hint */}
       {isOwner && hasItems && !isEditMode && (
-        <p className="text-[10px] text-muted-foreground text-center mt-2 opacity-60">
-          Segure para reorganizar
-        </p>
+        <p className="text-[10px] text-muted-foreground text-center mt-2 opacity-60">{uiText("Segure para reorganizar")}</p>
       )}
     </motion.div>
   );

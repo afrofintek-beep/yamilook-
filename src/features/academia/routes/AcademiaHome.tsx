@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { MentorSettings } from '../components/MentorSettings';
 import { useAuth } from '@/hooks/useAuth';
 import { useAdmin } from '@/hooks/useAdmin';
@@ -36,6 +37,7 @@ import {
 import { motion } from 'framer-motion';
 
 export default function AcademiaHome() {
+  useUiLocale();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isAdmin } = useAdmin();
@@ -55,14 +57,14 @@ export default function AcademiaHome() {
 
   const handleBecomeMentor = () => {
     if (!specialty.trim()) {
-      toast.error('Indica a tua especialidade.');
+      toast.error(uiText("Indica a tua especialidade."));
       return;
     }
     becomeMentor.mutate(
       { specialty: specialty.trim(), mentorBio: mentorBio.trim(), experience: experience.trim() },
       {
         onSuccess: () => {
-          toast.success('Candidatura enviada para análise.');
+          toast.success(uiText("Candidatura enviada para análise."));
           setMentorSheetOpen(false);
           setSpecialty('');
           setMentorBio('');
@@ -102,17 +104,17 @@ export default function AcademiaHome() {
       </header>
 
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain space-y-6 pt-4">
-        {notices.length > 0 && <section className="mx-4 space-y-2" aria-label="Avisos da Academia">
+        {notices.length > 0 && <section className="mx-4 space-y-2" aria-label={uiText("Avisos da Academia")}>
           {notices.map(n => <div key={n.session_id} role="status" className="rounded-xl border p-3 text-sm">
-            <p className="font-semibold">Sessão cancelada: {n.title}</p><p>{n.reason}</p>
-            {n.refunded > 0 && <p>Foram devolvidos {n.refunded} Kumbu.</p>}
-            <Button variant="link" onClick={() => navigate(`/academia/${n.session_id}`)}>Ver sessão</Button>
+            <p className="font-semibold">{uiText("Sessão cancelada: {{value1}}", { value1: (n.title) ?? "" })}</p><p>{n.reason}</p>
+            {n.refunded > 0 && <p>{uiText("Foram devolvidos {{value1}} Kumbu.", { value1: (n.refunded) ?? "" })}</p>}
+            <Button variant="link" onClick={() => navigate(`/academia/${n.session_id}`)}>{uiText("Ver sessão")}</Button>
           </div>)}
         </section>}
         <section className="mx-4 rounded-2xl border border-primary/20 bg-primary/5 p-4 space-y-2">
-          <h2 className="font-semibold">Aprender, fazer e mostrar resultados</h2>
-          <p className="text-sm text-muted-foreground">Transforma um objetivo num plano com o mentor. Entrega desafios e acompanha o teu progresso.</p>
-          <div className="flex flex-wrap gap-2"><Button onClick={() => navigate('/academia/comunidades')}>Descobrir comunidades e desafios</Button><Button variant="outline" onClick={() => navigate('/academia/percursos')}>Explorar os meus percursos</Button></div>
+          <h2 className="font-semibold">{uiText("Aprender, fazer e mostrar resultados")}</h2>
+          <p className="text-sm text-muted-foreground">{uiText("Transforma um objetivo num plano com o mentor. Entrega desafios e acompanha o teu progresso.")}</p>
+          <div className="flex flex-wrap gap-2"><Button onClick={() => navigate('/academia/comunidades')}>{uiText("Descobrir comunidades e desafios")}</Button><Button variant="outline" onClick={() => navigate('/academia/percursos')}>{uiText("Explorar os meus percursos")}</Button></div>
         </section>
         {/* Hero section */}
         <motion.section
@@ -125,36 +127,32 @@ export default function AcademiaHome() {
             {/* Decorative elements */}
             <div className="absolute top-0 right-0 w-40 h-40 bg-primary/5 rounded-full blur-3xl -translate-y-12 translate-x-12" />
             <div className="absolute bottom-0 left-0 w-24 h-24 bg-success/5 rounded-full blur-2xl translate-y-8 -translate-x-8" />
-            
+
             <div className="relative space-y-3">
               <div className="flex items-center gap-2">
                 <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
                   <Sparkles className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-foreground">Cresce com a tua banda</p>
+                  <p className="text-sm font-bold text-foreground">{uiText("Cresce com a tua banda")}</p>
                   <p className="text-[11px] text-muted-foreground">{ACADEMIA_COPY.subtitle}</p>
                 </div>
               </div>
-              
+
               {/* Stats strip */}
               <div className="flex items-center gap-4 pt-1">
                 <div className="flex items-center gap-1.5">
                   <TrendingUp className="h-3.5 w-3.5 text-success" />
                   <span className="text-[11px] text-muted-foreground">
-                    <span className="text-foreground font-semibold tabular-nums">{sessions.length}</span> sessões
-                  </span>
+                    <span className="text-foreground font-semibold tabular-nums">{sessions.length}</span>{uiText(" sessões")}</span>
                 </div>
                 <div className="w-px h-3.5 bg-border" />
                 <span className="text-[11px] text-muted-foreground">
-                  <span className="text-foreground font-semibold tabular-nums">{mentors.length}</span> mentores
-                </span>
+                  <span className="text-foreground font-semibold tabular-nums">{mentors.length}</span>{uiText(" mentores")}</span>
                 {liveSessions.length > 0 && (
                   <>
                     <div className="w-px h-3.5 bg-border" />
-                    <span className="text-[11px] text-destructive font-medium">
-                      {liveSessions.length} ao vivo
-                    </span>
+                    <span className="text-[11px] text-destructive font-medium">{uiText("{{value1}} ao vivo", { value1: (liveSessions.length) ?? "" })}</span>
                   </>
                 )}
               </div>
@@ -164,10 +162,8 @@ export default function AcademiaHome() {
 
         {isError && (
           <div role="alert" className="mx-4 rounded-xl border border-destructive/30 p-3 text-sm">
-            <p>Não foi possível atualizar as sessões. A lista pode estar desatualizada.</p>
-            <Button variant="outline" size="sm" className="mt-2" disabled={isFetching} onClick={() => void refetch()}>
-              Tentar novamente
-            </Button>
+            <p>{uiText("Não foi possível atualizar as sessões. A lista pode estar desatualizada.")}</p>
+            <Button variant="outline" size="sm" className="mt-2" disabled={isFetching} onClick={() => void refetch()}>{uiText("Tentar novamente")}</Button>
           </div>
         )}
 
@@ -210,7 +206,7 @@ export default function AcademiaHome() {
         )}
 
         {isMentor && <MentorSettings />}
-        {isAdmin && <Button variant="outline" onClick={() => navigate('/admin/mentors')}>Gestão de Mentores</Button>}
+        {isAdmin && <Button variant="outline" onClick={() => navigate('/admin/mentors')}>{uiText("Gestão de Mentores")}</Button>}
         {/* Mentors carousel */}
         <motion.section
           initial={{ opacity: 0, y: 12 }}
@@ -219,7 +215,7 @@ export default function AcademiaHome() {
         >
           <div className="flex items-center justify-between px-4 mb-3">
             <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{ACADEMIA_COPY.mentors}</h2>
-            <span className="text-[10px] text-muted-foreground/50">{mentors.length} disponíveis</span>
+            <span className="text-[10px] text-muted-foreground/50">{uiText("{{value1}} disponíveis", { value1: (mentors.length) ?? "" })}</span>
           </div>
           {mentorsLoading ? (
             <div className="flex gap-3 pb-2 px-4">
@@ -232,10 +228,8 @@ export default function AcademiaHome() {
                 <GraduationCap className="h-6 w-6 text-primary" />
               </div>
               <div className="space-y-1">
-                <p className="text-sm font-semibold text-foreground">Ainda sem mentores</p>
-                <p className="text-[11px] text-muted-foreground leading-relaxed max-w-[240px]">
-                  Sê o primeiro a partilhar o teu talento e a ajudar a tua banda a crescer.
-                </p>
+                <p className="text-sm font-semibold text-foreground">{uiText("Ainda sem mentores")}</p>
+                <p className="text-[11px] text-muted-foreground leading-relaxed max-w-[240px]">{uiText("Sê o primeiro a partilhar o teu talento e a ajudar a tua banda a crescer.")}</p>
               </div>
               {!isMentor && (
                 <Button
@@ -243,9 +237,7 @@ export default function AcademiaHome() {
                   className="rounded-full gap-1.5 h-8 text-xs"
                   onClick={() => setMentorSheetOpen(true)}
                 >
-                  <Plus className="h-3.5 w-3.5" />
-                  Candidatar-me a mentor
-                </Button>
+                  <Plus className="h-3.5 w-3.5" />{uiText("Candidatar-me a mentor")}</Button>
               )}
             </div>
           ) : (
@@ -266,9 +258,7 @@ export default function AcademiaHome() {
                 className="w-full rounded-full gap-1.5 h-9 text-xs"
                 onClick={() => setMentorSheetOpen(true)}
               >
-                <Plus className="h-3.5 w-3.5" />
-                Candidatar-me a mentor
-              </Button>
+                <Plus className="h-3.5 w-3.5" />{uiText("Candidatar-me a mentor")}</Button>
             </div>
           )}
         </motion.section>
@@ -281,16 +271,16 @@ export default function AcademiaHome() {
           className="px-4 pb-4"
         >
           <div className="mb-3 flex flex-wrap gap-2">
-            <Button variant={!mine ? 'default' : 'outline'} onClick={() => setMine(false)}>Explorar sessões</Button>
-            {user && <Button variant={mine ? 'default' : 'outline'} onClick={() => setMine(true)}>{isAdmin ? 'Gerir sessões' : 'As minhas sessões'}</Button>}
+            <Button variant={!mine ? 'default' : 'outline'} onClick={() => setMine(false)}>{uiText("Explorar sessões")}</Button>
+            {user && <Button variant={mine ? 'default' : 'outline'} onClick={() => setMine(true)}>{isAdmin ? uiText("Gerir sessões") : uiText("As minhas sessões")}</Button>}
           </div>
-          {<div className="mb-3 flex flex-wrap gap-2" aria-label="Filtrar sessões">
-            {([['upcoming', 'Próximas'], ['past', 'Passadas'], ['cancelled', 'Canceladas'], ['archived', 'Arquivadas']] as const).map(([value, label]) =>
+          {<div className="mb-3 flex flex-wrap gap-2" aria-label={uiText("Filtrar sessões")}>
+            {([['upcoming', uiText('Próximas')], ['past', uiText('Passadas')], ['cancelled', uiText('Canceladas')], ['archived', uiText('Arquivadas')]] as const).map(([value, label]) =>
               <Button key={value} size="sm" variant={filter === value ? 'default' : 'outline'} aria-pressed={filter === value} onClick={() => setFilter(value)}>{label}</Button>)}
           </div>}
           <Tabs value={tab} onValueChange={setTab}>
             <TabsList className="w-full rounded-xl h-10">
-              <TabsTrigger value="all" className="rounded-lg text-xs flex-1">Todos os preços</TabsTrigger>
+              <TabsTrigger value="all" className="rounded-lg text-xs flex-1">{uiText("Todos os preços")}</TabsTrigger>
               <TabsTrigger value="free" className="rounded-lg text-xs flex-1">{ACADEMIA_COPY.tabFree}</TabsTrigger>
               <TabsTrigger value="premium" className="rounded-lg text-xs flex-1">{ACADEMIA_COPY.tabPremium}</TabsTrigger>
             </TabsList>
@@ -332,7 +322,7 @@ export default function AcademiaHome() {
                   <div className="h-14 w-14 rounded-2xl bg-card border border-border/30 flex items-center justify-center">
                     <GraduationCap className="h-6 w-6 text-muted-foreground/30" />
                   </div>
-                  <p className="text-sm text-muted-foreground">Sem sessões de momento.</p>
+                  <p className="text-sm text-muted-foreground">{uiText("Sem sessões de momento.")}</p>
                 </div>
               )}
             </TabsContent>
@@ -343,30 +333,28 @@ export default function AcademiaHome() {
       <Sheet open={mentorSheetOpen} onOpenChange={setMentorSheetOpen}>
         <SheetContent side="bottom" className="max-h-[90dvh] overflow-y-auto rounded-t-2xl">
           <SheetHeader className="text-left">
-            <SheetTitle>Candidatar-me a mentor</SheetTitle>
-            <SheetDescription>
-              Apresenta a tua experiência. Poderás criar sessões após aprovação.
-            </SheetDescription>
+            <SheetTitle>{uiText("Candidatar-me a mentor")}</SheetTitle>
+            <SheetDescription>{uiText("Apresenta a tua experiência. Poderás criar sessões após aprovação.")}</SheetDescription>
           </SheetHeader>
 
           <div className="space-y-4 py-4">
             <div className="space-y-1.5">
-              <Label htmlFor="mentor-specialty" className="text-xs">Especialidade</Label>
+              <Label htmlFor="mentor-specialty" className="text-xs">{uiText("Especialidade")}</Label>
               <Input
                 id="mentor-specialty" maxLength={120}
                 value={specialty}
                 onChange={(e) => setSpecialty(e.target.value)}
-                placeholder="Ex.: Música, Fotografia, Negócios"
+                placeholder={uiText("Ex.: Música, Fotografia, Negócios")}
                 className="rounded-xl"
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="mentor-bio" className="text-xs">Biografia</Label>
+              <Label htmlFor="mentor-bio" className="text-xs">{uiText("Biografia")}</Label>
               <Textarea
                 id="mentor-bio" maxLength={2000}
                 value={mentorBio}
                 onChange={(e) => setMentorBio(e.target.value)}
-                placeholder="Conta um pouco sobre a tua experiência..."
+                placeholder={uiText("Conta um pouco sobre a tua experiência...")}
                 className="rounded-xl resize-none"
                 rows={4}
               />
@@ -374,8 +362,8 @@ export default function AcademiaHome() {
           </div>
 
           <div className="space-y-2 pb-4">
-            <Label htmlFor="mentor-experience">Experiência</Label>
-            <Textarea id="mentor-experience" maxLength={2000} value={experience} onChange={e => setExperience(e.target.value)} placeholder="Experiência prática, formação e trabalhos realizados" />
+            <Label htmlFor="mentor-experience">{uiText("Experiência")}</Label>
+            <Textarea id="mentor-experience" maxLength={2000} value={experience} onChange={e => setExperience(e.target.value)} placeholder={uiText("Experiência prática, formação e trabalhos realizados")} />
           </div>
           <SheetFooter>
             <Button
@@ -383,7 +371,7 @@ export default function AcademiaHome() {
               onClick={handleBecomeMentor}
               disabled={becomeMentor.isPending || specialty.trim().length < 2 || mentorBio.trim().length < 10 || experience.trim().length < 10}
             >
-              {becomeMentor.isPending ? 'A processar...' : 'Confirmar'}
+              {becomeMentor.isPending ? uiText("A processar...") : uiText("Confirmar")}
             </Button>
           </SheetFooter>
         </SheetContent>

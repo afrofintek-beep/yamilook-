@@ -1,7 +1,8 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Activity, Wifi, WifiOff, Mic, MicOff, Video, VideoOff, 
+import {
+  Activity, Wifi, WifiOff, Mic, MicOff, Video, VideoOff,
   Server, Shield, RefreshCw, CheckCircle, XCircle, AlertTriangle,
   ChevronDown, ChevronUp, Copy, ExternalLink, Phone, PhoneOff, Volume2
 } from 'lucide-react';
@@ -61,12 +62,13 @@ interface LoopbackTestResult {
 }
 
 export function CallDiagnosticsPanel() {
+  useUiLocale();
   const { user } = useAuth();
   const [isExpanded, setIsExpanded] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [diagnostics, setDiagnostics] = useState<DiagnosticsData | null>(null);
   const [testPeerConnection, setTestPeerConnection] = useState<RTCPeerConnection | null>(null);
-  
+
   // Loopback test state
   const [loopbackTest, setLoopbackTest] = useState<LoopbackTestResult>({
     status: 'idle',
@@ -91,19 +93,19 @@ export function CallDiagnosticsPanel() {
       loopbackStreamRef.current.getTracks().forEach(track => track.stop());
       loopbackStreamRef.current = null;
     }
-    
+
     // Close peer connections
     loopbackPcsRef.current.local?.close();
     loopbackPcsRef.current.remote?.close();
     loopbackPcsRef.current = { local: null, remote: null };
-    
+
     // Close audio context
     if (audioContextRef.current?.state !== 'closed') {
       audioContextRef.current?.close();
     }
     audioContextRef.current = null;
     analyserRef.current = null;
-    
+
     // Clear video elements
     if (localVideoRef.current) localVideoRef.current.srcObject = null;
     if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
@@ -113,7 +115,7 @@ export function CallDiagnosticsPanel() {
   const runLoopbackTest = useCallback(async () => {
     // Cleanup any previous test
     cleanupLoopbackTest();
-    
+
     setLoopbackTest({
       status: 'running',
       step: 'A solicitar acesso à câmara e microfone...',
@@ -145,7 +147,7 @@ export function CallDiagnosticsPanel() {
       const config: RTCConfiguration = {
         iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
       };
-      
+
       const localPc = new RTCPeerConnection(config);
       const remotePc = new RTCPeerConnection(config);
       loopbackPcsRef.current = { local: localPc, remote: remotePc };
@@ -169,12 +171,12 @@ export function CallDiagnosticsPanel() {
       // Handle remote track on remotePc
       let videoFrameCount = 0;
       const startTime = Date.now();
-      
+
       remotePc.ontrack = (e) => {
         if (remoteVideoRef.current && e.streams[0]) {
           remoteVideoRef.current.srcObject = e.streams[0];
           remoteVideoRef.current.play().catch(() => {});
-          
+
           // Count video frames
           const checkFrames = () => {
             if (remoteVideoRef.current && !remoteVideoRef.current.paused) {
@@ -205,7 +207,7 @@ export function CallDiagnosticsPanel() {
       const offer = await localPc.createOffer();
       await localPc.setLocalDescription(offer);
       await remotePc.setRemoteDescription(offer);
-      
+
       const answer = await remotePc.createAnswer();
       await remotePc.setLocalDescription(answer);
       await localPc.setRemoteDescription(answer);
@@ -221,30 +223,30 @@ export function CallDiagnosticsPanel() {
       const analyser = audioContext.createAnalyser();
       analyserRef.current = analyser;
       analyser.fftSize = 256;
-      
+
       const source = audioContext.createMediaStreamSource(stream);
       source.connect(analyser);
-      
+
       const dataArray = new Uint8Array(analyser.frequencyBinCount);
-      
+
       const checkAudioLevel = () => {
         if (!analyserRef.current) return;
         analyser.getByteFrequencyData(dataArray);
         const average = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
         const normalizedLevel = Math.min(100, Math.round((average / 128) * 100));
-        
+
         setLoopbackTest(prev => ({
           ...prev,
           audioLevel: normalizedLevel,
         }));
       };
-      
+
       const audioInterval = setInterval(checkAudioLevel, 100);
 
       // Wait for ICE connection
       await new Promise<void>((resolve, reject) => {
         const timeout = setTimeout(() => {
-          reject(new Error('ICE connection timeout'));
+          reject(new Error(uiText("ICE connection timeout")));
         }, 10000);
 
         const checkState = () => {
@@ -264,7 +266,7 @@ export function CallDiagnosticsPanel() {
           }));
           checkState();
         };
-        
+
         // Check initial state
         checkState();
       });
@@ -275,7 +277,7 @@ export function CallDiagnosticsPanel() {
         step: 'Teste de loopback concluído com sucesso!',
       }));
 
-      toast.success('Teste de loopback bem-sucedido! Áudio e vídeo funcionam corretamente.');
+      toast.success(uiText("Teste de loopback bem-sucedido! Áudio e vídeo funcionam corretamente."));
 
       // Keep running for 10 seconds then cleanup
       setTimeout(() => {
@@ -291,7 +293,7 @@ export function CallDiagnosticsPanel() {
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Erro desconhecido';
       console.error('[LoopbackTest] Failed:', error);
-      
+
       setLoopbackTest({
         status: 'failed',
         step: 'Teste falhou',
@@ -300,7 +302,7 @@ export function CallDiagnosticsPanel() {
         error: errorMsg,
       });
 
-      toast.error(`Teste de loopback falhou: ${errorMsg}`);
+      toast.error(uiText("Teste de loopback falhou: {{value1}}", { value1: (errorMsg) ?? "" }));
       cleanupLoopbackTest();
     }
   }, [cleanupLoopbackTest]);
@@ -516,7 +518,7 @@ export function CallDiagnosticsPanel() {
       }
     } catch (e) {
       console.error('[Diagnostics] Error:', e);
-      toast.error('Diagnóstico falhou');
+      toast.error(uiText("Diagnóstico falhou"));
     } finally {
       setIsLoading(false);
     }
@@ -539,7 +541,7 @@ export function CallDiagnosticsPanel() {
     if (!diagnostics) return;
     const text = JSON.stringify(diagnostics, null, 2);
     navigator.clipboard.writeText(text);
-    toast.success('Diagnóstico copiado para a área de transferência');
+    toast.success(uiText("Diagnóstico copiado para a área de transferência"));
   };
 
   const StatusIcon = ({ ok }: { ok: boolean }) => (
@@ -547,11 +549,12 @@ export function CallDiagnosticsPanel() {
   );
 
   const PermissionBadge = ({ state }: { state: PermissionState | 'unknown' }) => {
+  useUiLocale();
     const variants: Record<string, { color: string; label: string }> = {
-      granted: { color: 'bg-green-500/20 text-green-400 border-green-500/30', label: 'Permitido' },
-      denied: { color: 'bg-red-500/20 text-red-400 border-red-500/30', label: 'Negado' },
-      prompt: { color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30', label: 'Aguardando' },
-      unknown: { color: 'bg-muted text-muted-foreground', label: 'Desconhecido' },
+      granted: { color: 'bg-green-500/20 text-green-400 border-green-500/30', label: uiText("Permitido") },
+      denied: { color: 'bg-red-500/20 text-red-400 border-red-500/30', label: uiText("Negado") },
+      prompt: { color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30', label: uiText("Aguardando") },
+      unknown: { color: 'bg-muted text-muted-foreground', label: uiText("Desconhecido") },
     };
     const { color, label } = variants[state] || variants.unknown;
     return <Badge variant="outline" className={color}>{label}</Badge>;
@@ -564,7 +567,7 @@ export function CallDiagnosticsPanel() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Activity className="h-5 w-5 text-primary" />
-              <CardTitle className="text-lg">Diagnóstico de Chamadas</CardTitle>
+              <CardTitle className="text-lg">{uiText("Diagnóstico de Chamadas")}</CardTitle>
             </div>
             <div className="flex items-center gap-2">
               <Button
@@ -573,9 +576,7 @@ export function CallDiagnosticsPanel() {
                 onClick={runDiagnostics}
                 disabled={isLoading}
               >
-                <RefreshCw className={`h-4 w-4 mr-1 ${isLoading ? 'animate-spin' : ''}`} />
-                Atualizar
-              </Button>
+                <RefreshCw className={`h-4 w-4 mr-1 ${isLoading ? 'animate-spin' : ''}`} />{uiText("Atualizar")}</Button>
               <Button size="sm" variant="ghost" onClick={copyToClipboard}>
                 <Copy className="h-4 w-4" />
               </Button>
@@ -586,9 +587,7 @@ export function CallDiagnosticsPanel() {
               </CollapsibleTrigger>
             </div>
           </div>
-          <CardDescription>
-            Estado atual do sistema de chamadas WebRTC
-          </CardDescription>
+          <CardDescription>{uiText("Estado atual do sistema de chamadas WebRTC")}</CardDescription>
         </CardHeader>
 
         <CollapsibleContent>
@@ -598,25 +597,23 @@ export function CallDiagnosticsPanel() {
                 {/* Browser Compatibility */}
                 <div className="space-y-3 mb-6">
                   <h4 className="text-sm font-medium flex items-center gap-2">
-                    <Shield className="h-4 w-4" />
-                    Compatibilidade do Navegador
-                  </h4>
+                    <Shield className="h-4 w-4" />{uiText("Compatibilidade do Navegador")}</h4>
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     <div className="flex items-center gap-2 p-2 rounded bg-muted/50">
                       <StatusIcon ok={diagnostics.browserInfo.isSecureContext} />
-                      <span>Contexto Seguro (HTTPS)</span>
+                      <span>{uiText("Contexto Seguro (HTTPS)")}</span>
                     </div>
                     <div className="flex items-center gap-2 p-2 rounded bg-muted/50">
                       <StatusIcon ok={diagnostics.browserInfo.hasWebRTC} />
-                      <span>WebRTC Disponível</span>
+                      <span>{uiText("WebRTC Disponível")}</span>
                     </div>
                     <div className="flex items-center gap-2 p-2 rounded bg-muted/50">
                       <StatusIcon ok={diagnostics.browserInfo.hasGetUserMedia} />
-                      <span>getUserMedia API</span>
+                      <span>{uiText("getUserMedia API")}</span>
                     </div>
                     <div className="flex items-center gap-2 p-2 rounded bg-muted/50">
                       <StatusIcon ok={diagnostics.signalingState.realtimeConnected} />
-                      <span>Realtime Conectado</span>
+                      <span>{uiText("Realtime Conectado")}</span>
                     </div>
                   </div>
                 </div>
@@ -624,9 +621,7 @@ export function CallDiagnosticsPanel() {
                 {/* Media Permissions */}
                 <div className="space-y-3 mb-6">
                   <h4 className="text-sm font-medium flex items-center gap-2">
-                    <Mic className="h-4 w-4" />
-                    Permissões de Média
-                  </h4>
+                    <Mic className="h-4 w-4" />{uiText("Permissões de Média")}</h4>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="p-3 rounded-lg border bg-card">
                       <div className="flex items-center gap-2 mb-2">
@@ -635,7 +630,7 @@ export function CallDiagnosticsPanel() {
                         ) : (
                           <MicOff className="h-4 w-4 text-red-500" />
                         )}
-                        <span className="text-sm font-medium">Microfone</span>
+                        <span className="text-sm font-medium">{uiText("Microfone")}</span>
                       </div>
                       <PermissionBadge state={diagnostics.mediaPermissions.microphone} />
                     </div>
@@ -646,7 +641,7 @@ export function CallDiagnosticsPanel() {
                         ) : (
                           <VideoOff className="h-4 w-4 text-red-500" />
                         )}
-                        <span className="text-sm font-medium">Câmara</span>
+                        <span className="text-sm font-medium">{uiText("Câmara")}</span>
                       </div>
                       <PermissionBadge state={diagnostics.mediaPermissions.camera} />
                     </div>
@@ -656,14 +651,10 @@ export function CallDiagnosticsPanel() {
                 {/* Media Devices */}
                 <div className="space-y-3 mb-6">
                   <h4 className="text-sm font-medium flex items-center gap-2">
-                    <Video className="h-4 w-4" />
-                    Dispositivos Detetados ({diagnostics.mediaDevices.length})
-                  </h4>
+                    <Video className="h-4 w-4" />{uiText("Dispositivos Detetados ({{value1}})", { value1: (diagnostics.mediaDevices.length) ?? "" })}</h4>
                   <div className="space-y-1">
                     {diagnostics.mediaDevices.length === 0 ? (
-                      <p className="text-sm text-muted-foreground p-2 bg-muted/50 rounded">
-                        Nenhum dispositivo detetado (permissões podem estar pendentes)
-                      </p>
+                      <p className="text-sm text-muted-foreground p-2 bg-muted/50 rounded">{uiText("Nenhum dispositivo detetado (permissões podem estar pendentes)")}</p>
                     ) : (
                       diagnostics.mediaDevices.map((device, i) => (
                         <div key={i} className="flex items-center gap-2 text-sm p-2 bg-muted/30 rounded">
@@ -671,7 +662,7 @@ export function CallDiagnosticsPanel() {
                             {device.kind.replace('input', '').replace('output', ' out')}
                           </Badge>
                           <span className="truncate flex-1">
-                            {device.label || `Dispositivo ${i + 1}`}
+                            {device.label || uiText('Dispositivo {{number}}', { number: i + 1 })}
                           </span>
                         </div>
                       ))
@@ -682,16 +673,14 @@ export function CallDiagnosticsPanel() {
                 {/* TURN Servers */}
                 <div className="space-y-3 mb-6">
                   <h4 className="text-sm font-medium flex items-center gap-2">
-                    <Server className="h-4 w-4" />
-                    Servidores TURN/STUN
-                  </h4>
+                    <Server className="h-4 w-4" />{uiText("Servidores TURN/STUN")}</h4>
                   <div className="space-y-1">
                     {diagnostics.turnServers.map((server, i) => (
                       <div key={i} className="flex items-center gap-2 text-sm p-2 bg-muted/30 rounded">
                         <StatusIcon ok={server.status === 'available'} />
                         <span className="truncate flex-1 font-mono text-xs">{server.url}</span>
                         {server.username && (
-                          <Badge variant="outline" className="text-xs">auth</Badge>
+                          <Badge variant="outline" className="text-xs">{uiText("auth")}</Badge>
                         )}
                       </div>
                     ))}
@@ -701,19 +690,15 @@ export function CallDiagnosticsPanel() {
                 {/* ICE Candidates */}
                 <div className="space-y-3 mb-6">
                   <h4 className="text-sm font-medium flex items-center gap-2">
-                    <Wifi className="h-4 w-4" />
-                    ICE Candidates Locais ({diagnostics.localCandidates.length})
-                  </h4>
+                    <Wifi className="h-4 w-4" />{uiText("ICE Candidates Locais ({{value1}})", { value1: (diagnostics.localCandidates.length) ?? "" })}</h4>
                   {diagnostics.localCandidates.length === 0 ? (
-                    <p className="text-sm text-muted-foreground p-2 bg-muted/50 rounded">
-                      A recolher candidatos ICE...
-                    </p>
+                    <p className="text-sm text-muted-foreground p-2 bg-muted/50 rounded">{uiText("A recolher candidatos ICE...")}</p>
                   ) : (
                     <div className="space-y-1 max-h-32 overflow-y-auto">
                       {diagnostics.localCandidates.map((c, i) => (
                         <div key={i} className="text-xs font-mono p-2 bg-muted/30 rounded break-all">
                           <Badge variant="outline" className="mr-2 mb-1">
-                            {c.type || 'unknown'}
+                            {c.type || uiText("unknown")}
                           </Badge>
                           {c.candidate?.split(' ').slice(4, 7).join(' ')}
                         </div>
@@ -725,22 +710,20 @@ export function CallDiagnosticsPanel() {
                 {/* Signaling State */}
                 <div className="space-y-3 mb-6">
                   <h4 className="text-sm font-medium flex items-center gap-2">
-                    <Activity className="h-4 w-4" />
-                    Estado do Signaling
-                  </h4>
+                    <Activity className="h-4 w-4" />{uiText("Estado do Signaling")}</h4>
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     <div className="p-2 rounded bg-muted/50">
-                      <span className="text-muted-foreground">Realtime:</span>
+                      <span className="text-muted-foreground">{uiText("Realtime:")}</span>
                       <span className="ml-2">
                         {diagnostics.signalingState.realtimeConnected ? (
-                          <Badge className="bg-green-500">Conectado</Badge>
+                          <Badge className="bg-green-500">{uiText("Conectado")}</Badge>
                         ) : (
-                          <Badge variant="destructive">Desconectado</Badge>
+                          <Badge variant="destructive">{uiText("Desconectado")}</Badge>
                         )}
                       </span>
                     </div>
                     <div className="p-2 rounded bg-muted/50">
-                      <span className="text-muted-foreground">Sinais Pendentes:</span>
+                      <span className="text-muted-foreground">{uiText("Sinais Pendentes:")}</span>
                       <span className="ml-2 font-medium">{diagnostics.signalingState.pendingSignals}</span>
                     </div>
                   </div>
@@ -752,17 +735,15 @@ export function CallDiagnosticsPanel() {
                 {/* ICE State */}
                 <div className="space-y-3">
                   <h4 className="text-sm font-medium flex items-center gap-2">
-                    <WifiOff className="h-4 w-4" />
-                    Estado ICE (teste)
-                  </h4>
+                    <WifiOff className="h-4 w-4" />{uiText("Estado ICE (teste)")}</h4>
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     <div className="p-2 rounded bg-muted/50">
-                      <span className="text-muted-foreground">Connection:</span>
-                      <span className="ml-2 font-mono">{diagnostics.iceConnectionState || 'N/A'}</span>
+                      <span className="text-muted-foreground">{uiText("Connection:")}</span>
+                      <span className="ml-2 font-mono">{diagnostics.iceConnectionState || uiText("N/A")}</span>
                     </div>
                     <div className="p-2 rounded bg-muted/50">
-                      <span className="text-muted-foreground">Gathering:</span>
-                      <span className="ml-2 font-mono">{diagnostics.iceGatheringState || 'N/A'}</span>
+                      <span className="text-muted-foreground">{uiText("Gathering:")}</span>
+                      <span className="ml-2 font-mono">{diagnostics.iceGatheringState || uiText("N/A")}</span>
                     </div>
                   </div>
                 </div>
@@ -770,30 +751,24 @@ export function CallDiagnosticsPanel() {
                 {/* Loopback Test Section */}
                 <div className="space-y-3 pt-4 border-t">
                   <h4 className="text-sm font-medium flex items-center gap-2">
-                    <Phone className="h-4 w-4" />
-                    Teste de Loopback (Áudio/Vídeo)
-                  </h4>
-                  
+                    <Phone className="h-4 w-4" />{uiText("Teste de Loopback (Áudio/Vídeo)")}</h4>
+
                   <div className="flex gap-2">
                     {loopbackTest.status === 'idle' || loopbackTest.status === 'failed' ? (
-                      <Button 
-                        onClick={runLoopbackTest} 
+                      <Button
+                        onClick={runLoopbackTest}
                         size="sm"
                         className="flex-1"
                       >
-                        <Phone className="h-4 w-4 mr-2" />
-                        Iniciar Teste de Chamada
-                      </Button>
+                        <Phone className="h-4 w-4 mr-2" />{uiText("Iniciar Teste de Chamada")}</Button>
                     ) : (
-                      <Button 
-                        onClick={stopLoopbackTest} 
-                        size="sm" 
+                      <Button
+                        onClick={stopLoopbackTest}
+                        size="sm"
                         variant="destructive"
                         className="flex-1"
                       >
-                        <PhoneOff className="h-4 w-4 mr-2" />
-                        Parar Teste
-                      </Button>
+                        <PhoneOff className="h-4 w-4 mr-2" />{uiText("Parar Teste")}</Button>
                     )}
                   </div>
 
@@ -812,8 +787,8 @@ export function CallDiagnosticsPanel() {
                             <XCircle className="h-4 w-4 text-destructive" />
                           )}
                           <span className="text-sm font-medium">
-                            {loopbackTest.status === 'running' ? 'A testar...' : 
-                             loopbackTest.status === 'success' ? 'Sucesso' : 'Falhou'}
+                            {loopbackTest.status === 'running' ? uiText("A testar...") :
+                             loopbackTest.status === 'success' ? uiText("Sucesso") : uiText("Falhou")}
                           </span>
                         </div>
                         <p className="text-xs text-muted-foreground">{loopbackTest.step}</p>
@@ -826,23 +801,23 @@ export function CallDiagnosticsPanel() {
                       {(loopbackTest.status === 'running' || loopbackTest.status === 'success') && (
                         <div className="grid grid-cols-2 gap-2">
                           <div className="space-y-1">
-                            <p className="text-xs text-muted-foreground text-center">Local</p>
+                            <p className="text-xs text-muted-foreground text-center">{uiText("Local")}</p>
                             <div className="aspect-video bg-muted rounded-lg overflow-hidden relative">
-                              <video 
+                              <video
                                 ref={localVideoRef}
-                                autoPlay 
-                                playsInline 
+                                autoPlay
+                                playsInline
                                 muted
                                 className="w-full h-full object-cover"
                               />
                             </div>
                           </div>
                           <div className="space-y-1">
-                            <p className="text-xs text-muted-foreground text-center">Remoto (Loopback)</p>
+                            <p className="text-xs text-muted-foreground text-center">{uiText("Remoto (Loopback)")}</p>
                             <div className="aspect-video bg-muted rounded-lg overflow-hidden relative">
-                              <video 
+                              <video
                                 ref={remoteVideoRef}
-                                autoPlay 
+                                autoPlay
                                 playsInline
                                 className="w-full h-full object-cover"
                               />
@@ -856,7 +831,7 @@ export function CallDiagnosticsPanel() {
                         <div className="space-y-2">
                           <div className="flex items-center gap-2">
                             <Volume2 className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-xs text-muted-foreground">Nível de Áudio</span>
+                            <span className="text-xs text-muted-foreground">{uiText("Nível de Áudio")}</span>
                             <span className="text-xs font-mono ml-auto">{loopbackTest.audioLevel}%</span>
                           </div>
                           <Progress value={loopbackTest.audioLevel} className="h-2" />
@@ -867,15 +842,15 @@ export function CallDiagnosticsPanel() {
                       {(loopbackTest.status === 'running' || loopbackTest.status === 'success') && (
                         <div className="grid grid-cols-3 gap-2 text-xs">
                           <div className="p-2 rounded bg-muted/50 text-center">
-                            <p className="text-muted-foreground">ICE State</p>
+                            <p className="text-muted-foreground">{uiText("ICE State")}</p>
                             <p className="font-mono">{loopbackTest.iceState || '-'}</p>
                           </div>
                           <div className="p-2 rounded bg-muted/50 text-center">
-                            <p className="text-muted-foreground">Frames</p>
+                            <p className="text-muted-foreground">{uiText("Frames")}</p>
                             <p className="font-mono">{loopbackTest.videoFrames}</p>
                           </div>
                           <div className="p-2 rounded bg-muted/50 text-center">
-                            <p className="text-muted-foreground">Tempo</p>
+                            <p className="text-muted-foreground">{uiText("Tempo")}</p>
                             <p className="font-mono">{loopbackTest.latencyMs ? `${loopbackTest.latencyMs}ms` : '-'}</p>
                           </div>
                         </div>
@@ -883,10 +858,7 @@ export function CallDiagnosticsPanel() {
                     </div>
                   )}
 
-                  <p className="text-xs text-muted-foreground">
-                    Este teste captura o seu áudio e vídeo, cria uma conexão peer-to-peer local (loopback), 
-                    e verifica se a stack completa de WebRTC está a funcionar corretamente.
-                  </p>
+                  <p className="text-xs text-muted-foreground">{uiText("Este teste captura o seu áudio e vídeo, cria uma conexão peer-to-peer local (loopback), e verifica se a stack completa de WebRTC está a funcionar corretamente.")}</p>
                 </div>
               </ScrollArea>
             ) : (

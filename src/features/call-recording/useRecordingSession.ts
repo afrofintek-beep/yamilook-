@@ -1,3 +1,4 @@
+import { uiText } from '@/i18n/ui-copy';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { unlockCallAudio } from '@/lib/audio-context';
 import { saveRecording } from './save';
@@ -77,8 +78,8 @@ export function useRecordingSession(callId: string, userId: string | undefined,
         if (id) void recordingSession(callId, 'fail', id).catch(() => {});
       }
       if (mounted.current) setError(action === 'respond'
-        ? 'Não foi possível guardar a sua resposta. Tente novamente.'
-        : 'Não foi possível concluir o pedido de gravação. Verifique a ligação e tente novamente.');
+        ? uiText("Não foi possível guardar a sua resposta. Tente novamente.")
+        : uiText("Não foi possível concluir o pedido de gravação. Verifique a ligação e tente novamente."));
     } finally {
       working.current = false;
       if (mounted.current) setBusy(false);
@@ -92,7 +93,7 @@ export function useRecordingSession(callId: string, userId: string | undefined,
       owned.current = null;
       void discard();
       void recordingSession(callId, 'fail', id).catch(() => {});
-      setError('A gravação foi interrompida porque não foi possível actualizar o áudio ou vídeo.');
+      setError(uiText("A gravação foi interrompida porque não foi possível actualizar o áudio ou vídeo."));
     }
   }, [callId, localStream, remoteStreams, localScreen, remoteScreens, discard]);
 
@@ -115,7 +116,7 @@ export function useRecordingSession(callId: string, userId: string | undefined,
           } else {
             await discard();
             owned.current = null;
-            setError('A gravação foi interrompida porque o pedido terminou ou os participantes mudaram.');
+            setError(uiText("A gravação foi interrompida porque o pedido terminou ou os participantes mudaram."));
           }
         }
         setError(previous => previous === verificationError ? '' : previous);
@@ -169,7 +170,7 @@ export function useRecordingSession(callId: string, userId: string | undefined,
     if (session?.status !== 'pending_consent') return;
     const timer = setTimeout(() => {
       if (owned.current === session.id) void run('cancel', session.id);
-      setError('O prazo de 60 segundos terminou. Pode enviar um novo pedido.');
+      setError(uiText("O prazo de 60 segundos terminou. Pode enviar um novo pedido."));
     }, Math.max(0, Date.parse(session.deadline) - Date.now()));
     return () => clearTimeout(timer);
   }, [session?.id, session?.status, session?.deadline, run]);
@@ -195,7 +196,7 @@ export function useRecordingSession(callId: string, userId: string | undefined,
     } catch (cause) {
       if (mounted.current) {
         setRetryAvailable(true);
-        setError(cause instanceof Error ? cause.message : 'Não foi possível guardar a gravação.');
+        setError(cause instanceof Error ? cause.message : uiText("Não foi possível guardar a gravação."));
       }
     } finally {
       working.current = false;
@@ -227,7 +228,7 @@ export function useRecordingSession(callId: string, userId: string | undefined,
       working.current = false;
       if (mounted.current) {
         setBusy(false);
-        setError('O navegador não entregou dados da gravação. Não foi criado um ficheiro.');
+        setError(uiText("O navegador não entregou dados da gravação. Não foi criado um ficheiro."));
       }
     }
   };

@@ -1,27 +1,28 @@
+import { uiText } from '@/i18n/ui-copy';
 /**
  * YAMILOOK AFRICAN REACTION SYSTEM
  * ============================================================================
- * 
+ *
  * DESIGN PRINCIPLES:
  * - Emotions have meaning, not color.
  * - Culture over generic emoji behavior.
  * - Calm, dignified, non-aggressive visual language.
  * - No popularity or like-based scoring.
  * - Reactions communicate intent, not engagement pressure.
- * 
+ *
  * VISUAL HIERARCHY (Priority Order):
  * 1. Sankofa Love (highest)
  * 2. Ubuntu
  * 3. Djembe
  * 4. Shango
  * 5. Eish (lowest)
- * 
+ *
  * UI RULES:
  * - No gradients.
  * - No flashing or looping animations.
  * - Hover/Active: +10% brightness only.
  * - Reaction name shown on long-press or hover.
- * 
+ *
  * ACCESSIBILITY:
  * - Reactions must not rely solely on color.
  * - Meaning always visible via label.
@@ -42,7 +43,7 @@ export interface AfricanReaction {
 
 /**
  * OFFICIAL YAMILOOK AFRICAN REACTION SET
- * 
+ *
  * FINAL ICONS (Cultural symbols - DO NOT REPLACE):
  * - 💛 Sankofa Love
  * - 🤝🏾 Ubuntu (skin tone intentional)
@@ -51,46 +52,46 @@ export interface AfricanReaction {
  * - 😒 Eish
  */
 export const AFRICAN_REACTIONS: AfricanReaction[] = [
-  { 
-    type: 'sankofa', 
+  {
+    type: 'sankofa',
     icon: '💛',
-    label: 'Sankofa Love',
+    get label() { return uiText("Sankofa Love"); },
     meaning: 'Love with memory and respect for what came before',
     emotionType: 'Positive / Foundational',
     priority: 1,
     usage: 'Default positive reaction. Highest visual priority. Used for appreciation, respect, shared memory.',
   },
-  { 
-    type: 'ubuntu', 
+  {
+    type: 'ubuntu',
     icon: '🤝🏾',
-    label: 'Ubuntu',
+    get label() { return uiText("Ubuntu"); },
     meaning: 'Solidarity and shared humanity ("I am because we are")',
     emotionType: 'Support / Empathy',
     priority: 2,
     usage: 'Supportive response. Agreement without excitement. Community validation.',
   },
-  { 
-    type: 'djembe', 
+  {
+    type: 'djembe',
     icon: '🪘',
-    label: 'Djembe',
+    get label() { return uiText("Djembe"); },
     meaning: 'Rhythm, celebration, collective energy',
     emotionType: 'Celebration / Movement',
     priority: 3,
     usage: 'Celebration, joy, events. Positive momentum and movement.',
   },
-  { 
-    type: 'shango', 
+  {
+    type: 'shango',
     icon: '💢',
-    label: 'Shango',
+    get label() { return uiText("Shango"); },
     meaning: 'Justified anger and moral indignation',
     emotionType: 'Alert / Justice',
     priority: 4,
     usage: 'Expresses injustice or serious concern. Must not be gamified or promoted. Not for hate or harassment.',
   },
-  { 
-    type: 'eish', 
+  {
+    type: 'eish',
     icon: '😒',
-    label: 'Eish',
+    get label() { return uiText("Eish"); },
     meaning: 'Honest exhaustion or dissatisfaction',
     emotionType: 'Discomfort / Fatigue',
     priority: 5,
@@ -160,7 +161,7 @@ export function getTotalReactions(counts: Partial<ReactionCounts>): number {
  * Get top reactions sorted by visual hierarchy
  */
 export function getTopReactions(
-  counts: Partial<ReactionCounts>, 
+  counts: Partial<ReactionCounts>,
   limit = 3
 ): Array<{ type: AfricanReactionType; count: number; reaction: AfricanReaction }> {
   return Object.entries(counts)

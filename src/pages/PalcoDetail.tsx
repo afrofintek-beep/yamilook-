@@ -1,14 +1,15 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { 
+import {
   ArrowLeft,
-  Radio, 
-  Clock, 
-  MessageSquare, 
-  Calendar, 
+  Radio,
+  Clock,
+  MessageSquare,
+  Calendar,
   Share2,
   Heart,
   CheckCircle2,
@@ -23,7 +24,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { usePalco, usePalcoReaction, usePalcosForRoda, Roda, VoiceType } from '@/hooks/usePalco';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
-import { format, formatDistanceToNow } from 'date-fns';
+import { format, formatDistanceToNow } from '@/i18n/ui-date';
 import { pt } from 'date-fns/locale';
 import { GuideProfileSheet } from '@/components/palco/GuideProfileSheet';
 import { PalcoIcon } from '@/components/icons/PalcoIcon';
@@ -34,6 +35,7 @@ import { AnimatePresence } from 'framer-motion';
 
 
 export default function PalcoDetail() {
+  useUiLocale();
   const { palcoId } = useParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -45,35 +47,35 @@ export default function PalcoDetail() {
   const [showReactions, setShowReactions] = useState(false);
   const [showGuideSheet, setShowGuideSheet] = useState(false);
   const [countdown, setCountdown] = useState<string>('');
-  
+
   const isOwner = user?.id === palco?.guide_id;
   const isLive = palco?.status === 'live';
 
   // Countdown timer for roda
   useEffect(() => {
     if (!palco?.roda?.scheduled_at) return;
-    
+
     const updateCountdown = () => {
       const scheduledTime = new Date(palco.roda!.scheduled_at!);
       const now = new Date();
       const diff = scheduledTime.getTime() - now.getTime();
-      
+
       if (diff <= 0) {
         setCountdown('Ao vivo');
         return;
       }
-      
+
       const hours = Math.floor(diff / (1000 * 60 * 60));
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-      
+
       if (hours > 0) {
         setCountdown(`${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
       } else {
         setCountdown(`${minutes}:${seconds.toString().padStart(2, '0')}`);
       }
     };
-    
+
     updateCountdown();
     const interval = setInterval(updateCountdown, 1000);
     return () => clearInterval(interval);
@@ -82,7 +84,7 @@ export default function PalcoDetail() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-palco-bg flex items-center justify-center">
-        <div className="animate-pulse text-palco-accent">Carregando...</div>
+        <div className="animate-pulse text-palco-accent">{uiText("Carregando...")}</div>
       </div>
     );
   }
@@ -91,10 +93,8 @@ export default function PalcoDetail() {
     return (
       <div className="min-h-screen bg-palco-bg flex flex-col items-center justify-center p-4">
         <Sparkles className="w-12 h-12 text-palco-accent/50 mb-4" />
-        <h2 className="text-lg font-medium text-palco-text mb-2">Palco não encontrado</h2>
-        <Button variant="outline" onClick={() => navigate('/palco')}>
-          Voltar
-        </Button>
+        <h2 className="text-lg font-medium text-palco-text mb-2">{uiText("Palco não encontrado")}</h2>
+        <Button variant="outline" onClick={() => navigate('/palco')}>{uiText("Voltar")}</Button>
       </div>
     );
   }
@@ -106,9 +106,9 @@ export default function PalcoDetail() {
       {/* Header with Logo */}
       <div className="px-4 pt-4 pb-2">
         <div className="flex items-center justify-between">
-          <Button 
-            size="icon" 
-            variant="ghost" 
+          <Button
+            size="icon"
+            variant="ghost"
             className="text-palco-text hover:bg-palco-accent/10"
             onClick={() => navigate(-1)}
           >
@@ -131,8 +131,8 @@ export default function PalcoDetail() {
           {/* Cover Image with Badge */}
           <div className="relative aspect-[16/9]">
             {palco.cover_url ? (
-              <img 
-                src={palco.cover_url} 
+              <img
+                src={palco.cover_url}
                 alt={palco.title}
                 className="w-full h-full object-cover"
                 onError={(e) => {
@@ -145,20 +145,18 @@ export default function PalcoDetail() {
                 <Sparkles className="w-16 h-16 text-palco-accent/30" />
               </div>
             )}
-            
+
             {/* Live Badge */}
             {isLive && (
-              <div className="absolute top-3 right-3 flex items-center gap-1.5 px-3 py-1.5 bg-palco-accent text-palco-surface rounded-full text-sm font-semibold shadow-md">
-                EM DIRETO
-              </div>
+              <div className="absolute top-3 right-3 flex items-center gap-1.5 px-3 py-1.5 bg-palco-accent text-palco-surface rounded-full text-sm font-semibold shadow-md">{uiText("EM DIRETO")}</div>
             )}
 
             {/* Action Buttons */}
             <div className="absolute top-3 left-3 flex gap-2">
               {isOwner && (
-                <Button 
-                  size="icon" 
-                  variant="ghost" 
+                <Button
+                  size="icon"
+                  variant="ghost"
                   className="bg-black/30 backdrop-blur-sm text-white hover:bg-black/50 w-8 h-8"
                   onClick={() => navigate(`/palco/${palcoId}/edit`)}
                 >
@@ -166,14 +164,14 @@ export default function PalcoDetail() {
                 </Button>
               )}
             </div>
-            
+
             <div className="absolute top-3 right-3 flex gap-2">
               {!isLive && (
                 <>
                   <div className="relative">
-                    <Button 
-                      size="icon" 
-                      variant="ghost" 
+                    <Button
+                      size="icon"
+                      variant="ghost"
                       className="bg-black/30 backdrop-blur-sm text-white hover:bg-black/50 w-8 h-8"
                       onClick={() => {
                         if (myReaction) {
@@ -228,9 +226,9 @@ export default function PalcoDetail() {
                       )}
                     </AnimatePresence>
                   </div>
-                  <Button 
-                    size="icon" 
-                    variant="ghost" 
+                  <Button
+                    size="icon"
+                    variant="ghost"
                     className="bg-black/30 backdrop-blur-sm text-white hover:bg-black/50 w-8 h-8 relative z-10"
                     onClick={(e) => {
                       e.stopPropagation();
@@ -244,14 +242,14 @@ export default function PalcoDetail() {
                         }).catch(() => {
                           // Fallback if share is cancelled or fails
                           navigator.clipboard?.writeText(shareUrl).then(() => {
-                            toast({ title: 'Link copiado!' });
+                            toast({ title: uiText("Link copiado!") });
                           });
                         });
                       } else {
                         // No native share — copy to clipboard
                         if (navigator.clipboard) {
                           navigator.clipboard.writeText(shareUrl).then(() => {
-                            toast({ title: 'Link copiado!' });
+                            toast({ title: uiText("Link copiado!") });
                           });
                         } else {
                           // Ultimate fallback
@@ -261,7 +259,7 @@ export default function PalcoDetail() {
                           textarea.select();
                           document.execCommand('copy');
                           document.body.removeChild(textarea);
-                          toast({ title: 'Link copiado!' });
+                          toast({ title: uiText("Link copiado!") });
                         }
                       }
                     }}
@@ -273,7 +271,7 @@ export default function PalcoDetail() {
             </div>
 
             {/* Guide Avatar - Overlapping */}
-            <div 
+            <div
               className="absolute -bottom-8 left-4 cursor-pointer"
               onClick={() => setShowGuideSheet(true)}
             >
@@ -309,36 +307,36 @@ export default function PalcoDetail() {
 
             {/* Title */}
             <h1 className="text-2xl font-bold text-palco-text mb-2">{palco.title}</h1>
-            
+
             {/* Session Info */}
             <div className="flex items-center gap-2 text-sm text-palco-text-secondary mb-4">
             {isLive ? (
                 <>
                   <Radio className="w-4 h-4 text-destructive animate-pulse" />
-                  <span>Em direto agora</span>
+                  <span>{uiText("Em direto agora")}</span>
                 </>
               ) : (
                 <>
                 <Calendar className="w-4 h-4" />
                   {palco.roda?.scheduled_at && (
                     <span>
-                       {formatDistanceToNow(new Date(palco.roda.scheduled_at), { 
-                        locale: pt, 
-                        addSuffix: true 
+                       {formatDistanceToNow(new Date(palco.roda.scheduled_at), {
+                        locale: pt,
+                        addSuffix: true
                       })}
                     </span>
                   )}
                 </>
               )}
               <span>•</span>
-              <span>{currentRodaNumber}ª Roda</span>
+              <span>{uiText("{{value1}}ª Roda", { value1: (currentRodaNumber) ?? "" })}</span>
             </div>
 
             {/* Stats Row */}
             <div className="flex items-center gap-3 mb-5">
               <div className="flex items-center gap-2 px-4 py-2 bg-palco-bg rounded-full">
                 <MessageSquare className="w-4 h-4 text-palco-accent" />
-                <span className="font-semibold text-palco-text">{palco.total_voices} VOZES</span>
+                <span className="font-semibold text-palco-text">{uiText("{{value1}} VOZES", { value1: (palco.total_voices) ?? "" })}</span>
                 <Users className="w-4 h-4 text-palco-text-secondary ml-2" />
                 {countdown && (
                   <span className="text-palco-text-secondary">{countdown}</span>
@@ -347,15 +345,15 @@ export default function PalcoDetail() {
               {countdown && (
                 <div className="flex items-center gap-1.5 px-4 py-2 bg-palco-accent text-white rounded-full font-medium">
                   <Clock className="w-4 h-4" />
-                  <span>{countdown} Restantes</span>
+                  <span>{uiText("{{value1}} Restantes", { value1: (countdown) ?? "" })}</span>
                 </div>
               )}
             </div>
 
             {/* Voice Selection */}
             {palco.voice_types && palco.voice_types.filter(vt => vt.enabled).length > 0 && (
-              <VoiceSelector 
-                voiceTypes={palco.voice_types.filter(vt => vt.enabled)} 
+              <VoiceSelector
+                voiceTypes={palco.voice_types.filter(vt => vt.enabled)}
                 palcoId={palco.id}
                 rodaId={palco.roda?.id}
               />
@@ -372,8 +370,8 @@ export default function PalcoDetail() {
               onClick={() => palco.guide?.id && navigate(`/profile/${palco.guide.id}`)}
               className="flex-shrink-0 group"
             >
-              <img 
-                src={palco.guide?.avatar_url || '/placeholder.svg'} 
+              <img
+                src={palco.guide?.avatar_url || '/placeholder.svg'}
                 alt={palco.guide?.display_name}
                 className="w-20 h-24 rounded-xl object-cover ring-2 ring-transparent group-hover:ring-palco-accent transition-all"
               />
@@ -388,8 +386,8 @@ export default function PalcoDetail() {
               </button>
               <p className="text-sm text-palco-text-secondary mb-2">{palco.title}</p>
               <p className="text-sm text-palco-text-secondary leading-relaxed line-clamp-2">
-                {palco.description || 
-                  `Roda com ${palco.guide?.display_name}, especialista ${palco.theme ? `em ${palco.theme}` : ''}. Aprende estratégias práticas, fala diretamente com o ${t('palco.guide').toLowerCase()}.`}
+                {palco.description ||
+                  (palco.theme ? uiText('Roda com {{name}}, especialista em {{theme}}. Aprende estratégias práticas e fala diretamente com o guia.', { name: palco.guide?.display_name || '', theme: palco.theme }) : uiText('Roda com {{name}}. Aprende estratégias práticas e fala diretamente com o guia.', { name: palco.guide?.display_name || '' }))}
               </p>
               <Button
                 variant="ghost"
@@ -406,7 +404,7 @@ export default function PalcoDetail() {
 
       {/* CTA Button */}
       <div className="px-4 mt-5">
-        <Button 
+        <Button
           className="w-full bg-palco-accent hover:bg-palco-accent/90 text-palco-surface rounded-full h-14 text-lg font-semibold shadow-lg"
           onClick={() => {
             if (palco.roda) {
@@ -414,9 +412,7 @@ export default function PalcoDetail() {
             }
           }}
           disabled={!palco.roda}
-        >
-          Participar na Roda
-        </Button>
+        >{uiText("Participar na Roda")}</Button>
       </div>
 
       {/* Rodas Section */}
@@ -434,25 +430,26 @@ export default function PalcoDetail() {
 }
 
 // Voice Selection Grid Component
-function VoiceSelector({ 
-  voiceTypes, 
-  palcoId, 
-  rodaId 
-}: { 
-  voiceTypes: VoiceType[]; 
+function VoiceSelector({
+  voiceTypes,
+  palcoId,
+  rodaId
+}: {
+  voiceTypes: VoiceType[];
   palcoId: string;
   rodaId?: string;
 }) {
+  useUiLocale();
   const navigate = useNavigate();
   const { selectedCurrency } = useCurrencyRates();
-  
+
   const formatPrice = (price: number) => {
     if (!selectedCurrency) return `$${price}`;
     // Prices are stored in USD, convert to local currency
     const localValue = price / selectedCurrency.rate_to_usd;
     return `${selectedCurrency.symbol}${Math.round(localValue)}`;
   };
-  
+
   const getVoiceLabel = (type: string) => {
     switch (type) {
       case 'highlight': return 'DESTAQUE';
@@ -473,16 +470,14 @@ function VoiceSelector({
   return (
     <div className="mt-2">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold text-palco-text">Escolha uma Voz</h3>
-        <button 
+        <h3 className="font-semibold text-palco-text">{uiText("Escolha uma Voz")}</h3>
+        <button
           onClick={() => navigate(`/palco/${palcoId}/rodas`)}
           className="text-sm text-palco-text-secondary hover:text-palco-accent flex items-center gap-1"
-        >
-          Ver Sessões
-          <ChevronRight className="w-4 h-4" />
+        >{uiText("Ver Sessões")}<ChevronRight className="w-4 h-4" />
         </button>
       </div>
-      
+
       {/* Horizontal Scrolling Grid */}
       <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
         {voiceTypes.map((vt, index) => (
@@ -496,8 +491,8 @@ function VoiceSelector({
             }}
             className={cn(
               "flex-shrink-0 w-44 p-4 rounded-[16px] text-left transition-all",
-              vt.voice_type === 'highlight' 
-                ? "bg-palco-accent/10" 
+              vt.voice_type === 'highlight'
+                ? "bg-palco-accent/10"
                 : "bg-palco-bg hover:bg-palco-accent/5"
             )}
           >
@@ -530,8 +525,9 @@ function isRodaPast(roda: Roda): boolean {
 
 // Rodas Section Component
 function RodasSection({ rodas, palcoId }: { rodas: Roda[] | undefined; palcoId: string }) {
+  useUiLocale();
   const navigate = useNavigate();
-  
+
   if (!rodas || rodas.length === 0) return null;
 
   // Filter rodas: upcoming are those not ended AND scheduled time hasn't passed
@@ -545,7 +541,7 @@ function RodasSection({ rodas, palcoId }: { rodas: Roda[] | undefined; palcoId: 
     <div className="px-4 mt-6 space-y-4">
       {upcomingRodas.length > 0 && (
         <section>
-          <h3 className="text-lg font-semibold text-palco-text mb-3">Próximas Rodas</h3>
+          <h3 className="text-lg font-semibold text-palco-text mb-3">{uiText("Próximas Rodas")}</h3>
           <div className="space-y-2">
             {upcomingRodas.map((roda) => (
               <RodaCard key={roda.id} roda={roda} palcoId={palcoId} />
@@ -556,7 +552,7 @@ function RodasSection({ rodas, palcoId }: { rodas: Roda[] | undefined; palcoId: 
 
       {pastRodas.length > 0 && (
         <section>
-          <h3 className="text-lg font-semibold text-palco-text mb-3">Rodas Anteriores</h3>
+          <h3 className="text-lg font-semibold text-palco-text mb-3">{uiText("Rodas Anteriores")}</h3>
           <div className="space-y-2">
             {pastRodas.slice(0, 3).map((roda) => (
               <RodaCard key={roda.id} roda={roda} palcoId={palcoId} past />
@@ -568,10 +564,11 @@ function RodasSection({ rodas, palcoId }: { rodas: Roda[] | undefined; palcoId: 
   );
 }
 
-// Roda Card Component  
+// Roda Card Component
 function RodaCard({ roda, palcoId, past }: { roda: Roda; palcoId: string; past?: boolean }) {
+  useUiLocale();
   const navigate = useNavigate();
-  
+
   // Check if this roda should be considered as ended (date passed)
   const hasDatePassed = isRodaPast(roda);
   const isEffectivelyEnded = roda.phase === 'ended' || hasDatePassed;
@@ -597,14 +594,14 @@ function RodaCard({ roda, palcoId, past }: { roda: Roda; palcoId: string; past?:
       className={cn(
         "w-full flex items-center gap-3 p-3 rounded-[16px] text-left",
         past || isEffectivelyEnded
-          ? "bg-palco-surface/50" 
+          ? "bg-palco-surface/50"
           : "bg-palco-surface shadow-sm"
       )}
     >
       <div className={cn(
         "w-12 h-12 rounded-[12px] flex flex-col items-center justify-center",
         isEffectivelyEnded ? "bg-muted text-muted-foreground" :
-        roda.phase === 'qa' ? "bg-destructive text-destructive-foreground" : 
+        roda.phase === 'qa' ? "bg-destructive text-destructive-foreground" :
         roda.phase === 'content' ? "bg-palco-accent text-palco-surface" :
         "bg-palco-accent/10 text-palco-accent"
       )}>
@@ -626,7 +623,7 @@ function RodaCard({ roda, palcoId, past }: { roda: Roda; palcoId: string; past?:
           "font-medium truncate",
           (past || isEffectivelyEnded) ? "text-palco-text-secondary" : "text-palco-text"
         )}>
-          {roda.title || 'Roda'}
+          {roda.title || uiText("Roda")}
         </p>
         <div className="flex flex-col gap-0.5">
           <div className="flex items-center gap-2 text-xs text-palco-text-secondary">
@@ -648,9 +645,7 @@ function RodaCard({ roda, palcoId, past }: { roda: Roda; palcoId: string; past?:
           </div>
           {/* Message explaining why roda is ended */}
           {hasDatePassed && roda.phase !== 'ended' && (
-            <span className="text-[10px] text-muted-foreground italic">
-              Esta roda já passou da data agendada
-            </span>
+            <span className="text-[10px] text-muted-foreground italic">{uiText("Esta roda já passou da data agendada")}</span>
           )}
         </div>
       </div>

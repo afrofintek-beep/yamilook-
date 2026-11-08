@@ -1,3 +1,4 @@
+import { uiText } from '@/i18n/ui-copy';
 import { supabase } from '@/integrations/supabase/client';
 export type ResidenceMethod = 'home' | 'away' | 'existing' | 'later';
 export interface ResidencePlan { method: ResidenceMethod; code?: string; lat?: number; lng?: number; accuracy?: number }
@@ -7,7 +8,7 @@ export function validResidencePlan(plan: ResidencePlan) {
   return plan.method === 'away' || plan.method === 'later';
 }
 export async function submitResidence(plan: ResidencePlan, country: string, city: string, neighborhood: string) {
-  if (!validResidencePlan(plan)) throw new Error('Confirma a opção de endereço antes de continuar.');
+  if (!validResidencePlan(plan)) throw new Error(uiText("Confirma a opção de endereço antes de continuar."));
   // Non-home choices never send the current GPS or turn it into a residence.
   const { data, error } = await supabase.rpc('submit_residence_declaration' as never, {
     p_method: plan.method, p_country: country, p_city: city, p_neighborhood: neighborhood,

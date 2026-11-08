@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { PostText } from '@/components/feed/PostText';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
@@ -12,19 +13,21 @@ type PublicPostData = Awaited<ReturnType<typeof loadPublicPost>>;
 // Fallback for in-app navigation and existing service workers. Direct links are
 // server-rendered by /api/public-post, including their Open Graph metadata.
 function PublicVideo({ url, first }: { url: string; first: boolean }) {
+  useUiLocale();
   const [muted, setMuted] = useState(true);
   return <div className="relative h-[calc(100svh-64px)] min-h-60 bg-black">
-    <video src={url} controls playsInline autoPlay={first} muted={muted} preload="metadata" aria-label="Vídeo da publicação" onVolumeChange={(event) => setMuted(event.currentTarget.muted)} className="h-full w-full object-contain" />
+    <video src={url} controls playsInline autoPlay={first} muted={muted} preload="metadata" aria-label={uiText("Vídeo da publicação")} onVolumeChange={(event) => setMuted(event.currentTarget.muted)} className="h-full w-full object-contain" />
     <button type="button" className="absolute right-3 top-3 min-h-11 rounded-xl bg-black/70 px-4 text-white" onClick={(event) => {
       const video = event.currentTarget.previousElementSibling as HTMLVideoElement;
       video.muted = !video.muted;
       setMuted(video.muted);
       if (video.paused) void video.play().catch(() => {});
-    }}>{muted ? 'Ativar som' : 'Silenciar'}</button>
+    }}>{muted ? uiText("Ativar som") : uiText("Silenciar")}</button>
   </div>;
 }
 
 export default function PublicPost() {
+  useUiLocale();
   const { postId } = useParams();
   const { t } = useTranslation();
   const [post, setPost] = useState<PublicPostData>(null);

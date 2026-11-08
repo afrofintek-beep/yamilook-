@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -5,7 +6,7 @@ import { X, Users, Image as ImageIcon, MessageSquare, Video, Heart, Sparkles, Ch
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
-import { format } from 'date-fns';
+import { format } from '@/i18n/ui-date';
 import { pt } from 'date-fns/locale';
 
 type DetailType = 'friends' | 'posts' | 'momambos' | 'messages' | 'calls' | 'reactions';
@@ -74,6 +75,7 @@ const icons: Record<DetailType, React.ElementType> = {
 };
 
 export function JourneyDetailSheet({ open, onOpenChange, type, userId, onNavigate }: JourneyDetailSheetProps) {
+  useUiLocale();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [friends, setFriends] = useState<FriendItem[]>([]);
@@ -243,7 +245,7 @@ export function JourneyDetailSheet({ open, onOpenChange, type, userId, onNavigat
                   friends.map((friend, index) => (
                     <motion.button
                       type="button"
-                      aria-label={`Ver perfil de ${friend.display_name}`}
+                      aria-label={uiText("Ver perfil de {{value1}}", { value1: (friend.display_name) ?? "" })}
                       key={friend.id}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -289,7 +291,7 @@ export function JourneyDetailSheet({ open, onOpenChange, type, userId, onNavigat
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm text-foreground line-clamp-2">{post.content || '[Sem texto]'}</p>
+                        <p className="text-sm text-foreground line-clamp-2">{post.content || uiText("[Sem texto]")}</p>
                         <p className="text-xs text-muted-foreground mt-1">
                           {format(new Date(post.created_at), "d MMM yyyy", { locale: pt })}
                         </p>
@@ -341,7 +343,7 @@ export function JourneyDetailSheet({ open, onOpenChange, type, userId, onNavigat
                   icon={MessageSquare}
                   count={messages.length}
                   label="mensagens enviadas"
-                  description="Por razões de privacidade, os detalhes das mensagens não são listados aqui."
+                  description={uiText("Por razões de privacidade, os detalhes das mensagens não são listados aqui.")}
                   onAction={() => handleNavigate('/chat')}
                   actionLabel="Ir para Conversas"
                 />
@@ -353,7 +355,7 @@ export function JourneyDetailSheet({ open, onOpenChange, type, userId, onNavigat
                   icon={Video}
                   count={calls.length}
                   label="chamadas atendidas"
-                  description="Por razões de privacidade, os detalhes das chamadas não são listados aqui."
+                  description={uiText("Por razões de privacidade, os detalhes das chamadas não são listados aqui.")}
                   onAction={() => handleNavigate('/calls')}
                   actionLabel="Ir para Chamadas"
                 />
@@ -372,6 +374,7 @@ export function JourneyDetailSheet({ open, onOpenChange, type, userId, onNavigat
 }
 
 function EmptyState({ message }: { message: string }) {
+  useUiLocale();
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center">
       <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
@@ -392,6 +395,7 @@ interface PrivacyStatCardProps {
 }
 
 function PrivacyStatCard({ icon: Icon, count, label, description, onAction, actionLabel }: PrivacyStatCardProps) {
+  useUiLocale();
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}

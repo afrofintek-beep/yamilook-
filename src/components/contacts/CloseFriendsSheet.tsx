@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useAuth } from '@/hooks/useAuth';
 import { genderCtx } from '@/lib/i18n-gender';
 import { useState } from 'react';
@@ -24,6 +25,7 @@ interface CloseFriendsSheetProps {
 }
 
 export function CloseFriendsSheet({ open, onOpenChange }: CloseFriendsSheetProps) {
+  useUiLocale();
   const { t } = useTranslation();
   const { profile } = useAuth();
   const { toast } = useToast();
@@ -37,7 +39,7 @@ export function CloseFriendsSheet({ open, onOpenChange }: CloseFriendsSheetProps
     const displayName = contact.nickname || contact.profile?.display_name || '';
     const username = contact.profile?.username || '';
     const searchLower = search.toLowerCase();
-    return displayName.toLowerCase().includes(searchLower) || 
+    return displayName.toLowerCase().includes(searchLower) ||
            username.toLowerCase().includes(searchLower);
   });
 
@@ -45,9 +47,9 @@ export function CloseFriendsSheet({ open, onOpenChange }: CloseFriendsSheetProps
     setTogglingId(contactUserId);
     const isAdding = !closeFriends.includes(contactUserId);
     const label = getCloseFriendLabel(contactGender as 'male' | 'female' | 'other' | null);
-    
+
     const { error } = await toggleCloseFriend(contactUserId);
-    
+
     if (error) {
       toast({
         title: t('common.error'),
@@ -56,13 +58,13 @@ export function CloseFriendsSheet({ open, onOpenChange }: CloseFriendsSheetProps
       });
     } else {
       toast({
-        title: isAdding ? `Adicionado aos ${label}s` : `Removido dos ${label}s`,
-        description: isAdding 
-          ? `Esta pessoa verá os teus estados de ${label}s`
-          : `Esta pessoa já não verá os teus estados de ${label}s`,
+        title: isAdding ? uiText("Adicionado aos {{value1}}s", { value1: (label) ?? "" }) : uiText("Removido dos {{value1}}s", { value1: (label) ?? "" }),
+        description: isAdding
+          ? uiText("Esta pessoa verá os teus estados de {{value1}}s", { value1: (label) ?? "" })
+          : uiText("Esta pessoa já não verá os teus estados de {{value1}}s", { value1: (label) ?? "" }),
       });
     }
-    
+
     setTogglingId(null);
   };
 
@@ -122,8 +124,8 @@ export function CloseFriendsSheet({ open, onOpenChange }: CloseFriendsSheetProps
                   disabled={togglingId === contact.contact_user_id}
                   className={cn(
                     "w-full flex items-center gap-3 p-3 rounded-xl transition-colors",
-                    isCloseFriend 
-                      ? "bg-primary/10 hover:bg-primary/20" 
+                    isCloseFriend
+                      ? "bg-primary/10 hover:bg-primary/20"
                       : "hover:bg-secondary"
                   )}
                 >
@@ -133,18 +135,18 @@ export function CloseFriendsSheet({ open, onOpenChange }: CloseFriendsSheetProps
                       {initials}
                     </AvatarFallback>
                   </Avatar>
-                  
+
                   <div className="flex-1 text-left">
                     <div className="font-medium">{displayName}</div>
                     <div className="text-sm text-muted-foreground">
-                      @{contact.profile?.username || 'unknown'}
+                      @{contact.profile?.username || uiText("unknown")}
                     </div>
                   </div>
 
                   <div className={cn(
                     "w-6 h-6 rounded-full flex items-center justify-center transition-colors",
-                    isCloseFriend 
-                      ? "bg-primary text-primary-foreground" 
+                    isCloseFriend
+                      ? "bg-primary text-primary-foreground"
                       : "border-2 border-muted-foreground/30"
                   )}>
                     {isCloseFriend && <Check className="w-4 h-4" />}

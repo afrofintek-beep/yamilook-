@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Search, X, Clock, Star, Loader2 } from 'lucide-react';
@@ -28,6 +29,7 @@ interface StickerPickerProps {
 }
 
 export function StickerPicker({ onSelect, onClose }: StickerPickerProps) {
+  useUiLocale();
   const { user } = useAuth();
   const [packs, setPacks] = useState<StickerPack[]>([]);
   const [favorites, setFavorites] = useState<Sticker[]>([]);
@@ -171,7 +173,7 @@ export function StickerPicker({ onSelect, onClose }: StickerPickerProps) {
           <Input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search stickers..."
+            placeholder={uiText("Search stickers...")}
             className="pl-9 h-9"
           />
         </div>
@@ -183,13 +185,11 @@ export function StickerPicker({ onSelect, onClose }: StickerPickerProps) {
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="w-full justify-start h-auto p-1 bg-secondary/30">
-          <TabsTrigger value="stickers" className="text-xs px-3">Stickers</TabsTrigger>
+          <TabsTrigger value="stickers" className="text-xs px-3">{uiText("Stickers")}</TabsTrigger>
           <TabsTrigger value="favorites" className="text-xs px-3">
-            <Star className="w-3 h-3 mr-1" /> Favorites
-          </TabsTrigger>
+            <Star className="w-3 h-3 mr-1" />{uiText(" Favorites")}</TabsTrigger>
           <TabsTrigger value="recents" className="text-xs px-3">
-            <Clock className="w-3 h-3 mr-1" /> Recent
-          </TabsTrigger>
+            <Clock className="w-3 h-3 mr-1" />{uiText(" Recent")}</TabsTrigger>
         </TabsList>
 
         <div className="overflow-y-auto" style={{ maxHeight: '250px' }}>
@@ -210,9 +210,7 @@ export function StickerPicker({ onSelect, onClose }: StickerPickerProps) {
 
               <TabsContent value="favorites" className="p-3 m-0">
                 {favorites.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8 text-sm">
-                    No favorite stickers yet
-                  </p>
+                  <p className="text-center text-muted-foreground py-8 text-sm">{uiText("No favorite stickers yet")}</p>
                 ) : (
                   <StickerGrid stickers={favorites} />
                 )}
@@ -220,9 +218,7 @@ export function StickerPicker({ onSelect, onClose }: StickerPickerProps) {
 
               <TabsContent value="recents" className="p-3 m-0">
                 {recents.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8 text-sm">
-                    No recent stickers
-                  </p>
+                  <p className="text-center text-muted-foreground py-8 text-sm">{uiText("No recent stickers")}</p>
                 ) : (
                   <div className="grid grid-cols-4 gap-2">
                     {recents.map((url, i) => (

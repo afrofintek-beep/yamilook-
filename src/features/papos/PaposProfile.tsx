@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,6 +10,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import BottomNav from '@/components/BottomNav';
 export default function PaposProfile() {
+  useUiLocale();
   const { userId } = useParams(); const { user, profile } = useAuth(); const navigate = useNavigate(); const call = useActiveCall();
   const { createConversation } = useConversations(); const { toast } = useToast(); const own = !userId || userId === user?.id;
   const targetId = own ? user?.id : userId;
@@ -30,15 +32,15 @@ export default function PaposProfile() {
     },
   });
   const person = own ? data ?? profile : data;
-  const message = async () => { if (!userId) return; const result = await createConversation([userId]); if (result.error || !result.data) { toast({ title: 'Não foi possível abrir a conversa', variant: 'destructive' }); return; } navigate(`/chat/${result.data.id}`); };
+  const message = async () => { if (!userId) return; const result = await createConversation([userId]); if (result.error || !result.data) { toast({ title: uiText("Não foi possível abrir a conversa"), variant: 'destructive' }); return; } navigate(`/chat/${result.data.id}`); };
   return <div className="h-screen-safe pb-[calc(5rem+env(safe-area-inset-bottom,0px))] bg-background flex flex-col">
-    <header className="safe-top shrink-0 border-b p-4"><Button asChild variant="ghost"><Link to="/papos">Voltar às conversas</Link></Button></header>
+    <header className="safe-top shrink-0 border-b p-4"><Button asChild variant="ghost"><Link to="/papos">{uiText("Voltar às conversas")}</Link></Button></header>
     <main className="flex-1 overflow-y-auto p-6 max-w-md w-full mx-auto space-y-5">
-      {!own && isLoading ? <p role="status">A carregar perfil…</p> : !person || (!own && isError) ? <p role="alert">Perfil indisponível.</p> : <>
-        <Avatar className="w-24 h-24"><AvatarImage src={person.avatar_url || ''} alt={`Fotografia de ${person.display_name || person.username}`} className="object-cover" /><AvatarFallback>{person.display_name?.[0] || 'P'}</AvatarFallback></Avatar>
+      {!own && isLoading ? <p role="status">{uiText("A carregar perfil…")}</p> : !person || (!own && isError) ? <p role="alert">{uiText("Perfil indisponível.")}</p> : <>
+        <Avatar className="w-24 h-24"><AvatarImage src={person.avatar_url || ''} alt={uiText('Fotografia de {{name}}', { name: person.display_name || person.username })} className="object-cover" /><AvatarFallback>{person.display_name?.[0] || 'P'}</AvatarFallback></Avatar>
         <h1 className="text-2xl font-bold break-words">{person.display_name}</h1><p className="text-muted-foreground">@{person.username}</p><p className="whitespace-pre-wrap break-words">{person.bio}</p>
-        {!own && <div className="grid gap-3"><Button onClick={() => void message()}>Enviar mensagem</Button><Button variant="outline" onClick={() => void call?.startCall(userId!, 'voice')}>Chamada de voz</Button><Button variant="outline" onClick={() => void call?.startCall(userId!, 'video')}>Videochamada</Button></div>}
-        <Button asChild variant="outline" className="w-full"><a href={own ? 'https://www.yamilook.com/profile' : `https://www.yamilook.com/profile/${encodeURIComponent(userId!)}`}>{own ? 'Editar o meu perfil na Yamilook' : 'Ver perfil e Muxi na Yamilook'}</a></Button>
+        {!own && <div className="grid gap-3"><Button onClick={() => void message()}>{uiText("Enviar mensagem")}</Button><Button variant="outline" onClick={() => void call?.startCall(userId!, 'voice')}>{uiText("Chamada de voz")}</Button><Button variant="outline" onClick={() => void call?.startCall(userId!, 'video')}>{uiText("Videochamada")}</Button></div>}
+        <Button asChild variant="outline" className="w-full"><a href={own ? 'https://www.yamilook.com/profile' : `https://www.yamilook.com/profile/${encodeURIComponent(userId!)}`}>{own ? uiText("Editar o meu perfil na Yamilook") : uiText("Ver perfil e Muxi na Yamilook")}</a></Button>
       </>}
     </main><BottomNav /></div>;
 }

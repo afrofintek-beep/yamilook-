@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState } from 'react';
 import {
   Dialog,
@@ -19,6 +20,7 @@ interface ReviewModalProps {
 }
 
 export function ReviewModal({ open, onOpenChange, onSubmit }: ReviewModalProps) {
+  useUiLocale();
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
 
@@ -50,7 +52,7 @@ export function ReviewModal({ open, onOpenChange, onSubmit }: ReviewModalProps) 
         <Textarea
           value={comment}
           onChange={(e) => setComment(e.target.value)}
-          placeholder="Deixa um comentário (opcional)"
+          placeholder={uiText("Deixa um comentário (opcional)")}
           rows={3}
           className="resize-none"
         />

@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useTranslation } from 'react-i18next';
 import PaposLanguageSelector from './PaposLanguageSelector';
 import { loginCopy } from './login-copy';
@@ -8,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import PaposBrand from './PaposBrand';
 export default function PaposLogin() {
+  useUiLocale();
   const { t, i18n } = useTranslation();
   const language = (i18n.language || 'pt').split('-')[0];
   const copyLanguage = language in loginCopy ? language as keyof typeof loginCopy : 'en';
@@ -23,7 +25,7 @@ export default function PaposLogin() {
     event.preventDefault(); if (busy) return; setBusy(true); setError('');
     try {
       const result = await signIn(email.trim(), password);
-      if (result.error) { setError(language === 'pt' ? 'Não foi possível entrar. Verifica os teus dados e tenta novamente.' : t('auth.invalidCredentials')); return; }
+      if (result.error) { setError(language === 'pt' ? uiText("Não foi possível entrar. Verifica os teus dados e tenta novamente.") : t('auth.invalidCredentials')); return; }
       navigate(destination, { replace: true });
     } catch { setError(copy.networkError); }
     finally { setBusy(false); }
@@ -34,9 +36,9 @@ export default function PaposLogin() {
       <p lang={copyLanguage} className="text-muted-foreground">{copy.description}</p>
       <form onSubmit={submit} className="space-y-4"><div><label htmlFor="papos-email" className="text-sm">{t('auth.email')}</label><Input id="papos-email" autoComplete="username" type="email" required value={email} onChange={e => setEmail(e.target.value)} disabled={busy} /></div>
         <div><label htmlFor="papos-password" className="text-sm">{t('auth.password')}</label><Input id="papos-password" autoComplete="current-password" type="password" required value={password} onChange={e => setPassword(e.target.value)} disabled={busy} /></div>
-        {error && <p role="alert" className="text-sm text-destructive">{error}</p>}<Button type="submit" disabled={busy || loading} className="w-full">{busy ? t('auth.signingIn') : language === 'pt' ? 'Entrar na KOSOLOLA' : `${t('auth.login')} · KOSOLOLA`}</Button>
-      </form><a href="https://www.yamilook.com/forgot-password" className="text-primary text-sm block">{language === 'pt' ? 'Recuperar palavra-passe' : t('auth.forgotPassword')}</a>
-      <p className="text-sm text-muted-foreground">{t('auth.noAccount')} <a href="https://www.yamilook.com/onboarding" className="text-primary underline"> {copy.invitation}</a>.</p>
-      <div className="flex flex-wrap gap-4 text-xs text-muted-foreground"><a href="https://www.yamilook.com/terms">{language === 'pt' ? 'Termos' : t('auth.termsOfService')}</a><a href="https://www.yamilook.com/privacy">{language === 'pt' ? 'Privacidade' : t('auth.privacyPolicy')}</a><a href="https://www.yamilook.com/muxi">Yamilook</a></div>
+        {error && <p role="alert" className="text-sm text-destructive">{error}</p>}<Button type="submit" disabled={busy || loading} className="w-full">{busy ? t('auth.signingIn') : language === 'pt' ? uiText("Entrar na KOSOLOLA") : `${t('auth.login')} · KOSOLOLA`}</Button>
+      </form><a href={`https://www.yamilook.com/forgot-password?lang=${encodeURIComponent(language)}`} className="text-primary text-sm block">{language === 'pt' ? uiText("Recuperar palavra-passe") : t('auth.forgotPassword')}</a>
+      <p className="text-sm text-muted-foreground">{t('auth.noAccount')} <a href={`https://www.yamilook.com/onboarding?lang=${encodeURIComponent(language)}`} className="text-primary underline"> {copy.invitation}</a>.</p>
+      <div className="flex flex-wrap gap-4 text-xs text-muted-foreground"><a href={`https://www.yamilook.com/terms?lang=${encodeURIComponent(language)}`}>{language === 'pt' ? uiText("Termos") : t('auth.termsOfService')}</a><a href={`https://www.yamilook.com/privacy?lang=${encodeURIComponent(language)}`}>{language === 'pt' ? uiText("Privacidade") : t('auth.privacyPolicy')}</a><a href={`https://www.yamilook.com/muxi?lang=${encodeURIComponent(language)}`}>Yamilook</a></div>
     </div></main>;
 }

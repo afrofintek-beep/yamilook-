@@ -1,3 +1,5 @@
+import { uiServerMessage } from '@/i18n/server-copy';
+import { uiText, uiLocale, useUiLocale } from '@/i18n/ui-copy';
 import { CampaignInvites } from './CampaignInvites';
 import { useState, useEffect } from 'react';
 import { useAppSurface } from '@/lib/app-surface';
@@ -30,9 +32,9 @@ function invitationErrorMessage(error: unknown, fallback: string): string {
   // RPC errors are plain PostgREST objects, not necessarily Error instances.
   if (typeof error === 'object' && error !== null && 'code' in error &&
       error.code === 'P0001' && 'message' in error && typeof error.message === 'string') {
-    return error.message;
+    return uiServerMessage(error.message, fallback);
   }
-  return error instanceof Error ? error.message : fallback;
+  return error instanceof Error ? uiServerMessage(error.message, fallback) : fallback;
 }
 
 interface InviteSheetProps {
@@ -42,6 +44,7 @@ interface InviteSheetProps {
 }
 
 export function InviteSheet({ open, onOpenChange, isAdmin = false }: InviteSheetProps) {
+  useUiLocale();
   const isKosolola = useAppSurface() === 'papos';
   const brand = isKosolola ? 'KOSOLOLA' : 'YAMILOOK';
   const [viewportStyle, setViewportStyle] = useState<{ top: number; height: number }>();
@@ -97,9 +100,9 @@ export function InviteSheet({ open, onOpenChange, isAdmin = false }: InviteSheet
       const result = await invitationClient.rpc('list_invitation_permissions', {});
       if (result.error) throw result.error;
       setDelegates(result.data ?? []);
-      setStatus(grant ? 'Autorização concedida.' : 'Autorização retirada.');
+      setStatus(grant ? uiText("Autorização concedida.") : uiText("Autorização retirada."));
     } catch (error) {
-      setStatus(invitationErrorMessage(error, 'Não foi possível alterar a autorização.'));
+      setStatus(invitationErrorMessage(error, uiText("Não foi possível alterar a autorização.")));
     } finally { setManaging(false); }
   };
   const [status, setStatus] = useState('');
@@ -116,11 +119,11 @@ export function InviteSheet({ open, onOpenChange, isAdmin = false }: InviteSheet
       const { data, error } = await invitationClient.rpc('issue_user_invitation', { p_email: email.trim().toLowerCase() });
       if (error) throw error;
       const result = data as { code?: string } | null;
-      if (!result?.code) throw new Error('Não foi possível gerar o convite.');
+      if (!result?.code) throw new Error(uiText("Não foi possível gerar o convite."));
       setCode(result.code);
       setIssuedFor(email.trim().toLowerCase());
     } catch (error) {
-      setStatus(invitationErrorMessage(error, 'Não foi possível gerar o convite. Tenta novamente.'));
+      setStatus(invitationErrorMessage(error, uiText("Não foi possível gerar o convite. Tenta novamente.")));
     } finally {
       setIssuing(false);
     }
@@ -130,9 +133,9 @@ export function InviteSheet({ open, onOpenChange, isAdmin = false }: InviteSheet
   const copy = async (value: string) => {
     try {
       await navigator.clipboard.writeText(value);
-      setStatus('Copiado. Cola o convite na mensagem para o teu convidado.');
+      setStatus(uiText("Copiado. Cola o convite na mensagem para o teu convidado."));
     } catch {
-      setStatus('Não foi possível copiar automaticamente. Selecciona o código ou o link acima e copia manualmente.');
+      setStatus(uiText("Não foi possível copiar automaticamente. Selecciona o código ou o link acima e copia manualmente."));
     }
   };
 
@@ -142,18 +145,18 @@ export function InviteSheet({ open, onOpenChange, isAdmin = false }: InviteSheet
     setStatus('');
     try {
       const { data, error } = await supabase.functions.invoke('send-user-invitation', {
-        body: { email: issuedFor, code },
+        body: { email: issuedFor, code, language: uiLocale() },
       });
       if (error || !data?.ok) {
         const responseStatus = (error as { context?: { status?: number } } | null)?.context?.status;
         setStatus(responseStatus === 503 || data?.error === 'email_not_configured'
-          ? 'O envio automático ainda não está configurado. Usa «Preparar email manual» ou WhatsApp.'
-          : 'Não foi possível enviar o convite por email. Usa o envio manual ou tenta novamente.');
+          ? uiText("O envio automático ainda não está configurado. Usa «Preparar email manual» ou WhatsApp.")
+          : uiText("Não foi possível enviar o convite por email. Usa o envio manual ou tenta novamente."));
         return;
       }
-      setStatus('O serviço de email aceitou o convite para envio. A entrega na caixa de correio ainda não está confirmada.');
+      setStatus(uiText("O serviço de email aceitou o convite para envio. A entrega na caixa de correio ainda não está confirmada."));
     } catch {
-      setStatus('Não foi possível enviar o convite por email. Usa o envio manual ou WhatsApp.');
+      setStatus(uiText("Não foi possível enviar o convite por email. Usa o envio manual ou WhatsApp."));
     } finally {
       setSendingEmail(false);
     }
@@ -164,64 +167,62 @@ export function InviteSheet({ open, onOpenChange, isAdmin = false }: InviteSheet
       <SheetContent side="right" hideCloseButton style={viewportStyle} className="w-full max-w-full sm:max-w-md h-screen-safe flex flex-col overflow-hidden p-0 pt-[env(safe-area-inset-top,0px)] [&_input]:text-base md:[&_input]:text-sm">
         <SheetHeader className="shrink-0 border-b pl-6 pr-[max(0.5rem,env(safe-area-inset-right,0px))] py-2">
           <div className="flex items-center justify-between gap-3 text-left">
-            <SheetTitle className="min-w-0">{isKosolola ? 'Convidar para a KOSOLOLA' : 'Convidar para o Yamilook'}</SheetTitle>
-            <SheetClose aria-label="Fechar convites" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            <SheetTitle className="min-w-0">{isKosolola ? uiText("Convidar para a KOSOLOLA") : uiText("Convidar para o Yamilook")}</SheetTitle>
+            <SheetClose aria-label={uiText("Fechar convites")} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
               <X className="h-5 w-5" aria-hidden="true" />
             </SheetClose>
           </div>
         </SheetHeader>
         <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain break-words px-6 pt-4 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]">
-          <SheetDescription>Convida alguém pelos contactos do telemóvel, por WhatsApp ou email. Cada convite só pode ser utilizado por uma pessoa.{isKosolola && ' O registo é feito na Yamilook, com a mesma conta para entrar na KOSOLOLA.'}</SheetDescription>
+          <SheetDescription>{uiText("Convida alguém pelos contactos do telemóvel, por WhatsApp ou email. Cada convite só pode ser utilizado por uma pessoa.{{value1}}", { value1: (isKosolola && uiText(" O registo é feito na Yamilook, com a mesma conta para entrar na KOSOLOLA.")) ?? "" })}</SheetDescription>
         {open && userId && <CampaignInvites key={userId} />}
         {allowed ? <>
         {open && <ContactInviteActions key={userId} />}
         <details className="mt-6 border-t pt-4">
-        <summary className="cursor-pointer font-medium">Convidar um email específico</summary>
+        <summary className="cursor-pointer font-medium">{uiText("Convidar um email específico")}</summary>
         <form className="space-y-3 mt-6" onSubmit={(event) => { event.preventDefault(); void issue(); }}>
-          <label htmlFor="invite-email" className="block font-medium">Email da pessoa convidada</label>
+          <label htmlFor="invite-email" className="block font-medium">{uiText("Email da pessoa convidada")}</label>
           <Input id="invite-email" type="email" autoCapitalize="none" autoCorrect="off" required value={email} disabled={issuing}
             onChange={(event) => { setEmail(event.target.value); setCode(''); setStatus(''); }} />
           <Button type="submit" disabled={issuing || !email.trim()} className="w-full">
-            {issuing ? 'A gerar convite…' : 'Gerar código único'}
+            {issuing ? uiText("A gerar convite…") : uiText("Gerar código único")}
           </Button>
         </form>
         {code ? (
           <div className="space-y-4 mt-6">
-            <p>Convite para {issuedFor}. Este código é de utilização única.</p>
-            <label htmlFor="invite-code" className="block font-medium">Código único de convite</label>
+            <p>{uiText("Convite para {{value1}}. Este código é de utilização única.", { value1: (issuedFor) ?? "" })}</p>
+            <label htmlFor="invite-code" className="block font-medium">{uiText("Código único de convite")}</label>
             <Input id="invite-code" value={code} readOnly onFocus={(event) => event.target.select()} className="text-xl font-mono" />
-            <Button className="w-full" onClick={() => void copy(code)}>Copiar código</Button>
-            <label htmlFor="invite-link" className="block font-medium">Link de convite</label>
+            <Button className="w-full" onClick={() => void copy(code)}>{uiText("Copiar código")}</Button>
+            <label htmlFor="invite-link" className="block font-medium">{uiText("Link de convite")}</label>
             <Input id="invite-link" value={url} readOnly onFocus={(event) => event.target.select()} />
-            <Button variant="outline" className="w-full" onClick={() => void copy(url)}>Copiar link</Button>
+            <Button variant="outline" className="w-full" onClick={() => void copy(url)}>{uiText("Copiar link")}</Button>
             <div className="space-y-3 border-t border-border pt-4">
-              <p className="font-medium">Como queres enviar o convite?</p>
+              <p className="font-medium">{uiText("Como queres enviar o convite?")}</p>
               <Button className="w-full" disabled={sendingEmail || !allowed} onClick={() => void sendEmail()}>
-                {sendingEmail ? 'A enviar email…' : 'Enviar por email'}
+                {sendingEmail ? uiText("A enviar email…") : uiText("Enviar por email")}
               </Button>
               <Button variant="outline" className="w-full" asChild>
-                <a href={buildWhatsAppInviteUrl(issuedFor, code, brand)} target="_blank" rel="noopener noreferrer">
-                  Partilhar pelo WhatsApp
-                </a>
+                <a href={buildWhatsAppInviteUrl(issuedFor, code, brand)} target="_blank" rel="noopener noreferrer">{uiText("Partilhar pelo WhatsApp")}</a>
               </Button>
               <Button variant="ghost" className="w-full" asChild>
-                <a href={buildEmailInviteDraftUrl(issuedFor, code, brand)}>Preparar email manual</a>
+                <a href={buildEmailInviteDraftUrl(issuedFor, code, brand)}>{uiText("Preparar email manual")}</a>
               </Button>
-              <p className="text-xs text-muted-foreground">No WhatsApp e no email manual, confirma o destinatário e o envio na aplicação escolhida.</p>
+              <p className="text-xs text-muted-foreground">{uiText("No WhatsApp e no email manual, confirma o destinatário e o envio na aplicação escolhida.")}</p>
             </div>
           </div>
         ) : (
-          <p className="mt-6">Os convites destinam-se a pessoas que ainda não têm conta na Yamilook.</p>
+          <p className="mt-6">{uiText("Os convites destinam-se a pessoas que ainda não têm conta na Yamilook.")}</p>
         )}
         </details>
-        </> : <p className="mt-6">No MVP, apenas o administrador e as pessoas por ele autorizadas podem enviar convites.</p>}
-        <p className="text-sm text-muted-foreground mt-4" role="status" aria-label="Estado do convite por email">{status}</p>
+        </> : <p className="mt-6">{uiText("No MVP, apenas o administrador e as pessoas por ele autorizadas podem enviar convites.")}</p>}
+        <p className="text-sm text-muted-foreground mt-4" role="status" aria-label={uiText("Estado do convite por email")}>{status}</p>
         {isAdmin && <section className="mt-8 space-y-3 border-t pt-4">
-          <h3 className="font-semibold">Autorizações anteriores</h3>
-          <p className="text-sm text-muted-foreground">Estas autorizações mantêm os convites individuais antigos válidos. Novas autorizações são feitas em Administração → Campanhas de convites.</p>
+          <h3 className="font-semibold">{uiText("Autorizações anteriores")}</h3>
+          <p className="text-sm text-muted-foreground">{uiText("Estas autorizações mantêm os convites individuais antigos válidos. Novas autorizações são feitas em Administração → Campanhas de convites.")}</p>
           {delegates.map((delegate) => <div key={delegate.email} className="flex items-center justify-between gap-2">
             <span className="break-all text-sm">{delegate.email}</span>
-            <Button variant="outline" disabled={managing} onClick={() => void managePermission(delegate.email, false)}>Retirar autorização</Button>
+            <Button variant="outline" disabled={managing} onClick={() => void managePermission(delegate.email, false)}>{uiText("Retirar autorização")}</Button>
           </div>)}
         </section>}
         </div>

@@ -1,9 +1,10 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { flushSync } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { 
-  Mic, MicOff, Video, VideoOff, Phone, 
+import {
+  Mic, MicOff, Video, VideoOff, Phone,
   MonitorUp, FlipHorizontal2, Hand, MoreVertical,
   Users, MessageSquare, Settings, Maximize2, Minimize2,
   Volume2, VolumeX, Camera, Shield, LayoutGrid
@@ -50,15 +51,16 @@ interface VideoCallProps {
   isHost?: boolean;
 }
 
-export function VideoCall({ 
+export function VideoCall({
   conversationId,
-  callId, 
-  callType, 
-  participants, 
+  callId,
+  callType,
+  participants,
   onEndCall,
   isGroupCall = false,
   isHost = false,
 }: VideoCallProps) {
+  useUiLocale();
   const callViewportRef = useRef<HTMLDivElement>(null);
   const compactViewport = useCallViewport(callViewportRef);
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
@@ -86,7 +88,7 @@ export function VideoCall({
   const [userIsHost, setUserIsHost] = useState(isHost);
 
   const { checkIsHost } = useHostControls(callId);
-  
+
   // Use the shared WebRTC state from ActiveCallProvider context
   const {
     webRTCState: state,
@@ -127,7 +129,7 @@ export function VideoCall({
       }
       setIsFullscreen(!!document.fullscreenElement);
     } catch {
-      toast({ title: 'Ecrã inteiro indisponível', description: 'O navegador não permitiu abrir o ecrã inteiro.', variant: 'destructive' });
+      toast({ title: uiText("Ecrã inteiro indisponível"), description: uiText("O navegador não permitiu abrir o ecrã inteiro."), variant: 'destructive' });
     }
   };
 
@@ -142,7 +144,7 @@ export function VideoCall({
       await raiseHand(!handRaised);
       setHandRaised(value => !value);
     } catch {
-      toast({ title: 'Não foi possível atualizar a mão levantada', variant: 'destructive' });
+      toast({ title: uiText("Não foi possível atualizar a mão levantada"), variant: 'destructive' });
     }
   };
 
@@ -203,7 +205,7 @@ export function VideoCall({
 
   // Debug: Log state for troubleshooting
   console.log('[VideoCall] callStatus:', state.callStatus, 'localStream:', !!state.localStream, 'isMuted:', state.isMuted, 'isVideoEnabled:', state.isVideoEnabled);
-  
+
   return (
     <div ref={callViewportRef}
       data-testid="call-layout"
@@ -217,7 +219,7 @@ export function VideoCall({
       <header className="order-0 shrink-0 flex items-center justify-end gap-2 px-3 pb-1 pt-[calc(env(safe-area-inset-top,0px)+0.25rem)]">
       {compactChat && <span className="min-w-0 flex-1 truncate text-sm font-medium text-white">{participants.map(p => p.display_name).join(', ')}</span>}
       <span role="status" className="rounded-full bg-black/70 px-3 py-1 text-sm text-white">
-        {(state.callStatus === 'connected' && state.connectionState === 'connected') ? 'Ligada' : state.callStatus === 'ringing' ? 'A chamar…' : state.lastError || 'A estabelecer ligação…'}
+        {(state.callStatus === 'connected' && state.connectionState === 'connected') ? uiText("Ligada") : state.callStatus === 'ringing' ? uiText("A chamar…") : state.lastError || uiText("A estabelecer ligação…")}
       </span>
       </header>
       {/* Keep recording controls outside the stage so neither video thumbnail is covered. */}
@@ -242,7 +244,7 @@ export function VideoCall({
       {callType === 'video' && !hasSharedScreen && (participants.length > 0 || state.remoteStreams.size > 0) && (
         <button
           type="button"
-          aria-label={enlargeSelf ? 'Reduzir o meu vídeo' : 'Ampliar o meu vídeo'}
+          aria-label={enlargeSelf ? uiText("Reduzir o meu vídeo") : uiText("Ampliar o meu vídeo")}
           aria-pressed={enlargeSelf}
           onClick={() => setEnlargeSelf(value => !value)}
           className={cn("absolute overflow-hidden bg-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-white",
@@ -261,7 +263,7 @@ export function VideoCall({
           {!state.isVideoEnabled && (
             <div className="w-full h-full bg-muted flex items-center justify-center">
               <Avatar className="h-16 w-16">
-                <AvatarFallback>You</AvatarFallback>
+                <AvatarFallback>{uiText("You")}</AvatarFallback>
               </Avatar>
             </div>
           )}
@@ -314,14 +316,14 @@ export function VideoCall({
       <Sheet open={showParticipants} onOpenChange={setShowParticipants}>
         <SheetContent className="safe-top overflow-y-auto">
           <SheetHeader className="pr-12 py-4">
-            <SheetTitle>Participantes ({participants.length + 1})</SheetTitle>
-            <SheetDescription>Pessoas nesta chamada</SheetDescription>
+            <SheetTitle>{uiText("Participantes ({{value1}})", { value1: (participants.length + 1) })}</SheetTitle>
+            <SheetDescription>{uiText("Pessoas nesta chamada")}</SheetDescription>
           </SheetHeader>
           <ul className="space-y-3">
-            <li>Tu — {state.isMuted ? 'microfone desligado' : 'microfone ligado'}</li>
+            <li>{uiText("Tu — {{value1}}", { value1: (state.isMuted ? uiText("microfone desligado") : uiText("microfone ligado")) ?? "" })}</li>
             {participants.map(participant => <li key={participant.user_id} className="rounded-xl border p-3">
               <p className="font-medium">{participant.display_name}</p>
-              <p className="text-sm text-muted-foreground">{participant.is_muted ? 'Microfone desligado' : 'Microfone ligado'}{participant.is_hand_raised ? ' · Mão levantada' : ''}</p>
+              <p className="text-sm text-muted-foreground">{participant.is_muted ? uiText("Microfone desligado") : uiText("Microfone ligado")}{participant.is_hand_raised ? uiText(" · Mão levantada") : ''}</p>
             </li>)}
           </ul>
         </SheetContent>
@@ -348,7 +350,7 @@ export function VideoCall({
                     state.isMuted && "bg-red-500 hover:bg-red-600 border-red-500"
                   )}
                   onClick={toggleMute}
-                  aria-label={state.isMuted ? 'Ligar microfone' : 'Desligar microfone'}
+                  aria-label={state.isMuted ? uiText("Ligar microfone") : uiText("Desligar microfone")}
                   aria-pressed={state.isMuted}
                 >
                   {state.isMuted ? (
@@ -368,7 +370,7 @@ export function VideoCall({
                       !state.isVideoEnabled && "bg-red-500 hover:bg-red-600 border-red-500"
                     )}
                     onClick={toggleVideo}
-                    aria-label={state.isVideoEnabled ? 'Desligar câmara' : 'Ligar câmara'}
+                    aria-label={state.isVideoEnabled ? uiText("Desligar câmara") : uiText("Ligar câmara")}
                   >
                     {state.isVideoEnabled ? (
                       <Video className="h-6 w-6 text-white" />
@@ -383,7 +385,7 @@ export function VideoCall({
                   size="icon"
                   className="h-11 w-11 shrink-0 rounded-full bg-red-500 hover:bg-red-600"
                   onClick={handleEndCall}
-                  aria-label="Desligar chamada"
+                  aria-label={uiText("Desligar chamada")}
                 >
                   <Phone className="h-6 w-6 text-white rotate-135" />
                 </Button>
@@ -395,7 +397,7 @@ export function VideoCall({
                     size="icon"
                     className="h-11 w-11 shrink-0 rounded-full border-white/20 bg-white/10 hover:bg-white/20"
                     onClick={flipCamera}
-                    aria-label="Trocar câmara"
+                    aria-label={uiText("Trocar câmara")}
                   >
                     <FlipHorizontal2 className="h-6 w-6 text-white" />
                   </Button>
@@ -410,7 +412,7 @@ export function VideoCall({
                   className="h-11 w-11 shrink-0 rounded-full border-white/20 bg-white/10 hover:bg-white/20"
                   style={compactChat ? { display: 'none' } : undefined}
                   onClick={() => setShowEffects(true)}
-                  aria-label="Definições da chamada"
+                  aria-label={uiText("Definições da chamada")}
                 >
                   <MoreVertical className="h-6 w-6 text-white" />
                 </Button>
@@ -448,8 +450,8 @@ export function VideoCall({
                   )}
                   onClick={toggleScreenShare}
                   disabled={!state.isScreenSharing && !navigator.mediaDevices?.getDisplayMedia}
-                  aria-label={state.isScreenSharing ? 'Parar partilha de ecrã' : 'Partilhar ecrã'}
-                  title={!navigator.mediaDevices?.getDisplayMedia ? 'Partilha de ecrã não suportada neste navegador' : undefined}
+                  aria-label={state.isScreenSharing ? uiText("Parar partilha de ecrã") : uiText("Partilhar ecrã")}
+                  title={!navigator.mediaDevices?.getDisplayMedia ? uiText("Partilha de ecrã não suportada neste navegador") : undefined}
                 >
                   <MonitorUp className="h-6 w-6 text-white" />
                 </Button>
@@ -460,7 +462,7 @@ export function VideoCall({
                   size="icon"
                   className="h-11 w-11 shrink-0 rounded-full border-white/20 bg-white/10 hover:bg-white/20"
                   onClick={toggleHand}
-                  aria-label={handRaised ? 'Baixar a mão' : 'Levantar a mão'}
+                  aria-label={handRaised ? uiText("Baixar a mão") : uiText("Levantar a mão")}
                   aria-pressed={handRaised}
                 >
                   <Hand className="h-6 w-6 text-white" />
@@ -526,11 +528,9 @@ export function VideoCall({
                     "opacity-50"
                   )}
                   disabled
-                  aria-label="Legendas indisponíveis"
-                  title="A transcrição de chamadas ainda não está implementada"
-                >
-                  CC
-                </Button>
+                  aria-label={uiText("Legendas indisponíveis")}
+                  title={uiText("A transcrição de chamadas ainda não está implementada")}
+                >{uiText("CC")}</Button>
 
                 <Button
                   variant="ghost"
@@ -538,7 +538,7 @@ export function VideoCall({
                   className="text-white/70 hover:text-white hover:bg-white/10"
                   onClick={toggleFullscreen}
                   disabled={!document.fullscreenEnabled}
-                  aria-label={isFullscreen ? 'Sair do ecrã inteiro' : 'Abrir ecrã inteiro'}
+                  aria-label={isFullscreen ? uiText("Sair do ecrã inteiro") : uiText("Abrir ecrã inteiro")}
                 >
                   {isFullscreen ? (
                     <Minimize2 className="h-4 w-4" />

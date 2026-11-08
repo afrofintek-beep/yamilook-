@@ -1,5 +1,6 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect } from 'react';
-import { format } from 'date-fns';
+import { format } from '@/i18n/ui-date';
 import { Clock, Edit2, Trash2, Send, Repeat, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -42,6 +43,7 @@ export function ScheduledMessagesList({
   onOpenChange,
   conversationId,
 }: ScheduledMessagesListProps) {
+  useUiLocale();
   const { user } = useAuth();
   const { toast } = useToast();
   const [messages, setMessages] = useState<ScheduledMessage[]>([]);
@@ -119,9 +121,9 @@ export function ScheduledMessagesList({
       .eq('id', id);
 
     if (error) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      toast({ title: uiText("Error"), description: error.message, variant: 'destructive' });
     } else {
-      toast({ title: 'Scheduled message cancelled' });
+      toast({ title: uiText("Scheduled message cancelled") });
       setMessages((prev) => prev.filter((m) => m.id !== id));
     }
     setDeleteId(null);
@@ -137,14 +139,14 @@ export function ScheduledMessagesList({
     });
 
     if (sendError) {
-      toast({ title: 'Error', description: sendError.message, variant: 'destructive' });
+      toast({ title: uiText("Error"), description: sendError.message, variant: 'destructive' });
       return;
     }
 
     // Mark scheduled message as sent
     await supabase.from('scheduled_messages').update({ status: 'sent' }).eq('id', msg.id);
 
-    toast({ title: 'Message sent' });
+    toast({ title: uiText("Message sent") });
     setMessages((prev) => prev.filter((m) => m.id !== msg.id));
   };
 
@@ -167,9 +169,7 @@ export function ScheduledMessagesList({
         <SheetContent side="right" className="w-full sm:max-w-md">
           <SheetHeader className="pb-4">
             <SheetTitle className="flex items-center gap-2">
-              <Clock className="w-5 h-5 text-primary" />
-              Scheduled Messages
-            </SheetTitle>
+              <Clock className="w-5 h-5 text-primary" />{uiText("Scheduled Messages")}</SheetTitle>
           </SheetHeader>
 
           <ScrollArea className="h-[calc(100vh-8rem)]">
@@ -185,10 +185,8 @@ export function ScheduledMessagesList({
             ) : messages.length === 0 ? (
               <div className="text-center py-12">
                 <Clock className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
-                <p className="text-muted-foreground">No scheduled messages</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Messages you schedule will appear here
-                </p>
+                <p className="text-muted-foreground">{uiText("No scheduled messages")}</p>
+                <p className="text-sm text-muted-foreground mt-1">{uiText("Messages you schedule will appear here")}</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -210,13 +208,11 @@ export function ScheduledMessagesList({
                               </Badge>
                             )}
                           </div>
-                          <p className="text-xs text-muted-foreground">
-                            To: {msg.conversation_name} • {format(new Date(msg.scheduled_for), 'MMM d, h:mm a')}
-                          </p>
+                          <p className="text-xs text-muted-foreground">{uiText("To: {{value1}} • {{value2}}", { value1: (msg.conversation_name) ?? "", value2: (format(new Date(msg.scheduled_for), 'MMM d, h:mm a')) ?? "" })}</p>
                         </div>
                       </div>
 
-                      <p className="text-sm mb-3 line-clamp-2">{msg.content || '(Media message)'}</p>
+                      <p className="text-sm mb-3 line-clamp-2">{msg.content || uiText("(Media message)")}</p>
 
                       <div className="flex items-center gap-2">
                         <Button
@@ -225,9 +221,7 @@ export function ScheduledMessagesList({
                           className="flex-1"
                           onClick={() => sendNow(msg)}
                         >
-                          <Send className="w-3 h-3 mr-1" />
-                          Send now
-                        </Button>
+                          <Send className="w-3 h-3 mr-1" />{uiText("Send now")}</Button>
                         <Button
                           variant="ghost"
                           size="icon"
@@ -249,19 +243,15 @@ export function ScheduledMessagesList({
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Cancel scheduled message?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This message will not be sent. This action cannot be undone.
-            </AlertDialogDescription>
+            <AlertDialogTitle>{uiText("Cancel scheduled message?")}</AlertDialogTitle>
+            <AlertDialogDescription>{uiText("This message will not be sent. This action cannot be undone.")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Keep</AlertDialogCancel>
+            <AlertDialogCancel>{uiText("Keep")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deleteId && cancelMessage(deleteId)}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Cancel Message
-            </AlertDialogAction>
+            >{uiText("Cancel Message")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

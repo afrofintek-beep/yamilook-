@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { Globe, DollarSign, ChevronDown } from 'lucide-react';
 import { CurrencyRate } from '@/hooks/useCurrencyRates';
 import {
@@ -37,13 +38,14 @@ export function CurrencySelector({
   onCurrencyChange,
   compact = false
 }: CurrencySelectorProps) {
+  useUiLocale();
   if (!selectedCurrency) return null;
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           className={compact ? "h-8 px-2 text-xs gap-1" : "h-10 px-3 gap-2"}
         >
           <span className="text-base">{getCountryFlag(selectedCurrency.country_code)}</span>
@@ -53,18 +55,16 @@ export function CurrencySelector({
           <ChevronDown className="h-4 w-4 opacity-50" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent 
+      <DropdownMenuContent
         className="w-[220px] max-h-[300px] overflow-y-auto"
         align="start"
       >
         {referenceCurrencies.length > 0 && (
           <DropdownMenuGroup>
             <DropdownMenuLabel className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <DollarSign className="w-3 h-3" />
-              Moedas de Referência
-            </DropdownMenuLabel>
+              <DollarSign className="w-3 h-3" />{uiText("Moedas de Referência")}</DropdownMenuLabel>
             {referenceCurrencies.map((currency) => (
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 key={currency.id}
                 onClick={() => onCurrencyChange(currency.currency_code)}
                 className="cursor-pointer"
@@ -80,15 +80,13 @@ export function CurrencySelector({
             ))}
           </DropdownMenuGroup>
         )}
-        
+
         {localCurrencies.length > 0 && (
           <DropdownMenuGroup>
             <DropdownMenuLabel className="flex items-center gap-1.5 text-xs text-muted-foreground mt-2">
-              <Globe className="w-3 h-3" />
-              Moedas Locais
-            </DropdownMenuLabel>
+              <Globe className="w-3 h-3" />{uiText("Moedas Locais")}</DropdownMenuLabel>
             {localCurrencies.map((currency) => (
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 key={currency.id}
                 onClick={() => onCurrencyChange(currency.currency_code)}
                 className="cursor-pointer"

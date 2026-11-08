@@ -1,3 +1,4 @@
+import { uiText } from '@/i18n/ui-copy';
 /**
  * YAMILOOK emoji set — African-first.
  *
@@ -17,11 +18,11 @@ export interface EmojiGroup {
 /** Fitzpatrick skin-tone modifiers, from lightest (European) to darkest.
  *  African-first, so the picker defaults to the darkest ('dark'). */
 export const SKIN_TONES: { key: string; mod: string; label: string }[] = [
-  { key: 'light', mod: '\u{1F3FB}', label: 'Clara' },
-  { key: 'medium-light', mod: '\u{1F3FC}', label: 'Média clara' },
-  { key: 'medium', mod: '\u{1F3FD}', label: 'Média' },
-  { key: 'medium-dark', mod: '\u{1F3FE}', label: 'Média escura' },
-  { key: 'dark', mod: '\u{1F3FF}', label: 'Escura' },
+  { key: 'light', mod: '\u{1F3FB}', get label() { return uiText("Clara"); } },
+  { key: 'medium-light', mod: '\u{1F3FC}', get label() { return uiText("Média clara"); } },
+  { key: 'medium', mod: '\u{1F3FD}', get label() { return uiText("Média"); } },
+  { key: 'medium-dark', mod: '\u{1F3FE}', get label() { return uiText("Média escura"); } },
+  { key: 'dark', mod: '\u{1F3FF}', get label() { return uiText("Escura"); } },
 ];
 
 export const DEFAULT_TONE = '\u{1F3FF}'; // dark
@@ -54,7 +55,7 @@ export const EMOJI_GROUPS: EmojiGroup[] = [
   },
   {
     key: 'gestos',
-    label: 'Gestos',
+    get label() { return uiText("Gestos"); },
     emojis: [
       '👋🏿', '🙌🏿', '👏🏿', '🙏🏿', '💪🏿', '✊🏿', '👍🏿', '👎🏿',
       '🤝🏿', '🫶🏿', '🤟🏿', '✌🏿', '🤞🏿', '👌🏿', '🤲🏿', '🫰🏿',
@@ -64,7 +65,7 @@ export const EMOJI_GROUPS: EmojiGroup[] = [
   },
   {
     key: 'pessoas',
-    label: 'Pessoas',
+    get label() { return uiText("Pessoas"); },
     emojis: [
       '👩🏿', '👨🏿', '🧑🏿', '👶🏿', '👵🏿', '👴🏿', '👸🏿', '🤴🏿',
       '💃🏿', '🕺🏿', '🤰🏿', '🤱🏿', '👩🏿‍🦱', '👨🏿‍🦱', '👩🏿‍🦰', '🧕🏿',
@@ -75,7 +76,7 @@ export const EMOJI_GROUPS: EmojiGroup[] = [
   },
   {
     key: 'ritmo',
-    label: 'Ritmo',
+    get label() { return uiText("Ritmo"); },
     emojis: [
       '🪘', '🥁', '🎶', '🎵', '🎤', '🎧', '🎷', '🎸',
       '🪕', '🎺', '🎼', '🪇', '📻', '🔊', '💿', '🎙️',
@@ -84,7 +85,7 @@ export const EMOJI_GROUPS: EmojiGroup[] = [
   },
   {
     key: 'natureza',
-    label: 'Natureza',
+    get label() { return uiText("Natureza"); },
     emojis: [
       '🌍', '🌴', '🌅', '🌞', '⭐', '🔥', '🌺', '🌻',
       '🐘', '🦁', '🦒', '🦓', '🦏', '🦛', '🐆', '🦍',
@@ -95,7 +96,7 @@ export const EMOJI_GROUPS: EmojiGroup[] = [
   },
   {
     key: 'comida',
-    label: 'Comida',
+    get label() { return uiText("Comida"); },
     emojis: [
       '🍠', '🍌', '🥭', '🥥', '🌽', '🫘', '🍲', '🥘',
       '🌶️', '🥜', '🍚', '🐟', '🍉', '🍹', '☕', '🍶',
@@ -105,7 +106,7 @@ export const EMOJI_GROUPS: EmojiGroup[] = [
   },
   {
     key: 'festa',
-    label: 'Festa',
+    get label() { return uiText("Festa"); },
     emojis: [
       '🎉', '🎊', '🥳', '🎈', '🎁', '🎂', '🍾', '🥂',
       '💃🏿', '🕺🏿', '🪩', '🎆', '🎇', '✨', '🎶', '🥁',
@@ -114,7 +115,7 @@ export const EMOJI_GROUPS: EmojiGroup[] = [
   },
   {
     key: 'simbolos',
-    label: 'Símbolos',
+    get label() { return uiText("Símbolos"); },
     emojis: [
       '✊🏿', '❤️', '🖤', '💚', '💛', '💙', '💜', '🧡',
       '⭐', '☀️', '🔥', '💫', '🌟', '✨', '💯', '👑',
@@ -123,7 +124,7 @@ export const EMOJI_GROUPS: EmojiGroup[] = [
   },
   {
     key: 'bandeiras',
-    label: 'Bandeiras',
+    get label() { return uiText("Bandeiras"); },
     // Lusophone Africa first, then the rest of the continent (all 54 nations).
     emojis: [
       '🇦🇴', '🇨🇻', '🇲🇿', '🇬🇼', '🇸🇹', '🇬🇭', '🇳🇬', '🇿🇦',
@@ -137,7 +138,7 @@ export const EMOJI_GROUPS: EmojiGroup[] = [
   },
   {
     key: 'outros',
-    label: 'Outros',
+    get label() { return uiText("Outros"); },
     emojis: [
       '😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣',
       '🙂', '😉', '😊', '😍', '🥰', '😘', '😎', '🤩',

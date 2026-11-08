@@ -1,7 +1,8 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { format, formatDistanceToNow } from 'date-fns';
+import { format, formatDistanceToNow } from '@/i18n/ui-date';
 import { pt } from 'date-fns/locale';
 import { X, Users, Image as ImageIcon, Calendar, MessageSquare, Video, Heart, Sparkles, ChevronRight } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -39,14 +40,15 @@ type DetailType = 'friends' | 'posts' | 'momambos' | 'messages' | 'calls' | 'rea
 
 const StatCard = React.forwardRef<
   HTMLDivElement,
-  { 
-    icon: React.ElementType; 
-    label: string; 
-    value: number | string; 
+  {
+    icon: React.ElementType;
+    label: string;
+    value: number | string;
     delay: number;
     onClick?: () => void;
   }
 >(({ icon: Icon, label, value, delay, onClick }, ref) => {
+  useUiLocale();
   return (
     <motion.div
       ref={ref}
@@ -74,12 +76,13 @@ const StatCard = React.forwardRef<
 });
 StatCard.displayName = 'StatCard';
 
-export function YamilookJourneySheet({ 
-  open, 
-  onOpenChange, 
+export function YamilookJourneySheet({
+  open,
+  onOpenChange,
   userId,
   displayName = 'Utilizador'
 }: YamilookJourneySheetProps) {
+  useUiLocale();
   const { t } = useTranslation();
   const [stats, setStats] = useState<JourneyStats | null>(null);
   const [visibility, setVisibility] = useState<JourneyVisibility>({
@@ -168,16 +171,16 @@ export function YamilookJourneySheet({
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent 
-          side="bottom" 
+        <SheetContent
+          side="bottom"
           className="h-[85vh] rounded-t-3xl p-0 overflow-hidden"
           hideCloseButton
         >
           {/* Gradient Header */}
-          <div 
+          <div
             className="relative h-40 flex items-center justify-center"
-            style={{ 
-              background: 'linear-gradient(135deg, #F2A900 0%, #E67E22 50%, #C0392B 100%)' 
+            style={{
+              background: 'linear-gradient(135deg, #F2A900 0%, #E67E22 50%, #C0392B 100%)'
             }}
           >
             <motion.div
@@ -187,9 +190,9 @@ export function YamilookJourneySheet({
             >
               <YamilookLogo size="lg" showTagline={false} animate={false} bgClassName="bg-transparent" className="text-white [&_h1]:text-white" />
             </motion.div>
-            
+
             {/* Close button */}
-            <button 
+            <button
               onClick={() => onOpenChange(false)}
               className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center"
             >
@@ -205,12 +208,8 @@ export function YamilookJourneySheet({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
               >
-                <SheetTitle className="text-xl font-bold">
-                  A tua jornada no Yamilook
-                </SheetTitle>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {displayName}, aqui está o resumo da tua actividade
-                </p>
+                <SheetTitle className="text-xl font-bold">{uiText("A tua jornada no Yamilook")}</SheetTitle>
+                <p className="text-sm text-muted-foreground mt-1">{uiText("{{value1}}, aqui está o resumo da tua actividade", { value1: (displayName) ?? "" })}</p>
               </motion.div>
             </SheetHeader>
 
@@ -234,66 +233,63 @@ export function YamilookJourneySheet({
                       <Sparkles className="w-5 h-5 text-white" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-foreground">
-                        Membro há <span className="font-bold text-[#F2A900]">{getTimeSinceJoined(stats.joinedDate)}</span>
+                      <p className="text-sm font-medium text-foreground">{uiText("Membro há ")}<span className="font-bold text-[#F2A900]">{getTimeSinceJoined(stats.joinedDate)}</span>
                       </p>
-                      <p className="text-xs text-muted-foreground">
-                        Juntaste-te em {formatJoinedDate(stats.joinedDate)}
-                      </p>
+                      <p className="text-xs text-muted-foreground">{uiText("Juntaste-te em {{value1}}", { value1: (formatJoinedDate(stats.joinedDate)) ?? "" })}</p>
                     </div>
                   </div>
                 </motion.div>
 
                 {visibility.show_journey_friends && (
-                  <StatCard 
-                    icon={Users} 
-                    label={t('journey.friendsStat')} 
-                    value={stats.friendsCount} 
+                  <StatCard
+                    icon={Users}
+                    label={t('journey.friendsStat')}
+                    value={stats.friendsCount}
                     delay={0.5}
                     onClick={() => handleOpenDetail('friends')}
                   />
                 )}
                 {visibility.show_journey_posts && (
-                  <StatCard 
-                    icon={ImageIcon} 
-                    label={t('journey.postsStat')} 
-                    value={stats.postsCount} 
+                  <StatCard
+                    icon={ImageIcon}
+                    label={t('journey.postsStat')}
+                    value={stats.postsCount}
                     delay={0.6}
                     onClick={() => handleOpenDetail('posts')}
                   />
                 )}
                 {visibility.show_journey_momambos && (
-                  <StatCard 
-                    icon={Calendar} 
-                    label={t('journey.momambosStat')} 
-                    value={stats.momambosCount} 
+                  <StatCard
+                    icon={Calendar}
+                    label={t('journey.momambosStat')}
+                    value={stats.momambosCount}
                     delay={0.7}
                     onClick={() => handleOpenDetail('momambos')}
                   />
                 )}
                 {visibility.show_journey_messages && (
-                  <StatCard 
-                    icon={MessageSquare} 
-                    label={t('journey.messagesStat')} 
-                    value={stats.messagesCount} 
+                  <StatCard
+                    icon={MessageSquare}
+                    label={t('journey.messagesStat')}
+                    value={stats.messagesCount}
                     delay={0.8}
                     onClick={() => handleOpenDetail('messages')}
                   />
                 )}
                 {visibility.show_journey_calls && (
-                  <StatCard 
-                    icon={Video} 
-                    label={t('journey.callsStat')} 
-                    value={stats.callsCount} 
+                  <StatCard
+                    icon={Video}
+                    label={t('journey.callsStat')}
+                    value={stats.callsCount}
                     delay={0.9}
                     onClick={() => handleOpenDetail('calls')}
                   />
                 )}
                 {visibility.show_journey_reactions && (
-                  <StatCard 
-                    icon={Heart} 
-                    label={t('journey.reactionsStat')} 
-                    value={stats.likesGiven} 
+                  <StatCard
+                    icon={Heart}
+                    label={t('journey.reactionsStat')}
+                    value={stats.likesGiven}
                     delay={1.0}
                     onClick={() => handleOpenDetail('reactions')}
                   />
@@ -307,9 +303,7 @@ export function YamilookJourneySheet({
               animate={{ opacity: 1 }}
               transition={{ delay: 1.2 }}
               className="text-center text-xs text-muted-foreground mt-8"
-            >
-              A vida como ela é. ✨
-            </motion.p>
+            >{uiText("A vida como ela é. ✨")}</motion.p>
           </div>
         </SheetContent>
       </Sheet>

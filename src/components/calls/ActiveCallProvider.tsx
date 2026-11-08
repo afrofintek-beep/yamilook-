@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { GroupConferenceProvider } from '@/features/group-calls/GroupConferenceProvider';
 import { IncomingCallBoundary } from './IncomingCallBoundary';
 import { ScheduledCallNotices } from '@/features/scheduled-calls/ScheduledCallNotices';
@@ -56,7 +57,7 @@ export function useActiveCall() {
 export function useActiveCallRequired() {
   const context = useContext(ActiveCallContext);
   if (!context) {
-    throw new Error('useActiveCall must be used within ActiveCallProvider');
+    throw new Error("useActiveCall must be used within ActiveCallProvider");
   }
   return context;
 }
@@ -89,7 +90,7 @@ function formatCallError(err: unknown) {
   if (err && typeof err === 'object' && 'message' in err && typeof err.message === 'string') {
     const errObj = err as { message: string; code?: unknown; details?: unknown };
     const extra = [
-      typeof errObj.code === 'string' ? `code=${errObj.code}` : null,
+      typeof errObj.code === 'string' ? `code=${(errObj.code)}` : null,
       typeof errObj.details === 'string' ? errObj.details : null,
     ].filter(Boolean).join(' · ');
     return extra ? `${errObj.message} (${extra})` : errObj.message;
@@ -99,6 +100,7 @@ function formatCallError(err: unknown) {
 }
 
 export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
+  useUiLocale();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const location = useLocation();
@@ -113,16 +115,16 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
   const startingRef = useRef(false);
   const answeringCallRef = useRef<string | null>(null);
   const { incomingCall, setIncomingCall } = useCalls({ loadHistory: false });
-  
+
   // Get ALL WebRTC methods and state from a single hook instance
   const webRTC = useCallTransport();
-  const { 
+  const {
     state: webRTCState,
-    initiateCall, 
-    answerCall, 
+    initiateCall,
+    answerCall,
     endAndAnswerCall,
     addWaitingToConference,
-    declineCall, 
+    declineCall,
     endCall,
     toggleMute,
     toggleVideo,
@@ -147,7 +149,7 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
     // A failed transport may still be running ICE recovery. Leave only after cleanup.
     if (webRTCState.callStatus === 'failed' && webRTCState.callId) return;
     if (webRTCState.callStatus === 'failed') {
-      toast({ title: 'Não foi possível estabelecer a chamada', description: webRTCState.lastError || 'Verifica a ligação e tenta novamente.', variant: 'destructive' });
+      toast({ title: uiText("Não foi possível estabelecer a chamada"), description: webRTCState.lastError || 'Verifica a ligação e tenta novamente.', variant: 'destructive' });
     }
     if ((webRTCState.callStatus === 'ended' && webRTCState.lastError) || webRTCState.callStatus === 'declined') {
       playCallTone(webRTCState.callStatus === 'declined' ? 'declined' : 'ended');
@@ -164,8 +166,8 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
     // Preflight checks to avoid "nothing happens" when the browser blocks media APIs.
     if (!window.isSecureContext) {
       toast({
-        title: 'Chamada indisponível',
-        description: 'O navegador bloqueou microfone/câmara porque a página não está num contexto seguro (HTTPS).',
+        title: uiText("Chamada indisponível"),
+        description: uiText("O navegador bloqueou microfone/câmara porque a página não está num contexto seguro (HTTPS)."),
         variant: 'destructive',
       });
       return;
@@ -173,8 +175,8 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
 
     if (!navigator.mediaDevices?.getUserMedia) {
       toast({
-        title: 'Chamada indisponível',
-        description: 'Este dispositivo/navegador não suporta acesso ao microfone/câmara.',
+        title: uiText("Chamada indisponível"),
+        description: uiText("Este dispositivo/navegador não suporta acesso ao microfone/câmara."),
         variant: 'destructive',
       });
       return;
@@ -196,17 +198,17 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
       const code = callErrorCode(err);
       if (code === 'callee_busy') {
         playCallTone('busy');
-        toast({ title: 'Ocupado', description: 'Este contacto está noutra chamada. Tenta novamente mais tarde.' });
+        toast({ title: uiText("Ocupado"), description: uiText("Este contacto está noutra chamada. Tenta novamente mais tarde.") });
         return;
       }
       if (code === 'caller_busy') {
-        toast({ title: 'Já tens uma chamada em curso', description: 'Termina a chamada no outro dispositivo antes de iniciar uma nova.' });
+        toast({ title: uiText("Já tens uma chamada em curso"), description: uiText("Termina a chamada no outro dispositivo antes de iniciar uma nova.") });
         return;
       }
       const message = code === 'call_unavailable' ? 'Não é possível ligar a este contacto.' : formatCallError(err);
       logger.error('Failed to start call', 'ActiveCallProvider', err);
       toast({
-        title: 'Não foi possível iniciar a chamada',
+        title: uiText("Não foi possível iniciar a chamada"),
         description: message,
         variant: 'destructive',
       });
@@ -239,7 +241,7 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
       const message = formatCallError(err);
       logger.error('Failed to join call', 'ActiveCallProvider', err);
       toast({
-        title: 'Não foi possível entrar na chamada',
+        title: uiText("Não foi possível entrar na chamada"),
         description: message,
         variant: 'destructive',
       });
@@ -277,7 +279,7 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
     } catch (err) {
       if (epoch !== startEpoch.current) return;
       logger.error('Failed to answer incoming call', 'ActiveCallProvider', err);
-      toast({ title: 'Não foi possível atender a chamada', description: formatCallError(err), variant: 'destructive' });
+      toast({ title: uiText("Não foi possível atender a chamada"), description: formatCallError(err), variant: 'destructive' });
     } finally {
       if (epoch === startEpoch.current) setAnswering(false);
       if (answeringCallRef.current === call.id) answeringCallRef.current = null;
@@ -317,7 +319,7 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
         await declineCall(incomingCall.id, incomingCall.initiator_id);
         setIncomingCall(null);
       } catch (err) {
-        toast({ title: 'Não foi possível recusar a chamada', description: formatCallError(err), variant: 'destructive' });
+        toast({ title: uiText("Não foi possível recusar a chamada"), description: formatCallError(err), variant: 'destructive' });
       }
     }
   }, [incomingCall, declineCall, setIncomingCall, toast]);
@@ -349,15 +351,15 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
     <ActiveCallContext.Provider value={contextValue}>
       <GroupConferenceProvider directBusy={isInCall || starting || answering}>
       {children}
-      {(starting || answering) && <div role="dialog" aria-modal="true" aria-label="A iniciar chamada" className="fixed inset-0 z-[190] bg-background flex flex-col items-center justify-center gap-6 p-6 safe-top">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">{setupCallType === 'video' ? <Video className="h-4 w-4" /> : <Phone className="h-4 w-4" />}<span>{setupCallType === 'video' ? 'Videochamada' : 'Chamada de voz'}</span></div>
+      {(starting || answering) && <div role="dialog" aria-modal="true" aria-label={uiText("A iniciar chamada")} className="fixed inset-0 z-[190] bg-background flex flex-col items-center justify-center gap-6 p-6 safe-top">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">{setupCallType === 'video' ? <Video className="h-4 w-4" /> : <Phone className="h-4 w-4" />}<span>{setupCallType === 'video' ? uiText("Videochamada") : uiText("Chamada de voz")}</span></div>
         <div className="flex h-28 w-28 items-center justify-center rounded-full bg-primary/15"><User className="h-14 w-14 text-primary" /></div>
-        <p role="status" aria-live="polite" className="text-xl font-medium">{webRTCState.callStatus === 'ringing' ? 'A chamar…' : 'A ligar…'}</p>
-        <p className="max-w-sm text-center text-sm text-muted-foreground">Se for solicitado, autoriza o microfone para continuar.</p>
-        <Button variant="destructive" className="mt-12 h-16 rounded-full px-6 gap-2" onClick={endCurrentCall}><PhoneOff className="h-6 w-6" />Cancelar chamada</Button>
+        <p role="status" aria-live="polite" className="text-xl font-medium">{webRTCState.callStatus === 'ringing' ? uiText("A chamar…") : uiText("A ligar…")}</p>
+        <p className="max-w-sm text-center text-sm text-muted-foreground">{uiText("Se for solicitado, autoriza o microfone para continuar.")}</p>
+        <Button variant="destructive" className="mt-12 h-16 rounded-full px-6 gap-2" onClick={endCurrentCall}><PhoneOff className="h-6 w-6" />{uiText("Cancelar chamada")}</Button>
       </div>}
       <ScheduledCallNotices />
-      
+
       {/* Incoming call overlay - lazy loaded */}
       {incomingCall && (
         <IncomingCallBoundary key={incomingCall.id} onAnswer={handleAnswerCall} onDecline={handleDeclineCall} waiting={callWaiting} busy={answering} answerLabel={callWaiting ? t('calls.endAndAnswer') : undefined} waitingLabel={callWaiting ? t('calls.waitingTitle') : undefined}>

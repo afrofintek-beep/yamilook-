@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 // Parse and render formatted text (bold, italic, strikethrough, monospace, code blocks)
 export function parseFormattedText(text: string): React.ReactNode[] {
   const elements: React.ReactNode[] = [];
@@ -24,19 +25,19 @@ export function parseFormattedText(text: string): React.ReactNode[] {
   const processText = (input: string): React.ReactNode[] => {
     const result: React.ReactNode[] = [];
     let lastIndex = 0;
-    
+
     // Combined regex for all inline formats
     const combinedRegex = /(\*\*\*(.+?)\*\*\*|\*\*(.+?)\*\*|\*(.+?)\*|__(.+?)__|_(.+?)_|~~(.+?)~~|```([^`]+)```|`([^`]+)`)/g;
-    
+
     let match;
     while ((match = combinedRegex.exec(input)) !== null) {
       // Add text before match
       if (match.index > lastIndex) {
         result.push(input.slice(lastIndex, match.index));
       }
-      
+
       const fullMatch = match[0];
-      
+
       if (fullMatch.startsWith('***') && fullMatch.endsWith('***')) {
         result.push(<strong key={key++} className="italic">{fullMatch.slice(3, -3)}</strong>);
       } else if (fullMatch.startsWith('**') && fullMatch.endsWith('**')) {
@@ -62,15 +63,15 @@ export function parseFormattedText(text: string): React.ReactNode[] {
           </code>
         );
       }
-      
+
       lastIndex = match.index + fullMatch.length;
     }
-    
+
     // Add remaining text
     if (lastIndex < input.length) {
       result.push(input.slice(lastIndex));
     }
-    
+
     return result.length > 0 ? result : [input];
   };
 
@@ -79,14 +80,15 @@ export function parseFormattedText(text: string): React.ReactNode[] {
 
 // Format hint component
 export function FormattingHint() {
+  useUiLocale();
   return (
     <div className="text-xs text-muted-foreground space-y-1 p-3 bg-secondary/50 rounded-lg">
-      <p className="font-medium mb-2">Message Formatting</p>
+      <p className="font-medium mb-2">{uiText("Message Formatting")}</p>
       <div className="grid grid-cols-2 gap-2">
-        <div><code className="bg-black/10 px-1 rounded">*italic*</code> → <em>italic</em></div>
-        <div><code className="bg-black/10 px-1 rounded">**bold**</code> → <strong>bold</strong></div>
-        <div><code className="bg-black/10 px-1 rounded">~~strike~~</code> → <del>strike</del></div>
-        <div><code className="bg-black/10 px-1 rounded">`code`</code> → <code className="bg-black/10 px-1 rounded">code</code></div>
+        <div><code className="bg-black/10 px-1 rounded">{uiText("*italic*")}</code> → <em>{uiText("italic")}</em></div>
+        <div><code className="bg-black/10 px-1 rounded">{uiText("**bold**")}</code> → <strong>{uiText("bold")}</strong></div>
+        <div><code className="bg-black/10 px-1 rounded">{uiText("~~strike~~")}</code> → <del>{uiText("strike")}</del></div>
+        <div><code className="bg-black/10 px-1 rounded">{uiText("`code`")}</code> → <code className="bg-black/10 px-1 rounded">{uiText("code")}</code></div>
       </div>
     </div>
   );

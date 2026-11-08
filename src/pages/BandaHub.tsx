@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -17,13 +18,14 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 type BandaTab = 'para_ti' | 'banda' | 'em_alta' | 'explorar';
 
 const TABS: { key: BandaTab; label: string }[] = [
-  { key: 'para_ti', label: 'Para Ti' },
-  { key: 'banda', label: 'Banda' },
-  { key: 'em_alta', label: 'Em Alta' },
-  { key: 'explorar', label: 'Explorar' },
+  { key: 'para_ti', get label() { return uiText("Para Ti"); } },
+  { key: 'banda', get label() { return uiText("Banda"); } },
+  { key: 'em_alta', get label() { return uiText("Em Alta"); } },
+  { key: 'explorar', get label() { return uiText("Explorar"); } },
 ];
 
 export default function BandaHub() {
+  useUiLocale();
   const navigate = useNavigate();
   const { user, profile } = useAuth();
   const { liveSessions, fetchLiveSessions, loading, streamError, clearStreamError, forceEndSession } = useLiveStreamContext();
@@ -94,7 +96,7 @@ export default function BandaHub() {
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-2">
             <span className="text-lg">📡</span>
-            <span className="font-bold text-base text-foreground tracking-tight">Na Banda Ao Vivo</span>
+            <span className="font-bold text-base text-foreground tracking-tight">{uiText("Na Banda Ao Vivo")}</span>
           </div>
           <div className="flex items-center gap-1">
             <Button
@@ -130,7 +132,7 @@ export default function BandaHub() {
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Procurar na banda..."
+                placeholder={uiText("Procurar na banda...")}
                 className="pl-10 rounded-full bg-muted border-0"
                 autoFocus
               />
@@ -184,9 +186,7 @@ export default function BandaHub() {
           >
             <div className="flex items-center gap-2 min-w-0">
               <span className="w-2 h-2 rounded-full bg-destructive animate-pulse flex-shrink-0" />
-              <p className="text-sm font-medium text-foreground truncate">
-                A tua live está ativa
-              </p>
+              <p className="text-sm font-medium text-foreground truncate">{uiText("A tua live está ativa")}</p>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
               <Button
@@ -194,17 +194,13 @@ export default function BandaHub() {
                 variant="outline"
                 className="rounded-full text-xs"
                 onClick={() => navigate(`/live/${myActiveSession.id}`)}
-              >
-                Entrar
-              </Button>
+              >{uiText("Entrar")}</Button>
               <Button
                 size="sm"
                 variant="destructive"
                 className="rounded-full text-xs"
                 onClick={() => setConfirmEndOpen(true)}
-              >
-                Encerrar
-              </Button>
+              >{uiText("Encerrar")}</Button>
             </div>
           </motion.div>
         )}
@@ -229,9 +225,7 @@ export default function BandaHub() {
                 animate={{ opacity: 1, y: 0 }}
                 className="mb-4 px-3 py-4 rounded-2xl bg-primary/5 border border-primary/10 text-center"
               >
-                <p className="text-sm text-foreground font-medium mb-1">
-                  A banda está ao vivo.
-                </p>
+                <p className="text-sm text-foreground font-medium mb-1">{uiText("A banda está ao vivo.")}</p>
                 {firstActiveHost && (
                   <div className="flex items-center justify-center gap-2 mb-3">
                     <Avatar className="w-6 h-6">
@@ -240,17 +234,13 @@ export default function BandaHub() {
                         {firstActiveHost.display_name?.[0] || 'G'}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="text-sm text-muted-foreground">
-                      {firstActiveHost.display_name} está no Palco.
-                    </span>
+                    <span className="text-sm text-muted-foreground">{uiText("{{value1}} está no Palco.", { value1: (firstActiveHost.display_name) ?? "" })}</span>
                   </div>
                 )}
                 <Button
                   className="rounded-full bg-destructive hover:bg-destructive/90 text-destructive-foreground"
                   onClick={() => navigate(`/live/${filteredSessions[0].id}`)}
-                >
-                  🔴 Entrar no Palco
-                </Button>
+                >{uiText("🔴 Entrar no Palco")}</Button>
               </motion.div>
 
               {/* Grid */}
@@ -275,18 +265,12 @@ export default function BandaHub() {
               <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl">📡</span>
               </div>
-              <p className="text-base font-medium text-foreground mb-1">
-                A banda está pausada hoje.
-              </p>
-              <p className="text-sm text-muted-foreground mb-6">
-                Quem vai abrir?
-              </p>
+              <p className="text-base font-medium text-foreground mb-1">{uiText("A banda está pausada hoje.")}</p>
+              <p className="text-sm text-muted-foreground mb-6">{uiText("Quem vai abrir?")}</p>
               <Button
                 className="rounded-full bg-destructive hover:bg-destructive/90 text-destructive-foreground"
                 onClick={() => setStartLiveOpen(true)}
-              >
-                🔴 Abrir o Palco
-              </Button>
+              >{uiText("🔴 Abrir o Palco")}</Button>
             </motion.div>
           )}
         </div>
@@ -298,7 +282,7 @@ export default function BandaHub() {
         animate={{ scale: 1 }}
         className="fixed bottom-24 right-6 w-14 h-14 rounded-full bg-destructive text-destructive-foreground shadow-lg flex items-center justify-center z-40"
         onClick={() => setStartLiveOpen(true)}
-        title="Abrir o Palco"
+        title={uiText("Abrir o Palco")}
       >
         <Radio className="w-6 h-6" />
       </motion.button>
@@ -310,16 +294,12 @@ export default function BandaHub() {
       <AlertDialog open={confirmEndOpen} onOpenChange={setConfirmEndOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Encerrar a tua live?</AlertDialogTitle>
-            <AlertDialogDescription>
-              A transmissão será terminada e todos os espectadores serão desconectados.
-            </AlertDialogDescription>
+            <AlertDialogTitle>{uiText("Encerrar a tua live?")}</AlertDialogTitle>
+            <AlertDialogDescription>{uiText("A transmissão será terminada e todos os espectadores serão desconectados.")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleEndMyLive} className="bg-destructive hover:bg-destructive/90">
-              Encerrar
-            </AlertDialogAction>
+            <AlertDialogCancel>{uiText("Cancelar")}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleEndMyLive} className="bg-destructive hover:bg-destructive/90">{uiText("Encerrar")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

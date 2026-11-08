@@ -1,3 +1,4 @@
+import { uiLocale, uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -7,12 +8,12 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
-import { 
-  Megaphone, 
-  Plus, 
-  TrendingUp, 
-  Eye, 
-  MousePointer, 
+import {
+  Megaphone,
+  Plus,
+  TrendingUp,
+  Eye,
+  MousePointer,
   Coins,
   Building2,
   BarChart3,
@@ -35,7 +36,7 @@ import { AdPreviewDialog } from './AdPreviewDialog';
 import { StatsDetailSheet } from './StatsDetailSheet';
 import { CreditDisplay } from './CreditDisplay';
 import { BuyCreditsSheet } from './BuyCreditsSheet';
-import { format } from 'date-fns';
+import { format } from '@/i18n/ui-date';
 import { pt } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -47,9 +48,10 @@ interface AdsDashboardProps {
 type StatType = 'credits' | 'ads' | 'impressions' | 'clicks';
 
 export function AdsDashboard({ onBack }: AdsDashboardProps) {
-  const { 
-    businessProfile, 
-    advertisements, 
+  useUiLocale();
+  const {
+    businessProfile,
+    advertisements,
     creditTransactions,
     loading,
     pauseAdvertisement,
@@ -58,7 +60,7 @@ export function AdsDashboard({ onBack }: AdsDashboardProps) {
     addCredits,
     fetchBusinessProfile
   } = useAdvertising();
-  
+
   const [showBusinessSetup, setShowBusinessSetup] = useState(false);
   const [showCreateAd, setShowCreateAd] = useState(false);
   const [activeTab, setActiveTab] = useState('ads');
@@ -86,7 +88,7 @@ export function AdsDashboard({ onBack }: AdsDashboardProps) {
     (async () => {
       const { data } = await supabase.functions.invoke('check-appypay-payment', { body: {} });
       if (!cancelled && (data as { credited?: number })?.credited) {
-        toast.success('Pagamento confirmado! Créditos adicionados. ✅');
+        toast.success(uiText("Pagamento confirmado! Créditos adicionados. ✅"));
         fetchBusinessProfile();
       }
     })();
@@ -101,12 +103,12 @@ export function AdsDashboard({ onBack }: AdsDashboardProps) {
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, { variant: 'default' | 'secondary' | 'destructive' | 'outline'; label: string }> = {
-      active: { variant: 'default', label: 'Ativo' },
-      paused: { variant: 'secondary', label: 'Pausado' },
-      draft: { variant: 'outline', label: 'Rascunho' },
-      pending_review: { variant: 'secondary', label: 'Em revisão' },
-      completed: { variant: 'secondary', label: 'Concluído' },
-      rejected: { variant: 'destructive', label: 'Rejeitado' },
+      active: { variant: 'default', label: uiText("Ativo") },
+      paused: { variant: 'secondary', label: uiText("Pausado") },
+      draft: { variant: 'outline', label: uiText("Rascunho") },
+      pending_review: { variant: 'secondary', label: uiText("Em revisão") },
+      completed: { variant: 'secondary', label: uiText("Concluído") },
+      rejected: { variant: 'destructive', label: uiText("Rejeitado") },
     };
     const config = variants[status] || { variant: 'outline', label: status };
     return <Badge variant={config.variant}>{config.label}</Badge>;
@@ -123,7 +125,7 @@ export function AdsDashboard({ onBack }: AdsDashboardProps) {
                 <ArrowLeft className="w-5 h-5" />
               </Button>
             )}
-            <h1 className="text-xl font-bold">Yamilook Ads</h1>
+            <h1 className="text-xl font-bold">{uiText("Yamilook Ads")}</h1>
           </div>
         </div>
 
@@ -136,41 +138,35 @@ export function AdsDashboard({ onBack }: AdsDashboardProps) {
             <div className="w-24 h-24 bg-gradient-to-br from-primary/20 to-primary/5 rounded-3xl flex items-center justify-center mx-auto mb-6">
               <Megaphone className="w-12 h-12 text-primary" />
             </div>
-            <h2 className="text-2xl font-bold mb-2">Promove o teu negócio</h2>
-            <p className="text-muted-foreground mb-8 max-w-sm mx-auto">
-              Alcança clientes perto de ti com anúncios hiperlocais no Yamilook
-            </p>
+            <h2 className="text-2xl font-bold mb-2">{uiText("Promove o teu negócio")}</h2>
+            <p className="text-muted-foreground mb-8 max-w-sm mx-auto">{uiText("Alcança clientes perto de ti com anúncios hiperlocais no Yamilook")}</p>
 
             <div className="grid grid-cols-3 gap-4 mb-8 max-w-sm mx-auto text-center">
               <div>
                 <div className="w-12 h-12 bg-secondary rounded-xl flex items-center justify-center mx-auto mb-2">
                   <Eye className="w-6 h-6 text-primary" />
                 </div>
-                <p className="text-xs text-muted-foreground">Visibilidade local</p>
+                <p className="text-xs text-muted-foreground">{uiText("Visibilidade local")}</p>
               </div>
               <div>
                 <div className="w-12 h-12 bg-secondary rounded-xl flex items-center justify-center mx-auto mb-2">
                   <Target className="w-6 h-6 text-primary" />
                 </div>
-                <p className="text-xs text-muted-foreground">Público certo</p>
+                <p className="text-xs text-muted-foreground">{uiText("Público certo")}</p>
               </div>
               <div>
                 <div className="w-12 h-12 bg-secondary rounded-xl flex items-center justify-center mx-auto mb-2">
                   <BarChart3 className="w-6 h-6 text-primary" />
                 </div>
-                <p className="text-xs text-muted-foreground">Resultados reais</p>
+                <p className="text-xs text-muted-foreground">{uiText("Resultados reais")}</p>
               </div>
             </div>
 
             <Button size="lg" onClick={() => setShowBusinessSetup(true)} className="px-8">
-              <Building2 className="w-5 h-5 mr-2" />
-              Começar agora
-            </Button>
-            
+              <Building2 className="w-5 h-5 mr-2" />{uiText("Começar agora")}</Button>
+
             <p className="text-xs text-muted-foreground mt-4">
-              <Sparkles className="w-3 h-3 inline mr-1" />
-              500 créditos grátis para novos negócios
-            </p>
+              <Sparkles className="w-3 h-3 inline mr-1" />{uiText("500 créditos grátis para novos negócios")}</p>
           </motion.div>
         </div>
 
@@ -194,7 +190,7 @@ export function AdsDashboard({ onBack }: AdsDashboardProps) {
               </Button>
             )}
             <div>
-              <h1 className="text-xl font-bold">Yamilook Ads</h1>
+              <h1 className="text-xl font-bold">{uiText("Yamilook Ads")}</h1>
               <p className="text-xs text-muted-foreground">{businessProfile?.business_name}</p>
             </div>
           </div>
@@ -206,7 +202,7 @@ export function AdsDashboard({ onBack }: AdsDashboardProps) {
 
       {/* Stats cards */}
       <div className="p-4 grid grid-cols-2 gap-3">
-        <Card 
+        <Card
           className="p-4 bg-gradient-to-br from-primary/10 to-primary/5 cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98] col-span-2"
           onClick={() => setSelectedStat('credits')}
         >
@@ -222,10 +218,9 @@ export function AdsDashboard({ onBack }: AdsDashboardProps) {
           onClick={() => setBuyOpen(true)}
           className="col-span-2 h-11 rounded-xl gap-2"
         >
-          <Plus className="w-4 h-4" /> Comprar créditos
-        </Button>
+          <Plus className="w-4 h-4" />{uiText(" Comprar créditos")}</Button>
 
-        <Card 
+        <Card
           className="p-4 cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98]"
           onClick={() => setSelectedStat('ads')}
         >
@@ -235,12 +230,12 @@ export function AdsDashboard({ onBack }: AdsDashboardProps) {
             </div>
             <div>
               <p className="text-2xl font-bold">{activeAds.length}</p>
-              <p className="text-xs text-muted-foreground">Anúncios ativos</p>
+              <p className="text-xs text-muted-foreground">{uiText("Anúncios ativos")}</p>
             </div>
           </div>
         </Card>
 
-        <Card 
+        <Card
           className="p-4 cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98]"
           onClick={() => setSelectedStat('impressions')}
         >
@@ -249,13 +244,13 @@ export function AdsDashboard({ onBack }: AdsDashboardProps) {
               <Eye className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{totalImpressions.toLocaleString()}</p>
-              <p className="text-xs text-muted-foreground">Impressões</p>
+              <p className="text-2xl font-bold">{totalImpressions.toLocaleString(uiLocale())}</p>
+              <p className="text-xs text-muted-foreground">{uiText("Impressões")}</p>
             </div>
           </div>
         </Card>
 
-        <Card 
+        <Card
           className="p-4 cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98]"
           onClick={() => setSelectedStat('clicks')}
         >
@@ -264,8 +259,8 @@ export function AdsDashboard({ onBack }: AdsDashboardProps) {
               <MousePointer className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{totalClicks.toLocaleString()}</p>
-              <p className="text-xs text-muted-foreground">Cliques</p>
+              <p className="text-2xl font-bold">{totalClicks.toLocaleString(uiLocale())}</p>
+              <p className="text-xs text-muted-foreground">{uiText("Cliques")}</p>
             </div>
           </div>
         </Card>
@@ -274,19 +269,17 @@ export function AdsDashboard({ onBack }: AdsDashboardProps) {
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="px-4">
         <TabsList className="w-full">
-          <TabsTrigger value="ads" className="flex-1">Anúncios</TabsTrigger>
-          <TabsTrigger value="credits" className="flex-1">Créditos</TabsTrigger>
+          <TabsTrigger value="ads" className="flex-1">{uiText("Anúncios")}</TabsTrigger>
+          <TabsTrigger value="credits" className="flex-1">{uiText("Créditos")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="ads" className="mt-4">
           {advertisements.length === 0 ? (
             <div className="text-center py-12">
               <Megaphone className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground mb-4">Ainda não criaste anúncios</p>
+              <p className="text-muted-foreground mb-4">{uiText("Ainda não criaste anúncios")}</p>
               <Button onClick={() => setShowCreateAd(true)}>
-                <Plus className="w-4 h-4 mr-2" />
-                Criar primeiro anúncio
-              </Button>
+                <Plus className="w-4 h-4 mr-2" />{uiText("Criar primeiro anúncio")}</Button>
             </div>
           ) : (
             <ScrollArea className="h-[400px]" type="always">
@@ -302,11 +295,11 @@ export function AdsDashboard({ onBack }: AdsDashboardProps) {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
                             {getStatusBadge(ad.status)}
-                            <Badge 
+                            <Badge
                               variant={previewAd?.id === ad.id ? "default" : "outline"}
                               className={`text-xs cursor-pointer transition-colors ${
-                                previewAd?.id === ad.id 
-                                  ? 'bg-primary text-primary-foreground' 
+                                previewAd?.id === ad.id
+                                  ? 'bg-primary text-primary-foreground'
                                   : 'hover:bg-secondary'
                               }`}
                               onClick={(e) => {
@@ -314,11 +307,11 @@ export function AdsDashboard({ onBack }: AdsDashboardProps) {
                                 setPreviewAd(ad);
                               }}
                             >
-                              {ad.ad_type === 'promoted_post' ? 'Post' : 'Perfil'}
+                              {ad.ad_type === 'promoted_post' ? uiText("Post") : uiText("Perfil")}
                             </Badge>
                           </div>
                           <p className="text-sm font-medium truncate">
-                            {ad.title || 'Anúncio sem título'}
+                            {ad.title || uiText("Anúncio sem título")}
                           </p>
                           <p className="text-xs text-muted-foreground">
                             {ad.target_city}{ad.target_neighborhood ? ` - ${ad.target_neighborhood}` : ''}
@@ -329,21 +322,21 @@ export function AdsDashboard({ onBack }: AdsDashboardProps) {
                       <div className="grid grid-cols-3 gap-4 mb-3 text-center">
                         <div>
                           <p className="text-lg font-semibold">{ad.impressions}</p>
-                          <p className="text-xs text-muted-foreground">Impressões</p>
+                          <p className="text-xs text-muted-foreground">{uiText("Impressões")}</p>
                         </div>
                         <div>
                           <p className="text-lg font-semibold">{ad.clicks}</p>
-                          <p className="text-xs text-muted-foreground">Cliques</p>
+                          <p className="text-xs text-muted-foreground">{uiText("Cliques")}</p>
                         </div>
                         <div>
                           <p className="text-lg font-semibold">{ad.spent_credits}</p>
-                          <p className="text-xs text-muted-foreground">Gasto</p>
+                          <p className="text-xs text-muted-foreground">{uiText("Gasto")}</p>
                         </div>
                       </div>
 
                       <div className="mb-3">
                         <div className="flex justify-between text-xs mb-1">
-                          <span>Orçamento usado</span>
+                          <span>{uiText("Orçamento usado")}</span>
                           <span>{Math.round((ad.spent_credits / ad.total_budget) * 100)}%</span>
                         </div>
                         <Progress value={(ad.spent_credits / ad.total_budget) * 100} className="h-2" />
@@ -351,47 +344,39 @@ export function AdsDashboard({ onBack }: AdsDashboardProps) {
 
                       <div className="flex gap-2">
                         {ad.status === 'active' ? (
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
+                          <Button
+                            variant="outline"
+                            size="sm"
                             className="flex-1"
                             onClick={() => pauseAdvertisement(ad.id)}
                           >
-                            <Pause className="w-4 h-4 mr-1" />
-                            Pausar
-                          </Button>
+                            <Pause className="w-4 h-4 mr-1" />{uiText("Pausar")}</Button>
                         ) : ad.status === 'paused' ? (
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
+                          <Button
+                            variant="outline"
+                            size="sm"
                             className="flex-1"
                             onClick={() => activateAdvertisement(ad.id)}
                           >
-                            <Play className="w-4 h-4 mr-1" />
-                            Retomar
-                          </Button>
+                            <Play className="w-4 h-4 mr-1" />{uiText("Retomar")}</Button>
                         ) : ad.status === 'draft' ? (
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             className="flex-1 bg-gradient-to-r from-primary to-primary/80"
                             onClick={() => setPreviewAd(ad)}
                           >
-                            <Zap className="w-4 h-4 mr-1" />
-                            Ativar Destaque
-                          </Button>
+                            <Zap className="w-4 h-4 mr-1" />{uiText("Ativar Destaque")}</Button>
                         ) : ad.status === 'pending_review' ? (
-                          <Button 
-                            variant="secondary" 
-                            size="sm" 
+                          <Button
+                            variant="secondary"
+                            size="sm"
                             className="flex-1"
                             disabled
                           >
-                            <AlertCircle className="w-4 h-4 mr-1" />
-                            Em análise
-                          </Button>
+                            <AlertCircle className="w-4 h-4 mr-1" />{uiText("Em análise")}</Button>
                         ) : null}
-                        <Button 
-                          variant="ghost" 
+                        <Button
+                          variant="ghost"
                           size="sm"
                           onClick={() => deleteAdvertisement(ad.id)}
                         >
@@ -409,20 +394,18 @@ export function AdsDashboard({ onBack }: AdsDashboardProps) {
         <TabsContent value="credits" className="mt-4">
           <Card className="p-4 mb-4 bg-gradient-to-r from-primary/10 to-primary/5">
             <div className="flex items-center justify-between">
-              <CreditDisplay 
+              <CreditDisplay
                 credits={businessProfile?.credit_balance || 0}
                 size="lg"
                 showSelector={true}
                 showEquivalent={true}
               />
               <Button onClick={() => addCredits(100, 'Créditos de teste')}>
-                <Plus className="w-4 h-4 mr-2" />
-                Adicionar
-              </Button>
+                <Plus className="w-4 h-4 mr-2" />{uiText("Adicionar")}</Button>
             </div>
           </Card>
 
-          <h3 className="font-semibold mb-3">Histórico</h3>
+          <h3 className="font-semibold mb-3">{uiText("Histórico")}</h3>
           <ScrollArea className="h-[300px]">
             <div className="space-y-2">
               {creditTransactions.map((tx) => (
@@ -505,6 +488,7 @@ export function AdsDashboard({ onBack }: AdsDashboardProps) {
 
 // Missing import
 function Target(props: React.SVGProps<SVGSVGElement>) {
+  useUiLocale();
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

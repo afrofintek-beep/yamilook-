@@ -8,7 +8,7 @@ test('file destinations retain the active gesture and LinkedIn offers an explici
       window.handoffs.push({ active: navigator.userActivation.isActive, name: data.files[0].name, type: data.files[0].type, keys: Object.keys(data) });
     } });
   });
-  await page.goto('http://127.0.0.1:5173/tests/public-post/file-picker.html');
+  await page.goto('http://127.0.0.1:5173/tests/public-post/file-picker.html?lang=pt');
   const destinations = ['WhatsApp', 'LinkedIn', 'TikTok', 'YouTube', 'Facebook', 'Instagram', 'Outros'];
   for (const [index, name] of destinations.entries()) {
     await page.getByRole('button', { name, exact: true }).tap();

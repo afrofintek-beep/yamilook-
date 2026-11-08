@@ -25,7 +25,7 @@ afterEach(() => { cleanup(); client.clear(); vi.useRealTimers(); focusManager.se
 
 describe('Academia availability across devices', () => {
   it('refreshes a five-minute cached list immediately on opening Academia', async () => {
-    client.setQueryData(['academia-sessions'], []);
+    client.setQueryData(['academia-sessions', 'pt'], []);
     state.rows = [session];
     const { result } = mount();
     await waitFor(() => expect(result.current.data?.[0]?.title).toBe('Dança na chuva'));
@@ -41,11 +41,11 @@ describe('Academia availability across devices', () => {
     await act(async () => { await vi.advanceTimersByTimeAsync(10_100); });
     await act(async () => { await vi.advanceTimersByTimeAsync(1); });
     expect(state.read.mock.calls.length).toBeGreaterThan(1);
-    expect(client.getQueryData<{title:string}[]>(['academia-sessions'])?.[0]?.title).toBe('Dança na chuva');
+    expect(client.getQueryData<{title:string}[]>(['academia-sessions', 'pt'])?.[0]?.title).toBe('Dança na chuva');
     state.rows = [{ ...session, status: 'ended' }];
     await act(async () => { await vi.advanceTimersByTimeAsync(10_100); });
     await act(async () => { await vi.advanceTimersByTimeAsync(1); });
-    expect(client.getQueryData<{status:string}[]>(['academia-sessions'])?.[0]?.status).toBe('ended');
+    expect(client.getQueryData<{status:string}[]>(['academia-sessions', 'pt'])?.[0]?.status).toBe('ended');
   });
   it('refreshes when returning from another app without waiting for the interval', async () => {
     const { result } = mount();

@@ -1,9 +1,10 @@
+import { uiText } from '@/i18n/ui-copy';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Room, RoomEvent, ConnectionState, Participant, RemoteParticipant } from 'livekit-client';
 import { supabase } from '@/integrations/supabase/client';
 
 export async function requestScheduledVideo(sessionId: string, action: 'join'|'start'|'end') {
-  const expired = () => new Error('A tua sessão expirou. Inicia sessão novamente.');
+  const expired = () => new Error(uiText("A tua sessão expirou. Inicia sessão novamente."));
   const refresh = async () => {
     const result = await supabase.auth.refreshSession();
     if (result.error || !result.data.session?.access_token) throw expired();
@@ -27,20 +28,20 @@ export async function requestScheduledVideo(sessionId: string, action: 'join'|'s
     let reason = '';
     try { reason = (await error.context?.json())?.error || ''; } catch { /* network error */ }
     const messages: Record<string,string> = {
-      unauthenticated: 'A tua sessão expirou. Inicia sessão novamente.',
-      video_unavailable: 'O serviço de vídeo está temporariamente indisponível.',
-      not_allowed: 'Não tens acesso a esta chamada.',
-      organizer_required: 'Só o organizador pode iniciar ou encerrar a chamada.',
-      invitation_declined: 'Recusaste este convite. Aceita-o antes de entrar.',
-      not_live: 'Aguarda que o organizador inicie a sessão.',
-      too_early: 'A sala abre 15 minutos antes da hora marcada.',
-      session_closed: 'Esta sessão já foi encerrada.',
-      room_close_failed: 'A sessão foi encerrada. Não foi possível confirmar o fecho da ligação; tenta novamente.',
+      get unauthenticated() { return uiText("A tua sessão expirou. Inicia sessão novamente."); },
+      get video_unavailable() { return uiText("O serviço de vídeo está temporariamente indisponível."); },
+      get not_allowed() { return uiText("Não tens acesso a esta chamada."); },
+      get organizer_required() { return uiText("Só o organizador pode iniciar ou encerrar a chamada."); },
+      get invitation_declined() { return uiText("Recusaste este convite. Aceita-o antes de entrar."); },
+      get not_live() { return uiText("Aguarda que o organizador inicie a sessão."); },
+      get too_early() { return uiText("A sala abre 15 minutos antes da hora marcada."); },
+      get session_closed() { return uiText("Esta sessão já foi encerrada."); },
+      get room_close_failed() { return uiText("A sessão foi encerrada. Não foi possível confirmar o fecho da ligação; tenta novamente."); },
     };
-    throw new Error(messages[reason] || 'Não foi possível ligar à sala de vídeo. Tenta novamente.');
+    throw new Error(messages[reason] || uiText("Não foi possível ligar à sala de vídeo. Tenta novamente."));
   }
-  if (data?.waiting) throw new Error('Estás na sala de espera. Aguarda a admissão do organizador e toca em Entrar novamente.');
-  if (!data || data.error) throw new Error('Não foi possível obter acesso à sala.');
+  if (data?.waiting) throw new Error(uiText("Estás na sala de espera. Aguarda a admissão do organizador e toca em Entrar novamente."));
+  if (!data || data.error) throw new Error(uiText("Não foi possível obter acesso à sala."));
   return data as {token:string;url:string;isHost:boolean};
 }
 
@@ -101,14 +102,14 @@ export function useScheduledVideo(sessionId: string | undefined) {
         if(camera) await r.localParticipant.setCameraEnabled(true);
         if(!active()){await r.disconnect();return;}
         if(microphone) await r.localParticipant.setMicrophoneEnabled(true);
-      } catch { if(active())setError('Ligado sem câmara ou microfone. Autoriza o acesso nas definições do navegador e tenta ativar novamente.'); }
+      } catch { if(active())setError(uiText("Ligado sem câmara ou microfone. Autoriza o acesso nas definições do navegador e tenta ativar novamente.")); }
       if(!active()){await r.disconnect();return;}
       await r.startAudio().catch(()=>{});
       setAudioBlocked(!r.canPlaybackAudio);sync();
     } catch (e) {
       if(active()) {
         await next?.disconnect();ref.current=null;setRoom(null);setParticipants([]);
-        setError(e instanceof Error ? e.message : 'Não foi possível entrar. Confirma a convite e a ligação à internet.');
+        setError(e instanceof Error ? e.message : uiText("Não foi possível entrar. Confirma a convite e a ligação à internet."));
       }
     } finally {busy.current=false;if(active())setLoading(false);}
   };
@@ -118,14 +119,14 @@ export function useScheduledVideo(sessionId: string | undefined) {
       if(kind==='camera')await r.localParticipant.setCameraEnabled(!r.localParticipant.isCameraEnabled);
       else await r.localParticipant.setMicrophoneEnabled(!r.localParticipant.isMicrophoneEnabled);
       setParticipants([r.localParticipant,...r.remoteParticipants.values()]);setError('');
-    }catch{setError('Não foi possível ativar o dispositivo. Verifica as permissões da câmara e do microfone.');}
+    }catch{setError(uiText("Não foi possível ativar o dispositivo. Verifica as permissões da câmara e do microfone."));}
   };
   const send = async (text:string) => {
     const r=ref.current;const message=text.trim().slice(0,1000);if(!r||!message)return false;
     try {
       await r.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({text:message})),{reliable:true,topic:'scheduled-chat'});
       setMessages(items=>[...items,{id:crypto.randomUUID(),name:'Tu',text:message}].slice(-100));return true;
-    }catch{setError('Não foi possível enviar a mensagem.');return false;}
+    }catch{setError(uiText("Não foi possível enviar a mensagem."));return false;}
   };
   return {room,participants,connection,loading,error,messages,audioBlocked,join,leave,toggle,send};
 }

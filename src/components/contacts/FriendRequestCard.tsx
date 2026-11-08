@@ -1,9 +1,10 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Check, X } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from '@/i18n/ui-date';
 
 interface FriendRequestCardProps {
   request: {
@@ -41,6 +42,7 @@ export function FriendRequestCard({
   onReject,
   onCancel,
 }: FriendRequestCardProps) {
+  useUiLocale();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
@@ -94,7 +96,7 @@ export function FriendRequestCard({
           </span>
         </div>
         <p className="text-sm text-muted-foreground truncate">
-          {isReceived ? 'Wants to connect with you' : 'Request pending'}
+          {isReceived ? uiText("Wants to connect with you") : uiText("Request pending")}
         </p>
         {request.message && (
           <p className="text-sm text-foreground/80 mt-1 line-clamp-2">
@@ -130,9 +132,7 @@ export function FriendRequestCard({
           onClick={handleCancel}
           disabled={loading}
           className="text-destructive"
-        >
-          Cancel
-        </Button>
+        >{uiText("Cancel")}</Button>
       )}
     </div>
   );

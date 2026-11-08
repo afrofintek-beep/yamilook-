@@ -1,9 +1,10 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { 
-  AFRICAN_REACTIONS, 
-  AfricanReactionType, 
+import {
+  AFRICAN_REACTIONS,
+  AfricanReactionType,
   getReaction,
   ReactionCounts,
   getTotalReactions,
@@ -12,14 +13,14 @@ import {
 
 /**
  * YAMILOOK African Reaction System for Comments
- * 
+ *
  * FINAL ICONS (Cultural symbols - DO NOT REPLACE):
  * - 💛 Sankofa Love
  * - 🤝🏾 Ubuntu (skin tone intentional)
  * - 🪘 Djembe
  * - 💢 Shango
  * - 😒 Eish
- * 
+ *
  * Displays:
  * - Total reactions count
  * - Subtotals per reaction type (on hover/expand)
@@ -46,6 +47,7 @@ export function CommentReactions({
   compact = false,
   showSubtotals = false,
 }: CommentReactionsProps) {
+  useUiLocale();
   const [showPicker, setShowPicker] = useState(false);
   const [hoveredReaction, setHoveredReaction] = useState<string | null>(null);
 
@@ -67,8 +69,8 @@ export function CommentReactions({
           {/* Top reaction icons */}
           <div className="flex -space-x-0.5">
             {topReactions.map(({ type, reaction }) => (
-              <span 
-                key={type} 
+              <span
+                key={type}
                 className="text-sm"
                 title={`${reaction.label}: ${reactions[type as keyof ReactionCounts] || 0}`}
                 role="img"
@@ -78,7 +80,7 @@ export function CommentReactions({
               </span>
             ))}
           </div>
-          
+
           {/* Total count */}
           <span className="text-xs text-muted-foreground">
             {total}
@@ -106,13 +108,13 @@ export function CommentReactions({
       <button
         className={cn(
           "text-xs transition-all duration-200 flex items-center gap-1 rounded-md px-1.5 py-0.5",
-          myReaction 
-            ? "font-medium bg-secondary/50" 
+          myReaction
+            ? "font-medium bg-secondary/50"
             : "text-muted-foreground hover:text-foreground hover:bg-secondary/30"
         )}
         onClick={() => setShowPicker(!showPicker)}
         onMouseEnter={() => setShowPicker(true)}
-        aria-label={myReaction ? `Your reaction: ${myReactionData?.label}` : "Add reaction"}
+        aria-label={myReaction ? uiText("Your reaction: {{value1}}", { value1: (myReactionData?.label) ?? "" }) : uiText("Add reaction")}
         aria-haspopup="true"
         aria-expanded={showPicker}
       >
@@ -122,7 +124,7 @@ export function CommentReactions({
             {!compact && <span className="hidden sm:inline">{myReactionData.label}</span>}
           </>
         ) : (
-          <span>{compact ? '💛' : 'React'}</span>
+          <span>{compact ? '💛' : uiText("React")}</span>
         )}
       </button>
 
@@ -142,9 +144,9 @@ export function CommentReactions({
               }
             }}
             role="menu"
-            aria-label="Choose a reaction"
+            aria-label={uiText("Choose a reaction")}
           >
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
@@ -174,7 +176,7 @@ export function CommentReactions({
                   </button>
                 ))}
               </div>
-              
+
               {/* Label shown on hover/touch - always visible area */}
               <div className="min-h-[60px] flex items-center justify-center">
                 <AnimatePresence mode="wait">
@@ -199,17 +201,13 @@ export function CommentReactions({
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       className="text-sm text-muted-foreground text-center"
-                    >
-                      Toque numa reação para ver o significado
-                    </motion.p>
+                    >{uiText("Toque numa reação para ver o significado")}</motion.p>
                   )}
                 </AnimatePresence>
               </div>
 
               {/* Close hint */}
-              <p className="text-xs text-muted-foreground/60 text-center mt-2">
-                Toque fora para fechar
-              </p>
+              <p className="text-xs text-muted-foreground/60 text-center mt-2">{uiText("Toque fora para fechar")}</p>
             </motion.div>
           </motion.div>
         )}

@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useEffect, useRef, useState, type RefObject } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -20,6 +21,7 @@ export function CallChatPanel({ conversationId, contactId, open, onClose, inputR
   onClose: () => void;
   inputRef: RefObject<HTMLTextAreaElement>;
 }) {
+  useUiLocale();
   const { user } = useAuth();
   const [resolvedId, setResolvedId] = useState(conversationId || null);
   const [error, setError] = useState('');
@@ -39,7 +41,7 @@ export function CallChatPanel({ conversationId, contactId, open, onClose, inputR
     pending.current ||= createChatConversation([contactId]);
     void pending.current.then(({ data, error }) => {
       if (!active) return;
-      if (error || !data) setError('Não foi possível abrir a conversa.');
+      if (error || !data) setError(uiText("Não foi possível abrir a conversa."));
       else setResolvedId(data.id);
     });
     return () => { active = false; };
@@ -70,10 +72,10 @@ export function CallChatPanel({ conversationId, contactId, open, onClose, inputR
     setError('');
     try {
       const result = await sendMessage(draft.trim());
-      if (result.error) setError('Não foi possível enviar. A mensagem foi conservada.');
+      if (result.error) setError(uiText("Não foi possível enviar. A mensagem foi conservada."));
       else setDraft('');
     } catch {
-      setError('Não foi possível enviar. A mensagem foi conservada.');
+      setError(uiText("Não foi possível enviar. A mensagem foi conservada."));
     } finally {
       setSending(false);
     }
@@ -83,7 +85,7 @@ export function CallChatPanel({ conversationId, contactId, open, onClose, inputR
     <div
       role={inline ? "region" : "dialog"}
       aria-modal={inline ? undefined : open}
-      aria-label="Mensagens durante a chamada"
+      aria-label={uiText("Mensagens durante a chamada")}
       aria-hidden={!open}
       className={open
         ? `${inline ? `relative order-4 ${compact ? 'min-h-0 flex-1' : 'min-h-[7.5rem] flex-[1.2]'} basis-0 border-y` : 'fixed inset-x-0 z-[90]'} flex flex-col overflow-hidden bg-background text-foreground`
@@ -94,21 +96,21 @@ export function CallChatPanel({ conversationId, contactId, open, onClose, inputR
       } : undefined}
     >
       <header className={inline ? "flex shrink-0 items-center gap-3 border-b px-3 py-1" : "flex shrink-0 items-center gap-3 border-b px-3 pb-2 pt-2"}>
-        <Button variant="ghost" type="button" onClick={onClose} aria-label="Voltar à chamada" className={inline ? "h-8 gap-2 px-2" : "gap-2 px-2"}>
+        <Button variant="ghost" type="button" onClick={onClose} aria-label={uiText("Voltar à chamada")} className={inline ? "h-8 gap-2 px-2" : "gap-2 px-2"}>
           <ArrowLeft className="h-5 w-5" />
-          <span>Chamada</span>
+          <span>{uiText("Chamada")}</span>
         </Button>
-        <span className="text-sm font-semibold">Mensagens</span>
+        <span className="text-sm font-semibold">{uiText("Mensagens")}</span>
       </header>
 
       <div
         ref={messagesViewportRef}
         role="log"
-        aria-label="Mensagens da conversa"
+        aria-label={uiText("Mensagens da conversa")}
         className={`min-h-0 flex-1 overflow-y-auto overscroll-contain overflow-x-hidden px-2 ${inline ? "py-0" : "py-3"}`}
       >
-        {loading && <p role="status" className="p-4">A carregar mensagens…</p>}
-        {!resolvedId && !contactId && <p className="p-4">Esta chamada não tem uma conversa associada.</p>}
+        {loading && <p role="status" className="p-4">{uiText("A carregar mensagens…")}</p>}
+        {!resolvedId && !contactId && <p className="p-4">{uiText("Esta chamada não tem uma conversa associada.")}</p>}
         {messages.map(message => (
           <EnhancedMessageBubble
             key={message.id}
@@ -133,8 +135,8 @@ export function CallChatPanel({ conversationId, contactId, open, onClose, inputR
       >
         <textarea
           ref={inputRef}
-          aria-label="Escrever mensagem"
-          placeholder="Mensagem…"
+          aria-label={uiText("Escrever mensagem")}
+          placeholder={uiText("Mensagem…")}
           value={draft}
           onChange={event => setDraft(event.target.value)}
           onKeyDown={event => {
@@ -149,7 +151,7 @@ export function CallChatPanel({ conversationId, contactId, open, onClose, inputR
           className="max-h-32 min-h-11 flex-1 min-w-0 resize-none rounded-2xl border bg-background px-4 py-3 text-base"
         />
         <Button type="submit" disabled={!resolvedId || sending || !draft.trim()} className="min-h-11 shrink-0">
-          {sending ? 'A enviar…' : 'Enviar'}
+          {sending ? uiText("A enviar…") : uiText("Enviar")}
         </Button>
       </form>
     </div>

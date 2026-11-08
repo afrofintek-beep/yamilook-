@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Check, Copy, FileText, Highlighter, Image as ImageIcon, Pin, Reply, Star, Tag, Trash2, Video, Forward, X, Mic } from 'lucide-react';
@@ -27,6 +28,7 @@ function AttachmentThumbnail({ type, url, posterUrl }: {
   url: string;
   posterUrl?: string | null;
 }) {
+  useUiLocale();
   const { resolvedUrl, onError, error } = useResolvedMediaUrl(type === 'image' ? url : '');
   const { resolvedUrl: poster, onError: onPosterError, error: posterError } = useResolvedMediaUrl(type === 'video' ? posterUrl || '' : '');
   const imageUrl = type === 'image' ? resolvedUrl : poster;
@@ -34,7 +36,7 @@ function AttachmentThumbnail({ type, url, posterUrl }: {
   return (
     <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-secondary flex items-center justify-center">
       {imageUrl && !error && !posterError ? (
-        <img src={imageUrl} alt={type === 'video' ? 'Miniatura do vídeo' : 'Miniatura da fotografia'}
+        <img src={imageUrl} alt={type === 'video' ? uiText("Miniatura do vídeo") : uiText("Miniatura da fotografia")}
           loading="lazy" className="h-full w-full object-cover"
           onError={() => void (type === 'image' ? onError() : onPosterError())} />
       ) : (
@@ -77,6 +79,7 @@ export function MessageActionsSheet({
   highlight, onReply, onCopy, onReact, onStar, onPin,
   onForward, onDelete, onDeleteForMe, onHighlight, onRemoveHighlight,
 }: MessageActionsSheetProps) {
+  useUiLocale();
   const { t } = useTranslation();
   const getMeaning = (type: string) => t(`kosolola.reactionMeanings.${type}`, { fallbackLng: 'pt' });
   const [selectedColor, setSelectedColor] = useState(highlight?.color || '');
@@ -128,21 +131,21 @@ export function MessageActionsSheet({
       className="kosolola-message-actions max-h-[78dvh] overflow-y-auto rounded-t-3xl sm:max-w-[420px] sm:rounded-2xl">
       <div className="px-4 pt-3 pb-[max(12px,env(safe-area-inset-bottom))] sm:pb-4">
         <div className="mb-2 flex items-center justify-between">
-          <h2 className="text-base font-semibold text-foreground">Ações da mensagem</h2>
+          <h2 className="text-base font-semibold text-foreground">{uiText("Ações da mensagem")}</h2>
           <button type="button" onClick={() => onOpenChange(false)}
-            aria-label="Fechar ações" className="flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring">
+            aria-label={uiText("Fechar ações")} className="flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring">
             <X className="h-5 w-5" />
           </button>
         </div>
 
         <div className="mb-2 flex items-center justify-between">
-          <span className="text-xs font-medium text-muted-foreground">Reações</span>
+          <span className="text-xs font-medium text-muted-foreground">{uiText("Reações")}</span>
           <button type="button" aria-expanded={showMeanings} onClick={() => setShowMeanings(v => !v)}
             className="min-h-9 rounded-md px-2 text-xs text-primary underline-offset-2 hover:underline">
-            {showMeanings ? 'Ocultar significados' : 'O que significam?'}
+            {showMeanings ? uiText("Ocultar significados") : uiText("O que significam?")}
           </button>
         </div>
-        <div className="grid grid-cols-5 gap-1" role="group" aria-label="Reações africanas">
+        <div className="grid grid-cols-5 gap-1" role="group" aria-label={uiText("Reações africanas")}>
           {AFRICAN_REACTIONS.map(reaction => (
             <button key={reaction.type} type="button" disabled={busy}
               onClick={() => void handleAction(() => onReact(reaction.type))}
@@ -169,38 +172,35 @@ export function MessageActionsSheet({
               : (mediaUrl || messageType === 'voice') ? <AttachmentThumbnail type={messageType} url={mediaUrl || ''} posterUrl={thumbnailUrl} />
               : <FileText aria-hidden="true" className="h-5 w-5 shrink-0" />)}
             <div className="min-w-0 flex-1">
-              <p className="truncate text-xs text-muted-foreground">{isOwn ? 'Tu' : senderName || 'Remetente'}</p>
+              <p className="truncate text-xs text-muted-foreground">{isOwn ? uiText("Tu") : senderName || uiText("Remetente")}</p>
               <p className="break-words text-sm text-foreground line-clamp-2">
-                {isViewOnce ? 'Conteúdo de visualização única' : previewText || (attachment ? attachmentName : '')}
+                {isViewOnce ? uiText("Conteúdo de visualização única") : previewText || (attachment ? attachmentName : '')}
                 {messageType === 'voice' && !isViewOnce && <span className="ml-2 text-muted-foreground">
                   {typeof durationSeconds === 'number' && Number.isFinite(durationSeconds) && durationSeconds >= 0
                     ? `${Math.floor(durationSeconds / 60)}:${String(Math.floor(durationSeconds % 60)).padStart(2, '0')}`
-                    : 'Duração indisponível'}
+                    : uiText("Duração indisponível")}
                 </span>}
               </p>
             </div>
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-1" role="group" aria-label="Ações rápidas">
+        <div className="grid grid-cols-2 gap-1" role="group" aria-label={uiText("Ações rápidas")}>
           <Button variant="ghost" disabled={busy} className={actionClass} onClick={() => void handleAction(onReply)}>
-            <Reply className="h-4 w-4 shrink-0" />Responder
-          </Button>
+            <Reply className="h-4 w-4 shrink-0" />{uiText("Responder")}</Button>
           {previewText && !isViewOnce && (
             <Button variant="ghost" disabled={busy} className={actionClass} onClick={() => void handleAction(onCopy)}>
-              <Copy className="h-4 w-4 shrink-0" />Copiar
-            </Button>
+              <Copy className="h-4 w-4 shrink-0" />{uiText("Copiar")}</Button>
           )}
           {onForward && <Button variant="ghost" disabled={busy} className={actionClass} onClick={() => void handleAction(onForward)}>
-            <Forward className="h-4 w-4 shrink-0" />Reencaminhar
-          </Button>}
-          <Button variant="ghost" disabled={busy} className={cn(actionClass, 'col-span-2')} title="Guarda a mensagem apenas nos teus favoritos" onClick={() => void handleAction(onStar)}>
+            <Forward className="h-4 w-4 shrink-0" />{uiText("Reencaminhar")}</Button>}
+          <Button variant="ghost" disabled={busy} className={cn(actionClass, 'col-span-2')} title={uiText("Guarda a mensagem apenas nos teus favoritos")} onClick={() => void handleAction(onStar)}>
             <Star className={cn('h-4 w-4 shrink-0', isStarred && 'fill-amber-400 text-amber-500')} />
-            {isStarred ? 'Retirar dos favoritos' : 'Marcar como favorita'}
+            {isStarred ? uiText("Retirar dos favoritos") : uiText("Marcar como favorita")}
           </Button>
-          {isOwn && <Button variant="ghost" disabled={busy} className={actionClass} title="Fixa a mensagem no topo desta conversa" onClick={() => void handleAction(onPin)}>
+          {isOwn && <Button variant="ghost" disabled={busy} className={actionClass} title={uiText("Fixa a mensagem no topo desta conversa")} onClick={() => void handleAction(onPin)}>
             <Pin className={cn('h-4 w-4 shrink-0', isPinned && 'fill-primary text-primary')} />
-            {isPinned ? 'Desafixar' : 'Fixar na conversa'}
+            {isPinned ? uiText("Desafixar") : uiText("Fixar na conversa")}
           </Button>}
         </div>
 
@@ -209,16 +209,15 @@ export function MessageActionsSheet({
             {!confirmDelete ? (
               <Button variant="ghost" disabled={busy} className="h-11 w-full justify-start gap-2 text-destructive hover:text-destructive"
                 onClick={() => setConfirmDelete(true)}>
-                <Trash2 className="h-4 w-4" />Apagar mensagem
-              </Button>
+                <Trash2 className="h-4 w-4" />{uiText("Apagar mensagem")}</Button>
             ) : (
-              <div role="group" aria-label="Confirmar eliminação" className="space-y-1">
-                <p className="px-3 text-xs text-muted-foreground">Apagar só para ti mantém a mensagem para os outros participantes.</p>
+              <div role="group" aria-label={uiText("Confirmar eliminação")} className="space-y-1">
+                <p className="px-3 text-xs text-muted-foreground">{uiText("Apagar só para ti mantém a mensagem para os outros participantes.")}</p>
                 {onDeleteForMe && <Button variant="ghost" disabled={busy} className="h-11 w-full justify-start text-destructive"
-                  onClick={() => void handleAction(onDeleteForMe)}>Apagar só para mim</Button>}
+                  onClick={() => void handleAction(onDeleteForMe)}>{uiText("Apagar só para mim")}</Button>}
                 {isOwn && onDelete && <Button variant="ghost" disabled={busy} className="h-11 w-full justify-start text-destructive"
-                  onClick={() => void handleAction(onDelete)}>Apagar para todos</Button>}
-                <Button variant="ghost" disabled={busy} className="h-11 w-full" onClick={() => setConfirmDelete(false)}>Cancelar</Button>
+                  onClick={() => void handleAction(onDelete)}>{uiText("Apagar para todos")}</Button>}
+                <Button variant="ghost" disabled={busy} className="h-11 w-full" onClick={() => setConfirmDelete(false)}>{uiText("Cancelar")}</Button>
               </div>
             )}
           </div>
@@ -230,14 +229,14 @@ export function MessageActionsSheet({
               onClick={() => setShowHighlightOptions(v => !v)}
               className="flex min-h-11 w-full items-center gap-2 rounded-xl px-2 text-left text-sm font-medium text-foreground hover:bg-secondary">
               <Highlighter className="h-4 w-4" />
-              <span className="flex-1">Destaque com cor e etiqueta</span>
-              <span className="text-xs text-muted-foreground">{showHighlightOptions ? 'Ocultar' : 'Escolher'}</span>
+              <span className="flex-1">{uiText("Destaque com cor e etiqueta")}</span>
+              <span className="text-xs text-muted-foreground">{showHighlightOptions ? uiText("Ocultar") : uiText("Escolher")}</span>
             </button>
             {showHighlightOptions && (
               <div className="space-y-2 px-1 pb-1 pt-2">
-                <div className="flex flex-wrap items-center justify-between gap-1" role="group" aria-label="Cor do destaque">
+                <div className="flex flex-wrap items-center justify-between gap-1" role="group" aria-label={uiText("Cor do destaque")}>
                   {HIGHLIGHT_COLORS.map(c => (
-                    <button key={c.name} type="button" aria-label={`Cor ${c.name}`}
+                    <button key={c.name} type="button" aria-label={uiText("Cor {{value1}}", { value1: (c.name) ?? "" })}
                       aria-pressed={selectedColor === c.name} onClick={() => setSelectedColor(c.name)}
                       className={cn('flex h-11 w-11 items-center justify-center rounded-full focus-visible:ring-2 focus-visible:ring-ring', selectedColor === c.name && 'ring-2 ring-ring ring-offset-2 ring-offset-background')}>
                       <span className={cn('flex h-8 w-8 items-center justify-center rounded-full', c.swatch)}>
@@ -246,7 +245,7 @@ export function MessageActionsSheet({
                     </button>
                   ))}
                 </div>
-                <div className="flex flex-wrap gap-1" role="group" aria-label="Etiquetas sugeridas">
+                <div className="flex flex-wrap gap-1" role="group" aria-label={uiText("Etiquetas sugeridas")}>
                   {LABEL_SUGGESTIONS.map(label => (
                     <button key={label} type="button" aria-pressed={highlightLabel === label}
                       onClick={() => setHighlightLabel(label)}
@@ -257,16 +256,14 @@ export function MessageActionsSheet({
                 </div>
                 <div className="flex items-center gap-2">
                   <Tag aria-hidden="true" className="h-4 w-4 shrink-0 text-muted-foreground" />
-                  <Input aria-label="Etiqueta do destaque" placeholder="Etiqueta personalizada (opcional)"
+                  <Input aria-label={uiText("Etiqueta do destaque")} placeholder={uiText("Etiqueta personalizada (opcional)")}
                     maxLength={48} value={highlightLabel} onChange={e => setHighlightLabel(e.target.value)}
                     className="h-11 min-w-0 flex-1 text-base" />
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button disabled={!selectedColor || busy} className="h-11 flex-1" onClick={() => void handleAction(() => onHighlight(selectedColor, highlightLabel.trim() || undefined))}>
-                    Guardar destaque
-                  </Button>
+                  <Button disabled={!selectedColor || busy} className="h-11 flex-1" onClick={() => void handleAction(() => onHighlight(selectedColor, highlightLabel.trim() || undefined))}>{uiText("Guardar destaque")}</Button>
                   {highlight?.color && onRemoveHighlight && (
-                    <Button variant="outline" disabled={busy} className="h-11" onClick={() => void handleAction(onRemoveHighlight)}>Remover</Button>
+                    <Button variant="outline" disabled={busy} className="h-11" onClick={() => void handleAction(onRemoveHighlight)}>{uiText("Remover")}</Button>
                   )}
                 </div>
               </div>

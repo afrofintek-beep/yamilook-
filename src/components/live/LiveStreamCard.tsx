@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Users, Radio, X, Loader2 } from 'lucide-react';
@@ -24,6 +25,7 @@ interface LiveStreamCardProps {
 }
 
 export function LiveStreamCard({ session, onClick, canEnd, onEndSession }: LiveStreamCardProps) {
+  useUiLocale();
   const [showEndDialog, setShowEndDialog] = useState(false);
   const [ending, setEnding] = useState(false);
 
@@ -63,19 +65,17 @@ export function LiveStreamCard({ session, onClick, canEnd, onEndSession }: LiveS
               <Radio className="w-12 h-12 text-primary animate-pulse" />
             </div>
           )}
-          
+
           {/* Gradient overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-          
+
           {/* Live badge */}
-          <Badge 
-            variant="destructive" 
+          <Badge
+            variant="destructive"
             className="absolute top-3 left-3 flex items-center gap-1.5 animate-pulse"
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
-            LIVE
-          </Badge>
-          
+            <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />{uiText("LIVE")}</Badge>
+
           {/* Viewer count */}
           <div className="absolute top-3 right-3 flex items-center gap-1 bg-black/50 backdrop-blur-sm rounded-full px-2 py-1 text-white text-xs">
             <Users className="w-3 h-3" />
@@ -93,7 +93,7 @@ export function LiveStreamCard({ session, onClick, canEnd, onEndSession }: LiveS
               <X className="w-4 h-4" />
             </Button>
           )}
-          
+
           {/* Bottom info */}
           <div className="absolute bottom-0 left-0 right-0 p-3">
             <div className="flex items-center gap-2 mb-2">
@@ -105,7 +105,7 @@ export function LiveStreamCard({ session, onClick, canEnd, onEndSession }: LiveS
               </Avatar>
               <div className="flex-1 min-w-0">
                 <p className="text-white text-sm font-medium truncate">
-                  {session.host?.display_name || 'Anonymous'}
+                  {session.host?.display_name || uiText("Anonymous")}
                 </p>
                 {session.city && (
                   <p className="text-white/70 text-xs truncate">
@@ -119,7 +119,7 @@ export function LiveStreamCard({ session, onClick, canEnd, onEndSession }: LiveS
             </p>
           </div>
         </div>
-        
+
         {/* Hover effect */}
         <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
       </motion.div>
@@ -127,13 +127,11 @@ export function LiveStreamCard({ session, onClick, canEnd, onEndSession }: LiveS
       <AlertDialog open={showEndDialog} onOpenChange={setShowEndDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>End Live Session</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to end "{session.title}"? This will disconnect all viewers.
-            </AlertDialogDescription>
+            <AlertDialogTitle>{uiText("End Live Session")}</AlertDialogTitle>
+            <AlertDialogDescription>{uiText("Are you sure you want to end \"{{value1}}\"? This will disconnect all viewers.", { value1: (session.title) ?? "" })}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={ending}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={ending}>{uiText("Cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirmEnd}
               disabled={ending}
@@ -141,11 +139,9 @@ export function LiveStreamCard({ session, onClick, canEnd, onEndSession }: LiveS
             >
               {ending ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Ending...
-                </>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />{uiText("Ending...")}</>
               ) : (
-                'End Session'
+                uiText("End Session")
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

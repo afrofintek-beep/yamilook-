@@ -1,8 +1,9 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  LayoutGrid, Plus, X, Users, ArrowRight, 
-  Trash2, MoreVertical, Clock 
+import {
+  LayoutGrid, Plus, X, Users, ArrowRight,
+  Trash2, MoreVertical, Clock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,17 +40,18 @@ interface BreakoutRoomsPanelProps {
   onClose: () => void;
 }
 
-export function BreakoutRoomsPanel({ 
-  callId, 
-  participants, 
-  isOpen, 
-  onClose 
+export function BreakoutRoomsPanel({
+  callId,
+  participants,
+  isOpen,
+  onClose
 }: BreakoutRoomsPanelProps) {
+  useUiLocale();
   const [breakoutRooms, setBreakoutRooms] = useState<BreakoutRoom[]>([]);
   const [newRoomName, setNewRoomName] = useState('');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [selectedParticipant, setSelectedParticipant] = useState<string | null>(null);
-  
+
   const {
     createBreakoutRoom,
     closeBreakoutRoom,
@@ -101,11 +103,11 @@ export function BreakoutRoomsPanel({
 
   const handleCreateRoom = async () => {
     if (!newRoomName.trim()) return;
-    
+
     await createBreakoutRoom(newRoomName);
     setNewRoomName('');
     setShowCreateDialog(false);
-    
+
     const rooms = await fetchBreakoutRooms();
     setBreakoutRooms(rooms);
   };
@@ -130,7 +132,7 @@ export function BreakoutRoomsPanel({
 
   // Get participants not in any breakout room
   const mainRoomParticipants = participants.filter(
-    p => !breakoutRooms.some(room => 
+    p => !breakoutRooms.some(room =>
       room.participants.some(rp => rp.user_id === p.user_id)
     )
   );
@@ -150,7 +152,7 @@ export function BreakoutRoomsPanel({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <LayoutGrid className="h-5 w-5 text-primary" />
-              <h3 className="font-semibold">Breakout Rooms</h3>
+              <h3 className="font-semibold">{uiText("Breakout Rooms")}</h3>
             </div>
             <div className="flex items-center gap-2">
               <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
@@ -161,19 +163,17 @@ export function BreakoutRoomsPanel({
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Create Breakout Room</DialogTitle>
+                    <DialogTitle>{uiText("Create Breakout Room")}</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4 pt-4">
                     <Input
-                      placeholder="Room name"
+                      placeholder={uiText("Room name")}
                       value={newRoomName}
                       onChange={(e) => setNewRoomName(e.target.value)}
                     />
                     <div className="flex justify-end gap-2">
-                      <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
-                        Cancel
-                      </Button>
-                      <Button onClick={handleCreateRoom}>Create</Button>
+                      <Button variant="outline" onClick={() => setShowCreateDialog(false)}>{uiText("Cancel")}</Button>
+                      <Button onClick={handleCreateRoom}>{uiText("Create")}</Button>
                     </div>
                   </div>
                 </DialogContent>
@@ -190,14 +190,12 @@ export function BreakoutRoomsPanel({
           {/* Main Room */}
           <div className="mb-4">
             <div className="flex items-center justify-between mb-2">
-              <h4 className="text-sm font-medium text-muted-foreground">Main Room</h4>
+              <h4 className="text-sm font-medium text-muted-foreground">{uiText("Main Room")}</h4>
               <Badge variant="outline">{mainRoomParticipants.length}</Badge>
             </div>
             <div className="space-y-2 p-3 rounded-xl bg-secondary/30 border border-border/50">
               {mainRoomParticipants.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-2">
-                  No participants in main room
-                </p>
+                <p className="text-sm text-muted-foreground text-center py-2">{uiText("No participants in main room")}</p>
               ) : (
                 mainRoomParticipants.map((participant) => (
                   <div
@@ -225,9 +223,7 @@ export function BreakoutRoomsPanel({
                             <DropdownMenuItem
                               key={room.id}
                               onClick={() => handleAssignParticipant(room.id, participant.user_id)}
-                            >
-                              Move to {room.name}
-                            </DropdownMenuItem>
+                            >{uiText("Move to {{value1}}", { value1: (room.name) ?? "" })}</DropdownMenuItem>
                           ))}
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -261,18 +257,14 @@ export function BreakoutRoomsPanel({
                         className="text-destructive"
                         onClick={() => handleCloseRoom(room.id)}
                       >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Close Room
-                      </DropdownMenuItem>
+                        <Trash2 className="h-4 w-4 mr-2" />{uiText("Close Room")}</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
               </div>
               <div className="space-y-2 p-3 rounded-xl bg-primary/10 border border-primary/20">
                 {room.participants.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-2">
-                    No participants yet
-                  </p>
+                  <p className="text-sm text-muted-foreground text-center py-2">{uiText("No participants yet")}</p>
                 ) : (
                   room.participants.map((participant) => (
                     <div
@@ -307,11 +299,7 @@ export function BreakoutRoomsPanel({
           {breakoutRooms.length === 0 && (
             <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
               <LayoutGrid className="h-12 w-12 mb-4 opacity-50" />
-              <p className="text-sm text-center">
-                No breakout rooms yet.
-                <br />
-                Create one to split participants.
-              </p>
+              <p className="text-sm text-center">{uiText("No breakout rooms yet.")}<br />{uiText("Create one to split participants.")}</p>
             </div>
           )}
         </ScrollArea>
@@ -324,9 +312,7 @@ export function BreakoutRoomsPanel({
               className="w-full"
               onClick={closeAllBreakoutRooms}
             >
-              <Clock className="h-4 w-4 mr-2" />
-              Close All Rooms
-            </Button>
+              <Clock className="h-4 w-4 mr-2" />{uiText("Close All Rooms")}</Button>
           </div>
         )}
       </motion.div>

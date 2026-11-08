@@ -1,3 +1,4 @@
+import { uiLocale, uiText, useUiLocale } from '@/i18n/ui-copy';
 import { mentorStatus } from '../hooks/useMentorGovernance';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, CheckCircle2, Star, GraduationCap, Calendar, Users } from 'lucide-react';
@@ -9,10 +10,11 @@ import { SessionCard } from '../components/SessionCard';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { EmptyStateBack } from '@/components/common/EmptyStateBack';
-import { format } from 'date-fns';
+import { format } from '@/i18n/ui-date';
 import { pt } from 'date-fns/locale';
 
 export default function MentorProfileScreen() {
+  useUiLocale();
   const { mentorId } = useParams<{ mentorId: string }>();
   const navigate = useNavigate();
 
@@ -45,7 +47,7 @@ export default function MentorProfileScreen() {
 
   // Fetch sessions by this mentor
   const { data: sessions = [] } = useQuery({
-    queryKey: ['mentor-sessions', mentorId],
+    queryKey: ['mentor-sessions', mentorId, uiLocale()],
     enabled: !!mentorId,
     queryFn: async () => {
       const { data, error } = await supabase
@@ -158,14 +160,14 @@ export default function MentorProfileScreen() {
             <ArrowLeft className="h-5 w-5 text-foreground" />
           </button>
           <GraduationCap className="h-5 w-5 text-primary" />
-          <h1 className="text-base font-bold text-foreground truncate">Perfil de Mentor</h1>
+          <h1 className="text-base font-bold text-foreground truncate">{uiText("Perfil de Mentor")}</h1>
         </div>
       </header>
 
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-6 space-y-6">
         {/* Profile Header */}
         <div className="flex flex-col items-center text-center gap-3">
-          <Link to={`/profile/${mentor.id}`} aria-label={`Abrir perfil de ${mentor.name}`} className="relative rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+          <Link to={`/profile/${mentor.id}`} aria-label={uiText("Abrir perfil de {{value1}}", { value1: (mentor.name) ?? "" })} className="relative rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
             <div className="rounded-full p-[2px] bg-gradient-to-br from-primary/60 to-primary/20">
               <Avatar className="h-20 w-20 border-2 border-card">
                 <AvatarImage src={mentor.avatar} />
@@ -188,9 +190,7 @@ export default function MentorProfileScreen() {
             )}
           </div>
 
-          <Link to={`/profile/${mentor.id}`} className="inline-flex min-h-11 items-center justify-center rounded-full border border-primary/30 px-4 text-sm font-medium text-primary hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-            Ver perfil na Yamilook
-          </Link>
+          <Link to={`/profile/${mentor.id}`} className="inline-flex min-h-11 items-center justify-center rounded-full border border-primary/30 px-4 text-sm font-medium text-primary hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">{uiText("Ver perfil na Yamilook")}</Link>
 
           {mentor.status && <p className="text-sm text-muted-foreground">{mentorStatus[mentor.status] ?? mentor.status}</p>}
           {mentor.mentorBio && (
@@ -207,17 +207,17 @@ export default function MentorProfileScreen() {
                 <span className="text-base font-bold text-foreground">
                   {avgRating > 0 ? avgRating.toFixed(1) : '—'}
                 </span>
-                <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Avaliação</span>
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{uiText("Avaliação")}</span>
               </div>
               <div className="flex flex-col items-center py-3 gap-0.5">
                 <Calendar className="h-4 w-4 text-primary mb-1" />
                 <span className="text-base font-bold text-foreground">{totalSessions}</span>
-                <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Sessões</span>
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{uiText("Sessões")}</span>
               </div>
               <div className="flex flex-col items-center py-3 gap-0.5">
                 <Users className="h-4 w-4 text-primary mb-1" />
                 <span className="text-base font-bold text-foreground">{reviewCount}</span>
-                <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Reviews</span>
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{uiText("Reviews")}</span>
               </div>
             </div>
           </CardContent>
@@ -226,9 +226,7 @@ export default function MentorProfileScreen() {
         {/* Upcoming Sessions */}
         {upcomingSessions.length > 0 && (
           <section>
-            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-              Próximas Sessões
-            </h2>
+            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">{uiText("Próximas Sessões")}</h2>
             <div className="space-y-3">
               {upcomingSessions.map((s) => (
                 <SessionCard
@@ -256,9 +254,7 @@ export default function MentorProfileScreen() {
         {/* Past Sessions */}
         {pastSessions.length > 0 && (
           <section>
-            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-              Sessões Anteriores
-            </h2>
+            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">{uiText("Sessões Anteriores")}</h2>
             <div className="space-y-3">
               {pastSessions.slice(0, 5).map((s) => (
                 <SessionCard
@@ -283,14 +279,10 @@ export default function MentorProfileScreen() {
 
         {/* Reviews */}
         <section>
-          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-            Avaliações ({reviewCount})
-          </h2>
-          {reviewCount > 20 && <p className="text-xs text-muted-foreground">A mostrar as 20 avaliações mais recentes. A média inclui todas.</p>}
+          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">{uiText("Avaliações ({{value1}})", { value1: (reviewCount) ?? "" })}</h2>
+          {reviewCount > 20 && <p className="text-xs text-muted-foreground">{uiText("A mostrar as 20 avaliações mais recentes. A média inclui todas.")}</p>}
           {reviews.length === 0 ? (
-            <p className="text-center text-sm text-muted-foreground py-8">
-              Ainda sem avaliações.
-            </p>
+            <p className="text-center text-sm text-muted-foreground py-8">{uiText("Ainda sem avaliações.")}</p>
           ) : (
             <div className="space-y-3">
               {reviews.map((review) => (

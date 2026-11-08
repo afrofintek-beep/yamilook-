@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SmilePlus } from 'lucide-react';
@@ -7,7 +8,7 @@ import { AFRICAN_REACTIONS, AfricanReactionType, getReaction } from '@/lib/react
 
 /**
  * YAMILOOK African Reaction System for Calls
- * 
+ *
  * FINAL ICONS (Cultural symbols - DO NOT REPLACE):
  * - 💛 Sankofa Love
  * - 🤝🏾 Ubuntu (skin tone intentional)
@@ -22,6 +23,7 @@ interface CallReactionsProps {
 }
 
 export function CallReactions({ onReaction, inline = false }: CallReactionsProps) {
+  useUiLocale();
   const [isOpen, setIsOpen] = useState(false);
   const [hoveredReaction, setHoveredReaction] = useState<string | null>(null);
 
@@ -65,7 +67,7 @@ export function CallReactions({ onReaction, inline = false }: CallReactionsProps
                   </button>
                 ))}
               </div>
-              
+
               {/* Label on hover */}
               <AnimatePresence mode="wait">
                 {hoveredData && (
@@ -98,7 +100,7 @@ export function CallReactions({ onReaction, inline = false }: CallReactionsProps
         size="icon"
         className="h-12 w-12 rounded-full border-white/20 bg-white/10 hover:bg-white/20"
         onClick={() => setIsOpen(!isOpen)}
-        aria-label="Open reactions"
+        aria-label={uiText("Open reactions")}
         aria-expanded={isOpen}
       >
         <SmilePlus className="h-5 w-5 text-white" />

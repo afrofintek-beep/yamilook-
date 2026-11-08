@@ -1,3 +1,4 @@
+import { uiText } from '@/i18n/ui-copy';
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -53,7 +54,7 @@ export function useHiddenMessages(userId: string | undefined) {
       });
 
     if (error) {
-      toast({ title: 'Erro', description: error.message, variant: 'destructive' });
+      toast({ title: uiText("Erro"), description: error.message, variant: 'destructive' });
       return;
     }
 
@@ -86,7 +87,7 @@ export function useHiddenMessages(userId: string | undefined) {
       });
 
     if (error) {
-      toast({ title: 'Erro', description: error.message, variant: 'destructive' });
+      toast({ title: uiText("Erro"), description: error.message, variant: 'destructive' });
       return;
     }
 

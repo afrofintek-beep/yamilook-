@@ -1,13 +1,14 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Play, 
-  Pause, 
-  Volume2, 
-  VolumeX, 
-  MessageCircle, 
-  Share2, 
+import {
+  Play,
+  Pause,
+  Volume2,
+  VolumeX,
+  MessageCircle,
+  Share2,
   MoreVertical,
   Flag,
   Trash2,
@@ -27,7 +28,7 @@ import { Ritmo } from '@/hooks/useRitmos';
 import { AfricanReactionType, AFRICAN_REACTIONS, getReactionIcon } from '@/lib/reactions';
 import { useAuth } from '@/hooks/useAuth';
 import { useLongPress } from '@/hooks/useLongPress';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from '@/i18n/ui-date';
 
 interface RitmoPlayerProps {
   ritmo: Ritmo;
@@ -50,6 +51,7 @@ export function RitmoPlayer({
   onArchive,
   onView,
 }: RitmoPlayerProps) {
+  useUiLocale();
   const { user } = useAuth();
   const navigate = useNavigate();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -201,13 +203,13 @@ export function RitmoPlayer({
         {ritmo.is_promoted && (
           <div className="flex items-center gap-1 text-amber-300 text-xs bg-black/30 rounded-full px-2 py-1">
             <Sparkles className="w-3 h-3" />
-            <span>Destaque Local</span>
+            <span>{uiText("Destaque Local")}</span>
           </div>
         )}
       </div>
 
       {/* Right side actions - with stopPropagation to prevent swipe interference */}
-      <div 
+      <div
         className="absolute right-3 bottom-32 flex flex-col items-center gap-5 z-20"
         onTouchStart={(e) => e.stopPropagation()}
         onTouchMove={(e) => e.stopPropagation()}
@@ -216,8 +218,8 @@ export function RitmoPlayer({
       >
         {/* User avatar with follow button */}
         <div className="relative">
-          <button 
-            className="relative" 
+          <button
+            className="relative"
             onClick={(e) => {
               e.stopPropagation();
               navigate(`/profile/${ritmo.user_id}`);
@@ -297,8 +299,8 @@ export function RitmoPlayer({
         </div>
 
         {/* Comments */}
-        <button 
-          className="flex flex-col items-center gap-1" 
+        <button
+          className="flex flex-col items-center gap-1"
           onClick={(e) => {
             e.stopPropagation();
             onComment();
@@ -311,8 +313,8 @@ export function RitmoPlayer({
         </button>
 
         {/* Share */}
-        <button 
-          className="flex flex-col items-center gap-1" 
+        <button
+          className="flex flex-col items-center gap-1"
           onClick={(e) => {
             e.stopPropagation();
             onShare();
@@ -324,7 +326,7 @@ export function RitmoPlayer({
         </button>
 
         {/* Mute toggle */}
-        <button 
+        <button
           className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center"
           onClick={(e) => {
             e.stopPropagation();
@@ -341,7 +343,7 @@ export function RitmoPlayer({
         {/* More options */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button 
+            <button
               className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center"
               onClick={(e) => e.stopPropagation()}
             >
@@ -352,21 +354,15 @@ export function RitmoPlayer({
             {/* Archive - available for everyone */}
             {onArchive && (
               <DropdownMenuItem onClick={onArchive}>
-                <Archive className="w-4 h-4 mr-2" />
-                Arquivar
-              </DropdownMenuItem>
+                <Archive className="w-4 h-4 mr-2" />{uiText("Arquivar")}</DropdownMenuItem>
             )}
             {/* Report - available for everyone */}
             <DropdownMenuItem>
-              <Flag className="w-4 h-4 mr-2" />
-              Denunciar
-            </DropdownMenuItem>
+              <Flag className="w-4 h-4 mr-2" />{uiText("Denunciar")}</DropdownMenuItem>
             {/* Delete - only for owner */}
             {isOwner && onDelete && (
               <DropdownMenuItem onClick={onDelete} className="text-destructive">
-                <Trash2 className="w-4 h-4 mr-2" />
-                Eliminar
-              </DropdownMenuItem>
+                <Trash2 className="w-4 h-4 mr-2" />{uiText("Eliminar")}</DropdownMenuItem>
             )}
           </DropdownMenuContent>
         </DropdownMenu>
@@ -376,7 +372,7 @@ export function RitmoPlayer({
       <div className="absolute bottom-4 left-4 right-20 pb-safe">
         <div className="flex items-center gap-2 mb-2">
           <span className="text-white font-semibold">
-            @{ritmo.user?.username || ritmo.user?.display_name || 'user'}
+            @{ritmo.user?.username || ritmo.user?.display_name || uiText("user")}
           </span>
           <span className="text-white/60 text-sm">
             {formatDistanceToNow(new Date(ritmo.created_at), { addSuffix: true })}

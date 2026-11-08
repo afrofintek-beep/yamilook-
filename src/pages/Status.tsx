@@ -1,11 +1,12 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { 
-  ArrowLeft, 
-  Plus, 
-  MoreVertical, 
+import {
+  ArrowLeft,
+  Plus,
+  MoreVertical,
   Eye,
   VolumeX,
   Settings,
@@ -14,7 +15,7 @@ import {
   Type,
   Archive,
 } from 'lucide-react';
-import { format, formatDistanceToNow } from 'date-fns';
+import { format, formatDistanceToNow } from '@/i18n/ui-date';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -34,18 +35,19 @@ import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 
 export default function Status() {
+  useUiLocale();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { user } = useAuth();
-  const { 
-    myStatuses, 
-    contactStatuses, 
+  const {
+    myStatuses,
+    contactStatuses,
     mutedContacts,
     loading,
     toggleMuteContact,
     getArchivedStatuses,
   } = useStatus();
-  
+
   const [viewerOpen, setViewerOpen] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<GroupedStatuses | null>(null);
   const [isViewingOwn, setIsViewingOwn] = useState(false);
@@ -80,9 +82,9 @@ export default function Status() {
     setViewerOpen(true);
   };
 
-  const allViewableGroups = isViewingOwn 
-    ? [{ 
-        user_id: user?.id || '', 
+  const allViewableGroups = isViewingOwn
+    ? [{
+        user_id: user?.id || '',
         user: myStatuses[0]?.user || { id: '', display_name: 'You', avatar_url: null, username: '' },
         statuses: myStatuses,
         has_unviewed: false,
@@ -100,9 +102,9 @@ export default function Status() {
       <header className="shrink-0 relative z-50 glass border-b border-border/50 safe-top">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               className="rounded-full"
               onClick={() => navigate('/')}
             >
@@ -153,7 +155,7 @@ export default function Status() {
               <div className="flex-1">
                 <p className="font-semibold">{t('status.myStatus')}</p>
                 <p className="text-sm text-muted-foreground">
-                  {myStatuses.length > 0 
+                  {myStatuses.length > 0
                     ? `${myStatuses.length} ${t('status.statusCount', { count: myStatuses.length })} • ${formatDistanceToNow(new Date(myStatuses[0].created_at), { addSuffix: true })}`
                     : t('status.tapToAdd')}
                 </p>
@@ -196,10 +198,7 @@ export default function Status() {
                       />
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold truncate">{group.user.display_name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {group.statuses.length} status{group.statuses.length > 1 ? 'es' : ''} •{' '}
-                          {formatDistanceToNow(new Date(group.latest_at), { addSuffix: true })}
-                        </p>
+                        <p className="text-sm text-muted-foreground">{group.statuses.length} {t('status.statusCount', { count: group.statuses.length })} • {formatDistanceToNow(new Date(group.latest_at), { addSuffix: true })}</p>
                       </div>
                     </motion.div>
                   ))}
@@ -241,9 +240,9 @@ export default function Status() {
                       </div>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             className="rounded-full opacity-0 group-hover:opacity-100"
                           >
                             <MoreVertical className="w-4 h-4" />
@@ -322,9 +321,9 @@ export default function Status() {
       />
 
       {/* Create Status Sheet */}
-      <CreateStatusSheet 
-        open={createOpen} 
-        onOpenChange={setCreateOpen} 
+      <CreateStatusSheet
+        open={createOpen}
+        onOpenChange={setCreateOpen}
       />
     </div>
   );

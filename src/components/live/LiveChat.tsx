@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -15,6 +16,7 @@ interface LiveChatProps {
 }
 
 export function LiveChat({ messages, onSendMessage, isHost }: LiveChatProps) {
+  useUiLocale();
   const navigate = useNavigate();
   const [newMessage, setNewMessage] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -69,7 +71,7 @@ export function LiveChat({ messages, onSendMessage, isHost }: LiveChatProps) {
                     onClick={() => navigate(`/profile/${msg.user_id}`)}
                     className="text-xs font-medium text-primary hover:underline focus:outline-none"
                   >
-                    {msg.user?.display_name || 'User'}
+                    {msg.user?.display_name || uiText("User")}
                   </button>
                   <p className="text-sm text-white break-words">
                     {msg.message}
@@ -88,7 +90,7 @@ export function LiveChat({ messages, onSendMessage, isHost }: LiveChatProps) {
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Send a message..."
+            placeholder={uiText("Send a message...")}
             className="flex-1 rounded-full bg-muted border-0"
             maxLength={200}
           />

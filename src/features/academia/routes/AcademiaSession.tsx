@@ -1,3 +1,4 @@
+import { uiLocale, uiText, useUiLocale } from '@/i18n/ui-copy';
 import { SessionAttendance } from '../components/SessionAttendance';
 import { useAdmin } from '@/hooks/useAdmin';
 import { SessionManagement } from '../components/SessionManagement';
@@ -18,10 +19,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { useSubmitAcademiaReview } from '../hooks/useAcademia';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
+import { format } from '@/i18n/ui-date';
 import { pt } from 'date-fns/locale';
 
 export default function AcademiaSession() {
+  useUiLocale();
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
   const { isAdmin } = useAdmin();
@@ -31,7 +33,7 @@ export default function AcademiaSession() {
   const [reviewOpen, setReviewOpen] = useState(false);
 
   const { data: session, isLoading } = useQuery({
-    queryKey: ['academia-session', sessionId],
+    queryKey: ['academia-session', sessionId, uiLocale()],
     enabled: !!sessionId,
     queryFn: async () => {
       const { data, error } = await supabase
@@ -97,7 +99,7 @@ export default function AcademiaSession() {
 
   const reserveMutation = useMutation({
     mutationFn: async () => {
-      if (!user || !sessionId) throw new Error('Not authenticated');
+      if (!user || !sessionId) throw new Error(uiText("Not authenticated"));
       // Atomic + server-authoritative: charges the learner and holds the Kumbu.
       // The mentor is paid on completion (academia_complete). Guards double-book,
       // full/past/own sessions.
@@ -107,7 +109,7 @@ export default function AcademiaSession() {
       if (!r.ok) throw new Error(r.reason || 'reserve_failed');
     },
     onSuccess: () => {
-      toast.success('Lugar reservado com sucesso!');
+      toast.success(uiText("Lugar reservado com sucesso!"));
       queryClient.invalidateQueries({ queryKey: ['academia-session', sessionId] });
       queryClient.invalidateQueries({ queryKey: ['academia-reservation', sessionId] });
       queryClient.invalidateQueries({ queryKey: ['academia-sessions'] });
@@ -129,7 +131,7 @@ export default function AcademiaSession() {
 
   const cancelMutation = useMutation({
     mutationFn: async () => {
-      if (!user || !sessionId) throw new Error('Not authenticated');
+      if (!user || !sessionId) throw new Error(uiText("Not authenticated"));
       // Atomic: releases the seat and refunds the learner (academia_cancel).
       const { data, error } = await supabase.rpc('academia_cancel', { p_session: sessionId });
       if (error) throw error;
@@ -161,7 +163,7 @@ export default function AcademiaSession() {
           action_type: 'spend',
           source: 'academia',
           reference_id: sessionId,
-          description: `Reembolso: ${session.title}`,
+          description: uiText("Reembolso: {{value1}}", { value1: (session.title) ?? "" }),
           created_at: new Date().toISOString(),
         };
         for (const dir of ['all', 'credit'] as const) {
@@ -176,7 +178,7 @@ export default function AcademiaSession() {
       queryClient.invalidateQueries({ queryKey: ['kumbu-ledger'] });
     },
     onError: () => {
-      toast.error('Erro ao cancelar. Tenta novamente.');
+      toast.error(uiText("Erro ao cancelar. Tenta novamente."));
     },
   });
 
@@ -194,14 +196,14 @@ export default function AcademiaSession() {
     },
     onSuccess: (r) => {
       toast.success((r?.paid_to_mentor ?? 0) > 0
-        ? `Sessão concluída. Recebeste ${r.paid_to_mentor} Kumbu. 🎓`
+        ? uiText("Sessão concluída. Recebeste {{value1}} Kumbu. 🎓", { value1: (r.paid_to_mentor) ?? "" })
         : 'Sessão concluída.');
       queryClient.invalidateQueries({ queryKey: ['academia-session', sessionId] });
       queryClient.invalidateQueries({ queryKey: ['academia-sessions'] });
       queryClient.invalidateQueries({ queryKey: ['kumbu-ledger'] });
       void refreshProfile();
     },
-    onError: () => toast.error('Não foi possível concluir a sessão.'),
+    onError: () => toast.error(uiText("Não foi possível concluir a sessão.")),
   });
 
   if (isLoading) {
@@ -209,7 +211,7 @@ export default function AcademiaSession() {
       <div className="fixed inset-0 flex h-screen-safe min-w-0 flex-col overflow-hidden bg-background pl-[env(safe-area-inset-left,0px)] pr-[env(safe-area-inset-right,0px)]">
         <header className="relative z-30 shrink-0 border-b border-border/40 bg-background/95 backdrop-blur-md safe-top">
           <div className="mx-auto flex min-h-14 w-full max-w-2xl min-w-0 items-center gap-2 px-3 py-1">
-            <button onClick={() => navigate('/academia', { replace: true })} aria-label="Voltar à Academia" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            <button onClick={() => navigate('/academia', { replace: true })} aria-label={uiText("Voltar à Academia")} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
               <ArrowLeft className="h-5 w-5 text-foreground" />
             </button>
             <GraduationCap className="h-5 w-5 shrink-0 text-primary" />
@@ -245,7 +247,7 @@ export default function AcademiaSession() {
     <div className="fixed inset-0 flex h-screen-safe min-w-0 flex-col overflow-hidden bg-background pl-[env(safe-area-inset-left,0px)] pr-[env(safe-area-inset-right,0px)]">
       <header className="relative z-30 shrink-0 border-b border-border/40 bg-background/95 backdrop-blur-md safe-top">
         <div className="mx-auto flex min-h-14 w-full max-w-2xl min-w-0 items-center gap-2 px-3 py-1">
-          <button onClick={() => navigate('/academia', { replace: true })} aria-label="Voltar à Academia" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <button onClick={() => navigate('/academia', { replace: true })} aria-label={uiText("Voltar à Academia")} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
             <ArrowLeft className="h-5 w-5 text-foreground" />
           </button>
           <GraduationCap className="h-5 w-5 shrink-0 text-primary" />
@@ -266,7 +268,7 @@ export default function AcademiaSession() {
           </Avatar>
           <div className="flex-1 min-w-0">
             <span className="block break-words text-base font-semibold text-foreground [overflow-wrap:anywhere]">{session.mentorName}</span>
-            <p className="text-xs text-muted-foreground">Mentor</p>
+            <p className="text-xs text-muted-foreground">{uiText("Mentor")}</p>
           </div>
         </button>
 
@@ -285,28 +287,28 @@ export default function AcademiaSession() {
               <div className="flex min-w-0 items-center gap-2.5 p-3 [&>div]:min-w-0 [&_p]:break-words">
                 <Calendar className="h-4 w-4 text-primary shrink-0" />
                 <div>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Data</p>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{uiText("Data")}</p>
                   <p className="text-sm font-medium text-foreground">{session.date}</p>
                 </div>
               </div>
               <div className="flex min-w-0 items-center gap-2.5 p-3 [&>div]:min-w-0 [&_p]:break-words">
                 <Clock className="h-4 w-4 text-primary shrink-0" />
                 <div>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Hora</p>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{uiText("Hora")}</p>
                   <p className="text-sm font-medium text-foreground">{session.time}</p>
                 </div>
               </div>
               <div className="flex min-w-0 items-center gap-2.5 p-3 [&>div]:min-w-0 [&_p]:break-words">
                 <MonitorPlay className="h-4 w-4 text-primary shrink-0" />
                 <div>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Formato</p>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{uiText("Formato")}</p>
                   <p className="text-sm font-medium text-foreground capitalize">{session.format}</p>
                 </div>
               </div>
               <div className="flex min-w-0 items-center gap-2.5 p-3 [&>div]:min-w-0 [&_p]:break-words">
                 <Users className="h-4 w-4 text-primary shrink-0" />
                 <div>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Lugares</p>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{uiText("Lugares")}</p>
                   <p className="text-sm font-medium text-foreground">{session.spotsLeft}/{session.spots}</p>
                 </div>
               </div>
@@ -317,12 +319,10 @@ export default function AcademiaSession() {
         {/* Badges */}
         <div className="flex flex-wrap gap-2">
           <Badge variant={session.isPremium ? 'default' : 'secondary'} className="text-xs rounded-full px-3 py-1">
-            {session.isPremium ? `${ACADEMIA_COPY.tabPremium} · ${session.priceCoins} coins` : ACADEMIA_COPY.tabFree}
+            {session.isPremium ? uiText("{{value1}} · {{value2}} coins", { value1: (ACADEMIA_COPY.tabPremium) ?? "", value2: (session.priceCoins) ?? "" }) : ACADEMIA_COPY.tabFree}
           </Badge>
           {isReserved && (
-            <Badge variant="outline" className="text-xs rounded-full px-3 py-1 border-primary text-primary">
-              ✓ Reservado
-            </Badge>
+            <Badge variant="outline" className="text-xs rounded-full px-3 py-1 border-primary text-primary">{uiText("✓ Reservado")}</Badge>
           )}
         </div>
 
@@ -366,7 +366,7 @@ export default function AcademiaSession() {
 
       {(isMentor || isAdmin) && ['live', 'ended', 'completed'].includes(session.status) && <SessionAttendance sessionId={session.id} />}
       {(isMentor || isAdmin) && <div className="flex justify-end px-4"><SessionManagement session={session} /></div>}
-      {session.cancellationReason && <Alert className="mx-4 w-auto"><AlertDescription>Sessão cancelada: {session.cancellationReason}</AlertDescription></Alert>}
+      {session.cancellationReason && <Alert className="mx-4 w-auto"><AlertDescription>{uiText("Sessão cancelada: {{value1}}", { value1: (session.cancellationReason) ?? "" })}</AlertDescription></Alert>}
       {!session.archivedAt && ((!isEnded && !isRegistrationClosed) || (isMentor && !['completed','cancelled'].includes(session.status))) && (
         <div className="shrink-0 border-t border-border/40 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] [&>button]:whitespace-normal">
           {isLive ? (
@@ -375,15 +375,15 @@ export default function AcademiaSession() {
             </Button>
           ) : isMentor ? (
             <div className="space-y-2">
-            {!isEnded && <Button className="w-full rounded-full" onClick={() => navigate(`/academia/live/${session.id}`)}>Abrir sala de vídeo</Button>}
+            {!isEnded && <Button className="w-full rounded-full" onClick={() => navigate(`/academia/live/${session.id}`)}>{uiText("Abrir sala de vídeo")}</Button>}
             <Button
               className="w-full rounded-full"
               disabled={completeMutation.isPending || session.status === 'completed'}
               onClick={() => completeMutation.mutate()}
             >
               {session.status === 'completed'
-                ? 'Sessão concluída'
-                : completeMutation.isPending ? 'A concluir…' : 'Concluir e receber'}
+                ? uiText("Sessão concluída")
+                : completeMutation.isPending ? uiText("A concluir…") : uiText("Concluir e receber")}
             </Button>
             </div>
           ) : isReserved ? (
@@ -393,7 +393,7 @@ export default function AcademiaSession() {
               disabled={cancelMutation.isPending}
               onClick={() => cancelMutation.mutate()}
             >
-              {cancelMutation.isPending ? 'A cancelar…' : 'Cancelar reserva'}
+              {cancelMutation.isPending ? uiText("A cancelar…") : uiText("Cancelar reserva")}
             </Button>
           ) : (
             <Button
@@ -401,7 +401,7 @@ export default function AcademiaSession() {
               disabled={isMentor || isFull || reserveMutation.isPending}
               onClick={() => reserveMutation.mutate()}
             >
-              {reserveMutation.isPending ? 'A reservar…' : isFull ? 'Lotado' : isMentor ? 'É a tua sessão' : isLateRegistration ? `${ACADEMIA_COPY.reserve} (+10%)` : ACADEMIA_COPY.reserve}
+              {reserveMutation.isPending ? uiText("A reservar…") : isFull ? uiText("Lotado") : isMentor ? uiText("É a tua sessão") : isLateRegistration ? `${ACADEMIA_COPY.reserve} (+10%)` : ACADEMIA_COPY.reserve}
             </Button>
           )}
         </div>
@@ -413,7 +413,7 @@ export default function AcademiaSession() {
         onSubmit={(rating, comment) => {
           if (!sessionId) return;
           if (user?.id === session.mentorId || !canReview) {
-            toast.error('Não podes avaliar a tua própria sessão.');
+            toast.error(uiText("Não podes avaliar a tua própria sessão."));
             setReviewOpen(false);
             return;
           }
@@ -421,10 +421,10 @@ export default function AcademiaSession() {
             { sessionId, mentorId: session.mentorId, rating, comment },
             {
               onSuccess: () => {
-                toast.success('Avaliação enviada. Obrigado!');
+                toast.success(uiText("Avaliação enviada. Obrigado!"));
                 setReviewOpen(false);
               },
-              onError: () => toast.error('Erro ao enviar avaliação. Tenta novamente.'),
+              onError: () => toast.error(uiText("Erro ao enviar avaliação. Tenta novamente.")),
             },
           );
         }}

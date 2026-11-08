@@ -1,3 +1,4 @@
+import { uiText } from '@/i18n/ui-copy';
 import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Enums } from '@/integrations/supabase/types';
@@ -84,7 +85,7 @@ export function useAppeals() {
     });
 
     if (error) throw error;
-    toast.success('Apelação submetida. Será revista em breve.');
+    toast.success(uiText("Apelação submetida. Será revista em breve."));
   }, [user]);
 
   const reviewAppeal = useCallback(async (

@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -40,6 +41,7 @@ export function SessionCard({
   priceCoins,
   onPress,
 }: SessionCardProps) {
+  useUiLocale();
   // 'completed' (sessão dada) e 'cancelled' também são estados terminais —
   // não devem aparecer como reserváveis.
   const isEnded = status === 'ended' || status === 'completed' || status === 'cancelled';
@@ -86,19 +88,13 @@ export function SessionCard({
                   <span className="relative flex h-1.5 w-1.5">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75" />
                     <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-destructive" />
-                  </span>
-                  AO VIVO
-                </Badge>
+                  </span>{uiText("AO VIVO")}</Badge>
               )}
               {isPremium ? (
                 <Badge className="bg-primary/15 text-primary text-[10px] px-2 py-0.5 rounded-full border-0 gap-1">
-                  <Crown className="h-2.5 w-2.5" />
-                  Premium
-                </Badge>
+                  <Crown className="h-2.5 w-2.5" />{uiText("Premium")}</Badge>
               ) : (
-                <Badge className="bg-success/15 text-success text-[10px] px-2 py-0.5 rounded-full border-0">
-                  Gratuita
-                </Badge>
+                <Badge className="bg-success/15 text-success text-[10px] px-2 py-0.5 rounded-full border-0">{uiText("Gratuita")}</Badge>
               )}
             </div>
           </div>
@@ -128,13 +124,9 @@ export function SessionCard({
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                  <Users className="h-3 w-3" />
-                  {spotsLeft}/{spots} vagas
-                </span>
+                  <Users className="h-3 w-3" />{uiText("{{value1}}/{{value2}} vagas", { value1: (spotsLeft) ?? "", value2: (spots) ?? "" })}</span>
                 {isAlmostFull && (
-                  <span className="text-[10px] text-primary font-medium animate-pulse">
-                    Quase cheio!
-                  </span>
+                  <span className="text-[10px] text-primary font-medium animate-pulse">{uiText("Quase cheio!")}</span>
                 )}
               </div>
               <div className="h-1 rounded-full bg-secondary overflow-hidden">
@@ -150,7 +142,7 @@ export function SessionCard({
 
           {/* CTA */}
           {isEnded ? (
-            <p className="text-[11px] text-muted-foreground text-center py-1">{status === 'cancelled' ? 'Sessão cancelada' : ACADEMIA_COPY.sessionEndedInfo}</p>
+            <p className="text-[11px] text-muted-foreground text-center py-1">{status === 'cancelled' ? uiText("Sessão cancelada") : ACADEMIA_COPY.sessionEndedInfo}</p>
           ) : isRegistrationClosed ? (
             <Button size="sm" variant="secondary" className="w-full rounded-full text-xs h-9" disabled>
               {ACADEMIA_COPY.registrationClosed}

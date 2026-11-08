@@ -1,14 +1,15 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useAuth } from '@/hooks/useAuth';
 import { genderCtx } from '@/lib/i18n-gender';
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  X, 
-  Camera, 
-  Image, 
-  Type, 
-  Palette, 
-  Music, 
+import {
+  X,
+  Camera,
+  Image,
+  Type,
+  Palette,
+  Music,
   Sticker,
   Lock,
   Users,
@@ -64,6 +65,7 @@ const backgroundOptions = [
 type StatusType = 'text' | 'photo' | 'video';
 
 export function CreateStatusSheet({ open, onOpenChange }: CreateStatusSheetProps) {
+  useUiLocale();
   const { t } = useTranslation();
   const { profile } = useAuth();
   const privacyOptions = [
@@ -74,7 +76,7 @@ export function CreateStatusSheet({ open, onOpenChange }: CreateStatusSheetProps
   ];
   const { createStatus } = useStatus();
   const { toast } = useToast();
-  
+
   const [statusType, setStatusType] = useState<StatusType | null>(null);
   const [textContent, setTextContent] = useState('');
   const [selectedBackground, setSelectedBackground] = useState(backgroundOptions[0]);
@@ -83,7 +85,7 @@ export function CreateStatusSheet({ open, onOpenChange }: CreateStatusSheetProps
   const [caption, setCaption] = useState('');
   const [privacy, setPrivacy] = useState<'everyone' | 'contacts' | 'close_friends' | 'only_me'>('contacts');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
@@ -133,7 +135,7 @@ export function CreateStatusSheet({ open, onOpenChange }: CreateStatusSheetProps
         privacy,
       });
 
-      if (!created?.id) throw new Error('Status was not saved');
+      if (!created?.id) throw new Error(uiText("Status was not saved"));
 
       toast({
         title: t('status.statusPosted'),
@@ -182,12 +184,12 @@ export function CreateStatusSheet({ open, onOpenChange }: CreateStatusSheetProps
               <SheetHeader className="p-4 border-b">
                 <SheetTitle>{t('status.createStatus')}</SheetTitle>
               </SheetHeader>
-              
+
               <div className="flex-1 p-6 space-y-4">
                 <p className="text-muted-foreground text-center mb-8">
                   {t('status.whatToShare')}
                 </p>
-                
+
                 <div className="grid grid-cols-3 gap-2">
                   <motion.button
                     whileTap={{ scale: 0.95 }}
@@ -197,7 +199,7 @@ export function CreateStatusSheet({ open, onOpenChange }: CreateStatusSheetProps
                     <Camera className="w-8 h-8" />
                     <span className="font-medium">{t('status.camera')}</span>
                   </motion.button>
-                  
+
                   <motion.button
                     whileTap={{ scale: 0.95 }}
                     onClick={() => fileInputRef.current?.click()}
@@ -206,7 +208,7 @@ export function CreateStatusSheet({ open, onOpenChange }: CreateStatusSheetProps
                     <Image className="w-8 h-8" />
                     <span className="font-medium">{t('status.gallery')}</span>
                   </motion.button>
-                  
+
                   <motion.button
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setStatusType('text')}
@@ -249,7 +251,7 @@ export function CreateStatusSheet({ open, onOpenChange }: CreateStatusSheetProps
               className="flex min-h-0 flex-1 flex-col overflow-y-auto"
             >
               {/* Preview */}
-              <div 
+              <div
                 className="flex-1 flex items-center justify-center p-8 relative"
                 style={{ background: selectedBackground }}
               >
@@ -261,7 +263,7 @@ export function CreateStatusSheet({ open, onOpenChange }: CreateStatusSheetProps
                   rows={4}
                   maxLength={250}
                 />
-                
+
                 {/* Character count */}
                 <span className="absolute bottom-4 right-4 text-white/50 text-sm">
                   {textContent.length}/250
@@ -352,9 +354,9 @@ export function CreateStatusSheet({ open, onOpenChange }: CreateStatusSheetProps
               {/* Preview */}
               <div className="flex-1 min-h-0 bg-black relative flex items-center justify-center overflow-hidden">
                 {statusType === 'photo' ? (
-                  <img 
-                    src={filePreview || ''} 
-                    alt="Preview" 
+                  <img
+                    src={filePreview || ''}
+                    alt={uiText("Preview")}
                     className="h-full w-full min-h-0 object-contain"
                   />
                 ) : (
@@ -374,7 +376,7 @@ export function CreateStatusSheet({ open, onOpenChange }: CreateStatusSheetProps
                   size="icon"
                   className="absolute top-4 left-4 text-white hover:bg-white/20 z-10"
                   onClick={resetToTypeSelection}
-                  aria-label="Escolher outra foto ou vídeo"
+                  aria-label={uiText("Escolher outra foto ou vídeo")}
                 >
                   <X className="w-5 h-5" />
                 </Button>

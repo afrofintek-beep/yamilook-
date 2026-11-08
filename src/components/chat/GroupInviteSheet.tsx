@@ -1,11 +1,12 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect } from 'react';
-import { 
-  Link2, 
-  Copy, 
-  Check, 
-  Trash2, 
-  Clock, 
-  Users, 
+import {
+  Link2,
+  Copy,
+  Check,
+  Trash2,
+  Clock,
+  Users,
   Plus,
   Loader2,
   Share2
@@ -26,7 +27,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from '@/i18n/ui-date';
 import { pt } from 'date-fns/locale';
 
 interface GroupInvite {
@@ -47,29 +48,30 @@ interface GroupInviteSheetProps {
 }
 
 const EXPIRATION_OPTIONS = [
-  { value: 'never', label: 'Nunca expira' },
-  { value: '1h', label: '1 hora' },
-  { value: '24h', label: '24 horas' },
-  { value: '7d', label: '7 dias' },
-  { value: '30d', label: '30 dias' },
+  { value: 'never', get label() { return uiText("Nunca expira"); } },
+  { value: '1h', get label() { return uiText("1 hora"); } },
+  { value: '24h', get label() { return uiText("24 horas"); } },
+  { value: '7d', get label() { return uiText("7 dias"); } },
+  { value: '30d', get label() { return uiText("30 dias"); } },
 ];
 
 const MAX_USES_OPTIONS = [
-  { value: 'unlimited', label: 'Ilimitado' },
-  { value: '1', label: '1 uso' },
-  { value: '5', label: '5 usos' },
-  { value: '10', label: '10 usos' },
-  { value: '25', label: '25 usos' },
-  { value: '50', label: '50 usos' },
-  { value: '100', label: '100 usos' },
+  { value: 'unlimited', get label() { return uiText("Ilimitado"); } },
+  { value: '1', get label() { return uiText("1 uso"); } },
+  { value: '5', get label() { return uiText("5 usos"); } },
+  { value: '10', get label() { return uiText("10 usos"); } },
+  { value: '25', get label() { return uiText("25 usos"); } },
+  { value: '50', get label() { return uiText("50 usos"); } },
+  { value: '100', get label() { return uiText("100 usos"); } },
 ];
 
-export function GroupInviteSheet({ 
-  open, 
-  onOpenChange, 
-  conversationId, 
-  groupName 
+export function GroupInviteSheet({
+  open,
+  onOpenChange,
+  conversationId,
+  groupName
 }: GroupInviteSheetProps) {
+  useUiLocale();
   const { toast } = useToast();
   const { user } = useAuth();
   const [invites, setInvites] = useState<GroupInvite[]>([]);
@@ -103,7 +105,7 @@ export function GroupInviteSheet({
 
   const calculateExpiresAt = (option: string): string | null => {
     if (option === 'never') return null;
-    
+
     const now = new Date();
     switch (option) {
       case '1h':
@@ -123,7 +125,7 @@ export function GroupInviteSheet({
 
   const createInvite = async () => {
     if (!user) return;
-    
+
     setCreating(true);
     try {
       const code = await generateCode();
@@ -144,16 +146,16 @@ export function GroupInviteSheet({
 
       if (error) {
         toast({
-          title: 'Erro',
-          description: 'Não foi possível criar o convite.',
+          title: uiText("Erro"),
+          description: uiText("Não foi possível criar o convite."),
           variant: 'destructive',
         });
       } else if (data) {
         setInvites((prev) => [data, ...prev]);
         setShowCreateForm(false);
         toast({
-          title: 'Convite criado!',
-          description: 'O link de convite foi gerado.',
+          title: uiText("Convite criado!"),
+          description: uiText("O link de convite foi gerado."),
         });
       }
     } finally {
@@ -170,8 +172,8 @@ export function GroupInviteSheet({
     if (!error) {
       setInvites((prev) => prev.filter((i) => i.id !== inviteId));
       toast({
-        title: 'Convite revogado',
-        description: 'O link já não funciona.',
+        title: uiText("Convite revogado"),
+        description: uiText("O link já não funciona."),
       });
     }
   };
@@ -182,8 +184,8 @@ export function GroupInviteSheet({
     setCopiedId(inviteId);
     setTimeout(() => setCopiedId(null), 2000);
     toast({
-      title: 'Link copiado!',
-      description: 'Partilha com quem quiseres.',
+      title: uiText("Link copiado!"),
+      description: uiText("Partilha com quem quiseres."),
     });
   };
 
@@ -192,7 +194,7 @@ export function GroupInviteSheet({
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `Junta-te ao grupo ${groupName}`,
+          title: uiText("Junta-te ao grupo {{value1}}", { value1: (groupName) ?? "" }),
           text: `Foste convidado para o grupo "${groupName}" no Yamilook!`,
           url: link,
         });
@@ -205,10 +207,10 @@ export function GroupInviteSheet({
   };
 
   const getExpirationText = (expiresAt: string | null) => {
-    if (!expiresAt) return 'Nunca expira';
+    if (!expiresAt) return uiText('Nunca expira');
     const date = new Date(expiresAt);
-    if (date < new Date()) return 'Expirado';
-    return `Expira ${formatDistanceToNow(date, { addSuffix: true, locale: pt })}`;
+    if (date < new Date()) return uiText('Expirado');
+    return uiText('Expira {{date}}', { date: formatDistanceToNow(date, { addSuffix: true }) });
   };
 
   const isExpired = (expiresAt: string | null) => {
@@ -227,9 +229,7 @@ export function GroupInviteSheet({
       className="h-[85vh] rounded-t-3xl sm:max-w-lg"
       title={
         <span className="text-xl flex items-center gap-2">
-          <Link2 className="w-5 h-5" />
-          Convites por Link
-        </span>
+          <Link2 className="w-5 h-5" />{uiText("Convites por Link")}</span>
       }
     >
         <div className="space-y-4 max-h-[70vh] overflow-y-auto">
@@ -244,7 +244,7 @@ export function GroupInviteSheet({
                 className="bg-secondary/50 rounded-xl p-4 space-y-4"
               >
                 <div className="space-y-2">
-                  <Label>Expiração</Label>
+                  <Label>{uiText("Expiração")}</Label>
                   <Select value={expiration} onValueChange={setExpiration}>
                     <SelectTrigger className="h-12 rounded-xl">
                       <SelectValue />
@@ -260,7 +260,7 @@ export function GroupInviteSheet({
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Limite de usos</Label>
+                  <Label>{uiText("Limite de usos")}</Label>
                   <Select value={maxUses} onValueChange={setMaxUses}>
                     <SelectTrigger className="h-12 rounded-xl">
                       <SelectValue />
@@ -280,9 +280,7 @@ export function GroupInviteSheet({
                     variant="outline"
                     className="flex-1 h-12 rounded-xl"
                     onClick={() => setShowCreateForm(false)}
-                  >
-                    Cancelar
-                  </Button>
+                  >{uiText("Cancelar")}</Button>
                   <Button
                     className="flex-1 h-12 rounded-xl"
                     onClick={createInvite}
@@ -291,7 +289,7 @@ export function GroupInviteSheet({
                     {creating ? (
                       <Loader2 className="w-5 h-5 animate-spin" />
                     ) : (
-                      'Criar Link'
+                      uiText("Criar Link")
                     )}
                   </Button>
                 </div>
@@ -303,9 +301,7 @@ export function GroupInviteSheet({
                   className="w-full h-14 rounded-xl border-dashed gap-2"
                   onClick={() => setShowCreateForm(true)}
                 >
-                  <Plus className="w-5 h-5" />
-                  Criar novo link de convite
-                </Button>
+                  <Plus className="w-5 h-5" />{uiText("Criar novo link de convite")}</Button>
               </motion.div>
             )}
           </AnimatePresence>
@@ -318,8 +314,8 @@ export function GroupInviteSheet({
           ) : invites.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <Link2 className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>Sem links de convite activos</p>
-              <p className="text-sm">Cria um para partilhar o grupo</p>
+              <p>{uiText("Sem links de convite activos")}</p>
+              <p className="text-sm">{uiText("Cria um para partilhar o grupo")}</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -345,7 +341,7 @@ export function GroupInviteSheet({
                           </code>
                           {inactive && (
                             <Badge variant="secondary" className="text-xs">
-                              {expired ? 'Expirado' : 'Esgotado'}
+                              {expired ? uiText("Expirado") : uiText("Esgotado")}
                             </Badge>
                           )}
                         </div>
@@ -355,10 +351,7 @@ export function GroupInviteSheet({
                             {getExpirationText(invite.expires_at)}
                           </span>
                           <span className="flex items-center gap-1">
-                            <Users className="w-3 h-3" />
-                            {invite.uses_count}
-                            {invite.max_uses ? ` / ${invite.max_uses}` : ''} usos
-                          </span>
+                            <Users className="w-3 h-3" />{uiText("{{value1}}{{value2}} usos", { value1: (invite.uses_count) ?? "", value2: (invite.max_uses ? ` / ${invite.max_uses}` : '') })}</span>
                         </div>
                       </div>
                       <div className="flex gap-1">

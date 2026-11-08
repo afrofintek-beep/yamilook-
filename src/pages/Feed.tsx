@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect, useRef, useMemo, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -28,7 +29,7 @@ const FeedDiagnostics = lazy(() => import('@/components/feed/FeedDiagnostics'));
 // the server actually returns a visible ad; preserve existing ad behavior.
 const SponsoredPostCard = lazy(() => import('@/components/advertising/SponsoredPostCard').then(m => ({ default: m.SponsoredPostCard })));
 
-  
+
 // Heavy creation/comment editors are never loaded by a passive feed visit.
 // Preserve the existing controls and mount the real sheet only on user intent.
 const CreatePostSheet = lazy(() => import('@/components/feed/CreatePostSheet').then(m => ({ default: m.CreatePostSheet })));
@@ -36,12 +37,13 @@ const CommentsSheet = lazy(() => import('@/components/feed/CommentsSheet').then(
 
 
 export default function Feed() {
+  useUiLocale();
   const navigate = useNavigate();
   const { feedPosts, loading, feedError, loadMoreError, retryLoadMorePosts, fetchFeedPosts, loadMoreFeedPosts, hasMoreFeed, loadingMoreFeed, newPostsCount } = usePosts({ loadDiscovery: false });
   const { fetchActiveAdsForFeed, interleaveAdsInFeed } = useAdvertising();
   const { hasActiveStreams, activeStreams } = useActiveStreams();
   const { archivedPostIds, fetchArchivedIds, toggleArchive, isArchived } = useArchivedPosts();
-  
+
   const [createOpen, setCreateOpen] = useState(false);
   const [createEverOpened, setCreateEverOpened] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
@@ -126,15 +128,15 @@ export default function Feed() {
         <div className="flex items-center justify-between px-3 py-1 mx-auto w-full max-w-[1440px]">
           <YamilookLogo className="feed-logo" size="sm" showTagline={false} animate={false} bgClassName="bg-card" />
           <div className="flex items-center gap-0">
-            <Button size="icon" aria-label="Criar publicação" className="h-11 w-11 rounded-full shrink-0" onClick={() => handleCreateOpenChange(true)}>
+            <Button size="icon" aria-label={uiText("Criar publicação")} className="h-11 w-11 rounded-full shrink-0" onClick={() => handleCreateOpenChange(true)}>
               <Plus className="w-5 h-5" />
             </Button>
             <LivePreviewTooltip activeStreams={activeStreams} hasActiveStreams={hasActiveStreams}>
               <div className="relative">
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  aria-label="Bandas ao vivo"
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label={uiText("Bandas ao vivo")}
                   className="h-11 w-11 rounded-full text-destructive"
                   onClick={() => navigate('/live')}
                 >
@@ -143,20 +145,20 @@ export default function Feed() {
                 {hasActiveStreams && <LiveIndicatorBadge />}
               </div>
             </LivePreviewTooltip>
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               className="h-11 w-11 rounded-full"
-              aria-label="Pesquisar"
+              aria-label={uiText("Pesquisar")}
               onClick={() => navigate('/discover')}
             >
               <Search className="w-5 h-5" />
             </Button>
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               className="h-11 w-11 rounded-full"
-              aria-label="Abrir conversas"
+              aria-label={uiText("Abrir conversas")}
               onClick={() => navigate('/papos')}
             >
               <KosololaLogo className="w-6 h-6" />
@@ -175,7 +177,7 @@ export default function Feed() {
             className="flex items-center gap-1.5 rounded-full bg-primary text-primary-foreground text-xs font-semibold px-4 py-2 shadow-lg"
           >
             <ArrowUp className="w-3.5 h-3.5" />
-            {newPostsCount} {newPostsCount === 1 ? 'novo post' : 'novos posts'}
+            {newPostsCount} {newPostsCount === 1 ? uiText("novo post") : uiText("novos posts")}
           </motion.button>
         </div>
       )}
@@ -203,8 +205,8 @@ export default function Feed() {
         <div className="feed-posts">
           {feedError && (
             <div role="alert" className="mx-3 my-3 flex items-center justify-between gap-3 rounded-lg border border-destructive/40 bg-card px-4 py-3 text-sm">
-              <span>Não foi possível atualizar as publicações. Verifique a ligação e tente novamente.</span>
-              <Button size="sm" variant="outline" onClick={() => void fetchFeedPosts()}>Repetir</Button>
+              <span>{uiText("Não foi possível atualizar as publicações. Verifique a ligação e tente novamente.")}</span>
+              <Button size="sm" variant="outline" onClick={() => void fetchFeedPosts()}>{uiText("Repetir")}</Button>
             </div>
           )}
           {loading ? (
@@ -214,17 +216,13 @@ export default function Feed() {
               <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
                 <MessageCircle className="w-8 h-8 text-muted-foreground" />
               </div>
-              <h3 className="text-lg font-semibold mb-2 text-foreground">Ainda não há partilhas na tua comunidade</h3>
-              <p className="text-muted-foreground text-sm mb-6">
-                Partilha o que se passa à tua volta.
-              </p>
-              <Button 
+              <h3 className="text-lg font-semibold mb-2 text-foreground">{uiText("Ainda não há partilhas na tua comunidade")}</h3>
+              <p className="text-muted-foreground text-sm mb-6">{uiText("Partilha o que se passa à tua volta.")}</p>
+              <Button
                 className="rounded-full bg-primary text-primary-foreground px-6"
                 onClick={() => handleCreateOpenChange(true)}
               >
-                <Plus className="w-4 h-4 mr-2" />
-                Criar publicação
-              </Button>
+                <Plus className="w-4 h-4 mr-2" />{uiText("Criar publicação")}</Button>
             </div>
           ) : feedWithAds.length === 0 ? null : (
             <>
@@ -237,7 +235,7 @@ export default function Feed() {
                       </Suspense>
                     </div>
                   ) : (
-                    <PostCard 
+                    <PostCard
                       post={item}
                       mediaPriority={index === 0}
                       onCommentClick={() => handleCommentClick(item)}
@@ -250,8 +248,8 @@ export default function Feed() {
               {hasMoreFeed && <div ref={sentinelRef} className="h-px" aria-hidden="true" />}
               {loadMoreError && (
                 <div role="alert" className="flex items-center justify-center gap-3 py-4 text-sm">
-                  <span>Não foi possível carregar mais publicações.</span>
-                  <Button variant="outline" size="sm" onClick={() => void retryLoadMorePosts()}>Repetir</Button>
+                  <span>{uiText("Não foi possível carregar mais publicações.")}</span>
+                  <Button variant="outline" size="sm" onClick={() => void retryLoadMorePosts()}>{uiText("Repetir")}</Button>
                 </div>
               )}
               {loadingMoreFeed && (
@@ -263,7 +261,7 @@ export default function Feed() {
           )}
         </div>
           </main>
-          <aside className="feed-right-rail min-w-0" aria-label="Na tua banda">
+          <aside className="feed-right-rail min-w-0" aria-label={uiText("Na tua banda")}>
             <FeedSidebar activeStreams={activeStreams} />
           </aside>
         </div>
@@ -273,12 +271,12 @@ export default function Feed() {
 
       {/* Sheets */}
       {createEverOpened && (
-        <Suspense fallback={<div role="status" aria-label="A carregar editor" className="sr-only">A carregar editor</div>}>
+        <Suspense fallback={<div role="status" aria-label={uiText("A carregar editor")} className="sr-only">{uiText("A carregar editor")}</div>}>
           <CreatePostSheet open={createOpen} onOpenChange={handleCreateOpenChange} />
         </Suspense>
       )}
       {commentsEverOpened && selectedPost && (
-        <Suspense fallback={<div role="status" aria-label="A carregar comentários" className="sr-only">A carregar comentários</div>}>
+        <Suspense fallback={<div role="status" aria-label={uiText("A carregar comentários")} className="sr-only">{uiText("A carregar comentários")}</div>}>
           <CommentsSheet
             open={commentsOpen}
             onOpenChange={setCommentsOpen}

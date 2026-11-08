@@ -1,3 +1,4 @@
+import { uiText } from '@/i18n/ui-copy';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 
@@ -102,6 +103,6 @@ async function flush() {
     }
     complete(profiles, null);
   } catch (cause) {
-    complete(null, cause instanceof Error ? cause : new Error('Public profile request failed'));
+    complete(null, cause instanceof Error ? cause : new Error(uiText("Public profile request failed")));
   }
 }

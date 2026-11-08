@@ -1,3 +1,4 @@
+import { uiText } from '@/i18n/ui-copy';
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -58,7 +59,7 @@ export function useHighlights(userId?: string) {
   }, [fetchHighlights]);
 
   const createHighlight = async (title: string, coverFile?: File) => {
-    if (!user) throw new Error('Not authenticated');
+    if (!user) throw new Error(uiText("Not authenticated"));
 
     let coverUrl: string | null = null;
 
@@ -122,8 +123,8 @@ export function useHighlights(userId?: string) {
   };
 
   const reorderHighlights = async (orderedIds: string[]) => {
-    if (!user) throw new Error('Not authenticated');
-    
+    if (!user) throw new Error(uiText("Not authenticated"));
+
     // Optimistic update
     const reordered = orderedIds
       .map((id, index) => {
@@ -131,11 +132,11 @@ export function useHighlights(userId?: string) {
         return highlight ? { ...highlight, display_order: index } : null;
       })
       .filter(Boolean) as Highlight[];
-    
+
     setHighlights(reordered);
 
     // Persist to database
-    const updates = orderedIds.map((id, index) => 
+    const updates = orderedIds.map((id, index) =>
       supabase
         .from('profile_highlights')
         .update({ display_order: index })
@@ -146,7 +147,7 @@ export function useHighlights(userId?: string) {
   };
 
   const addItemToHighlight = async (highlightId: string, file: File, caption?: string) => {
-    if (!user) throw new Error('Not authenticated');
+    if (!user) throw new Error(uiText("Not authenticated"));
 
     const fileExt = file.name.split('.').pop();
     const fileName = `${user.id}/${highlightId}/${Date.now()}.${fileExt}`;

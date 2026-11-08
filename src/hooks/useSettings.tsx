@@ -1,3 +1,4 @@
+import { uiText } from '@/i18n/ui-copy';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -73,7 +74,7 @@ export function useSettings() {
   }, [user]);
 
   const updateSettings = async (updates: Partial<UserSettings>) => {
-    if (!user || !settings) return { error: new Error('No user or settings') };
+    if (!user || !settings) return { error: new Error(uiText("No user or settings")) };
 
     const { error } = await supabase
       .from('user_settings')

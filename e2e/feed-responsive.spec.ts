@@ -28,6 +28,7 @@ async function mockAccount(page: import('@playwright/test').Page, paginate = fal
     await route.fulfill({ json: data });
   });
   await page.addInitScript(({ me }) => {
+    localStorage.setItem('i18nextLng', 'pt');
     const session = JSON.stringify({ access_token: btoa('{}')+'.'+btoa(JSON.stringify({sub:me,exp:Math.floor(Date.now()/1000)+3600}))+'.signature', refresh_token: 'test-only', expires_at: Math.floor(Date.now()/1000)+3600, token_type: 'bearer', user: { id: me, email: 'test@example.invalid' } });
     // Older client versions preserve an explicit undefined storageKey.
     localStorage.setItem('undefined', session);

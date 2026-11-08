@@ -1,7 +1,8 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from '@/i18n/ui-date';
 import { MoreHorizontal, Trash2, Send } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -32,9 +33,10 @@ interface CommentsSheetProps {
 }
 
 export function CommentsSheet({ open, onOpenChange, post }: CommentsSheetProps) {
+  useUiLocale();
   const { user } = useAuth();
   const { getComments, addComment, deleteComment, toggleCommentReaction } = usePosts({ autoLoad: false });
-  
+
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [replyingTo, setReplyingTo] = useState<Comment | null>(null);
@@ -90,8 +92,8 @@ export function CommentsSheet({ open, onOpenChange, post }: CommentsSheetProps) 
     // Add comment optimistically
     if (parentId) {
       // Add as reply to parent comment
-      setComments(prev => prev.map(c => 
-        c.id === parentId 
+      setComments(prev => prev.map(c =>
+        c.id === parentId
           ? { ...c, replies: [...(c.replies || []), optimisticComment] }
           : c
       ));
@@ -118,12 +120,12 @@ export function CommentsSheet({ open, onOpenChange, post }: CommentsSheetProps) 
       if (realComment) {
         // Replace temp comment with real one
         if (parentId) {
-          setComments(prev => prev.map(c => 
-            c.id === parentId 
-              ? { 
-                  ...c, 
-                  replies: c.replies?.map(r => 
-                    r.id === optimisticComment.id 
+          setComments(prev => prev.map(c =>
+            c.id === parentId
+              ? {
+                  ...c,
+                  replies: c.replies?.map(r =>
+                    r.id === optimisticComment.id
                       ? { ...optimisticComment, id: realComment.id }
                       : r
                   ) || []
@@ -131,8 +133,8 @@ export function CommentsSheet({ open, onOpenChange, post }: CommentsSheetProps) 
               : c
           ));
         } else {
-          setComments(prev => prev.map(c => 
-            c.id === optimisticComment.id 
+          setComments(prev => prev.map(c =>
+            c.id === optimisticComment.id
               ? { ...optimisticComment, id: realComment.id }
               : c
           ));
@@ -146,23 +148,23 @@ export function CommentsSheet({ open, onOpenChange, post }: CommentsSheetProps) 
 
   const handleDelete = (commentId: string) => {
     if (!post) return;
-    
+
     // Optimistically remove the comment
     setComments(prev => {
       // Check if it's a top-level comment
       const isTopLevel = prev.some(c => c.id === commentId);
-      
+
       if (isTopLevel) {
         return prev.filter(c => c.id !== commentId);
       }
-      
+
       // It's a reply - remove from parent
       return prev.map(c => ({
         ...c,
         replies: c.replies?.filter(r => r.id !== commentId) || []
       }));
     });
-    
+
     // Fire and forget
     deleteComment(commentId, post.id);
   };
@@ -194,7 +196,7 @@ export function CommentsSheet({ open, onOpenChange, post }: CommentsSheetProps) 
       }
 
       const newReactions = { ...c.reactions };
-      
+
       if (previousReaction === reactionType) {
         // Remove reaction
         newReactions[reactionType] = Math.max(0, (newReactions[reactionType] || 1) - 1);
@@ -248,7 +250,7 @@ export function CommentsSheet({ open, onOpenChange, post }: CommentsSheetProps) 
         </div>
         <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
           <span>{formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}</span>
-          
+
           {/* African-inspired reactions */}
           <CommentReactions
             commentId={comment.id}
@@ -256,13 +258,11 @@ export function CommentsSheet({ open, onOpenChange, post }: CommentsSheetProps) 
             myReaction={comment.my_reaction}
             onReact={handleReact}
           />
-          
-          <button 
+
+          <button
             className="hover:text-foreground"
             onClick={() => setReplyingTo(comment)}
-          >
-            Reply
-          </button>
+          >{uiText("Reply")}</button>
           {comment.user_id === user?.id && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -271,13 +271,11 @@ export function CommentsSheet({ open, onOpenChange, post }: CommentsSheetProps) 
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   onClick={() => handleDelete(comment.id)}
                   className="text-destructive"
                 >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Delete
-                </DropdownMenuItem>
+                  <Trash2 className="w-4 h-4 mr-2" />{uiText("Delete")}</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           )}
@@ -297,7 +295,7 @@ export function CommentsSheet({ open, onOpenChange, post }: CommentsSheetProps) 
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="h-[80vh] rounded-t-3xl p-0">
         <SheetHeader className="p-4 border-b">
-          <SheetTitle>Comments {totalComments > 0 && `(${totalComments})`}</SheetTitle>
+          <SheetTitle>{uiText("Comments {{value1}}", { value1: (totalComments > 0 && `(${totalComments})`) ?? "" })}</SheetTitle>
         </SheetHeader>
 
         <ScrollArea className="h-[calc(80vh-140px)]">
@@ -315,8 +313,8 @@ export function CommentsSheet({ open, onOpenChange, post }: CommentsSheetProps) 
               </div>
             ) : comments.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-muted-foreground">No comments yet</p>
-                <p className="text-sm text-muted-foreground mt-1">Be the first to comment!</p>
+                <p className="text-muted-foreground">{uiText("No comments yet")}</p>
+                <p className="text-sm text-muted-foreground mt-1">{uiText("Be the first to comment!")}</p>
               </div>
             ) : (
               <AnimatePresence>
@@ -328,17 +326,15 @@ export function CommentsSheet({ open, onOpenChange, post }: CommentsSheetProps) 
 
         {/* Input */}
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t bg-background safe-bottom">
-          {submitError && <p role="alert" className="mb-2 text-sm text-destructive">Não foi possível publicar. O texto foi reposto para tentares novamente.</p>}
+          {submitError && <p role="alert" className="mb-2 text-sm text-destructive">{uiText("Não foi possível publicar. O texto foi reposto para tentares novamente.")}</p>}
           {replyingTo && (
             <div className="flex items-center justify-between mb-2 text-sm text-muted-foreground">
-              <span>Replying to {replyingTo.user.display_name}</span>
-              <Button 
-                variant="ghost" 
+              <span>{uiText("Replying to {{value1}}", { value1: (replyingTo.user.display_name) ?? "" })}</span>
+              <Button
+                variant="ghost"
                 size="sm"
                 onClick={() => setReplyingTo(null)}
-              >
-                Cancel
-              </Button>
+              >{uiText("Cancel")}</Button>
             </div>
           )}
           <div className="flex gap-2">
@@ -349,14 +345,14 @@ export function CommentsSheet({ open, onOpenChange, post }: CommentsSheetProps) 
             </Avatar>
             <div className="flex-1 flex gap-2">
               <MentionInput
-                placeholder="Write a comment..."
+                placeholder={uiText("Write a comment...")}
                 value={newComment}
                 onValueChange={setNewComment}
                 onSubmit={handleSubmit}
                 disabled={!user || isSubmitting}
                 className="flex-1 rounded-full bg-secondary/50 border-none"
               />
-              <Button 
+              <Button
                 size="icon"
                 className="rounded-full bg-gradient-primary text-white"
                 disabled={!newComment.trim() || isSubmitting}

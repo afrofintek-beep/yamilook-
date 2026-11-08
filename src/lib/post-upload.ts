@@ -1,3 +1,4 @@
+import { uiText } from '@/i18n/ui-copy';
 import { supabase } from '@/integrations/supabase/client';
 import { chatMediaContentType } from './chat-media';
 import { Upload } from 'tus-js-client';
@@ -11,7 +12,7 @@ export function postUploadEndpoint(projectUrl: string): string {
 /** Retry interrupted chunks, report actual bytes, and never leave the composer waiting forever. */
 export function uploadPostFile(file: File, path: string, options: { signal?: AbortSignal; onProgress?: (percent: number) => void } = {}): Promise<void> {
   options.signal?.throwIfAborted();
-  if (!file.size) return Promise.reject(new Error('O ficheiro está vazio. Seleciona-o novamente.'));
+  if (!file.size) return Promise.reject(new Error(uiText("O ficheiro está vazio. Seleciona-o novamente.")));
   const endpoint = postUploadEndpoint(import.meta.env.VITE_SUPABASE_URL);
   return new Promise((resolve, reject) => {
     let upload: Upload | undefined;
@@ -28,10 +29,10 @@ export function uploadPostFile(file: File, path: string, options: { signal?: Abo
     };
     const touch = () => {
       clearTimeout(idleTimer);
-      idleTimer = setTimeout(() => finish(new Error('O envio ficou sem resposta. Verifica a ligação e tenta publicar novamente; o texto e o ficheiro foram mantidos.')), 120_000);
+      idleTimer = setTimeout(() => finish(new Error(uiText("O envio ficou sem resposta. Verifica a ligação e tenta publicar novamente; o texto e o ficheiro foram mantidos."))), 120_000);
     };
     const cancel = () => finish(new DOMException('Envio cancelado.', 'AbortError'));
-    const totalTimer = setTimeout(() => finish(new Error('O envio demorou demasiado. Tenta novamente com uma ligação mais estável.')), 30 * 60_000);
+    const totalTimer = setTimeout(() => finish(new Error(uiText("O envio demorou demasiado. Tenta novamente com uma ligação mais estável."))), 30 * 60_000);
     options.signal?.addEventListener('abort', cancel, { once: true });
     touch();
     try {
@@ -43,10 +44,10 @@ export function uploadPostFile(file: File, path: string, options: { signal?: Abo
       storeFingerprintForResuming: false,
       metadata: { bucketName: 'media', objectName: path, contentType: chatMediaContentType(file), cacheControl: '31536000' },
       onBeforeRequest: async request => {
-        if (new URL(request.getURL()).origin !== new URL(endpoint).origin) throw new Error('Destino de envio inválido.');
+        if (new URL(request.getURL()).origin !== new URL(endpoint).origin) throw new Error(uiText("Destino de envio inválido."));
         const { data: { session }, error } = await supabase.auth.getSession();
         if (settled || options.signal?.aborted) throw new DOMException('Envio cancelado.', 'AbortError');
-        if (error || !session?.access_token) throw new Error('A sessão expirou. Entra novamente para publicar.');
+        if (error || !session?.access_token) throw new Error(uiText("A sessão expirou. Entra novamente para publicar."));
         request.setHeader('authorization', `Bearer ${session.access_token}`);
         request.setHeader('apikey', import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY);
         request.setHeader('x-upsert', 'false');
@@ -70,6 +71,6 @@ export function uploadPostFile(file: File, path: string, options: { signal?: Abo
       onSuccess: () => finish(),
     });
     upload.start();
-    } catch (error) { finish(error instanceof Error ? error : new Error('Não foi possível iniciar o envio.')); }
+    } catch (error) { finish(error instanceof Error ? error : new Error(uiText("Não foi possível iniciar o envio."))); }
   });
 }

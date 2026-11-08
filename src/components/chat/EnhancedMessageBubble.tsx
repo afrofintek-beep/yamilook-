@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import PostSharePreview from '@/components/sharing/PostSharePreview';
 import { sharedPostId } from '../../../shared/share-destinations.mjs';
 import { ChatMediaLink } from './PrivateMediaElements';
@@ -5,17 +6,17 @@ import { LocationCard } from './LocationCard';
 import { parseChatLocation } from '@/lib/chat-location';
 import { useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { format } from 'date-fns';
+import { format } from '@/i18n/ui-date';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from 'framer-motion';
-import { 
-  Check, 
-  CheckCheck, 
-  MoreVertical, 
-  Trash2, 
-  Copy, 
-  Reply, 
-  Star, 
+import {
+  Check,
+  CheckCheck,
+  MoreVertical,
+  Trash2,
+  Copy,
+  Reply,
+  Star,
   Pin,
   Forward,
   Edit2,
@@ -136,17 +137,18 @@ export function EnhancedMessageBubble({
   onLongPressSelect,
   showReadReceipts = true,
 }: EnhancedMessageBubbleProps) {
+  useUiLocale();
   const navigate = useNavigate();
   const { i18n } = useTranslation();
   const { toast } = useToast();
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const [showMediaPreview, setShowMediaPreview] = useState(false);
   const [showActionsSheet, setShowActionsSheet] = useState(false);
-  
+
   // Long press handling
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isLongPress = useRef(false);
-  
+
   // Swipe to reply
   const x = useMotionValue(0);
   const replyIconOpacity = useTransform(x, [0, 40, 60], [0, 0.5, 1]);
@@ -164,7 +166,7 @@ export function EnhancedMessageBubble({
   const handleCopy = () => {
     if (message.content) {
       navigator.clipboard.writeText(message.content);
-      toast({ title: 'Copiado' });
+      toast({ title: uiText("Copiado") });
     }
   };
 
@@ -262,9 +264,7 @@ export function EnhancedMessageBubble({
         className={`flex gap-2 px-4 py-1 ${isOwn ? 'justify-end' : 'justify-start'}`}
       >
         {!isOwn && showAvatar && <div className="w-8" />}
-        <div className="px-4 py-2 rounded-2xl bg-muted/50 italic text-muted-foreground text-sm">
-          This message was deleted
-        </div>
+        <div className="px-4 py-2 rounded-2xl bg-muted/50 italic text-muted-foreground text-sm">{uiText("This message was deleted")}</div>
       </motion.div>
     );
   }
@@ -326,7 +326,7 @@ export function EnhancedMessageBubble({
         return (
           <img
             src={message.media_url || ''}
-            alt="Sticker"
+            alt={uiText("Sticker")}
             className="w-32 h-32 object-contain"
           />
         );
@@ -346,7 +346,7 @@ export function EnhancedMessageBubble({
             rel="noopener noreferrer"
             className="flex items-center gap-2 text-sm underline"
           >
-            📎 {message.content || 'File'}
+            📎 {message.content || uiText("File")}
           </ChatMediaLink>
         );
       default: {
@@ -407,11 +407,11 @@ export function EnhancedMessageBubble({
           {/* Selection checkbox */}
           {selectionMode && (
             <div className="flex items-center mr-1">
-              <div 
+              <div
                 className={cn(
                   'w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors',
-                  isSelected 
-                    ? 'bg-primary border-primary' 
+                  isSelected
+                    ? 'bg-primary border-primary'
                     : 'border-muted-foreground/50'
                 )}
               >
@@ -456,9 +456,7 @@ export function EnhancedMessageBubble({
           {/* Forwarded indicator */}
           {message.forwarded_from_id && (
             <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
-              <Forward className="w-3 h-3" />
-              Forwarded
-            </div>
+              <Forward className="w-3 h-3" />{uiText("Forwarded")}</div>
           )}
 
           {/* Highlight badge */}
@@ -495,20 +493,16 @@ export function EnhancedMessageBubble({
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem onClick={() => onReply?.(message)}>
-                        <Reply className="w-4 h-4 mr-2" />
-                        Reply
-                      </DropdownMenuItem>
+                        <Reply className="w-4 h-4 mr-2" />{uiText("Reply")}</DropdownMenuItem>
                       <DropdownMenuItem onClick={handleCopy}>
-                        <Copy className="w-4 h-4 mr-2" />
-                        Copy
-                      </DropdownMenuItem>
+                        <Copy className="w-4 h-4 mr-2" />{uiText("Copy")}</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => onStar?.(message.id)}>
                         <Star className={`w-4 h-4 mr-2 ${isStarred ? 'fill-warning text-warning' : ''}`} />
-                        {isStarred ? 'Unstar' : 'Star'}
+                        {isStarred ? uiText("Unstar") : uiText("Star")}
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => onPin?.(message.id)}>
                         <Pin className={`w-4 h-4 mr-2 ${isPinned ? 'fill-primary text-primary' : ''}`} />
-                        {isPinned ? 'Unpin' : 'Pin'}
+                        {isPinned ? uiText("Unpin") : uiText("Pin")}
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       {onHighlight && (
@@ -525,9 +519,7 @@ export function EnhancedMessageBubble({
                       <DropdownMenuSeparator />
                       {onDelete && (
                         <DropdownMenuItem onClick={() => setShowActionsSheet(true)} className="text-destructive">
-                          <Trash2 className="w-4 h-4 mr-2" />
-                          Apagar mensagem
-                        </DropdownMenuItem>
+                          <Trash2 className="w-4 h-4 mr-2" />{uiText("Apagar mensagem")}</DropdownMenuItem>
                       )}
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -545,9 +537,7 @@ export function EnhancedMessageBubble({
               >
                 {isPinned && (
                   <div className="flex items-center gap-1 text-xs opacity-70 mb-1">
-                    <Pin className="w-3 h-3" />
-                    Pinned
-                  </div>
+                    <Pin className="w-3 h-3" />{uiText("Pinned")}</div>
                 )}
                 {renderContent()}
               </div>
@@ -570,16 +560,12 @@ export function EnhancedMessageBubble({
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start">
                       <DropdownMenuItem onClick={() => onReply?.(message)}>
-                        <Reply className="w-4 h-4 mr-2" />
-                        Reply
-                      </DropdownMenuItem>
+                        <Reply className="w-4 h-4 mr-2" />{uiText("Reply")}</DropdownMenuItem>
                       <DropdownMenuItem onClick={handleCopy}>
-                        <Copy className="w-4 h-4 mr-2" />
-                        Copy
-                      </DropdownMenuItem>
+                        <Copy className="w-4 h-4 mr-2" />{uiText("Copy")}</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => onStar?.(message.id)}>
                         <Star className={`w-4 h-4 mr-2 ${isStarred ? 'fill-warning text-warning' : ''}`} />
-                        {isStarred ? 'Unstar' : 'Star'}
+                        {isStarred ? uiText("Unstar") : uiText("Star")}
                       </DropdownMenuItem>
                       {onHighlight && (
                         <>
@@ -626,7 +612,7 @@ export function EnhancedMessageBubble({
               {format(new Date(message.created_at), i18n.language?.startsWith('pt') ? 'HH:mm' : 'h:mm a')}
             </span>
             {message.is_edited && (
-              <span className="text-[10px] text-muted-foreground italic">edited</span>
+              <span className="text-[10px] text-muted-foreground italic">{uiText("edited")}</span>
             )}
             {isOwn && showReadReceipts && (
               Array.isArray(message.read_by) && message.read_by.length > 0 ? (

@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 /* @refresh reset */
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -19,10 +20,11 @@ interface StartLiveSheetProps {
 }
 
 export function StartLiveSheet({ open, onOpenChange }: StartLiveSheetProps) {
+  useUiLocale();
   const navigate = useNavigate();
   const { startStream, loading } = useLiveStreamContext();
   const { toast } = useToast();
-  
+
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [cameraEnabled, setCameraEnabled] = useState(true);
@@ -31,7 +33,7 @@ export function StartLiveSheet({ open, onOpenChange }: StartLiveSheetProps) {
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [isCountingDown, setIsCountingDown] = useState(false);
-  
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const prevCountdownRef = useRef<number | null>(null);
   const pendingTracksRef = useRef<LocalTrack[]>([]);
@@ -62,7 +64,7 @@ export function StartLiveSheet({ open, onOpenChange }: StartLiveSheetProps) {
   // Countdown timer logic with sound effects
   useEffect(() => {
     if (countdown === null || !isCountingDown) return;
-    
+
     // Play sound when countdown changes
     if (countdown > 0 && countdown !== prevCountdownRef.current) {
       playCountdownBeep(countdown);
@@ -70,17 +72,17 @@ export function StartLiveSheet({ open, onOpenChange }: StartLiveSheetProps) {
       playGoLiveFanfare();
     }
     prevCountdownRef.current = countdown;
-    
+
     if (countdown === 0) {
       // Countdown finished, actually start the stream
       actuallyStartStream();
       return;
     }
-    
+
     const timer = setTimeout(() => {
       setCountdown(countdown - 1);
     }, 1000);
-    
+
     return () => clearTimeout(timer);
   }, [countdown, isCountingDown]);
 
@@ -131,8 +133,8 @@ export function StartLiveSheet({ open, onOpenChange }: StartLiveSheetProps) {
       console.error('Camera access error:', error);
       setCameraError('Sem acesso à câmara. Verifica as permissões.');
       toast({
-        title: 'Acesso à câmara necessário',
-        description: 'Permite o acesso à câmara e microfone para abrir o Palco.',
+        title: uiText("Acesso à câmara necessário"),
+        description: uiText("Permite o acesso à câmara e microfone para abrir o Palco."),
         variant: 'destructive',
       });
     }
@@ -184,9 +186,9 @@ export function StartLiveSheet({ open, onOpenChange }: StartLiveSheetProps) {
     if (!stream) {
       if (!previewRequested) {
         setPreviewRequested(true);
-        toast({ title: 'A ativar câmara...', description: 'Toca em "Abrir o Palco" novamente quando estiver pronta.' });
+        toast({ title: uiText("A ativar câmara..."), description: uiText("Toca em \"Abrir o Palco\" novamente quando estiver pronta.") });
       } else {
-        toast({ title: 'Câmara não está pronta', description: 'Permite o acesso à câmara primeiro.', variant: 'destructive' });
+        toast({ title: uiText("Câmara não está pronta"), description: uiText("Permite o acesso à câmara primeiro."), variant: 'destructive' });
         startCameraPreview();
       }
       return;
@@ -288,9 +290,7 @@ export function StartLiveSheet({ open, onOpenChange }: StartLiveSheetProps) {
         <div className="overflow-y-auto max-h-[calc(90vh-2rem)] px-4 pb-8">
           <DrawerHeader className="text-center pb-4">
             <DrawerTitle className="flex items-center justify-center gap-2">
-              <Radio className="w-5 h-5 text-destructive" />
-              Abrir o Palco
-            </DrawerTitle>
+              <Radio className="w-5 h-5 text-destructive" />{uiText("Abrir o Palco")}</DrawerTitle>
           </DrawerHeader>
 
           <div className="space-y-6">
@@ -310,7 +310,7 @@ export function StartLiveSheet({ open, onOpenChange }: StartLiveSheetProps) {
                 style={{ transform: 'scaleX(-1)' }}
               />
             ) : null}
-            
+
             {(!stream || cameraError || !cameraEnabled) && (
               <div
                 className="absolute inset-0 flex items-center justify-center bg-muted cursor-pointer"
@@ -328,15 +328,13 @@ export function StartLiveSheet({ open, onOpenChange }: StartLiveSheetProps) {
                     {cameraError
                       ? cameraError
                       : !cameraEnabled
-                        ? 'Câmara desligada'
+                        ? uiText("Câmara desligada")
                         : previewRequested
-                          ? 'A iniciar câmara...'
-                          : 'Toca para ativar a câmara'}
+                          ? uiText("A iniciar câmara...")
+                          : uiText("Toca para ativar a câmara")}
                   </p>
                   {cameraError && (
-                    <Button size="sm" variant="outline" onClick={startCameraPreview}>
-                      Tentar novamente
-                    </Button>
+                    <Button size="sm" variant="outline" onClick={startCameraPreview}>{uiText("Tentar novamente")}</Button>
                   )}
                 </div>
               </div>
@@ -363,13 +361,11 @@ export function StartLiveSheet({ open, onOpenChange }: StartLiveSheetProps) {
                     <span className="text-9xl font-bold text-white drop-shadow-lg">
                       {countdown}
                     </span>
-                    <motion.p 
+                    <motion.p
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       className="text-white/80 text-sm mt-4"
-                    >
-                      Toca para cancelar
-                    </motion.p>
+                    >{uiText("Toca para cancelar")}</motion.p>
                   </motion.div>
                 </motion.div>
               )}
@@ -386,27 +382,25 @@ export function StartLiveSheet({ open, onOpenChange }: StartLiveSheetProps) {
                     className="text-center"
                   >
                     <Radio className="w-16 h-16 text-white mx-auto animate-pulse" />
-                    <span className="text-2xl font-bold text-white mt-2 block">
-                      Estás no Palco!
-                    </span>
+                    <span className="text-2xl font-bold text-white mt-2 block">{uiText("Estás no Palco!")}</span>
                   </motion.div>
                 </motion.div>
               )}
             </AnimatePresence>
-            
+
             {/* Preview controls */}
             {!isCountingDown && (
               <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-3">
-                <Button 
-                  size="icon" 
+                <Button
+                  size="icon"
                   variant={cameraEnabled ? "secondary" : "destructive"}
                   className="rounded-full"
                   onClick={toggleCamera}
                 >
                   {cameraEnabled ? <Camera className="w-4 h-4" /> : <CameraOff className="w-4 h-4" />}
                 </Button>
-                <Button 
-                  size="icon" 
+                <Button
+                  size="icon"
                   variant={micEnabled ? "secondary" : "destructive"}
                   className="rounded-full"
                   onClick={toggleMic}
@@ -423,24 +417,24 @@ export function StartLiveSheet({ open, onOpenChange }: StartLiveSheetProps) {
           {/* Form */}
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="title">Título *</Label>
+              <Label htmlFor="title">{uiText("Título *")}</Label>
               <Input
                 id="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Sobre o que vais falar hoje?"
+                placeholder={uiText("Sobre o que vais falar hoje?")}
                 maxLength={100}
                 disabled={isCountingDown}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">Descrição (opcional)</Label>
+              <Label htmlFor="description">{uiText("Descrição (opcional)")}</Label>
               <Textarea
                 id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Conta à banda o que podem esperar..."
+                placeholder={uiText("Conta à banda o que podem esperar...")}
                 rows={3}
                 maxLength={500}
                 disabled={isCountingDown}
@@ -456,25 +450,17 @@ export function StartLiveSheet({ open, onOpenChange }: StartLiveSheetProps) {
           >
             {loading ? (
               <>
-                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
-                A preparar...
-              </>
+                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />{uiText("A preparar...")}</>
             ) : isCountingDown ? (
               <>
-                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
-                Prepara-te...
-              </>
+                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />{uiText("Prepara-te...")}</>
             ) : (
               <>
-                <Radio className="w-4 h-4 mr-2" />
-                Abrir o Palco
-              </>
+                <Radio className="w-4 h-4 mr-2" />{uiText("Abrir o Palco")}</>
             )}
           </Button>
 
-          <p className="text-center text-xs text-muted-foreground pb-4">
-            Ao abrir o Palco, aceitas as nossas Regras da Comunidade
-          </p>
+          <p className="text-center text-xs text-muted-foreground pb-4">{uiText("Ao abrir o Palco, aceitas as nossas Regras da Comunidade")}</p>
         </div>
         </div>
       </DrawerContent>

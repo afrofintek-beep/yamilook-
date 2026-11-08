@@ -1,3 +1,5 @@
+import { uiServerMessage } from '@/i18n/server-copy';
+import { uiText } from '@/i18n/ui-copy';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -35,7 +37,7 @@ export function canIssueCampaign(c: InvitationCampaign, now = Date.now()) {
 }
 export function campaignError(error: unknown) {
   if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string'
-    && 'code' in error && (error.code === 'P0001' || error.code === '42501')) return error.message;
-  return 'Não foi possível concluir. Atualiza a campanha e tenta novamente.';
+    && 'code' in error && (error.code === 'P0001' || error.code === '42501')) return uiServerMessage(error.message, uiText('Não foi possível concluir. Atualiza a campanha e tenta novamente.'));
+  return uiText('Não foi possível concluir. Atualiza a campanha e tenta novamente.');
 }
-export const campaignStateLabels = { draft: 'Rascunho', active: 'Ativa', suspended: 'Suspensa', closed: 'Encerrada' };
+export const campaignStateLabels = { get draft() { return uiText("Rascunho"); }, get active() { return uiText("Ativa"); }, get suspended() { return uiText("Suspensa"); }, get closed() { return uiText("Encerrada"); } };

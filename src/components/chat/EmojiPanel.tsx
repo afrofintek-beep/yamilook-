@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { EMOJI_GROUPS, SKIN_TONES, DEFAULT_TONE, applyTone, supportsTone } from '@/lib/african-emojis';
@@ -12,6 +13,7 @@ const TONE_KEY = 'yamilook-emoji-tone';
  *  skin-tone selector re-tones people/hand emojis (default darkest, up to the
  *  lightest/European); the "Outros" group holds the general set. */
 export function EmojiPanel({ onSelect }: Props) {
+  useUiLocale();
   const [active, setActive] = useState(EMOJI_GROUPS[0].key);
   const [tone, setTone] = useState<string>(() => {
     try {
@@ -57,14 +59,14 @@ export function EmojiPanel({ onSelect }: Props) {
       {/* Skin-tone selector — only where the current group has tonable emojis */}
       {groupHasTonable && (
         <div className="flex items-center gap-1 pb-2">
-          <span className="text-[10px] text-muted-foreground mr-1">Tom:</span>
+          <span className="text-[10px] text-muted-foreground mr-1">{uiText("Tom:")}</span>
           {SKIN_TONES.map((t) => (
             <button
               key={t.key}
               type="button"
               onClick={() => pickTone(t.mod)}
               title={t.label}
-              aria-label={`Tom de pele: ${t.label}`}
+              aria-label={uiText("Tom de pele: {{value1}}", { value1: (t.label) ?? "" })}
               aria-pressed={tone === t.mod}
               className={cn(
                 'text-base leading-none rounded-md p-0.5 transition-transform',
@@ -87,7 +89,7 @@ export function EmojiPanel({ onSelect }: Props) {
               type="button"
               onClick={() => onSelect(toned)}
               className="text-xl p-1.5 rounded-lg hover:bg-secondary/60 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              aria-label={`Emoji ${toned}`}
+              aria-label={uiText("Emoji {{value1}}", { value1: (toned) ?? "" })}
             >
               <span role="img">{toned}</span>
             </button>

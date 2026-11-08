@@ -1,4 +1,5 @@
-import { format, isToday, isYesterday, isSameDay } from 'date-fns';
+import { isToday, isYesterday, isSameDay } from 'date-fns';
+import { format } from '@/i18n/ui-date';
 import { useTranslation } from 'react-i18next';
 
 interface DateSeparatorProps {

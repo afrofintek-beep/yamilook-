@@ -208,9 +208,9 @@ describe('PostCard', () => {
   it('calls toggleLike when like button is clicked', async () => {
     render(<PostCard post={mockPost} />);
 
-    // The like button contains the default reaction icon labelled "React".
+    // The like button contains the default reaction icon labelled "Reagir".
     const buttons = screen.getAllByRole('button');
-    const likeButton = buttons.find(btn => btn.querySelector('[aria-label="React"]'));
+    const likeButton = buttons.find(btn => btn.querySelector('[aria-label="Reagir"]'));
     expect(likeButton).toBeDefined();
 
     // jsdom exposes `ontouchstart`, so the component treats it as a touch device

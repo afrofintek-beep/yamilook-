@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState } from 'react';
 import {
   Sheet,
@@ -41,6 +42,7 @@ export default function IssueStrikeSheet({
   contentId,
   onComplete,
 }: IssueStrikeSheetProps) {
+  useUiLocale();
   const { issueStrike } = useStrikes();
   const [loading, setLoading] = useState(false);
   const [category, setCategory] = useState('');
@@ -78,22 +80,20 @@ export default function IssueStrikeSheet({
       <SheetContent side="bottom" className="max-h-[90vh] overflow-y-auto">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
-            <AlertTriangle className="w-5 h-5 text-red-500" />
-            Emitir Strike
-          </SheetTitle>
+            <AlertTriangle className="w-5 h-5 text-red-500" />{uiText("Emitir Strike")}</SheetTitle>
           <SheetDescription>
             {targetDisplayName
-              ? `Emitir um strike contra ${targetDisplayName}`
-              : 'Emitir um strike contra um utilizador'}
+              ? uiText("Emitir um strike contra {{value1}}", { value1: (targetDisplayName) ?? "" })
+              : uiText("Emitir um strike contra um utilizador")}
           </SheetDescription>
         </SheetHeader>
 
         <div className="space-y-4 mt-4">
           {!targetUserId && (
             <div className="space-y-2">
-              <Label>ID do Utilizador</Label>
+              <Label>{uiText("ID do Utilizador")}</Label>
               <Input
-                placeholder="UUID do utilizador..."
+                placeholder={uiText("UUID do utilizador...")}
                 value={userId}
                 onChange={(e) => setUserId(e.target.value)}
               />
@@ -101,10 +101,10 @@ export default function IssueStrikeSheet({
           )}
 
           <div className="space-y-2">
-            <Label>Categoria da Violação</Label>
+            <Label>{uiText("Categoria da Violação")}</Label>
             <Select value={category} onValueChange={setCategory}>
               <SelectTrigger>
-                <SelectValue placeholder="Seleciona uma categoria..." />
+                <SelectValue placeholder={uiText("Seleciona uma categoria...")} />
               </SelectTrigger>
               <SelectContent>
                 {Object.entries(VIOLATION_LABELS).map(([key, label]) => (
@@ -117,23 +117,23 @@ export default function IssueStrikeSheet({
           </div>
 
           <div className="space-y-2">
-            <Label>Severidade</Label>
+            <Label>{uiText("Severidade")}</Label>
             <Select value={severity} onValueChange={setSeverity}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="1">1 — Menor (aviso)</SelectItem>
-                <SelectItem value="2">2 — Moderada</SelectItem>
-                <SelectItem value="3">3 — Grave</SelectItem>
+                <SelectItem value="1">{uiText("1 — Menor (aviso)")}</SelectItem>
+                <SelectItem value="2">{uiText("2 — Moderada")}</SelectItem>
+                <SelectItem value="3">{uiText("3 — Grave")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-2">
-            <Label>Motivo</Label>
+            <Label>{uiText("Motivo")}</Label>
             <Textarea
-              placeholder="Descreve o motivo do strike..."
+              placeholder={uiText("Descreve o motivo do strike...")}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               rows={3}
@@ -145,9 +145,7 @@ export default function IssueStrikeSheet({
             disabled={!category || !reason.trim() || !userId || loading}
             onClick={handleSubmit}
           >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <AlertTriangle className="w-4 h-4 mr-2" />}
-            Emitir Strike
-          </Button>
+            {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <AlertTriangle className="w-4 h-4 mr-2" />}{uiText("Emitir Strike")}</Button>
         </div>
       </SheetContent>
     </Sheet>

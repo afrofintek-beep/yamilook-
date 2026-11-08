@@ -1,3 +1,4 @@
+import { uiText } from '@/i18n/ui-copy';
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -112,17 +113,17 @@ export function useAdvertising() {
   // Fetch business profile
   const fetchBusinessProfile = useCallback(async () => {
     if (!user?.id) return null;
-    
+
     const { data, error } = await supabase
       .from('business_profiles')
       .select('*')
       .eq('user_id', user.id)
       .single();
-    
+
     if (error && error.code !== 'PGRST116') {
       console.error('Error fetching business profile:', error);
     }
-    
+
     if (data) {
       setBusinessProfile(data as BusinessProfile);
     }
@@ -132,7 +133,7 @@ export function useAdvertising() {
   // Create business profile
   const createBusinessProfile = async (profile: Partial<BusinessProfile>) => {
     if (!user?.id) return null;
-    
+
     const { data, error } = await supabase
       .from('business_profiles')
       .insert({
@@ -154,13 +155,13 @@ export function useAdvertising() {
       })
       .select()
       .single();
-    
+
     if (error) {
       console.error('Error creating business profile:', error);
-      toast.error('Erro ao criar perfil de negócio');
+      toast.error(uiText("Erro ao criar perfil de negócio"));
       return null;
     }
-    
+
     // Record bonus credits transaction
     if (data) {
       await supabase.from('credit_transactions').insert({
@@ -168,41 +169,41 @@ export function useAdvertising() {
         transaction_type: 'bonus',
         amount: 500,
         balance_after: 500,
-        description: 'Créditos de boas-vindas',
+        description: uiText("Créditos de boas-vindas"),
       });
     }
-    
+
     setBusinessProfile(data as BusinessProfile);
-    toast.success('Perfil de negócio criado com sucesso!');
+    toast.success(uiText("Perfil de negócio criado com sucesso!"));
     return data as BusinessProfile;
   };
 
   // Update business profile
   const updateBusinessProfile = async (updates: Partial<BusinessProfile>) => {
     if (!businessProfile?.id) return null;
-    
+
     const { data, error } = await supabase
       .from('business_profiles')
       .update(updates)
       .eq('id', businessProfile.id)
       .select()
       .single();
-    
+
     if (error) {
       console.error('Error updating business profile:', error);
-      toast.error('Erro ao atualizar perfil');
+      toast.error(uiText("Erro ao atualizar perfil"));
       return null;
     }
-    
+
     setBusinessProfile(data as BusinessProfile);
-    toast.success('Perfil atualizado!');
+    toast.success(uiText("Perfil atualizado!"));
     return data as BusinessProfile;
   };
 
   // Fetch advertisements with business profile data
   const fetchAdvertisements = useCallback(async () => {
     if (!businessProfile?.id) return [];
-    
+
     const { data, error } = await supabase
       .from('advertisements')
       .select(`
@@ -223,12 +224,12 @@ export function useAdvertising() {
       `)
       .eq('business_id', businessProfile.id)
       .order('created_at', { ascending: false });
-    
+
     if (error) {
       console.error('Error fetching advertisements:', error);
       return [];
     }
-    
+
     setAdvertisements((data || []) as Advertisement[]);
     return (data || []) as Advertisement[];
   }, [businessProfile?.id]);
@@ -236,14 +237,14 @@ export function useAdvertising() {
   // Create advertisement - simplified targeting
   const createAdvertisement = async (ad: Partial<Advertisement>) => {
     if (!businessProfile?.id) {
-      toast.error('Crie primeiro um perfil de negócio');
+      toast.error(uiText("Crie primeiro um perfil de negócio"));
       return null;
     }
-    
+
     // Get market details if market_id provided
     let marketCity = ad.target_city;
     let marketNeighborhood = ad.target_neighborhood;
-    
+
     if (ad.target_market_id) {
       const market = locationMarkets.find(m => m.id === ad.target_market_id);
       if (market) {
@@ -251,7 +252,7 @@ export function useAdvertising() {
         marketNeighborhood = market.neighborhood;
       }
     }
-    
+
     const { data, error } = await supabase
       .from('advertisements')
       .insert({
@@ -274,16 +275,16 @@ export function useAdvertising() {
       })
       .select()
       .single();
-    
+
     if (error) {
       console.error('Error creating advertisement:', error);
-      toast.error('Erro ao criar anúncio');
+      toast.error(uiText("Erro ao criar anúncio"));
       return null;
     }
-    
+
     const newAd = data as Advertisement;
     setAdvertisements(prev => [newAd, ...prev]);
-    toast.success('Anúncio criado!');
+    toast.success(uiText("Anúncio criado!"));
     return newAd;
   };
 
@@ -296,13 +297,13 @@ export function useAdvertising() {
       .eq('id', adId)
       .select()
       .single();
-    
+
     if (error) {
       console.error('Error updating advertisement:', error);
-      toast.error('Erro ao atualizar anúncio');
+      toast.error(uiText("Erro ao atualizar anúncio"));
       return null;
     }
-    
+
     const updatedAd = data as Advertisement;
     setAdvertisements(prev => prev.map(a => a.id === adId ? updatedAd : a));
     return updatedAd;
@@ -311,19 +312,19 @@ export function useAdvertising() {
   // Submit advertisement for review
   const submitForReview = async (adId: string) => {
     if (!businessProfile) return null;
-    
+
     const ad = advertisements.find(a => a.id === adId);
     if (!ad) return null;
-    
+
     // Check if enough credits
     if (businessProfile.credit_balance < ad.total_budget) {
-      toast.error('Créditos insuficientes');
+      toast.error(uiText("Créditos insuficientes"));
       return null;
     }
-    
+
     const result = await updateAdvertisement(adId, { status: 'pending_review' });
     if (result) {
-      toast.success('Anúncio enviado para revisão!');
+      toast.success(uiText("Anúncio enviado para revisão!"));
     }
     return result;
   };
@@ -331,45 +332,45 @@ export function useAdvertising() {
   // Activate advertisement (for MVP, auto-approve)
   const activateAdvertisement = async (adId: string) => {
     if (!businessProfile) return null;
-    
+
     const ad = advertisements.find(a => a.id === adId);
     if (!ad) return null;
-    
+
     // Check if enough credits
     if (businessProfile.credit_balance < ad.total_budget) {
-      toast.error('Créditos insuficientes');
+      toast.error(uiText("Créditos insuficientes"));
       return null;
     }
-    
+
     // Deduct credits from balance
     const newBalance = businessProfile.credit_balance - ad.total_budget;
-    
+
     const { error: balanceError } = await supabase
       .from('business_profiles')
       .update({ credit_balance: newBalance })
       .eq('id', businessProfile.id);
-    
+
     if (balanceError) {
       console.error('Error deducting credits:', balanceError);
-      toast.error('Erro ao deduzir créditos');
+      toast.error(uiText("Erro ao deduzir créditos"));
       return null;
     }
-    
+
     // Record transaction
     await supabase.from('credit_transactions').insert({
       business_id: businessProfile.id,
       transaction_type: 'spend',
       amount: -ad.total_budget,
       balance_after: newBalance,
-      description: `Destaque: ${ad.title || 'Publicação'}`,
+      description: uiText("Destaque: {{value1}}", { value1: (ad.title || 'Publicação') ?? "" }),
     });
-    
+
     // Update local state
     setBusinessProfile(prev => prev ? { ...prev, credit_balance: newBalance } : null);
-    
+
     const result = await updateAdvertisement(adId, { status: 'active' });
     if (result) {
-      toast.success('Anúncio ativado!');
+      toast.success(uiText("Anúncio ativado!"));
     }
     return result;
   };
@@ -378,7 +379,7 @@ export function useAdvertising() {
   const pauseAdvertisement = async (adId: string) => {
     const result = await updateAdvertisement(adId, { status: 'paused' });
     if (result) {
-      toast.info('Anúncio pausado');
+      toast.info(uiText("Anúncio pausado"));
     }
     return result;
   };
@@ -389,15 +390,15 @@ export function useAdvertising() {
       .from('advertisements')
       .delete()
       .eq('id', adId);
-    
+
     if (error) {
       console.error('Error deleting advertisement:', error);
-      toast.error('Erro ao eliminar anúncio');
+      toast.error(uiText("Erro ao eliminar anúncio"));
       return false;
     }
-    
+
     setAdvertisements(prev => prev.filter(a => a.id !== adId));
-    toast.success('Anúncio eliminado');
+    toast.success(uiText("Anúncio eliminado"));
     return true;
   };
 
@@ -408,12 +409,12 @@ export function useAdvertising() {
       .select('*')
       .eq('is_active', true)
       .order('display_name');
-    
+
     if (error) {
       console.error('Error fetching location markets:', error);
       return [];
     }
-    
+
     setLocationMarkets((data || []) as LocationMarket[]);
     return (data || []) as LocationMarket[];
   }, []);
@@ -421,10 +422,10 @@ export function useAdvertising() {
   // Find nearest market from coordinates
   const findNearestMarket = useCallback((lat: number, lng: number): LocationMarket | null => {
     if (locationMarkets.length === 0) return null;
-    
+
     let nearestMarket: LocationMarket | null = null;
     let minDistance = Infinity;
-    
+
     locationMarkets.forEach(market => {
       const distance = Math.sqrt(
         Math.pow(lat - market.latitude, 2) +
@@ -435,26 +436,26 @@ export function useAdvertising() {
         nearestMarket = market;
       }
     });
-    
+
     return nearestMarket;
   }, [locationMarkets]);
 
   // Fetch credit transactions
   const fetchCreditTransactions = useCallback(async () => {
     if (!businessProfile?.id) return [];
-    
+
     const { data, error } = await supabase
       .from('credit_transactions')
       .select('*')
       .eq('business_id', businessProfile.id)
       .order('created_at', { ascending: false })
       .limit(50);
-    
+
     if (error) {
       console.error('Error fetching credit transactions:', error);
       return [];
     }
-    
+
     setCreditTransactions((data || []) as CreditTransaction[]);
     return (data || []) as CreditTransaction[];
   }, [businessProfile?.id]);
@@ -462,23 +463,23 @@ export function useAdvertising() {
   // Add credits (for testing/demo)
   const addCredits = async (amount: number, description = 'Créditos adicionados') => {
     if (!businessProfile?.id) return null;
-    
+
     // Fetch current balance from database to avoid stale state issues
     const { data: currentProfile, error: fetchError } = await supabase
       .from('business_profiles')
       .select('credit_balance')
       .eq('id', businessProfile.id)
       .single();
-    
+
     if (fetchError || !currentProfile) {
       console.error('Error fetching current balance:', fetchError);
-      toast.error('Erro ao adicionar créditos');
+      toast.error(uiText("Erro ao adicionar créditos"));
       return null;
     }
-    
+
     const currentBalance = currentProfile.credit_balance || 0;
     const newBalance = currentBalance + amount;
-    
+
     // Update balance first
     const { data, error } = await supabase
       .from('business_profiles')
@@ -486,13 +487,13 @@ export function useAdvertising() {
       .eq('id', businessProfile.id)
       .select()
       .single();
-    
+
     if (error) {
       console.error('Error updating balance:', error);
-      toast.error('Erro ao adicionar créditos');
+      toast.error(uiText("Erro ao adicionar créditos"));
       return null;
     }
-    
+
     // Insert transaction record
     await supabase
       .from('credit_transactions')
@@ -503,16 +504,16 @@ export function useAdvertising() {
         balance_after: newBalance,
         description,
       });
-    
+
     setBusinessProfile(data as BusinessProfile);
-    toast.success(`+${amount} créditos adicionados!`);
+    toast.success(uiText("+{{value1}} créditos adicionados!", { value1: (amount) ?? "" }));
     return data as BusinessProfile;
   };
 
   // Record impression - privacy-preserving (no user GPS)
   const recordImpression = async (adId: string, userMarket?: LocationMarket) => {
     if (!user?.id) return;
-    
+
     await supabase.from('ad_impressions').insert({
       ad_id: adId,
       user_id: user.id,
@@ -526,7 +527,7 @@ export function useAdvertising() {
   // Record click
   const recordClick = async (adId: string, clickType = 'cta') => {
     if (!user?.id) return;
-    
+
     await supabase.from('ad_clicks').insert({
       ad_id: adId,
       user_id: user.id,
@@ -539,7 +540,7 @@ export function useAdvertising() {
     // Calculate max ads based on feed rules
     const maxAds = Math.floor(totalPosts * AD_FEED_RULES.MAX_AD_PERCENTAGE);
     const limit = Math.max(1, Math.min(maxAds, Math.floor(totalPosts / AD_FEED_RULES.POSTS_BETWEEN_ADS)));
-    
+
     let query = supabase
       .from('advertisements')
       .select(`
@@ -549,25 +550,25 @@ export function useAdvertising() {
       .eq('status', 'active')
       .eq('ad_type', 'promoted_post')
       .lte('starts_at', new Date().toISOString());
-    
+
     if (userCity) {
       query = query.eq('target_city', userCity);
     }
-    
+
     const { data, error } = await query.limit(limit);
-    
+
     if (error) {
       console.error('Error fetching active ads:', error);
       return [];
     }
-    
+
     return (data || []) as (Advertisement & { business: BusinessProfile })[];
   }, []);
 
   // Fetch featured businesses (for Discover)
   const fetchFeaturedBusinesses = async (userCity?: string, limit = 6) => {
     const now = new Date().toISOString();
-    
+
     // First try to get ads matching user city, then fallback to all active ads
     let query = supabase
       .from('advertisements')
@@ -579,22 +580,22 @@ export function useAdvertising() {
       .eq('ad_type', 'business_profile')
       .lte('starts_at', now)
       .or(`ends_at.is.null,ends_at.gte.${now}`);
-    
+
     if (userCity) {
       query = query.eq('target_city', userCity);
     }
-    
+
     const initial = await query.limit(limit);
     let data = initial.data;
     const error = initial.error;
-    
+
     if (error) {
       console.error('Error fetching featured businesses:', error);
       return [];
     }
-    
+
     console.log('Fetched featured businesses:', data?.length || 0, 'for city:', userCity);
-    
+
     // If no results for specific city, fetch all active business_profile ads
     if ((!data || data.length === 0) && userCity) {
       console.log('No businesses for city, fetching all...');
@@ -609,13 +610,13 @@ export function useAdvertising() {
         .lte('starts_at', now)
         .or(`ends_at.is.null,ends_at.gte.${now}`)
         .limit(limit);
-      
+
       if (!fallbackQuery.error) {
         data = fallbackQuery.data;
         console.log('Fallback fetched:', data?.length || 0);
       }
     }
-    
+
     return (data || []) as (Advertisement & { business: BusinessProfile })[];
   };
 
@@ -625,19 +626,19 @@ export function useAdvertising() {
     ads: (Advertisement & { business: BusinessProfile })[]
   ): (T | (Advertisement & { business: BusinessProfile; isAd: true }))[] => {
     if (ads.length === 0) return posts;
-    
+
     const result: (T | (Advertisement & { business: BusinessProfile; isAd: true }))[] = [];
     let adIndex = 0;
     let postsSinceLastAd = 0;
-    
+
     // Calculate max ads allowed
     const maxAds = Math.floor(posts.length * AD_FEED_RULES.MAX_AD_PERCENTAGE);
     let adsInserted = 0;
-    
+
     posts.forEach((post, index) => {
       result.push(post);
       postsSinceLastAd++;
-      
+
       // Check if we should insert an ad
       if (
         postsSinceLastAd >= AD_FEED_RULES.POSTS_BETWEEN_ADS &&
@@ -650,7 +651,7 @@ export function useAdvertising() {
         postsSinceLastAd = 0;
       }
     });
-    
+
     return result;
   }, []);
 
@@ -664,7 +665,7 @@ export function useAdvertising() {
       ]);
       setLoading(false);
     };
-    
+
     if (user?.id) {
       init();
     }
@@ -685,15 +686,15 @@ export function useAdvertising() {
     locationMarkets,
     creditTransactions,
     loading,
-    
+
     // Feed rules
     AD_FEED_RULES,
-    
+
     // Business profile actions
     createBusinessProfile,
     updateBusinessProfile,
     fetchBusinessProfile,
-    
+
     // Advertisement actions
     createAdvertisement,
     updateAdvertisement,
@@ -702,14 +703,14 @@ export function useAdvertising() {
     pauseAdvertisement,
     deleteAdvertisement,
     fetchAdvertisements,
-    
+
     // Credits
     addCredits,
     fetchCreditTransactions,
-    
+
     // Location
     findNearestMarket,
-    
+
     // Consumer actions
     fetchActiveAdsForFeed,
     fetchFeaturedBusinesses,

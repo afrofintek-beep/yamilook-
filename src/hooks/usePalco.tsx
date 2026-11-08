@@ -1,3 +1,4 @@
+import { uiText } from '@/i18n/ui-copy';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -154,7 +155,7 @@ export function useCreateRoda() {
 
   return useMutation({
     mutationFn: async (roda: { title: string; description?: string; theme?: string; scheduled_at?: string; cover_url?: string; visibility?: string }) => {
-      if (!user) throw new Error('Not authenticated');
+      if (!user) throw new Error(uiText("Not authenticated"));
 
       const { data, error } = await supabase
         .from('rodas')
@@ -175,10 +176,10 @@ export function useCreateRoda() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['rodas'] });
-      toast({ title: 'Roda criada com sucesso!' });
+      toast({ title: uiText("Roda criada com sucesso!") });
     },
     onError: (error) => {
-      toast({ title: 'Erro ao criar roda', description: error.message, variant: 'destructive' });
+      toast({ title: uiText("Erro ao criar roda"), description: error.message, variant: 'destructive' });
     },
   });
 }
@@ -208,10 +209,10 @@ export function useStartRoda() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['rodas'] });
       queryClient.invalidateQueries({ queryKey: ['roda', data.id] });
-      toast({ title: 'Roda iniciada!', description: 'A transmissão está ao vivo.' });
+      toast({ title: uiText("Roda iniciada!"), description: uiText("A transmissão está ao vivo.") });
     },
     onError: (error) => {
-      toast({ title: 'Erro ao iniciar roda', description: error.message, variant: 'destructive' });
+      toast({ title: uiText("Erro ao iniciar roda"), description: error.message, variant: 'destructive' });
     },
   });
 }
@@ -238,10 +239,10 @@ export function useStartQA() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['rodas'] });
       queryClient.invalidateQueries({ queryKey: ['roda', data.id] });
-      toast({ title: 'Q&A iniciado!' });
+      toast({ title: uiText("Q&A iniciado!") });
     },
     onError: (error) => {
-      toast({ title: 'Erro ao iniciar Q&A', description: error.message, variant: 'destructive' });
+      toast({ title: uiText("Erro ao iniciar Q&A"), description: error.message, variant: 'destructive' });
     },
   });
 }
@@ -268,10 +269,10 @@ export function useEndRoda() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['rodas'] });
       queryClient.invalidateQueries({ queryKey: ['roda', data.id] });
-      toast({ title: 'Roda terminada.' });
+      toast({ title: uiText("Roda terminada.") });
     },
     onError: (error) => {
-      toast({ title: 'Erro ao terminar roda', description: error.message, variant: 'destructive' });
+      toast({ title: uiText("Erro ao terminar roda"), description: error.message, variant: 'destructive' });
     },
   });
 }
@@ -396,7 +397,7 @@ export function useCreatePalco() {
 
   return useMutation({
     mutationFn: async (palco: Partial<Palco> & { title: string; roda_id?: string; space?: string | null }) => {
-      if (!user) throw new Error('Not authenticated');
+      if (!user) throw new Error(uiText("Not authenticated"));
 
       const { data, error } = await supabase
         .from('palcos')
@@ -429,10 +430,10 @@ export function useCreatePalco() {
       queryClient.invalidateQueries({ queryKey: ['my-palcos'] });
       queryClient.invalidateQueries({ queryKey: ['palcos'] });
       queryClient.invalidateQueries({ queryKey: ['rodas'] });
-      toast({ title: 'Palco criado com sucesso!' });
+      toast({ title: uiText("Palco criado com sucesso!") });
     },
     onError: (error) => {
-      toast({ title: 'Erro ao criar palco', description: error.message, variant: 'destructive' });
+      toast({ title: uiText("Erro ao criar palco"), description: error.message, variant: 'destructive' });
     },
   });
 }
@@ -497,7 +498,7 @@ export function useUpdatePalco() {
         queryClient.setQueryData(['my-palcos'], context.prevMyPalcos);
         queryClient.setQueryData(['palcos'], context.prevPalcos);
       }
-      toast({ title: 'Erro ao atualizar palco', description: error.message, variant: 'destructive' });
+      toast({ title: uiText("Erro ao atualizar palco"), description: error.message, variant: 'destructive' });
     },
     onSettled: (_data, _error, variables) => {
       // Refetch in background to ensure consistency
@@ -536,7 +537,7 @@ export function useSubmitVoz() {
 
   return useMutation({
     mutationFn: async (voz: { roda_id: string; voice_type: 'email' | 'live' | 'highlight'; custom_text?: string }) => {
-      if (!user) throw new Error('Not authenticated');
+      if (!user) throw new Error(uiText("Not authenticated"));
 
       const { data, error } = await supabase
         .from('vozes')
@@ -554,10 +555,10 @@ export function useSubmitVoz() {
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['vozes', variables.roda_id] });
-      toast({ title: 'Voz enviada!' });
+      toast({ title: uiText("Voz enviada!") });
     },
     onError: (error) => {
-      toast({ title: 'Erro ao enviar voz', description: error.message, variant: 'destructive' });
+      toast({ title: uiText("Erro ao enviar voz"), description: error.message, variant: 'destructive' });
     },
   });
 }
@@ -585,10 +586,10 @@ export function useConfirmVozPayment() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['vozes', data.rodaId] });
-      toast({ title: 'Pagamento confirmado!' });
+      toast({ title: uiText("Pagamento confirmado!") });
     },
     onError: (error) => {
-      toast({ title: 'Erro ao confirmar pagamento', description: error.message, variant: 'destructive' });
+      toast({ title: uiText("Erro ao confirmar pagamento"), description: error.message, variant: 'destructive' });
     },
   });
 }
@@ -614,10 +615,10 @@ export function useMarkVozAnswered() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['vozes', data.rodaId] });
-      toast({ title: 'Voz marcada como respondida!' });
+      toast({ title: uiText("Voz marcada como respondida!") });
     },
     onError: (error) => {
-      toast({ title: 'Erro ao marcar voz', description: error.message, variant: 'destructive' });
+      toast({ title: uiText("Erro ao marcar voz"), description: error.message, variant: 'destructive' });
     },
   });
 }
@@ -628,7 +629,7 @@ export function useJoinRoda() {
 
   return useMutation({
     mutationFn: async (rodaId: string) => {
-      if (!user) throw new Error('Not authenticated');
+      if (!user) throw new Error(uiText("Not authenticated"));
 
       const { data, error } = await supabase
         .from('roda_participants')
@@ -672,8 +673,8 @@ export function usePalcoReaction(palcoId: string | undefined) {
 
   const react = useMutation({
     mutationFn: async (reactionType: string) => {
-      if (!palcoId || !user) throw new Error('Not authenticated');
-      
+      if (!palcoId || !user) throw new Error(uiText("Not authenticated"));
+
       if (myReaction === reactionType) {
         const { error } = await supabase
           .from('palco_likes')

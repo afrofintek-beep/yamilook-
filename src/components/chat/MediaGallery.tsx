@@ -1,7 +1,8 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { ChatMediaImage, ChatMediaLink } from './PrivateMediaElements';
 import { privateChatPath, signPrivateChatMedia } from '@/lib/private-chat-media';
 import { useState, useEffect } from 'react';
-import { format } from 'date-fns';
+import { format } from '@/i18n/ui-date';
 import { Image, Film, FileText, Link2, Download, X, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -27,6 +28,7 @@ interface MediaGalleryProps {
 }
 
 export function MediaGallery({ open, onOpenChange, conversationId }: MediaGalleryProps) {
+  useUiLocale();
   const [media, setMedia] = useState<MediaItem[]>([]);
   const [files, setFiles] = useState<MediaItem[]>([]);
   const [links, setLinks] = useState<MediaItem[]>([]);
@@ -230,7 +232,7 @@ export function MediaGallery({ open, onOpenChange, conversationId }: MediaGaller
                     <FileText className="w-5 h-5 text-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{item.name || 'Document'}</p>
+                    <p className="text-sm font-medium truncate">{item.name || uiText("Document")}</p>
                     <p className="text-xs text-muted-foreground">
                       {item.sender_name} • {format(new Date(item.created_at), 'MMM d, h:mm a')}
                     </p>
@@ -290,7 +292,7 @@ export function MediaGallery({ open, onOpenChange, conversationId }: MediaGaller
         <SheetContent side="right" className="w-full sm:max-w-md p-0">
           <SheetHeader className="px-4 pt-4 pb-2">
             <div className="flex items-center justify-between">
-              <SheetTitle>Media, Files & Links</SheetTitle>
+              <SheetTitle>{uiText("Media, Files & Links")}</SheetTitle>
               {(media.length > 0 || files.length > 0) && (
                 <Button
                   variant="ghost"
@@ -302,7 +304,7 @@ export function MediaGallery({ open, onOpenChange, conversationId }: MediaGaller
                     setIsSelecting(!isSelecting);
                   }}
                 >
-                  {isSelecting ? 'Cancel' : 'Select'}
+                  {isSelecting ? uiText("Cancel") : uiText("Select")}
                 </Button>
               )}
             </div>
@@ -311,17 +313,11 @@ export function MediaGallery({ open, onOpenChange, conversationId }: MediaGaller
           <Tabs defaultValue="media" className="w-full">
             <TabsList className="w-full justify-start px-4 bg-transparent border-b rounded-none">
               <TabsTrigger value="media" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
-                <Image className="w-4 h-4 mr-2" />
-                Media ({media.length})
-              </TabsTrigger>
+                <Image className="w-4 h-4 mr-2" />{uiText("Media ({{value1}})", { value1: (media.length) ?? "" })}</TabsTrigger>
               <TabsTrigger value="files" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
-                <FileText className="w-4 h-4 mr-2" />
-                Files ({files.length})
-              </TabsTrigger>
+                <FileText className="w-4 h-4 mr-2" />{uiText("Files ({{value1}})", { value1: (files.length) ?? "" })}</TabsTrigger>
               <TabsTrigger value="links" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
-                <Link2 className="w-4 h-4 mr-2" />
-                Links ({links.length})
-              </TabsTrigger>
+                <Link2 className="w-4 h-4 mr-2" />{uiText("Links ({{value1}})", { value1: (links.length) ?? "" })}</TabsTrigger>
             </TabsList>
 
             <ScrollArea className="h-[calc(100vh-12rem)]">
@@ -335,7 +331,7 @@ export function MediaGallery({ open, onOpenChange, conversationId }: MediaGaller
                 ) : media.length === 0 ? (
                   <div className="text-center py-12">
                     <Image className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
-                    <p className="text-muted-foreground">No media shared yet</p>
+                    <p className="text-muted-foreground">{uiText("No media shared yet")}</p>
                   </div>
                 ) : (
                   renderMediaGrid(media)
@@ -352,7 +348,7 @@ export function MediaGallery({ open, onOpenChange, conversationId }: MediaGaller
                 ) : files.length === 0 ? (
                   <div className="text-center py-12">
                     <FileText className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
-                    <p className="text-muted-foreground">No files shared yet</p>
+                    <p className="text-muted-foreground">{uiText("No files shared yet")}</p>
                   </div>
                 ) : (
                   renderFilesList(files)
@@ -369,7 +365,7 @@ export function MediaGallery({ open, onOpenChange, conversationId }: MediaGaller
                 ) : links.length === 0 ? (
                   <div className="text-center py-12">
                     <Link2 className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
-                    <p className="text-muted-foreground">No links shared yet</p>
+                    <p className="text-muted-foreground">{uiText("No links shared yet")}</p>
                   </div>
                 ) : (
                   renderLinksList(links)
@@ -381,14 +377,10 @@ export function MediaGallery({ open, onOpenChange, conversationId }: MediaGaller
           {/* Selection actions */}
           {isSelecting && selectedItems.size > 0 && (
             <div className="absolute bottom-0 left-0 right-0 p-4 bg-background border-t flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">
-                {selectedItems.size} selected
-              </span>
+              <span className="text-sm text-muted-foreground">{uiText("{{value1}} selected", { value1: (selectedItems.size) ?? "" })}</span>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={downloadSelected}>
-                  <Download className="w-4 h-4 mr-2" />
-                  Download
-                </Button>
+                  <Download className="w-4 h-4 mr-2" />{uiText("Download")}</Button>
               </div>
             </div>
           )}

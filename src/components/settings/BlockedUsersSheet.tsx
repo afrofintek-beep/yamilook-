@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useEffect, useState, useCallback } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -21,6 +22,7 @@ interface Props {
 }
 
 export function BlockedUsersSheet({ open, onOpenChange }: Props) {
+  useUiLocale();
   const { user } = useAuth();
   const [blocked, setBlocked] = useState<BlockedUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -63,7 +65,7 @@ export function BlockedUsersSheet({ open, onOpenChange }: Props) {
     setActing(b.rowId);
     const { error } = await supabase.from('blocked_users').delete().eq('id', b.rowId);
     if (error) {
-      toast.error('Não foi possível desbloquear.');
+      toast.error(uiText("Não foi possível desbloquear."));
     } else {
       // Best-effort: reflect it on the contact row too, if there is one.
       if (user) {
@@ -71,7 +73,7 @@ export function BlockedUsersSheet({ open, onOpenChange }: Props) {
           .update({ is_blocked: false })
           .eq('user_id', user.id).eq('contact_user_id', b.userId);
       }
-      toast.success('Utilizador desbloqueado.');
+      toast.success(uiText("Utilizador desbloqueado."));
       setBlocked((list) => list.filter((x) => x.rowId !== b.rowId));
     }
     setActing(null);
@@ -85,8 +87,7 @@ export function BlockedUsersSheet({ open, onOpenChange }: Props) {
       <SheetContent side="right" className="w-full sm:max-w-md p-0">
         <SheetHeader className="p-4 border-b border-border">
           <SheetTitle className="flex items-center gap-2">
-            <ShieldOff className="w-5 h-5 text-primary" /> Utilizadores bloqueados
-          </SheetTitle>
+            <ShieldOff className="w-5 h-5 text-primary" />{uiText(" Utilizadores bloqueados")}</SheetTitle>
         </SheetHeader>
 
         <ScrollArea className="h-[calc(100vh-72px)]">
@@ -98,7 +99,7 @@ export function BlockedUsersSheet({ open, onOpenChange }: Props) {
             {!loading && blocked.length === 0 && (
               <div className="text-center py-12 space-y-2">
                 <UserX className="h-9 w-9 text-muted-foreground/50 mx-auto" />
-                <p className="text-sm text-muted-foreground">Não bloqueaste ninguém.</p>
+                <p className="text-sm text-muted-foreground">{uiText("Não bloqueaste ninguém.")}</p>
               </div>
             )}
 
@@ -110,7 +111,7 @@ export function BlockedUsersSheet({ open, onOpenChange }: Props) {
                     : <span className="text-sm font-semibold text-primary">{initials(b)}</span>}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium truncate">{b.displayName || 'Utilizador'}</p>
+                  <p className="text-sm font-medium truncate">{b.displayName || uiText("Utilizador")}</p>
                   {b.username && <p className="text-xs text-muted-foreground truncate">@{b.username}</p>}
                 </div>
                 <Button
@@ -118,7 +119,7 @@ export function BlockedUsersSheet({ open, onOpenChange }: Props) {
                   disabled={acting === b.rowId}
                   onClick={() => unblock(b)}
                 >
-                  {acting === b.rowId ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Desbloquear'}
+                  {acting === b.rowId ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : uiText("Desbloquear")}
                 </Button>
               </div>
             ))}

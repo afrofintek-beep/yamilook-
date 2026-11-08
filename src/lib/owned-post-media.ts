@@ -1,3 +1,4 @@
+import { uiText } from '@/i18n/ui-copy';
 import { supabase } from '@/integrations/supabase/client';
 import { prepareOwnedMedia } from '../../shared/owned-post-media.mjs';
 
@@ -21,6 +22,6 @@ export interface ExportIdentity { content: string; author: { name: string; usern
 export async function getExportIdentity(postId: string, signal?: AbortSignal): Promise<ExportIdentity> {
   const { data, error } = await supabase.functions.invoke('owned-post-media', { body: { postId, index: 0, mode: 'branding' }, signal });
   signal?.throwIfAborted();
-  if (error || typeof data?.content !== 'string' || !data?.author?.name) throw new Error('Não foi possível confirmar a autoria. Entra novamente e tenta outra vez.');
+  if (error || typeof data?.content !== 'string' || !data?.author?.name) throw new Error(uiText("Não foi possível confirmar a autoria. Entra novamente e tenta outra vez."));
   return data;
 }

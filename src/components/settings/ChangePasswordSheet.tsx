@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
@@ -47,6 +48,7 @@ interface ChangePasswordSheetProps {
 }
 
 export function ChangePasswordSheet({ open, onOpenChange }: ChangePasswordSheetProps) {
+  useUiLocale();
   const { t } = useTranslation();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
@@ -78,7 +80,7 @@ export function ChangePasswordSheet({ open, onOpenChange }: ChangePasswordSheetP
       // First, verify the current password by trying to sign in
       const { data: { user } } = await supabase.auth.getUser();
       if (!user?.email) {
-        throw new Error('User not found');
+        throw new Error(uiText("User not found"));
       }
 
       // Re-authenticate with current password
@@ -141,7 +143,7 @@ export function ChangePasswordSheet({ open, onOpenChange }: ChangePasswordSheetP
               name="currentPassword"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('auth.currentPassword') || 'Current Password'}</FormLabel>
+                  <FormLabel>{t('auth.currentPassword') || uiText("Current Password")}</FormLabel>
                     <div className="relative">
                       <FormControl>
                         <Input
@@ -176,7 +178,7 @@ export function ChangePasswordSheet({ open, onOpenChange }: ChangePasswordSheetP
               name="newPassword"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('auth.newPassword') || 'New Password'}</FormLabel>
+                  <FormLabel>{t('auth.newPassword') || uiText("New Password")}</FormLabel>
                     <div className="relative">
                       <FormControl>
                         <Input
@@ -283,7 +285,7 @@ export function ChangePasswordSheet({ open, onOpenChange }: ChangePasswordSheetP
                   className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
                 />
               ) : (
-                t('settings.updatePassword') || 'Update Password'
+                t('settings.updatePassword') || uiText("Update Password")
               )}
             </Button>
           </form>

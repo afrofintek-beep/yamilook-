@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useEffect, useRef, useState } from 'react';
 
 // Never export URLs, query strings, headers, user identifiers or page content.
@@ -59,6 +60,7 @@ export function imageExceedsPixelBudget(
 }
 
 export default function FeedDiagnostics() {
+  useUiLocale();
   const [report, setReport] = useState('');
   const capture = useRef<() => void>(() => {});
   useEffect(() => {
@@ -197,11 +199,11 @@ export default function FeedDiagnostics() {
     a.href = url; a.download = 'yamilook-diagnostico-v3.json'; a.click();
     setTimeout(() => URL.revokeObjectURL(url), 10000);
   };
-  return <aside aria-label="Diagnóstico do feed" className="fixed bottom-24 left-2 z-[100] max-w-[calc(100vw-1rem)] rounded-xl border bg-background p-3 text-foreground shadow-lg">
-    <p className="text-sm font-semibold">Diagnóstico neste aparelho</p>
-    <p className="max-w-xs text-xs">Deslize pelo feed durante 30 segundos. O relatório fica neste aparelho; partilhe-o depois nesta conversa.</p>
-    {report ? <button className="mt-2 min-h-11 underline" onClick={download}>Guardar relatório</button>
-      : <button className="mt-2 min-h-11 underline" onClick={() => capture.current()}>Terminar recolha</button>}
-    <p className="max-w-xs text-xs">Para repetir, recarregue a página. Para sair, retire ?diagnostico=1 do endereço.</p>
+  return <aside aria-label={uiText("Diagnóstico do feed")} className="fixed bottom-24 left-2 z-[100] max-w-[calc(100vw-1rem)] rounded-xl border bg-background p-3 text-foreground shadow-lg">
+    <p className="text-sm font-semibold">{uiText("Diagnóstico neste aparelho")}</p>
+    <p className="max-w-xs text-xs">{uiText("Deslize pelo feed durante 30 segundos. O relatório fica neste aparelho; partilhe-o depois nesta conversa.")}</p>
+    {report ? <button className="mt-2 min-h-11 underline" onClick={download}>{uiText("Guardar relatório")}</button>
+      : <button className="mt-2 min-h-11 underline" onClick={() => capture.current()}>{uiText("Terminar recolha")}</button>}
+    <p className="max-w-xs text-xs">{uiText("Para repetir, recarregue a página. Para sair, retire ?diagnostico=1 do endereço.")}</p>
   </aside>;
 }

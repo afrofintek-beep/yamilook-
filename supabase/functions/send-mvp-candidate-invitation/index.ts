@@ -1,3 +1,4 @@
+import { candidateInvitationEmail } from '../_shared/invitation-copy.ts';
 import { createClient } from 'npm:@supabase/supabase-js@2.90.1';
 const headers = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, apikey, content-type, x-client-info', 'Access-Control-Allow-Methods': 'POST, OPTIONS' };
 const reply = (data: unknown, status = 200) => Response.json(data, { status, headers });
@@ -9,7 +10,7 @@ Deno.serve(async req => {
   try {
     const raw = await req.text();
     if (raw.length > 1024) return reply({ error: 'size' }, 413);
-    const { candidateId } = JSON.parse(raw);
+    const { candidateId, language } = JSON.parse(raw);
     if (typeof candidateId !== 'string' || !/^[0-9a-f-]{36}$/i.test(candidateId)) return reply({ error: 'request' }, 400);
     const client = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, {
       global: { headers: { Authorization: authorization } }, auth: { persistSession: false, autoRefreshToken: false },
@@ -30,8 +31,7 @@ Deno.serve(async req => {
     if (!apiKey || !from) return reply({ error: 'email_not_configured' }, 503);
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST', headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json', 'Idempotency-Key': `mvp-${candidate.id}-${candidate.access_code}-${new Date().toISOString().slice(0,10)}` },
-      body: JSON.stringify({ from, to: [candidate.email], subject: 'A tua candidatura à YAMILOOK foi aprovada',
-        text: `Olá ${candidate.full_name},\n\nA tua candidatura ao MVP da YAMILOOK foi aprovada!\n\nCria a tua conta em https://www.yamilook.com/register e insere o código ${candidate.access_code}.\n\nEste código é de utilização única.\n\nBem-vindo(a)!\nEquipa YAMILOOK` }),
+      body: JSON.stringify({ from, to: [candidate.email], ...candidateInvitationEmail(candidate.full_name, candidate.access_code, language) }),
     });
     if (!response.ok) return reply({ error: 'email_delivery_failed' }, 502);
     const { error: saveError } = await client.from('mvp_candidates').update({ invite_sent_at: new Date().toISOString() }).eq('id', candidate.id);

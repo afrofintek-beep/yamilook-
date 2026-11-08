@@ -1,3 +1,4 @@
+import { uiText } from '@/i18n/ui-copy';
 import { useCachedList } from './useCachedList';
 import { readChatHotCache, saveChatHotCache, clearChatHotCache } from '@/lib/chat-hot-cache';
 import { deleteChatMessage, deleteChatMessageForMe } from '@/lib/delete-chat-message';
@@ -299,7 +300,7 @@ export function useConversations() {
     groupName?: string,
     groupAvatarUrl?: string | null
   ) => {
-    if (!user) return { error: new Error('Not authenticated'), data: null };
+    if (!user) return { error: new Error(uiText("Not authenticated")), data: null };
 
     const { data: newConv, error } = await createChatConversation(participantIds, groupName, groupAvatarUrl);
     if (error) return { error, data: null };
@@ -660,7 +661,7 @@ export function useMessages(conversationId: string | null) {
             });
             return;
           }
-          
+
           // Deliver the text before any optional profile request completes.
           setMessages((prev) => prev.some(message => message.id === newMessage.id)
             ? prev
@@ -925,7 +926,7 @@ export function useMessages(conversationId: string | null) {
 
       // Fallback (RFC4122 v4) using getRandomValues
       if (typeof crypto === 'undefined' || typeof crypto.getRandomValues !== 'function') {
-        throw new Error('Crypto API not available');
+        throw new Error(uiText("Crypto API not available"));
       }
 
       const bytes = new Uint8Array(16);
@@ -988,7 +989,7 @@ export function useMessages(conversationId: string | null) {
 
     pendingMessageIdsRef.current.delete(messageId);
 
-    // Clear typing indicator via broadcast (immediate) 
+    // Clear typing indicator via broadcast (immediate)
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     if (typingChannelRef.current) {
       typingChannelRef.current.send({
@@ -1008,7 +1009,7 @@ export function useMessages(conversationId: string | null) {
   };
 
   const updateMessageMediaUrl = async (messageId: string, newMediaUrl: string) => {
-    if (!user) return { error: new Error('Not authenticated') };
+    if (!user) return { error: new Error(uiText("Not authenticated")) };
 
     const { error } = await supabase
       .from('messages')
@@ -1025,19 +1026,19 @@ export function useMessages(conversationId: string | null) {
   };
 
   const editMessage = async (messageId: string, newContent: string) => {
-    if (!user) return { error: new Error('Not authenticated') };
+    if (!user) return { error: new Error(uiText("Not authenticated")) };
 
     // Get the original message
     const message = messages.find((m) => m.id === messageId);
     if (!message || message.sender_id !== user.id) {
-      return { error: new Error('Cannot edit this message') };
+      return { error: new Error(uiText("Cannot edit this message")) };
     }
 
     // Check 15-minute window
     const createdAt = new Date(message.created_at).getTime();
     const now = Date.now();
     if (now - createdAt > 15 * 60 * 1000) {
-      return { error: new Error('Edit window expired') };
+      return { error: new Error(uiText("Edit window expired")) };
     }
 
     // Save original content to edit history
@@ -1069,7 +1070,7 @@ export function useMessages(conversationId: string | null) {
   };
 
   const forwardMessage = async (messageId: string, conversationIds: string[]) => {
-    if (!user) return { error: new Error('Not authenticated') };
+    if (!user) return { error: new Error(uiText("Not authenticated")) };
 
     const { error } = await supabase.rpc('forward_chat_messages', {
       p_message_ids: [messageId],
@@ -1082,7 +1083,7 @@ export function useMessages(conversationId: string | null) {
   // Also respects user's show_typing_indicators privacy setting
   const setTyping = async (userShowTypingIndicators: boolean = true) => {
     if (!conversationId || !user) return;
-    
+
     // If user has disabled typing indicators, don't broadcast
     if (!userShowTypingIndicators) return;
 
@@ -1131,7 +1132,7 @@ export function useMessages(conversationId: string | null) {
   };
 
   const deleteMessageForMe = async (messageId: string) => {
-    if (!user) return { error: new Error('Not authenticated') };
+    if (!user) return { error: new Error(uiText("Not authenticated")) };
     const requestScope = scope;
     const { error } = await deleteChatMessageForMe(messageId, user.id);
     if (!error) {
@@ -1147,7 +1148,7 @@ export function useMessages(conversationId: string | null) {
   };
 
   const deleteMessage = async (messageId: string) => {
-    if (!user) return { error: new Error('Not authenticated') };
+    if (!user) return { error: new Error(uiText("Not authenticated")) };
     const { error } = await deleteChatMessage(messageId, user.id);
 
     if (!error) {
@@ -1158,7 +1159,7 @@ export function useMessages(conversationId: string | null) {
   };
 
   const toggleReaction = async (messageId: string, emoji: string) => {
-    if (!user) return { error: new Error('Not authenticated') };
+    if (!user) return { error: new Error(uiText("Not authenticated")) };
 
     // Check if user already reacted with this specific emoji
     const existingWithSameEmoji = reactions[messageId]?.find((r) => r.emoji === emoji && r.users.includes(user.id));
@@ -1188,7 +1189,7 @@ export function useMessages(conversationId: string | null) {
   };
 
   const toggleStar = async (messageId: string) => {
-    if (!user) return { error: new Error('Not authenticated') };
+    if (!user) return { error: new Error(uiText("Not authenticated")) };
 
     if (starredIds.has(messageId)) {
       await supabase.from('starred_messages').delete().eq('message_id', messageId).eq('user_id', user.id);
@@ -1202,7 +1203,7 @@ export function useMessages(conversationId: string | null) {
   };
 
   const togglePin = async (messageId: string) => {
-    if (!user || !conversationId) return { error: new Error('Not authenticated') };
+    if (!user || !conversationId) return { error: new Error(uiText("Not authenticated")) };
 
     if (pinnedIds.has(messageId)) {
       await supabase.from('pinned_messages').delete().eq('message_id', messageId).eq('conversation_id', conversationId);
@@ -1230,7 +1231,7 @@ export function useMessages(conversationId: string | null) {
   };
 
   const markViewOnce = async (messageId: string) => {
-    if (!user) return { error: new Error('Not authenticated') };
+    if (!user) return { error: new Error(uiText("Not authenticated")) };
 
     // Upsert so calling twice never throws a duplicate-key error
     const { error } = await supabase
@@ -1309,7 +1310,7 @@ export function useMessages(conversationId: string | null) {
   };
 
   const setHistoryCleared = async (restore = false) => {
-    if (!conversationId) throw new Error('Conversa indisponível');
+    if (!conversationId) throw new Error(uiText("Conversa indisponível"));
     const { data, error } = await supabase.rpc('set_chat_history_cleared', {
       p_conversation_id: conversationId,
       p_restore: restore,

@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -20,6 +21,7 @@ interface Props {
 
 /** Open a free Mokubico conversa: a title and an individually-chosen guest list. */
 export function NewConversaSheet({ open, onOpenChange, space, spaceTitle }: Props) {
+  useUiLocale();
   const navigate = useNavigate();
   const openConversa = useOpenConversa();
   const [title, setTitle] = useState('');
@@ -37,7 +39,7 @@ export function NewConversaSheet({ open, onOpenChange, space, spaceTitle }: Prop
 
   const create = async () => {
     if (isQuarto && guests.length !== 1) {
-      toast.info('No Quarto escolhes 1 pessoa (conversa só entre vocês).');
+      toast.info(uiText("No Quarto escolhes 1 pessoa (conversa só entre vocês)."));
       return;
     }
     setCreating(true);
@@ -45,10 +47,10 @@ export function NewConversaSheet({ open, onOpenChange, space, spaceTitle }: Prop
       const { id, existing } = await openConversa({ space, title: title.trim(), guestIds: guests.map((g) => g.id) });
       reset();
       onOpenChange(false);
-      if (existing) toast.info('Já tens uma conversa aberta — leva-te a ela.');
+      if (existing) toast.info(uiText("Já tens uma conversa aberta — leva-te a ela."));
       navigate(`/mokubico/conversa/${id}`);
     } catch {
-      toast.error('Não foi possível abrir a conversa.');
+      toast.error(uiText("Não foi possível abrir a conversa."));
     } finally {
       setCreating(false);
     }
@@ -67,23 +69,23 @@ export function NewConversaSheet({ open, onOpenChange, space, spaceTitle }: Prop
     <Sheet open={open} onOpenChange={(o) => { if (!o) reset(); onOpenChange(o); }}>
       <SheetContent side="bottom" className="h-auto max-h-[85vh] overflow-y-auto rounded-t-3xl">
         <SheetHeader className="mb-4">
-          <SheetTitle>Abrir conversa em {spaceTitle}</SheetTitle>
+          <SheetTitle>{uiText("Abrir conversa em ")}{spaceTitle}</SheetTitle>
         </SheetHeader>
 
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="conversa-title" className="text-sm">Sobre o quê?</Label>
+            <Label htmlFor="conversa-title" className="text-sm">{uiText("Sobre o quê?")}</Label>
             <Input
               id="conversa-title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Ex.: Papo de fim de tarde"
+              placeholder={uiText("Ex.: Papo de fim de tarde")}
               className="h-11"
             />
           </div>
 
           <div className="space-y-2">
-            <Label className="text-sm">Quem entra</Label>
+            <Label className="text-sm">{uiText("Quem entra")}</Label>
             <button
               type="button"
               onClick={() => setInviteOpen(true)}
@@ -94,10 +96,10 @@ export function NewConversaSheet({ open, onOpenChange, space, spaceTitle }: Prop
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium">
-                  {guests.length === 0 ? (isQuarto ? 'Escolher 1 pessoa' : 'Escolher pessoas') : `${guests.length} ${guests.length === 1 ? 'pessoa' : 'pessoas'}`}
+                  {guests.length === 0 ? (isQuarto ? uiText("Escolher 1 pessoa") : uiText("Escolher pessoas")) : `${guests.length} ${guests.length === 1 ? 'pessoa' : 'pessoas'}`}
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  {isQuarto ? 'Conversa só entre vocês os dois' : 'Só quem escolheres pode entrar'}
+                  {isQuarto ? uiText("Conversa só entre vocês os dois") : uiText("Só quem escolheres pode entrar")}
                 </div>
               </div>
             </button>
@@ -117,21 +119,18 @@ export function NewConversaSheet({ open, onOpenChange, space, spaceTitle }: Prop
 
           {isQuintal && (
             <div className="bg-secondary/50 rounded-lg p-2.5 space-y-2">
-              <p className="text-[11px] text-muted-foreground leading-relaxed">
-                🔒 No Quintal, a <b>voz e o vídeo</b> são <b>Pro</b>. Sem Pro, a conversa é <b>só de texto</b> (sem limite de pessoas).
-              </p>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">{uiText("🔒 No Quintal, a ")}<b>{uiText("voz e o vídeo")}</b>{uiText(" são ")}<b>{uiText("Pro")}</b>{uiText(". Sem Pro, a conversa é ")}<b>{uiText("só de texto")}</b>{uiText(" (sem limite de pessoas).")}</p>
               <button
                 type="button"
                 onClick={() => setProOpen(true)}
                 className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-600"
               >
-                <Crown className="w-3.5 h-3.5" /> Subir a Pro
-              </button>
+                <Crown className="w-3.5 h-3.5" />{uiText(" Subir a Pro")}</button>
             </div>
           )}
 
           <Button className="w-full h-12 rounded-xl" onClick={create} disabled={creating}>
-            {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Abrir conversa'}
+            {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : uiText("Abrir conversa")}
           </Button>
         </div>
 

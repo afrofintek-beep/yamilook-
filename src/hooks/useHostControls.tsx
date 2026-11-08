@@ -1,3 +1,4 @@
+import { uiText } from '@/i18n/ui-copy';
 import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -36,7 +37,7 @@ export function useHostControls(callId: string) {
   const muteAllParticipants = useCallback(async () => {
     const isHost = await checkIsHost();
     if (!isHost) {
-      toast.error('Only hosts can mute all participants');
+      toast.error(uiText("Only hosts can mute all participants"));
       return;
     }
 
@@ -47,9 +48,9 @@ export function useHostControls(callId: string) {
       .neq('user_id', user?.id);
 
     if (error) {
-      toast.error('Failed to mute participants');
+      toast.error(uiText("Failed to mute participants"));
     } else {
-      toast.success('All participants muted');
+      toast.success(uiText("All participants muted"));
     }
   }, [callId, user, checkIsHost]);
 
@@ -57,7 +58,7 @@ export function useHostControls(callId: string) {
   const removeParticipant = useCallback(async (participantUserId: string) => {
     const isHost = await checkIsHost();
     if (!isHost) {
-      toast.error('Only hosts can remove participants');
+      toast.error(uiText("Only hosts can remove participants"));
       return;
     }
 
@@ -68,9 +69,9 @@ export function useHostControls(callId: string) {
       .eq('user_id', participantUserId);
 
     if (error) {
-      toast.error('Failed to remove participant');
+      toast.error(uiText("Failed to remove participant"));
     } else {
-      toast.success('Participant removed');
+      toast.success(uiText("Participant removed"));
     }
   }, [callId, checkIsHost]);
 
@@ -78,7 +79,7 @@ export function useHostControls(callId: string) {
   const makeCoHost = useCallback(async (participantUserId: string) => {
     const isHost = await checkIsHost();
     if (!isHost) {
-      toast.error('Only hosts can promote participants');
+      toast.error(uiText("Only hosts can promote participants"));
       return;
     }
 
@@ -89,9 +90,9 @@ export function useHostControls(callId: string) {
       .eq('user_id', participantUserId);
 
     if (error) {
-      toast.error('Failed to promote participant');
+      toast.error(uiText("Failed to promote participant"));
     } else {
-      toast.success('Participant promoted to co-host');
+      toast.success(uiText("Participant promoted to co-host"));
     }
   }, [callId, checkIsHost]);
 
@@ -99,7 +100,7 @@ export function useHostControls(callId: string) {
   const spotlightParticipant = useCallback(async (participantUserId: string, spotlight: boolean) => {
     const isHost = await checkIsHost();
     if (!isHost) {
-      toast.error('Only hosts can spotlight participants');
+      toast.error(uiText("Only hosts can spotlight participants"));
       return;
     }
 
@@ -118,7 +119,7 @@ export function useHostControls(callId: string) {
       .eq('user_id', participantUserId);
 
     if (error) {
-      toast.error('Failed to spotlight participant');
+      toast.error(uiText("Failed to spotlight participant"));
     }
   }, [callId, checkIsHost]);
 
@@ -126,7 +127,7 @@ export function useHostControls(callId: string) {
   const toggleCallLock = useCallback(async (locked: boolean) => {
     const isHost = await checkIsHost();
     if (!isHost) {
-      toast.error('Only hosts can lock/unlock the call');
+      toast.error(uiText("Only hosts can lock/unlock the call"));
       return;
     }
 
@@ -136,7 +137,7 @@ export function useHostControls(callId: string) {
       .eq('id', callId);
 
     if (error) {
-      toast.error('Failed to update call lock status');
+      toast.error(uiText("Failed to update call lock status"));
     } else {
       toast.success(locked ? 'Call locked' : 'Call unlocked');
     }
@@ -146,7 +147,7 @@ export function useHostControls(callId: string) {
   const toggleWaitingRoom = useCallback(async (enabled: boolean) => {
     const isHost = await checkIsHost();
     if (!isHost) {
-      toast.error('Only hosts can toggle waiting room');
+      toast.error(uiText("Only hosts can toggle waiting room"));
       return;
     }
 
@@ -156,7 +157,7 @@ export function useHostControls(callId: string) {
       .eq('id', callId);
 
     if (error) {
-      toast.error('Failed to toggle waiting room');
+      toast.error(uiText("Failed to toggle waiting room"));
     } else {
       toast.success(enabled ? 'Waiting room enabled' : 'Waiting room disabled');
     }
@@ -166,7 +167,7 @@ export function useHostControls(callId: string) {
   const admitParticipant = useCallback(async (participantUserId: string) => {
     const isHost = await checkIsHost();
     if (!isHost) {
-      toast.error('Only hosts can admit participants');
+      toast.error(uiText("Only hosts can admit participants"));
       return;
     }
 
@@ -177,9 +178,9 @@ export function useHostControls(callId: string) {
       .eq('user_id', participantUserId);
 
     if (error) {
-      toast.error('Failed to admit participant');
+      toast.error(uiText("Failed to admit participant"));
     } else {
-      toast.success('Participant admitted');
+      toast.success(uiText("Participant admitted"));
     }
   }, [callId, checkIsHost]);
 
@@ -187,7 +188,7 @@ export function useHostControls(callId: string) {
   const admitAllParticipants = useCallback(async () => {
     const isHost = await checkIsHost();
     if (!isHost) {
-      toast.error('Only hosts can admit participants');
+      toast.error(uiText("Only hosts can admit participants"));
       return;
     }
 
@@ -198,9 +199,9 @@ export function useHostControls(callId: string) {
       .eq('status', 'waiting');
 
     if (error) {
-      toast.error('Failed to admit participants');
+      toast.error(uiText("Failed to admit participants"));
     } else {
-      toast.success('All participants admitted');
+      toast.success(uiText("All participants admitted"));
     }
   }, [callId, checkIsHost]);
 
@@ -208,7 +209,7 @@ export function useHostControls(callId: string) {
   const lowerAllHands = useCallback(async () => {
     const isHost = await checkIsHost();
     if (!isHost) {
-      toast.error('Only hosts can lower all hands');
+      toast.error(uiText("Only hosts can lower all hands"));
       return;
     }
 
@@ -218,9 +219,9 @@ export function useHostControls(callId: string) {
       .eq('call_id', callId);
 
     if (error) {
-      toast.error('Failed to lower hands');
+      toast.error(uiText("Failed to lower hands"));
     } else {
-      toast.success('All hands lowered');
+      toast.success(uiText("All hands lowered"));
     }
   }, [callId, checkIsHost]);
 
@@ -228,7 +229,7 @@ export function useHostControls(callId: string) {
   const createBreakoutRoom = useCallback(async (name: string) => {
     const isHost = await checkIsHost();
     if (!isHost) {
-      toast.error('Only hosts can create breakout rooms');
+      toast.error(uiText("Only hosts can create breakout rooms"));
       return null;
     }
 
@@ -242,11 +243,11 @@ export function useHostControls(callId: string) {
       .single();
 
     if (error) {
-      toast.error('Failed to create breakout room');
+      toast.error(uiText("Failed to create breakout room"));
       return null;
     }
 
-    toast.success(`Breakout room "${name}" created`);
+    toast.success(uiText("Breakout room \"{{value1}}\" created", { value1: (name) ?? "" }));
     return data;
   }, [callId, checkIsHost]);
 
@@ -254,7 +255,7 @@ export function useHostControls(callId: string) {
   const closeBreakoutRoom = useCallback(async (roomId: string) => {
     const isHost = await checkIsHost();
     if (!isHost) {
-      toast.error('Only hosts can close breakout rooms');
+      toast.error(uiText("Only hosts can close breakout rooms"));
       return;
     }
 
@@ -264,9 +265,9 @@ export function useHostControls(callId: string) {
       .eq('id', roomId);
 
     if (error) {
-      toast.error('Failed to close breakout room');
+      toast.error(uiText("Failed to close breakout room"));
     } else {
-      toast.success('Breakout room closed');
+      toast.success(uiText("Breakout room closed"));
     }
   }, [checkIsHost]);
 
@@ -274,7 +275,7 @@ export function useHostControls(callId: string) {
   const assignToBreakoutRoom = useCallback(async (roomId: string, participantUserId: string) => {
     const isHost = await checkIsHost();
     if (!isHost) {
-      toast.error('Only hosts can assign participants');
+      toast.error(uiText("Only hosts can assign participants"));
       return;
     }
 
@@ -292,9 +293,9 @@ export function useHostControls(callId: string) {
       });
 
     if (error) {
-      toast.error('Failed to assign participant');
+      toast.error(uiText("Failed to assign participant"));
     } else {
-      toast.success('Participant assigned to breakout room');
+      toast.success(uiText("Participant assigned to breakout room"));
     }
   }, [checkIsHost]);
 
@@ -306,7 +307,7 @@ export function useHostControls(callId: string) {
       .eq('user_id', participantUserId);
 
     if (error) {
-      toast.error('Failed to move participant');
+      toast.error(uiText("Failed to move participant"));
     }
   }, []);
 
@@ -358,7 +359,7 @@ export function useHostControls(callId: string) {
   const closeAllBreakoutRooms = useCallback(async () => {
     const isHost = await checkIsHost();
     if (!isHost) {
-      toast.error('Only hosts can close breakout rooms');
+      toast.error(uiText("Only hosts can close breakout rooms"));
       return;
     }
 
@@ -368,9 +369,9 @@ export function useHostControls(callId: string) {
       .eq('call_id', callId);
 
     if (error) {
-      toast.error('Failed to close breakout rooms');
+      toast.error(uiText("Failed to close breakout rooms"));
     } else {
-      toast.success('All breakout rooms closed');
+      toast.success(uiText("All breakout rooms closed"));
     }
   }, [callId, checkIsHost]);
 

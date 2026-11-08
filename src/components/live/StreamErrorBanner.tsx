@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { motion } from 'framer-motion';
 import { AlertTriangle, X, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -33,6 +34,7 @@ const errorMessages: Record<StreamError['code'], { icon: string; suggestion: str
 };
 
 export function StreamErrorBanner({ error, onDismiss, onRetry }: StreamErrorBannerProps) {
+  useUiLocale();
   const errorInfo = errorMessages[error.code];
 
   return (
@@ -66,9 +68,7 @@ export function StreamErrorBanner({ error, onDismiss, onRetry }: StreamErrorBann
               className="mt-3 h-8 text-xs"
               onClick={onRetry}
             >
-              <RefreshCw className="w-3 h-3 mr-1" />
-              Try Again
-            </Button>
+              <RefreshCw className="w-3 h-3 mr-1" />{uiText("Try Again")}</Button>
           )}
         </div>
         <Button

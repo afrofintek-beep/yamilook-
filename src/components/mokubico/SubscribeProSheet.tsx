@@ -1,3 +1,4 @@
+import { uiText, useUiLocale, uiLocale } from '@/i18n/ui-copy';
 import { useEffect, useRef, useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -19,11 +20,12 @@ type Period = 'monthly' | 'annual';
 type Method = 'GPO' | 'REF';
 type Phase = 'choose' | 'pending' | 'ref' | 'done';
 
-const fmtKz = (n: number) => `${n.toLocaleString('pt-PT')} Kz`;
+const fmtKz = (n: number) => `${n.toLocaleString(uiLocale())} Kz`;
 
 /** Subscribe to Mokubico Pro via AppyPay. Price comes from billing_config;
  *  payment is confirmed by polling check-pro-subscription (webhook unreliable). */
 export function SubscribeProSheet({ open, onOpenChange, onActivated }: Props) {
+  useUiLocale();
   const { refreshProfile } = useAuth();
   const [cfg, setCfg] = useState<{ pro_monthly: number; pro_annual: number } | null>(null);
   const [period, setPeriod] = useState<Period>('monthly');
@@ -53,7 +55,7 @@ export function SubscribeProSheet({ open, onOpenChange, onActivated }: Props) {
     setPhase('done');
     await refreshProfile();
     onActivated?.();
-    toast.success('Já és Pro! Voz e vídeo desbloqueados. 👑');
+    toast.success(uiText("Já és Pro! Voz e vídeo desbloqueados. 👑"));
   };
 
   const check = async () => {
@@ -72,7 +74,7 @@ export function SubscribeProSheet({ open, onOpenChange, onActivated }: Props) {
 
   const pay = async () => {
     if (method === 'GPO' && phone.replace(/\D/g, '').length < 9) {
-      toast.info('Escreve o teu número Multicaixa Express.');
+      toast.info(uiText("Escreve o teu número Multicaixa Express."));
       return;
     }
     setBusy(true);
@@ -92,13 +94,13 @@ export function SubscribeProSheet({ open, onOpenChange, onActivated }: Props) {
       }
       if (r.status === 'pending_push') { setPhase('pending'); startPolling(); return; }
       if (r.status === 'gateway_pending') {
-        toast.info('Subscrição registada — o pagamento ainda não está ativo (falta configurar o gateway).');
+        toast.info(uiText("Subscrição registada — o pagamento ainda não está ativo (falta configurar o gateway)."));
         setPhase('pending'); return;
       }
       toast.info(r.message ?? 'A processar…');
       setPhase('pending'); startPolling();
     } catch {
-      toast.error('Não foi possível iniciar o pagamento.');
+      toast.error(uiText("Não foi possível iniciar o pagamento."));
     } finally {
       setBusy(false);
     }
@@ -109,8 +111,7 @@ export function SubscribeProSheet({ open, onOpenChange, onActivated }: Props) {
       <SheetContent side="bottom" className="h-auto max-h-[90vh] overflow-y-auto rounded-t-3xl">
         <SheetHeader className="mb-4">
           <SheetTitle className="flex items-center gap-2">
-            <Crown className="w-5 h-5 text-amber-500" /> Mokubico Pro
-          </SheetTitle>
+            <Crown className="w-5 h-5 text-amber-500" />{uiText(" Mokubico Pro")}</SheetTitle>
         </SheetHeader>
 
         {phase === 'done' ? (
@@ -118,17 +119,17 @@ export function SubscribeProSheet({ open, onOpenChange, onActivated }: Props) {
             <div className="w-16 h-16 rounded-full bg-emerald-500/15 flex items-center justify-center mx-auto">
               <Check className="w-8 h-8 text-emerald-500" />
             </div>
-            <p className="font-semibold">Já és Pro! 👑</p>
-            <p className="text-sm text-muted-foreground">Voz e vídeo em grupo desbloqueados no Quintal.</p>
-            <Button className="w-full h-12 rounded-xl mt-2" onClick={() => onOpenChange(false)}>Boa!</Button>
+            <p className="font-semibold">{uiText("Já és Pro! 👑")}</p>
+            <p className="text-sm text-muted-foreground">{uiText("Voz e vídeo em grupo desbloqueados no Quintal.")}</p>
+            <Button className="w-full h-12 rounded-xl mt-2" onClick={() => onOpenChange(false)}>{uiText("Boa!")}</Button>
           </div>
         ) : (
           <div className="space-y-5">
             {/* Value */}
             <div className="rounded-2xl bg-secondary/50 p-4 space-y-2">
-              <p className="text-sm font-medium">Desbloqueia no Quintal:</p>
-              <div className="flex items-center gap-2 text-sm"><Mic className="w-4 h-4 text-primary" /> Voz em grupo</div>
-              <div className="flex items-center gap-2 text-sm"><Video className="w-4 h-4 text-primary" /> Vídeo em grupo</div>
+              <p className="text-sm font-medium">{uiText("Desbloqueia no Quintal:")}</p>
+              <div className="flex items-center gap-2 text-sm"><Mic className="w-4 h-4 text-primary" />{uiText(" Voz em grupo")}</div>
+              <div className="flex items-center gap-2 text-sm"><Video className="w-4 h-4 text-primary" />{uiText(" Vídeo em grupo")}</div>
             </div>
 
             {/* Plan */}
@@ -138,10 +139,10 @@ export function SubscribeProSheet({ open, onOpenChange, onActivated }: Props) {
                   <button key={p} type="button" onClick={() => setPeriod(p)}
                     className={cn('rounded-2xl border p-4 text-left transition-colors',
                       period === p ? 'border-primary bg-primary/5' : 'border-border')}>
-                    <div className="text-xs text-muted-foreground">{p === 'annual' ? 'Anual' : 'Mensal'}</div>
+                    <div className="text-xs text-muted-foreground">{p === 'annual' ? uiText("Anual") : uiText("Mensal")}</div>
                     <div className="text-lg font-bold">{fmtKz(p === 'annual' ? cfg.pro_annual : cfg.pro_monthly)}</div>
                     {p === 'annual' && monthlyEquiv > 0 && (
-                      <div className="text-[11px] text-emerald-600">≈ {fmtKz(monthlyEquiv)}/mês</div>
+                      <div className="text-[11px] text-emerald-600">≈ {fmtKz(monthlyEquiv)}{uiText("/mês")}</div>
                     )}
                   </button>
                 ))}
@@ -150,52 +151,47 @@ export function SubscribeProSheet({ open, onOpenChange, onActivated }: Props) {
 
             {/* Method */}
             <div className="space-y-2">
-              <Label className="text-sm">Como pagas</Label>
+              <Label className="text-sm">{uiText("Como pagas")}</Label>
               <div className="grid grid-cols-2 gap-3">
                 <button type="button" onClick={() => setMethod('GPO')}
                   className={cn('rounded-xl border p-3 flex items-center gap-2 text-sm transition-colors',
                     method === 'GPO' ? 'border-primary bg-primary/5' : 'border-border')}>
-                  <Smartphone className="w-4 h-4" /> Multicaixa Express
-                </button>
+                  <Smartphone className="w-4 h-4" />{uiText(" Multicaixa Express")}</button>
                 <button type="button" onClick={() => setMethod('REF')}
                   className={cn('rounded-xl border p-3 flex items-center gap-2 text-sm transition-colors',
                     method === 'REF' ? 'border-primary bg-primary/5' : 'border-border')}>
-                  <Receipt className="w-4 h-4" /> Referência
-                </button>
+                  <Receipt className="w-4 h-4" />{uiText(" Referência")}</button>
               </div>
             </div>
 
             {method === 'GPO' && phase === 'choose' && (
               <div className="space-y-1.5">
-                <Label className="text-sm">Número Multicaixa Express</Label>
+                <Label className="text-sm">{uiText("Número Multicaixa Express")}</Label>
                 <Input value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel"
-                  placeholder="9xx xxx xxx" className="h-11" />
+                  placeholder={uiText("9xx xxx xxx")} className="h-11" />
               </div>
             )}
 
             {phase === 'ref' && ref && (
               <div className="rounded-xl bg-secondary/50 p-4 space-y-1 text-sm">
-                <p className="font-medium">Paga esta referência:</p>
-                <div className="flex justify-between"><span className="text-muted-foreground">Entidade</span><span className="font-mono font-semibold">{ref.entity ?? '—'}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Referência</span><span className="font-mono font-semibold">{ref.reference ?? '—'}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Valor</span><span className="font-semibold">{fmtKz(amount)}</span></div>
+                <p className="font-medium">{uiText("Paga esta referência:")}</p>
+                <div className="flex justify-between"><span className="text-muted-foreground">{uiText("Entidade")}</span><span className="font-mono font-semibold">{ref.entity ?? '—'}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">{uiText("Referência")}</span><span className="font-mono font-semibold">{ref.reference ?? '—'}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">{uiText("Valor")}</span><span className="font-semibold">{fmtKz(amount)}</span></div>
               </div>
             )}
 
             {phase === 'pending' && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground bg-secondary/40 rounded-xl p-3">
-                <Loader2 className="w-4 h-4 animate-spin" /> À espera da confirmação do pagamento…
-              </div>
+                <Loader2 className="w-4 h-4 animate-spin" />{uiText(" À espera da confirmação do pagamento…")}</div>
             )}
 
             {phase === 'choose' ? (
               <Button className="w-full h-12 rounded-xl" onClick={pay} disabled={busy || !cfg}>
-                {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : `Pagar ${fmtKz(amount)}`}
+                {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : uiText("Pagar {{value1}}", { value1: (fmtKz(amount)) ?? "" })}
               </Button>
             ) : (
-              <Button variant="secondary" className="w-full h-12 rounded-xl" onClick={check}>
-                Já paguei — verificar agora
-              </Button>
+              <Button variant="secondary" className="w-full h-12 rounded-xl" onClick={check}>{uiText("Já paguei — verificar agora")}</Button>
             )}
           </div>
         )}

@@ -1,3 +1,4 @@
+import { changeAppLanguage } from '@/i18n';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -18,7 +19,7 @@ describe('Papos account and route isolation', () => {
   it('retains the destination when requesting sign-in', () => { gate(); expect(screen.getByTestId('location')).toHaveTextContent('"path":"/login"'); expect(screen.getByTestId('location')).toHaveTextContent('"from":"/chat/real-chat"'); });
   it('does not reveal messages while authentication is loading', () => { auth.loading=true; gate(); expect(screen.getByRole('status')).toBeInTheDocument(); expect(screen.queryByText('Histórico partilhado')).not.toBeInTheDocument(); });
   it('uses the existing completed account without a second registration', () => { auth.user={id:'same-user'}; auth.profile={onboarding_completed:true}; gate(); expect(screen.getByText('Histórico partilhado')).toBeInTheDocument(); expect(auth.signIn).not.toHaveBeenCalled(); });
-  it('preserves the central onboarding requirement', () => { auth.user={id:'same-user'}; auth.profile={onboarding_completed:false}; gate(); expect(screen.getByRole('link',{name:'Continuar a inscrição'})).toHaveAttribute('href','https://www.yamilook.com/onboarding'); expect(screen.queryByText('Histórico partilhado')).not.toBeInTheDocument(); });
+  it('preserves the central onboarding requirement', () => { auth.user={id:'same-user'}; auth.profile={onboarding_completed:false}; gate(); expect(screen.getByRole('link',{name:'Continuar a inscrição'})).toHaveAttribute('href','https://www.yamilook.com/onboarding?lang=pt'); expect(screen.queryByText('Histórico partilhado')).not.toBeInTheDocument(); });
   it('allows retry when the shared account profile cannot be loaded', () => { auth.user={id:'same-user'}; gate(); fireEvent.click(screen.getByRole('button',{name:'Tentar novamente'})); expect(auth.refreshProfile).toHaveBeenCalledOnce(); });
   it('keeps all messenger navigation inside the standalone application', () => {
     render(<AppSurfaceContext.Provider value="papos"><MemoryRouter basename="/papos-app" initialEntries={['/papos-app/papos']}><BottomNav /></MemoryRouter></AppSurfaceContext.Provider>);
@@ -29,11 +30,20 @@ describe('Papos account and route isolation', () => {
   });
 });
 describe('Papos password sign-in', () => {
-  it('keeps account and legal links on Yamilook from any app host', () => {
-    login();
-    for (const [name, path] of [['Recuperar palavra-passe','/forgot-password'], ['Criar conta Yamilook com convite','/onboarding'], ['Termos','/terms'], ['Privacidade','/privacy'], ['Yamilook','/muxi']]) {
-      expect(screen.getByRole('link', { name, exact: true })).toHaveAttribute('href', `https://www.yamilook.com${path}`);
-    }
+  it('keeps account and legal links on Yamilook with the selected language', async () => {
+    try {
+      for (const language of ['pt', 'en', 'fr', 'ar', 'am', 'sw', 'ln', 'yo', 'sn', 'zu']) {
+        await changeAppLanguage(language);
+        const view = login();
+        const links = screen.getAllByRole('link').map(link => new URL(link.getAttribute('href')!));
+        expect(links.map(link => link.pathname).sort()).toEqual(['/forgot-password', '/muxi', '/onboarding', '/privacy', '/terms']);
+        for (const link of links) {
+          expect(link.origin).toBe('https://www.yamilook.com');
+          expect(link.searchParams.get('lang')).toBe(language);
+        }
+        view.unmount();
+      }
+    } finally { await changeAppLanguage('pt'); }
   });
   function login() { return render(<MemoryRouter basename="/papos-app" initialEntries={[{pathname:'/papos-app/login',state:{from:'/chat/real-chat'}}]}><Routes><Route path="/login" element={<PaposLogin />} /><Route path="/chat/:id" element={<Destination />} /></Routes></MemoryRouter>); }
   function submit() { fireEvent.change(screen.getByLabelText('Email'),{target:{value:'same@example.com'}}); fireEvent.change(screen.getByLabelText('Palavra-passe'),{target:{value:'private-password'}}); fireEvent.click(screen.getByRole('button',{name:'Entrar na KOSOLOLA'})); }

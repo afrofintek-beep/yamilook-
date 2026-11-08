@@ -1,0 +1,24 @@
+{
+  "status": "completed",
+  "languages": [
+    "pt",
+    "en",
+    "fr",
+    "ar",
+    "am",
+    "sw",
+    "ln",
+    "yo",
+    "sn",
+    "zu"
+  ],
+  "interface_source_count": 3435,
+  "legacy_keys_per_language": 1041,
+  "legacy_entries_added": 4568,
+  "source_dictionary": "src/i18n/interface/pt.json",
+  "translation_dictionaries": "src/i18n/interface/{language}.json",
+  "coverage_test": "src/i18n/ui-source-coverage.test.ts",
+  "language_and_placeholder_tests": "src/i18n/ui-copy.test.tsx",
+  "method": "Offline translation of fixed app-authored copy with targeted semantic review; no runtime translation and no user content sent.",
+  "scope_notes": "See i18n-ui-rollout.md for coverage, validation and remaining limits."
+}

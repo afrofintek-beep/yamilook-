@@ -1,3 +1,4 @@
+import { uiText, useUiLocale, uiLocale } from '@/i18n/ui-copy';
 import { useMyMentor } from '../hooks/useMentorGovernance';
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -17,10 +18,10 @@ import { useCreateAcademiaSession } from '../hooks/useAcademia';
 import { useAfrolocCertification } from '@/features/kumbu/hooks/useAfrolocCertification';
 
 const STEPS = [
-  { key: 'title', label: 'Título', icon: Type },
-  { key: 'description', label: 'Descrição', icon: FileText },
-  { key: 'format', label: 'Formato', icon: LayoutGrid },
-  { key: 'price', label: 'Detalhes', icon: Coins },
+  { key: 'title', get label() { return uiText("Título"); }, icon: Type },
+  { key: 'description', get label() { return uiText("Descrição"); }, icon: FileText },
+  { key: 'format', get label() { return uiText("Formato"); }, icon: LayoutGrid },
+  { key: 'price', get label() { return uiText("Detalhes"); }, icon: Coins },
 ] as const;
 
 // Valor por defeito para o campo de data/hora: amanhã às 18:00, no formato
@@ -41,6 +42,7 @@ const FORMAT_OPTIONS = [
 ];
 
 export default function AcademiaCreateSession() {
+  useUiLocale();
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [title, setTitle] = useState('');
@@ -102,10 +104,10 @@ export default function AcademiaCreateSession() {
 
   const handleSubmit = () => {
     if (mentor.data?.status !== 'active' || (price > 0 && !mentor.data.is_verified_mentor)) {
-      toast.error('Aprovação necessária; para cobrar, precisas também da verificação de mentor.'); return;
+      toast.error(uiText("Aprovação necessária; para cobrar, precisas também da verificação de mentor.")); return;
     }
     if (!datetimeValid) {
-      toast.error('Escolhe uma data e hora futuras para a sessão.');
+      toast.error(uiText("Escolhe uma data e hora futuras para a sessão."));
       return;
     }
     createMutation.mutate(
@@ -120,7 +122,7 @@ export default function AcademiaCreateSession() {
       },
       {
         onSuccess: () => {
-          toast.success('Sessão criada!');
+          toast.success(uiText("Sessão criada!"));
           navigate('/academia');
         },
         onError: (err) => {
@@ -150,9 +152,9 @@ export default function AcademiaCreateSession() {
   const goNext = () => { setDirection(1); handleNext(); };
   const goBack = () => { setDirection(-1); handleBack(); };
 
-  if (mentor.isLoading) return <p className="p-6">A verificar o perfil de mentor…</p>;
-  if (mentor.isError) return <div className="p-6"><p>Não foi possível verificar o perfil.</p><Button onClick={() => mentor.refetch()}>Tentar novamente</Button></div>;
-  if (mentor.data?.status !== 'active') return <div className="p-6 space-y-4"><h1 className="font-semibold">Aprovação de mentor necessária</h1><p>Apresenta ou completa a candidatura na Academia. As sessões existentes mantêm o histórico.</p><Button onClick={() => navigate('/academia')}>Ir à Academia</Button></div>;
+  if (mentor.isLoading) return <p className="p-6">{uiText("A verificar o perfil de mentor…")}</p>;
+  if (mentor.isError) return <div className="p-6"><p>{uiText("Não foi possível verificar o perfil.")}</p><Button onClick={() => mentor.refetch()}>{uiText("Tentar novamente")}</Button></div>;
+  if (mentor.data?.status !== 'active') return <div className="p-6 space-y-4"><h1 className="font-semibold">{uiText("Aprovação de mentor necessária")}</h1><p>{uiText("Apresenta ou completa a candidatura na Academia. As sessões existentes mantêm o histórico.")}</p><Button onClick={() => navigate('/academia')}>{uiText("Ir à Academia")}</Button></div>;
 
   return (
     <div className="flex flex-col h-screen-safe overflow-hidden bg-background">
@@ -214,14 +216,14 @@ export default function AcademiaCreateSession() {
             {step === 0 && (
               <div className="space-y-5">
                 <div className="space-y-1">
-                  <h2 className="text-lg font-bold text-foreground">Como se chama a tua sessão?</h2>
-                  <p className="text-xs text-muted-foreground">Escolhe um título claro e atrativo.</p>
+                  <h2 className="text-lg font-bold text-foreground">{uiText("Como se chama a tua sessão?")}</h2>
+                  <p className="text-xs text-muted-foreground">{uiText("Escolhe um título claro e atrativo.")}</p>
                 </div>
                 <div className="space-y-2">
                   <Input
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    placeholder="Ex.: Produção musical com Ableton"
+                    placeholder={uiText("Ex.: Produção musical com Ableton")}
                     maxLength={100}
                     className="h-12 text-base"
                     autoFocus
@@ -235,14 +237,14 @@ export default function AcademiaCreateSession() {
             {step === 1 && (
               <div className="space-y-5">
                 <div className="space-y-1">
-                  <h2 className="text-lg font-bold text-foreground">Do que vais falar?</h2>
-                  <p className="text-xs text-muted-foreground">Descreve o que a banda pode esperar.</p>
+                  <h2 className="text-lg font-bold text-foreground">{uiText("Do que vais falar?")}</h2>
+                  <p className="text-xs text-muted-foreground">{uiText("Descreve o que a banda pode esperar.")}</p>
                 </div>
                 <div className="space-y-2">
                   <Textarea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Descreve o conteúdo, os objectivos e o que a malta vai aprender..."
+                    placeholder={uiText("Descreve o conteúdo, os objectivos e o que a malta vai aprender...")}
                     rows={5}
                     maxLength={500}
                     autoFocus
@@ -256,8 +258,8 @@ export default function AcademiaCreateSession() {
             {step === 2 && (
               <div className="space-y-5">
                 <div className="space-y-1">
-                  <h2 className="text-lg font-bold text-foreground">Qual é o formato?</h2>
-                  <p className="text-xs text-muted-foreground">Escolhe como queres organizar a sessão.</p>
+                  <h2 className="text-lg font-bold text-foreground">{uiText("Qual é o formato?")}</h2>
+                  <p className="text-xs text-muted-foreground">{uiText("Escolhe como queres organizar a sessão.")}</p>
                 </div>
                 <div className="space-y-3">
                   {FORMAT_OPTIONS.map((opt) => (
@@ -295,7 +297,7 @@ export default function AcademiaCreateSession() {
                     animate={{ opacity: 1, height: 'auto' }}
                     className="space-y-2"
                   >
-                    <Label htmlFor="spots" className="text-xs">Número de lugares</Label>
+                    <Label htmlFor="spots" className="text-xs">{uiText("Número de lugares")}</Label>
                     <Input
                       id="spots"
                       type="number"
@@ -313,16 +315,14 @@ export default function AcademiaCreateSession() {
             {step === 3 && (
               <div className="space-y-5">
                 <div className="space-y-1">
-                  <h2 className="text-lg font-bold text-foreground">Detalhes finais</h2>
-                  <p className="text-xs text-muted-foreground">Define o preço e a data da sessão.</p>
+                  <h2 className="text-lg font-bold text-foreground">{uiText("Detalhes finais")}</h2>
+                  <p className="text-xs text-muted-foreground">{uiText("Define o preço e a data da sessão.")}</p>
                 </div>
 
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="price" className="text-xs flex items-center gap-1.5">
-                      <Coins className="h-3.5 w-3.5 text-primary" />
-                      Preço (coins)
-                    </Label>
+                      <Coins className="h-3.5 w-3.5 text-primary" />{uiText("Preço (coins)")}</Label>
                     <Input
                       id="price"
                       disabled={!mentor.data.is_verified_mentor}
@@ -331,27 +331,24 @@ export default function AcademiaCreateSession() {
                       value={priceCoins}
                       onChange={(e) => setPriceCoins(e.target.value)}
                     />
-                    <p className="text-[10px] text-muted-foreground/50">0 = sessão gratuita. Só mentores verificados podem cobrar.</p>
+                    <p className="text-[10px] text-muted-foreground/50">{uiText("0 = sessão gratuita. Só mentores verificados podem cobrar.")}</p>
                   </div>
 
                   {price > 0 && !isCertified && (
                     <Alert className="bg-primary/10 border-primary/30 rounded-xl">
                       <AlertTriangle className="h-4 w-4 text-primary" />
-                      <AlertDescription className="text-xs">
-                        Podes publicar já. Para <strong>receberes</strong> os pagamentos vais precisar de verificar o teu endereço AFROLOC — fá-lo em Definições quando quiseres.
-                      </AlertDescription>
+                      <AlertDescription className="text-xs">{uiText("Podes publicar já. Para ")}<strong>{uiText("receberes")}</strong>{uiText(" os pagamentos vais precisar de verificar o teu endereço AFROLOC — fá-lo em Definições quando quiseres.")}</AlertDescription>
                     </Alert>
                   )}
 
                   <div className="space-y-2">
-                    <Label htmlFor="duration">Duração prevista</Label>
+                    <Label htmlFor="duration">{uiText("Duração prevista")}</Label>
                     <select id="duration" value={durationMinutes} onChange={e=>setDurationMinutes(e.target.value)} className="w-full rounded-lg border border-border bg-background p-3">
-                      {[30,45,60,90,120].map(minutes=><option key={minutes} value={minutes}>{minutes} minutos</option>)}
+                      {[30,45,60,90,120].map(minutes=><option key={minutes} value={minutes}>{uiText("{{value1}} minutos", { value1: (minutes) ?? "" })}</option>)}
                     </select>
-                    <p className="text-xs text-muted-foreground">O tempo começa ao iniciar a sala. O fim da duração prevista não encerra a sessão nem gera cobrança automática.</p>
+                    <p className="text-xs text-muted-foreground">{uiText("O tempo começa ao iniciar a sala. O fim da duração prevista não encerra a sessão nem gera cobrança automática.")}</p>
                     <Label htmlFor="datetime" className="text-xs flex items-center gap-1.5">
-                      <Calendar className="h-3.5 w-3.5 text-primary" />
-                      Agendar <span className="text-muted-foreground font-normal">(data e hora)</span>
+                      <Calendar className="h-3.5 w-3.5 text-primary" />{uiText("Agendar ")}<span className="text-muted-foreground font-normal">{uiText("(data e hora)")}</span>
                     </Label>
                     <Input
                       id="datetime"
@@ -360,7 +357,7 @@ export default function AcademiaCreateSession() {
                       onChange={(e) => setDatetime(e.target.value)}
                     />
                     {!datetimeValid && (
-                      <p className="text-[11px] text-destructive">Escolhe uma data e hora futuras.</p>
+                      <p className="text-[11px] text-destructive">{uiText("Escolhe uma data e hora futuras.")}</p>
                     )}
                   </div>
                 </div>
@@ -372,7 +369,7 @@ export default function AcademiaCreateSession() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 }}
                   >
-                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2">Pré-visualização</p>
+                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2">{uiText("Pré-visualização")}</p>
                     <Card className="border-border/30 overflow-hidden">
                       <CardContent className="p-4 space-y-3">
                         <div className="flex items-start justify-between gap-2">
@@ -380,13 +377,9 @@ export default function AcademiaCreateSession() {
                           <div className="flex flex-col items-end gap-1 shrink-0">
                             {price > 0 ? (
                               <Badge className="bg-primary/15 text-primary text-[10px] px-2 py-0.5 rounded-full border-0 gap-1">
-                                <Crown className="h-2.5 w-2.5" />
-                                Premium
-                              </Badge>
+                                <Crown className="h-2.5 w-2.5" />{uiText("Premium")}</Badge>
                             ) : (
-                              <Badge className="bg-success/15 text-success text-[10px] px-2 py-0.5 rounded-full border-0">
-                                Gratuita
-                              </Badge>
+                              <Badge className="bg-success/15 text-success text-[10px] px-2 py-0.5 rounded-full border-0">{uiText("Gratuita")}</Badge>
                             )}
                           </div>
                         </div>
@@ -402,12 +395,11 @@ export default function AcademiaCreateSession() {
                           {datetime && (
                             <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
                               <Calendar className="h-3 w-3" />
-                              {new Date(datetime).toLocaleDateString('pt', { day: 'numeric', month: 'short' })}
+                              {new Date(datetime).toLocaleDateString(uiLocale(), { day: 'numeric', month: 'short' })}
                             </span>
                           )}
                           <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                            <Users className="h-3 w-3" />{spots} vagas
-                          </span>
+                            <Users className="h-3 w-3" />{uiText("{{value1}} vagas", { value1: (spots) ?? "" })}</span>
                           {price > 0 && (
                             <span className="flex items-center gap-1 text-[11px] text-primary font-medium">
                               <Coins className="h-3 w-3" />{price}
@@ -432,22 +424,18 @@ export default function AcademiaCreateSession() {
           onClick={goNext}
         >
           {createMutation.isPending
-            ? 'A criar...'
+            ? uiText("A criar...")
             : isLastStep
-              ? 'Publicar sessão'
+              ? uiText("Publicar sessão")
               : (
-                <>
-                  Continuar
-                  <ChevronRight className="h-4 w-4" />
+                <>{uiText("Continuar")}<ChevronRight className="h-4 w-4" />
                 </>
               )
           }
         </Button>
 
         {/* Step counter */}
-        <p className="text-center text-[10px] text-muted-foreground/50 mt-2">
-          Passo {step + 1} de {STEPS.length}
-        </p>
+        <p className="text-center text-[10px] text-muted-foreground/50 mt-2">{uiText("Passo {{value1}} de {{value2}}", { value1: (step + 1), value2: (STEPS.length) ?? "" })}</p>
       </div>
     </div>
   );

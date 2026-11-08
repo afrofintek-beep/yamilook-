@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +17,7 @@ export interface MentorCardProps {
 }
 
 export function MentorCard({ name, avatar, specialty, rating, sessionCount, isVerified, onPress }: MentorCardProps) {
+  useUiLocale();
   return (
     <motion.div
       whileTap={{ scale: 0.96 }}
@@ -58,7 +60,7 @@ export function MentorCard({ name, avatar, specialty, rating, sessionCount, isVe
               {rating.toFixed(1)}
             </span>
             <span className="w-px h-3 bg-border" />
-            <span>{sessionCount} sessões</span>
+            <span>{uiText("{{value1}} sessões", { value1: (sessionCount) ?? "" })}</span>
           </div>
         </CardContent>
       </Card>

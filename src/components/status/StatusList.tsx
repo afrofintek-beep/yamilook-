@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -20,12 +21,13 @@ const CreateStatusSheet = lazy(() => import('./CreateStatusSheet').then(m => ({ 
 
 
 export function StatusList() {
+  useUiLocale();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { user } = useAuth();
   const { myStatuses, contactStatuses, loading } = useStatus();
   const { hasActiveStreams, activeStreams } = useActiveStreams();
-  
+
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerEverOpened, setViewerEverOpened] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<GroupedStatuses | null>(null);
@@ -59,9 +61,9 @@ export function StatusList() {
     setViewerOpen(true);
   };
 
-  const allViewableGroups = isViewingOwn 
-    ? [{ 
-        user_id: user?.id || '', 
+  const allViewableGroups = isViewingOwn
+    ? [{
+        user_id: user?.id || '',
         user: myStatuses[0]?.user || { id: '', display_name: 'You', avatar_url: null, username: '' },
         statuses: myStatuses,
         has_unviewed: false,
@@ -125,9 +127,7 @@ export function StatusList() {
                 {hasActiveStreams && <LiveIndicatorBadge className="top-0 right-0" />}
               </button>
             </LivePreviewTooltip>
-            <span className="text-[11px] leading-tight text-destructive font-medium text-center w-full px-0.5 line-clamp-2">
-              Banda ao vivo
-            </span>
+            <span className="text-[11px] leading-tight text-destructive font-medium text-center w-full px-0.5 line-clamp-2">{uiText("Banda ao vivo")}</span>
           </motion.div>
 
           {/* Contact statuses */}
