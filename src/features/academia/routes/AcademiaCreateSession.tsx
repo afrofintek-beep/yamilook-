@@ -11,9 +11,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import { uiServerMessage } from '@/i18n/server-copy';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ACADEMIA_COPY } from '../copy';
+import { ACADEMIA_COPY, sessionFormatLabel } from '../copy';
 import { useCreateAcademiaSession } from '../hooks/useAcademia';
 import { useAfrolocCertification } from '@/features/kumbu/hooks/useAfrolocCertification';
 
@@ -36,9 +37,9 @@ function defaultDatetimeLocal(): string {
 }
 
 const FORMAT_OPTIONS = [
-  { value: '1:1', label: ACADEMIA_COPY.format1on1, desc: 'Sessão privada, 1 vaga', emoji: '🎯' },
-  { value: 'grupo', label: ACADEMIA_COPY.formatGroup, desc: 'Para a banda toda', emoji: '👥' },
-  { value: 'masterclass', label: ACADEMIA_COPY.formatMasterclass, desc: 'Apresentação aberta', emoji: '🎓' },
+  { value: '1:1', label: ACADEMIA_COPY.format1on1, get desc() { return uiText("Sessão privada, 1 vaga"); }, emoji: '🎯' },
+  { value: 'grupo', get label() { return ACADEMIA_COPY.formatGroup; }, get desc() { return uiText("Para a banda toda"); }, emoji: '👥' },
+  { value: 'masterclass', get label() { return ACADEMIA_COPY.formatMasterclass; }, get desc() { return uiText("Apresentação aberta"); }, emoji: '🎓' },
 ];
 
 export default function AcademiaCreateSession() {
@@ -126,7 +127,7 @@ export default function AcademiaCreateSession() {
           navigate('/academia');
         },
         onError: (err) => {
-          toast.error('Erro ao criar sessão: ' + (err as Error).message);
+          toast.error(uiServerMessage((err as Error).message, uiText("Não foi possível criar a sessão.")));
         },
       }
     );
@@ -390,7 +391,7 @@ export default function AcademiaCreateSession() {
 
                         <div className="flex items-center gap-3 flex-wrap">
                           <span className="text-[10px] text-muted-foreground bg-secondary rounded-md px-2 py-0.5 capitalize font-medium">
-                            {format}
+                            {sessionFormatLabel(format)}
                           </span>
                           {datetime && (
                             <span className="flex items-center gap-1 text-[11px] text-muted-foreground">

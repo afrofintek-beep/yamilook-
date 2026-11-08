@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Calendar, Clock, Users, Coins, Crown } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { ACADEMIA_COPY } from '../copy';
+import { ACADEMIA_COPY, sessionFormatLabel } from '../copy';
 
 export interface SessionCardProps {
   id: string;
@@ -103,7 +103,7 @@ export function SessionCard({
           <div className="flex items-center gap-3 flex-wrap">
             {sessionFormat && (
               <span className="text-[10px] text-muted-foreground bg-secondary rounded-md px-2 py-0.5 capitalize font-medium">
-                {sessionFormat}
+                {sessionFormatLabel(sessionFormat)}
               </span>
             )}
             <span className="flex items-center gap-1 text-[11px] text-muted-foreground">

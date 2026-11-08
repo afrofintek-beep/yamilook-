@@ -8,6 +8,7 @@ import { useAcademiaNotices } from '../hooks/useAcademia';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, GraduationCap, Sparkles, TrendingUp } from 'lucide-react';
+import { uiServerMessage } from '@/i18n/server-copy';
 import { toast } from 'sonner';
 import BottomNav from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
@@ -70,7 +71,7 @@ export default function AcademiaHome() {
           setMentorBio('');
         },
         onError: (err) => {
-          toast.error('Erro ao tornar-te mentor: ' + (err as Error).message);
+          toast.error(uiServerMessage((err as Error).message, uiText("Não foi possível enviar a candidatura.")));
         },
       },
     );
