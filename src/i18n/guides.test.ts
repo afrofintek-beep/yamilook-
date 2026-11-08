@@ -26,6 +26,8 @@ describe('published static guides', () => {
     const translated = dictionary(language);
     const manual = JSON.parse(readFileSync(`${process.cwd()}/src/i18n/manuals/${language}.json`, 'utf8'));
     expect(translated['Academia']).toBe(manual['Academia']);
+    expect(translated['Lives']).toBe(manual['Lives']);
+    if (language === 'ar') expect(translated['Lives']).toBe('البث المباشر');
     expect(translated['Toca em <strong>Academia</strong> na barra inferior.']).toContain(`<strong>${manual['Academia']}</strong>`);
     expect(Object.keys(translated).sort()).toEqual(Object.keys(dictionary('pt')).sort());
     for (const [source, value] of Object.entries(translated)) {
