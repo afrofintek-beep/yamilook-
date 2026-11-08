@@ -347,6 +347,7 @@ function AnimatedRoutes() {
           <Route path="/install" element={<Install />} />
           <Route path="/apresentacao" element={<Presentation />} />
           <Route path="/apresentacao/pdf" element={<PresentationPrint />} />
+          <Route path="/manual/contas" element={<UserAccountsManualPrint />} />
           <Route path="/manual/contas/pdf" element={<UserAccountsManualPrint />} />
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
