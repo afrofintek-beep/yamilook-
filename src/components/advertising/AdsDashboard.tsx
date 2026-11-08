@@ -1,4 +1,4 @@
-import { uiText, useUiLocale } from '@/i18n/ui-copy';
+import { uiLocale, uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -36,7 +36,7 @@ import { AdPreviewDialog } from './AdPreviewDialog';
 import { StatsDetailSheet } from './StatsDetailSheet';
 import { CreditDisplay } from './CreditDisplay';
 import { BuyCreditsSheet } from './BuyCreditsSheet';
-import { format } from 'date-fns';
+import { format } from '@/i18n/ui-date';
 import { pt } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -244,7 +244,7 @@ export function AdsDashboard({ onBack }: AdsDashboardProps) {
               <Eye className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{totalImpressions.toLocaleString()}</p>
+              <p className="text-2xl font-bold">{totalImpressions.toLocaleString(uiLocale())}</p>
               <p className="text-xs text-muted-foreground">{uiText("Impressões")}</p>
             </div>
           </div>
@@ -259,7 +259,7 @@ export function AdsDashboard({ onBack }: AdsDashboardProps) {
               <MousePointer className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{totalClicks.toLocaleString()}</p>
+              <p className="text-2xl font-bold">{totalClicks.toLocaleString(uiLocale())}</p>
               <p className="text-xs text-muted-foreground">{uiText("Cliques")}</p>
             </div>
           </div>

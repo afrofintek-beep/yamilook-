@@ -73,8 +73,7 @@ export function ReportContentSheet({ open, onOpenChange, targetType, targetId }:
       <SheetContent side="bottom" className="h-[85vh] rounded-t-3xl">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
-            <Flag className="w-5 h-5 text-destructive" />{uiText("Denunciar ")}{targetType === 'post' ? uiText("publicação") : targetType === 'comment' ? uiText("comentário") : targetType === 'user' ? uiText("utilizador") : uiText("conteúdo")}
-          </SheetTitle>
+            <Flag className="w-5 h-5 text-destructive" />{uiText("Denunciar {{value1}}", { value1: (targetType === 'post' ? uiText("publicação") : targetType === 'comment' ? uiText("comentário") : targetType === 'user' ? uiText("utilizador") : uiText("conteúdo")) ?? "" })}</SheetTitle>
           <SheetDescription>
             {step === 'category'
               ? uiText("Seleciona o motivo da denúncia")
@@ -104,8 +103,7 @@ export function ReportContentSheet({ open, onOpenChange, targetType, targetId }:
           ) : (
             <>
               <div className="bg-muted/50 rounded-xl p-3 mb-4">
-                <p className="text-sm font-medium">{uiText("Categoria: ")}{REPORT_CATEGORIES.find(c => c.value === selectedCategory)?.label}
-                </p>
+                <p className="text-sm font-medium">{uiText("Categoria: {{value1}}", { value1: (REPORT_CATEGORIES.find(c => c.value === selectedCategory)?.label) ?? "" })}</p>
               </div>
               <Textarea
                 placeholder={uiText("Descreve o problema com mais detalhe...")}

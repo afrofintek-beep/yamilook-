@@ -74,8 +74,8 @@ export function useRodaStream(): UseRodaStreamReturn {
     if (!user || !profile) return null;
 
     const participantIdentity = isHostUser
-      ? `host:${user.id}`
-      : `viewer:${user.id}:${Date.now()}`;
+      ? `host:${(user.id)}`
+      : `viewer:${(user.id)}:${(Date.now())}`;
     const body = { roomName, participantName: profile.display_name || 'User', participantIdentity, isHost: isHostUser };
 
     // Retry: the token edge function can cold-start slowly after a lull.

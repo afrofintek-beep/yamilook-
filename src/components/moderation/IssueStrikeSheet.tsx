@@ -83,7 +83,7 @@ export default function IssueStrikeSheet({
             <AlertTriangle className="w-5 h-5 text-red-500" />{uiText("Emitir Strike")}</SheetTitle>
           <SheetDescription>
             {targetDisplayName
-              ? `Emitir um strike contra ${targetDisplayName}`
+              ? uiText("Emitir um strike contra {{value1}}", { value1: (targetDisplayName) ?? "" })
               : uiText("Emitir um strike contra um utilizador")}
           </SheetDescription>
         </SheetHeader>

@@ -4,7 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Loader2, BadgeCheck, Crown, MapPin, ArrowRight } from 'lucide-react';
-import { format } from 'date-fns';
+import { format } from '@/i18n/ui-date';
 import { pt } from 'date-fns/locale';
 
 // Public, unauthenticated profile page — the ecosystem deep-link target
@@ -97,8 +97,7 @@ export default function PublicProfile() {
           <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5">
             {profile.founder_number != null && (
               <span className="inline-flex items-center gap-1 rounded-full bg-[#C9A23F]/15 px-2.5 py-1 text-[11px] font-semibold text-[#C9A23F]">
-                <Crown className="h-3 w-3" />{uiText(" Fundador #")}{profile.founder_number}
-              </span>
+                <Crown className="h-3 w-3" />{uiText(" Fundador #{{value1}}", { value1: (profile.founder_number) ?? "" })}</span>
             )}
             {profile.is_creator && (
               <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2.5 py-1 text-[11px] font-semibold text-primary">
@@ -119,8 +118,7 @@ export default function PublicProfile() {
             </div>
           )}
 
-          <p className="mt-4 text-[11px] text-muted-foreground">{uiText("Membro desde ")}{format(new Date(profile.created_at), 'MMMM yyyy', { locale: pt })}
-          </p>
+          <p className="mt-4 text-[11px] text-muted-foreground">{uiText("Membro desde {{value1}}", { value1: (format(new Date(profile.created_at), 'MMMM yyyy', { locale: pt })) ?? "" })}</p>
         </div>
 
         {/* CTA */}

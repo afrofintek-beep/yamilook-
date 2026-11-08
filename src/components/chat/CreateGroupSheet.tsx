@@ -80,7 +80,7 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
         if (newSet.size >= MAX_GROUP_MEMBERS) {
           toast({
             title: uiText("Limite atingido"),
-            description: `O grupo pode ter no máximo ${MAX_GROUP_MEMBERS + 1} membros.`,
+            description: uiText("O grupo pode ter no máximo {{value1}} membros.", { value1: (MAX_GROUP_MEMBERS + 1) }),
             variant: 'destructive',
           });
           return prev;
@@ -252,7 +252,7 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
                                   </AvatarFallback>
                                 </Avatar>
                                 <button
-                                  aria-label={`Remover ${displayName}`}
+                                  aria-label={uiText("Remover {{value1}}", { value1: (displayName) ?? "" })}
                                   onClick={() => toggleContact(contact.contact_user_id)}
                                   className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center"
                                 >
@@ -364,8 +364,7 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
                     onClick={() => setStep('details')}
                     disabled={!canProceed}
                     className="w-full h-12 rounded-xl gap-2"
-                  >{uiText("Continuar · ")}{selectedContacts.size} {selectedContacts.size === 1 ? uiText("selecionado") : uiText("selecionados")}
-                    <ChevronRight className="w-5 h-5" />
+                  >{uiText("Continuar · {{value1}} {{value2}}", { value1: (selectedContacts.size) ?? "", value2: (selectedContacts.size === 1 ? uiText("selecionado") : uiText("selecionados")) ?? "" })}<ChevronRight className="w-5 h-5" />
                   </Button>
                 </div>
               </motion.div>
@@ -450,9 +449,7 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
                         </div>
                       )}
                     </div>
-                    <p className="text-xs text-muted-foreground">{uiText("Tu e mais ")}{selectedContacts.size}{' '}
-                      {selectedContacts.size === 1 ? uiText("pessoa") : uiText("pessoas")}
-                    </p>
+                    <p className="text-xs text-muted-foreground">{uiText("Tu e mais {{value1}}{{value2}}{{value3}}", { value1: (selectedContacts.size) ?? "", value2: (' '), value3: (selectedContacts.size === 1 ? uiText("pessoa") : uiText("pessoas")) ?? "" })}</p>
                   </div>
                 </div>
 
@@ -489,7 +486,7 @@ export function CreateGroupSheet({ open, onOpenChange }: CreateGroupSheetProps) 
                   <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
                     <Check className="h-8 w-8" aria-hidden="true" />
                   </div>
-                  <p>{uiText("O grupo “")}{groupName.trim()}{uiText("” foi criado com ")}{selectedContacts.size + 1}{uiText(" membros.")}</p>
+                  <p>{uiText("O grupo “{{value1}}” foi criado com {{value2}} membros.", { value1: (groupName.trim()) ?? "", value2: (selectedContacts.size + 1) })}</p>
                   <p className="mt-2 text-sm text-muted-foreground">{uiText("Já podes enviar mensagens e iniciar chamadas em grupo.")}</p>
                 </div>
                 <div className="shrink-0 border-t border-border/50 bg-background px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))]">

@@ -145,7 +145,7 @@ export function CallSignalsDebugPanel() {
         )}
 
         <Badge variant="outline">
-          {userId ? `user: ${userId.slice(0, 8)}…` : uiText("not logged in")}
+          {userId ? uiText("user: {{value1}}…", { value1: (userId.slice(0, 8)) ?? "" }) : uiText("not logged in")}
         </Badge>
 
         <Badge variant={listenStatus === 'subscribed' ? 'default' : 'secondary'}>
@@ -153,7 +153,7 @@ export function CallSignalsDebugPanel() {
         </Badge>
       </div>
 
-      {selectError && <p className="text-xs text-destructive">{uiText("SELECT error: ")}{selectError}</p>}
+      {selectError && <p className="text-xs text-destructive">{uiText("SELECT error: {{value1}}", { value1: (selectError) ?? "" })}</p>}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div className="p-3 rounded-lg border bg-card">

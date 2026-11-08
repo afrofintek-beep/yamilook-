@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Check, X } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from '@/i18n/ui-date';
 
 interface FriendRequestCardProps {
   request: {

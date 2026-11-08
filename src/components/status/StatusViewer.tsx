@@ -1,7 +1,7 @@
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence, PanInfo } from 'framer-motion';
-import { format, formatDistanceToNow } from 'date-fns';
+import { format, formatDistanceToNow } from '@/i18n/ui-date';
 import { useTranslation } from 'react-i18next';
 import {
   X,

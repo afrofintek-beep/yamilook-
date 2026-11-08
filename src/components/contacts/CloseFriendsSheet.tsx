@@ -58,10 +58,10 @@ export function CloseFriendsSheet({ open, onOpenChange }: CloseFriendsSheetProps
       });
     } else {
       toast({
-        title: isAdding ? `Adicionado aos ${label}s` : `Removido dos ${label}s`,
+        title: isAdding ? uiText("Adicionado aos {{value1}}s", { value1: (label) ?? "" }) : uiText("Removido dos {{value1}}s", { value1: (label) ?? "" }),
         description: isAdding
-          ? `Esta pessoa verá os teus estados de ${label}s`
-          : `Esta pessoa já não verá os teus estados de ${label}s`,
+          ? uiText("Esta pessoa verá os teus estados de {{value1}}s", { value1: (label) ?? "" })
+          : uiText("Esta pessoa já não verá os teus estados de {{value1}}s", { value1: (label) ?? "" }),
       });
     }
 

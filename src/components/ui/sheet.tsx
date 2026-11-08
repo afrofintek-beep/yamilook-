@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import * as SheetPrimitive from "@radix-ui/react-dialog";
 import { cva, type VariantProps } from "class-variance-authority";
 import { X } from "lucide-react";
@@ -55,22 +56,22 @@ interface SheetContentProps
 }
 
 const SheetContent = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Content>, SheetContentProps>(
-  ({ side = "right", className, children, hideCloseButton = false, overlayClassName, ...props }, ref) => (
+  ({ side = "right", className, children, hideCloseButton = false, overlayClassName, ...props }, ref) => { useUiLocale(); return (
     <SheetPortal>
       <SheetOverlay className={overlayClassName} />
       <SheetPrimitive.Content ref={ref} className={cn(sheetVariants({ side }), className)} {...props}>
         {!hideCloseButton && (
           <div data-modal-close-bar className="sticky top-0 z-50 col-span-full flex min-h-12 shrink-0 justify-end bg-background py-1">
-          <SheetPrimitive.Close aria-label="Close" className="relative flex h-11 shrink-0 items-center justify-center gap-2 rounded-full bg-secondary px-3 text-foreground ring-offset-background hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
+          <SheetPrimitive.Close aria-label={uiText("Fechar")} className="relative flex h-11 shrink-0 items-center justify-center gap-2 rounded-full bg-secondary px-3 text-foreground ring-offset-background hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
             <X className="h-4 w-4" />
-            <span>Fechar</span>
+            <span>{uiText("Fechar")}</span>
           </SheetPrimitive.Close>
           </div>
         )}
         {children}
       </SheetPrimitive.Content>
     </SheetPortal>
-  ),
+  ); },
 );
 SheetContent.displayName = SheetPrimitive.Content.displayName;
 

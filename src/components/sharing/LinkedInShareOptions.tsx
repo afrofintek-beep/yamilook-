@@ -20,11 +20,11 @@ export default function LinkedInShareOptions({ id, webUrl, onPrepareMedia, brand
     try {
       // Keep this call in the tap handler so iOS retains user activation.
       const result = await sharePostLink(id, { copyOnly });
-      setStatus(result === 'cancelled' ? 'Partilha cancelada. Podes tentar novamente.'
-        : result === 'copied' ? 'Ligação copiada. Abre a aplicação LinkedIn, toca em Publicar e cola a ligação.'
-        : 'Conclui a publicação no LinkedIn. A Yamilook não recebe confirmação de publicação.');
+      setStatus(result === 'cancelled' ? uiText("Partilha cancelada. Podes tentar novamente.")
+        : result === 'copied' ? uiText("Ligação copiada. Abre a aplicação LinkedIn, toca em Publicar e cola a ligação.")
+        : uiText("Conclui a publicação no LinkedIn. A Yamilook não recebe confirmação de publicação."));
     } catch {
-      setStatus('Não foi possível copiar automaticamente. Seleciona a ligação abaixo e copia-a.');
+      setStatus(uiText("Não foi possível copiar automaticamente. Seleciona a ligação abaixo e copia-a."));
     } finally { setBusy(false); }
   };
 

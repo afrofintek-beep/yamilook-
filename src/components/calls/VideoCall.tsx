@@ -316,11 +316,11 @@ export function VideoCall({
       <Sheet open={showParticipants} onOpenChange={setShowParticipants}>
         <SheetContent className="safe-top overflow-y-auto">
           <SheetHeader className="pr-12 py-4">
-            <SheetTitle>{uiText("Participantes (")}{participants.length + 1})</SheetTitle>
+            <SheetTitle>{uiText("Participantes ({{value1}})", { value1: (participants.length + 1) })}</SheetTitle>
             <SheetDescription>{uiText("Pessoas nesta chamada")}</SheetDescription>
           </SheetHeader>
           <ul className="space-y-3">
-            <li>{uiText("Tu — ")}{state.isMuted ? uiText("microfone desligado") : uiText("microfone ligado")}</li>
+            <li>{uiText("Tu — {{value1}}", { value1: (state.isMuted ? uiText("microfone desligado") : uiText("microfone ligado")) ?? "" })}</li>
             {participants.map(participant => <li key={participant.user_id} className="rounded-xl border p-3">
               <p className="font-medium">{participant.display_name}</p>
               <p className="text-sm text-muted-foreground">{participant.is_muted ? uiText("Microfone desligado") : uiText("Microfone ligado")}{participant.is_hand_raised ? uiText(" · Mão levantada") : ''}</p>

@@ -129,8 +129,7 @@ export default function CheckoutVoice() {
               {selectedCurrency && selectedCurrency.currency_code !== 'USD' && (
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-palco-text-secondary">{uiText("Câmbio")}</span>
-                  <span className="text-sm text-palco-text-secondary">{uiText("1 USD = ")}{(1/fxRate).toFixed(2)} {selectedCurrency.currency_code}
-                  </span>
+                  <span className="text-sm text-palco-text-secondary">{uiText("1 USD = {{value1}} {{value2}}", { value1: ((1/fxRate).toFixed(2)) ?? "", value2: (selectedCurrency.currency_code) ?? "" })}</span>
                 </div>
               )}
 
@@ -213,7 +212,7 @@ export default function CheckoutVoice() {
             <>
               <Loader2 className="w-5 h-5 mr-2 animate-spin" />{uiText("A processar...")}</>
           ) : (
-            `Confirmar pagamento - ${formattedLocalAmount}`
+            uiText('Confirmar pagamento — {{amount}}', { amount: formattedLocalAmount })
           )}
         </Button>
       </div>

@@ -196,7 +196,7 @@ export function VoicemailRecorder({
 
       toast({
         title: uiText("Mensagem enviada!"),
-        description: `A tua mensagem de voz foi enviada para ${toUserName}`,
+        description: uiText("A tua mensagem de voz foi enviada para {{value1}}", { value1: (toUserName) ?? "" }),
       });
 
       onSent?.();
@@ -245,8 +245,7 @@ export function VoicemailRecorder({
             </Button>
           </div>
 
-          <p className="text-muted-foreground text-sm mb-6">
-            {toUserName}{uiText(" não atendeu. Deixa uma mensagem de voz.")}</p>
+          <p className="text-muted-foreground text-sm mb-6">{uiText("{{value1}} não atendeu. Deixa uma mensagem de voz.", { value1: (toUserName) ?? "" })}</p>
 
           <div className="flex flex-col items-center gap-4">
             {/* Recording visualization */}

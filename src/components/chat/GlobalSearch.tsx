@@ -1,6 +1,6 @@
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect, useCallback } from 'react';
-import { format } from 'date-fns';
+import { format } from '@/i18n/ui-date';
 import {
   Search,
   X,
@@ -423,9 +423,7 @@ export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
               </div>
             ) : (
               <div className="space-y-2">
-                <p className="text-sm text-muted-foreground mb-3">
-                  {results.length}{uiText(" result")}{results.length !== 1 ? 's' : ''}
-                </p>
+                <p className="text-sm text-muted-foreground mb-3">{uiText("{{value1}} result{{value2}}", { value1: (results.length) ?? "", value2: (results.length !== 1 ? 's' : '') })}</p>
                 {results.map((result) => (
                   <button
                     key={result.id}

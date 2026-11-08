@@ -1,6 +1,6 @@
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState } from 'react';
-import { format } from 'date-fns';
+import { format } from '@/i18n/ui-date';
 import { motion } from 'framer-motion';
 import { Check, CheckCheck, MoreVertical, Trash2, Copy } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';

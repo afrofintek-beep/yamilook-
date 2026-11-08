@@ -1,4 +1,5 @@
-import { uiText, useUiLocale } from '@/i18n/ui-copy';
+import { uiServerMessage } from '@/i18n/server-copy';
+import { uiText, uiLocale, useUiLocale } from '@/i18n/ui-copy';
 import { CampaignInvites } from './CampaignInvites';
 import { useState, useEffect } from 'react';
 import { useAppSurface } from '@/lib/app-surface';
@@ -31,9 +32,9 @@ function invitationErrorMessage(error: unknown, fallback: string): string {
   // RPC errors are plain PostgREST objects, not necessarily Error instances.
   if (typeof error === 'object' && error !== null && 'code' in error &&
       error.code === 'P0001' && 'message' in error && typeof error.message === 'string') {
-    return error.message;
+    return uiServerMessage(error.message, fallback);
   }
-  return error instanceof Error ? error.message : fallback;
+  return error instanceof Error ? uiServerMessage(error.message, fallback) : fallback;
 }
 
 interface InviteSheetProps {
@@ -99,9 +100,9 @@ export function InviteSheet({ open, onOpenChange, isAdmin = false }: InviteSheet
       const result = await invitationClient.rpc('list_invitation_permissions', {});
       if (result.error) throw result.error;
       setDelegates(result.data ?? []);
-      setStatus(grant ? 'Autorização concedida.' : 'Autorização retirada.');
+      setStatus(grant ? uiText("Autorização concedida.") : uiText("Autorização retirada."));
     } catch (error) {
-      setStatus(invitationErrorMessage(error, 'Não foi possível alterar a autorização.'));
+      setStatus(invitationErrorMessage(error, uiText("Não foi possível alterar a autorização.")));
     } finally { setManaging(false); }
   };
   const [status, setStatus] = useState('');
@@ -122,7 +123,7 @@ export function InviteSheet({ open, onOpenChange, isAdmin = false }: InviteSheet
       setCode(result.code);
       setIssuedFor(email.trim().toLowerCase());
     } catch (error) {
-      setStatus(invitationErrorMessage(error, 'Não foi possível gerar o convite. Tenta novamente.'));
+      setStatus(invitationErrorMessage(error, uiText("Não foi possível gerar o convite. Tenta novamente.")));
     } finally {
       setIssuing(false);
     }
@@ -132,9 +133,9 @@ export function InviteSheet({ open, onOpenChange, isAdmin = false }: InviteSheet
   const copy = async (value: string) => {
     try {
       await navigator.clipboard.writeText(value);
-      setStatus('Copiado. Cola o convite na mensagem para o teu convidado.');
+      setStatus(uiText("Copiado. Cola o convite na mensagem para o teu convidado."));
     } catch {
-      setStatus('Não foi possível copiar automaticamente. Selecciona o código ou o link acima e copia manualmente.');
+      setStatus(uiText("Não foi possível copiar automaticamente. Selecciona o código ou o link acima e copia manualmente."));
     }
   };
 
@@ -144,18 +145,18 @@ export function InviteSheet({ open, onOpenChange, isAdmin = false }: InviteSheet
     setStatus('');
     try {
       const { data, error } = await supabase.functions.invoke('send-user-invitation', {
-        body: { email: issuedFor, code },
+        body: { email: issuedFor, code, language: uiLocale() },
       });
       if (error || !data?.ok) {
         const responseStatus = (error as { context?: { status?: number } } | null)?.context?.status;
         setStatus(responseStatus === 503 || data?.error === 'email_not_configured'
-          ? 'O envio automático ainda não está configurado. Usa «Preparar email manual» ou WhatsApp.'
-          : 'Não foi possível enviar o convite por email. Usa o envio manual ou tenta novamente.');
+          ? uiText("O envio automático ainda não está configurado. Usa «Preparar email manual» ou WhatsApp.")
+          : uiText("Não foi possível enviar o convite por email. Usa o envio manual ou tenta novamente."));
         return;
       }
-      setStatus('O serviço de email aceitou o convite para envio. A entrega na caixa de correio ainda não está confirmada.');
+      setStatus(uiText("O serviço de email aceitou o convite para envio. A entrega na caixa de correio ainda não está confirmada."));
     } catch {
-      setStatus('Não foi possível enviar o convite por email. Usa o envio manual ou WhatsApp.');
+      setStatus(uiText("Não foi possível enviar o convite por email. Usa o envio manual ou WhatsApp."));
     } finally {
       setSendingEmail(false);
     }
@@ -173,7 +174,7 @@ export function InviteSheet({ open, onOpenChange, isAdmin = false }: InviteSheet
           </div>
         </SheetHeader>
         <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain break-words px-6 pt-4 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]">
-          <SheetDescription>{uiText("Convida alguém pelos contactos do telemóvel, por WhatsApp ou email. Cada convite só pode ser utilizado por uma pessoa.")}{isKosolola && uiText(" O registo é feito na Yamilook, com a mesma conta para entrar na KOSOLOLA.")}</SheetDescription>
+          <SheetDescription>{uiText("Convida alguém pelos contactos do telemóvel, por WhatsApp ou email. Cada convite só pode ser utilizado por uma pessoa.{{value1}}", { value1: (isKosolola && uiText(" O registo é feito na Yamilook, com a mesma conta para entrar na KOSOLOLA.")) ?? "" })}</SheetDescription>
         {open && userId && <CampaignInvites key={userId} />}
         {allowed ? <>
         {open && <ContactInviteActions key={userId} />}
@@ -189,7 +190,7 @@ export function InviteSheet({ open, onOpenChange, isAdmin = false }: InviteSheet
         </form>
         {code ? (
           <div className="space-y-4 mt-6">
-            <p>{uiText("Convite para ")}{issuedFor}{uiText(". Este código é de utilização única.")}</p>
+            <p>{uiText("Convite para {{value1}}. Este código é de utilização única.", { value1: (issuedFor) ?? "" })}</p>
             <label htmlFor="invite-code" className="block font-medium">{uiText("Código único de convite")}</label>
             <Input id="invite-code" value={code} readOnly onFocus={(event) => event.target.select()} className="text-xl font-mono" />
             <Button className="w-full" onClick={() => void copy(code)}>{uiText("Copiar código")}</Button>

@@ -559,10 +559,9 @@ export function VideoEditor({ file, onSave, onCancel }: VideoEditorProps) {
           {activeTab === 'trim' && (
             <div className="space-y-4">
               <div className="flex items-center justify-between text-white/60 text-xs">
-                <span>{uiText("Início: ")}{formatTime(trimStartSec)}</span>
-                <span className="text-[#D4AF37] font-medium">{uiText("Duração: ")}{formatTime(trimDuration)}
-                </span>
-                <span>{uiText("Fim: ")}{formatTime(trimEndSec)}</span>
+                <span>{uiText("Início: {{value1}}", { value1: (formatTime(trimStartSec)) ?? "" })}</span>
+                <span className="text-[#D4AF37] font-medium">{uiText("Duração: {{value1}}", { value1: (formatTime(trimDuration)) ?? "" })}</span>
+                <span>{uiText("Fim: {{value1}}", { value1: (formatTime(trimEndSec)) ?? "" })}</span>
               </div>
               <div className="space-y-3">
                 <div className="space-y-1">

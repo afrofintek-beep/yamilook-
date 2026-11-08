@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { refreshCallPush } from '@/lib/call-push';
 import { deferCallUpdate } from '@/lib/call-update-guard';
 import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
@@ -32,14 +33,16 @@ const PaposProfile = lazy(() => import('./PaposProfile'));
 const ActiveCallProvider = lazy(() => import('@/components/calls/ActiveCallProvider').then(module => ({ default: module.ActiveCallProvider })));
 const queryClient = new QueryClient({ defaultOptions: { queries: { staleTime: 60_000, retry: 1, refetchOnWindowFocus: false } } });
 export function PaposGate({ children }: { children: ReactNode }) {
+  useUiLocale();
   const { user, profile, loading, refreshProfile } = useAuth(); const location = useLocation();
   if (loading) return <Loading />;
   if (!user) return <Navigate to="/login" state={{ from: location.pathname + location.search }} replace />;
-  if (!profile) return <main className="min-h-screen-safe safe-top p-6 space-y-4"><p>Não foi possível carregar o perfil.</p><Button onClick={() => void refreshProfile()}>Tentar novamente</Button></main>;
-  if (!profile.onboarding_completed) return <main className="min-h-screen-safe safe-top p-6 space-y-4"><h1 className="text-2xl font-bold">Conclui a tua conta</h1><p>A tua conta é partilhada com a Yamilook. Conclui os dados pendentes e volta à KOSOLOLA.</p><Button asChild><a href="https://www.yamilook.com/onboarding">Continuar a inscrição</a></Button></main>;
+  if (!profile) return <main className="min-h-screen-safe safe-top p-6 space-y-4"><p>{uiText("Não foi possível carregar o perfil.")}</p><Button onClick={() => void refreshProfile()}>{uiText("Tentar novamente")}</Button></main>;
+  if (!profile.onboarding_completed) return <main className="min-h-screen-safe safe-top p-6 space-y-4"><h1 className="text-2xl font-bold">{uiText("Conclui a tua conta")}</h1><p>{uiText("A tua conta é partilhada com a Yamilook. Conclui os dados pendentes e volta à KOSOLOLA.")}</p><Button asChild><a href="https://www.yamilook.com/onboarding">{uiText("Continuar a inscrição")}</a></Button></main>;
   return <>{children}</>;
 }
 export function PaposCallLayout() {
+  useUiLocale();
   const location = useLocation();
   return <ActiveCallProvider>
     <PaposBoundary key={location.pathname}>
@@ -47,8 +50,10 @@ export function PaposCallLayout() {
     </PaposBoundary>
   </ActiveCallProvider>;
 }
-function Loading() { return <div role="status" className="h-screen-safe flex items-center justify-center">A carregar a KOSOLOLA…</div>; }
+function Loading() {
+  useUiLocale(); return <div role="status" className="h-screen-safe flex items-center justify-center">{uiText("A carregar a KOSOLOLA…")}</div>; }
 function PaposRuntime() {
+  useUiLocale();
   usePaposViewport();
   const [updateReady, setUpdateReady] = useState(false);
   const { user } = useAuth();
@@ -66,7 +71,7 @@ function PaposRuntime() {
     return () => { document.removeEventListener('click', unlock, true); document.removeEventListener('touchstart', unlock, true); document.removeEventListener('keydown', unlock, true); window.removeEventListener('papos:update-ready', update); };
   }, []);
   return <><OnlineStatusTracker /><GlobalMessageNotifier /><ThemeSync />
-    {updateReady && <aside className="fixed top-0 safe-top inset-x-0 z-[200] p-3 bg-primary text-primary-foreground flex items-center justify-between gap-3"><span className="text-sm">Nova versão disponível. Durante uma chamada, a atualização aguarda o seu fim.</span><Button variant="outline" onClick={() => deferCallUpdate(() => window.location.reload())}>Atualizar</Button></aside>}
+    {updateReady && <aside className="fixed top-0 safe-top inset-x-0 z-[200] p-3 bg-primary text-primary-foreground flex items-center justify-between gap-3"><span className="text-sm">{uiText("Nova versão disponível. Durante uma chamada, a atualização aguarda o seu fim.")}</span><Button variant="outline" onClick={() => deferCallUpdate(() => window.location.reload())}>{uiText("Atualizar")}</Button></aside>}
     <PaposBoundary><Suspense fallback={<Loading />}><Routes>
       <Route path="/login" element={<PaposLogin />} /><Route path="/welcome" element={<Navigate to="/login" replace />} />
       <Route path="/install" element={<PaposInstall />} />
@@ -88,9 +93,10 @@ function PaposRuntime() {
       <Route path="/profile/:userId" element={<PaposProfile />} />
       <Route path="/join/:code" element={<JoinGroup />} />
       </Route>
-      <Route path="*" element={<main className="min-h-screen-safe safe-top p-6 space-y-4"><h1 className="text-xl font-bold">Esta página não está na KOSOLOLA</h1><Button asChild><Link to="/papos">Voltar às conversas</Link></Button><Button asChild variant="outline"><a href="https://www.yamilook.com/muxi">Abrir Yamilook</a></Button></main>} />
+      <Route path="*" element={<main className="min-h-screen-safe safe-top p-6 space-y-4"><h1 className="text-xl font-bold">{uiText("Esta página não está na KOSOLOLA")}</h1><Button asChild><Link to="/papos">{uiText("Voltar às conversas")}</Link></Button><Button asChild variant="outline"><a href="https://www.yamilook.com/muxi">{uiText("Abrir Yamilook")}</a></Button></main>} />
     </Routes></Suspense></PaposBoundary></>;
 }
 export default function PaposApp() {
+  useUiLocale();
   return <AppSurfaceContext.Provider value="papos"><QueryClientProvider client={queryClient}><AuthProvider><TooltipProvider><Toaster /><Sonner /><BrowserRouter basename="/papos-app"><PaposRuntime /></BrowserRouter></TooltipProvider></AuthProvider></QueryClientProvider></AppSurfaceContext.Provider>;
 }

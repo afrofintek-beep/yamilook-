@@ -84,8 +84,7 @@ export function EditMessageDialog({ open, onClose, message, onSave }: EditMessag
                 className="min-h-[100px] resize-none"
                 autoFocus
               />
-              <p className="text-xs text-muted-foreground">{uiText("Time remaining to edit: ")}{remainingMinutes}:{remainingSeconds.toString().padStart(2, '0')}
-              </p>
+              <p className="text-xs text-muted-foreground">{uiText("Time remaining to edit: {{value1}}:{{value2}}", { value1: (remainingMinutes) ?? "", value2: (remainingSeconds.toString().padStart(2, '0')) ?? "" })}</p>
             </div>
 
             <DialogFooter>

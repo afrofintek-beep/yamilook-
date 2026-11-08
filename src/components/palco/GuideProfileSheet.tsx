@@ -112,7 +112,7 @@ export function GuideProfileSheet({
               <h3 className="font-semibold text-palco-text text-lg">
                 {guide?.display_name || t('palco.guide')}
               </h3>
-              <p className="text-sm text-palco-text-secondary">{t('palco.guide')}{uiText(" do PALCO")}</p>
+              <p className="text-sm text-palco-text-secondary">{uiText("{{value1}} do PALCO", { value1: (t('palco.guide')) ?? "" })}</p>
             </div>
           </div>
 
@@ -187,7 +187,7 @@ export function GuideProfileSheet({
                 >{uiText("Ver Perfil Completo")}</Button>
               ) : (
                 <div className="text-center p-4 bg-palco-surface rounded-[16px] border border-palco-border">
-                  <p className="text-palco-text-secondary text-sm">{uiText("Este ")}{t('palco.guide').toLowerCase()}{uiText(" ainda não completou o perfil na Yamilook.")}</p>
+                  <p className="text-palco-text-secondary text-sm">{uiText("Este {{value1}} ainda não completou o perfil na Yamilook.", { value1: (t('palco.guide').toLowerCase()) ?? "" })}</p>
                 </div>
               )}
 

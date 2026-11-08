@@ -1,3 +1,4 @@
+import { uiText } from '@/i18n/ui-copy';
 import { supabase } from '@/integrations/supabase/client';
 import { postUrl } from '../../../shared/public-post.mjs';
 
@@ -8,5 +9,5 @@ export async function sendSharedPost({ id, postId, conversationId, userId }: { i
   if (!error) return;
   const { data: existing } = await supabase.from('messages').select('id,sender_id,conversation_id,content').eq('id', id).maybeSingle();
   if (existing?.sender_id === userId && existing.conversation_id === conversationId && existing.content === content) return;
-  throw new Error('Não foi possível enviar. Tenta novamente.');
+  throw new Error(uiText("Não foi possível enviar. Tenta novamente."));
 }

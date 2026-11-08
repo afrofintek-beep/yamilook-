@@ -1,4 +1,4 @@
-import { uiText, useUiLocale } from '@/i18n/ui-copy';
+import { uiLocale, uiText, useUiLocale } from '@/i18n/ui-copy';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -22,7 +22,7 @@ import { Advertisement, BusinessProfile, CreditTransaction } from '@/hooks/useAd
 import { useCurrencyRates } from '@/hooks/useCurrencyRates';
 import { CreditDisplay } from './CreditDisplay';
 import { CurrencySelector } from './CurrencySelector';
-import { format } from 'date-fns';
+import { format } from '@/i18n/ui-date';
 import { pt } from 'date-fns/locale';
 
 type StatType = 'credits' | 'ads' | 'impressions' | 'clicks';
@@ -117,8 +117,7 @@ export function StatsDetailSheet({
         <div className="grid grid-cols-2 gap-4 text-center">
           <div>
             <p className="text-lg font-semibold">{totalSpent}</p>
-            <p className="text-xs text-muted-foreground">{uiText("Gastos (")}{formatMoney(totalSpent)})
-            </p>
+            <p className="text-xs text-muted-foreground">{uiText("Gastos ({{value1}})", { value1: (formatMoney(totalSpent)) ?? "" })}</p>
           </div>
           <div>
             <p className="text-lg font-semibold">{advertisements.length}</p>
@@ -135,8 +134,7 @@ export function StatsDetailSheet({
           <div className="flex justify-between items-center">
             <span className="text-sm text-muted-foreground">{uiText("Custo por impressão")}</span>
             <div className="text-right">
-              <span className="font-medium block">
-                {totalImpressions > 0 ? (totalSpent / totalImpressions).toFixed(3) : '0'}{uiText(" créditos")}</span>
+              <span className="font-medium block">{uiText("{{value1}} créditos", { value1: (totalImpressions > 0 ? (totalSpent / totalImpressions).toFixed(3) : '0') ?? "" })}</span>
               <span className="text-xs text-muted-foreground">
                 ≈ {totalImpressions > 0 ? formatMoney(totalSpent / totalImpressions) : formatMoney(0)}
               </span>
@@ -145,8 +143,7 @@ export function StatsDetailSheet({
           <div className="flex justify-between items-center">
             <span className="text-sm text-muted-foreground">{uiText("Custo por clique")}</span>
             <div className="text-right">
-              <span className="font-medium block">
-                {totalClicks > 0 ? (totalSpent / totalClicks).toFixed(2) : '0'}{uiText(" créditos")}</span>
+              <span className="font-medium block">{uiText("{{value1}} créditos", { value1: (totalClicks > 0 ? (totalSpent / totalClicks).toFixed(2) : '0') ?? "" })}</span>
               <span className="text-xs text-muted-foreground">
                 ≈ {totalClicks > 0 ? formatMoney(totalSpent / totalClicks) : formatMoney(0)}
               </span>
@@ -259,7 +256,7 @@ export function StatsDetailSheet({
       {/* Impressions Overview */}
       <Card className="p-4 bg-gradient-to-br from-primary/10 to-primary/5">
         <div className="text-center mb-4">
-          <p className="text-4xl font-bold text-primary">{totalImpressions.toLocaleString()}</p>
+          <p className="text-4xl font-bold text-primary">{totalImpressions.toLocaleString(uiLocale())}</p>
           <p className="text-sm text-muted-foreground">{uiText("Total de impressões")}</p>
         </div>
         <div className="grid grid-cols-2 gap-4 text-center">
@@ -298,7 +295,7 @@ export function StatsDetailSheet({
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="font-semibold">{ad.impressions.toLocaleString()}</p>
+                  <p className="font-semibold">{ad.impressions.toLocaleString(uiLocale())}</p>
                   <p className="text-xs text-muted-foreground">{uiText("impressões")}</p>
                 </div>
                 <ChevronRight className="w-4 h-4 text-muted-foreground" />
@@ -326,7 +323,7 @@ export function StatsDetailSheet({
       {/* Clicks Overview */}
       <Card className="p-4 bg-gradient-to-br from-primary/10 to-primary/5">
         <div className="text-center mb-4">
-          <p className="text-4xl font-bold text-primary">{totalClicks.toLocaleString()}</p>
+          <p className="text-4xl font-bold text-primary">{totalClicks.toLocaleString(uiLocale())}</p>
           <p className="text-sm text-muted-foreground">{uiText("Total de cliques")}</p>
         </div>
         <div className="grid grid-cols-2 gap-4 text-center">
@@ -355,8 +352,7 @@ export function StatsDetailSheet({
             </div>
             <Progress value={parseFloat(ctr) * 10} className="h-2" />
           </div>
-          <p className="text-xs text-muted-foreground">{uiText("CTR médio na plataforma: 2-5%. ")}{parseFloat(ctr) >= 2 ? uiText("✨ Seu desempenho está excelente!") : uiText("Continue otimizando seus anúncios.")}
-          </p>
+          <p className="text-xs text-muted-foreground">{uiText("CTR médio na plataforma: 2-5%. {{value1}}", { value1: (parseFloat(ctr) >= 2 ? uiText("✨ Seu desempenho está excelente!") : uiText("Continue otimizando seus anúncios.")) ?? "" })}</p>
         </div>
       </Card>
 
@@ -378,11 +374,11 @@ export function StatsDetailSheet({
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{ad.title || uiText("Sem título")}</p>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <span>{uiText("CTR: ")}{ad.impressions > 0 ? ((ad.clicks / ad.impressions) * 100).toFixed(1) : '0'}%</span>
+                    <span>{uiText("CTR: {{value1}}%", { value1: (ad.impressions > 0 ? ((ad.clicks / ad.impressions) * 100).toFixed(1) : '0') ?? "" })}</span>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-semibold">{ad.clicks.toLocaleString()}</p>
+                  <p className="font-semibold">{ad.clicks.toLocaleString(uiLocale())}</p>
                   <p className="text-xs text-muted-foreground">{uiText("cliques")}</p>
                 </div>
                 <ChevronRight className="w-4 h-4 text-muted-foreground" />

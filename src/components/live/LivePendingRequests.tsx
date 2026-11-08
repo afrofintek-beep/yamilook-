@@ -44,7 +44,7 @@ export function LivePendingRequests({ sessionId }: { sessionId: string }) {
     // Notify the host about newly-arrived requests (not on the first load).
     if (seenRef.current) {
       for (const r of list) {
-        if (!seenRef.current.has(r.user_id)) toast.info(`${r.name} pediu para entrar na live.`);
+        if (!seenRef.current.has(r.user_id)) toast.info(uiText("{{value1}} pediu para entrar na live.", { value1: (r.name) ?? "" }));
       }
     }
     seenRef.current = new Set(list.map((r) => r.user_id));

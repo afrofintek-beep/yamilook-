@@ -222,7 +222,7 @@ function ParticipantTile({ participant, stream, callType, isSpotlight, onSelect 
       )}
 
       <button type="button" onClick={onSelect}
-        aria-label={`Ampliar ${participant.display_name}`}
+        aria-label={uiText("Ampliar {{value1}}", { value1: (participant.display_name) ?? "" })}
         aria-pressed={!!isSpotlight}
         className="absolute inset-0 z-10 rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
       />

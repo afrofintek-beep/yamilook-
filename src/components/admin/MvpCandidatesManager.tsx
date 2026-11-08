@@ -1,3 +1,4 @@
+import { uiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect, useCallback } from "react";
 import {
   Users,
@@ -206,7 +207,7 @@ Equipa Yamilook 🇦🇴`;
   const sendCandidateEmail = async (candidate: Candidate) => {
     setSending(candidate.id);
     try {
-      const { data, error } = await supabase.functions.invoke('send-mvp-candidate-invitation', { body: { candidateId: candidate.id } });
+      const { data, error } = await supabase.functions.invoke('send-mvp-candidate-invitation', { body: { candidateId: candidate.id, language: uiLocale() } });
       if (error || !data?.accepted) throw error || new Error('Delivery failed');
       toast.success('Email aceite pelo serviço de envio. A entrega depende do destinatário.');
       await fetchCandidates();

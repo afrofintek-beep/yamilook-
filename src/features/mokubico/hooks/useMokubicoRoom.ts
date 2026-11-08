@@ -1,3 +1,4 @@
+import { uiText } from '@/i18n/ui-copy';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Room, RoomEvent, Track, type Participant } from 'livekit-client';
 import { supabase } from '@/integrations/supabase/client';
@@ -152,7 +153,7 @@ export function useMokubicoRoom(conversaId: string | null, roomName: string | nu
     setError(null);
     try {
       const creds = await getToken();
-      if (!creds) throw new Error('Sem credenciais para entrar.');
+      if (!creds) throw new Error(uiText("Sem credenciais para entrar."));
       const room = new Room({ adaptiveStream: true, dynacast: true });
       roomRef.current = room;
       const refresh = () => refreshPeers(room);
@@ -174,7 +175,7 @@ export function useMokubicoRoom(conversaId: string | null, roomName: string | nu
       refreshPeers(room);
     } catch (e) {
       logger.error('Mokubico room connect failed', 'mokubico', e);
-      setError(e instanceof Error ? e.message : 'Falha ao entrar na sala.');
+      setError(e instanceof Error ? e.message : uiText("Falha ao entrar na sala."));
       roomRef.current?.disconnect();
       roomRef.current = null;
     } finally {

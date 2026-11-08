@@ -13,7 +13,8 @@ import {
   Timer,
   Voicemail,
 } from 'lucide-react';
-import { format, isToday, isYesterday } from 'date-fns';
+import { isToday, isYesterday } from 'date-fns';
+import { format } from '@/i18n/ui-date';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';

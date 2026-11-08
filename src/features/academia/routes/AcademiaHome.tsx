@@ -106,8 +106,8 @@ export default function AcademiaHome() {
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain space-y-6 pt-4">
         {notices.length > 0 && <section className="mx-4 space-y-2" aria-label={uiText("Avisos da Academia")}>
           {notices.map(n => <div key={n.session_id} role="status" className="rounded-xl border p-3 text-sm">
-            <p className="font-semibold">{uiText("Sessão cancelada: ")}{n.title}</p><p>{n.reason}</p>
-            {n.refunded > 0 && <p>{uiText("Foram devolvidos ")}{n.refunded}{uiText(" Kumbu.")}</p>}
+            <p className="font-semibold">{uiText("Sessão cancelada: {{value1}}", { value1: (n.title) ?? "" })}</p><p>{n.reason}</p>
+            {n.refunded > 0 && <p>{uiText("Foram devolvidos {{value1}} Kumbu.", { value1: (n.refunded) ?? "" })}</p>}
             <Button variant="link" onClick={() => navigate(`/academia/${n.session_id}`)}>{uiText("Ver sessão")}</Button>
           </div>)}
         </section>}
@@ -152,8 +152,7 @@ export default function AcademiaHome() {
                 {liveSessions.length > 0 && (
                   <>
                     <div className="w-px h-3.5 bg-border" />
-                    <span className="text-[11px] text-destructive font-medium">
-                      {liveSessions.length}{uiText(" ao vivo")}</span>
+                    <span className="text-[11px] text-destructive font-medium">{uiText("{{value1}} ao vivo", { value1: (liveSessions.length) ?? "" })}</span>
                   </>
                 )}
               </div>
@@ -216,7 +215,7 @@ export default function AcademiaHome() {
         >
           <div className="flex items-center justify-between px-4 mb-3">
             <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{ACADEMIA_COPY.mentors}</h2>
-            <span className="text-[10px] text-muted-foreground/50">{mentors.length}{uiText(" disponíveis")}</span>
+            <span className="text-[10px] text-muted-foreground/50">{uiText("{{value1}} disponíveis", { value1: (mentors.length) ?? "" })}</span>
           </div>
           {mentorsLoading ? (
             <div className="flex gap-3 pb-2 px-4">
@@ -276,7 +275,7 @@ export default function AcademiaHome() {
             {user && <Button variant={mine ? 'default' : 'outline'} onClick={() => setMine(true)}>{isAdmin ? uiText("Gerir sessões") : uiText("As minhas sessões")}</Button>}
           </div>
           {<div className="mb-3 flex flex-wrap gap-2" aria-label={uiText("Filtrar sessões")}>
-            {([['upcoming', 'Próximas'], ['past', 'Passadas'], ['cancelled', 'Canceladas'], ['archived', 'Arquivadas']] as const).map(([value, label]) =>
+            {([['upcoming', uiText('Próximas')], ['past', uiText('Passadas')], ['cancelled', uiText('Canceladas')], ['archived', uiText('Arquivadas')]] as const).map(([value, label]) =>
               <Button key={value} size="sm" variant={filter === value ? 'default' : 'outline'} aria-pressed={filter === value} onClick={() => setFilter(value)}>{label}</Button>)}
           </div>}
           <Tabs value={tab} onValueChange={setTab}>

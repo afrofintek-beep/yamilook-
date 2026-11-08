@@ -7,7 +7,7 @@ import { ArrowLeft, TrendingUp, TrendingDown, ArrowUpDown } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useKumbuHistory, type LedgerDirection } from '../hooks/useKumbuHistory';
 import { ACTION_LABELS } from '../copy';
-import { format } from 'date-fns';
+import { format } from '@/i18n/ui-date';
 import { pt } from 'date-fns/locale';
 
 export default function KumbuHistory() {

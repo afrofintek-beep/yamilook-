@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { scrollChatToEnd } from '@/lib/chat-scroll';
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
@@ -24,6 +25,7 @@ interface ConversaInfo {
 }
 
 export default function MokubicoConversa() {
+  useUiLocale();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -70,10 +72,10 @@ export default function MokubicoConversa() {
     try {
       await endMutation.mutateAsync(id);
       room.leave();
-      toast.success('Conversa terminada.');
+      toast.success(uiText("Conversa terminada."));
       navigate(`/mokubico/${conversa?.space ?? ''}`);
     } catch {
-      toast.error('Não foi possível terminar a conversa. Tenta novamente.');
+      toast.error(uiText("Não foi possível terminar a conversa. Tenta novamente."));
     } finally {
       endingRef.current = false;
     }
@@ -95,10 +97,9 @@ export default function MokubicoConversa() {
         <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center">
           <Lock className="w-6 h-6 text-muted-foreground" />
         </div>
-        <p className="text-sm text-muted-foreground">Esta conversa é privada. Não estás na lista de convidados.</p>
+        <p className="text-sm text-muted-foreground">{uiText("Esta conversa é privada. Não estás na lista de convidados.")}</p>
         <Button variant="ghost" onClick={() => navigate('/mokubico')}>
-          <ArrowLeft className="w-4 h-4 mr-2" /> Voltar
-        </Button>
+          <ArrowLeft className="w-4 h-4 mr-2" />{uiText(" Voltar")}</Button>
       </div>
     );
   }
@@ -112,19 +113,19 @@ export default function MokubicoConversa() {
       <header className="flex items-center gap-3 px-4 min-h-[calc(3.5rem+env(safe-area-inset-top,0px))] border-b border-border safe-top shrink-0">
         <button onClick={leave} className="p-1 -ml-1"><ArrowLeft className="h-5 w-5" /></button>
         <div className="flex-1 min-w-0">
-          <h1 className="text-sm font-bold truncate">{conversa?.title || 'Conversa'}</h1>
+          <h1 className="text-sm font-bold truncate">{conversa?.title || uiText("Conversa")}</h1>
           <p className="text-[11px] text-muted-foreground flex items-center gap-1">
             <Users className="h-3 w-3" />{' '}
             {ended
-              ? 'terminada'
+              ? uiText("terminada")
               : !media
-                ? 'só texto'
+                ? uiText("só texto")
                 : `${room.peers.length || 1} · ${room.connected ? 'ao vivo' : room.connecting ? 'a entrar…' : 'offline'}`}
           </p>
         </div>
         {isHost && !ended && (
           <Button size="sm" variant="destructive" className="rounded-full h-8" onClick={endConversa} disabled={endMutation.isPending}>
-            {endMutation.isPending ? 'A terminar…' : 'Terminar'}
+            {endMutation.isPending ? uiText("A terminar…") : uiText("Terminar")}
           </Button>
         )}
       </header>
@@ -158,7 +159,7 @@ export default function MokubicoConversa() {
               ))}
               {others.length === 0 && (
                 <p className="text-xs text-muted-foreground self-center">
-                  {room.connecting ? 'A entrar…' : 'À espera de mais pessoas…'}
+                  {room.connecting ? uiText("A entrar…") : uiText("À espera de mais pessoas…")}
                 </p>
               )}
             </div>
@@ -181,7 +182,7 @@ export default function MokubicoConversa() {
                     <AvatarFallback>{self.name.charAt(0).toUpperCase()}</AvatarFallback>
                   </Avatar>
                 )}
-                <span className="absolute bottom-0.5 left-1.5 text-[10px] text-white drop-shadow">Tu</span>
+                <span className="absolute bottom-0.5 left-1.5 text-[10px] text-white drop-shadow">{uiText("Tu")}</span>
               </motion.div>
             )}
           </>
@@ -192,7 +193,7 @@ export default function MokubicoConversa() {
       {/* Text chat */}
       <div ref={messagesViewportRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-3 space-y-2">
         {room.messages.length === 0 ? (
-          <p className="text-xs text-muted-foreground text-center py-8">Sê o primeiro a escrever.</p>
+          <p className="text-xs text-muted-foreground text-center py-8">{uiText("Sê o primeiro a escrever.")}</p>
         ) : (
           room.messages.map((m) => {
             const mine = m.senderId === room.selfId;
@@ -207,7 +208,7 @@ export default function MokubicoConversa() {
                   {m.text}
                 </div>
                 {mine && (
-                  <span className="mt-0.5 mr-1" title={readByOther ? 'Lida' : 'Enviada'}>
+                  <span className="mt-0.5 mr-1" title={readByOther ? uiText("Lida") : uiText("Enviada")}>
                     {readByOther
                       ? <CheckCheck className="w-3.5 h-3.5 text-primary" />
                       : <Check className="w-3.5 h-3.5 text-muted-foreground" />}
@@ -221,9 +222,7 @@ export default function MokubicoConversa() {
 
       {/* Controls */}
       {ended ? (
-        <div className="p-4 border-t border-border text-center text-sm text-muted-foreground shrink-0">
-          Esta conversa terminou.
-        </div>
+        <div className="p-4 border-t border-border text-center text-sm text-muted-foreground shrink-0">{uiText("Esta conversa terminou.")}</div>
       ) : (
         <div className="p-3 border-t border-border flex items-center gap-2 shrink-0 safe-bottom">
           {media ? (
@@ -243,7 +242,7 @@ export default function MokubicoConversa() {
                 className="rounded-full h-11 w-11 shrink-0"
                 onClick={room.toggleCamera}
                 disabled={!room.connected}
-                title={room.camOn ? 'Desligar câmara' : 'Ligar câmara'}
+                title={room.camOn ? uiText("Desligar câmara") : uiText("Ligar câmara")}
               >
                 {room.camOn ? <Video className="h-5 w-5" /> : <VideoOff className="h-5 w-5" />}
               </Button>
@@ -251,18 +250,17 @@ export default function MokubicoConversa() {
           ) : (
             <button
               type="button"
-              onClick={() => toast.info('Voz e vídeo no Quintal é uma funcionalidade Pro.')}
+              onClick={() => toast.info(uiText("Voz e vídeo no Quintal é uma funcionalidade Pro."))}
               className="rounded-full h-11 px-3 shrink-0 flex items-center gap-1.5 bg-secondary text-muted-foreground text-xs font-medium"
-              title="Voz e vídeo é Pro"
+              title={uiText("Voz e vídeo é Pro")}
             >
-              <Lock className="h-4 w-4" /> Pro
-            </button>
+              <Lock className="h-4 w-4" />{uiText(" Pro")}</button>
           )}
           <Input
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') send(); }}
-            placeholder="Escreve uma mensagem…"
+            placeholder={uiText("Escreve uma mensagem…")}
             className="h-11 rounded-full"
           />
           <Button size="icon" className="rounded-full h-11 w-11 shrink-0" onClick={send} disabled={!text.trim()}>

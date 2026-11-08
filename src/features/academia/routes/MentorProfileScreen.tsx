@@ -1,4 +1,4 @@
-import { uiText, useUiLocale } from '@/i18n/ui-copy';
+import { uiLocale, uiText, useUiLocale } from '@/i18n/ui-copy';
 import { mentorStatus } from '../hooks/useMentorGovernance';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, CheckCircle2, Star, GraduationCap, Calendar, Users } from 'lucide-react';
@@ -10,7 +10,7 @@ import { SessionCard } from '../components/SessionCard';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { EmptyStateBack } from '@/components/common/EmptyStateBack';
-import { format } from 'date-fns';
+import { format } from '@/i18n/ui-date';
 import { pt } from 'date-fns/locale';
 
 export default function MentorProfileScreen() {
@@ -47,7 +47,7 @@ export default function MentorProfileScreen() {
 
   // Fetch sessions by this mentor
   const { data: sessions = [] } = useQuery({
-    queryKey: ['mentor-sessions', mentorId],
+    queryKey: ['mentor-sessions', mentorId, uiLocale()],
     enabled: !!mentorId,
     queryFn: async () => {
       const { data, error } = await supabase
@@ -167,7 +167,7 @@ export default function MentorProfileScreen() {
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-6 space-y-6">
         {/* Profile Header */}
         <div className="flex flex-col items-center text-center gap-3">
-          <Link to={`/profile/${mentor.id}`} aria-label={`Abrir perfil de ${mentor.name}`} className="relative rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+          <Link to={`/profile/${mentor.id}`} aria-label={uiText("Abrir perfil de {{value1}}", { value1: (mentor.name) ?? "" })} className="relative rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
             <div className="rounded-full p-[2px] bg-gradient-to-br from-primary/60 to-primary/20">
               <Avatar className="h-20 w-20 border-2 border-card">
                 <AvatarImage src={mentor.avatar} />
@@ -279,8 +279,7 @@ export default function MentorProfileScreen() {
 
         {/* Reviews */}
         <section>
-          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">{uiText("Avaliações (")}{reviewCount})
-          </h2>
+          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">{uiText("Avaliações ({{value1}})", { value1: (reviewCount) ?? "" })}</h2>
           {reviewCount > 20 && <p className="text-xs text-muted-foreground">{uiText("A mostrar as 20 avaliações mais recentes. A média inclui todas.")}</p>}
           {reviews.length === 0 ? (
             <p className="text-center text-sm text-muted-foreground py-8">{uiText("Ainda sem avaliações.")}</p>

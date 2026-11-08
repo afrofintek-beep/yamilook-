@@ -1,4 +1,4 @@
-import { uiText, useUiLocale } from '@/i18n/ui-copy';
+import { uiLocale, uiText, useUiLocale } from '@/i18n/ui-copy';
 import { QRCodeSVG } from 'qrcode.react';
 import { useRef, useState } from 'react';
 import { useAppSurface } from '@/lib/app-surface';
@@ -39,9 +39,9 @@ export function ContactInviteActions() {
       const { data, error } = await client.rpc('issue_shareable_user_invitation', { p_request_id: requestId.current });
       if (error || !data?.code || !data.expires_at) throw error ?? new Error(uiText("Invalid invitation"));
       setInvite(data);
-      setStatus(choice === 'qr' ? 'QR pronto. Mostra-o apenas à pessoa que queres convidar.' : 'Convite pronto. Escolhe o contacto na aplicação e confirma o envio.');
+      setStatus(choice === 'qr' ? uiText("QR pronto. Mostra-o apenas à pessoa que queres convidar.") : uiText("Convite pronto. Escolhe o contacto na aplicação e confirma o envio."));
     } catch {
-      setStatus('Não foi possível preparar o convite. Tenta novamente.');
+      setStatus(uiText("Não foi possível preparar o convite. Tenta novamente."));
     } finally {
       busy.current = false;
       setPending(false);
@@ -50,20 +50,20 @@ export function ContactInviteActions() {
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(url);
-      setStatus('Ligação copiada. Envia-a apenas à pessoa que queres convidar.');
+      setStatus(uiText("Ligação copiada. Envia-a apenas à pessoa que queres convidar."));
     } catch {
-      setStatus('Selecciona a ligação abaixo e copia manualmente.');
+      setStatus(uiText("Selecciona a ligação abaixo e copia manualmente."));
     }
   };
   const share = async () => {
     if (!invite) return;
     try {
       // Called directly from a click, without awaiting token creation (iOS activation).
-      await navigator.share({ title: `Convite para a ${brand}`, text: invitationMessage('', invite.code, brand), url });
-      setStatus('Partilha concluída na aplicação escolhida. A entrega não está confirmada.');
+      await navigator.share({ title: uiText("Convite para a {{value1}}", { value1: (brand) ?? "" }), text: invitationMessage('', invite.code, brand), url });
+      setStatus(uiText("Partilha concluída na aplicação escolhida. A entrega não está confirmada."));
     } catch (error) {
       if ((error as { name?: string })?.name !== 'AbortError') {
-        setStatus('Não foi possível abrir a partilha. Usa WhatsApp, email ou copia a ligação.');
+        setStatus(uiText("Não foi possível abrir a partilha. Usa WhatsApp, email ou copia a ligação."));
       }
     }
   };
@@ -87,7 +87,7 @@ export function ContactInviteActions() {
       <Button variant={channel === 'copy' ? 'default' : 'outline'} className="w-full" onClick={() => void copy()}><Copy className="mr-2 h-4 w-4" />{uiText("Copiar ligação")}</Button>
       <label className="block text-sm" htmlFor="contact-invite-link">{uiText("Ligação para o teu contacto")}</label>
       <Input id="contact-invite-link" value={url} readOnly onFocus={event => event.target.select()} />
-      <p className="text-xs text-muted-foreground">{uiText("Válido até ")}{new Date(invite.expires_at).toLocaleDateString()}{uiText(". Uma pessoa por convite. Quem receber a ligação pode utilizá-la; partilha-a apenas com o destinatário.")}</p>
+      <p className="text-xs text-muted-foreground">{uiText("Válido até {{value1}}. Uma pessoa por convite. Quem receber a ligação pode utilizá-la; partilha-a apenas com o destinatário.", { value1: (new Date(invite.expires_at).toLocaleDateString(uiLocale())) ?? "" })}</p>
       <Button variant="ghost" className="w-full" onClick={() => { requestId.current = undefined; setInvite(null); setStatus(''); }}>{uiText("Convidar outra pessoa")}</Button>
     </>}
     <p role="status" className="text-sm text-muted-foreground">{status}</p>

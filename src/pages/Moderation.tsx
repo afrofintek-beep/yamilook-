@@ -55,7 +55,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/hooks/useAuth';
 import { useModeration, ContentReport, ModerationAction, ModerationStats } from '@/hooks/useModeration';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from '@/i18n/ui-date';
 import { pt } from 'date-fns/locale';
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -356,7 +356,7 @@ export default function Moderation() {
             ) : reports.length === 0 ? (
               <Card className="p-8 text-center">
                 <CheckCircle className="w-12 h-12 mx-auto mb-3 text-green-500/50" />
-                <p className="text-muted-foreground">{uiText("Nenhuma denúncia ")}{reportFilter !== 'all' ? STATUS_CONFIG[reportFilter]?.label.toLowerCase() : ''}</p>
+                <p className="text-muted-foreground">{uiText("Nenhuma denúncia {{value1}}", { value1: (reportFilter !== 'all' ? STATUS_CONFIG[reportFilter]?.label.toLowerCase() : '') ?? "" })}</p>
               </Card>
             ) : (
               <div className="space-y-3">
@@ -510,8 +510,7 @@ export default function Moderation() {
                               <span className="text-muted-foreground">{ACTION_LABELS[action.action_type] || action.action_type}</span>
                             </p>
                             {action.reason && (
-                              <p className="text-xs text-muted-foreground mt-1">{uiText("Motivo: ")}{action.reason}
-                              </p>
+                              <p className="text-xs text-muted-foreground mt-1">{uiText("Motivo: {{value1}}", { value1: (action.reason) ?? "" })}</p>
                             )}
                             <p className="text-xs text-muted-foreground mt-1">
                               {formatDistanceToNow(new Date(action.created_at), { addSuffix: true, locale: pt })}

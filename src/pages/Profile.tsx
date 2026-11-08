@@ -412,7 +412,7 @@ function ProfileContent() {
     if (canNativeShare) {
       try {
         await navigator.share({
-          title: `${profileData?.display_name} on Yamilook`,
+          title: uiText("{{value1}} on Yamilook", { value1: (profileData?.display_name) ?? "" }),
           text: `Check out ${profileData?.display_name}'s profile on Yamilook`,
           url: shareUrl,
         });

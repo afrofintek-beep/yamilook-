@@ -106,7 +106,7 @@ export function GifPicker({ onSelect, onClose }: GifPickerProps) {
       {/* Title */}
       <div className="px-3 py-2 flex items-center gap-2 text-sm text-muted-foreground">
         <TrendingUp className="w-4 h-4" />
-        {searchQuery ? `Results for "${searchQuery}"` : uiText("Trending")}
+        {searchQuery ? uiText("Results for \"{{value1}}\"", { value1: (searchQuery) ?? "" }) : uiText("Trending")}
       </div>
 
       {/* GIF Grid */}

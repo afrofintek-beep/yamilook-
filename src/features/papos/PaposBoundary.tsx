@@ -1,3 +1,4 @@
+import { loadingText } from '@/i18n/startup-copy';
 import { renderDiagnostic } from '@/lib/render-diagnostic';
 import { Component, type ReactNode, type ErrorInfo } from 'react';
 import { Button } from '@/components/ui/button';
@@ -41,11 +42,11 @@ export class PaposBoundary extends Component<{ children: ReactNode }, { error: E
     if (!error) return this.props.children;
     const assets = isPaposAssetError(error);
     return <main className="min-h-screen-safe safe-top p-6 space-y-4">
-      <h1 className="text-xl font-bold">Não foi possível abrir esta página</h1>
-      <p>{assets ? 'Não foi possível carregar os ficheiros da aplicação. Se houver uma chamada em curso, a recuperação aguarda o seu fim.' : 'A interface encontrou um erro. Tenta abrir a página novamente.'} A tua conta mantém-se guardada.</p>
-      <details><summary>Diagnóstico técnico</summary><pre className="whitespace-pre-wrap break-all text-xs">{this.state.diagnostic}</pre></details>
-      <Button onClick={() => this.setState({ error: null, diagnostic: '' })}>Tentar novamente</Button>
-      <Button variant="outline" onClick={() => deferCallUpdate(() => void this.reload())}>Recarregar KOSOLOLA</Button>
+      <h1 className="text-xl font-bold">{loadingText("Não foi possível abrir esta página")}</h1>
+      <p>{assets ? loadingText("Não foi possível carregar os ficheiros da aplicação. Se houver uma chamada em curso, a recuperação aguarda o seu fim.") : loadingText("A interface encontrou um erro. Tenta abrir a página novamente.")}{loadingText(" A tua conta mantém-se guardada.")}</p>
+      <details><summary>{loadingText("Diagnóstico técnico")}</summary><pre className="whitespace-pre-wrap break-all text-xs">{this.state.diagnostic}</pre></details>
+      <Button onClick={() => this.setState({ error: null, diagnostic: '' })}>{loadingText("Tentar novamente")}</Button>
+      <Button variant="outline" onClick={() => deferCallUpdate(() => void this.reload())}>{loadingText("Recarregar KOSOLOLA")}</Button>
     </main>;
   }
 }

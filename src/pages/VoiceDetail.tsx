@@ -151,8 +151,7 @@ export default function VoiceDetail() {
             <h3 className="text-sm font-medium text-palco-text mb-3">{uiText("O que inclui")}</h3>
             <ul className="space-y-2">
               <li className="flex items-center gap-2 text-sm text-palco-text-secondary">
-                <CheckCircle className="w-4 h-4 text-green-500" />{uiText("Resposta personalizada do ")}{t('palco.guide')}
-              </li>
+                <CheckCircle className="w-4 h-4 text-green-500" />{uiText("Resposta personalizada do {{value1}}", { value1: (t('palco.guide')) ?? "" })}</li>
               <li className="flex items-center gap-2 text-sm text-palco-text-secondary">
                 <CheckCircle className="w-4 h-4 text-green-500" />
                 {voz.type === 'highlight' ? uiText("Prioridade máxima na fila") : uiText("Posição na fila de perguntas")}
@@ -174,8 +173,7 @@ export default function VoiceDetail() {
         <Button
           onClick={handleBuyVoice}
           className="w-full bg-palco-accent hover:bg-palco-accent/90 text-white rounded-full h-12 text-base font-medium"
-        >{uiText("Comprar Voz - $")}{voz.price}
-        </Button>
+        >{uiText("Comprar Voz - ${{value1}}", { value1: (voz.price) ?? "" })}</Button>
         <Button
           variant="ghost"
           onClick={() => navigate(-1)}

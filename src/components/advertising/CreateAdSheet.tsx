@@ -1,4 +1,4 @@
-import { uiText, useUiLocale } from '@/i18n/ui-copy';
+import { uiLocale, uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -23,7 +23,8 @@ import {
 import { useAdvertising, Advertisement, LocationMarket } from '@/hooks/useAdvertising';
 import { usePosts, PostWithUser } from '@/hooks/usePosts';
 import { useAuth } from '@/hooks/useAuth';
-import { format, addDays } from 'date-fns';
+import { addDays } from 'date-fns';
+import { format } from '@/i18n/ui-date';
 import { pt } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -190,7 +191,7 @@ export function CreateAdSheet({ open, onOpenChange, preselectedPostId }: CreateA
       transaction_type: 'spend',
       amount: -ad.total_budget,
       balance_after: newBalance,
-      description: `Destaque: ${ad.title || 'Publicação'}`,
+      description: uiText("Destaque: {{value1}}", { value1: (ad.title || 'Publicação') ?? "" }),
     });
 
     // Activate the ad
@@ -305,8 +306,7 @@ export function CreateAdSheet({ open, onOpenChange, preselectedPostId }: CreateA
                       )}
                       <div className="flex-1 min-w-0">
                         <p className="text-sm line-clamp-2">{post.content || uiText("Sem texto")}</p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {post.likes_count}{uiText(" gostos • ")}{post.comments_count}{uiText(" comentários")}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{uiText("{{value1}} gostos • {{value2}} comentários", { value1: (post.likes_count) ?? "", value2: (post.comments_count) ?? "" })}</p>
                       </div>
                     </div>
                   </Card>
@@ -400,8 +400,7 @@ export function CreateAdSheet({ open, onOpenChange, preselectedPostId }: CreateA
               <MapPin className="w-4 h-4 mr-2" />
             )}{uiText("Gerar o meu endereço AFROLOC")}</Button>
 
-          <p className="text-xs text-muted-foreground text-center">{uiText("O destaque aparecerá para utilizadores em ")}{selectedMarket?.display_name || uiText("esta zona")}
-          </p>
+          <p className="text-xs text-muted-foreground text-center">{uiText("O destaque aparecerá para utilizadores em {{value1}}", { value1: (selectedMarket?.display_name || uiText("esta zona")) ?? "" })}</p>
         </div>
 
         <div className="space-y-2">
@@ -457,7 +456,7 @@ export function CreateAdSheet({ open, onOpenChange, preselectedPostId }: CreateA
         <div className="space-y-2">
           <div className="flex justify-between">
             <Label>{uiText("Orçamento diário")}</Label>
-            <span className="text-sm font-medium">{dailyBudget}{uiText(" créditos")}</span>
+            <span className="text-sm font-medium">{uiText("{{value1}} créditos", { value1: (dailyBudget) ?? "" })}</span>
           </div>
           <Slider
             value={[dailyBudget]}
@@ -474,7 +473,7 @@ export function CreateAdSheet({ open, onOpenChange, preselectedPostId }: CreateA
         <div className="space-y-2">
           <div className="flex justify-between">
             <Label>{uiText("Duração")}</Label>
-            <span className="text-sm font-medium">{duration}{uiText(" dias")}</span>
+            <span className="text-sm font-medium">{uiText("{{value1}} dias", { value1: (duration) ?? "" })}</span>
           </div>
           <Slider
             value={[duration]}
@@ -486,8 +485,7 @@ export function CreateAdSheet({ open, onOpenChange, preselectedPostId }: CreateA
             max={30}
             step={1}
           />
-          <p className="text-xs text-muted-foreground">{uiText("Até ")}{format(endDate, "d 'de' MMMM", { locale: pt })}
-          </p>
+          <p className="text-xs text-muted-foreground">{uiText("Até {{value1}}", { value1: (format(endDate, "d 'de' MMMM", { locale: pt })) ?? "" })}</p>
         </div>
 
         {/* Summary card */}
@@ -495,11 +493,11 @@ export function CreateAdSheet({ open, onOpenChange, preselectedPostId }: CreateA
           <div className="space-y-3">
             <div className="flex justify-between">
               <span className="text-sm text-muted-foreground">{uiText("Orçamento total")}</span>
-              <span className="font-medium">{totalBudget}{uiText(" créditos")}</span>
+              <span className="font-medium">{uiText("{{value1}} créditos", { value1: (totalBudget) ?? "" })}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-muted-foreground">{uiText("Alcance estimado")}</span>
-              <span className="font-medium">~{estimatedReach.toLocaleString()}{uiText(" pessoas")}</span>
+              <span className="font-medium">{uiText("~{{value1}} pessoas", { value1: (estimatedReach.toLocaleString(uiLocale())) ?? "" })}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-muted-foreground">{uiText("Zona")}</span>
@@ -509,8 +507,7 @@ export function CreateAdSheet({ open, onOpenChange, preselectedPostId }: CreateA
               <span className="text-sm text-muted-foreground">{uiText("Saldo disponível")}</span>
               <span className={`font-medium ${
                 (businessProfile?.credit_balance || 0) < totalBudget ? 'text-destructive' : 'text-green-600'
-              }`}>
-                {businessProfile?.credit_balance || 0}{uiText(" créditos")}</span>
+              }`}>{uiText("{{value1}} créditos", { value1: (businessProfile?.credit_balance || 0) ?? "" })}</span>
             </div>
           </div>
         </Card>

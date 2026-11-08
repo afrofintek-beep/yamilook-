@@ -28,17 +28,17 @@ export async function requestScheduledVideo(sessionId: string, action: 'join'|'s
     let reason = '';
     try { reason = (await error.context?.json())?.error || ''; } catch { /* network error */ }
     const messages: Record<string,string> = {
-      unauthenticated: 'A tua sessão expirou. Inicia sessão novamente.',
-      video_unavailable: 'O serviço de vídeo está temporariamente indisponível.',
-      not_allowed: 'Não tens acesso a esta chamada.',
-      organizer_required: 'Só o organizador pode iniciar ou encerrar a chamada.',
-      invitation_declined: 'Recusaste este convite. Aceita-o antes de entrar.',
-      not_live: 'Aguarda que o organizador inicie a sessão.',
-      too_early: 'A sala abre 15 minutos antes da hora marcada.',
-      session_closed: 'Esta sessão já foi encerrada.',
-      room_close_failed: 'A sessão foi encerrada. Não foi possível confirmar o fecho da ligação; tenta novamente.',
+      get unauthenticated() { return uiText("A tua sessão expirou. Inicia sessão novamente."); },
+      get video_unavailable() { return uiText("O serviço de vídeo está temporariamente indisponível."); },
+      get not_allowed() { return uiText("Não tens acesso a esta chamada."); },
+      get organizer_required() { return uiText("Só o organizador pode iniciar ou encerrar a chamada."); },
+      get invitation_declined() { return uiText("Recusaste este convite. Aceita-o antes de entrar."); },
+      get not_live() { return uiText("Aguarda que o organizador inicie a sessão."); },
+      get too_early() { return uiText("A sala abre 15 minutos antes da hora marcada."); },
+      get session_closed() { return uiText("Esta sessão já foi encerrada."); },
+      get room_close_failed() { return uiText("A sessão foi encerrada. Não foi possível confirmar o fecho da ligação; tenta novamente."); },
     };
-    throw new Error(messages[reason] || 'Não foi possível ligar à sala de vídeo. Tenta novamente.');
+    throw new Error(messages[reason] || uiText("Não foi possível ligar à sala de vídeo. Tenta novamente."));
   }
   if (data?.waiting) throw new Error(uiText("Estás na sala de espera. Aguarda a admissão do organizador e toca em Entrar novamente."));
   if (!data || data.error) throw new Error(uiText("Não foi possível obter acesso à sala."));
@@ -109,7 +109,7 @@ export function useScheduledVideo(sessionId: string | undefined) {
     } catch (e) {
       if(active()) {
         await next?.disconnect();ref.current=null;setRoom(null);setParticipants([]);
-        setError(e instanceof Error ? e.message : 'Não foi possível entrar. Confirma a convite e a ligação à internet.');
+        setError(e instanceof Error ? e.message : uiText("Não foi possível entrar. Confirma a convite e a ligação à internet."));
       }
     } finally {busy.current=false;if(active())setLoading(false);}
   };

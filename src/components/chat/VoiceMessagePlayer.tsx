@@ -155,8 +155,7 @@ export function VoiceMessagePlayer({ url, duration, isOwn }: VoiceMessagePlayerP
           </div>
           <div className="flex justify-between text-xs opacity-70">
             <span className="flex items-center gap-1">
-              <Loader2 className="w-3 h-3 animate-spin" />{uiText("A enviar... ")}{waitSeconds > 0 ? `(${waitSeconds}s)` : ''}
-            </span>
+              <Loader2 className="w-3 h-3 animate-spin" />{uiText("A enviar... {{value1}}", { value1: (waitSeconds > 0 ? `(${waitSeconds}s)` : '') })}</span>
             <span>{formatTime(duration || 0)}</span>
           </div>
         </div>

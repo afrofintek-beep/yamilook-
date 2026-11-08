@@ -91,7 +91,7 @@ describe('Unique invitations', () => {
     show(); await generate();
     fireEvent.click(screen.getByRole('button', { name: 'Enviar por email' }));
     await waitFor(() => expect(invoke).toHaveBeenCalledWith('send-user-invitation', {
-      body: { email: 'new@example.com', code },
+      body: { email: 'new@example.com', code, language: 'pt' },
     }));
     expect(screen.getByRole('status', { name: 'Estado do convite por email' })).toHaveTextContent('aceitou o convite para envio');
   });

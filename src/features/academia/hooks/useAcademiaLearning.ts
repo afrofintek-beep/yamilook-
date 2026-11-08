@@ -1,3 +1,4 @@
+import { uiServerMessage } from '@/i18n/server-copy';
 import { uiText } from '@/i18n/ui-copy';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,8 +8,8 @@ export type LearningGoal = Database['public']['Tables']['academia_goals']['Row']
 export type LearningChallenge = Database['public']['Tables']['academia_challenges']['Row'];
 export type LearningSubmission = Database['public']['Tables']['academia_submissions']['Row'];
 export const learningStatus: Record<string, string> = {
-  requested: 'A aguardar o mentor', active: 'Em curso', completed: 'Concluído', cancelled: 'Encerrado',
-  open: 'Por entregar', submitted: 'Em avaliação', revision: 'Rever e entregar novamente', approved: 'Validado', pending: 'Em avaliação',
+  get requested() { return uiText("A aguardar o mentor"); }, get active() { return uiText("Em curso"); }, get completed() { return uiText("Concluído"); }, get cancelled() { return uiText("Encerrado"); },
+  get open() { return uiText("Por entregar"); }, get submitted() { return uiText("Em avaliação"); }, get revision() { return uiText("Rever e entregar novamente"); }, get approved() { return uiText("Validado"); }, get pending() { return uiText("Em avaliação"); },
 };
 export type CommunityAction = 'cohort_create' | 'cohort_join' | 'cohort_close' | 'work_publish' | 'work_hide';
 export type LearningAction = CommunityAction | 'create' | 'plan' | 'challenge' | 'submit' | 'review' | 'complete' | 'cancel';
@@ -26,8 +27,8 @@ export async function requestLearningAction(input: LearningInput): Promise<strin
   let result = await invoke(session.access_token);
   if (result.error?.context?.status === 401) { session = await refresh(); result = await invoke(session.access_token); }
   if (result.error) {
-    let message = 'Não foi possível guardar o percurso. Tenta novamente.';
-    try { const body = await result.error.context?.json(); if (typeof body?.error === 'string') message = body.error; } catch { /* offline */ }
+    let message = uiText('Não foi possível guardar o percurso. Tenta novamente.');
+    try { const body = await result.error.context?.json(); if (typeof body?.error === 'string') message = uiServerMessage(body.error, message); } catch { /* offline */ }
     throw new Error(message);
   }
   if (typeof result.data?.id !== 'string') throw new Error(uiText("Não foi possível confirmar a alteração. Atualiza o percurso."));

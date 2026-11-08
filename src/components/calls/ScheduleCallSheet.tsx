@@ -1,6 +1,6 @@
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect, useRef } from 'react';
-import { format } from 'date-fns';
+import { format } from '@/i18n/ui-date';
 import { pt } from 'date-fns/locale';
 import { Calendar as CalendarIcon, Clock, Video, Phone, Users, Repeat, X } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -153,7 +153,7 @@ export function ScheduleCallSheet({ open, onOpenChange, existingCall }: Schedule
 
       toast({
         title: existingCall ? 'Agendamento atualizado' : 'Chamada agendada',
-        description: `Chamada de ${callType === 'video' ? 'vídeo' : 'voz'} agendada para ${format(scheduledDate, 'dd/MM/yyyy HH:mm', { locale: pt })}`,
+        description: uiText("Chamada de {{value1}} agendada para {{value2}}", { value1: (callType === 'video' ? 'vídeo' : 'voz'), value2: (format(scheduledDate, 'dd/MM/yyyy HH:mm', { locale: pt })) ?? "" }),
       });
 
       // Reset form
@@ -189,7 +189,7 @@ export function ScheduleCallSheet({ open, onOpenChange, existingCall }: Schedule
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-1 pb-4">
           <div className="space-y-6">
             {loadError && <p role="alert">{loadError}</p>}
-            <p className="text-sm text-muted-foreground">{uiText("Horários no fuso ")}{timezone}{uiText(". Lembrete na aplicação 15 minutos antes. ")}{existingCall && uiText("As alterações aplicam-se apenas a esta ocorrência.")}</p>
+            <p className="text-sm text-muted-foreground">{uiText("Horários no fuso {{value1}}. Lembrete na aplicação 15 minutos antes. {{value2}}", { value1: (timezone) ?? "", value2: (existingCall && uiText("As alterações aplicam-se apenas a esta ocorrência.")) ?? "" })}</p>
             {/* Title */}
             <div className="space-y-2">
               <Label htmlFor="title">{uiText("Título *")}</Label>

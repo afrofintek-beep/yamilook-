@@ -1,4 +1,4 @@
-import { uiText, useUiLocale } from '@/i18n/ui-copy';
+import { uiLocale, uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -17,7 +17,7 @@ export default function AuthorizedAfrolocLink() {
     const {data,error}=await supabase.functions.invoke('account-link',{body:{action:'list'}});if(error||!data?.ok)throw new Error();setLinks(data.links);return;
    }
    const {data,error}=await supabase.functions.invoke('account-link',{body:{action,id,code,consent}});
-   if(error||!data?.ok){setMessage(data?.reason==='phone_required'?'Confirma primeiro o telefone nesta conta.':data?.reason==='address_changed'?'O endereço mudou. Atualiza os dados e autoriza novamente.':'Ligação ou certificado indisponível. Nenhuma certificação foi atribuída.');return;}
+   if(error||!data?.ok){setMessage(data?.reason==='phone_required'?uiText("Confirma primeiro o telefone nesta conta."):data?.reason==='address_changed'?uiText("O endereço mudou. Atualiza os dados e autoriza novamente."):uiText("Ligação ou certificado indisponível. Nenhuma certificação foi atribuída."));return;}
    if(action==='begin'){setRequest(data);setMessage(uiText("Abre o AFROLOC, entra na tua conta e confirma o destinatário e o endereço."));}
    else if(action==='revoke'){setLinks(v=>v.map(l=>l.id===id?{...l,revoked_at:new Date().toISOString()}:l));setMessage(uiText("Ligação revogada."));}
    else if(data.certified===true){
@@ -25,7 +25,7 @@ export default function AuthorizedAfrolocLink() {
      setLinks(v=>[{id:id!,code,linked_at:new Date().toISOString(),revoked_at:null},...v.filter(l=>l.id!==id)]);
      setRequest(null);setConsent(false);
     }
-    setMessage(`Certificado válido na consulta efetuada agora, até ${new Date(data.expires_at).toLocaleString()}. Não é uma garantia permanente.`);
+    setMessage(uiText("Certificado válido na consulta efetuada agora, até {{value1}}. Não é uma garantia permanente.", { value1: (new Date(data.expires_at).toLocaleString(uiLocale())) ?? "" }));
    }
   }catch{setMessage(uiText("Serviço indisponível. Nenhuma certificação foi atribuída."));}finally{setBusy(false);}
  };

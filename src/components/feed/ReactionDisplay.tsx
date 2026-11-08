@@ -102,8 +102,7 @@ export function ReactionDisplay({
               </span>
             );
           })}
-          <span className="text-muted-foreground text-xs ml-1">
-            ({total}{uiText(" total)")}</span>
+          <span className="text-muted-foreground text-xs ml-1">{uiText("({{value1}} total)", { value1: (total) ?? "" })}</span>
         </div>
       )}
     </div>

@@ -200,7 +200,7 @@ export function LiveCaptions({ callId }: LiveCaptionsProps) {
               {/* Font Size */}
               <div className="space-y-3">
                 <label className="text-sm font-medium flex items-center gap-2">
-                  <Type className="h-4 w-4" />{uiText("Font Size: ")}{settings.fontSize}{uiText("px")}</label>
+                  <Type className="h-4 w-4" />{uiText("Font Size: {{value1}}px", { value1: (settings.fontSize) ?? "" })}</label>
                 <Slider
                   value={[settings.fontSize]}
                   onValueChange={([val]) => {
@@ -215,8 +215,7 @@ export function LiveCaptions({ callId }: LiveCaptionsProps) {
 
               {/* Background Opacity */}
               <div className="space-y-3">
-                <label className="text-sm font-medium">{uiText("Background Opacity: ")}{settings.opacity}%
-                </label>
+                <label className="text-sm font-medium">{uiText("Background Opacity: {{value1}}%", { value1: (settings.opacity) ?? "" })}</label>
                 <Slider
                   value={[settings.opacity]}
                   onValueChange={([val]) => {

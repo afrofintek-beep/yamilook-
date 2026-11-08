@@ -62,7 +62,7 @@ export function LiveAccessRequest({
       toast.error(uiText("Não foi possível enviar o pedido."));
       return;
     }
-    setStatus('pending');
+    setStatus("pending");
     toast.success(uiText("Pedido enviado. À espera da autorização do dono."));
   };
 
@@ -73,7 +73,7 @@ export function LiveAccessRequest({
     const { data, error } = await supabase.rpc('live_accept_invite', { p_session: sessionId });
     setSending(false);
     if (error || !(data as { ok?: boolean })?.ok) { toast.error(uiText("Não foi possível aceitar o convite.")); return; }
-    setStatus('approved');
+    setStatus("approved");
     onGranted();
   };
 
@@ -94,8 +94,10 @@ export function LiveAccessRequest({
         <h1 className="text-lg font-bold text-foreground">{invited ? uiText("Convite para a live") : uiText("Live da banda")}</h1>
         <p className="text-sm text-muted-foreground max-w-xs">
           {invited
-            ? `${info.host_name ?? 'O anfitrião'} convidou-te para esta live. Aceita para entrar.`
-            : `${info.host_name ? `${info.host_name} está ao vivo para a banda.` : 'Esta live é da banda.'} Não fazes parte, mas podes pedir para entrar.`}
+            ? uiText('{{host}} convidou-te para esta live. Aceita para entrar.', { host: info.host_name ?? uiText('O anfitrião') })
+            : info.host_name
+              ? uiText('{{host}} está ao vivo para a banda. Não fazes parte, mas podes pedir para entrar.', { host: info.host_name })
+              : uiText('Esta live é da banda. Não fazes parte, mas podes pedir para entrar.')}
         </p>
       </div>
 

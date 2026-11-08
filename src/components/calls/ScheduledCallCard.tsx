@@ -22,8 +22,8 @@ export function ScheduledCallCard({call}:{call:ScheduledCall;onJoin?:()=>void;on
  return <article className="p-4 rounded-2xl border bg-card space-y-3 min-w-0">
   <h3 className="font-semibold break-words">{call.title}</h3>
   {call.description&&<p className="text-sm break-words">{call.description}</p>}
-  <p className="text-sm">{new Date(call.scheduled_at).toLocaleString(uiLocale(),{dateStyle:'short',timeStyle:'short'})} · {call.duration_minutes}{uiText(" min · ")}{call.call_type==='video'?uiText("Vídeo"):uiText("Voz")}</p>
-  <p className="text-xs text-muted-foreground">{uiText("Hora local do dispositivo · Fuso de origem: ")}{call.timezone}</p>
+  <p className="text-sm">{uiText("{{value1}} · {{value2}} min · {{value3}}", { value1: (new Date(call.scheduled_at).toLocaleString(uiLocale(),{dateStyle:'short',timeStyle:'short'})) ?? "", value2: (call.duration_minutes) ?? "", value3: (call.call_type==='video'?uiText("Vídeo"):uiText("Voz")) ?? "" })}</p>
+  <p className="text-xs text-muted-foreground">{uiText("Hora local do dispositivo · Fuso de origem: {{value1}}", { value1: (call.timezone) ?? "" })}</p>
   {call.is_recurring&&<p className="text-xs">{uiText("Ocorrência de uma série")}</p>}
   {!host&&call.status==='scheduled'&&<div className="flex flex-wrap gap-2">
    {(['accepted','maybe','declined'] as const).map((status,i)=><Button key={status} disabled={busy} variant="outline" onClick={()=>void run(()=>rsvp(call.id,status),'Resposta guardada')}>{['Aceitar','Talvez','Recusar'][i]}</Button>)}

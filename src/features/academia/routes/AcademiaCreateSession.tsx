@@ -344,7 +344,7 @@ export default function AcademiaCreateSession() {
                   <div className="space-y-2">
                     <Label htmlFor="duration">{uiText("Duração prevista")}</Label>
                     <select id="duration" value={durationMinutes} onChange={e=>setDurationMinutes(e.target.value)} className="w-full rounded-lg border border-border bg-background p-3">
-                      {[30,45,60,90,120].map(minutes=><option key={minutes} value={minutes}>{minutes}{uiText(" minutos")}</option>)}
+                      {[30,45,60,90,120].map(minutes=><option key={minutes} value={minutes}>{uiText("{{value1}} minutos", { value1: (minutes) ?? "" })}</option>)}
                     </select>
                     <p className="text-xs text-muted-foreground">{uiText("O tempo começa ao iniciar a sala. O fim da duração prevista não encerra a sessão nem gera cobrança automática.")}</p>
                     <Label htmlFor="datetime" className="text-xs flex items-center gap-1.5">
@@ -399,7 +399,7 @@ export default function AcademiaCreateSession() {
                             </span>
                           )}
                           <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                            <Users className="h-3 w-3" />{spots}{uiText(" vagas")}</span>
+                            <Users className="h-3 w-3" />{uiText("{{value1}} vagas", { value1: (spots) ?? "" })}</span>
                           {price > 0 && (
                             <span className="flex items-center gap-1 text-[11px] text-primary font-medium">
                               <Coins className="h-3 w-3" />{price}
@@ -435,8 +435,7 @@ export default function AcademiaCreateSession() {
         </Button>
 
         {/* Step counter */}
-        <p className="text-center text-[10px] text-muted-foreground/50 mt-2">{uiText("Passo ")}{step + 1}{uiText(" de ")}{STEPS.length}
-        </p>
+        <p className="text-center text-[10px] text-muted-foreground/50 mt-2">{uiText("Passo {{value1}} de {{value2}}", { value1: (step + 1), value2: (STEPS.length) ?? "" })}</p>
       </div>
     </div>
   );

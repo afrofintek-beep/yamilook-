@@ -187,7 +187,7 @@ export default function CreatePalco() {
             const found = currencies.find(c => c.currency_code === currencyCode);
             if (found) {
               changeCurrency(currencyCode);
-              toast.success(`Moeda detetada: ${found.currency_name} (${found.symbol})`);
+              toast.success(uiText("Moeda detetada: {{value1}} ({{value2}})", { value1: (found.currency_name) ?? "", value2: (found.symbol) ?? "" }));
               console.log('[GPS] Currency set to:', found);
             } else {
               console.log('[GPS] Currency not in list, keeping USD. Available:', currencies.map(c => c.currency_code));
@@ -438,7 +438,7 @@ export default function CreatePalco() {
               try {
                 console.log('Creating roda:', { palco_id: newPalco.id, scheduled_at: roda.datetime });
                 await createRoda.mutateAsync({
-                  title: `Roda ${rodasToCreate.indexOf(roda) + 1}`,
+                  title: uiText("Roda {{value1}}", { value1: (rodasToCreate.indexOf(roda) + 1) }),
                   description: description || 'Sessão ao vivo',
                   scheduled_at: roda.datetime,
                 });
@@ -509,7 +509,7 @@ export default function CreatePalco() {
               <h1 className="font-semibold text-palco-text">
                 {isEditMode ? uiText("Editar Palco") : uiText("Abrir Banda ao Vivo")}
               </h1>
-              <p className="text-xs text-palco-text-secondary">{uiText("Passo ")}{step}{uiText(" de 4")}</p>
+              <p className="text-xs text-palco-text-secondary">{uiText("Passo {{value1}} de 4", { value1: (step) ?? "" })}</p>
             </div>
             <div className="flex gap-1">
               {[1, 2, 3, 4].map((s) => (
@@ -714,7 +714,7 @@ export default function CreatePalco() {
                         <div className="w-8 h-8 rounded-full bg-palco-accent/10 flex items-center justify-center">
                           <Radio className="w-4 h-4 text-palco-accent" />
                         </div>
-                        <span className="font-medium text-palco-text">{uiText("Roda ")}{index + 1}</span>
+                        <span className="font-medium text-palco-text">{uiText("Roda {{value1}}", { value1: (index + 1) })}</span>
                       </div>
                       <Button
                         size="sm"
@@ -761,7 +761,7 @@ export default function CreatePalco() {
                         <SelectTrigger className="bg-palco-bg border-palco-border">
                           <SelectValue>
                             {roda.duration <= 60 && roda.duration > 0
-                              ? `Personalizado: ${roda.duration} min`
+                              ? uiText("Personalizado: {{value1}} min", { value1: (roda.duration) ?? "" })
                               : durationOptions.find(o => o.value === roda.duration)?.label || uiText("60 min")}
                           </SelectValue>
                         </SelectTrigger>
@@ -779,7 +779,7 @@ export default function CreatePalco() {
                         <div className="space-y-3 p-3 bg-palco-bg rounded-[12px]">
                           <div className="flex items-center justify-between text-sm">
                             <span className="text-palco-text-secondary">{uiText("Duração personalizada")}</span>
-                            <span className="font-semibold text-palco-accent">{roda.duration}{uiText(" min")}</span>
+                            <span className="font-semibold text-palco-accent">{uiText("{{value1}} min", { value1: (roda.duration) ?? "" })}</span>
                           </div>
                           <Slider
                             value={[roda.duration]}
@@ -809,8 +809,7 @@ export default function CreatePalco() {
                         </SelectTrigger>
                         <SelectContent className="bg-palco-surface border-palco-border">
                           {maxVoicesOptions.map((opt) => (
-                            <SelectItem key={opt} value={opt.toString()}>
-                              {opt}{uiText(" vozes")}</SelectItem>
+                            <SelectItem key={opt} value={opt.toString()}>{uiText("{{value1}} vozes", { value1: (opt) ?? "" })}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -882,8 +881,7 @@ export default function CreatePalco() {
 
                 {detectedCountry && !gpsDetecting && (
                   <div className="flex items-center gap-2 text-xs text-palco-accent">
-                    <MapPin className="w-3 h-3" />{uiText("Detetado: ")}{detectedCountry}
-                  </div>
+                    <MapPin className="w-3 h-3" />{uiText("Detetado: {{value1}}", { value1: (detectedCountry) ?? "" })}</div>
                 )}
               </div>
               <p className="text-xs text-palco-text-secondary">{uiText("Os preços serão apresentados nesta moeda. A conversão é automática com base nas taxas de câmbio.")}</p>
@@ -969,8 +967,7 @@ export default function CreatePalco() {
               {selectedCurrency && (
                 <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 bg-palco-accent/10 rounded-full">
                   <Coins className="w-3.5 h-3.5 text-palco-accent" />
-                  <span className="text-xs font-medium text-palco-accent">{uiText("Moeda: ")}{selectedCurrency.currency_code} ({selectedCurrency.symbol})
-                  </span>
+                  <span className="text-xs font-medium text-palco-accent">{uiText("Moeda: {{value1}} ({{value2}})", { value1: (selectedCurrency.currency_code) ?? "", value2: (selectedCurrency.symbol) ?? "" })}</span>
                 </div>
               )}
             </div>

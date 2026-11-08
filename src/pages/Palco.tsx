@@ -17,7 +17,8 @@ import { usePalcos, Palco, VoiceType } from '@/hooks/usePalco';
 import { usePalcoThemes } from '@/hooks/useDiscoverTopics';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
-import { format, formatDistanceToNow, isToday, isTomorrow } from 'date-fns';
+import { isToday, isTomorrow } from 'date-fns';
+import { format, formatDistanceToNow } from '@/i18n/ui-date';
 import { pt } from 'date-fns/locale';
 import { PalcoIcon } from '@/components/icons/PalcoIcon';
 import YamilookLogo from '@/components/brand/YamilookLogo';
@@ -232,7 +233,7 @@ export default function PalcoDiscover() {
           <section>
             <h3 className="text-lg font-semibold text-palco-text mb-3">
               {selectedTheme
-                ? `Palcos de ${themes?.find(t => t.slug === selectedTheme)?.name || selectedTheme}`
+                ? uiText("Palcos de {{value1}}", { value1: (themes?.find(t => t.slug === selectedTheme)?.name || selectedTheme) ?? "" })
                 : uiText("Outros Palcos")}
             </h3>
             <div className="grid grid-cols-2 gap-3">
@@ -298,7 +299,7 @@ function FeaturedPalcoCard({ palco, countdown }: { palco: Palco; countdown: stri
           {/* Live Badge */}
           {isLive && (
             <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 bg-palco-accent text-palco-surface rounded-full text-sm font-semibold shadow-md">
-              <Lock className="w-3.5 h-3.5" />{uiText("AO VIVO • ")}{countdown}{uiText(" restantes")}</div>
+              <Lock className="w-3.5 h-3.5" />{uiText("AO VIVO • {{value1}} restantes", { value1: (countdown) ?? "" })}</div>
           )}
 
           {/* Content overlay */}
@@ -329,8 +330,7 @@ function FeaturedPalcoCard({ palco, countdown }: { palco: Palco; countdown: stri
 
       {/* Voices info */}
       <div className="px-4 py-3 border-t border-palco-border">
-        <p className="text-sm text-palco-accent font-semibold mb-3">
-          + {palco.total_voices || 20}{uiText(" Vozes pagas")}</p>
+        <p className="text-sm text-palco-accent font-semibold mb-3">{uiText("+{{value1}} Vozes pagas", { value1: (palco.total_voices || 20) ?? "" })}</p>
 
         {/* Sample questions list */}
         <div className="space-y-2 mb-3">
@@ -427,7 +427,7 @@ function PalcoCard({ palco, index }: { palco: Palco; index: number }) {
 
         {/* Voices available */}
         <p className="text-xs mb-2">
-          <span className="text-palco-accent font-semibold">+{palco.total_voices || 17}{uiText(" Vozes")}</span>
+          <span className="text-palco-accent font-semibold">{uiText("+{{value1}} Vozes", { value1: (palco.total_voices || 17) ?? "" })}</span>
           <span className="text-palco-text-secondary">{uiText(" Disponíveis")}</span>
         </p>
 

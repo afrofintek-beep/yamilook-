@@ -1,3 +1,4 @@
+import { invitationEmail } from '../_shared/invitation-copy.ts';
 import { createClient } from 'npm:@supabase/supabase-js@2.90.1';
 
 const cors = {
@@ -8,28 +9,6 @@ const cors = {
 const reply = (value: unknown, status = 200) => Response.json(value, { status, headers: cors });
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const CODE = /^[A-F0-9]{16}$/;
-
-const escapeHtml = (text: string) => text.replace(/[&<>"']/g, char =>
-  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]!);
-
-function invitationEmail(email: string, code: string) {
-  const link = 'https://www.yamilook.com/register?ref=' + encodeURIComponent(code);
-  const safeEmail = escapeHtml(email);
-  const safeLink = escapeHtml(link);
-  return {
-    subject: 'O teu convite para a YAMILOOK',
-    html: `<!doctype html><html lang="pt"><body style="margin:0;padding:32px 12px;background:#f5f5f7;font-family:Arial,sans-serif;color:#14213d">
-      <div style="max-width:520px;margin:auto;padding:32px;border-radius:18px;background:#101827">
-        <div style="font-size:24px;font-weight:800;letter-spacing:2px;color:#d7ae34">YAMILOOK</div>
-        <h1 style="color:white;font-size:22px;margin:30px 0 10px">Tens um convite pessoal</h1>
-        <p style="color:#e6e7eb;line-height:1.6">Foste convidado(a) a fazer parte da YAMILOOK. Este convite é de utilização única e está associado ao email <strong>${safeEmail}</strong>.</p>
-        <p style="margin:32px 0"><a href="${safeLink}" style="background:#d7ae34;color:#111827;text-decoration:none;font-weight:700;padding:14px 22px;border-radius:8px">Aceitar convite</a></p>
-        <p style="color:#d6d6d6;font-size:13px">Se o botão não funcionar, abre: <a style="color:#f8d574;word-break:break-all" href="${safeLink}">${safeLink}</a></p>
-        <p style="color:#a1a6b0;font-size:12px;margin-top:28px">Se não pediste este convite, podes ignorar esta mensagem.</p>
-      </div></body></html>`,
-    text: `Foste convidado(a) para a YAMILOOK. Este convite é pessoal, de utilização única, e destina-se a ${email}. Regista-te em: ${link}`,
-  };
-}
 
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: cors });
@@ -75,7 +54,7 @@ Deno.serve(async (req: Request) => {
     if (!/^[^\r\n<>]+<[^\s<>@]+@[^\s<>@]+\.[^\s<>@]+>$/.test(from))
       return reply({ error: 'email_not_configured' }, 503);
 
-    const message = invitationEmail(email, code);
+    const message = invitationEmail(email, code, payload.language);
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {

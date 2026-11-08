@@ -2,7 +2,7 @@ import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { format, formatDistanceToNow } from 'date-fns';
+import { format, formatDistanceToNow } from '@/i18n/ui-date';
 import { pt } from 'date-fns/locale';
 import { X, Users, Image as ImageIcon, Calendar, MessageSquare, Video, Heart, Sparkles, ChevronRight } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -209,8 +209,7 @@ export function YamilookJourneySheet({
                 transition={{ delay: 0.3 }}
               >
                 <SheetTitle className="text-xl font-bold">{uiText("A tua jornada no Yamilook")}</SheetTitle>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {displayName}{uiText(", aqui está o resumo da tua actividade")}</p>
+                <p className="text-sm text-muted-foreground mt-1">{uiText("{{value1}}, aqui está o resumo da tua actividade", { value1: (displayName) ?? "" })}</p>
               </motion.div>
             </SheetHeader>
 
@@ -236,8 +235,7 @@ export function YamilookJourneySheet({
                     <div className="flex-1">
                       <p className="text-sm font-medium text-foreground">{uiText("Membro há ")}<span className="font-bold text-[#F2A900]">{getTimeSinceJoined(stats.joinedDate)}</span>
                       </p>
-                      <p className="text-xs text-muted-foreground">{uiText("Juntaste-te em ")}{formatJoinedDate(stats.joinedDate)}
-                      </p>
+                      <p className="text-xs text-muted-foreground">{uiText("Juntaste-te em {{value1}}", { value1: (formatJoinedDate(stats.joinedDate)) ?? "" })}</p>
                     </div>
                   </div>
                 </motion.div>

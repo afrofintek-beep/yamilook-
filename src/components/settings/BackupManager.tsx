@@ -51,7 +51,7 @@ export function BackupManager() {
   const run=async(job:()=>Promise<void>)=>{
     if(busy)return;
     setBusy(true);setError('');setInfo('');
-    try{await job();}catch(e){setError(e instanceof Error?e.message:'Não foi possível concluir a operação.');}
+    try{await job();}catch(e){setError(e instanceof Error?e.message:uiText("Não foi possível concluir a operação."));}
     finally{setBusy(false);}
   };
   const changePrefs=(next:BackupPreferences)=>{
@@ -71,11 +71,11 @@ export function BackupManager() {
         ? <>
             <p className="text-xl font-semibold">{formatBytes(usage.bytes)}</p>
             <div className="grid grid-cols-3 gap-2 text-xs">
-              <span>{uiText("Fotos: ")}{formatBytes(usage.photos)}</span>
-              <span>{uiText("Vídeos: ")}{formatBytes(usage.videos)}</span>
-              <span>{uiText("Outros: ")}{formatBytes(usage.other)}</span>
+              <span>{uiText("Fotos: {{value1}}", { value1: (formatBytes(usage.photos)) ?? "" })}</span>
+              <span>{uiText("Vídeos: {{value1}}", { value1: (formatBytes(usage.videos)) ?? "" })}</span>
+              <span>{uiText("Outros: {{value1}}", { value1: (formatBytes(usage.other)) ?? "" })}</span>
             </div>
-            <p className="text-xs text-muted-foreground">{usage.files}{uiText(" ficheiros com proprietário confirmado. Os ficheiros antigos sem proprietário atribuído não são contabilizados. Não há quota individual confirmada.")}</p>
+            <p className="text-xs text-muted-foreground">{uiText("{{value1}} ficheiros com proprietário confirmado. Os ficheiros antigos sem proprietário atribuído não são contabilizados. Não há quota individual confirmada.", { value1: (usage.files) ?? "" })}</p>
           </>
         : <p className="text-muted-foreground">{uiText("Medição ainda não disponível. Não apresentamos valores estimados como se fossem reais.")}</p>}
     </div>
@@ -98,7 +98,7 @@ export function BackupManager() {
           await importRecoveryKey(id,inputKey);setInputKey('');setKeyReady(true);setKeyConfirmed(true);setInfo('Chave recuperada e verificada neste dispositivo.');
         })}>{uiText("Usar a chave existente")}</button>
       </div>}
-      {keyReady && !recoveryKey && <p className="text-xs">{uiText("Este dispositivo possui uma chave de cifragem. ")}{keyConfirmed ? uiText("A recuperação foi confirmada.") : uiText("Confirme que guardou a chave original para poder fazer backups.")}</p>}
+      {keyReady && !recoveryKey && <p className="text-xs">{uiText("Este dispositivo possui uma chave de cifragem. {{value1}}", { value1: (keyConfirmed ? uiText("A recuperação foi confirmada.") : uiText("Confirme que guardou a chave original para poder fazer backups.")) ?? "" })}</p>}
       {recoveryKey && <div className="rounded-xl border border-amber-500/50 p-3 space-y-2">
         <p className="font-semibold">{uiText("Chave de recuperação — apresentada uma única vez")}</p>
         <code className="block break-all select-all">{recoveryKey}</code>
@@ -148,7 +148,7 @@ export function BackupManager() {
 
     {snapshot && <div className="rounded-xl border p-4 space-y-3">
       <h3 className="font-semibold">{uiText("Pré-visualização do restauro")}</h3>
-      <p>{uiText("Contactos: ")}{summary?.totalContacts ?? '—'}{uiText(" · Conversas: ")}{summary?.totalConversations ?? '—'}{uiText(" · Publicações: ")}{summary?.totalPosts ?? '—'}</p>
+      <p>{uiText("Contactos: {{value1}} · Conversas: {{value2}} · Publicações: {{value3}}", { value1: (summary?.totalContacts ?? '—') ?? "", value2: (summary?.totalConversations ?? '—') ?? "", value3: (summary?.totalPosts ?? '—') ?? "" })}</p>
       <p className="text-xs text-muted-foreground">{uiText("A conta existente continua sincronizada com o servidor. Este restauro seguro aplica apenas preferências selecionadas, sem substituir conversas, mensagens, publicações ou ficheiros multimédia.")}</p>
       <label className="flex gap-2"><input type="checkbox" checked={confirmRestore} onChange={e=>setConfirmRestore(e.target.checked)} />{uiText(" Confirmo a reposição das preferências antigas")}</label>
       <button className="rounded-lg border px-3 py-2 disabled:opacity-50" disabled={!confirmRestore||busy} onClick={()=>void run(async()=>{

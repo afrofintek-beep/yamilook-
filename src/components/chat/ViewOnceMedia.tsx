@@ -58,7 +58,7 @@ export function ViewOnceMediaBubble({
       <div className="flex items-center gap-2 px-4 py-3 rounded-2xl bg-muted/50">
         <EyeOff className="w-5 h-5 text-muted-foreground" />
         <div className="text-sm">
-          <p className="text-muted-foreground italic">{uiText("View once ")}{type}</p>
+          <p className="text-muted-foreground italic">{uiText("View once {{value1}}", { value1: (type) ?? "" })}</p>
           <p className="text-xs text-muted-foreground">{uiText("Opened")}</p>
         </div>
       </div>
@@ -83,7 +83,7 @@ export function ViewOnceMediaBubble({
             <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
               <div className="text-center text-white">
                 <Lock className="w-6 h-6 mx-auto mb-2" />
-                <p className="text-xs">{uiText("View once ")}{type}</p>
+                <p className="text-xs">{uiText("View once {{value1}}", { value1: (type) ?? "" })}</p>
                 {isViewed ? (
                   <p className="text-xs opacity-70 mt-1">{uiText("Opened")}</p>
                 ) : (
@@ -98,7 +98,7 @@ export function ViewOnceMediaBubble({
               <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-3">
                 <Eye className="w-8 h-8 text-primary" />
               </div>
-              <p className="text-sm font-medium">{uiText("View once ")}{type}</p>
+              <p className="text-sm font-medium">{uiText("View once {{value1}}", { value1: (type) ?? "" })}</p>
               <p className="text-xs text-muted-foreground mt-1">{uiText("Tap to open")}</p>
             </div>
           </div>

@@ -1,4 +1,4 @@
-import { uiText, useUiLocale } from '@/i18n/ui-copy';
+import { uiLocale, uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -71,8 +71,8 @@ export function CampaignInvites() {
       }}><option value="">{uiText("Selecionar campanha")}</option>{campaigns.map(c => <option key={c.id} value={c.id}>{c.name} — {campaignStateLabels[c.status]}</option>)}</select>
     </label>
     {campaign && <>
-      <p>{campaign.my_issued}{uiText(" de ")}{campaign.max_per_user}{uiText(" convites emitidos. ")}{Math.max(0, campaign.max_per_user - campaign.my_issued)}{uiText(" restantes.")}</p>
-      <p className="text-sm">{uiText("Até ")}{new Date(campaign.ends_at).toLocaleString()}.</p>
+      <p>{uiText("{{value1}} de {{value2}} convites emitidos. {{value3}} restantes.", { value1: (campaign.my_issued) ?? "", value2: (campaign.max_per_user) ?? "", value3: (Math.max(0, campaign.max_per_user - campaign.my_issued)) ?? "" })}</p>
+      <p className="text-sm">{uiText("Até {{value1}}.", { value1: (new Date(campaign.ends_at).toLocaleString(uiLocale())) ?? "" })}</p>
       {!canIssueCampaign(campaign) && <p role="note">{uiText("Emissão indisponível: verifica a autorização, as condições, o período e os limites da campanha.")}</p>}
       {!invite ? <form className="space-y-3" onSubmit={e => { e.preventDefault(); void issue(); }}>
         <label className="block" htmlFor="campaign-recipient">{uiText("Email do convidado (opcional)")}</label>
@@ -82,13 +82,13 @@ export function CampaignInvites() {
       </form> : <div className="space-y-3">
         <label htmlFor="campaign-link">{uiText("Ligação individual")}</label>
         <Input id="campaign-link" readOnly value={buildInviteUrl(invite.code)} onFocus={e => e.target.select()} />
-        <p>{uiText("Válido até ")}{new Date(invite.expires_at).toLocaleString()}.</p>
+        <p>{uiText("Válido até {{value1}}.", { value1: (new Date(invite.expires_at).toLocaleString(uiLocale())) ?? "" })}</p>
         <Button asChild><a href={buildWhatsAppInviteUrl(email.trim(), invite.code, brand, invite.expires_at)} target="_blank" rel="noopener noreferrer">{uiText("Partilhar no WhatsApp")}</a></Button>
         <Button variant="outline" asChild><a href={buildEmailInviteDraftUrl(email.trim(), invite.code, brand, invite.expires_at)}>{uiText("Preparar email")}</a></Button>
         <Button variant="ghost" onClick={() => { setInvite(undefined); setEmail(''); request.current = undefined; }}>{uiText("Novo destinatário")}</Button>
       </div>}
       {report && <div className="space-y-2">
-        <p>{report.issued}{uiText(" emitidos · ")}{report.used}{uiText(" utilizados · ")}{report.expired}{uiText(" expirados · ")}{report.pending}{uiText(" pendentes")}</p>
+        <p>{uiText("{{value1}} emitidos · {{value2}} utilizados · {{value3}} expirados · {{value4}} pendentes", { value1: (report.issued) ?? "", value2: (report.used) ?? "", value3: (report.expired) ?? "", value4: (report.pending) ?? "" })}</p>
         {report.invitations.map(i => <div key={i.code} className="text-sm border-b py-2 break-all">{i.recipient_email || uiText("Ligação individual")} · {{ used: 'Utilizado', expired: 'Expirado', pending: 'Pendente' }[i.state]}
           {i.state === 'pending' && <Button variant="link" onClick={() => { setEmail(i.recipient_email ?? ''); setInvite(i); }}>{uiText("Ver ligação")}</Button>}
         </div>)}

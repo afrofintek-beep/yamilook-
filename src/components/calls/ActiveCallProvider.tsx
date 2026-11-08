@@ -57,7 +57,7 @@ export function useActiveCall() {
 export function useActiveCallRequired() {
   const context = useContext(ActiveCallContext);
   if (!context) {
-    throw new Error(uiText("useActiveCall must be used within ActiveCallProvider"));
+    throw new Error("useActiveCall must be used within ActiveCallProvider");
   }
   return context;
 }
@@ -90,7 +90,7 @@ function formatCallError(err: unknown) {
   if (err && typeof err === 'object' && 'message' in err && typeof err.message === 'string') {
     const errObj = err as { message: string; code?: unknown; details?: unknown };
     const extra = [
-      typeof errObj.code === 'string' ? `code=${errObj.code}` : null,
+      typeof errObj.code === 'string' ? `code=${(errObj.code)}` : null,
       typeof errObj.details === 'string' ? errObj.details : null,
     ].filter(Boolean).join(' · ');
     return extra ? `${errObj.message} (${extra})` : errObj.message;

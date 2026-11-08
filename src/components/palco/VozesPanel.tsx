@@ -18,7 +18,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Voz } from '@/hooks/usePalco';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from '@/i18n/ui-date';
 import { pt } from 'date-fns/locale';
 
 interface VozesPanelProps {
@@ -89,8 +89,7 @@ export function VozesPanel({
         >
           <div className="flex items-center gap-2">
             <MessageSquare className="w-4 h-4 text-palco-accent" />
-            <span className="text-xs font-medium text-white">{uiText("Vozes (")}{paidVozes.length + queuedVozes.length})
-            </span>
+            <span className="text-xs font-medium text-white">{uiText("Vozes ({{value1}})", { value1: (paidVozes.length + queuedVozes.length) })}</span>
           </div>
           {expanded ? (
             <ChevronDown className="w-4 h-4 text-white/60" />
@@ -129,8 +128,7 @@ export function VozesPanel({
       {isGuide && pendingVozes.length > 0 && (
         <div>
           <h4 className="text-xs font-medium text-orange-500 mb-2 flex items-center gap-1">
-            <Clock className="w-3 h-3" />{uiText("Aguardando Confirmação (")}{pendingVozes.length})
-          </h4>
+            <Clock className="w-3 h-3" />{uiText("Aguardando Confirmação ({{value1}})", { value1: (pendingVozes.length) ?? "" })}</h4>
           <div className="space-y-2">
             {pendingVozes.map((voz) => (
               <FullVozCard
@@ -149,8 +147,7 @@ export function VozesPanel({
       {(paidVozes.length > 0 || queuedVozes.length > 0) && (
         <div>
           <h4 className="text-xs font-medium text-green-500 mb-2 flex items-center gap-1">
-            <CheckCircle className="w-3 h-3" />{uiText("Prontas para Responder (")}{paidVozes.length + queuedVozes.length})
-          </h4>
+            <CheckCircle className="w-3 h-3" />{uiText("Prontas para Responder ({{value1}})", { value1: (paidVozes.length + queuedVozes.length) })}</h4>
           <div className="space-y-2">
             {[...queuedVozes, ...paidVozes].map((voz) => (
               <FullVozCard
@@ -168,8 +165,7 @@ export function VozesPanel({
       {/* Answered */}
       {answeredVozes.length > 0 && (
         <div>
-          <h4 className="text-xs font-medium text-palco-text-secondary mb-2">{uiText("Respondidas (")}{answeredVozes.length})
-          </h4>
+          <h4 className="text-xs font-medium text-palco-text-secondary mb-2">{uiText("Respondidas ({{value1}})", { value1: (answeredVozes.length) ?? "" })}</h4>
           <div className="space-y-2">
             {answeredVozes.slice(0, 5).map((voz) => (
               <FullVozCard key={voz.id} voz={voz} isGuide={isGuide} />

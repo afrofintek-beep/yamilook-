@@ -278,8 +278,7 @@ export default function Apply() {
                     )}
                   </Button>
 
-                  <p className="text-xs text-muted-foreground text-center pt-1">{uiText("Ao submeter, aceitas os nossos")}{" "}
-                    <a href="/terms" className="underline hover:text-foreground">{uiText("Termos de Serviço")}</a>{" "}
+                  <p className="text-xs text-muted-foreground text-center pt-1">{uiText("Ao submeter, aceitas os nossos{{value1}}", { value1: (" ") })}<a href="/terms" className="underline hover:text-foreground">{uiText("Termos de Serviço")}</a>{" "}
                     e{" "}
                     <a href="/privacy" className="underline hover:text-foreground">{uiText("Política de Privacidade")}</a>
                     .

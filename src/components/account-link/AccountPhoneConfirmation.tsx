@@ -11,10 +11,10 @@ export default function AccountPhoneConfirmation() {
   setBusy(true);setMessage('');
   try {
    const {data,error}=await supabase.functions.invoke('account-phone',{body:{action,phone,consent,challenge_id:challenge,otp}});
-   if(error||!data?.ok){setMessage(data?.reason==='try_later'?'Aguarda antes de pedir outro código.':'Não foi possível confirmar. Verifica o código ou tenta mais tarde.');return;}
+   if(error||!data?.ok){setMessage(data?.reason==='try_later'?uiText("Aguarda antes de pedir outro código."):uiText("Não foi possível confirmar. Verifica o código ou tenta mais tarde."));return;}
    if(action==='begin'){setChallenge(data.challenge_id);setOtp('');setMessage(uiText("Código enviado. Expira em cinco minutos."));}
    else if(action==='verify'){setChallenge(null);setOtp('');setMessage(uiText("Telefone confirmado nesta conta. Isto não certifica o endereço."));}
-   else if(action==='status')setMessage(data.verified?'Telefone confirmado nesta conta.':'Telefone ainda não confirmado ou confirmação expirada.');
+   else if(action==='status')setMessage(data.verified?uiText("Telefone confirmado nesta conta."):uiText("Telefone ainda não confirmado ou confirmação expirada."));
    else {setChallenge(null);setMessage(uiText("Confirmação do telefone revogada."));}
   }catch{setMessage(uiText("Serviço indisponível. Tenta mais tarde."));}finally{setBusy(false);}
  };

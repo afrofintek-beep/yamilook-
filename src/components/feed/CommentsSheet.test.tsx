@@ -1,7 +1,17 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { changeAppLanguage } from '@/i18n';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { cleanup } from '@testing-library/react';
 import { render, screen, fireEvent, waitFor } from '@/test/test-utils';
 import { CommentsSheet } from './CommentsSheet';
 import { mockSupabaseClient, resetMocks } from '@/test/mocks/supabase';
+
+beforeEach(async () => { await changeAppLanguage('en'); });
+afterEach(async () => {
+  cleanup();
+  // Radix restores focus on the next tick; finish before jsdom is replaced.
+  await new Promise(resolve => setTimeout(resolve, 0));
+  await changeAppLanguage('pt');
+});
 
 // Mock the supabase client
 vi.mock('@/integrations/supabase/client', async () => ({
@@ -510,7 +520,7 @@ describe('CommentsSheet', () => {
     
     await waitFor(() => {
       // Should show something like "less than a minute ago"
-      const timeText = screen.getAllByText(/ago|just now/i);
+      const timeText = screen.getAllByText(/ago|now/i);
       expect(timeText.length).toBeGreaterThan(0);
     });
   });

@@ -27,13 +27,13 @@ export function ResidenceForm(p: Props) {
  const locale = language.toLowerCase().split(/[-_]/)[0] as keyof typeof locationHints;
  const cityListId = useId();
  const [cityData, setCityData] = useState<{country: string; cities: string[]}>({country: '', cities: []});
- const countryCodes = useMemo(() => [...RESIDENCE_COUNTRY_CODES].sort((a,b) => localizedCountryName(a,language).localeCompare(localizedCountryName(b,language),locale)), [language,locale]);
+ const countryCodes = useMemo(() => [...RESIDENCE_COUNTRY_CODES].sort((a,b) => localizedCountryName(a,language).localeCompare(localizedCountryName(b,language),locale)), [language, locale]);
  useEffect(() => {
   let active = true;
   loadResidenceCities(p.country).then(cities => { if (active) setCityData({country:p.country,cities}); }).catch(() => { if (active) setCityData({country:p.country,cities:[]}); });
   return () => { active = false; };
  }, [p.country]);
- const suggestions = useMemo(() => matchingResidenceCities(cityData.country === p.country ? cityData.cities : [],p.city,language), [cityData,p.country,p.city,language]);
+ const suggestions = useMemo(() => matchingResidenceCities(cityData.country === p.country ? cityData.cities : [],p.city,language), [cityData, p.country, p.city, language]);
  const [locating,setLocating]=useState(false); const [error,setError]=useState(''); const generation=useRef(0);
  useEffect(()=>()=>{generation.current++;},[]);
  const resetHomeCapture=()=>{if(p.plan.method==='home'){generation.current++;setLocating(false);p.onPlan({method:'home'});}};
@@ -41,14 +41,14 @@ export function ResidenceForm(p: Props) {
  const neighborhoods=country?.cities.find(c=>c.name===p.city)?.neighborhoods || [];
  const changeMode=(method:ResidenceMethod)=>{generation.current++;setLocating(false);setError('');p.onPlan({method});};
  const locate=()=>{
-  if(!navigator.geolocation){setError(uiText("onboardingFlow.locationUnavailable"));return;}
+  if(!navigator.geolocation){setError("onboardingFlow.locationUnavailable");return;}
   const request=++generation.current;setLocating(true);setError('');
   navigator.geolocation.getCurrentPosition(pos=>{
    if(request!==generation.current)return;setLocating(false);
-   if(pos.coords.accuracy>1000){setError(uiText("onboardingFlow.weakSignal"));return;}
+   if(pos.coords.accuracy>1000){setError("onboardingFlow.weakSignal");return;}
    const cell=snapToGrid(pos.coords.latitude,pos.coords.longitude);
    p.onPlan({method:'home',lat:cell.lat,lng:cell.lng,accuracy:pos.coords.accuracy});
-  },()=>{if(request!==generation.current)return;setLocating(false);setError(uiText("onboardingFlow.locationFailed"));},
+  },()=>{if(request!==generation.current)return;setLocating(false);setError("onboardingFlow.locationFailed");},
   {enableHighAccuracy:true,timeout:10000,maximumAge:0});
  };
  const valid=!!p.country&&!!p.city.trim()&&!!p.neighborhood&&(p.neighborhood!=='__other__'||!!p.customNeighborhood.trim())&&validResidencePlan(p.plan);

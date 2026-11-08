@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
@@ -35,7 +36,7 @@ interface DialogContentProps extends React.ComponentPropsWithoutRef<typeof Dialo
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   DialogContentProps
->(({ className, children, hideCloseButton, overlayClassName, ...props }, ref) => (
+>(({ className, children, hideCloseButton, overlayClassName, ...props }, ref) => { useUiLocale(); return (
   <DialogPortal>
     <DialogOverlay className={overlayClassName} />
     <DialogPrimitive.Content
@@ -48,16 +49,16 @@ const DialogContent = React.forwardRef<
     >
       {!hideCloseButton && (
         <div data-modal-close-bar className="sticky top-0 z-50 col-span-full flex min-h-12 shrink-0 justify-end bg-background py-1">
-        <DialogPrimitive.Close aria-label="Close" className="relative flex h-11 shrink-0 items-center justify-center gap-2 rounded-full bg-secondary px-3 text-foreground ring-offset-background hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
+        <DialogPrimitive.Close aria-label={uiText("Fechar")} className="relative flex h-11 shrink-0 items-center justify-center gap-2 rounded-full bg-secondary px-3 text-foreground ring-offset-background hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
           <X className="h-5 w-5" />
-          <span>Fechar</span>
+          <span>{uiText("Fechar")}</span>
         </DialogPrimitive.Close>
         </div>
       )}
       {children}
     </DialogPrimitive.Content>
   </DialogPortal>
-));
+); });
 DialogContent.displayName = DialogPrimitive.Content.displayName;
 
 const DialogHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (

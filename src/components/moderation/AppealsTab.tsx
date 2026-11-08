@@ -25,7 +25,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { useAppeals, Appeal } from '@/hooks/useAppeals';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from '@/i18n/ui-date';
 import { pt } from 'date-fns/locale';
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: typeof Clock }> = {
@@ -107,7 +107,7 @@ export default function AppealsTab() {
       ) : appeals.length === 0 ? (
         <Card className="p-8 text-center">
           <Scale className="w-12 h-12 mx-auto mb-3 text-blue-500/50" />
-          <p className="text-muted-foreground">{uiText("Nenhuma apelação ")}{filter !== 'all' ? STATUS_CONFIG[filter]?.label.toLowerCase() : ''}</p>
+          <p className="text-muted-foreground">{uiText("Nenhuma apelação {{value1}}", { value1: (filter !== 'all' ? STATUS_CONFIG[filter]?.label.toLowerCase() : '') ?? "" })}</p>
         </Card>
       ) : (
         <div className="space-y-3">

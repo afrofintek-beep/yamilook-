@@ -27,7 +27,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { useStrikes, Strike, VIOLATION_LABELS } from '@/hooks/useStrikes';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from '@/i18n/ui-date';
 import { pt } from 'date-fns/locale';
 
 const STATUS_COLORS: Record<string, string> = {
@@ -142,13 +142,10 @@ export default function StrikesTab() {
                         <Badge variant="secondary" className="text-xs">
                           {VIOLATION_LABELS[strike.violation_category] || strike.violation_category}
                         </Badge>
-                        <Badge variant="outline" className="text-xs">{uiText("Severidade ")}{strike.severity}/3
-                        </Badge>
+                        <Badge variant="outline" className="text-xs">{uiText("Severidade {{value1}}/3", { value1: (strike.severity) ?? "" })}</Badge>
                       </div>
                       <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{strike.reason}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{uiText("Emitido por ")}{strike.issuer_profile?.display_name || uiText("Sistema")} •{' '}
-                        {formatDistanceToNow(new Date(strike.created_at), { addSuffix: true, locale: pt })}
-                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">{uiText("Emitido por {{value1}} •{{value2}}{{value3}}", { value1: (strike.issuer_profile?.display_name || uiText("Sistema")) ?? "", value2: (' '), value3: (formatDistanceToNow(new Date(strike.created_at), { addSuffix: true, locale: pt })) ?? "" })}</p>
 
                       {expandedId === strike.id && (
                         <div className="mt-3 p-3 bg-muted/50 rounded-lg text-xs space-y-1">

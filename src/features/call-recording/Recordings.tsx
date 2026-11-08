@@ -1,4 +1,4 @@
-import { uiText, useUiLocale } from '@/i18n/ui-copy';
+import { uiLocale, uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -49,7 +49,7 @@ export function Recordings() {
     if (busy || file.ownerId !== ownerId) return;
     setBusy(file.id); setError('');
     try { await saveRecording(file); await reload(); }
-    catch (cause) { if (currentOwner.current === ownerId) setError(cause instanceof Error ? cause.message : 'Não foi possível guardar.'); }
+    catch (cause) { if (currentOwner.current === ownerId) setError(cause instanceof Error ? cause.message : uiText("Não foi possível guardar.")); }
     finally { if (currentOwner.current === ownerId) setBusy(null); }
   };
   const deleteSaved = async (file: Saved) => {
@@ -109,16 +109,16 @@ export function Recordings() {
   };
   return <section aria-label={uiText("As minhas gravações")} className="p-4 space-y-4">
     <div className="flex items-center justify-between gap-2"><h2 className="font-semibold">{uiText("As minhas gravações")}</h2><Button variant="outline" onClick={() => { setError(''); void reload(); }}>{uiText("Actualizar")}</Button></div>
-    <p className="text-sm text-muted-foreground">{uiText("Gravações que iniciou com consentimento. São conservadas por 30 dias. Descarregue as que pretende manter antes da data indicada.")}</p>
+    <p className="text-sm text-muted-foreground">{uiText("Gravações que iniciou com o consentimento de todos os participantes. São conservadas por 30 dias. Descarregue as que pretende manter antes da data indicada.")}</p>
     {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
     {pending.map(file => <div key={file.id} className="rounded-lg border p-3 space-y-2">
-      <p>{uiText("Gravação por enviar · ")}{new Date(file.createdAt).toLocaleString()}</p>
+      <p>{uiText("Gravação por enviar · {{value1}}", { value1: (new Date(file.createdAt).toLocaleString(uiLocale())) ?? "" })}</p>
       <p className="text-sm">{uiText("A cópia está neste dispositivo.")}</p>
       <div className="flex flex-wrap gap-2"><Button disabled={!!busy} onClick={() => void retry(file)}>{busy === file.id ? uiText("A guardar…") : uiText("Tentar guardar novamente")}</Button><Button variant="outline" onClick={() => downloadRecording(file)}>{uiText("Descarregar gravação")}</Button></div>
     </div>)}
     {saved.map(file => <div key={file.id} className="rounded-lg border p-3 space-y-2">
-      <p>{new Date(file.created_at).toLocaleString()} · {file.duration_seconds ?? 0}s</p>
-      {file.expires_at && <p className="text-sm">{uiText("Remoção automática: ")}{new Date(file.expires_at).toLocaleString()}</p>}
+      <p>{new Date(file.created_at).toLocaleString(uiLocale())} · {file.duration_seconds ?? 0}s</p>
+      {file.expires_at && <p className="text-sm">{uiText("Remoção automática: {{value1}}", { value1: (new Date(file.expires_at).toLocaleString(uiLocale())) ?? "" })}</p>}
       {file.expires_at && Date.parse(file.expires_at) - Date.now() <= 7 * 86400000 && <p role="status" className="text-sm font-semibold">{Date.parse(file.expires_at) <= Date.now() ? uiText("Prazo terminado. A eliminação está pendente.") : Date.parse(file.expires_at) - Date.now() <= 86400000 ? uiText("Esta gravação será apagada em menos de 24 horas. Descarregue-a agora.") : uiText("Esta gravação será apagada nos próximos 7 dias. Descarregue-a para conservar.")}</p>}
       {file.deletion_requested_at && <p role="status">{uiText("Eliminação em curso.")}</p>}
       <Button disabled={!!busy} variant="destructive" onClick={() => void deleteSaved(file)}>{uiText("Apagar gravação")}</Button>
@@ -126,7 +126,7 @@ export function Recordings() {
         <Button disabled={!!busy} variant="outline" onClick={() => void play(file)}>{uiText("Reproduzir gravação")}</Button>
         <Button disabled={!!busy || !file.storage_path} variant="outline" onClick={() => void prepareDownload(file)}>{uiText("Descarregar gravação")}</Button>
       </div>
-      {busy === file.id && <p role="status" className="text-sm">{exportProgress === null ? uiText("A carregar…") : `A preparar MP4… ${exportProgress}%`}</p>}
+      {busy === file.id && <p role="status" className="text-sm">{exportProgress === null ? uiText("A carregar…") : uiText("A preparar MP4… {{value1}}%", { value1: (exportProgress) ?? "" })}</p>}
       {originalFile?.id === file.id && !busy && !exportFile && <Button variant="outline" onClick={() => downloadFile(originalFile.file)}>{uiText("Guardar original")}</Button>}
       {exportFile?.id === file.id && <div className="space-y-2">
         <p role="status" className="text-sm">{uiText("Ficheiro pronto. Escolha como guardar.")}</p>

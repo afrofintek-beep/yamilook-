@@ -34,12 +34,12 @@ export function SessionClock({ session, isMentor, onUpdated }: {
         .eq('status', 'live').eq('duration_minutes', duration).select('id').single();
       if (error || !data) throw new Error(uiText("Não foi possível prolongar. Atualiza a sessão e tenta novamente."));
       await onUpdated();
-    } catch (e) { setError(e instanceof Error ? e.message : 'Não foi possível prolongar.'); }
+    } catch (e) { setError(e instanceof Error ? e.message : uiText("Não foi possível prolongar.")); }
     finally { setSaving(false); }
   };
   return <section aria-label={uiText("Tempo da sessão")} className="border-t px-3 py-2 space-y-1 text-xs">
     <div className="flex flex-wrap items-center justify-between gap-2 tabular-nums">
-      <span>{uiText("Previsto: ")}{duration}{uiText(" min")}</span>
+      <span>{uiText("Previsto: {{value1}} min", { value1: (duration) ?? "" })}</span>
       {elapsed !== null ? <><span>{live ? uiText("Decorrido") : uiText("Duração real")}: {formatSessionTime(elapsed)}</span>
         {live && <span>{remaining! >= 0 ? uiText("Restante") : uiText("Tempo adicional")}: {formatSessionTime(Math.abs(remaining!))}</span>}</>
         : <span>{live ? uiText("Hora de início indisponível para esta sessão.") : uiText("O cronómetro começa ao iniciar a sala.")}</span>}

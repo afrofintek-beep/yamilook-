@@ -50,7 +50,7 @@ export function ProfileQRCode({ open, onOpenChange, profile }: ProfileQRCodeProp
     if (canNativeShare) {
       try {
         await navigator.share({
-          title: `${profile.display_name} on Yamilook`,
+          title: uiText("{{value1}} on Yamilook", { value1: (profile.display_name) ?? "" }),
           text: `Add me on Yamilook! @${profile.username}`,
           url: profileUrl,
         });

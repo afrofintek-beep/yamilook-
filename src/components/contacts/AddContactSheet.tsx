@@ -87,7 +87,7 @@ export function AddContactSheet({
     } else {
       toast({
         title: uiText("Request sent"),
-        description: `Friend request sent to ${selectedUser.display_name}`,
+        description: uiText("Friend request sent to {{value1}}", { value1: (selectedUser.display_name) ?? "" }),
       });
       setSelectedUser(null);
       setMessage('');
@@ -197,12 +197,12 @@ export function AddContactSheet({
                 searchQuery.trim() ? (
                   <div className="text-center py-12 text-muted-foreground">
                     <p>{pt ? uiText("Nenhum utilizador encontrado") : uiText("No users found")}</p>
-                    <p className="text-sm">{pt ? `Tenta outra pesquisa ou convida a pessoa para a ${brand}.` : `Try another search or invite the person to ${brand}.`}</p>
+                    <p className="text-sm">{pt ? uiText("Tenta outra pesquisa ou convida a pessoa para a {{value1}}.", { value1: (brand) ?? "" }) : uiText("Try another search or invite the person to {{value1}}.", { value1: (brand) ?? "" })}</p>
                   </div>
                 ) : (
                   <div className="text-center py-12 text-muted-foreground">
                     <Search className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                    <p>{pt ? `Pesquisa utilizadores da ${brand}` : `Search ${brand} users to add`}</p>
+                    <p>{pt ? uiText("Pesquisa utilizadores da {{value1}}", { value1: (brand) ?? "" }) : uiText("Search {{value1}} users to add", { value1: (brand) ?? "" })}</p>
                   </div>
                 )
               ) : (
@@ -256,10 +256,10 @@ export function AddContactSheet({
               )}
             </div>
             <div className="border-t border-border/40 pt-4 space-y-2">
-              <p className="text-sm text-muted-foreground">{pt ? `A pessoa ainda não está na ${brand}?` : `Not on ${brand} yet?`}</p>
+              <p className="text-sm text-muted-foreground">{pt ? uiText("A pessoa ainda não está na {{value1}}?", { value1: (brand) ?? "" }) : uiText("Not on {{value1}} yet?", { value1: (brand) ?? "" })}</p>
               <Button variant="outline" className="w-full min-h-11 rounded-xl" onClick={beginInvitation}>
                 <MailPlus className="w-4 h-4 mr-2" />
-                {pt ? `Convidar para a ${brand}` : `Invite to ${brand}`}
+                {pt ? uiText("Convidar para a {{value1}}", { value1: (brand) ?? "" }) : uiText("Invite to {{value1}}", { value1: (brand) ?? "" })}
               </Button>
               <p className="text-xs text-muted-foreground">{pt ? uiText("Escolhe um contacto no WhatsApp ou email, sem indicar previamente o seu email.") : uiText("Choose a WhatsApp or email contact without entering their email first.")}</p>
             </div>

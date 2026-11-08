@@ -142,7 +142,7 @@ export function BuyKumbuSheet({ open, onOpenChange, onPurchased }: Props) {
 
             {phase === 'choose' ? (
               <Button className="w-full h-12 rounded-xl" onClick={pay} disabled={busy}>
-                {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : `Pagar ${fmtKz(pkg.kwanza)}`}
+                {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : uiText("Pagar {{value1}}", { value1: (fmtKz(pkg.kwanza)) ?? "" })}
               </Button>
             ) : (
               <Button variant="secondary" className="w-full h-12 rounded-xl" onClick={check}>{uiText("Já paguei — verificar agora")}</Button>

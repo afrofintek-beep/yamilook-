@@ -257,8 +257,7 @@ export function HostControlsPanel({
 
           {/* Participants List */}
           <div className="space-y-3">
-            <h4 className="text-sm font-medium text-muted-foreground">{uiText("Participants (")}{participants.length})
-            </h4>
+            <h4 className="text-sm font-medium text-muted-foreground">{uiText("Participants ({{value1}})", { value1: (participants.length) ?? "" })}</h4>
 
             {participants.map((participant) => (
               <motion.div

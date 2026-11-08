@@ -60,7 +60,7 @@ export function MentorCard({ name, avatar, specialty, rating, sessionCount, isVe
               {rating.toFixed(1)}
             </span>
             <span className="w-px h-3 bg-border" />
-            <span>{sessionCount}{uiText(" sessões")}</span>
+            <span>{uiText("{{value1}} sessões", { value1: (sessionCount) ?? "" })}</span>
           </div>
         </CardContent>
       </Card>

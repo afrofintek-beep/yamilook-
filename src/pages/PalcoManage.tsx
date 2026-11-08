@@ -1,4 +1,4 @@
-import { uiText, useUiLocale } from '@/i18n/ui-copy';
+import { uiLocale, uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -31,7 +31,7 @@ import { usePalco, useRodasList, useCreateRoda, useStartRoda, useEndRoda, useVoz
 import { useAuth } from '@/hooks/useAuth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
-import { format, formatDistanceToNow } from 'date-fns';
+import { format, formatDistanceToNow } from '@/i18n/ui-date';
 import { pt } from 'date-fns/locale';
 import {
   DropdownMenu,
@@ -467,8 +467,7 @@ function RodaManageCard({ roda, palcoId, index }: { roda: Roda; palcoId: string;
               </span>
             )}
             <span className="flex items-center gap-1">
-              <Users className="w-3 h-3" />
-              {roda.viewer_count}{uiText(" viewers")}</span>
+              <Users className="w-3 h-3" />{uiText("{{value1}} viewers", { value1: (roda.viewer_count) ?? "" })}</span>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -593,7 +592,7 @@ function StatsTabContent({ palco, endedRodasCount }: { palco: Palco; endedRodasC
   // Format price with Palco's location-based currency
   const formatPrice = (usdPrice: number) => {
     const localValue = usdPrice / palcoCurrency.rate_to_usd;
-    return `${palcoCurrency.symbol}${Math.round(localValue).toLocaleString()}`;
+    return `${palcoCurrency.symbol}${Math.round(localValue).toLocaleString(uiLocale())}`;
   };
 
   const totalRevenue = (palco.total_voices || 0) * (palco.min_price || 5);
@@ -648,8 +647,7 @@ function StatsCard({ label, value, change }: { label: string; value: string | nu
       <p className={cn(
         "text-xs mt-1",
         isPositive ? "text-green-500" : "text-red-500"
-      )}>
-        {change}{uiText(" vs. mês anterior")}</p>
+      )}>{uiText("{{value1}} vs. mês anterior", { value1: (change) ?? "" })}</p>
     </div>
   );
 }

@@ -78,8 +78,8 @@ export function useRecordingSession(callId: string, userId: string | undefined,
         if (id) void recordingSession(callId, 'fail', id).catch(() => {});
       }
       if (mounted.current) setError(action === 'respond'
-        ? 'Não foi possível guardar a sua resposta. Tente novamente.'
-        : 'Não foi possível concluir o pedido de gravação. Verifique a ligação e tente novamente.');
+        ? uiText("Não foi possível guardar a sua resposta. Tente novamente.")
+        : uiText("Não foi possível concluir o pedido de gravação. Verifique a ligação e tente novamente."));
     } finally {
       working.current = false;
       if (mounted.current) setBusy(false);
@@ -196,7 +196,7 @@ export function useRecordingSession(callId: string, userId: string | undefined,
     } catch (cause) {
       if (mounted.current) {
         setRetryAvailable(true);
-        setError(cause instanceof Error ? cause.message : 'Não foi possível guardar a gravação.');
+        setError(cause instanceof Error ? cause.message : uiText("Não foi possível guardar a gravação."));
       }
     } finally {
       working.current = false;

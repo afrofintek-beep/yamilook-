@@ -114,7 +114,7 @@ export function CommentReactions({
         )}
         onClick={() => setShowPicker(!showPicker)}
         onMouseEnter={() => setShowPicker(true)}
-        aria-label={myReaction ? `Your reaction: ${myReactionData?.label}` : uiText("Add reaction")}
+        aria-label={myReaction ? uiText("Your reaction: {{value1}}", { value1: (myReactionData?.label) ?? "" }) : uiText("Add reaction")}
         aria-haspopup="true"
         aria-expanded={showPicker}
       >

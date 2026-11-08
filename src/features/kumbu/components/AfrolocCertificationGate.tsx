@@ -88,8 +88,7 @@ export function AfrolocCertificationGate({
           )}
         </div>
 
-        <p className="text-sm text-muted-foreground">{uiText("Para ")}{action}{uiText(", o teu endereço AFROLOC precisa de ser")}{' '}
-          <span className="font-medium text-foreground">{uiText("certificado por uma autoridade")}</span>.
+        <p className="text-sm text-muted-foreground">{uiText("Para {{value1}}, o teu endereço AFROLOC precisa de ser{{value2}}", { value1: (action) ?? "", value2: (' ') })}<span className="font-medium text-foreground">{uiText("certificado por uma autoridade")}</span>.
         </p>
 
         {afrolocCode && (

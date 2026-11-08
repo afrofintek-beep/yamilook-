@@ -87,7 +87,7 @@ export default function RankingPage() {
                       {' – '}
                       {new Date(h.week_end).toLocaleDateString(uiLocale(), { day: 'numeric', month: 'short' })}
                     </span>
-                    <span className="text-foreground/60 font-medium tabular-nums">{count}{uiText(" participantes")}</span>
+                    <span className="text-foreground/60 font-medium tabular-nums">{uiText("{{value1}} participantes", { value1: (count) ?? "" })}</span>
                   </div>
                 );
               })}

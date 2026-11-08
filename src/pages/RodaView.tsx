@@ -27,7 +27,7 @@ import { useRoda, useJoinRoda, useSubmitVoz, usePalco, useStartQA, useVozes, use
 import { useRodaStream } from '@/hooks/useRodaStream';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from '@/i18n/ui-date';
 import { pt } from 'date-fns/locale';
 import { VideoTrack } from '@/components/live/VideoTrack';
 import { AudioTrack } from '@/components/live/AudioTrack';
@@ -291,20 +291,18 @@ const RodaView = forwardRef<HTMLDivElement>((_, ref) => {
                 : uiText("Esta sessão já foi realizada e terminou.")}
             </p>
             {roda?.ended_at && !isExpiredButNotEnded && (
-              <p className="text-xs text-white/40 mt-2">{uiText("Encerrada há ")}{formatDistanceToNow(new Date(roda.ended_at), {
+              <p className="text-xs text-white/40 mt-2">{uiText("Encerrada há {{value1}}", { value1: (formatDistanceToNow(new Date(roda.ended_at), {
                   locale: pt,
                   addSuffix: false
-                })}
-              </p>
+                })) ?? "" })}</p>
             )}
             {isExpiredButNotEnded && roda?.scheduled_at && (
-              <p className="text-xs text-white/40 mt-2">{uiText("Agendada para ")}{new Date(roda.scheduled_at).toLocaleDateString(uiLocale(), {
+              <p className="text-xs text-white/40 mt-2">{uiText("Agendada para {{value1}}", { value1: (new Date(roda.scheduled_at).toLocaleDateString(uiLocale(), {
                   day: 'numeric',
                   month: 'long',
                   hour: '2-digit',
                   minute: '2-digit'
-                })}
-              </p>
+                })) ?? "" })}</p>
             )}
             <Button
               className="mt-6 bg-palco-accent hover:bg-palco-accent/90 text-palco-surface rounded-full"
@@ -316,11 +314,10 @@ const RodaView = forwardRef<HTMLDivElement>((_, ref) => {
             <Clock className="w-16 h-16 mx-auto mb-4 text-palco-accent/50" />
             <p className="text-lg font-medium">{uiText("Aguardando início")}</p>
             {roda?.scheduled_at && (
-              <p className="text-sm text-white/60 mt-2">{uiText("Começa daqui a ")}{formatDistanceToNow(new Date(roda.scheduled_at), {
+              <p className="text-sm text-white/60 mt-2">{uiText("Começa daqui a {{value1}}", { value1: (formatDistanceToNow(new Date(roda.scheduled_at), {
                   locale: pt,
                   addSuffix: false
-                })}
-              </p>
+                })) ?? "" })}</p>
             )}
           </div>
         )}
@@ -521,12 +518,10 @@ const RodaView = forwardRef<HTMLDivElement>((_, ref) => {
             {isGuide && isQA && (
               <div className="flex items-center gap-2 text-sm text-white">
                 {pendingVozesCount > 0 && (
-                  <span className="px-2 py-1 bg-orange-500/20 text-orange-400 rounded-full text-xs">
-                    {pendingVozesCount}{uiText(" pendentes")}</span>
+                  <span className="px-2 py-1 bg-orange-500/20 text-orange-400 rounded-full text-xs">{uiText("{{value1}} pendentes", { value1: (pendingVozesCount) ?? "" })}</span>
                 )}
                 {activeVozesCount > 0 && (
-                  <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded-full text-xs">
-                    {activeVozesCount}{uiText(" prontas")}</span>
+                  <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded-full text-xs">{uiText("{{value1}} prontas", { value1: (activeVozesCount) ?? "" })}</span>
                 )}
               </div>
             )}
@@ -545,11 +540,10 @@ const RodaView = forwardRef<HTMLDivElement>((_, ref) => {
           </div>
 
           {!isQA && !isGuide && roda?.qa_start_at && (
-            <p className="text-center text-xs text-white/50 mt-2">{uiText("Q&A começa ")}{formatDistanceToNow(new Date(roda.qa_start_at), {
+            <p className="text-center text-xs text-white/50 mt-2">{uiText("Q&A começa {{value1}}", { value1: (formatDistanceToNow(new Date(roda.qa_start_at), {
                 locale: pt,
                 addSuffix: true
-              })}
-            </p>
+              })) ?? "" })}</p>
           )}
         </div>
       )}

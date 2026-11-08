@@ -27,7 +27,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from '@/i18n/ui-date';
 import { pt } from 'date-fns/locale';
 
 interface GroupInvite {
@@ -194,7 +194,7 @@ export function GroupInviteSheet({
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `Junta-te ao grupo ${groupName}`,
+          title: uiText("Junta-te ao grupo {{value1}}", { value1: (groupName) ?? "" }),
           text: `Foste convidado para o grupo "${groupName}" no Yamilook!`,
           url: link,
         });
@@ -207,10 +207,10 @@ export function GroupInviteSheet({
   };
 
   const getExpirationText = (expiresAt: string | null) => {
-    if (!expiresAt) return 'Nunca expira';
+    if (!expiresAt) return uiText('Nunca expira');
     const date = new Date(expiresAt);
-    if (date < new Date()) return 'Expirado';
-    return `Expira ${formatDistanceToNow(date, { addSuffix: true, locale: pt })}`;
+    if (date < new Date()) return uiText('Expirado');
+    return uiText('Expira {{date}}', { date: formatDistanceToNow(date, { addSuffix: true }) });
   };
 
   const isExpired = (expiresAt: string | null) => {
@@ -351,9 +351,7 @@ export function GroupInviteSheet({
                             {getExpirationText(invite.expires_at)}
                           </span>
                           <span className="flex items-center gap-1">
-                            <Users className="w-3 h-3" />
-                            {invite.uses_count}
-                            {invite.max_uses ? ` / ${invite.max_uses}` : ''}{uiText(" usos")}</span>
+                            <Users className="w-3 h-3" />{uiText("{{value1}}{{value2}} usos", { value1: (invite.uses_count) ?? "", value2: (invite.max_uses ? ` / ${invite.max_uses}` : '') })}</span>
                         </div>
                       </div>
                       <div className="flex gap-1">

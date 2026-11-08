@@ -302,7 +302,7 @@ export function CallDiagnosticsPanel() {
         error: errorMsg,
       });
 
-      toast.error(`Teste de loopback falhou: ${errorMsg}`);
+      toast.error(uiText("Teste de loopback falhou: {{value1}}", { value1: (errorMsg) ?? "" }));
       cleanupLoopbackTest();
     }
   }, [cleanupLoopbackTest]);
@@ -651,8 +651,7 @@ export function CallDiagnosticsPanel() {
                 {/* Media Devices */}
                 <div className="space-y-3 mb-6">
                   <h4 className="text-sm font-medium flex items-center gap-2">
-                    <Video className="h-4 w-4" />{uiText("Dispositivos Detetados (")}{diagnostics.mediaDevices.length})
-                  </h4>
+                    <Video className="h-4 w-4" />{uiText("Dispositivos Detetados ({{value1}})", { value1: (diagnostics.mediaDevices.length) ?? "" })}</h4>
                   <div className="space-y-1">
                     {diagnostics.mediaDevices.length === 0 ? (
                       <p className="text-sm text-muted-foreground p-2 bg-muted/50 rounded">{uiText("Nenhum dispositivo detetado (permissões podem estar pendentes)")}</p>
@@ -663,7 +662,7 @@ export function CallDiagnosticsPanel() {
                             {device.kind.replace('input', '').replace('output', ' out')}
                           </Badge>
                           <span className="truncate flex-1">
-                            {device.label || `Dispositivo ${i + 1}`}
+                            {device.label || uiText('Dispositivo {{number}}', { number: i + 1 })}
                           </span>
                         </div>
                       ))
@@ -691,8 +690,7 @@ export function CallDiagnosticsPanel() {
                 {/* ICE Candidates */}
                 <div className="space-y-3 mb-6">
                   <h4 className="text-sm font-medium flex items-center gap-2">
-                    <Wifi className="h-4 w-4" />{uiText("ICE Candidates Locais (")}{diagnostics.localCandidates.length})
-                  </h4>
+                    <Wifi className="h-4 w-4" />{uiText("ICE Candidates Locais ({{value1}})", { value1: (diagnostics.localCandidates.length) ?? "" })}</h4>
                   {diagnostics.localCandidates.length === 0 ? (
                     <p className="text-sm text-muted-foreground p-2 bg-muted/50 rounded">{uiText("A recolher candidatos ICE...")}</p>
                   ) : (

@@ -65,7 +65,7 @@ function CallRecordingControls({ callId, participants, compact }: { callId: stri
     <Dialog open={!!pending && initiator} onOpenChange={open => { if (!open && !busy) void recording.cancel(); }}>
       <DialogContent onEscapeKeyDown={e => { if (busy) e.preventDefault(); }} onPointerDownOutside={e => e.preventDefault()}>
         <DialogHeader><DialogTitle>{uiText("Autorização para gravar")}</DialogTitle>
-          <DialogDescription>{uiText("A gravação só começa depois de todos aceitarem. O pedido expira em 60 segundos.")}</DialogDescription></DialogHeader>
+          <DialogDescription>{uiText("A gravação só começa depois de todos autorizarem. O pedido de autorização expira em 60 segundos.")}</DialogDescription></DialogHeader>
         <div className="space-y-3 py-4">{session?.consents.map(c => <div key={c.user_id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-muted p-3">
           <span>{participants.find(p => p.user_id === c.user_id)?.display_name || uiText("Participante")}</span>
           <span className="flex items-center gap-2 text-sm">{c.consented ? <><Check className="h-4 w-4" />{uiText("Aceitou")}</> : c.revoked_at ? <><X className="h-4 w-4" />{uiText("Recusou")}</> : <><Clock className="h-4 w-4" />{uiText("A aguardar…")}</>}</span>
@@ -78,7 +78,7 @@ function CallRecordingControls({ callId, participants, compact }: { callId: stri
       <DialogContent onEscapeKeyDown={e => { if (busy) e.preventDefault(); }} onPointerDownOutside={e => e.preventDefault()}>
         <DialogHeader><DialogTitle>{uiText("Pedido de gravação")}</DialogTitle>
           <DialogDescription>{uiText("Um participante pretende gravar o áudio e o vídeo desta chamada. Autoriza a gravação?")}</DialogDescription></DialogHeader>
-        <p className="text-sm">{uiText("Pode recusar e continuar na chamada. Fechar este pedido equivale a recusar.")}</p>
+        <p className="text-sm">{uiText("Pode recusar a gravação e continuar na chamada. Fechar este pedido equivale a recusar a gravação.")}</p>
         {errorMessage}
         <DialogFooter className="gap-2">
           <Button variant="outline" disabled={busy} onClick={() => recording.respond(false)}>{uiText("Recusar")}</Button>

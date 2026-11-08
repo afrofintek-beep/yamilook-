@@ -88,8 +88,7 @@ export default function VoicePool() {
         {/* Available Voices */}
         {groupedVozes.available.length > 0 && (
           <section>
-            <h2 className="text-sm font-medium text-palco-text-secondary mb-3">{uiText("Disponíveis (")}{groupedVozes.available.length})
-            </h2>
+            <h2 className="text-sm font-medium text-palco-text-secondary mb-3">{uiText("Disponíveis ({{value1}})", { value1: (groupedVozes.available.length) ?? "" })}</h2>
             <div className="space-y-3">
               {groupedVozes.available.map((voz) => {
                 const config = voiceTypeConfig[voz.type];
@@ -131,8 +130,7 @@ export default function VoicePool() {
         {/* Sold Voices */}
         {groupedVozes.sold.length > 0 && (
           <section>
-            <h2 className="text-sm font-medium text-palco-text-secondary mb-3">{uiText("Vendidas (")}{groupedVozes.sold.length})
-            </h2>
+            <h2 className="text-sm font-medium text-palco-text-secondary mb-3">{uiText("Vendidas ({{value1}})", { value1: (groupedVozes.sold.length) ?? "" })}</h2>
             <div className="space-y-3">
               {groupedVozes.sold.map((voz) => {
                 const config = voiceTypeConfig[voz.type];

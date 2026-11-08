@@ -66,7 +66,7 @@ export function EmojiPanel({ onSelect }: Props) {
               type="button"
               onClick={() => pickTone(t.mod)}
               title={t.label}
-              aria-label={`Tom de pele: ${t.label}`}
+              aria-label={uiText("Tom de pele: {{value1}}", { value1: (t.label) ?? "" })}
               aria-pressed={tone === t.mod}
               className={cn(
                 'text-base leading-none rounded-md p-0.5 transition-transform',
@@ -89,7 +89,7 @@ export function EmojiPanel({ onSelect }: Props) {
               type="button"
               onClick={() => onSelect(toned)}
               className="text-xl p-1.5 rounded-lg hover:bg-secondary/60 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              aria-label={`Emoji ${toned}`}
+              aria-label={uiText("Emoji {{value1}}", { value1: (toned) ?? "" })}
             >
               <span role="img">{toned}</span>
             </button>

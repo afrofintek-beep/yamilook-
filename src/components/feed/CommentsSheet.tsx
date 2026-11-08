@@ -2,7 +2,7 @@ import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from '@/i18n/ui-date';
 import { MoreHorizontal, Trash2, Send } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -295,7 +295,7 @@ export function CommentsSheet({ open, onOpenChange, post }: CommentsSheetProps) 
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="h-[80vh] rounded-t-3xl p-0">
         <SheetHeader className="p-4 border-b">
-          <SheetTitle>{uiText("Comments ")}{totalComments > 0 && `(${totalComments})`}</SheetTitle>
+          <SheetTitle>{uiText("Comments {{value1}}", { value1: (totalComments > 0 && `(${totalComments})`) ?? "" })}</SheetTitle>
         </SheetHeader>
 
         <ScrollArea className="h-[calc(80vh-140px)]">
@@ -329,7 +329,7 @@ export function CommentsSheet({ open, onOpenChange, post }: CommentsSheetProps) 
           {submitError && <p role="alert" className="mb-2 text-sm text-destructive">{uiText("Não foi possível publicar. O texto foi reposto para tentares novamente.")}</p>}
           {replyingTo && (
             <div className="flex items-center justify-between mb-2 text-sm text-muted-foreground">
-              <span>{uiText("Replying to ")}{replyingTo.user.display_name}</span>
+              <span>{uiText("Replying to {{value1}}", { value1: (replyingTo.user.display_name) ?? "" })}</span>
               <Button
                 variant="ghost"
                 size="sm"

@@ -23,12 +23,12 @@ export function LinkedInConnection() {
     try {
       if (connection?.connected) { await linkedinRequest('disconnect'); setConnection({ enabled: true, connected: false }); }
       else await connectLinkedIn();
-    } catch (e) { setError(e instanceof Error ? e.message : 'Não foi possível ligar ao LinkedIn.'); }
+    } catch (e) { setError(e instanceof Error ? e.message : uiText("Não foi possível ligar ao LinkedIn.")); }
     finally { setBusy(false); }
   };
   if (connection?.enabled === false) return null;
   return <section className="space-y-2 rounded-xl border p-3" aria-label={uiText("Conta LinkedIn")}>
-    <p className="text-sm">{connection?.connected ? `LinkedIn ligado: ${connection.name}` : uiText("Liga a tua conta LinkedIn antes de preparar a cópia. A autorização abre o LinkedIn e regressa à Yamilook.")}</p>
+    <p className="text-sm">{connection?.connected ? uiText("LinkedIn ligado: {{value1}}", { value1: (connection.name) ?? "" }) : uiText("Liga a tua conta LinkedIn antes de preparar a cópia. A autorização abre o LinkedIn e regressa à Yamilook.")}</p>
     <Button variant="outline" disabled={busy || !connection} onClick={() => void act()}>{connection?.connected ? uiText("Desligar conta LinkedIn") : uiText("Ligar conta LinkedIn")}</Button>
     <p role="status" className="text-sm">{error}</p>
   </section>;
@@ -56,11 +56,11 @@ export default function DirectLinkedInPublish({ file, postId }: { file: File; po
       for (let i = 0; i < job.parts.length; i++) {
         const part = job.parts[i];
         await linkedinRequest('upload', undefined, { draft: job.id, part: i, blob: file.slice(part.firstByte, part.lastByte + 1) }, abort.signal);
-        setMessage(`A carregar para o LinkedIn… ${Math.round(100 * (i + 1) / job.parts.length)}%`);
+        setMessage(uiText("A carregar para o LinkedIn… {{value1}}%", { value1: (Math.round(100 * (i + 1) / job.parts.length)) ?? "" }));
       }
       const result = await linkedinRequest('finalize', { draft: job.id }, undefined, abort.signal);
-      setPhase(result.status); setMessage(result.status === 'ready' ? 'Cópia carregada. Revê o texto e confirma a publicação.' : 'O LinkedIn está a processar o vídeo. Verifica quando estiver pronto.');
-    } catch (e) { if (!abort.signal.aborted) { setPhase('failed'); setMessage(e instanceof Error ? e.message : 'O envio falhou.'); } }
+      setPhase(result.status); setMessage(result.status === 'ready' ? uiText("Cópia carregada. Revê o texto e confirma a publicação.") : uiText("O LinkedIn está a processar o vídeo. Verifica quando estiver pronto."));
+    } catch (e) { if (!abort.signal.aborted) { setPhase('failed'); setMessage(e instanceof Error ? e.message : uiText("O envio falhou.")); } }
     finally { busy.current = false; }
   };
   const check = async () => {
@@ -69,8 +69,8 @@ export default function DirectLinkedInPublish({ file, postId }: { file: File; po
     try {
       const result = await linkedinRequest('draft', { draft });
       setPhase(result.status); if (result.postId) setPublished(result.postId);
-      setMessage(result.status === 'ready' ? 'Cópia pronta. Confirma a publicação.' : result.status === 'published' ? 'Publicado no LinkedIn.' : result.status === 'processing' ? 'O LinkedIn ainda está a processar o vídeo.' : 'Verifica o teu LinkedIn antes de criar outra publicação.');
-    } catch (e) { setMessage(e instanceof Error ? e.message : 'Não foi possível confirmar o resultado.'); }
+      setMessage(result.status === 'ready' ? uiText("Cópia pronta. Confirma a publicação.") : result.status === 'published' ? uiText("Publicado no LinkedIn.") : result.status === 'processing' ? uiText("O LinkedIn ainda está a processar o vídeo.") : uiText("Verifica o teu LinkedIn antes de criar outra publicação."));
+    } catch (e) { setMessage(e instanceof Error ? e.message : uiText("Não foi possível confirmar o resultado.")); }
     finally { busy.current = false; }
   };
   const publish = async () => {
@@ -80,7 +80,7 @@ export default function DirectLinkedInPublish({ file, postId }: { file: File; po
       const result = await linkedinRequest('publish', { draft, commentary: text, visibility, confirm: true });
       setPublished(result.postId); setPhase('published'); setMessage(uiText("Publicado no LinkedIn."));
     } catch (e) {
-      setPhase('uncertain'); setMessage(e instanceof Error ? e.message : 'Não foi possível confirmar o resultado. Verifica o LinkedIn.');
+      setPhase('uncertain'); setMessage(e instanceof Error ? e.message : uiText("Não foi possível confirmar o resultado. Verifica o LinkedIn."));
     } finally { busy.current = false; }
   };
   if (connection?.enabled === false) return null;
@@ -90,7 +90,7 @@ export default function DirectLinkedInPublish({ file, postId }: { file: File; po
       <p className="text-sm">{uiText("Liga a conta antes de enviar. Ao regressares, volta a preparar a cópia desta publicação.")}</p>
       <Button disabled={!connection} onClick={() => void connectLinkedIn().catch(e => setConnectionError(e.message))}>{uiText("Ligar conta LinkedIn")}</Button>
     </> : <>
-      <p className="text-sm">{uiText("Conta: ")}{connection.name}{uiText(". Será enviado o ficheiro da pré-visualização acima, com logótipo e autor.")}</p>
+      <p className="text-sm">{uiText("Conta: {{value1}}. Será enviado o ficheiro da pré-visualização acima, com logótipo e autor.", { value1: (connection.name) ?? "" })}</p>
       <label className="block text-sm">{uiText("Texto da publicação")}<textarea className="mt-1 w-full rounded border bg-background p-2" maxLength={3000} rows={4} value={text} disabled={['publishing', 'published', 'uncertain'].includes(phase)} onChange={e => { setText(e.target.value); setConfirmed(false); }} /></label>
       <label className="block text-sm">{uiText("Quem pode ver no LinkedIn")}<select className="ml-2 rounded border bg-background p-2" value={visibility} disabled={['publishing', 'published', 'uncertain'].includes(phase)} onChange={e => { setVisibility(e.target.value); setConfirmed(false); }}><option value="PUBLIC">{uiText("Todos")}</option><option value="CONNECTIONS">{uiText("As minhas ligações")}</option></select></label>
       {phase === 'idle' && <Button className="w-full" onClick={() => void prepare()}>{uiText("Carregar arte para LinkedIn")}</Button>}

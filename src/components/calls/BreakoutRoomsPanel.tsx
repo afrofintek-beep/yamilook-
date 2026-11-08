@@ -223,8 +223,7 @@ export function BreakoutRoomsPanel({
                             <DropdownMenuItem
                               key={room.id}
                               onClick={() => handleAssignParticipant(room.id, participant.user_id)}
-                            >{uiText("Move to ")}{room.name}
-                            </DropdownMenuItem>
+                            >{uiText("Move to {{value1}}", { value1: (room.name) ?? "" })}</DropdownMenuItem>
                           ))}
                         </DropdownMenuContent>
                       </DropdownMenu>

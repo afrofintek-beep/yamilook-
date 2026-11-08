@@ -6,7 +6,7 @@ import { X, Users, Image as ImageIcon, MessageSquare, Video, Heart, Sparkles, Ch
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
-import { format } from 'date-fns';
+import { format } from '@/i18n/ui-date';
 import { pt } from 'date-fns/locale';
 
 type DetailType = 'friends' | 'posts' | 'momambos' | 'messages' | 'calls' | 'reactions';
@@ -245,7 +245,7 @@ export function JourneyDetailSheet({ open, onOpenChange, type, userId, onNavigat
                   friends.map((friend, index) => (
                     <motion.button
                       type="button"
-                      aria-label={`Ver perfil de ${friend.display_name}`}
+                      aria-label={uiText("Ver perfil de {{value1}}", { value1: (friend.display_name) ?? "" })}
                       key={friend.id}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}

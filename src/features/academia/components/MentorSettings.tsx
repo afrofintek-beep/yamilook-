@@ -51,7 +51,7 @@ export function MentorSettings() {
     <h2 className="font-semibold">{uiText("O meu perfil de mentor")}</h2>
     <p>{mentorStatus[mentor.status] ?? mentor.status}{mentor.is_verified_mentor ? uiText(" · Verificado para cobrar") : ''}</p>
     {mentor.status !== 'active' && <p className="text-sm text-muted-foreground">{uiText("Novas sessões exigem aprovação. O histórico mantém-se disponível. Completa a tua apresentação para a revisão.")}</p>}
-    {decisions.find(d => d.reason)?.reason && <p className="text-sm">{uiText("Última indicação: ")}{decisions.find(d => d.reason)?.reason}</p>}
+    {decisions.find(d => d.reason)?.reason && <p className="text-sm">{uiText("Última indicação: {{value1}}", { value1: (decisions.find(d => d.reason)?.reason) ?? "" })}</p>}
     {!editing ? <Button variant="outline" onClick={() => { setSpecialty(mentor.specialty); setBio(mentor.mentor_bio ?? ''); setExperience(mentor.experience); setEditing(true); }}>{resubmit ? uiText("Actualizar e recandidatar-me") : uiText("Editar apresentação")}</Button> : <div className="space-y-3">
       <Label htmlFor="edit-specialty">{uiText("Especialidade")}</Label><Input id="edit-specialty" maxLength={120} value={specialty} onChange={e => setSpecialty(e.target.value)} />
       <Label htmlFor="edit-bio">{uiText("Biografia")}</Label><Textarea id="edit-bio" maxLength={2000} value={bio} onChange={e => setBio(e.target.value)} />

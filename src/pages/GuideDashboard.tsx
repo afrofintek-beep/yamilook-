@@ -29,7 +29,7 @@ import { useMyPalcos, Palco } from '@/hooks/usePalco';
 import { useAuth } from '@/hooks/useAuth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
-import { formatDistanceToNow, format } from 'date-fns';
+import { formatDistanceToNow, format } from '@/i18n/ui-date';
 import { pt } from 'date-fns/locale';
 import {
   DropdownMenu,
@@ -167,18 +167,15 @@ export default function GuideDashboard() {
             <TabsTrigger
               value="active"
               className="rounded-full data-[state=active]:bg-palco-accent data-[state=active]:text-palco-surface data-[state=active]:shadow-sm"
-            >{uiText("Ativos (")}{activePalcos.length})
-            </TabsTrigger>
+            >{uiText("Ativos ({{value1}})", { value1: (activePalcos.length) ?? "" })}</TabsTrigger>
             <TabsTrigger
               value="scheduled"
               className="rounded-full data-[state=active]:bg-palco-accent data-[state=active]:text-palco-surface data-[state=active]:shadow-sm"
-            >{uiText("Agendados (")}{scheduledPalcos.length})
-            </TabsTrigger>
+            >{uiText("Agendados ({{value1}})", { value1: (scheduledPalcos.length) ?? "" })}</TabsTrigger>
             <TabsTrigger
               value="archived"
               className="rounded-full data-[state=active]:bg-palco-accent data-[state=active]:text-palco-surface data-[state=active]:shadow-sm"
-            >{uiText("Arquivo (")}{archivedPalcos.length})
-            </TabsTrigger>
+            >{uiText("Arquivo ({{value1}})", { value1: (archivedPalcos.length) ?? "" })}</TabsTrigger>
           </TabsList>
         </Tabs>
 

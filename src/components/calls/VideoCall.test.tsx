@@ -35,7 +35,7 @@ it('opens participants and settings rather than only toggling unused state',asyn
   setup();
   fireEvent.click(screen.getByRole('button',{name:/Participantes.*2/i}));
   expect(await screen.findByText('Participante de teste')).toBeVisible();
-  fireEvent.click(screen.getByRole('button',{name:'Close'}));
+  fireEvent.click(screen.getByRole('button',{name:'Fechar'}));
   fireEvent.click(screen.getByRole('button',{name:'Definições da chamada'}));
   expect(screen.getByText('Definições abertas')).toBeVisible();
   expect(screen.getByTestId('call-media')).toBeInTheDocument();

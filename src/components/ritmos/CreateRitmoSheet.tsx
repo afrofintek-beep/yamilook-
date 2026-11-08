@@ -182,7 +182,7 @@ export function CreateRitmoSheet({ open, onOpenChange }: CreateRitmoSheetProps) 
     // Check file size
     const sizeMB = file.size / (1024 * 1024);
     if (sizeMB > MAX_VIDEO_SIZE_MB) {
-      toast.error(`Video too large. Maximum ${MAX_VIDEO_SIZE_MB}MB allowed.`);
+      toast.error(uiText("Video too large. Maximum {{value1}}MB allowed.", { value1: (MAX_VIDEO_SIZE_MB) ?? "" }));
       return false;
     }
 
@@ -200,7 +200,7 @@ export function CreateRitmoSheet({ open, onOpenChange }: CreateRitmoSheetProps) 
       video.onloadedmetadata = () => {
         URL.revokeObjectURL(video.src);
         if (video.duration > MAX_VIDEO_DURATION) {
-          toast.error(`Video too long. Maximum ${MAX_VIDEO_DURATION} seconds allowed.`);
+          toast.error(uiText("Video too long. Maximum {{value1}} seconds allowed.", { value1: (MAX_VIDEO_DURATION) ?? "" }));
           resolve(false);
         } else if (video.duration < 3) {
           toast.error(uiText("Video too short. Minimum 3 seconds required."));
@@ -341,7 +341,7 @@ export function CreateRitmoSheet({ open, onOpenChange }: CreateRitmoSheetProps) 
                 </motion.button>
 
                 {/* Duration hint */}
-                <p className="absolute bottom-8 text-xs text-muted-foreground text-center">{uiText("Vídeos de 3-")}{MAX_VIDEO_DURATION}{uiText(" segundos")}</p>
+                <p className="absolute bottom-8 text-xs text-muted-foreground text-center">{uiText("Vídeos de 3-{{value1}} segundos", { value1: (MAX_VIDEO_DURATION) ?? "" })}</p>
 
                 {/* Hidden inputs */}
                 <input

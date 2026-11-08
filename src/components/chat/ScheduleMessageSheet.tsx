@@ -1,6 +1,7 @@
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState } from 'react';
-import { format, addDays, addHours, setHours, setMinutes } from 'date-fns';
+import { addDays, addHours, setHours, setMinutes } from 'date-fns';
+import { format } from '@/i18n/ui-date';
 import { Calendar, Clock, Repeat, Send, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -165,12 +166,9 @@ export function ScheduleMessageSheet({
           {/* Schedule preview */}
           {selectedDate && (
             <div className="p-3 rounded-xl bg-primary/10 border border-primary/20">
-              <p className="text-sm text-center">{uiText("Message will be sent on")}{' '}
-                <strong>{format(selectedDate, 'EEEE, MMMM d, yyyy')}</strong>{uiText(" at")}{' '}
-                <strong>{selectedTime}</strong>
+              <p className="text-sm text-center">{uiText('A mensagem será enviada em {{date}} às {{time}}.', { date: format(selectedDate, 'EEEE, MMMM d, yyyy'), time: selectedTime })}
                 {isRecurring && (
-                  <span className="block text-muted-foreground mt-1">{uiText("Repeating ")}{recurrencePattern}
-                  </span>
+                  <span className="block text-muted-foreground mt-1">{uiText("Repeating {{value1}}", { value1: recurrencePattern === 'daily' ? uiText("Daily") : recurrencePattern === 'weekly' ? uiText("Weekly") : uiText("Monthly") })}</span>
                 )}
               </p>
             </div>

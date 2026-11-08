@@ -1,3 +1,4 @@
+import { uiText } from '@/i18n/ui-copy';
 import { useCallback } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -59,7 +60,7 @@ export function useEndConversa() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      if (!user) throw new Error('Not authenticated');
+      if (!user) throw new Error(uiText("Not authenticated"));
       const { data, error } = await supabase
         .from('mokubico_conversas')
         .update({ status: 'ended', ended_at: new Date().toISOString() })
@@ -69,7 +70,7 @@ export function useEndConversa() {
         .single();
       if (error) throw error;
       // A write blocked by RLS can affect no rows. Do not report success.
-      if (!data) throw new Error('Não foi possível confirmar o encerramento.');
+      if (!data) throw new Error(uiText("Não foi possível confirmar o encerramento."));
       return data.id;
     },
     onSuccess: async (id) => {
@@ -95,7 +96,7 @@ export function useOpenConversa() {
   const { user } = useAuth();
   return useCallback(
     async ({ space, title, guestIds }: { space: string; title: string; guestIds: string[] }) => {
-      if (!user) throw new Error('Not authenticated');
+      if (!user) throw new Error(uiText("Not authenticated"));
 
       // Limit: one live conversa per host. If one's already open, reuse it.
       const { data: existing } = await supabase

@@ -1,4 +1,4 @@
-import { uiText, useUiLocale } from '@/i18n/ui-copy';
+import { uiLocale, uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useGroupConference } from '@/features/group-calls/GroupConferenceProvider';
 import { isRecentlyOnline } from '@/lib/online-presence';
 import { usePresenceClock } from '@/hooks/usePresenceClock';
@@ -590,9 +590,9 @@ export default function Chat() {
     const deleted = ownMessages.length - failed.size;
     if (failed.size) {
       setSelectedMessages(failed);
-      toast({ title: `${deleted} apagada(s); ${failed.size} não confirmada(s)`, description: uiText("As mensagens que falharam continuam selecionadas. Tenta novamente."), variant: 'destructive' });
+      toast({ title: uiText("{{value1}} apagada(s); {{value2}} não confirmada(s)", { value1: (deleted) ?? "", value2: (failed.size) ?? "" }), description: uiText("As mensagens que falharam continuam selecionadas. Tenta novamente."), variant: 'destructive' });
     } else {
-      toast({ title: `${deleted} mensagem(ns) apagada(s)` });
+      toast({ title: uiText("{{value1}} mensagem(ns) apagada(s)", { value1: (deleted) ?? "" }) });
       handleCancelSelection();
     }
   };
@@ -620,7 +620,7 @@ export default function Chat() {
     for (const id of selectedMessages) {
       await toggleStar(id);
     }
-    toast({ title: `${selectedMessages.size} mensagem(ns) com estrela` });
+    toast({ title: uiText("{{value1}} mensagem(ns) com estrela", { value1: (selectedMessages.size) ?? "" }) });
     handleCancelSelection();
   };
 
@@ -727,7 +727,7 @@ export default function Chat() {
                       : isOnline
                       ? t('chat.online')
                       : otherUserShowLastSeen && otherParticipant?.last_seen
-                      ? `Visto ${formatLastSeen(otherParticipant.last_seen)}`
+                      ? uiText("Visto {{value1}}", { value1: (formatLastSeen(otherParticipant.last_seen)) ?? "" })
                       : !isGroup && otherUserShowOnlineStatus
                       ? t('chat.offline')
                       : ''}
@@ -822,9 +822,7 @@ export default function Chat() {
         {pinnedMessages.length > 0 && (
           <div className="flex items-center gap-2 px-4 py-2 bg-primary/5 border-b border-border/30">
             <Pin className="w-4 h-4 text-primary" />
-            <span className="text-sm text-muted-foreground">
-              {pinnedMessages.length}{uiText(" pinned message")}{pinnedMessages.length > 1 ? 's' : ''}
-            </span>
+            <span className="text-sm text-muted-foreground">{uiText("{{value1}} pinned message{{value2}}", { value1: (pinnedMessages.length) ?? "", value2: (pinnedMessages.length > 1 ? 's' : '') })}</span>
           </div>
         )}
       </header>
@@ -981,7 +979,7 @@ export default function Chat() {
                 >
                   <p className="text-sm">{msg.content}</p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {new Date(msg.created_at).toLocaleString()}
+                    {new Date(msg.created_at).toLocaleString(uiLocale())}
                   </p>
                 </button>
               ))}
@@ -1055,7 +1053,7 @@ export default function Chat() {
                     )}
                     {collectionTab === 'starred' && <Star aria-hidden="true" className="h-3 w-3 text-amber-500" />}
                     <time className="ml-auto shrink-0 text-xs text-muted-foreground" dateTime={message.created_at}>
-                      {new Date(message.created_at).toLocaleDateString()}
+                      {new Date(message.created_at).toLocaleDateString(uiLocale())}
                     </time>
                   </div>
                   <p className="mt-1 line-clamp-2 break-words text-sm text-foreground">{summary}</p>

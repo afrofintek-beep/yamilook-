@@ -22,7 +22,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from '@/i18n/ui-date';
 import { pt } from 'date-fns/locale';
 import { AFRICAN_REACTIONS } from '@/lib/reactions';
 
@@ -198,7 +198,7 @@ export default function Notifications() {
               id: `pr_${reaction.id}`,
               type: 'post_reaction',
               title: reactor?.display_name || 'Utilizador',
-              message: `reagiu ao teu post com ${reactionEmoji}`,
+              message: uiText("reagiu ao teu post com {{value1}}", { value1: (reactionEmoji) ?? "" }),
               avatar_url: reactor?.avatar_url,
               created_at: reaction.created_at,
               read: true,
@@ -235,7 +235,7 @@ export default function Notifications() {
               id: `cm_${comment.id}`,
               type: 'comment',
               title: commenter?.display_name || 'Utilizador',
-              message: `comentou: "${comment.content?.substring(0, 50)}${comment.content?.length > 50 ? '...' : ''}"`,
+              message: uiText("comentou: \"{{value1}}{{value2}}\"", { value1: (comment.content?.substring(0, 50)) ?? "", value2: (comment.content?.length > 50 ? '...' : '') }),
               avatar_url: commenter?.avatar_url,
               created_at: comment.created_at,
               read: true,
@@ -270,7 +270,7 @@ export default function Notifications() {
             id: `mc_${call.id}`,
             type: 'missed_call',
             title: caller?.display_name || 'Utilizador',
-            message: `perdeste uma chamada ${call.type === 'video' ? 'de vídeo' : 'de voz'}`,
+            message: uiText("perdeste uma chamada {{value1}}", { value1: (call.type === 'video' ? 'de vídeo' : 'de voz') }),
             avatar_url: caller?.avatar_url,
             created_at: call.created_at,
             read: true,

@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { SpaceCard } from '../components/SpaceCard';
 import { LiveSummaryCard } from '../components/LiveSummaryCard';
 import { MOKUBICO_COPY, SPACES } from '../copy';
@@ -6,6 +7,7 @@ import { useLiveSpaces } from '../hooks/useMokubicoData';
 import { motion } from 'framer-motion';
 
 export default function MokubHome() {
+  useUiLocale();
   const { data: liveSpaces } = useLiveSpaces();
   const LIVE_SPACES = liveSpaces ?? new Set<string>();
 
@@ -46,7 +48,7 @@ export default function MokubHome() {
             <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               {MOKUBICO_COPY.chooseSpace}
             </h2>
-            <span className="text-[10px] text-muted-foreground/50">{SPACES.length} espaços</span>
+            <span className="text-[10px] text-muted-foreground/50">{SPACES.length}{uiText(" espaços")}</span>
           </motion.div>
           <div className="space-y-3">
             {SPACES.map((space, i) => (

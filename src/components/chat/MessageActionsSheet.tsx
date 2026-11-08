@@ -236,7 +236,7 @@ export function MessageActionsSheet({
               <div className="space-y-2 px-1 pb-1 pt-2">
                 <div className="flex flex-wrap items-center justify-between gap-1" role="group" aria-label={uiText("Cor do destaque")}>
                   {HIGHLIGHT_COLORS.map(c => (
-                    <button key={c.name} type="button" aria-label={`Cor ${c.name}`}
+                    <button key={c.name} type="button" aria-label={uiText("Cor {{value1}}", { value1: (c.name) ?? "" })}
                       aria-pressed={selectedColor === c.name} onClick={() => setSelectedColor(c.name)}
                       className={cn('flex h-11 w-11 items-center justify-center rounded-full focus-visible:ring-2 focus-visible:ring-ring', selectedColor === c.name && 'ring-2 ring-ring ring-offset-2 ring-offset-background')}>
                       <span className={cn('flex h-8 w-8 items-center justify-center rounded-full', c.swatch)}>

@@ -262,7 +262,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const event = unread[0];
         securityToast.warning(unread.length === 1
           ? 'Novo acesso à sua conta'
-          : `${unread.length} novos acessos à sua conta`, {
+          : uiText("{{value1}} novos acessos à sua conta", { value1: (unread.length) ?? "" }), {
           id: `account-login-alert-${user.id}`,
           description: `${event.device_label} · ${event.app_surface === 'kosolola' ? 'KOSOLOLA' : 'YAMILOOK'}`,
           duration: 3000,
@@ -476,7 +476,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error(uiText("useAuth must be used within an AuthProvider"));
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 }

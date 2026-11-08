@@ -159,7 +159,7 @@ describe('StatusViewer', () => {
       });
       renderStatusViewer({ initialGroup: group, allGroups: [group] });
       
-      const img = screen.getByRole('img', { name: 'Status' });
+      const img = screen.getByRole('img', { name: 'Estados' });
       expect(img).toHaveAttribute('src', 'https://example.com/photo.jpg');
     });
 

@@ -16,7 +16,7 @@ export function LiveStreamProvider({ children }: { children: React.ReactNode }) 
 export function useLiveStreamContext() {
   const ctx = useContext(LiveStreamContext);
   if (!ctx) {
-    throw new Error(uiText("useLiveStreamContext must be used within LiveStreamProvider"));
+    throw new Error("useLiveStreamContext must be used within LiveStreamProvider");
   }
   return ctx;
 }

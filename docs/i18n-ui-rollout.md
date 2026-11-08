@@ -1,27 +1,31 @@
-# Ten-language interface rollout — working draft
+# Ten-language interface rollout
 
-Status: **incomplete; do not merge or release**.
+The public Academy presentation and its real application captures were released in PR #188. This change extends localization across the application flows behind those screens.
 
-The public Academy screens were released separately in PR #188. This branch prepares the remaining interface localization and does not claim that the application is fully translated.
+## Languages and coverage
 
-## Prepared
+Portuguese, English, French, Arabic, Amharic, Swahili, Lingala, Yoruba, Shona and Zulu (`pt`, `en`, `fr`, `ar`, `am`, `sw`, `ln`, `yo`, `sn`, `zu`). Each interface dictionary contains 3,435 fixed source phrases. The existing translation namespace has 1,041 keys in each language; 4,568 missing locale entries were filled across the ten dictionaries.
 
-- Application-authored text in 264 source files now calls the interface translation namespace. Component subscriptions are placed before early returns; changing a language does not deliberately remount calls or forms.
-- Module-level label objects use lazy getters so they do not freeze the language at import time.
-- Existing translations are reused where the original phrase matches. Missing translations still fall back to existing source copy and are not counted as translated.
-- Several explicit Portuguese date/number locales now follow the application language.
-- `i18n-ui-translation-worklist.json` contains the exact 3,383 distinct source texts and requested languages for the next translation pass. It contains application copy only, not user messages, names, profile records, credentials or uploaded media.
+Covered areas include Academy sessions, learning paths and mentoring; chat, contacts, groups and message tools; calls, recording notices and consent; profiles, feed and sharing; invitations and campaign participation; calendar labels, relative dates and recovery screens. KOSOLOLA login copy now supports all ten languages. Server invitation templates follow the sender's selected language and preserve it in the registration link.
 
-## Required before release
+## Implementation and data boundaries
 
-1. Complete and review the ten language dictionaries. A local translation-model trial produced semantic errors and its generated text was rejected; none of it is in this branch.
-2. Review extracted fragments and combine sentences with dynamic values into complete interpolation templates. Preserve variable names, numbers and product names.
-3. Finish invitation templates, server-generated errors and system messages, static Academy copy/status tables, and remaining date-fns locale usage.
-4. Review the source diff for technical labels, memoized values and any remaining untranslated application copy. Never translate user-authored content automatically.
-5. Add regression checks for consent meaning, live language switching, Arabic layout, invitations and missing/empty translations; run the applicable full checks and browser flows before publication.
+- The interface namespace loads with the selected language. Changing languages updates subscribed components without deliberately remounting forms, calls or media. Arabic sets the document direction to RTL.
+- Dynamic names, amounts, dates and codes are interpolated locally into complete sentence templates. User posts, messages, biographies and media are not translated.
+- Translation was performed at build time using Google Translate on authorized fixed application copy. English and Portuguese source phrases were handled separately in the final review. Reviewed overrides cover ambiguous controls, recording consent/refusal/retention and relative-time fallbacks.
+- There are no runtime translation API calls. No recipient addresses, names, invitation codes, user content or credentials were sent to the translation provider.
+- Known server errors use an explicit allowlist; unrecognized server details use a generic translated fallback. Developer invariant errors retain their original identifiers.
+- Invitation email HTML escapes interpolated text and URLs. JWT verification, authentication, recipient ownership checks, campaign eligibility, idempotency and existing database policies are preserved. No database migration is required.
+- Other languages load lazily. Startup recovery uses a small synchronous dictionary independent of authentication and the main translation loader.
 
-## Validation so far
+## Validation
 
-- TypeScript application check passed.
-- Public-language coverage, Academy communities, group creation and campaign-invitation component checks: 55 tests passed in four files.
-- This is draft validation, not an end-to-end multilingual sign-off.
+`npm test -- --maxWorkers=3`, `npx tsc --noEmit -p tsconfig.app.json`, and `npm run build` validate the change. The dedicated interface workflow runs these checks on future translation changes.
+
+Coverage tests require an entry for every literal UI source and reject runtime values passed to `uiText`. They also check all ten dictionaries, existing keys, placeholders, Arabic direction, actual calendar captions and navigation, form state preservation, localized invitation links and escaped email templates. Recording tests exercise consent and refusal in every language. React hook ordering was checked across the changed components.
+
+## Limits and release
+
+This is machine-assisted localization with targeted semantic review, not native-speaker certification of every phrase. Internal administration reports, printable manuals, technical diagnostics and provider-owned browser/device dialogs are not a claim of complete ten-language coverage. User-authored content and database-authored titles remain in their original language.
+
+The frontend is deployed through the repository's existing Vercel integration. Deploy `send-user-invitation` and `send-mvp-candidate-invitation` with the shared invitation files and `verify_jwt: true`. Confirm the deployment commit and smoke-test the public language flows after release; do not send real invitation emails as a test.

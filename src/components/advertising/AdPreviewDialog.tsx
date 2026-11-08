@@ -465,7 +465,7 @@ export function AdPreviewDialog({
                       </div>
                       <div className="flex justify-between mt-1 text-[10px] text-muted-foreground">
                         <span>0</span>
-                        <span>{uiText("Orçamento: ")}{currentBudget}{uiText(" créditos")}</span>
+                        <span>{uiText("Orçamento: {{value1}} créditos", { value1: (currentBudget) ?? "" })}</span>
                         <span>1000+</span>
                       </div>
                     </Card>
@@ -492,8 +492,8 @@ export function AdPreviewDialog({
                           <p className="text-sm font-bold">200</p>
                           <p className="text-[10px] text-muted-foreground">{uiText("créditos")}</p>
                           <div className="mt-2 pt-2 border-t border-muted">
-                            <p className="text-[10px] text-muted-foreground">~{Math.round((200 / CPM_ESTIMATE) * 1000).toLocaleString(uiLocale())}{uiText(" impressões")}</p>
-                            <p className="text-[10px] text-muted-foreground">~{Math.round((200 / CPM_ESTIMATE) * 1000 * 0.5).toLocaleString(uiLocale())}{uiText(" pessoas")}</p>
+                            <p className="text-[10px] text-muted-foreground">{uiText("~{{value1}} impressões", { value1: (Math.round((200 / CPM_ESTIMATE) * 1000).toLocaleString(uiLocale())) ?? "" })}</p>
+                            <p className="text-[10px] text-muted-foreground">{uiText("~{{value1}} pessoas", { value1: (Math.round((200 / CPM_ESTIMATE) * 1000 * 0.5).toLocaleString(uiLocale())) ?? "" })}</p>
                           </div>
                         </motion.button>
 
@@ -516,8 +516,8 @@ export function AdPreviewDialog({
                           <p className="text-sm font-bold">500</p>
                           <p className="text-[10px] text-muted-foreground">{uiText("créditos")}</p>
                           <div className="mt-2 pt-2 border-t border-primary/20">
-                            <p className="text-[10px] text-muted-foreground">~{Math.round((500 / CPM_ESTIMATE) * 1000).toLocaleString(uiLocale())}{uiText(" impressões")}</p>
-                            <p className="text-[10px] text-muted-foreground">~{Math.round((500 / CPM_ESTIMATE) * 1000 * 0.5).toLocaleString(uiLocale())}{uiText(" pessoas")}</p>
+                            <p className="text-[10px] text-muted-foreground">{uiText("~{{value1}} impressões", { value1: (Math.round((500 / CPM_ESTIMATE) * 1000).toLocaleString(uiLocale())) ?? "" })}</p>
+                            <p className="text-[10px] text-muted-foreground">{uiText("~{{value1}} pessoas", { value1: (Math.round((500 / CPM_ESTIMATE) * 1000 * 0.5).toLocaleString(uiLocale())) ?? "" })}</p>
                           </div>
                         </motion.button>
 
@@ -539,8 +539,8 @@ export function AdPreviewDialog({
                           <p className="text-sm font-bold">1000</p>
                           <p className="text-[10px] text-muted-foreground">{uiText("créditos")}</p>
                           <div className="mt-2 pt-2 border-t border-amber-500/20">
-                            <p className="text-[10px] text-muted-foreground">~{Math.round((1000 / CPM_ESTIMATE) * 1000).toLocaleString(uiLocale())}{uiText(" impressões")}</p>
-                            <p className="text-[10px] text-muted-foreground">~{Math.round((1000 / CPM_ESTIMATE) * 1000 * 0.5).toLocaleString(uiLocale())}{uiText(" pessoas")}</p>
+                            <p className="text-[10px] text-muted-foreground">{uiText("~{{value1}} impressões", { value1: (Math.round((1000 / CPM_ESTIMATE) * 1000).toLocaleString(uiLocale())) ?? "" })}</p>
+                            <p className="text-[10px] text-muted-foreground">{uiText("~{{value1}} pessoas", { value1: (Math.round((1000 / CPM_ESTIMATE) * 1000 * 0.5).toLocaleString(uiLocale())) ?? "" })}</p>
                           </div>
                         </motion.button>
                       </div>
@@ -549,7 +549,7 @@ export function AdPreviewDialog({
                       )}
                     </div>
 
-                    <p className="text-[10px] text-muted-foreground mt-3 italic">{uiText("* Estimativa baseada no custo médio de ~")}{CPM_ESTIMATE}{uiText(" créditos por 1.000 impressões")}</p>
+                    <p className="text-[10px] text-muted-foreground mt-3 italic">{uiText("* Estimativa baseada no custo médio de ~{{value1}} créditos por 1.000 impressões", { value1: (CPM_ESTIMATE) ?? "" })}</p>
                   </motion.div>
 
                   <Separator className="my-4" />
@@ -603,7 +603,7 @@ export function AdPreviewDialog({
 
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <MapPin className="w-3 h-3" />
-                      <span>{uiText("Público-alvo: ")}{ad.target_city}{ad.target_neighborhood ? ` - ${ad.target_neighborhood}` : ''}</span>
+                      <span>{uiText("Público-alvo: {{value1}}{{value2}}", { value1: (ad.target_city) ?? "", value2: (ad.target_neighborhood ? ` - ${ad.target_neighborhood}` : '') })}</span>
                     </div>
                   </div>
 
@@ -618,7 +618,7 @@ export function AdPreviewDialog({
                         className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive mb-4"
                       >
                         <AlertTriangle className="w-4 h-4 shrink-0" />
-                        <p className="text-xs">{uiText("Créditos insuficientes. Precisas de ")}{ad.total_budget - (businessProfile?.credit_balance || 0)}{uiText(" créditos adicionais.")}</p>
+                        <p className="text-xs">{uiText("Créditos insuficientes. Precisas de {{value1}} créditos adicionais.", { value1: (ad.total_budget - (businessProfile?.credit_balance || 0)) })}</p>
                       </motion.div>
                     ) : activated ? (
                       <motion.div
@@ -655,7 +655,7 @@ export function AdPreviewDialog({
                         </motion.div>
                       ) : (
                         <>
-                          <Zap className="w-4 h-4 mr-1" />{uiText("Ativar por ")}{ad.total_budget}{uiText(" créditos")}</>
+                          <Zap className="w-4 h-4 mr-1" />{uiText("Ativar por {{value1}} créditos", { value1: (ad.total_budget) ?? "" })}</>
                       )}
                     </Button>
                   </div>

@@ -179,8 +179,7 @@ export function BuyCreditsSheet({ open, onOpenChange, onDone }: Props) {
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <div className="font-semibold flex items-center gap-2">
-                        {p.credits.toLocaleString(uiLocale())}{uiText(" créditos")}{p.popular && (
+                      <div className="font-semibold flex items-center gap-2">{uiText("{{value1}} créditos", { value1: (p.credits.toLocaleString(uiLocale())) ?? "" })}{p.popular && (
                           <span className="text-[10px] font-bold text-primary bg-primary/10 rounded-full px-2 py-0.5">{uiText("POPULAR")}</span>
                         )}
                       </div>

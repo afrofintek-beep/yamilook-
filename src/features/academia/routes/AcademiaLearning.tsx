@@ -54,9 +54,9 @@ export default function AcademiaLearning() {
       {!goals.isLoading && !goals.isError && !visible.length && <p className="text-muted-foreground">{scope === 'mentor' ? uiText("Os pedidos dos alunos aparecerão aqui.") : uiText("Ainda não tens percursos. Começa com um objetivo concreto.")}</p>}
       <section aria-label={uiText("Percursos recentes")} className="space-y-3">
         {visible.map(g => <button key={g.id} className="w-full text-left rounded-xl border p-4 space-y-2 hover:bg-muted/40" onClick={() => navigate(`/academia/percursos/${g.id}`)}>
-          <h2 className="font-semibold break-words">{g.title}</h2><p className="text-sm text-muted-foreground break-words">{scope === 'mentor' ? `Aluno: ${g.learnerName}` : `Mentor: ${g.mentorName}`}</p>
-          <p className="text-sm">{learningStatus[g.status]} · {g.approved}/{g.total}{uiText(" desafios validados")}</p>
-          {g.total > 0 && <progress className="w-full accent-primary" aria-label={`Progresso de ${g.title}`} value={g.approved} max={g.total} />}
+          <h2 className="font-semibold break-words">{g.title}</h2><p className="text-sm text-muted-foreground break-words">{scope === 'mentor' ? uiText("Aluno: {{value1}}", { value1: (g.learnerName) ?? "" }) : uiText("Mentor: {{value1}}", { value1: (g.mentorName) ?? "" })}</p>
+          <p className="text-sm">{uiText("{{value1}} · {{value2}}/{{value3}} desafios validados", { value1: (learningStatus[g.status]) ?? "", value2: (g.approved) ?? "", value3: (g.total) ?? "" })}</p>
+          {g.total > 0 && <progress className="w-full accent-primary" aria-label={uiText("Progresso de {{value1}}", { value1: (g.title) ?? "" })} value={g.approved} max={g.total} />}
         </button>)}
       </section>
       {(goals.data?.length || 0) >= 100 && <p className="text-xs text-muted-foreground">{uiText("A mostrar os 100 percursos mais recentes.")}</p>}

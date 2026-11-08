@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -9,6 +10,7 @@ import { MOKUBICO_COPY } from '../copy';
 import { useActiveLiveSession, useBandaActiveCount, useNovidadesCount, useBandaActiveMembers } from '../hooks/useMokubicoData';
 
 export function LiveSummaryCard() {
+  useUiLocale();
   const navigate = useNavigate();
   const [membersOpen, setMembersOpen] = useState(false);
   const members = useBandaActiveMembers(membersOpen);
@@ -50,8 +52,7 @@ export function LiveSummaryCard() {
                     <div className="flex items-center gap-1 mt-0.5">
                       <span className="flex items-center gap-1 text-[10px] text-destructive/80">
                         <Users className="h-2.5 w-2.5" />
-                        {liveSession.viewerCount} a ouvir
-                      </span>
+                        {liveSession.viewerCount}{uiText(" a ouvir")}</span>
                     </div>
                   )}
                 </div>
@@ -80,8 +81,8 @@ export function LiveSummaryCard() {
               <Radio className="h-5 w-5 text-muted-foreground/50" />
             </div>
             <div className="flex-1">
-              <p className="text-sm text-muted-foreground">Nenhum palco ao vivo</p>
-              <p className="text-[10px] text-muted-foreground/50">Sê o primeiro a abrir uma roda</p>
+              <p className="text-sm text-muted-foreground">{uiText("Nenhum palco ao vivo")}</p>
+              <p className="text-[10px] text-muted-foreground/50">{uiText("Sê o primeiro a abrir uma roda")}</p>
             </div>
           </motion.div>
         )}
@@ -95,7 +96,7 @@ export function LiveSummaryCard() {
           transition={{ delay: 0.15, duration: 0.4 }}
           className="text-left min-w-0 rounded-2xl bg-card border border-border/30 p-3.5 flex items-center gap-3 group hover:border-primary/20 transition-colors duration-300 cursor-pointer active:scale-[0.97]"
           type="button"
-          aria-label="Ver membros da banda ativa"
+          aria-label={uiText("Ver membros da banda ativa")}
           onClick={() => setMembersOpen(true)}
         >
           <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/15 transition-colors">
@@ -125,14 +126,14 @@ export function LiveSummaryCard() {
       <Sheet open={membersOpen} onOpenChange={setMembersOpen}>
         <SheetContent side="bottom" className="h-[80dvh] rounded-t-2xl flex flex-col overflow-hidden pb-[calc(1rem+env(safe-area-inset-bottom,0px))]">
           <SheetHeader className="shrink-0 pr-10">
-            <SheetTitle>Membros da banda</SheetTitle>
-            <SheetDescription>Pessoas que pertencem à tua banda selecionada.</SheetDescription>
+            <SheetTitle>{uiText("Membros da banda")}</SheetTitle>
+            <SheetDescription>{uiText("Pessoas que pertencem à tua banda selecionada.")}</SheetDescription>
           </SheetHeader>
           <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain mt-4 space-y-1">
-            {members.isLoading ? <p role="status">A carregar membros…</p> : members.isError ? <div role="alert"><p>Não foi possível carregar a banda.</p><Button variant="outline" onClick={() => void members.refetch()}>Tentar novamente</Button></div> : !members.data?.length ? <p>A tua banda ainda não tem membros disponíveis.</p> : members.data.map(member => (
+            {members.isLoading ? <p role="status">{uiText("A carregar membros…")}</p> : members.isError ? <div role="alert"><p>{uiText("Não foi possível carregar a banda.")}</p><Button variant="outline" onClick={() => void members.refetch()}>{uiText("Tentar novamente")}</Button></div> : !members.data?.length ? <p>{uiText("A tua banda ainda não tem membros disponíveis.")}</p> : members.data.map(member => (
               <button type="button" key={member.id} className="w-full flex items-center gap-3 rounded-xl p-3 text-left hover:bg-muted focus-visible:ring-2 focus-visible:ring-primary" onClick={() => {setMembersOpen(false); navigate(`/profile/${member.id}`);}}>
                 <Avatar className="h-11 w-11 shrink-0"><AvatarImage src={member.avatar_url || undefined} /><AvatarFallback>{member.display_name?.[0]?.toUpperCase() || 'M'}</AvatarFallback></Avatar>
-                <span className="min-w-0"><span className="block font-medium break-words">{member.display_name || 'Membro da banda'}</span>{member.username && <span className="block text-sm text-muted-foreground truncate">@{member.username.trim()}</span>}</span>
+                <span className="min-w-0"><span className="block font-medium break-words">{member.display_name || uiText("Membro da banda")}</span>{member.username && <span className="block text-sm text-muted-foreground truncate">@{member.username.trim()}</span>}</span>
               </button>
             ))}
           </div>

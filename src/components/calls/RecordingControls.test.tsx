@@ -1,3 +1,5 @@
+import { changeAppLanguage } from '@/i18n';
+import { uiText } from '@/i18n/ui-copy';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { RecordingControls } from './RecordingControls';
@@ -168,3 +170,17 @@ it('finishes a delayed manual stop after the call screen unmounts', async () => 
   view.unmount();finish(new Blob(['sound'],{type:'audio/mp4'}));await tick();
   expect(mocks.upload).toHaveBeenCalledOnce();expect(state?.status).toBe('completed');
 });
+
+for (const language of ['pt','en','fr','ar','am','sw','ln','yo','sn','zu']) {
+  it(`keeps refusal available without starting a recording in ${language}`, async () => {
+    await changeAppLanguage(language);
+    try {
+      state=pending();mocks.userId='other';await mount();
+      expect(screen.getByText(uiText('Pode recusar a gravação e continuar na chamada. Fechar este pedido equivale a recusar a gravação.'))).toBeInTheDocument();
+      await click(uiText('Recusar'));
+      expect(mocks.api).toHaveBeenCalledWith('call','respond','rec',false);
+      expect(mocks.start).not.toHaveBeenCalled();
+      expect(state?.status).toBe('stopped');
+    } finally { cleanup(); await changeAppLanguage('pt'); }
+  });
+}

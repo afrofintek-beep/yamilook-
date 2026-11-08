@@ -15,7 +15,7 @@ import {
   Type,
   Archive,
 } from 'lucide-react';
-import { format, formatDistanceToNow } from 'date-fns';
+import { format, formatDistanceToNow } from '@/i18n/ui-date';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -198,10 +198,7 @@ export default function Status() {
                       />
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold truncate">{group.user.display_name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {group.statuses.length}{uiText(" status")}{group.statuses.length > 1 ? uiText("es") : ''} •{' '}
-                          {formatDistanceToNow(new Date(group.latest_at), { addSuffix: true })}
-                        </p>
+                        <p className="text-sm text-muted-foreground">{group.statuses.length} {t('status.statusCount', { count: group.statuses.length })} • {formatDistanceToNow(new Date(group.latest_at), { addSuffix: true })}</p>
                       </div>
                     </motion.div>
                   ))}

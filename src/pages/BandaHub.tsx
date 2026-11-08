@@ -234,8 +234,7 @@ export default function BandaHub() {
                         {firstActiveHost.display_name?.[0] || 'G'}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="text-sm text-muted-foreground">
-                      {firstActiveHost.display_name}{uiText(" está no Palco.")}</span>
+                    <span className="text-sm text-muted-foreground">{uiText("{{value1}} está no Palco.", { value1: (firstActiveHost.display_name) ?? "" })}</span>
                   </div>
                 )}
                 <Button

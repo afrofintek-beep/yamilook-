@@ -2,7 +2,7 @@ import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { ChatMediaImage, ChatMediaLink } from './PrivateMediaElements';
 import { privateChatPath, signPrivateChatMedia } from '@/lib/private-chat-media';
 import { useState, useEffect } from 'react';
-import { format } from 'date-fns';
+import { format } from '@/i18n/ui-date';
 import { Image, Film, FileText, Link2, Download, X, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -313,14 +313,11 @@ export function MediaGallery({ open, onOpenChange, conversationId }: MediaGaller
           <Tabs defaultValue="media" className="w-full">
             <TabsList className="w-full justify-start px-4 bg-transparent border-b rounded-none">
               <TabsTrigger value="media" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
-                <Image className="w-4 h-4 mr-2" />{uiText("Media (")}{media.length})
-              </TabsTrigger>
+                <Image className="w-4 h-4 mr-2" />{uiText("Media ({{value1}})", { value1: (media.length) ?? "" })}</TabsTrigger>
               <TabsTrigger value="files" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
-                <FileText className="w-4 h-4 mr-2" />{uiText("Files (")}{files.length})
-              </TabsTrigger>
+                <FileText className="w-4 h-4 mr-2" />{uiText("Files ({{value1}})", { value1: (files.length) ?? "" })}</TabsTrigger>
               <TabsTrigger value="links" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
-                <Link2 className="w-4 h-4 mr-2" />{uiText("Links (")}{links.length})
-              </TabsTrigger>
+                <Link2 className="w-4 h-4 mr-2" />{uiText("Links ({{value1}})", { value1: (links.length) ?? "" })}</TabsTrigger>
             </TabsList>
 
             <ScrollArea className="h-[calc(100vh-12rem)]">
@@ -380,8 +377,7 @@ export function MediaGallery({ open, onOpenChange, conversationId }: MediaGaller
           {/* Selection actions */}
           {isSelecting && selectedItems.size > 0 && (
             <div className="absolute bottom-0 left-0 right-0 p-4 bg-background border-t flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">
-                {selectedItems.size}{uiText(" selected")}</span>
+              <span className="text-sm text-muted-foreground">{uiText("{{value1}} selected", { value1: (selectedItems.size) ?? "" })}</span>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={downloadSelected}>
                   <Download className="w-4 h-4 mr-2" />{uiText("Download")}</Button>

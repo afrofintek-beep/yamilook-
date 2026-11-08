@@ -102,7 +102,7 @@ export default function Home() {
     if (error || data?.length !== selectedIds.size) {
       toast({ title: uiText("Erro"), description: error?.message || 'Não foi possível confirmar o arquivo de todas as conversas. Tenta novamente.', variant: 'destructive' });
     } else {
-      toast({ title: `${selectedIds.size} conversa(s) arquivada(s)` });
+      toast({ title: uiText("{{value1}} conversa(s) arquivada(s)", { value1: (selectedIds.size) ?? "" }) });
       setSelectionMode(false);
       setSelectedIds(new Set());
       refresh();
@@ -121,7 +121,7 @@ export default function Home() {
     if (error) {
       toast({ title: uiText("Erro"), description: error.message, variant: 'destructive' });
     } else {
-      toast({ title: `${selectedIds.size} conversa(s) fixada(s)` });
+      toast({ title: uiText("{{value1}} conversa(s) fixada(s)", { value1: (selectedIds.size) ?? "" }) });
       setSelectionMode(false);
       setSelectedIds(new Set());
       refresh();
@@ -140,7 +140,7 @@ export default function Home() {
     if (error) {
       toast({ title: uiText("Erro"), description: error.message, variant: 'destructive' });
     } else {
-      toast({ title: `${selectedIds.size} conversa(s) silenciada(s)` });
+      toast({ title: uiText("{{value1}} conversa(s) silenciada(s)", { value1: (selectedIds.size) ?? "" }) });
       setSelectionMode(false);
       setSelectedIds(new Set());
       refresh();

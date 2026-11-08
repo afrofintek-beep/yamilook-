@@ -28,7 +28,7 @@ import { Ritmo } from '@/hooks/useRitmos';
 import { AfricanReactionType, AFRICAN_REACTIONS, getReactionIcon } from '@/lib/reactions';
 import { useAuth } from '@/hooks/useAuth';
 import { useLongPress } from '@/hooks/useLongPress';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from '@/i18n/ui-date';
 
 interface RitmoPlayerProps {
   ritmo: Ritmo;

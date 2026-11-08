@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import * as React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { DayPicker } from "react-day-picker";
@@ -7,7 +8,9 @@ import { buttonVariants } from "@/components/ui/button";
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>;
 
-function Calendar({ className, classNames, showOutsideDays = true, ...props }: CalendarProps) {
+function Calendar({ className, classNames, showOutsideDays = true, formatters, labels, ...props }: CalendarProps) {
+  const language = useUiLocale();
+  const dateText = (date: Date, options: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat(language, options).format(date);
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
@@ -46,6 +49,24 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }: C
         IconRight: ({ ..._props }) => <ChevronRight className="h-4 w-4" />,
       }}
       {...props}
+      dir={language === 'ar' ? 'rtl' : 'ltr'}
+      formatters={{
+        formatCaption: date => dateText(date, { month: 'long', year: 'numeric' }),
+        formatDay: date => dateText(date, { day: 'numeric' }),
+        formatMonthCaption: date => dateText(date, { month: 'long' }),
+        formatYearCaption: date => dateText(date, { year: 'numeric' }),
+        formatWeekdayName: date => dateText(date, { weekday: 'short' }),
+        ...formatters,
+      }}
+      labels={{
+        labelNext: () => uiText('Mês seguinte'),
+        labelPrevious: () => uiText('Mês anterior'),
+        labelMonthDropdown: () => uiText('Selecionar mês'),
+        labelYearDropdown: () => uiText('Selecionar ano'),
+        labelWeekday: date => dateText(date, { weekday: 'long' }),
+        labelDay: date => dateText(date, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
+        ...labels,
+      }}
     />
   );
 }

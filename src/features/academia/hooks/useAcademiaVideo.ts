@@ -30,16 +30,16 @@ export async function requestAcademiaVideo(sessionId: string, action: 'join'|'st
     let reason = '';
     try { reason = (await error.context?.json())?.error || ''; } catch { /* network error */ }
     const messages: Record<string,string> = {
-      unauthenticated: 'A tua sessão expirou. Inicia sessão novamente.',
-      video_unavailable: 'O serviço de vídeo está temporariamente indisponível.',
-      reservation_required: 'Reserva um lugar para entrar nesta sessão.',
-      not_live: 'Aguarda que o mentor inicie a sessão.',
-      mentor_required: 'Apenas o mentor pode iniciar ou encerrar a sessão.',
-      too_early: 'A sala abre 15 minutos antes da hora marcada.',
-      session_closed: 'Esta sessão já foi encerrada.',
-      room_close_failed: 'A sessão foi encerrada. Não foi possível confirmar o fecho da ligação; tenta novamente.',
+      get unauthenticated() { return uiText("A tua sessão expirou. Inicia sessão novamente."); },
+      get video_unavailable() { return uiText("O serviço de vídeo está temporariamente indisponível."); },
+      get reservation_required() { return uiText("Reserva um lugar para entrar nesta sessão."); },
+      get not_live() { return uiText("Aguarda que o mentor inicie a sessão."); },
+      get mentor_required() { return uiText("Apenas o mentor pode iniciar ou encerrar a sessão."); },
+      get too_early() { return uiText("A sala abre 15 minutos antes da hora marcada."); },
+      get session_closed() { return uiText("Esta sessão já foi encerrada."); },
+      get room_close_failed() { return uiText("A sessão foi encerrada. Não foi possível confirmar o fecho da ligação; tenta novamente."); },
     };
-    throw new Error(messages[reason] || 'Não foi possível ligar à sala de vídeo. Tenta novamente.');
+    throw new Error(messages[reason] || uiText("Não foi possível ligar à sala de vídeo. Tenta novamente."));
   }
   if (!data || data.error) throw new Error(uiText("Não foi possível obter acesso à sala."));
   return data as {token:string;url:string;isMentor:boolean};
@@ -105,10 +105,10 @@ export function useAcademiaVideo(sessionId: string | undefined) {
         recordAcademiaCall('disconnected',reason === undefined ? 'unknown' : (DisconnectReason[reason] || String(reason)));
         ref.current=null;setRoom(null);setParticipants([]);setConnection(ConnectionState.Disconnected);release();
         setError(reason===DisconnectReason.DUPLICATE_IDENTITY
-          ? 'Esta conta entrou na mesma sala noutro dispositivo. Usa apenas um dispositivo por conta nesta sessão.'
+          ? uiText("Esta conta entrou na mesma sala noutro dispositivo. Usa apenas um dispositivo por conta nesta sessão.")
           : reason===DisconnectReason.ROOM_DELETED || reason===DisconnectReason.PARTICIPANT_REMOVED
-            ? 'A ligação foi encerrada pelo servidor ou pelo responsável da sala.'
-            : 'A ligação à sala foi perdida após a tentativa de recuperação. Verifica a internet e entra novamente.');
+            ? uiText("A ligação foi encerrada pelo servidor ou pelo responsável da sala.")
+            : uiText("A ligação à sala foi perdida após a tentativa de recuperação. Verifica a internet e entra novamente."));
       }});
       r.on(RoomEvent.AudioPlaybackStatusChanged,()=>{if(active())setAudioBlocked(!r.canPlaybackAudio);});
       r.on(RoomEvent.DataReceived,(data:Uint8Array,p?:RemoteParticipant,_kind?:unknown,topic?:string)=>{
@@ -132,7 +132,7 @@ export function useAcademiaVideo(sessionId: string | undefined) {
           else await r.localParticipant.setMicrophoneEnabled(true);
         }catch{failures.push(kind==='camera'?'câmara':'microfone');recordAcademiaCall('device_failed',kind);}
       }
-      if(active()&&failures.length)setError(`Ligado sem ${failures.join(' e ')}. Verifica as permissões e tenta ativar novamente.`);
+      if(active()&&failures.length)setError(uiText("Ligado sem {{value1}}. Verifica as permissões e tenta ativar novamente.", { value1: (failures.join(' e ')) ?? "" }));
       if(!active()){await r.disconnect();return;}
       await r.startAudio().catch(()=>{});
       if(active()){setAudioBlocked(!r.canPlaybackAudio);sync();}
@@ -140,7 +140,7 @@ export function useAcademiaVideo(sessionId: string | undefined) {
       if(active()) {
         recordAcademiaCall('join_failed','connection_or_access_failure');
         await next?.disconnect();ref.current=null;setRoom(null);setParticipants([]);
-        setError(e instanceof Error ? e.message : 'Não foi possível entrar. Confirma a reserva e a ligação à internet.');
+        setError(e instanceof Error ? e.message : uiText("Não foi possível entrar. Confirma a reserva e a ligação à internet."));
       }
     } finally {busy.current=false;if(active()){setLoading(false);if(!ref.current)release();}}
   };

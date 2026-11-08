@@ -124,8 +124,7 @@ export function SessionCard({
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                  <Users className="h-3 w-3" />
-                  {spotsLeft}/{spots}{uiText(" vagas")}</span>
+                  <Users className="h-3 w-3" />{uiText("{{value1}}/{{value2}} vagas", { value1: (spotsLeft) ?? "", value2: (spots) ?? "" })}</span>
                 {isAlmostFull && (
                   <span className="text-[10px] text-primary font-medium animate-pulse">{uiText("Quase cheio!")}</span>
                 )}

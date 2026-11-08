@@ -87,11 +87,11 @@ export function ContactCard({
     } else {
       toast({
         title: isInCloseFriends
-          ? `Removido dos ${closeFriendLabel}s`
-          : `Adicionado aos ${closeFriendLabel}s`,
+          ? uiText("Removido dos {{value1}}s", { value1: (closeFriendLabel) ?? "" })
+          : uiText("Adicionado aos {{value1}}s", { value1: (closeFriendLabel) ?? "" }),
         description: isInCloseFriends
-          ? `Esta pessoa já não verá os teus estados de ${closeFriendLabel}s`
-          : `Esta pessoa verá os teus estados de ${closeFriendLabel}s`,
+          ? uiText("Esta pessoa já não verá os teus estados de {{value1}}s", { value1: (closeFriendLabel) ?? "" })
+          : uiText("Esta pessoa verá os teus estados de {{value1}}s", { value1: (closeFriendLabel) ?? "" }),
       });
     }
   };
@@ -206,12 +206,11 @@ export function ContactCard({
                   }`}
                 />
                 {isInCloseFriends
-                  ? `Tirar dos ${closeFriendLabel}s`
-                  : `Pôr nos ${closeFriendLabel}s`}
+                  ? uiText("Tirar dos {{value1}}s", { value1: (closeFriendLabel) ?? "" })
+                  : uiText("Pôr nos {{value1}}s", { value1: (closeFriendLabel) ?? "" })}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setNicknameDialogOpen(true)}>
-                <Edit2 className="w-4 h-4 mr-2" />
-                {t('common.edit')}{uiText(" nickname")}</DropdownMenuItem>
+                <Edit2 className="w-4 h-4 mr-2" />{uiText("{{value1}} nickname", { value1: (t('common.edit')) ?? "" })}</DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() => onRemove(contact.id)}
@@ -235,7 +234,7 @@ export function ContactCard({
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="nickname">{uiText("Nickname for ")}{contact.profile?.display_name}</Label>
+              <Label htmlFor="nickname">{uiText("Nickname for {{value1}}", { value1: (contact.profile?.display_name) ?? "" })}</Label>
               <Input
                 id="nickname"
                 value={newNickname}

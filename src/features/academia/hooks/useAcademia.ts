@@ -1,8 +1,8 @@
-import { uiText } from '@/i18n/ui-copy';
+import { useUiLocale, uiText } from '@/i18n/ui-copy';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { format } from 'date-fns';
+import { format } from '@/i18n/ui-date';
 import { pt } from 'date-fns/locale';
 import type { MentorCardProps } from '../components/MentorCard';
 
@@ -29,8 +29,9 @@ export interface AcademiaSession {
 const QUERY_KEY = ['academia-sessions'];
 
 export function useAcademiaSessions() {
+  const locale = useUiLocale();
   return useQuery({
-    queryKey: QUERY_KEY,
+    queryKey: [...QUERY_KEY, locale],
     // Availability changes on other devices; override the app's five-minute cache.
     staleTime: 0,
     refetchOnMount: 'always',

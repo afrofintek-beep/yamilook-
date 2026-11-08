@@ -24,9 +24,9 @@ export default function PostShareDialog({ id, mediaUrls = [], privacy = 'everyon
     try {
       const result = await sharePostLink(id, { copyOnly });
       if (result === 'cancelled') return;
-      setStatus(result === 'copied' ? 'Ligação copiada.' : 'Partilha preparada.');
+      setStatus(result === 'copied' ? uiText("Ligação copiada.") : uiText("Partilha preparada."));
       onShared?.();
-    } catch { setStatus('Não foi possível partilhar. Copia a ligação abaixo.'); }
+    } catch { setStatus(uiText("Não foi possível partilhar. Copia a ligação abaixo.")); }
   };
   return <ResponsiveModal open={open} onOpenChange={onOpenChange} title={uiText("Partilhar publicação")} description={uiText("Escolhe como e onde queres partilhar.")} className="max-h-[90svh] overflow-y-auto">
     {isOwner && <p className="mb-4 text-sm">{uiText("Visibilidade na Yamilook: ")}<strong>{audience}</strong>{uiText(". Enviar um ficheiro mantém esta escolha.")}</p>}
@@ -47,6 +47,6 @@ export default function PostShareDialog({ id, mediaUrls = [], privacy = 'everyon
     <p role="status" className="mt-3 text-sm">{status}</p>
     <input aria-label={uiText("Ligação pública")} className="mt-2 w-full rounded border bg-background p-3 text-xs" value={`https://www.yamilook.com/post/${id}`} readOnly onFocus={event => event.target.select()} />
     </div>}
-    {!isPublic && <p className="text-sm text-muted-foreground">{uiText("A ligação pública não está disponível para esta publicação. ")}{isOwner ? uiText("Podes enviar o ficheiro acima sem mudar a visibilidade.") : uiText("Só o autor pode enviar uma cópia dos seus ficheiros.")}</p>}
+    {!isPublic && <p className="text-sm text-muted-foreground">{uiText("A ligação pública não está disponível para esta publicação. {{value1}}", { value1: (isOwner ? uiText("Podes enviar o ficheiro acima sem mudar a visibilidade.") : uiText("Só o autor pode enviar uma cópia dos seus ficheiros.")) ?? "" })}</p>}
   </ResponsiveModal>;
 }

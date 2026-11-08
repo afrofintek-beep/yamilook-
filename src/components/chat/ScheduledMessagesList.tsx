@@ -1,6 +1,6 @@
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect } from 'react';
-import { format } from 'date-fns';
+import { format } from '@/i18n/ui-date';
 import { Clock, Edit2, Trash2, Send, Repeat, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -208,8 +208,7 @@ export function ScheduledMessagesList({
                               </Badge>
                             )}
                           </div>
-                          <p className="text-xs text-muted-foreground">{uiText("To: ")}{msg.conversation_name} • {format(new Date(msg.scheduled_for), 'MMM d, h:mm a')}
-                          </p>
+                          <p className="text-xs text-muted-foreground">{uiText("To: {{value1}} • {{value2}}", { value1: (msg.conversation_name) ?? "", value2: (format(new Date(msg.scheduled_for), 'MMM d, h:mm a')) ?? "" })}</p>
                         </div>
                       </div>
 

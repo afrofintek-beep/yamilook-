@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useManageAcademiaSession, type AcademiaSession } from '../hooks/useAcademia';
 import { sessionActions, type SessionAction } from '../session-management';
-const labels: Record<SessionAction, string> = { archive: 'Arquivar', restore: 'Restaurar', cancel: 'Cancelar sessão', delete: 'Eliminar' };
+const labels: Record<SessionAction, string> = { get archive() { return uiText("Arquivar"); }, get restore() { return uiText("Restaurar"); }, get cancel() { return uiText("Cancelar sessão"); }, get delete() { return uiText("Eliminar"); } };
 const descriptions: Record<SessionAction, string> = {
   archive: 'A sessão sai da lista principal. O histórico e os materiais são preservados. Inscrições pendentes precisam de conclusão ou cancelamento.',
   restore: 'A sessão volta ao histórico ou à lista de próximas sessões, conforme o seu estado. Não reabre inscrições de sessões canceladas.',
@@ -24,7 +24,7 @@ export function SessionManagement({ session }: { session: AcademiaSession }) {
   if (!actions.length) return null;
   return <>
     <DropdownMenu>
-      <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" aria-label={`Gerir sessão: ${session.title}`}><MoreHorizontal className="h-5 w-5" /></Button></DropdownMenuTrigger>
+      <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" aria-label={uiText("Gerir sessão: {{value1}}", { value1: (session.title) ?? "" })}><MoreHorizontal className="h-5 w-5" /></Button></DropdownMenuTrigger>
       <DropdownMenuContent align="end">{actions.map(a => <DropdownMenuItem key={a} onSelect={() => { setReason(''); setAction(a); }}>{labels[a]}</DropdownMenuItem>)}</DropdownMenuContent>
     </DropdownMenu>
     <Dialog open={!!action} onOpenChange={open => { if (!open && !mutation.isPending) setAction(null); }}>

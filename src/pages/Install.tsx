@@ -37,9 +37,9 @@ export default function Install() {
     try {
       await deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
-      setStatus(outcome === 'accepted' ? 'Pedido aceite. Conclui a instalação e abre o ícone Yamilook no ecrã principal.' : 'Instalação cancelada. Podes tentar novamente pelo menu do navegador.');
+      setStatus(outcome === 'accepted' ? uiText("Pedido aceite. Conclui a instalação e abre o ícone Yamilook no ecrã principal.") : uiText("Instalação cancelada. Podes tentar novamente pelo menu do navegador."));
     } catch {
-      setStatus('Não foi possível abrir a instalação. Usa o menu do navegador para adicionar o Yamilook ao ecrã principal.');
+      setStatus(uiText("Não foi possível abrir a instalação. Usa o menu do navegador para adicionar o Yamilook ao ecrã principal."));
     } finally {
       clearAppInstallPrompt(); setInstalling(false);
     }

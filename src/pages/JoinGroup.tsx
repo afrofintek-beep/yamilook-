@@ -32,7 +32,7 @@ export default function JoinGroup() {
 
   useEffect(() => {
     if (!code) {
-      setStatus('error');
+      setStatus("error");
       setError(uiText("Código de convite inválido"));
       return;
     }
@@ -40,7 +40,7 @@ export default function JoinGroup() {
     if (authLoading) return;
 
     if (!user) {
-      setStatus('ready');
+      setStatus("ready");
       return;
     }
 
@@ -50,31 +50,31 @@ export default function JoinGroup() {
   const validateInvite = async () => {
     if (!code) return;
 
-    setStatus('loading');
+    setStatus("loading");
 
     const { data, error } = await supabase.rpc('preview_chat_invite', { invite_code: code });
     const result = data as { success?: boolean; conversation_id?: string; name?: string; avatar_url?: string | null; member_count?: number } | null;
     if (error || !result?.success || !result.conversation_id) {
-      setStatus('error');
+      setStatus("error");
       setError(uiText("Link de convite inválido ou expirado"));
       return;
     }
     setGroupInfo({ name: result.name || 'Grupo', avatar_url: result.avatar_url || null, member_count: result.member_count || 0 });
     setConversationId(result.conversation_id);
-    setStatus('ready');
+    setStatus("ready");
   };
 
   const handleJoin = async () => {
     if (!code || !user) return;
 
-    setStatus('joining');
+    setStatus("joining");
 
     const { data, error } = await supabase.rpc('use_group_invite', {
       invite_code: code,
     });
 
     if (error) {
-      setStatus('error');
+      setStatus("error");
       setError(uiText("Erro ao entrar no grupo"));
       return;
     }
@@ -82,24 +82,24 @@ export default function JoinGroup() {
     const result = data as { success: boolean; error?: string; already_member?: boolean; conversation_id?: string };
 
     if (!result.success) {
-      setStatus('error');
-      setError(result.error || 'Erro desconhecido');
+      setStatus("error");
+      setError(result.error || uiText("Erro desconhecido"));
       return;
     }
 
     if (result.already_member) {
-      setStatus('already_member');
+      setStatus("already_member");
       setConversationId(result.conversation_id || null);
       toast({
         title: uiText("Já és membro!"),
         description: uiText("Já fazes parte deste grupo."),
       });
     } else {
-      setStatus('success');
+      setStatus("success");
       setConversationId(result.conversation_id || null);
       toast({
         title: uiText("Bem-vindo ao grupo!"),
-        description: `Entraste no grupo "${groupInfo?.name}".`,
+        description: uiText("Entraste no grupo \"{{value1}}\".", { value1: (groupInfo?.name) ?? "" }),
       });
     }
   };
@@ -196,7 +196,7 @@ export default function JoinGroup() {
                 <CardDescription>
                   {status === 'already_member'
                     ? uiText("Já fazes parte deste grupo.")
-                    : `Bem-vindo ao "${groupInfo?.name}"!`}
+                    : uiText("Bem-vindo ao \"{{value1}}\"!", { value1: (groupInfo?.name) ?? "" })}
                 </CardDescription>
               </>
             )}

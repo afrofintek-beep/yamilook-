@@ -138,8 +138,7 @@ export function VirtualBackgroundPicker({
                 />
                 <div>
                   <p className="font-medium">{bg.name}</p>
-                  <p className="text-sm text-muted-foreground">{uiText("Intensity: ")}{bg.blur_intensity}/10
-                  </p>
+                  <p className="text-sm text-muted-foreground">{uiText("Intensity: {{value1}}/10", { value1: (bg.blur_intensity) ?? "" })}</p>
                 </div>
                 {selectedBackground === bg.id && (
                   <Check className="h-5 w-5 text-primary ml-auto" />

@@ -19,7 +19,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
+import { format } from '@/i18n/ui-date';
 import { pt } from 'date-fns/locale';
 import { AfrolocCertificationGate } from '../components/AfrolocCertificationGate';
 import { useAfrolocCertification } from '../hooks/useAfrolocCertification';
@@ -111,7 +111,7 @@ export default function Payouts() {
 
     const res = data as { amount_local?: number } | null;
     toast.success(
-      res?.amount_local != null ? `Pedido submetido — ${fmtKz(res.amount_local)}.` : 'Pedido de payout submetido.',
+      res?.amount_local != null ? uiText("Pedido submetido — {{value1}}.", { value1: (fmtKz(res.amount_local)) ?? "" }) : 'Pedido de payout submetido.',
     );
     setShowModal(false);
     setAmount('');
@@ -251,12 +251,11 @@ export default function Payouts() {
                     max={kumbuAvailable}
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
-                    placeholder={`Entre ${MIN_PAYOUT_KUMBU} e ${kumbuAvailable}`}
+                    placeholder={uiText("Entre {{value1}} e {{value2}}", { value1: (MIN_PAYOUT_KUMBU) ?? "", value2: (kumbuAvailable) ?? "" })}
                   />
-                  <p className="text-xs text-muted-foreground">{uiText("Mínimo ")}{MIN_PAYOUT_KUMBU}{uiText(" Kumbu · máximo ")}{kumbuAvailable}.
-                  </p>
+                  <p className="text-xs text-muted-foreground">{uiText("Mínimo {{value1}} Kumbu · máximo {{value2}}.", { value1: (MIN_PAYOUT_KUMBU) ?? "", value2: (kumbuAvailable) ?? "" })}</p>
                   {aoaFactor && parseInt(amount) > 0 && (
-                    <p className="text-xs text-muted-foreground">{uiText("Vais receber ≈ ")}{fmtKz(parseInt(amount) * aoaFactor)}</p>
+                    <p className="text-xs text-muted-foreground">{uiText("Vais receber ≈ {{value1}}", { value1: (fmtKz(parseInt(amount) * aoaFactor)) ?? "" })}</p>
                   )}
                 </div>
               </div>

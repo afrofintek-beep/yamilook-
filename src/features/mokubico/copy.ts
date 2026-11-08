@@ -1,8 +1,9 @@
+import { uiText } from '@/i18n/ui-copy';
 /** Exact UI copy for MOKUBICO feature */
 
 export const MOKUBICO_COPY = {
-  title: 'MOKUBICO',
-  subtitle: 'Onde a tua banda vive',
+  get title() { return uiText("MOKUBICO"); },
+  get subtitle() { return uiText("Onde a tua banda vive"); },
   liveLabel: 'Ao vivo no MOKUBICO',
   liveBadge: 'Ao vivo',
   openRoda: 'Abrir Roda',
@@ -32,9 +33,9 @@ export const SPACES: SpaceConfig[] = [
   {
     key: 'quintal',
     route: '/mokubico/quintal',
-    title: 'QUINTAL',
+    get title() { return uiText("QUINTAL"); },
     headline: 'O palco aberto da banda',
-    description: 'Conversas ao vivo, debates e vibes para todos. Aqui qualquer wis pode ouvir e participar.',
+    get description() { return uiText("Conversas ao vivo, debates e vibes para todos. Aqui qualquer wis pode ouvir e participar."); },
     lines: ['Conversas abertas', 'Debates ao vivo', 'Vibes para todos'],
     access: 'Wis',
     emoji: '🌴',
@@ -42,9 +43,9 @@ export const SPACES: SpaceConfig[] = [
   {
     key: 'sala',
     route: '/mokubico/sala',
-    title: 'SALA',
+    get title() { return uiText("SALA"); },
     headline: 'O espaço dos kambas',
-    description: 'Rodas mais íntimas entre kambas. Partilha ideias, projetos e planos com quem confias.',
+    get description() { return uiText("Rodas mais íntimas entre kambas. Partilha ideias, projetos e planos com quem confias."); },
     lines: ['Rodas entre kambas', 'Projetos e ideias', 'Mais íntimo'],
     access: 'Kambas',
     emoji: '🛋️',
@@ -52,9 +53,9 @@ export const SPACES: SpaceConfig[] = [
   {
     key: 'cozinha',
     route: '/mokubico/cozinha',
-    title: 'COZINHA DAS SIS',
+    get title() { return uiText("COZINHA DAS SIS"); },
     headline: 'O refúgio dos bradas',
-    description: 'Espaço seguro para as sis. Girl talk, apoio mútuo e empoderamento sem filtros.',
+    get description() { return uiText("Espaço seguro para as sis. Girl talk, apoio mútuo e empoderamento sem filtros."); },
     lines: ['Girl talk', 'Apoio mútuo', 'Sem filtros'],
     access: 'Bradas / Sis',
     emoji: '🍳',
@@ -62,9 +63,9 @@ export const SPACES: SpaceConfig[] = [
   {
     key: 'quarto',
     route: '/mokubico/quarto',
-    title: 'QUARTO',
+    get title() { return uiText("QUARTO"); },
     headline: 'Só nós dois',
-    description: 'Privacidade total. Chamadas e rodas exclusivas para o teu par. Intimidade é o mambo.',
+    get description() { return uiText("Privacidade total. Chamadas e rodas exclusivas para o teu par. Intimidade é o mambo."); },
     lines: ['Privacidade total', 'Intimidade é o mambo', 'Só nós'],
     access: 'Só Nós',
     emoji: '🔒',

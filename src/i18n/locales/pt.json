@@ -1115,5 +1115,19 @@
         "starter_skill": "Preparação profissional"
       }
     }
+  },
+  "closeFriends": {
+    "title": "Amigos próximos",
+    "description": "As pessoas na tua lista de amigos próximos podem ver os estados que partilhas com elas.",
+    "searchPlaceholder": "Pesquisar contatos...",
+    "selected": "selecionado(s)",
+    "noResults": "Nenhum contato encontrado",
+    "noContacts": "Nenhum contato ainda",
+    "added": "Adicionado aos amigos próximos",
+    "addedDescription": "Esta pessoa verá os estados que partilhares com os amigos próximos.",
+    "removed": "Removido dos amigos próximos",
+    "removedDescription": "Esta pessoa deixará de ver os estados que partilhares com os amigos próximos.",
+    "addToCloseFriends": "Adicionar aos amigos próximos",
+    "removeFromCloseFriends": "Remover dos amigos próximos"
   }
 }

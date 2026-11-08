@@ -1,4 +1,4 @@
-import { uiText, useUiLocale } from '@/i18n/ui-copy';
+import { uiLocale, uiText, useUiLocale } from '@/i18n/ui-copy';
 import { SessionAttendance } from '../components/SessionAttendance';
 import { useAdmin } from '@/hooks/useAdmin';
 import { SessionManagement } from '../components/SessionManagement';
@@ -19,7 +19,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useSubmitAcademiaReview } from '../hooks/useAcademia';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
+import { format } from '@/i18n/ui-date';
 import { pt } from 'date-fns/locale';
 
 export default function AcademiaSession() {
@@ -33,7 +33,7 @@ export default function AcademiaSession() {
   const [reviewOpen, setReviewOpen] = useState(false);
 
   const { data: session, isLoading } = useQuery({
-    queryKey: ['academia-session', sessionId],
+    queryKey: ['academia-session', sessionId, uiLocale()],
     enabled: !!sessionId,
     queryFn: async () => {
       const { data, error } = await supabase
@@ -163,7 +163,7 @@ export default function AcademiaSession() {
           action_type: 'spend',
           source: 'academia',
           reference_id: sessionId,
-          description: `Reembolso: ${session.title}`,
+          description: uiText("Reembolso: {{value1}}", { value1: (session.title) ?? "" }),
           created_at: new Date().toISOString(),
         };
         for (const dir of ['all', 'credit'] as const) {
@@ -196,7 +196,7 @@ export default function AcademiaSession() {
     },
     onSuccess: (r) => {
       toast.success((r?.paid_to_mentor ?? 0) > 0
-        ? `Sessão concluída. Recebeste ${r.paid_to_mentor} Kumbu. 🎓`
+        ? uiText("Sessão concluída. Recebeste {{value1}} Kumbu. 🎓", { value1: (r.paid_to_mentor) ?? "" })
         : 'Sessão concluída.');
       queryClient.invalidateQueries({ queryKey: ['academia-session', sessionId] });
       queryClient.invalidateQueries({ queryKey: ['academia-sessions'] });
@@ -319,7 +319,7 @@ export default function AcademiaSession() {
         {/* Badges */}
         <div className="flex flex-wrap gap-2">
           <Badge variant={session.isPremium ? 'default' : 'secondary'} className="text-xs rounded-full px-3 py-1">
-            {session.isPremium ? `${ACADEMIA_COPY.tabPremium} · ${session.priceCoins} coins` : ACADEMIA_COPY.tabFree}
+            {session.isPremium ? uiText("{{value1}} · {{value2}} coins", { value1: (ACADEMIA_COPY.tabPremium) ?? "", value2: (session.priceCoins) ?? "" }) : ACADEMIA_COPY.tabFree}
           </Badge>
           {isReserved && (
             <Badge variant="outline" className="text-xs rounded-full px-3 py-1 border-primary text-primary">{uiText("✓ Reservado")}</Badge>
@@ -366,7 +366,7 @@ export default function AcademiaSession() {
 
       {(isMentor || isAdmin) && ['live', 'ended', 'completed'].includes(session.status) && <SessionAttendance sessionId={session.id} />}
       {(isMentor || isAdmin) && <div className="flex justify-end px-4"><SessionManagement session={session} /></div>}
-      {session.cancellationReason && <Alert className="mx-4 w-auto"><AlertDescription>{uiText("Sessão cancelada: ")}{session.cancellationReason}</AlertDescription></Alert>}
+      {session.cancellationReason && <Alert className="mx-4 w-auto"><AlertDescription>{uiText("Sessão cancelada: {{value1}}", { value1: (session.cancellationReason) ?? "" })}</AlertDescription></Alert>}
       {!session.archivedAt && ((!isEnded && !isRegistrationClosed) || (isMentor && !['completed','cancelled'].includes(session.status))) && (
         <div className="shrink-0 border-t border-border/40 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] [&>button]:whitespace-normal">
           {isLive ? (

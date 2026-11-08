@@ -362,7 +362,7 @@ export function useAdvertising() {
       transaction_type: 'spend',
       amount: -ad.total_budget,
       balance_after: newBalance,
-      description: `Destaque: ${ad.title || 'Publicação'}`,
+      description: uiText("Destaque: {{value1}}", { value1: (ad.title || 'Publicação') ?? "" }),
     });
 
     // Update local state
@@ -506,7 +506,7 @@ export function useAdvertising() {
       });
 
     setBusinessProfile(data as BusinessProfile);
-    toast.success(`+${amount} créditos adicionados!`);
+    toast.success(uiText("+{{value1}} créditos adicionados!", { value1: (amount) ?? "" }));
     return data as BusinessProfile;
   };
 

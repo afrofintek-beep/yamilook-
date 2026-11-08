@@ -117,7 +117,7 @@ export function useLiveStream(): UseLiveStreamReturn {
   const getToken = useCallback(async (roomName: string, isHostUser: boolean) => {
     if (!user || !profile) return null;
     const participantIdentity = isHostUser
-      ? `host:${user.id}`
+      ? `host:${(user.id)}`
       : (viewerIdentityRef.current ??= `viewer:${user.id}:${globalThis.crypto?.randomUUID?.() ?? Date.now()}`);
     const body = { roomName, participantName: profile.display_name || 'User', participantIdentity, isHost: isHostUser };
 
@@ -165,7 +165,7 @@ export function useLiveStream(): UseLiveStreamReturn {
     newRoom.on(RoomEvent.ParticipantConnected, (p) => {
       setRemoteParticipants(prev => [...prev, p]);
       // Alert everyone already in the room (host + viewers) that someone joined.
-      toast({ title: `${p.name || 'Espectador'} entrou na live 👋` });
+      toast({ title: uiText("{{value1}} entrou na live 👋", { value1: (p.name || 'Espectador') ?? "" }) });
     });
     newRoom.on(RoomEvent.ParticipantDisconnected, (p) => setRemoteParticipants(prev => prev.filter(x => x.sid !== p.sid)));
     newRoom.on(RoomEvent.TrackSubscribed, () => setRemoteParticipants([...newRoom.remoteParticipants.values()]));

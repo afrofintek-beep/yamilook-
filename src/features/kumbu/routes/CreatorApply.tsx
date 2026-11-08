@@ -93,7 +93,7 @@ export default function CreatorApply() {
         doc_type: 'bi',
       });
 
-      setStatus('pending');
+      setStatus("pending");
       toast.success(uiText("Candidatura submetida com sucesso."));
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Erro ao submeter candidatura.');
@@ -137,8 +137,7 @@ export default function CreatorApply() {
                 <p className="text-xs text-muted-foreground">{uiText("A tua candidatura está a ser analisada. Receberás uma notificação quando for processada.")}</p>
               )}
               {status === 'approved' && (
-                <p className="text-xs text-muted-foreground">{uiText("Parabéns! A tua conta de criador está ativa. Podes solicitar payouts em")}{' '}
-                  <button onClick={() => navigate('/payouts')} className="text-primary font-medium">{uiText("Payouts")}</button>.
+                <p className="text-xs text-muted-foreground">{uiText('Parabéns! A tua conta de criador está ativa. Podes solicitar levantamentos.')} <button onClick={() => navigate('/payouts')} className="text-primary font-medium">{uiText('Levantamentos')}</button>
                 </p>
               )}
             </CardContent>

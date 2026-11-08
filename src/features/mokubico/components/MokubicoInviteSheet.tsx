@@ -1,3 +1,4 @@
+import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useMemo, useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -24,6 +25,7 @@ interface Props {
 /** Pick people to invite into a private MOKUBICO space (Quarto / Cozinha).
  *  Sources the user's contacts; single mode enforces one pick. */
 export function MokubicoInviteSheet({ open, onOpenChange, single, selected, onConfirm }: Props) {
+  useUiLocale();
   const { contacts, loading } = useContacts();
   const [query, setQuery] = useState('');
   const [picked, setPicked] = useState<InvitedUser[]>(selected);
@@ -61,7 +63,7 @@ export function MokubicoInviteSheet({ open, onOpenChange, single, selected, onCo
         <SheetHeader className="p-4 border-b border-border">
           <SheetTitle className="flex items-center gap-2 text-base">
             <Users className="w-4 h-4 text-primary" />
-            {single ? 'Escolhe 1 pessoa' : 'Convidar pessoas'}
+            {single ? uiText("Escolhe 1 pessoa") : uiText("Convidar pessoas")}
           </SheetTitle>
         </SheetHeader>
 
@@ -71,7 +73,7 @@ export function MokubicoInviteSheet({ open, onOpenChange, single, selected, onCo
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Procurar contacto"
+              placeholder={uiText("Procurar contacto")}
               className="pl-9 h-11"
             />
           </div>
@@ -79,10 +81,10 @@ export function MokubicoInviteSheet({ open, onOpenChange, single, selected, onCo
 
         <div className="flex-1 overflow-y-auto px-2">
           {loading ? (
-            <p className="text-sm text-muted-foreground text-center py-8">A carregar contactos…</p>
+            <p className="text-sm text-muted-foreground text-center py-8">{uiText("A carregar contactos…")}</p>
           ) : people.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">
-              {query ? 'Ninguém encontrado.' : 'Ainda não tens contactos para convidar.'}
+              {query ? uiText("Ninguém encontrado.") : uiText("Ainda não tens contactos para convidar.")}
             </p>
           ) : (
             people.map((p) => {
@@ -102,7 +104,7 @@ export function MokubicoInviteSheet({ open, onOpenChange, single, selected, onCo
                     <AvatarFallback>{(p.display_name ?? '?').charAt(0).toUpperCase()}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium truncate">{p.display_name ?? 'Anónimo'}</div>
+                    <div className="text-sm font-medium truncate">{p.display_name ?? uiText("Anónimo")}</div>
                     {p.username && <div className="text-xs text-muted-foreground truncate">@{p.username}</div>}
                   </div>
                   <div
@@ -125,10 +127,10 @@ export function MokubicoInviteSheet({ open, onOpenChange, single, selected, onCo
             disabled={single && picked.length !== 1}
           >
             {single
-              ? 'Confirmar pessoa'
+              ? uiText("Confirmar pessoa")
               : picked.length > 0
-                ? `Convidar ${picked.length} ${picked.length === 1 ? 'pessoa' : 'pessoas'}`
-                : 'Sem convidados'}
+                ? picked.length === 1 ? uiText('Convidar {{count}} pessoa', { count: picked.length }) : uiText('Convidar {{count}} pessoas', { count: picked.length })
+                : uiText("Sem convidados")}
           </Button>
         </div>
       </SheetContent>

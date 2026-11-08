@@ -102,7 +102,7 @@ export function ForwardMessageSheet({
       const convCount = selectedIds.size;
       toast({
         title: uiText("Mensagens reencaminhadas"),
-        description: `${msgCount} mensagem(ns) enviada(s) para ${convCount} conversa(s)`,
+        description: uiText("{{value1}} mensagem(ns) enviada(s) para {{value2}} conversa(s)", { value1: (msgCount) ?? "", value2: (convCount) ?? "" }),
       });
 
       setSelectedIds(new Set());
@@ -133,8 +133,7 @@ export function ForwardMessageSheet({
       className="h-[75vh] rounded-t-3xl sm:max-w-lg"
       title={
         <span className="flex items-center gap-2">
-          <Forward className="w-5 h-5" />{uiText("Reencaminhar ")}{sourceIds.length > 1 ? `${sourceIds.length} mensagens` : uiText("mensagem")}
-        </span>
+          <Forward className="w-5 h-5" />{uiText("Reencaminhar {{value1}}", { value1: (sourceIds.length > 1 ? `${sourceIds.length} mensagens` : uiText("mensagem")) ?? "" })}</span>
       }
     >
 
@@ -153,8 +152,7 @@ export function ForwardMessageSheet({
                   : messagesToForward[0].content || uiText("Mensagem")}
               </p>
             ) : (
-              <p className="text-sm">
-                {messagesToForward.length}{uiText(" mensagens selecionadas")}</p>
+              <p className="text-sm">{uiText("{{value1}} mensagens selecionadas", { value1: (messagesToForward.length) ?? "" })}</p>
             )}
           </div>
         )}
@@ -229,8 +227,7 @@ export function ForwardMessageSheet({
             className="flex items-center gap-3 pt-4 border-t border-border mt-4"
           >
             <div className="flex-1">
-              <span className="text-sm text-muted-foreground">
-                {selectedIds.size}{uiText(" selecionada(s)")}</span>
+              <span className="text-sm text-muted-foreground">{uiText("{{value1}} selecionada(s)", { value1: (selectedIds.size) ?? "" })}</span>
             </div>
             <Button variant="outline" onClick={handleClose} disabled={forwarding}>{uiText("Cancelar")}</Button>
             <Button

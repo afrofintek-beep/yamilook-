@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from '@/i18n/ui-date';
 import { pt, enUS, fr, ar } from 'date-fns/locale';
 import {
   MessageCircle,
@@ -220,7 +220,7 @@ export const PostCard = memo(function PostCard({ mediaPriority = false, post, on
     }
     if (!copyOnly) { setShowShare(true); return; }
     try {
-      const result = await sharePostLink(post.id, { title: `${post.user.display_name} — Yamilook`, copyOnly });
+      const result = await sharePostLink(post.id, { title: uiText("{{value1}} — Yamilook", { value1: (post.user.display_name) ?? "" }), copyOnly });
       if (result === 'cancelled') return;
       if (result === 'copied') toast({ title: t('feed.linkCopied'), description: t('feed.linkCopiedDesc') });
       // Record only successful share/copy operations; cancellation is not a share.

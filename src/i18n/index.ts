@@ -117,7 +117,7 @@ export async function changeAppLanguage(language: string) {
     i18n.addResourceBundle('en', 'translation', english.translation);
     i18n.addResourceBundle('en', 'interface', english.interface);
   }
-  if (!i18n.hasResourceBundle(code, 'translation')) {
+  if (!i18n.hasResourceBundle(code, 'translation') || !i18n.hasResourceBundle(code, 'interface')) {
     const resources = await loadLanguage(code);
     i18n.addResourceBundle(code, 'translation', resources.translation);
     i18n.addResourceBundle(code, 'interface', resources.interface);
@@ -132,7 +132,7 @@ function syncDocumentLanguage(language: string) {
 i18n.on('languageChanged', (language) => {
   syncDocumentLanguage(language);
   // Existing Yamilook settings also call i18next directly.
-  if (!i18n.hasResourceBundle(language, 'translation')) {
+  if (!i18n.hasResourceBundle(language, 'translation') || !i18n.hasResourceBundle(normalizeAppLanguage(language), 'interface')) {
     void changeAppLanguage(language).catch(() => { /* Keep the available fallback. */ });
   }
 });

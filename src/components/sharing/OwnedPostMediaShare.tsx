@@ -35,36 +35,36 @@ function FileActions({ id, index, kind, onShared }: { id: string; index: number;
       controller.abort();
       request.current = null;
       setBusy(false);
-      setStatus('A preparação demorou demasiado. Tenta novamente ou descarrega o ficheiro.');
+      setStatus(uiText("A preparação demorou demasiado. Tenta novamente ou descarrega o ficheiro."));
     }, kind === 'video' ? 15 * 60 * 1000 : 120000);
     setBusy(true);
     setDownload(null);
-    setStatus(downloadOnly ? 'A preparar descarga…' : 'A preparar ficheiro…');
+    setStatus(downloadOnly ? uiText("A preparar descarga…") : uiText("A preparar ficheiro…"));
     try {
       if (kind === 'video') {
-        setStatus('A preparar MP4 com áudio. Mantém esta página aberta…');
+        setStatus(uiText("A preparar MP4 com áudio. Mantém esta página aberta…"));
         const prepared = await prepareOwnedVideoExport(id, index, { signal: controller.signal, onProgress: progress => { if (!controller.signal.aborted) setStatus(`A preparar MP4 com áudio… ${progress}%`); } });
         if (controller.signal.aborted) return;
         setFile(prepared);
-        setStatus('MP4 pronto. Reproduz a pré-visualização e escolhe a aplicação ou guarda o vídeo.');
+        setStatus(uiText("MP4 pronto. Reproduz a pré-visualização e escolhe a aplicação ou guarda o vídeo."));
       } else if (downloadOnly) {
         const descriptor = await getOwnedMediaDescriptor(id, index, controller.signal);
         if (controller.signal.aborted) return;
         setDownload(descriptor.downloadUrl);
-        setStatus('Toca em Guardar ficheiro. Depois anexa-o na conversa com o teu amigo.');
+        setStatus(uiText("Toca em Guardar ficheiro. Depois anexa-o na conversa com o teu amigo."));
       } else {
         const prepared = await prepareOwnedPostMedia(id, index, {
           signal: controller.signal,
           onProgress: (loaded, total) => {
-            if (!controller.signal.aborted) setStatus(total ? `A preparar ficheiro… ${Math.min(100, Math.round(loaded / total * 100))}%` : `A preparar ficheiro… ${(loaded / 1048576).toFixed(1)} MB`);
+            if (!controller.signal.aborted) setStatus(total ? uiText("A preparar ficheiro… {{value1}}%", { value1: (Math.min(100, Math.round(loaded / total * 100))) ?? "" }) : uiText("A preparar ficheiro… {{value1}} MB", { value1: ((loaded / 1048576).toFixed(1)) ?? "" }));
           },
         });
         if (controller.signal.aborted) return;
         setFile(prepared);
-        setStatus(canShareFile(prepared) ? 'Ficheiro pronto. Escolhe a aplicação e depois o destinatário.' : 'Este navegador não permite enviar ficheiros diretamente. Usa Descarregar ficheiro e anexa-o na aplicação.');
+        setStatus(canShareFile(prepared) ? uiText("Ficheiro pronto. Escolhe a aplicação e depois o destinatário.") : uiText("Este navegador não permite enviar ficheiros diretamente. Usa Descarregar ficheiro e anexa-o na aplicação."));
       }
     } catch (error) {
-      if (!controller.signal.aborted) setStatus(error instanceof Error ? error.message : 'Não foi possível preparar o ficheiro.');
+      if (!controller.signal.aborted) setStatus(error instanceof Error ? error.message : uiText("Não foi possível preparar o ficheiro."));
     } finally {
       window.clearTimeout(timeout);
       if (request.current === controller) {
@@ -78,7 +78,7 @@ function FileActions({ id, index, kind, onShared }: { id: string; index: number;
     request.current?.abort();
     request.current = null;
     setBusy(false);
-    setStatus('Preparação interrompida. Podes tentar novamente.');
+    setStatus(uiText("Preparação interrompida. Podes tentar novamente."));
   };
   const share = async () => {
     if (!file || busy) return;
@@ -87,16 +87,16 @@ function FileActions({ id, index, kind, onShared }: { id: string; index: number;
       // No asynchronous work before the native sheet: preserve iPhone activation.
       const result = await shareFile(file);
       if (result === 'shared') {
-        setStatus('Ficheiro entregue à aplicação. Conclui o envio ao destinatário.');
+        setStatus(uiText("Ficheiro entregue à aplicação. Conclui o envio ao destinatário."));
         onShared?.();
-      } else setStatus(result === 'cancelled' ? 'Partilha cancelada. O ficheiro continua pronto.' : 'Usa Descarregar ficheiro e anexa-o na aplicação.');
-    } catch { setStatus('Não foi possível abrir a partilha. Tenta novamente ou descarrega o ficheiro.'); }
+      } else setStatus(result === 'cancelled' ? uiText("Partilha cancelada. O ficheiro continua pronto.") : uiText("Usa Descarregar ficheiro e anexa-o na aplicação."));
+    } catch { setStatus(uiText("Não foi possível abrir a partilha. Tenta novamente ou descarrega o ficheiro.")); }
     finally { setBusy(false); }
   };
 
   return <div className="space-y-2">
     {!file && <Button className="w-full" disabled={busy} onClick={() => void prepare()}>{uiText("Preparar ficheiro")}</Button>}
-    {file && preview && kind === 'video' && <><video src={preview} controls playsInline preload="metadata" aria-label={uiText("Pré-visualização do MP4")} className="max-h-[50svh] w-full rounded bg-black" /><p className="text-xs">{uiText("MP4 · ")}{(file.size / 1048576).toFixed(1)}{uiText(" MB · com áudio quando presente no original")}</p><Button asChild variant="outline" className="w-full"><a href={preview} download={file.name}>{uiText("Guardar vídeo MP4")}</a></Button></>}
+    {file && preview && kind === 'video' && <><video src={preview} controls playsInline preload="metadata" aria-label={uiText("Pré-visualização do MP4")} className="max-h-[50svh] w-full rounded bg-black" /><p className="text-xs">{uiText("MP4 · {{value1}} MB · com áudio quando presente no original", { value1: ((file.size / 1048576).toFixed(1)) ?? "" })}</p><Button asChild variant="outline" className="w-full"><a href={preview} download={file.name}>{uiText("Guardar vídeo MP4")}</a></Button></>}
     {file && canShareFile(file) && <Button className="w-full" disabled={busy} onClick={() => void share()}>{uiText("Escolher aplicação")}</Button>}
     {busy && request.current && <Button variant="ghost" className="w-full" onClick={cancel}>{uiText("Cancelar preparação")}</Button>}
     {(!file || kind !== 'video') && <Button variant="outline" className="w-full" disabled={busy} onClick={() => void prepare(true)}>{uiText("Descarregar ficheiro")}</Button>}

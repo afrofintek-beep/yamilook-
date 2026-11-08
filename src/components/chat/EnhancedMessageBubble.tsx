@@ -6,7 +6,7 @@ import { LocationCard } from './LocationCard';
 import { parseChatLocation } from '@/lib/chat-location';
 import { useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { format } from 'date-fns';
+import { format } from '@/i18n/ui-date';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from 'framer-motion';
 import {

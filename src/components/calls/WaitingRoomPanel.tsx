@@ -1,4 +1,4 @@
-import { uiText, useUiLocale } from '@/i18n/ui-copy';
+import { uiLocale, uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Users, Check, X, UserPlus } from 'lucide-react';
@@ -149,8 +149,7 @@ export function WaitingRoomPanel({ callId, isOpen, onClose }: WaitingRoomPanelPr
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <p className="font-medium truncate">{participant.display_name}</p>
-                    <p className="text-xs text-muted-foreground">{uiText("Waiting since ")}{new Date(participant.created_at).toLocaleTimeString()}
-                    </p>
+                    <p className="text-xs text-muted-foreground">{uiText("Waiting since {{value1}}", { value1: (new Date(participant.created_at).toLocaleTimeString(uiLocale())) ?? "" })}</p>
                   </div>
                   <div className="flex gap-2">
                     <Button
@@ -183,8 +182,7 @@ export function WaitingRoomPanel({ callId, isOpen, onClose }: WaitingRoomPanelPr
               className="w-full"
               onClick={admitAllParticipants}
             >
-              <UserPlus className="h-4 w-4 mr-2" />{uiText("Admit All (")}{waitingParticipants.length})
-            </Button>
+              <UserPlus className="h-4 w-4 mr-2" />{uiText("Admit All ({{value1}})", { value1: (waitingParticipants.length) ?? "" })}</Button>
           </div>
         )}
       </motion.div>

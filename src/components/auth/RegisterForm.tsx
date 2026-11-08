@@ -1,4 +1,4 @@
-import { uiText, useUiLocale } from '@/i18n/ui-copy';
+import { uiLocale, uiText, useUiLocale } from '@/i18n/ui-copy';
 import { communityReturn } from '@/features/academia/community-links';
 import { getYamilookPublicUrl } from '@/lib/public-site';
 import { captureReferralCode, getReferralCode, clearReferralCode } from '@/lib/referral';
@@ -31,7 +31,7 @@ export function RegisterForm() {
   useUiLocale();
   const { t } = useTranslation();
   const [isInvitationSignup] = useState(() => hasInviteCodeInSearch(window.location.search));
-  const registerSchema = useMemo(() => createRegisterSchema(isInvitationSignup), [isInvitationSignup]);
+  const registerSchema = useMemo(() => createRegisterSchema(isInvitationSignup), [isInvitationSignup, uiLocale()]);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
@@ -41,7 +41,7 @@ export function RegisterForm() {
   const codeCheckVersion = useRef(0);
   const navigate = useNavigate();
   const returnToCommunity = communityReturn(useLocation().search);
-  const communitySearch = returnToCommunity ? `?next=${encodeURIComponent(returnToCommunity)}` : "";
+  const communitySearch = returnToCommunity ? `?next=${(encodeURIComponent(returnToCommunity))}` : "";
 
   const passwordRequirements = [
     { regex: /.{8,}/, label: t('auth.passwordRequirements.minLength') },

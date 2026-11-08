@@ -120,8 +120,8 @@ export function BandaChangeSheet({ open, onOpenChange, current, onChanged }: Pro
     loadResidenceCities(country).then(cities => {if(active) setCityData({country,cities});}).catch(() => {if(active) setCityData({country,cities:[]});});
     return () => {active=false;};
   }, [open,country]);
-  const countryCodes = useMemo(() => [...RESIDENCE_COUNTRY_CODES].sort((a,b)=>localizedCountryName(a,language).localeCompare(localizedCountryName(b,language),locale)), [language,locale]);
-  const citySuggestions = useMemo(() => matchingResidenceCities(cityData.country===country?cityData.cities:[],city,language), [cityData,country,city,language]);
+  const countryCodes = useMemo(() => [...RESIDENCE_COUNTRY_CODES].sort((a,b)=>localizedCountryName(a,language).localeCompare(localizedCountryName(b,language),locale)), [language, locale]);
+  const citySuggestions = useMemo(() => matchingResidenceCities(cityData.country===country?cityData.cities:[],city,language), [cityData, country, city, language]);
   const clearLocation = () => {captureGeneration.current++;setLocating(false);setGps(null);setGpsAccuracy(null);setHomeConfirmed(false);};
   const countryData = useMemo(() => AFRICAN_LOCATIONS.find((l) => l.countryCode === country), [country]);
   const cities = countryData?.cities ?? [];
@@ -215,7 +215,7 @@ export function BandaChangeSheet({ open, onOpenChange, current, onChanged }: Pro
               <div className="space-y-1">
                 <div className="flex justify-between text-[11px] text-muted-foreground">
                   <span>{uiText("Últimos 14 dias")}</span>
-                  <span>{residency.present_days_14 ?? 0}/{residency.need_present ?? 8}{uiText(" dias")}</span>
+                  <span>{uiText("{{value1}}/{{value2}} dias", { value1: (residency.present_days_14 ?? 0) ?? "", value2: (residency.need_present ?? 8) ?? "" })}</span>
                 </div>
                 <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
                   <div
@@ -284,7 +284,7 @@ export function BandaChangeSheet({ open, onOpenChange, current, onChanged }: Pro
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : (changingBanda ? uiText("Confirmar mudança") : uiText("Guardar"))}
           </Button>
           {blockedByCooldown && (
-            <p className="text-[11px] text-center text-muted-foreground">{uiText("Em período de espera até ")}{nextChange}.</p>
+            <p className="text-[11px] text-center text-muted-foreground">{uiText("Em período de espera até {{value1}}.", { value1: (nextChange) ?? "" })}</p>
           )}
         </div>
       </SheetContent>

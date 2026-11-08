@@ -36,7 +36,7 @@ export function GlobalLiveInviteNotifier() {
           if (!data || data.status !== 'live') return;
 
           const host = (data.host as { display_name?: string } | null)?.display_name ?? 'Alguém';
-          toast(`${host} convidou-te para a live`, {
+          toast(uiText("{{value1}} convidou-te para a live", { value1: (host) ?? "" }), {
             description: data.title || 'Live da banda',
             duration: 12000,
             action: { label: uiText("Entrar"), onClick: () => navigate(`/live/${row.session_id}`) },

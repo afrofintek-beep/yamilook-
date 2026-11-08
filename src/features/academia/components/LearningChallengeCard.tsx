@@ -14,15 +14,15 @@ export function LearningChallengeCard({ challenge, submissions, goalId, isMentor
   return <article className="rounded-xl border p-4 space-y-3">
     <div className="flex flex-wrap justify-between gap-2"><h3 className="min-w-0 max-w-full font-semibold break-words">{challenge.title}</h3><span className="text-sm text-primary">{learningStatus[challenge.status]}</span></div>
     <p className="text-sm whitespace-pre-wrap break-words">{challenge.instructions}</p>
-    <p className="text-xs text-muted-foreground break-words">{uiText("Competência trabalhada: ")}{challenge.skill}</p>
+    <p className="text-xs text-muted-foreground break-words">{uiText("Competência trabalhada: {{value1}}", { value1: (challenge.skill) ?? "" })}</p>
     {submissions.map((s, index) => {
       const link = safeEvidenceUrl(s.evidence_url);
-      return <section key={s.id} aria-label={`Entrega ${submissions.length - index}`} className="rounded-lg bg-muted/40 p-3 space-y-2">
-        <p className="text-xs text-muted-foreground">{uiText("Entrega ")}{submissions.length - index} · {new Date(s.created_at).toLocaleString(uiLocale())} · {learningStatus[s.status]}</p>
+      return <section key={s.id} aria-label={uiText("Entrega {{value1}}", { value1: (submissions.length - index) })} className="rounded-lg bg-muted/40 p-3 space-y-2">
+        <p className="text-xs text-muted-foreground">{uiText("Entrega {{value1}} · {{value2}} · {{value3}}", { value1: (submissions.length - index), value2: (new Date(s.created_at).toLocaleString(uiLocale())) ?? "", value3: (learningStatus[s.status]) ?? "" })}</p>
         <p className="text-sm whitespace-pre-wrap break-words">{s.content}</p>
         {link && <a className="text-sm underline" href={link} target="_blank" rel="noopener noreferrer" referrerPolicy="no-referrer">{uiText("Abrir trabalho partilhado")}</a>}
         {s.feedback && <p className="text-sm whitespace-pre-wrap break-words"><strong>{uiText("Feedback do mentor: ")}</strong>{s.feedback}</p>}
-        {active && isMentor && s.status === 'pending' && challenge.status === 'submitted' && <form aria-label={`Avaliar ${challenge.title}`} className="space-y-2" onSubmit={e => e.preventDefault()}>
+        {active && isMentor && s.status === 'pending' && challenge.status === 'submitted' && <form aria-label={uiText("Avaliar {{value1}}", { value1: (challenge.title) ?? "" })} className="space-y-2" onSubmit={e => e.preventDefault()}>
           <label className="block space-y-1"><span className="text-sm">{uiText("Feedback para o aluno")}</span><Textarea required minLength={3} maxLength={3000} value={feedback} onChange={e => setFeedback(e.target.value)} /></label>
           <div className="flex flex-wrap gap-2">{(['revision', 'approved'] as const).map(decision => <Button key={decision} type="button" variant={decision === 'approved' ? 'default' : 'outline'} disabled={save.isPending || feedback.trim().length < 3} onClick={() => save.mutate({ action: 'review', goalId, payload: { challenge_id: challenge.id, submission_id: s.id, decision, feedback: feedback.trim() } }, { onSuccess: () => setFeedback('') })}>
             {decision === 'approved' ? uiText("Validar trabalho") : uiText("Pedir revisão")}
@@ -30,7 +30,7 @@ export function LearningChallengeCard({ challenge, submissions, goalId, isMentor
         </form>}
       </section>;
     })}
-    {active && !isMentor && ['open', 'revision'].includes(challenge.status) && <form aria-label={`Entregar ${challenge.title}`} className="space-y-3" onSubmit={async e => {
+    {active && !isMentor && ['open', 'revision'].includes(challenge.status) && <form aria-label={uiText("Entregar {{value1}}", { value1: (challenge.title) ?? "" })} className="space-y-3" onSubmit={async e => {
       e.preventDefault();
       try { await save.mutateAsync({ action: 'submit', goalId, payload: { challenge_id: challenge.id, content: content.trim(), evidence_url: url.trim() } }); setContent(''); setUrl(''); } catch { /* alert below */ }
     }}>

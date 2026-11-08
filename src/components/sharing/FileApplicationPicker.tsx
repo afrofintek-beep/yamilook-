@@ -28,7 +28,7 @@ export default function FileApplicationPicker({ onShare, onSave, linkedInPublish
     {selected && selected !== 'Outros' && <>
       {selected !== 'LinkedIn' && <p role="note" className="text-sm text-muted-foreground">{selected === 'Kosolola'
         ? uiText("Guarda a cópia com marca e anexa-a na conversa ou grupo da Kosolola.")
-        : `Escolhe ${selected} nas opções do telemóvel. Se não aparecer, guarda a cópia e anexa-a nessa aplicação.`}</p>}
+        : uiText("Escolhe {{value1}} nas opções do telemóvel. Se não aparecer, guarda a cópia e anexa-a nessa aplicação.", { value1: (selected) ?? "" })}</p>}
       {selected === 'Kosolola' && <Button asChild variant="outline"><a href="https://www.kosolola.com" target="_blank" rel="noopener noreferrer">{uiText("Abrir Kosolola")}</a></Button>}
       {selected === 'LinkedIn' && <section ref={linkedInPanel} tabIndex={-1} className="space-y-3 rounded-xl border p-4" aria-label={uiText("Publicar no LinkedIn")}>
         <h4 className="font-semibold">{uiText("Publicar no LinkedIn")}</h4>

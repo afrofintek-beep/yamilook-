@@ -142,7 +142,7 @@ export function SubscribeProSheet({ open, onOpenChange, onActivated }: Props) {
                     <div className="text-xs text-muted-foreground">{p === 'annual' ? uiText("Anual") : uiText("Mensal")}</div>
                     <div className="text-lg font-bold">{fmtKz(p === 'annual' ? cfg.pro_annual : cfg.pro_monthly)}</div>
                     {p === 'annual' && monthlyEquiv > 0 && (
-                      <div className="text-[11px] text-emerald-600">≈ {fmtKz(monthlyEquiv)}/mês</div>
+                      <div className="text-[11px] text-emerald-600">≈ {fmtKz(monthlyEquiv)}{uiText("/mês")}</div>
                     )}
                   </button>
                 ))}
@@ -188,7 +188,7 @@ export function SubscribeProSheet({ open, onOpenChange, onActivated }: Props) {
 
             {phase === 'choose' ? (
               <Button className="w-full h-12 rounded-xl" onClick={pay} disabled={busy || !cfg}>
-                {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : `Pagar ${fmtKz(amount)}`}
+                {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : uiText("Pagar {{value1}}", { value1: (fmtKz(amount)) ?? "" })}
               </Button>
             ) : (
               <Button variant="secondary" className="w-full h-12 rounded-xl" onClick={check}>{uiText("Já paguei — verificar agora")}</Button>

@@ -1,10 +1,11 @@
+import { uiText } from '@/i18n/ui-copy';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
 export const mentorStatus: Record<string, string> = {
-  pending: 'Candidatura pendente', review_required: 'Em revisão', active: 'Activo',
-  rejected: 'Candidatura rejeitada', suspended: 'Suspenso', inactive: 'Desactivado',
+  get pending() { return uiText("Candidatura pendente"); }, get review_required() { return uiText("Em revisão"); }, get active() { return uiText("Activo"); },
+  get rejected() { return uiText("Candidatura rejeitada"); }, get suspended() { return uiText("Suspenso"); }, get inactive() { return uiText("Desactivado"); },
 };
 export function useMyMentor() {
   const { user } = useAuth();

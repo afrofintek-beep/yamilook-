@@ -13,7 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Ritmo } from '@/hooks/useRitmos';
 import { AfricanReactionType, AFRICAN_REACTIONS, getReactionIcon } from '@/lib/reactions';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from '@/i18n/ui-date';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { useLongPress } from '@/hooks/useLongPress';
@@ -219,8 +219,7 @@ export function RitmosCommentsSheet({ open, onOpenChange, ritmo }: RitmosComment
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="h-[70vh] rounded-t-3xl p-0">
         <SheetHeader className="px-4 py-3 border-b border-border">
-          <SheetTitle className="text-center">
-            {comments.length}{uiText(" Comments")}</SheetTitle>
+          <SheetTitle className="text-center">{uiText("{{value1}} Comments", { value1: (comments.length) ?? "" })}</SheetTitle>
         </SheetHeader>
 
         <ScrollArea className="flex-1 h-[calc(70vh-8rem)]">

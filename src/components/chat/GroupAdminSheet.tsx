@@ -263,7 +263,7 @@ export function GroupAdminSheet({
     setConfirmDialog({
       open: true,
       title: uiText("Remover membro"),
-      description: `Tens a certeza que queres remover ${displayName} do grupo?`,
+      description: uiText("Tens a certeza que queres remover {{value1}} do grupo?", { value1: (displayName) ?? "" }),
       action: async () => {
         try {
           const { data, error } = await supabase.rpc('remove_group_member', {
@@ -293,7 +293,7 @@ export function GroupAdminSheet({
     setConfirmDialog({
       open: true,
       title: role === 'admin' ? 'Promover a admin' : 'Remover admin',
-      description: `Tens a certeza que queres ${action} ${displayName}?`,
+      description: uiText("Tens a certeza que queres {{value1}} {{value2}}?", { value1: (action) ?? "", value2: (displayName) ?? "" }),
       action: async () => {
         try {
           const { data, error } = await supabase.rpc('set_member_role', {

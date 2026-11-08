@@ -24,7 +24,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { usePalco, usePalcoReaction, usePalcosForRoda, Roda, VoiceType } from '@/hooks/usePalco';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
-import { format, formatDistanceToNow } from 'date-fns';
+import { format, formatDistanceToNow } from '@/i18n/ui-date';
 import { pt } from 'date-fns/locale';
 import { GuideProfileSheet } from '@/components/palco/GuideProfileSheet';
 import { PalcoIcon } from '@/components/icons/PalcoIcon';
@@ -329,14 +329,14 @@ export default function PalcoDetail() {
                 </>
               )}
               <span>•</span>
-              <span>{currentRodaNumber}{uiText("ª Roda")}</span>
+              <span>{uiText("{{value1}}ª Roda", { value1: (currentRodaNumber) ?? "" })}</span>
             </div>
 
             {/* Stats Row */}
             <div className="flex items-center gap-3 mb-5">
               <div className="flex items-center gap-2 px-4 py-2 bg-palco-bg rounded-full">
                 <MessageSquare className="w-4 h-4 text-palco-accent" />
-                <span className="font-semibold text-palco-text">{palco.total_voices}{uiText(" VOZES")}</span>
+                <span className="font-semibold text-palco-text">{uiText("{{value1}} VOZES", { value1: (palco.total_voices) ?? "" })}</span>
                 <Users className="w-4 h-4 text-palco-text-secondary ml-2" />
                 {countdown && (
                   <span className="text-palco-text-secondary">{countdown}</span>
@@ -345,7 +345,7 @@ export default function PalcoDetail() {
               {countdown && (
                 <div className="flex items-center gap-1.5 px-4 py-2 bg-palco-accent text-white rounded-full font-medium">
                   <Clock className="w-4 h-4" />
-                  <span>{countdown}{uiText(" Restantes")}</span>
+                  <span>{uiText("{{value1}} Restantes", { value1: (countdown) ?? "" })}</span>
                 </div>
               )}
             </div>
@@ -387,7 +387,7 @@ export default function PalcoDetail() {
               <p className="text-sm text-palco-text-secondary mb-2">{palco.title}</p>
               <p className="text-sm text-palco-text-secondary leading-relaxed line-clamp-2">
                 {palco.description ||
-                  `Roda com ${palco.guide?.display_name}, especialista ${palco.theme ? `em ${palco.theme}` : ''}. Aprende estratégias práticas, fala diretamente com o ${t('palco.guide').toLowerCase()}.`}
+                  (palco.theme ? uiText('Roda com {{name}}, especialista em {{theme}}. Aprende estratégias práticas e fala diretamente com o guia.', { name: palco.guide?.display_name || '', theme: palco.theme }) : uiText('Roda com {{name}}. Aprende estratégias práticas e fala diretamente com o guia.', { name: palco.guide?.display_name || '' }))}
               </p>
               <Button
                 variant="ghost"

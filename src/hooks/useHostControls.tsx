@@ -247,7 +247,7 @@ export function useHostControls(callId: string) {
       return null;
     }
 
-    toast.success(`Breakout room "${name}" created`);
+    toast.success(uiText("Breakout room \"{{value1}}\" created", { value1: (name) ?? "" }));
     return data;
   }, [callId, checkIsHost]);
 

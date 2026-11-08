@@ -128,7 +128,7 @@ export function LiveStreamCard({ session, onClick, canEnd, onEndSession }: LiveS
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{uiText("End Live Session")}</AlertDialogTitle>
-            <AlertDialogDescription>{uiText("Are you sure you want to end \"")}{session.title}{uiText("\"? This will disconnect all viewers.")}</AlertDialogDescription>
+            <AlertDialogDescription>{uiText("Are you sure you want to end \"{{value1}}\"? This will disconnect all viewers.", { value1: (session.title) ?? "" })}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={ending}>{uiText("Cancel")}</AlertDialogCancel>

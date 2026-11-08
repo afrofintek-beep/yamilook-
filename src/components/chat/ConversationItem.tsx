@@ -1,6 +1,7 @@
 import { isRecentlyOnline } from '@/lib/online-presence';
 import { usePresenceClock } from '@/hooks/usePresenceClock';
-import { formatDistanceToNow, isToday, isYesterday, format } from 'date-fns';
+import { isToday, isYesterday } from 'date-fns';
+import { formatDistanceToNow, format } from '@/i18n/ui-date';
 import { pt } from 'date-fns/locale';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';

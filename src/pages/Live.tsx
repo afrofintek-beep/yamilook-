@@ -163,7 +163,7 @@ export default function Live() {
   const _trackTick = trackTick;
 
   // Find the host participant - use prefixed identity format
-  const hostIdentity = currentSession?.host_id ? `host:${currentSession.host_id}` : null;
+  const hostIdentity = currentSession?.host_id ? `host:${(currentSession.host_id)}` : null;
 
   const hostParticipant = isHost
     ? (room?.localParticipant ?? localParticipant)
