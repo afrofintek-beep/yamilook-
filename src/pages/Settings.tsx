@@ -1,3 +1,4 @@
+import { PhoneAccess } from '@/features/phone-access/PhoneAccess';
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import AuthorizedAfrolocLink from '@/components/account-link/AuthorizedAfrolocLink';
 import { genderCtx } from '@/lib/i18n-gender';
@@ -354,6 +355,7 @@ export default function Settings() {
       <ScrollArea className="min-h-0 flex-1 [&_[data-radix-scroll-area-viewport]]:overscroll-y-contain">
         <div className="pb-8">
           <div className="p-4"><AuthorizedAfrolocLink /></div>
+          <div className="px-4"><PhoneAccess mode="link" /></div>
           {/* Profile Section */}
           <motion.button
             initial={{ opacity: 0, y: 10 }}

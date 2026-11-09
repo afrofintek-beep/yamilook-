@@ -1,3 +1,4 @@
+import { PhoneAccess } from '@/features/phone-access/PhoneAccess';
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { communityReturn } from '@/features/academia/community-links';
 import { useState } from 'react';
@@ -96,6 +97,8 @@ export function LoginForm() {
   };
 
   return (
+    <>
+    <PhoneAccess mode="login" onSuccess={() => navigate(returnToCommunity || "/feed")} />
     <Form {...form}>
       <motion.form
         onSubmit={form.handleSubmit(onSubmit)}
@@ -319,5 +322,6 @@ export function LoginForm() {
         </motion.div>
       </motion.form>
     </Form>
+    </>
   );
 }

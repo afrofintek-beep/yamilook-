@@ -1,3 +1,4 @@
+import { normalizePhone, phoneAccessEnabled, phoneDirectory } from '@/features/phone-access/api';
 import { uiText } from '@/i18n/ui-copy';
 import { useCachedList } from './useCachedList';
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -489,6 +490,14 @@ export function useContacts() {
 
   const searchUsers = async (query: string) => {
     if (!user || !query.trim()) return [];
+    if (phoneAccessEnabled && /^[+\d\s().-]+$/.test(query.trim())) {
+      const phone = normalizePhone(query);
+      if (!phone) return [];
+      try {
+        const result = await phoneDirectory('search', { phone });
+        return result.profiles || [];
+      } catch { return []; }
+    }
 
     const { data, error } = await supabase
       .from('public_profiles')
