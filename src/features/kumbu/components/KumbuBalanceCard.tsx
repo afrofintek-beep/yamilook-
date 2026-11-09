@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Progress } from '@/components/ui/progress';
 import { useKumbuBalance } from '../hooks/useKumbuBalance';
 import { Coins, TrendingUp } from 'lucide-react';
+import { kumbuLevelLabel } from '../copy';
 
 const LEVEL_COLORS: Record<string, { ring: string; text: string; bg: string; glow: string }> = {
   Bronze: { ring: 'border-amber-700/30', text: 'text-amber-600', bg: 'bg-amber-900/15', glow: 'from-amber-700/8' },
@@ -39,7 +40,7 @@ export default function KumbuBalanceCard() {
         </div>
         <div className={`px-2.5 py-1 rounded-lg ${colors.bg}`}>
           <span className={`text-[11px] font-bold uppercase tracking-wider ${colors.text}`}>
-            {level}
+            {kumbuLevelLabel(level)}
           </span>
         </div>
       </div>

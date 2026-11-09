@@ -27,3 +27,8 @@ it('falls back to copying the canonical link when native sharing is unavailable'
 it('does not carry arbitrary authentication or redirect parameters into the return route',()=>{
  expect(communityReturn('?next='+encodeURIComponent('/academia/comunidades/criacao-digital?code=unexpected&next=https://evil.example'))).toBe('/academia/comunidades/criacao-digital');
 });
+
+it('preserves only the validated fair invitation after authentication',()=>{
+ expect(communityReturn('?next='+encodeURIComponent('/feira-natalicia-talatona?convite=abcdef0123456789&token=secret&next=https://evil.example'))).toBe('/feira-natalicia-talatona?convite=ABCDEF0123456789');
+ expect(communityReturn('?next='+encodeURIComponent('/feira-natalicia-talatona?convite=invalid'))).toBe('/feira-natalicia-talatona');
+});

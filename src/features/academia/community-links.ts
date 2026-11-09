@@ -6,7 +6,12 @@ export function communityReturn(search: string) {
   if (!next || !next.startsWith('/') || next.startsWith('//')) return null;
   try {
     const url = new URL(next, 'https://www.yamilook.com');
-    if (url.origin !== 'https://www.yamilook.com' || !/^\/academia\/comunidades(?:\/[a-z0-9-]+)?(?:\/turmas\/[0-9a-f-]{36})?\/?$/.test(url.pathname)) return null;
+    if (url.origin !== 'https://www.yamilook.com') return null;
+    if (url.pathname === '/feira-natalicia-talatona') {
+      const invite = url.searchParams.get('convite')?.toUpperCase();
+      return url.pathname + (invite && /^[A-F0-9]{16}$/.test(invite) ? `?convite=${invite}` : '');
+    }
+    if ( !/^\/academia\/comunidades(?:\/[a-z0-9-]+)?(?:\/turmas\/[0-9a-f-]{36})?\/?$/.test(url.pathname)) return null;
     const source = referralWork(url.search);
     return url.pathname + (source ? `?origem=${source}` : '');
   } catch { return null; }

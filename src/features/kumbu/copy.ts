@@ -1,4 +1,5 @@
 /** Kumbu economy – copy & constants (algorithm thresholds only, no formula). */
+import { uiText } from '@/i18n/ui-copy';
 
 export const LEVEL_THRESHOLDS = [
   { level: 'Bronze', min: 0, max: 200 },
@@ -8,6 +9,16 @@ export const LEVEL_THRESHOLDS = [
 ] as const;
 
 export type KumbuLevel = (typeof LEVEL_THRESHOLDS)[number]['level'];
+
+/** Keep stored tier identifiers stable; translate only their display labels. */
+export function kumbuLevelLabel(level: string): string {
+  switch (level) {
+    case 'Bronze': return uiText('Bronze');
+    case 'Prata': return uiText('Prata');
+    case 'Ouro': return uiText('Ouro');
+    default: return level;
+  }
+}
 
 export function levelFor(lifetime: number): KumbuLevel {
   return (LEVEL_THRESHOLDS.find((t) => lifetime < t.max) ?? LEVEL_THRESHOLDS[3]).level;
@@ -23,23 +34,23 @@ export function levelProgress(lifetime: number) {
 
 /** Friendly labels for reason codes coming from kumbu_ledger.action_type */
 export const ACTION_LABELS: Record<string, string> = {
-  roda_join: 'Participar na Roda',
-  roda_create: 'Criar Roda',
-  academia_session: 'Sessão na Academia',
-  referral: 'Convidar utilizador activo',
-  post_create: 'Publicação criada',
-  weekly_bonus: 'Bónus semanal Top 10',
-  spend: 'Utilização de Kumbu',
-  payout: 'Conversão para dinheiro',
-  admin_grant: 'Bónus administrativo',
+  get roda_join() { return uiText('Participar na Roda'); },
+  get roda_create() { return uiText('Criar Roda'); },
+  get academia_session() { return uiText('Sessão na Academia'); },
+  get referral() { return uiText('Convidar utilizador activo'); },
+  get post_create() { return uiText('Publicação criada'); },
+  get weekly_bonus() { return uiText('Bónus semanal Top 10'); },
+  get spend() { return uiText('Utilização de Kumbu'); },
+  get payout() { return uiText('Conversão para dinheiro'); },
+  get admin_grant() { return uiText('Bónus administrativo'); },
 };
 
 export const EARN_ACTIONS = [
-  { action: 'Participar na Roda', kumbu: '+5', limit: 'máx. 3/dia' },
-  { action: 'Criar Roda', kumbu: '+8', limit: 'máx. 2/dia' },
-  { action: 'Sessão na Academia', kumbu: '+15', limit: 'máx. 1/dia' },
-  { action: 'Convidar utilizador activo', kumbu: '+15', limit: 'máx. 5/mês' },
-  { action: 'Publicar no feed', kumbu: '+3', limit: 'máx. 3/dia' },
+  { get action() { return uiText('Participar na Roda'); }, kumbu: '+5', get limit() { return uiText('máx. 3/dia'); } },
+  { get action() { return uiText('Criar Roda'); }, kumbu: '+8', get limit() { return uiText('máx. 2/dia'); } },
+  { get action() { return uiText('Sessão na Academia'); }, kumbu: '+15', get limit() { return uiText('máx. 1/dia'); } },
+  { get action() { return uiText('Convidar utilizador activo'); }, kumbu: '+15', get limit() { return uiText('máx. 5/mês'); } },
+  { get action() { return uiText('Publicar no feed'); }, kumbu: '+3', get limit() { return uiText('máx. 3/dia'); } },
 ];
 
 export const WEEKLY_REWARDS = [
