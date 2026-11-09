@@ -54,8 +54,13 @@ export function PhoneAccess({ mode, onSuccess }: { mode: 'login' | 'link'; onSuc
         await confirmPhoneCode(sentTo, code, mode); setCode(''); setVerified(true);
         if (mode === 'link') {
           setConsent(false); setConsentLoaded(false);
-          const status = await phoneDirectory('status');
-          setConsent(status.enabled); setConsentLoaded(true);
+          try {
+            const status = await phoneDirectory('status');
+            setConsent(status.enabled); setConsentLoaded(true);
+          } catch {
+            // Directory availability must not turn a successful Auth verification into an error.
+            setConsentLoaded(false);
+          }
         }
         setMessage(copy('Telefone confirmado.', 'Phone confirmed.')); onSuccess?.();
       })}>{copy('Confirmar código', 'Confirm code')}</Button>
