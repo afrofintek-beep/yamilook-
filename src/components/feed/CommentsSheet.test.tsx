@@ -247,6 +247,22 @@ describe('CommentsSheet', () => {
       expect(screen.getByText('No comments yet')).toBeInTheDocument();
       expect(screen.getByText('Be the first to comment!')).toBeInTheDocument();
     });
+    expect(screen.getByRole('heading', { name: 'Comments', exact: true })).toBeInTheDocument();
+  });
+
+  it('shows the Portuguese empty title without leaking a boolean and accepts the first comment', async () => {
+    await changeAppLanguage('pt');
+    mockGetComments.mockResolvedValueOnce([]);
+    mockAddComment.mockResolvedValueOnce({ id: 'first-comment' });
+    render(<CommentsSheet {...defaultProps} />);
+    await screen.findByText('Ainda não há comentários');
+    expect(screen.getByRole('heading', { name: 'Comentários', exact: true })).toBeInTheDocument();
+    const input = screen.getByRole('combobox');
+    fireEvent.change(input, { target: { value: 'O meu primeiro comentário' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Enviar', exact: true }));
+    await waitFor(() => expect(mockAddComment).toHaveBeenCalledWith('post-1', 'O meu primeiro comentário', undefined));
+    expect(await screen.findByRole('heading', { name: 'Comentários (1)' })).toBeInTheDocument();
+    expect(input).toHaveValue('');
   });
 
   it('renders comment input field', async () => {

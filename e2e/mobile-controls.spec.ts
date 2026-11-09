@@ -332,3 +332,78 @@ test('call chat, media and hangup occupy separate areas through keyboard resize'
   expect(errors).toEqual([]);
   await page.screenshot({ path: 'test-results/call-layout-mobile.png' });
 });
+
+for (const count of [0, 30]) {
+  test(`comments composer stays reachable with ${count} comments, keyboard and rotation`, async ({ page }) => {
+    await mockAccount(page);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.addInitScript(() => {
+      const viewport = Object.assign(new EventTarget(), { height: 844, offsetTop: 0, scale: 1 });
+      Object.defineProperty(window, 'visualViewport', { value: viewport, configurable: true });
+    });
+    await page.route('**/rest/v1/posts*', route => route.fulfill({ json: [{
+      id: 'post-comments-test', user_id: peer, type: 'text', content: 'Publicação para comentar',
+      media_urls: [], privacy: 'everyone', likes_count: 0, comments_count: count, shares_count: 0,
+      created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+    }] }));
+    let submitted: Record<string, unknown> | undefined;
+    await page.route('**/rest/v1/post_comments*', async route => {
+      if (route.request().method() === 'POST') {
+        submitted = route.request().postDataJSON();
+        await route.fulfill({ json: { ...submitted, id: 'saved-comment' } });
+      } else {
+        await route.fulfill({ json: Array.from({ length: count }, (_, i) => ({
+          id: `comment-${i}`, post_id: 'post-comments-test', user_id: peer,
+          content: `Comentário ${i + 1}`, parent_comment_id: null, likes_count: 0,
+          created_at: new Date().toISOString(),
+        })) });
+      }
+    });
+    await page.goto('/muxi');
+    await page.locator('article').getByRole('button', { name: 'Comentários', exact: true }).click();
+    const sheet = page.getByRole('dialog');
+    const input = sheet.getByRole('combobox');
+    const send = sheet.getByRole('button', { name: 'Enviar', exact: true });
+    await expect(sheet.getByRole('heading')).toHaveText(count ? `Comentários (${count})` : 'Comentários');
+    await input.fill('Consigo comentar no telemóvel');
+    await simulateInsets(page, [0, 0, 34, 0]);
+    for (const [width, layoutHeight, visibleHeight, top] of [
+      [390, 844, 844, 0], [390, 844, 430, 30], [390, 844, 844, 0],
+      [844, 390, 390, 0], [320, 568, 300, 0], [390, 844, 844, 0],
+    ]) {
+      await page.setViewportSize({ width, height: layoutHeight });
+      await page.evaluate(({ height, offsetTop }) => {
+        Object.assign(window.visualViewport!, { height, offsetTop });
+        window.visualViewport!.dispatchEvent(new Event('resize'));
+      }, { height: visibleHeight, offsetTop: top });
+      await expect.poll(() => sheet.evaluate(el => Math.round(el.getBoundingClientRect().bottom))).toBe(visibleHeight + top);
+      for (const control of [input, send, sheet.getByRole('button', { name: 'Fechar', exact: true })]) {
+        const box = await control.boundingBox();
+        expect(box!.y).toBeGreaterThanOrEqual(top);
+        expect(box!.y + box!.height).toBeLessThanOrEqual(visibleHeight + top);
+        expect(box!.x).toBeGreaterThanOrEqual(0);
+        expect(box!.x + box!.width).toBeLessThanOrEqual(width);
+        expect(await control.evaluate(el => {
+          const box = el.getBoundingClientRect();
+          return el.contains(document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2));
+        })).toBe(true);
+      }
+      await expect(input).toHaveValue('Consigo comentar no telemóvel');
+      if (width < 640) expect(await input.evaluate(el => parseFloat(getComputedStyle(el).fontSize))).toBeGreaterThanOrEqual(16);
+    }
+    if (count) {
+      await sheet.locator('[data-radix-scroll-area-viewport]').evaluate(el => { el.scrollTop = el.scrollHeight; });
+      const last = await sheet.getByText(`Comentário ${count}`, { exact: true }).boundingBox();
+      const composer = await input.locator('xpath=../../..').boundingBox();
+      expect(last!.y + last!.height).toBeLessThanOrEqual(composer!.y);
+    }
+    await page.screenshot({ path: test.info().outputPath(`comments-${count}.png`) });
+    await send.click();
+    await expect.poll(() => submitted?.content).toBe('Consigo comentar no telemóvel');
+    expect(submitted?.post_id).toBe('post-comments-test');
+    await expect(input).toHaveValue('');
+    await expect(sheet.getByRole('heading')).toHaveText(`Comentários (${count + 1})`);
+    await sheet.getByRole('button', { name: 'Fechar', exact: true }).click();
+    await expect(sheet).toHaveCount(0);
+  });
+}
