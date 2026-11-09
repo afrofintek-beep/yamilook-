@@ -11,6 +11,7 @@ import { MentionText } from '@/components/feed/MentionText';
 import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useKeyboardViewport } from '@/hooks/useKeyboardViewport';
 import { Ritmo } from '@/hooks/useRitmos';
 import { AfricanReactionType, AFRICAN_REACTIONS, getReactionIcon } from '@/lib/reactions';
 import { formatDistanceToNow } from '@/i18n/ui-date';
@@ -49,6 +50,7 @@ interface RitmosCommentsSheetProps {
 export function RitmosCommentsSheet({ open, onOpenChange, ritmo }: RitmosCommentsSheetProps) {
   useUiLocale();
   const { user } = useAuth();
+  const viewport = useKeyboardViewport(open);
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(false);
   const [newComment, setNewComment] = useState('');
@@ -217,12 +219,21 @@ export function RitmosCommentsSheet({ open, onOpenChange, ritmo }: RitmosComment
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-[70vh] rounded-t-3xl p-0">
-        <SheetHeader className="px-4 py-3 border-b border-border">
+      <SheetContent
+        side="bottom"
+        style={{
+          ...viewport.style,
+          bottom: 'var(--group-viewport-bottom, 0px)',
+          height: 'calc(var(--group-viewport-height, 100dvh) * 0.7)',
+          maxHeight: 'calc(var(--group-viewport-height, 100dvh) - env(safe-area-inset-top, 0px))',
+        }}
+        className="rounded-t-3xl p-0 flex flex-col gap-0 overflow-hidden"
+      >
+        <SheetHeader className="shrink-0 px-4 py-3 border-b border-border">
           <SheetTitle className="text-center">{uiText("{{value1}} Comments", { value1: (comments.length) ?? "" })}</SheetTitle>
         </SheetHeader>
 
-        <ScrollArea className="flex-1 h-[calc(70vh-8rem)]">
+        <ScrollArea className="min-h-0 flex-1">
           <div className="p-4 space-y-4">
             {loading ? (
               // Loading skeleton
@@ -256,19 +267,21 @@ export function RitmosCommentsSheet({ open, onOpenChange, ritmo }: RitmosComment
         </ScrollArea>
 
         {/* Input area */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 bg-card border-t border-border safe-bottom">
+        <div className="relative z-10 shrink-0 p-4 pb-safe bg-card border-t border-border">
           <div className="flex items-center gap-2">
             <MentionInput
               placeholder={uiText("Add a comment...")}
+              aria-label={uiText("Add a comment...")}
               value={newComment}
               onValueChange={setNewComment}
               onSubmit={handleSubmit}
               disabled={!user || submitting}
-              className="flex-1 rounded-full"
+              className="flex-1 rounded-full text-base sm:text-sm"
             />
             <Button
               size="icon"
-              className="rounded-full"
+              aria-label={uiText("Enviar")}
+              className="shrink-0 rounded-full"
               onClick={handleSubmit}
               disabled={!user || !newComment.trim() || submitting}
             >

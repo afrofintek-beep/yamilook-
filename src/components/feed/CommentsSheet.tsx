@@ -23,6 +23,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { usePosts, Comment, PostWithUser } from '@/hooks/usePosts';
 import { useAuth } from '@/hooks/useAuth';
+import { useKeyboardViewport } from '@/hooks/useKeyboardViewport';
 import { cn } from '@/lib/utils';
 import { CommentReactions } from './CommentReactions';
 
@@ -35,6 +36,7 @@ interface CommentsSheetProps {
 export function CommentsSheet({ open, onOpenChange, post }: CommentsSheetProps) {
   useUiLocale();
   const { user } = useAuth();
+  const viewport = useKeyboardViewport(open);
   const { getComments, addComment, deleteComment, toggleCommentReaction } = usePosts({ autoLoad: false });
 
   const [comments, setComments] = useState<Comment[]>([]);
@@ -293,12 +295,21 @@ export function CommentsSheet({ open, onOpenChange, post }: CommentsSheetProps) 
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-[80vh] rounded-t-3xl p-0">
-        <SheetHeader className="p-4 border-b">
-          <SheetTitle>{uiText("Comments {{value1}}", { value1: (totalComments > 0 && `(${totalComments})`) ?? "" })}</SheetTitle>
+      <SheetContent
+        side="bottom"
+        style={{
+          ...viewport.style,
+          bottom: 'var(--group-viewport-bottom, 0px)',
+          height: 'calc(var(--group-viewport-height, 100dvh) * 0.8)',
+          maxHeight: 'calc(var(--group-viewport-height, 100dvh) - env(safe-area-inset-top, 0px))',
+        }}
+        className="rounded-t-3xl p-0 flex flex-col gap-0 overflow-hidden"
+      >
+        <SheetHeader className="shrink-0 p-4 border-b">
+          <SheetTitle>{uiText("Comments {{value1}}", { value1: totalComments > 0 ? `(${totalComments})` : '' })}</SheetTitle>
         </SheetHeader>
 
-        <ScrollArea className="h-[calc(80vh-140px)]">
+        <ScrollArea className="min-h-0 flex-1">
           <div className="p-4 space-y-4">
             {loading ? (
               <div className="space-y-4">
@@ -325,7 +336,7 @@ export function CommentsSheet({ open, onOpenChange, post }: CommentsSheetProps) 
         </ScrollArea>
 
         {/* Input */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t bg-background safe-bottom">
+        <div className="relative z-10 shrink-0 p-4 pb-safe border-t bg-background">
           {submitError && <p role="alert" className="mb-2 text-sm text-destructive">{uiText("Não foi possível publicar. O texto foi reposto para tentares novamente.")}</p>}
           {replyingTo && (
             <div className="flex items-center justify-between mb-2 text-sm text-muted-foreground">
@@ -338,24 +349,26 @@ export function CommentsSheet({ open, onOpenChange, post }: CommentsSheetProps) 
             </div>
           )}
           <div className="flex gap-2">
-            <Avatar className="w-8 h-8">
+            <Avatar className="w-8 h-8 shrink-0">
               <AvatarFallback className="bg-gradient-primary text-white text-xs">
                 {user?.email?.[0]?.toUpperCase() || 'U'}
               </AvatarFallback>
             </Avatar>
-            <div className="flex-1 flex gap-2">
+            <div className="min-w-0 flex-1 flex gap-2">
               <MentionInput
                 placeholder={uiText("Write a comment...")}
+                aria-label={uiText("Write a comment...")}
                 value={newComment}
                 onValueChange={setNewComment}
                 onSubmit={handleSubmit}
                 disabled={!user || isSubmitting}
-                className="flex-1 rounded-full bg-secondary/50 border-none"
+                className="flex-1 rounded-full bg-secondary/50 border-none text-base sm:text-sm"
               />
               <Button
                 size="icon"
-                className="rounded-full bg-gradient-primary text-white"
-                disabled={!newComment.trim() || isSubmitting}
+                aria-label={uiText("Enviar")}
+                className="shrink-0 rounded-full bg-gradient-primary text-white"
+                disabled={!user || !newComment.trim() || isSubmitting}
                 onClick={handleSubmit}
               >
                 <Send className="w-4 h-4" />
