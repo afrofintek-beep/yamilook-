@@ -3472,5 +3472,10 @@
   "máx. 1/dia": "በቀን እስከ 1",
   "máx. 5/mês": "በወር እስከ 5",
   "Publicar no feed": "በልጥፎች ገጽ ላይ ማተም",
-  "Mokubico é convivência. Academia é crescimento. Kumbu é valor.": "Mokubico ሰዎችን ያገናኛል። አካዳሚው ለእድገት ይረዳል። Kumbu ለተሳትፎ ዋጋ ይሰጣል።"
+  "Mokubico é convivência. Academia é crescimento. Kumbu é valor.": "Mokubico ሰዎችን ያገናኛል። አካዳሚው ለእድገት ይረዳል። Kumbu ለተሳትፎ ዋጋ ይሰጣል።",
+  "Endereço AFROLOC": "የAFROLOC አድራሻ",
+  "Código AFROLOC": "የAFROLOC ኮድ",
+  "Abrir no NJILA": "በNJILA ክፈት",
+  "Código fornecido pelo remetente. O NJILA consulta a disponibilidade pública do endereço.": "ኮዱ በላኪው የቀረበ ነው። NJILA አድራሻው ለሕዝብ የሚገኝ መሆኑን ያረጋግጣል።",
+  "Partilha o código de um local público, como uma loja. Não é necessário partilhar a tua localização actual.": "እንደ ሱቅ ያለ የሕዝብ ቦታ ኮድ አጋራ። አሁን ያለህበትን ቦታ ማጋራት አያስፈልግም።"
 }

@@ -3472,5 +3472,10 @@
   "máx. 1/dia": "1 يوميًا كحد أقصى",
   "máx. 5/mês": "5 شهريًا كحد أقصى",
   "Publicar no feed": "النشر في الخلاصة",
-  "Mokubico é convivência. Academia é crescimento. Kumbu é valor.": "Mokubico يجمع الناس. الأكاديمية تنمّي المهارات. Kumbu يمنح المشاركة قيمة."
+  "Mokubico é convivência. Academia é crescimento. Kumbu é valor.": "Mokubico يجمع الناس. الأكاديمية تنمّي المهارات. Kumbu يمنح المشاركة قيمة.",
+  "Endereço AFROLOC": "عنوان AFROLOC",
+  "Código AFROLOC": "رمز AFROLOC",
+  "Abrir no NJILA": "فتح في NJILA",
+  "Código fornecido pelo remetente. O NJILA consulta a disponibilidade pública do endereço.": "رمز قدّمه المرسل. يتحقق NJILA مما إذا كان العنوان متاحاً للعامة.",
+  "Partilha o código de um local público, como uma loja. Não é necessário partilhar a tua localização actual.": "شارك رمز مكان عام، مثل متجر. لا تحتاج إلى مشاركة موقعك الحالي."
 }

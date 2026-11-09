@@ -3472,5 +3472,10 @@
   "máx. 1/dia": "kufika ku-1/ngosuku",
   "máx. 5/mês": "kufika ku-5/ngenyanga",
   "Publicar no feed": "Shicilela kokuthunyelwe",
-  "Mokubico é convivência. Academia é crescimento. Kumbu é valor.": "I-Mokubico ihlanganisa abantu. I-Akhademi isiza ekukhuleni. I-Kumbu inika ukubamba iqhaza inani."
+  "Mokubico é convivência. Academia é crescimento. Kumbu é valor.": "I-Mokubico ihlanganisa abantu. I-Akhademi isiza ekukhuleni. I-Kumbu inika ukubamba iqhaza inani.",
+  "Endereço AFROLOC": "Ikheli le-AFROLOC",
+  "Código AFROLOC": "Ikhodi ye-AFROLOC",
+  "Abrir no NJILA": "Vula ku-NJILA",
+  "Código fornecido pelo remetente. O NJILA consulta a disponibilidade pública do endereço.": "Ikhodi inikezwe umthumeli. I-NJILA ihlola ukuthi ikheli liyatholakala yini emphakathini.",
+  "Partilha o código de um local público, como uma loja. Não é necessário partilhar a tua localização actual.": "Yabelana ngekhodi yendawo yomphakathi, njengesitolo. Akudingeki wabelane ngendawo okuyo manje."
 }

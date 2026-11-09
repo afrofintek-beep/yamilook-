@@ -1,3 +1,4 @@
+import userEvent from '@testing-library/user-event';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { EnhancedChatInput } from './EnhancedChatInput';
@@ -71,4 +72,27 @@ describe('Papos draft recovery', () => {
     await waitFor(() => expect(onSend).toHaveBeenCalledWith('clip.MOV', 'video', 'https://example.com/clip.mov', undefined, 17, false, 'https://example.com/poster.jpg'));
     expect(uploadMedia).toHaveBeenCalledWith(expect.any(File), 'video', { videoPoster: true, conversationId: 'chat' });
   });
+});
+
+it('shares an AFROLOC address only after confirming the draft, without requesting GPS', async () => {
+  const user = userEvent.setup();
+  const getCurrentPosition = vi.fn();
+  Object.defineProperty(navigator, 'geolocation', { value: { getCurrentPosition }, configurable: true });
+  const onSend = vi.fn().mockResolvedValue({ messageId: 'saved' });
+  const props = { onSend, onTyping: vi.fn(), conversationId: 'chat' };
+  const { rerender } = render(<EnhancedChatInput {...props} />);
+  await user.click(screen.getByRole('button', { name: 'Adicionar à mensagem' }));
+  await user.click(screen.getByRole('menuitem', { name: 'Endereço AFROLOC' }));
+  await user.type(screen.getByLabelText('Código AFROLOC'), 'AO-example');
+  await user.click(screen.getByRole('button', { name: 'Adicionar à mensagem' }));
+  expect(onSend).not.toHaveBeenCalled();
+  expect(getCurrentPosition).not.toHaveBeenCalled();
+  expect(screen.getByRole('textbox', { name: 'Mensagem' })).toHaveValue('📍 https://www.njilamaps.com/?to=AO-example');
+  await user.click(screen.getByRole('button', { name: 'Enviar mensagem' }));
+  expect(onSend).toHaveBeenCalledWith('📍 https://www.njilamaps.com/?to=AO-example', 'text', undefined, undefined);
+  await user.click(screen.getByRole('button', { name: 'Adicionar à mensagem' }));
+  await user.click(screen.getByRole('menuitem', { name: 'Endereço AFROLOC' }));
+  await user.type(screen.getByLabelText('Código AFROLOC'), 'draft');
+  rerender(<EnhancedChatInput {...props} conversationId="other" />);
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
 });

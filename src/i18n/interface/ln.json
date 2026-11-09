@@ -3472,5 +3472,10 @@
   "máx. 1/dia": "koleka 1 te/mokolo",
   "máx. 5/mês": "koleka 5 te/sanza",
   "Publicar no feed": "Kobimisa na sango",
-  "Mokubico é convivência. Academia é crescimento. Kumbu é valor.": "Mokubico esangisaka bato. Akademi esalisaka bato bákola. Kumbu epesaka motuya na kosangana."
+  "Mokubico é convivência. Academia é crescimento. Kumbu é valor.": "Mokubico esangisaka bato. Akademi esalisaka bato bákola. Kumbu epesaka motuya na kosangana.",
+  "Endereço AFROLOC": "Adresi AFROLOC",
+  "Código AFROLOC": "Kode AFROLOC",
+  "Abrir no NJILA": "Fungola na NJILA",
+  "Código fornecido pelo remetente. O NJILA consulta a disponibilidade pública do endereço.": "Kode epesami na motindi. NJILA etalaka soki adresi ezali mpo na bato nyonso.",
+  "Partilha o código de um local público, como uma loja. Não é necessário partilhar a tua localização actual.": "Kabola kode ya esika ya bato nyonso, lokola magazini. Ozali na mposa te ya kokabola esika ozali sikoyo."
 }

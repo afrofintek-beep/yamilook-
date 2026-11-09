@@ -56,3 +56,15 @@ it('uses 24-hour timestamps in Portuguese and highlights the message whose actio
   fireEvent.click(screen.getByRole('button', { name: 'Fechar ações' }));
   expect(bubble).not.toHaveClass('ring-primary/60');
 });
+
+it('renders the AFROLOC destination in a text message and respects selection mode', () => {
+  const addressMessage = { ...message, message_type: 'text', content: 'Loja\n📍 https://www.njilamaps.com/?to=AO-example' };
+  const view = mount({ message: addressMessage });
+  expect(screen.getByRole('link', { name: 'Abrir no NJILA' })).toHaveAttribute('href', 'https://www.njilamaps.com/?to=AO-example');
+  view.unmount();
+  const onToggleSelect = vi.fn();
+  mount({ message: addressMessage, selectionMode: true, onToggleSelect });
+  expect(screen.queryByRole('link', { name: 'Abrir no NJILA' })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByText('Loja'));
+  expect(onToggleSelect).toHaveBeenCalledOnce();
+});

@@ -3472,5 +3472,10 @@
   "máx. 1/dia": "upeo 1/siku",
   "máx. 5/mês": "upeo 5/mwezi",
   "Publicar no feed": "Chapisha kwenye mkondo",
-  "Mokubico é convivência. Academia é crescimento. Kumbu é valor.": "Mokubico huwaleta watu pamoja. Akademia husaidia ukuaji. Kumbu huthamini ushiriki."
+  "Mokubico é convivência. Academia é crescimento. Kumbu é valor.": "Mokubico huwaleta watu pamoja. Akademia husaidia ukuaji. Kumbu huthamini ushiriki.",
+  "Endereço AFROLOC": "Anwani ya AFROLOC",
+  "Código AFROLOC": "Msimbo wa AFROLOC",
+  "Abrir no NJILA": "Fungua kwenye NJILA",
+  "Código fornecido pelo remetente. O NJILA consulta a disponibilidade pública do endereço.": "Msimbo umetolewa na mtumaji. NJILA hukagua kama anwani inapatikana kwa umma.",
+  "Partilha o código de um local público, como uma loja. Não é necessário partilhar a tua localização actual.": "Shiriki msimbo wa mahali pa umma, kama duka. Huhitaji kushiriki mahali ulipo sasa."
 }

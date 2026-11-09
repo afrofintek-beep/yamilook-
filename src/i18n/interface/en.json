@@ -3472,5 +3472,10 @@
   "máx. 1/dia": "max. 1/day",
   "máx. 5/mês": "max. 5/month",
   "Publicar no feed": "Post to the feed",
-  "Mokubico é convivência. Academia é crescimento. Kumbu é valor.": "Mokubico brings people together. The Academy helps you grow. Kumbu rewards participation."
+  "Mokubico é convivência. Academia é crescimento. Kumbu é valor.": "Mokubico brings people together. The Academy helps you grow. Kumbu rewards participation.",
+  "Endereço AFROLOC": "AFROLOC address",
+  "Código AFROLOC": "AFROLOC code",
+  "Abrir no NJILA": "Open in NJILA",
+  "Código fornecido pelo remetente. O NJILA consulta a disponibilidade pública do endereço.": "Code provided by the sender. NJILA checks whether the address is publicly available.",
+  "Partilha o código de um local público, como uma loja. Não é necessário partilhar a tua localização actual.": "Share the code of a public place, such as a shop. You do not need to share your current location."
 }

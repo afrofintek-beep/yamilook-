@@ -1,3 +1,5 @@
+import { AfrolocAddressCard } from './AfrolocAddressCard';
+import { parseChatAfroloc } from '@/lib/chat-afroloc';
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import PostSharePreview from '@/components/sharing/PostSharePreview';
 import { sharedPostId } from '../../../shared/share-destinations.mjs';
@@ -352,6 +354,8 @@ export function EnhancedMessageBubble({
       default: {
         const postId = message.message_type === 'text' ? sharedPostId(message.content) : null;
         if (postId) return <PostSharePreview id={postId} interactive={!selectionMode} />;
+        const address = message.message_type === 'text' ? parseChatAfroloc(message.content) : null;
+        if (address) return <AfrolocAddressCard address={address} interactive={!selectionMode} />;
         const location = parseChatLocation(message.content);
         if (location && message.message_type === 'text') return <LocationCard location={location} />;
         return (

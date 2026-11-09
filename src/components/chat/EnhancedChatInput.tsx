@@ -1,3 +1,4 @@
+import { AfrolocAddressDialog } from './AfrolocAddressDialog';
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -77,6 +78,7 @@ export function EnhancedChatInput({
   useUiLocale();
   const { t } = useTranslation();
   const [message, setMessage] = useState('');
+  const [addressConversation, setAddressConversation] = useState<string | null>(null);
   const [locationDraft, setLocationDraft] = useState<string | null>(null);
   const [locationName, setLocationName] = useState('');
   const [locationReference, setLocationReference] = useState('');
@@ -86,6 +88,7 @@ export function EnhancedChatInput({
   useEffect(() => {
     setLocating(false);
     setLocationDraft(null);
+    setAddressConversation(null);
     return () => { locationRequest.current += 1; };
   }, [conversationId]);
   const [sending, setSending] = useState(false);
@@ -414,6 +417,7 @@ export function EnhancedChatInput({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
+                aria-label={uiText("Adicionar à mensagem")}
                 variant="ghost"
                 size="icon"
                 className="h-10 w-10 rounded-full flex-shrink-0"
@@ -438,6 +442,8 @@ export function EnhancedChatInput({
                 {viewOnceEnabled ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
                 {viewOnceEnabled ? uiText("View once ON") : uiText("View once")}
               </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => setAddressConversation(conversationId)} disabled={disabled || sending}>
+                <MapPin className="w-4 h-4 mr-2" />{uiText("Endereço AFROLOC")}</DropdownMenuItem>
               <DropdownMenuItem onSelect={handleLocation} disabled={disabled || locating || sending}>
                 <MapPin className="w-4 h-4 mr-2" />{uiText("Localização")}</DropdownMenuItem>
             </DropdownMenuContent>
@@ -544,6 +550,13 @@ export function EnhancedChatInput({
         </div>
       )}
 
+      {addressConversation === conversationId && <AfrolocAddressDialog key={conversationId}
+        disabled={disabled || sending}
+        onClose={() => setAddressConversation(null)}
+        onAdd={content => {
+          setMessage(current => current ? `${current}\n${content}` : content);
+          requestAnimationFrame(() => textareaRef.current?.focus());
+        }} />}
       <Dialog open={locationDraft !== null} onOpenChange={open => { if (!open) setLocationDraft(null); }}>
         <DialogContent className="max-w-sm">
           <DialogHeader><DialogTitle>{uiText("Partilhar localização")}</DialogTitle><DialogDescription>{uiText("Acrescenta os detalhes. A localização será colocada na mensagem para confirmares o envio.")}</DialogDescription></DialogHeader>
