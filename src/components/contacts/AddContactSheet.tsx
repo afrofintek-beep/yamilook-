@@ -1,3 +1,4 @@
+import { phoneAccessEnabled } from '@/features/phone-access/api';
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect, useCallback } from 'react';
 import { Search, UserPlus, Loader2, MailPlus } from 'lucide-react';
@@ -183,7 +184,7 @@ export function AddContactSheet({
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={pt ? uiText("Pesquisar por nome ou utilizador...") : uiText("Search by name or username...")}
+                placeholder={phoneAccessEnabled ? (pt ? "Nome, utilizador ou número completo..." : "Name, username or full phone number...") : pt ? uiText("Pesquisar por nome ou utilizador...") : uiText("Search by name or username...")}
                 className="pl-10 h-12 rounded-xl"
               />
             </div>
