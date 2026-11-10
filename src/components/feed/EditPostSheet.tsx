@@ -130,7 +130,7 @@ export function EditPostSheet({ open, onOpenChange, post, onSave }: EditPostShee
               disabled={saving}
               onChange={e => setContent(e.target.value)}
               placeholder={t('feed.whatsOnYourMind')}
-              className="min-h-[180px] flex-1 border-none bg-transparent p-0 shadow-none focus-visible:ring-0"
+              className="min-h-[180px] grow shrink-0 border-none bg-transparent p-0 shadow-none focus-visible:ring-0"
             />
 
             <div className="shrink-0 space-y-3 border-t pt-4">
