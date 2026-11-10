@@ -3,6 +3,7 @@ on:
   pull_request:
     paths:
       - 'src/components/admin/InvitationCampaignAdmin*'
+      - 'src/components/admin/SharedRegistrationLinks*'
       - 'src/components/settings/*Invite*'
       - 'src/components/settings/CampaignInvites*'
       - 'src/lib/invitation-campaigns*'
@@ -11,6 +12,7 @@ on:
       - 'src/features/papos/PaposSettings.tsx'
       - 'src/features/papos/PaposLogout.test.tsx'
       - 'supabase/migrations/*controlled_invitation_campaigns.sql'
+      - 'supabase/migrations/*shared_registration_links.sql'
       - 'tests/invitation-campaigns/**'
       - '.github/workflows/invitation-campaigns.yml'
   workflow_dispatch:
@@ -45,7 +47,7 @@ jobs:
           python-version: '3.12'
       - run: npm ci --no-audit --no-fund
       - run: python -m pip install 'psycopg[binary]==3.2.12'
-      - run: python -m unittest discover -s tests/invitation-campaigns -v
-      - run: npm test -- src/components/admin/InvitationCampaignAdmin.test.tsx src/components/settings/CampaignInvites.test.tsx src/components/settings/InviteSheet.test.tsx src/components/settings/ContactInviteActions.test.tsx src/lib/invite-delivery.test.ts src/lib/invitation-registration.test.ts src/lib/referral.test.ts src/test/integration/auth.test.tsx src/features/papos/PaposLogout.test.tsx --reporter=dot
+      - run: python tests/invitation-campaigns/shared_links.py
+      - run: npm test -- src/components/admin/SharedRegistrationLinks.test.tsx src/components/admin/InvitationCampaignAdmin.test.tsx src/components/settings/CampaignInvites.test.tsx src/components/settings/InviteSheet.test.tsx src/components/settings/ContactInviteActions.test.tsx src/lib/invite-delivery.test.ts src/lib/invitation-registration.test.ts src/lib/referral.test.ts src/test/integration/auth.test.tsx src/features/papos/PaposLogout.test.tsx --reporter=dot
       - run: npx tsc --noEmit -p tsconfig.app.json
       - run: npx eslint src/components/admin/InvitationCampaignAdmin.tsx src/components/settings/CampaignInvites.tsx src/components/settings/InviteSheet.tsx src/lib/invitation-campaigns.ts src/lib/invite-delivery.ts

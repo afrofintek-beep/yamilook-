@@ -328,5 +328,13 @@
   "Últimos 100 registos, incluindo autor e motivo.": "Amarekhodi angu-100 okugcina, afaka umbhali nesizathu.",
   "← Administração": "← Ukuphatha",
   "✓ Utilizado em {{value1}}": "✓ Isetshenziswa ku-{{value1}}",
-  "🎉 Candidato aprovado!": "🎉 Umuntu ozokhethwa ugunyaziwe!"
+  "🎉 Candidato aprovado!": "🎉 Umuntu ozokhethwa ugunyaziwe!",
+  "Convites coletivos": "Izimemo ezabiwayo",
+  "Uma ligação para várias pessoas, com limite de inscrições e prazo de validade.": "Isixhumanisi esisodwa sabantu abaningi, esinomkhawulo wokubhalisa nosuku lokuphelelwa.",
+  "Não foi possível atualizar os convites. Tenta novamente.": "Akukwazekanga ukubuyekeza izimemo. Zama futhi.",
+  "Ainda não existem convites coletivos.": "Azikho izimemo ezabiwayo okwamanje.",
+  "Inscrições: {{used}} de {{limit}} · Emails confirmados: {{confirmed}}": "Ukubhalisa: {{used}} kokungu-{{limit}} · Ama-imeyili aqinisekisiwe: {{confirmed}}",
+  "Válido até {{date}}": "Sisebenza kuze kube {{date}}",
+  "Copiado!": "Kukopishiwe!",
+  "Cada conta criada ocupa uma vaga, mesmo antes da confirmação do email. Reencaminhar a ligação permite que outras pessoas utilizem as vagas disponíveis.": "I-akhawunti ngayinye eyakhiwayo ithatha indawo eyodwa, ngisho nangaphambi kokuqinisekiswa kwe-imeyili. Ukudlulisela isixhumanisi kuvumela abanye abantu ukuthi basebenzise izindawo ezisele."
 }

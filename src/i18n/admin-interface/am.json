@@ -328,5 +328,13 @@
   "Últimos 100 registos, incluindo autor e motivo.": "ደራሲ እና ምክንያትን ጨምሮ የመጨረሻ 100 መዝገቦች።",
   "← Administração": "← አስተዳደር",
   "✓ Utilizado em {{value1}}": "✓ በ{{value1}} ውስጥ ጥቅም ላይ ውሏል",
-  "🎉 Candidato aprovado!": "🎉 እጩ ጸደቀ!"
+  "🎉 Candidato aprovado!": "🎉 እጩ ጸደቀ!",
+  "Convites coletivos": "የቡድን ግብዣዎች",
+  "Uma ligação para várias pessoas, com limite de inscrições e prazo de validade.": "ለብዙ ሰዎች አንድ አገናኝ፣ ከምዝገባ ገደብ እና የማብቂያ ቀን ጋር።",
+  "Não foi possível atualizar os convites. Tenta novamente.": "ግብዣዎቹን ማዘመን አልተቻለም። እንደገና ሞክር።",
+  "Ainda não existem convites coletivos.": "እስካሁን የቡድን ግብዣዎች የሉም።",
+  "Inscrições: {{used}} de {{limit}} · Emails confirmados: {{confirmed}}": "ምዝገባዎች፦ {{used}} ከ {{limit}} · የተረጋገጡ ኢሜይሎች፦ {{confirmed}}",
+  "Válido até {{date}}": "እስከ {{date}} ድረስ የሚሰራ",
+  "Copiado!": "ተቀድቷል!",
+  "Cada conta criada ocupa uma vaga, mesmo antes da confirmação do email. Reencaminhar a ligação permite que outras pessoas utilizem as vagas disponíveis.": "እያንዳንዱ የተፈጠረ መለያ ኢሜይሉ ከመረጋገጡ በፊትም አንድ ቦታ ይይዛል። አገናኙን ማስተላለፍ ሌሎች ሰዎች ያሉትን ቦታዎች እንዲጠቀሙ ያስችላል።"
 }

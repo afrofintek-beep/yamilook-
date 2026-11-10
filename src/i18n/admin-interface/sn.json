@@ -328,5 +328,13 @@
   "Últimos 100 registos, incluindo autor e motivo.": "Ekupedzisira zana zvinyorwa, kusanganisira munyori uye chikonzero.",
   "← Administração": "← Administration",
   "✓ Utilizado em {{value1}}": "✓ Inoshandiswa mu{{value1}}",
-  "🎉 Candidato aprovado!": "🎉 Mumiriri atenderwa!"
+  "🎉 Candidato aprovado!": "🎉 Mumiriri atenderwa!",
+  "Convites coletivos": "Kukoka vanhu vakawanda",
+  "Uma ligação para várias pessoas, com limite de inscrições e prazo de validade.": "Link imwe yevanhu vakawanda, ine muganhu wekunyoresa nezuva rekupera.",
+  "Não foi possível atualizar os convites. Tenta novamente.": "Hatina kukwanisa kuvandudza kukoka. Edza zvakare.",
+  "Ainda não existem convites coletivos.": "Hapasati paine kukoka vanhu vakawanda.",
+  "Inscrições: {{used}} de {{limit}} · Emails confirmados: {{confirmed}}": "Vakanyoresa: {{used}} pa {{limit}} · Maemail akasimbiswa: {{confirmed}}",
+  "Válido até {{date}}": "Inoshanda kusvika {{date}}",
+  "Copiado!": "Yakopwa!",
+  "Cada conta criada ocupa uma vaga, mesmo antes da confirmação do email. Reencaminhar a ligação permite que outras pessoas utilizem as vagas disponíveis.": "Akaunti imwe neimwe inogadzirwa inotora nzvimbo imwe, kunyange email isati yasimbiswa. Kutumira link kune vamwe kunovabvumira kushandisa nzvimbo dzasara."
 }

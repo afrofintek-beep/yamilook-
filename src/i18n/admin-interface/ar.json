@@ -328,5 +328,13 @@
   "Últimos 100 registos, incluindo autor e motivo.": "آخر 100 سجل، بما في ذلك المؤلف والسبب.",
   "← Administração": "← الإدارة",
   "✓ Utilizado em {{value1}}": "✓ يستخدم في {{value1}}",
-  "🎉 Candidato aprovado!": "🎉 تمت الموافقة على المرشح!"
+  "🎉 Candidato aprovado!": "🎉 تمت الموافقة على المرشح!",
+  "Convites coletivos": "دعوات جماعية",
+  "Uma ligação para várias pessoas, com limite de inscrições e prazo de validade.": "رابط واحد لعدة أشخاص، مع حد لعدد التسجيلات وتاريخ انتهاء.",
+  "Não foi possível atualizar os convites. Tenta novamente.": "تعذّر تحديث الدعوات. حاول مجددًا.",
+  "Ainda não existem convites coletivos.": "لا توجد دعوات جماعية بعد.",
+  "Inscrições: {{used}} de {{limit}} · Emails confirmados: {{confirmed}}": "التسجيلات: {{used}} من {{limit}} · عناوين البريد المؤكدة: {{confirmed}}",
+  "Válido até {{date}}": "صالح حتى {{date}}",
+  "Copiado!": "تم النسخ!",
+  "Cada conta criada ocupa uma vaga, mesmo antes da confirmação do email. Reencaminhar a ligação permite que outras pessoas utilizem as vagas disponíveis.": "يستهلك كل حساب يُنشأ مكانًا واحدًا، حتى قبل تأكيد البريد الإلكتروني. تتيح إعادة إرسال الرابط لأشخاص آخرين استخدام الأماكن المتاحة."
 }
