@@ -9,6 +9,11 @@ test('long text expands in one scrolling editor and saves the complete text', as
  await expect.poll(() => field.evaluate(el => el.scrollHeight <= el.clientHeight + 2)).toBe(true);
  const scroll = page.getByTestId('edit-post-scroll');
  expect(await scroll.evaluate(el => el.scrollHeight > el.clientHeight)).toBe(true);
+ await field.evaluate(el => { el.blur(); el.setSelectionRange(0, 0); });
+ await scroll.evaluate(el => { el.scrollTop = 0; });
+ await field.evaluate(el => el.focus({ preventScroll: true }));
+ await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+ expect(await scroll.evaluate(el => el.scrollTop)).toBeLessThan(100);
  await scroll.evaluate(el => { el.scrollTop = el.scrollHeight; });
  await expect(page.getByRole('button', { name: 'Guardar', exact: true })).toBeInViewport();
  await page.getByLabel('Adicionar local').fill('');

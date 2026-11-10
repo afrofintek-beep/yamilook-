@@ -33,3 +33,20 @@ it('supports browsers without VisualViewport', () => {
   const { result } = renderHook(() => useKeyboardViewport(true));
   expect(result.current.style?.['--group-viewport-height']).toBe('500px');
 });
+it('keeps the caret context for a growing textarea while still revealing short fields', () => {
+  vi.stubGlobal('requestAnimationFrame', (fn: FrameRequestCallback) => { fn(0); return 1; });
+  vi.stubGlobal('cancelAnimationFrame', vi.fn());
+  const area = document.createElement('div');
+  area.style.overflowY = 'auto';
+  const field = document.createElement('textarea');
+  area.append(field); document.body.append(area);
+  vi.spyOn(area, 'getBoundingClientRect').mockReturnValue({ top: 100, bottom: 300, height: 200 } as DOMRect);
+  const bounds = vi.spyOn(field, 'getBoundingClientRect').mockReturnValue({ top: 120, bottom: 1120, height: 1000 } as DOMRect);
+  renderHook(() => useKeyboardViewport(true));
+  act(() => field.focus());
+  expect(area.scrollTop).toBe(0);
+  act(() => field.blur());
+  bounds.mockReturnValue({ top: 280, bottom: 320, height: 40 } as DOMRect);
+  act(() => field.focus());
+  expect(area.scrollTop).toBe(36);
+});
