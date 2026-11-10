@@ -24,6 +24,7 @@ const mockToggleLike = vi.fn();
 const mockToggleSave = vi.fn();
 const mockDeletePost = vi.fn();
 const mockSharePost = vi.fn();
+const mockUpdatePost = vi.fn();
 
 vi.mock('@/hooks/usePosts', () => ({
   usePosts: () => ({
@@ -31,6 +32,7 @@ vi.mock('@/hooks/usePosts', () => ({
     toggleSave: mockToggleSave,
     deletePost: mockDeletePost,
     sharePost: mockSharePost,
+    updatePost: mockUpdatePost,
   }),
   PostWithUser: {},
 }));
@@ -89,6 +91,20 @@ describe('PostCard', () => {
     mockToggleSave.mockClear();
     mockDeletePost.mockClear();
     mockSharePost.mockClear();
+    mockUpdatePost.mockReset();
+  });
+
+  it('keeps the editor open when the backend does not confirm the update', async () => {
+    mockUpdatePost.mockResolvedValue(null);
+    render(<PostCard post={{ ...mockPost, user_id: 'test-user-id' }} />);
+    fireEvent.pointerDown(document.querySelector('button[aria-haspopup="menu"]')!, { button: 0, ctrlKey: false, pointerType: 'mouse' });
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'Editar publicação' }));
+    const field = await screen.findByLabelText('Texto da publicação');
+    fireEvent.change(field, { target: { value: 'Texto que deve ser preservado' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Não foi possível guardar');
+    expect(field).toHaveValue('Texto que deve ser preservado');
+    expect(screen.queryByText('Publicação editada')).not.toBeInTheDocument();
   });
 
   it('renders campaign addresses as clickable links without opening the author profile', () => {

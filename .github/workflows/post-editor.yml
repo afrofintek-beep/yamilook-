@@ -1,0 +1,28 @@
+name: Post editor mobile usability
+on:
+  pull_request:
+    paths: ['src/components/feed/*Post*', 'src/components/ui/sheet.tsx', 'src/components/ui/textarea.tsx', 'src/hooks/useKeyboardViewport*', 'src/i18n/locales/**', 'tests/post-editor/**', '.github/workflows/post-editor.yml']
+permissions:
+  contents: read
+jobs:
+  editor:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx vitest run src/components/feed/EditPostSheet.test.tsx src/components/feed/CreatePostSheet.test.tsx src/components/feed/PostCard.test.tsx src/hooks/useKeyboardViewport.test.ts
+      - run: npx tsc --noEmit -p tsconfig.app.json
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium webkit
+      - run: npx playwright test -c tests/post-editor/playwright.config.ts
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: post-editor-browser-results
+          path: test-results/
+          retention-days: 7

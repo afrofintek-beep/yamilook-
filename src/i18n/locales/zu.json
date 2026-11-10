@@ -688,7 +688,12 @@
     "draftRestored": "Okusalungiswa kubuyisiwe",
     "draftReady": "Ungaqhubeka nokuhlela nokushicilela.",
     "draftMediaNotSaved": "Umbhalo ugciniwe, kodwa uzodinga ukukhetha ividiyo futhi.",
-    "draftMediaReselect": "Umbhalo ubuyisiwe. Khetha ividiyo futhi."
+    "draftMediaReselect": "Umbhalo ubuyisiwe. Khetha ividiyo futhi.",
+    "postText": "Umbhalo wokuthunyelwe",
+    "publicAudience": "Esidlangalaleni (wonke umuntu)",
+    "discardChangesTitle": "Lahla izinguquko?",
+    "discardChangesDescription": "Izinguquko zakho azikagcinwa.",
+    "editSaveError": "Akukwazanga ukugcinwa. Umbhalo wakho usekhona lapha; zama futhi."
   },
   "contacts": {
     "title": "Oxhumana nabo",

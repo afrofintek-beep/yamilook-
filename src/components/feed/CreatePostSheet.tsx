@@ -16,7 +16,7 @@ import {
   Scissors,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
+import { PostContentTextarea } from './PostContentTextarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Sheet,
@@ -93,7 +93,7 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
   const { toast } = useToast();
 
   const privacyOptions = [
-    { value: 'everyone', label: t('privacy.everyone'), icon: Globe },
+    { value: 'everyone', label: t('feed.publicAudience'), icon: Globe },
     { value: 'contacts', label: t('privacy.friends'), icon: Users },
     { value: 'close_friends', label: t('privacy.closeFriends', genderCtx(profile?.gender)), icon: Circle },
     { value: 'only_me', label: t('privacy.onlyMe'), icon: Lock },
@@ -538,7 +538,7 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
                   {profile?.display_name || t('feed.you')}
                 </p>
                 <Select value={privacy} onValueChange={(v) => setPrivacy(v as typeof privacy)}>
-                  <SelectTrigger className="h-7 w-auto text-xs border border-primary/30 rounded-full px-2 gap-1 bg-transparent">
+                  <SelectTrigger aria-label={t('status.whoCanSee')} className="min-h-11 w-auto text-sm border border-primary/30 rounded-full px-3 gap-1 bg-transparent">
                     {(() => {
                       const selected = privacyOptions.find(o => o.value === privacy);
                       const Icon = selected?.icon || Globe;
@@ -565,11 +565,12 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
             </div>
 
             {/* Content input */}
-            <Textarea
+            <PostContentTextarea
+              aria-label={t('feed.postText')}
               placeholder={t('feed.createPlaceholder', 'O que se passa na tua banda?')}
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              className="min-h-[76px] sm:min-h-[100px] resize-none border-none text-lg text-foreground placeholder:text-foreground/60 p-0 focus-visible:ring-0"
+              className="min-h-[160px] border-none text-lg text-foreground placeholder:text-foreground/60 p-0 focus-visible:ring-0"
             />
 
             {/* File previews */}

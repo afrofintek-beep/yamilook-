@@ -374,7 +374,12 @@
     "postEditedDesc": "A tua publicação foi atualizada",
     "posts": "Publicações",
     "promotePost": "Promover",
-    "whatsOnYourMind": "No que estás a pensar?"
+    "whatsOnYourMind": "No que estás a pensar?",
+    "postText": "Texto da publicação",
+    "publicAudience": "Público (todas as pessoas)",
+    "discardChangesTitle": "Descartar as alterações?",
+    "discardChangesDescription": "As alterações ainda não foram guardadas.",
+    "editSaveError": "Não foi possível guardar. O teu texto continua aqui; tenta novamente."
   },
   "calls": {
     "title": "Chamadas",

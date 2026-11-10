@@ -361,7 +361,12 @@
     "draftRestored": "Draft retrieved",
     "draftReady": "You can continue editing and publishing.",
     "draftMediaNotSaved": "The text is saved, but you will need to select the video again.",
-    "draftMediaReselect": "The text was retrieved. Select the video again."
+    "draftMediaReselect": "The text was retrieved. Select the video again.",
+    "postText": "Post text",
+    "publicAudience": "Public (everyone)",
+    "discardChangesTitle": "Discard changes?",
+    "discardChangesDescription": "Your changes have not been saved yet.",
+    "editSaveError": "Could not save. Your text is still here; please try again."
   },
   "calls": {
     "title": "Calls",

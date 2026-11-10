@@ -688,7 +688,12 @@
     "draftRestored": "Akọpamọ gba",
     "draftReady": "O le tẹsiwaju ṣiṣatunṣe ati titẹjade.",
     "draftMediaNotSaved": "Ọrọ ti wa ni ipamọ, ṣugbọn iwọ yoo nilo lati yan fidio lẹẹkansi.",
-    "draftMediaReselect": "Ọrọ ti gba pada. Yan fidio lẹẹkansi."
+    "draftMediaReselect": "Ọrọ ti gba pada. Yan fidio lẹẹkansi.",
+    "postText": "Ọ̀rọ̀ ìfìwéránṣẹ́",
+    "publicAudience": "Gbangba (gbogbo ènìyàn)",
+    "discardChangesTitle": "Pa àwọn àyípadà rẹ́?",
+    "discardChangesDescription": "A kò tíì fi àwọn àyípadà rẹ pamọ́.",
+    "editSaveError": "A kò lè fi pamọ́. Ọ̀rọ̀ rẹ ṣì wà níbí; tún gbìyànjú."
   },
   "contacts": {
     "title": "Awọn olubasọrọ",

@@ -361,7 +361,12 @@
     "draftRestored": "Rasimu imerejeshwa",
     "draftReady": "Unaweza kuendelea kuhariri na kuchapisha.",
     "draftMediaNotSaved": "Maandishi yamehifadhiwa, lakini utahitaji kuchagua video tena.",
-    "draftMediaReselect": "Maandishi yamerejeshwa. Teua video tena."
+    "draftMediaReselect": "Maandishi yamerejeshwa. Teua video tena.",
+    "postText": "Maandishi ya chapisho",
+    "publicAudience": "Hadharani (kila mtu)",
+    "discardChangesTitle": "Ungependa kufuta mabadiliko?",
+    "discardChangesDescription": "Mabadiliko yako bado hayajahifadhiwa.",
+    "editSaveError": "Imeshindwa kuhifadhi. Maandishi yako bado yako hapa; jaribu tena."
   },
   "calls": {
     "title": "Simu",

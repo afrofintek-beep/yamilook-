@@ -29,6 +29,9 @@ export function useKeyboardViewport(open: boolean) {
           if (getComputedStyle(parent).overflowY === 'auto') {
             const field = focused.getBoundingClientRect();
             const area = parent.getBoundingClientRect();
+            // Growing text fields may be taller than the viewport. Let the
+            // browser reveal the caret instead of jumping to the field's end.
+            if (field.height > area.height - 32) break;
             if (field.bottom > area.bottom - 16) parent.scrollTop += field.bottom - area.bottom + 16;
             else if (field.top < area.top + 16) parent.scrollTop -= area.top + 16 - field.top;
             break;

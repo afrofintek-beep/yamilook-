@@ -361,7 +361,12 @@
     "draftRestored": "تم استرداد المسودة",
     "draftReady": "يمكنك متابعة التحرير والنشر.",
     "draftMediaNotSaved": "تم حفظ النص، ولكن ستحتاج إلى تحديد الفيديو مرة أخرى.",
-    "draftMediaReselect": "تم استرداد النص. حدد الفيديو مرة أخرى."
+    "draftMediaReselect": "تم استرداد النص. حدد الفيديو مرة أخرى.",
+    "postText": "نص المنشور",
+    "publicAudience": "عام (الجميع)",
+    "discardChangesTitle": "تجاهل التغييرات؟",
+    "discardChangesDescription": "لم يتم حفظ تغييراتك بعد.",
+    "editSaveError": "تعذّر الحفظ. لا يزال نصك هنا؛ حاول مرة أخرى."
   },
   "calls": {
     "title": "المكالمات",

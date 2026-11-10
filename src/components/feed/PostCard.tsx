@@ -486,10 +486,11 @@ export const PostCard = memo(function PostCard({ mediaPriority = false, post, on
           onOpenChange={setShowEdit}
           post={post}
           onSave={async (updates) => {
-            await updatePost(post.id, {
+            const updated = await updatePost(post.id, {
               ...updates,
               privacy: updates.privacy as 'everyone' | 'contacts' | 'close_friends' | 'only_me' | undefined,
             });
+            if (!updated) throw new Error('Post update was not confirmed');
             toast({
               title: t('feed.postEdited', 'Publicação editada'),
               description: t('feed.postEditedDesc', 'A tua publicação foi atualizada'),
