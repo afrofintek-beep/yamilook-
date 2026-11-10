@@ -328,5 +328,13 @@
   "Últimos 100 registos, incluindo autor e motivo.": "Rekodi 100 za mwisho, ikijumuisha mwandishi na sababu.",
   "← Administração": "← Utawala",
   "✓ Utilizado em {{value1}}": "✓ Inatumika katika {{value1}}",
-  "🎉 Candidato aprovado!": "🎉 Mgombea ameidhinishwa!"
+  "🎉 Candidato aprovado!": "🎉 Mgombea ameidhinishwa!",
+  "Convites coletivos": "Mialiko ya pamoja",
+  "Uma ligação para várias pessoas, com limite de inscrições e prazo de validade.": "Kiungo kimoja kwa watu kadhaa, chenye kikomo cha usajili na tarehe ya mwisho.",
+  "Não foi possível atualizar os convites. Tenta novamente.": "Imeshindikana kusasisha mialiko. Jaribu tena.",
+  "Ainda não existem convites coletivos.": "Bado hakuna mialiko ya pamoja.",
+  "Inscrições: {{used}} de {{limit}} · Emails confirmados: {{confirmed}}": "Usajili: {{used}} kati ya {{limit}} · Barua pepe zilizothibitishwa: {{confirmed}}",
+  "Válido até {{date}}": "Halali hadi {{date}}",
+  "Copiado!": "Imenakiliwa!",
+  "Cada conta criada ocupa uma vaga, mesmo antes da confirmação do email. Reencaminhar a ligação permite que outras pessoas utilizem as vagas disponíveis.": "Kila akaunti inayoundwa hutumia nafasi moja, hata kabla ya kuthibitisha barua pepe. Kusambaza kiungo kunaruhusu watu wengine kutumia nafasi zilizobaki."
 }

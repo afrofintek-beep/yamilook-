@@ -328,5 +328,13 @@
   "Últimos 100 registos, incluindo autor e motivo.": "Últimos 100 registos, incluindo autor e motivo.",
   "← Administração": "← Administração",
   "✓ Utilizado em {{value1}}": "✓ Utilizado em {{value1}}",
-  "🎉 Candidato aprovado!": "🎉 Candidato aprovado!"
+  "🎉 Candidato aprovado!": "🎉 Candidato aprovado!",
+  "Convites coletivos": "Convites coletivos",
+  "Uma ligação para várias pessoas, com limite de inscrições e prazo de validade.": "Uma ligação para várias pessoas, com limite de inscrições e prazo de validade.",
+  "Não foi possível atualizar os convites. Tenta novamente.": "Não foi possível atualizar os convites. Tenta novamente.",
+  "Ainda não existem convites coletivos.": "Ainda não existem convites coletivos.",
+  "Inscrições: {{used}} de {{limit}} · Emails confirmados: {{confirmed}}": "Inscrições: {{used}} de {{limit}} · Emails confirmados: {{confirmed}}",
+  "Válido até {{date}}": "Válido até {{date}}",
+  "Copiado!": "Copiado!",
+  "Cada conta criada ocupa uma vaga, mesmo antes da confirmação do email. Reencaminhar a ligação permite que outras pessoas utilizem as vagas disponíveis.": "Cada conta criada ocupa uma vaga, mesmo antes da confirmação do email. Reencaminhar a ligação permite que outras pessoas utilizem as vagas disponíveis."
 }

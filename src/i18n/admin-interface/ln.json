@@ -328,5 +328,13 @@
   "Últimos 100 registos, incluindo autor e motivo.": "Ba dossiers 100 ya suka, na kati na yango mokomi na raison.",
   "← Administração": "← Bokambami",
   "✓ Utilizado em {{value1}}": "✓ Esalemi na {{value1}}",
-  "🎉 Candidato aprovado!": "🎉 Candidat andimi!"
+  "🎉 Candidato aprovado!": "🎉 Candidat andimi!",
+  "Convites coletivos": "Mabiangi ya bato mingi",
+  "Uma ligação para várias pessoas, com limite de inscrições e prazo de validade.": "Lien moko mpo na bato mingi, na motángo ya nsuka ya bakomi nkombo mpe mokolo ya kosila.",
+  "Não foi possível atualizar os convites. Tenta novamente.": "Tokoki te kozongisa mabiangi sika. Meka lisusu.",
+  "Ainda não existem convites coletivos.": "Mabiangi ya bato mingi ezali naino te.",
+  "Inscrições: {{used}} de {{limit}} · Emails confirmados: {{confirmed}}": "Bakomi nkombo: {{used}} kati na {{limit}} · Ba-email endimami: {{confirmed}}",
+  "Válido até {{date}}": "Ekosala kino {{date}}",
+  "Copiado!": "Ekopiami!",
+  "Cada conta criada ocupa uma vaga, mesmo antes da confirmação do email. Reencaminhar a ligação permite que outras pessoas utilizem as vagas disponíveis.": "Compte nyonso oyo esalemi ezwaka esika moko, ata liboso ya kondima email. Kotindela bato mosusu lien epesaka bango nzela ya kosalela bisika oyo etikali."
 }

@@ -65,6 +65,7 @@ import { TopicSuggestionsManager } from '@/components/admin/TopicSuggestionsMana
 import { LiveSessionsManager } from '@/components/admin/LiveSessionsManager';
 import { MvpCandidatesManager } from '@/components/admin/MvpCandidatesManager';
 import { InvitationCampaignAdmin } from '@/components/admin/InvitationCampaignAdmin';
+import { SharedRegistrationLinks } from '@/components/admin/SharedRegistrationLinks';
 import { FounderInviteAssistant } from '@/components/admin/FounderInviteAssistant';
 
 interface Stats {
@@ -519,6 +520,7 @@ export default function Admin() {
 
         {/* Founder invitation workflow — uses server-authorized invitation RPC */}
         <FounderInviteAssistant />
+        <SharedRegistrationLinks />
         <InvitationCampaignAdmin />
         {socialInitiativesEnabled && <InitiativeAdmin />}
 

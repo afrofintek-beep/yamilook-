@@ -328,5 +328,13 @@
   "Últimos 100 registos, incluindo autor e motivo.": "kẹhin 100 igbasilẹ, pẹlu onkowe ati idi.",
   "← Administração": "← Isakoso",
   "✓ Utilizado em {{value1}}": "✓ Lo ninu {{value1}}",
-  "🎉 Candidato aprovado!": "🎉 Oludije fọwọsi!"
+  "🎉 Candidato aprovado!": "🎉 Oludije fọwọsi!",
+  "Convites coletivos": "Àwọn ìkésíni àjọpín",
+  "Uma ligação para várias pessoas, com limite de inscrições e prazo de validade.": "Ọ̀nà àsopọ̀ kan fún ọ̀pọ̀ ènìyàn, pẹ̀lú ààlà ìforúkọsílẹ̀ àti ọjọ́ ìparí.",
+  "Não foi possível atualizar os convites. Tenta novamente.": "A kò lè ṣe àtúnṣe àwọn ìkésíni. Gbìyànjú lẹ́ẹ̀kan sí i.",
+  "Ainda não existem convites coletivos.": "Kò tíì sí ìkésíni àjọpín.",
+  "Inscrições: {{used}} de {{limit}} · Emails confirmados: {{confirmed}}": "Ìforúkọsílẹ̀: {{used}} nínú {{limit}} · Àwọn ímeèlì tí a ti jẹ́rìí sí: {{confirmed}}",
+  "Válido até {{date}}": "Ó wúlò títí di {{date}}",
+  "Copiado!": "A ti dà á kọ!",
+  "Cada conta criada ocupa uma vaga, mesmo antes da confirmação do email. Reencaminhar a ligação permite que outras pessoas utilizem as vagas disponíveis.": "Àkọọ́lẹ̀ kọ̀ọ̀kan tí a ṣẹ̀dá gba àyè kan, kódà ṣáájú ìmúdájú ímeèlì. Fífi ọ̀nà àsopọ̀ ránṣẹ́ sí ẹlòmíràn jẹ́ kí wọ́n lo àwọn àyè tó kù."
 }

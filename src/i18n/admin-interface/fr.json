@@ -328,5 +328,13 @@
   "Últimos 100 registos, incluindo autor e motivo.": "100 derniers enregistrements, y compris l'auteur et la raison.",
   "← Administração": "← Administration",
   "✓ Utilizado em {{value1}}": "✓ Utilisé dans {{value1}}",
-  "🎉 Candidato aprovado!": "🎉 Candidat approuvé !"
+  "🎉 Candidato aprovado!": "🎉 Candidat approuvé !",
+  "Convites coletivos": "Invitations collectives",
+  "Uma ligação para várias pessoas, com limite de inscrições e prazo de validade.": "Un lien pour plusieurs personnes, avec un nombre limité d’inscriptions et une date d’expiration.",
+  "Não foi possível atualizar os convites. Tenta novamente.": "Impossible de mettre à jour les invitations. Réessaie.",
+  "Ainda não existem convites coletivos.": "Il n’y a pas encore d’invitations collectives.",
+  "Inscrições: {{used}} de {{limit}} · Emails confirmados: {{confirmed}}": "Inscriptions : {{used}} sur {{limit}} · Emails confirmés : {{confirmed}}",
+  "Válido até {{date}}": "Valable jusqu’au {{date}}",
+  "Copiado!": "Copié !",
+  "Cada conta criada ocupa uma vaga, mesmo antes da confirmação do email. Reencaminhar a ligação permite que outras pessoas utilizem as vagas disponíveis.": "Chaque compte créé occupe une place, même avant la confirmation de l’email. Transmettre le lien permet à d’autres personnes d’utiliser les places disponibles."
 }

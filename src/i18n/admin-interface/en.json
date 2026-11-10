@@ -328,5 +328,13 @@
   "Últimos 100 registos, incluindo autor e motivo.": "Last 100 records, including author and reason.",
   "← Administração": "← Administration",
   "✓ Utilizado em {{value1}}": "✓ Used in {{value1}}",
-  "🎉 Candidato aprovado!": "🎉 Candidate approved!"
+  "🎉 Candidato aprovado!": "🎉 Candidate approved!",
+  "Convites coletivos": "Shared invitations",
+  "Uma ligação para várias pessoas, com limite de inscrições e prazo de validade.": "One link for several people, with a registration limit and an expiry date.",
+  "Não foi possível atualizar os convites. Tenta novamente.": "Could not update invitations. Try again.",
+  "Ainda não existem convites coletivos.": "There are no shared invitations yet.",
+  "Inscrições: {{used}} de {{limit}} · Emails confirmados: {{confirmed}}": "Registrations: {{used}} of {{limit}} · Confirmed emails: {{confirmed}}",
+  "Válido até {{date}}": "Valid until {{date}}",
+  "Copiado!": "Copied!",
+  "Cada conta criada ocupa uma vaga, mesmo antes da confirmação do email. Reencaminhar a ligação permite que outras pessoas utilizem as vagas disponíveis.": "Each account created takes one place, even before email confirmation. Forwarding the link allows other people to use the available places."
 }
