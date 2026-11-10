@@ -203,4 +203,3 @@ BEGIN
  RETURN public.validate_legacy_mvp_access_code(p_code);
 END $function$
 ;
-
