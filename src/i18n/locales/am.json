@@ -361,7 +361,12 @@
     "draftRestored": "ረቂቅ ተሰርስሮ ወጥቷል።",
     "draftReady": "ማረም እና ማተምን መቀጠል ትችላለህ።",
     "draftMediaNotSaved": "ጽሑፉ ተቀምጧል፣ ግን ቪዲዮውን እንደገና መምረጥ ያስፈልግዎታል።",
-    "draftMediaReselect": "ጽሑፉ ተሰርስሮ ወጥቷል። ቪዲዮውን እንደገና ይምረጡ።"
+    "draftMediaReselect": "ጽሑፉ ተሰርስሮ ወጥቷል። ቪዲዮውን እንደገና ይምረጡ።",
+    "postText": "የልጥፉ ጽሑፍ",
+    "publicAudience": "ይፋዊ (ሁሉም ሰው)",
+    "discardChangesTitle": "ለውጦቹን ይተዉ?",
+    "discardChangesDescription": "ለውጦችዎ ገና አልተቀመጡም።",
+    "editSaveError": "ማስቀመጥ አልተቻለም። ጽሑፍዎ እዚህ አለ፤ እንደገና ይሞክሩ።"
   },
   "calls": {
     "title": "ጥሪዎች",

@@ -361,7 +361,12 @@
     "draftRestored": "Brouillon récupéré",
     "draftReady": "Vous pouvez continuer la modification et la publication.",
     "draftMediaNotSaved": "Le texte a été enregistré, mais vous devrez sélectionner à nouveau la vidéo.",
-    "draftMediaReselect": "Le texte a été récupéré. Sélectionnez à nouveau la vidéo."
+    "draftMediaReselect": "Le texte a été récupéré. Sélectionnez à nouveau la vidéo.",
+    "postText": "Texte de la publication",
+    "publicAudience": "Public (tout le monde)",
+    "discardChangesTitle": "Abandonner les modifications ?",
+    "discardChangesDescription": "Vos modifications ne sont pas encore enregistrées.",
+    "editSaveError": "Impossible d’enregistrer. Votre texte est conservé ; réessayez."
   },
   "calls": {
     "title": "Appels",

@@ -361,7 +361,12 @@
     "draftRestored": "Projet ezwami",
     "draftReady": "Okoki kokoba kobongisa mpe kobimisa.",
     "draftMediaNotSaved": "Makomi ebombami, kasi ekosenga opona lisusu video.",
-    "draftMediaReselect": "Mokanda yango ezwamaki. Poná lisusu video yango."
+    "draftMediaReselect": "Mokanda yango ezwamaki. Poná lisusu video yango.",
+    "postText": "Makomi ya mokanda",
+    "publicAudience": "Ya bato nyonso",
+    "discardChangesTitle": "Kolongola mbongwana?",
+    "discardChangesDescription": "Mbongwana na yo ebombami naino te.",
+    "editSaveError": "Ekoki kobomba te. Makomi na yo ezali kaka awa; meká lisusu."
   },
   "calls": {
     "title": "Bayangi",

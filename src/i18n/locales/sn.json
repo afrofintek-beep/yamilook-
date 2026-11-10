@@ -688,7 +688,12 @@
     "draftRestored": "Chinyorwa chakadzoserwa",
     "draftReady": "Unogona kuenderera mberi nekugadzirisa uye kutsikisa.",
     "draftMediaNotSaved": "Iwo mameseji akachengetedzwa, asi iwe uchafanirwa kusarudza vhidhiyo zvakare.",
-    "draftMediaReselect": "Mavara akatorwa zvakare. Sarudza vhidhiyo zvakare."
+    "draftMediaReselect": "Mavara akatorwa zvakare. Sarudza vhidhiyo zvakare.",
+    "postText": "Mashoko echinyorwa",
+    "publicAudience": "Zveruzhinji (vanhu vose)",
+    "discardChangesTitle": "Rasa shanduko?",
+    "discardChangesDescription": "Shanduko dzako hadzisati dzachengetwa.",
+    "editSaveError": "Hatina kukwanisa kuchengetedza. Mashoko ako achiri pano; edza zvakare."
   },
   "contacts": {
     "title": "Mazita",
