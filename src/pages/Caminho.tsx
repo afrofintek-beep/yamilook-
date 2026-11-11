@@ -75,7 +75,7 @@ export default function Caminho() {
     </header>
     <iframe ref={frame} src={GAME + '/'} title="O Meu Caminho — bairro 3D"
       onLoad={() => setNonce(null)} referrerPolicy="strict-origin"
-      sandbox="allow-scripts allow-same-origin allow-downloads"
+      sandbox="allow-scripts allow-same-origin allow-downloads allow-forms"
       style={{width:'100%',height:'calc(100dvh - 190px)',minHeight:600,border:0}} />
   </main>;
 }
