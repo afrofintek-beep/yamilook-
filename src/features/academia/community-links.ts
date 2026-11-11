@@ -7,7 +7,7 @@ export function communityReturn(search: string) {
   try {
     const url = new URL(next, 'https://www.yamilook.com');
     if (url.origin !== 'https://www.yamilook.com') return null;
-    if (url.pathname === '/caminho') return '/caminho';
+    if (url.pathname === '/caminho' || url.pathname === '/app/caminho') return '/app/caminho';
     if (url.pathname === '/feira-natalicia-talatona') {
       const invite = url.searchParams.get('convite')?.toUpperCase();
       return url.pathname + (invite && /^[A-F0-9]{16}$/.test(invite) ? `?convite=${invite}` : '');

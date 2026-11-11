@@ -339,6 +339,7 @@ function AnimatedRoutes() {
           <Route path="/advertising" element={<ProtectedRoute><Advertising /></ProtectedRoute>} />
           <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
           <Route path="/caminho" element={<Caminho />} />
+          <Route path="/app/caminho" element={<Caminho />} />
           <Route path="/kumbu" element={<ProtectedRoute><KumbuWallet /></ProtectedRoute>} />
           <Route path="/kumbu/history" element={<ProtectedRoute><KumbuHistory /></ProtectedRoute>} />
           <Route path="/ranking" element={<ProtectedRoute><RankingPage /></ProtectedRoute>} />

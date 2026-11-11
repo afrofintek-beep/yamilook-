@@ -65,7 +65,7 @@ export default function Caminho() {
       <p className="text-sm">Autoriza a consulta do teu nome e saldo Kumbu no jogo. A associação dura apenas nesta página e podes desligá-la a qualquer momento. Não permite pagamentos nem atribui créditos por conquistas.</p>
       <div className="flex flex-wrap gap-3 items-center" aria-live="polite">
         {loading ? <span>A carregar a conta…</span> : recoveringPassword ? <Link to="/reset-password">Concluir recuperação da conta</Link> : !user ?
-          <Link className="rounded-lg bg-primary px-4 py-2 text-primary-foreground" to="/login?next=/caminho">Entrar para associar Kumbu</Link> :
+          <Link className="rounded-lg bg-primary px-4 py-2 text-primary-foreground" to="/login?next=/app/caminho">Entrar para associar Kumbu</Link> :
           enabled ? <><span>{snapshot ? snapshot.balance.toLocaleString('pt-AO') + ' Kumbu · consulta autorizada' : 'A consultar carteira…'}</span>
             <button className="underline" onClick={() => setRefresh(n => n+1)}>Actualizar saldo</button>
             <button className="rounded-lg border px-4 py-2" onClick={() => {setConsent(null);setSnapshot(null);}}>Desligar carteira</button></> :
