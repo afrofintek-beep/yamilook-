@@ -956,7 +956,7 @@
   "Reproduzir vídeo": "Bobɛta video",
   "Ver fotografia": "Talá fɔtɔ́",
   "Vídeo": "Vidéo oyo ezali",
-  "Fotografia": "Foto",
+  "Fotografia": "Fɔtɔ",
   "Descarregar ficheiro": "Télécharger fichier",
   "Fechar pré-visualização": "Bokanga botali liboso",
   "Fechar": "Kokanga",
@@ -3477,5 +3477,14 @@
   "Código AFROLOC": "Kode AFROLOC",
   "Abrir no NJILA": "Fungola na NJILA",
   "Código fornecido pelo remetente. O NJILA consulta a disponibilidade pública do endereço.": "Kode epesami na motindi. NJILA etalaka soki adresi ezali mpo na bato nyonso.",
-  "Partilha o código de um local público, como uma loja. Não é necessário partilhar a tua localização actual.": "Kabola kode ya esika ya bato nyonso, lokola magazini. Ozali na mposa te ya kokabola esika ozali sikoyo."
+  "Partilha o código de um local público, como uma loja. Não é necessário partilhar a tua localização actual.": "Kabola kode ya esika ya bato nyonso, lokola magazini. Ozali na mposa te ya kokabola esika ozali sikoyo.",
+  "Fotos": "Bafɔtɔ",
+  "Grelha": "Molɔngɔ ya bafɔtɔ",
+  "Lista": "Liste",
+  "Abrir fotografia": "Fungola fɔtɔ",
+  "Fotografia anterior": "Fɔtɔ ya liboso",
+  "Fotografia seguinte": "Fɔtɔ oyo elandi",
+  "Ver publicação": "Tala publication",
+  "Publicação": "Publication",
+  "Sem fotografias disponíveis para ti neste perfil.": "Ezali na bafɔtɔ te oyo okoki komona na profil oyo."
 }

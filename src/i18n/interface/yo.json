@@ -956,7 +956,7 @@
   "Reproduzir vídeo": "Mu fidio ṣiṣẹ",
   "Ver fotografia": "Wo fọto",
   "Vídeo": "Fidio",
-  "Fotografia": "Fọtoyiya",
+  "Fotografia": "Fọ́tò",
   "Descarregar ficheiro": "Ṣe igbasilẹ faili",
   "Fechar pré-visualização": "Pa awotẹlẹ",
   "Fechar": "Pa dé",
@@ -3477,5 +3477,14 @@
   "Código AFROLOC": "Kóòdù AFROLOC",
   "Abrir no NJILA": "Ṣí nínú NJILA",
   "Código fornecido pelo remetente. O NJILA consulta a disponibilidade pública do endereço.": "Olùránṣẹ́ ló pèsè kóòdù náà. NJILA ń ṣàyẹ̀wò bóyá àdírẹ́sì náà wà fún gbogbo ènìyàn.",
-  "Partilha o código de um local público, como uma loja. Não é necessário partilhar a tua localização actual.": "Pín kóòdù ibi tí gbogbo ènìyàn lè lọ, bí ilé ìtajà. Kò ṣe dandan láti pín ibi tí o wà báyìí."
+  "Partilha o código de um local público, como uma loja. Não é necessário partilhar a tua localização actual.": "Pín kóòdù ibi tí gbogbo ènìyàn lè lọ, bí ilé ìtajà. Kò ṣe dandan láti pín ibi tí o wà báyìí.",
+  "Fotos": "Àwọn fọ́tò",
+  "Grelha": "Àkójọpọ̀",
+  "Lista": "Àtòjọ",
+  "Abrir fotografia": "Ṣí fọ́tò",
+  "Fotografia anterior": "Fọ́tò tó ṣáájú",
+  "Fotografia seguinte": "Fọ́tò tó tẹ̀ lé",
+  "Ver publicação": "Wo àtẹ̀jáde",
+  "Publicação": "Àtẹ̀jáde",
+  "Sem fotografias disponíveis para ti neste perfil.": "Kò sí fọ́tò tí o lè rí lórí prófáìlì yìí."
 }
