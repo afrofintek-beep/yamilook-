@@ -956,7 +956,7 @@
   "Reproduzir vídeo": "Lire la vidéo",
   "Ver fotografia": "Voir photo",
   "Vídeo": "Vidéo",
-  "Fotografia": "Photographie",
+  "Fotografia": "Photo",
   "Descarregar ficheiro": "Télécharger le fichier",
   "Fechar pré-visualização": "Fermer l'aperçu",
   "Fechar": "Fermer",
@@ -3477,5 +3477,14 @@
   "Código AFROLOC": "Code AFROLOC",
   "Abrir no NJILA": "Ouvrir dans NJILA",
   "Código fornecido pelo remetente. O NJILA consulta a disponibilidade pública do endereço.": "Code fourni par l’expéditeur. NJILA vérifie si l’adresse est accessible au public.",
-  "Partilha o código de um local público, como uma loja. Não é necessário partilhar a tua localização actual.": "Partage le code d’un lieu public, comme une boutique. Tu n’as pas besoin de partager ta position actuelle."
+  "Partilha o código de um local público, como uma loja. Não é necessário partilhar a tua localização actual.": "Partage le code d’un lieu public, comme une boutique. Tu n’as pas besoin de partager ta position actuelle.",
+  "Fotos": "Photos",
+  "Grelha": "Grille",
+  "Lista": "Liste",
+  "Abrir fotografia": "Ouvrir la photo",
+  "Fotografia anterior": "Photo précédente",
+  "Fotografia seguinte": "Photo suivante",
+  "Ver publicação": "Voir la publication",
+  "Publicação": "Publication",
+  "Sem fotografias disponíveis para ti neste perfil.": "Aucune photo disponible pour vous sur ce profil."
 }

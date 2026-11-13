@@ -956,7 +956,7 @@
   "Reproduzir vídeo": "تشغيل الفيديو",
   "Ver fotografia": "انظر الصورة",
   "Vídeo": "فيديو",
-  "Fotografia": "التصوير",
+  "Fotografia": "صورة",
   "Descarregar ficheiro": "تحميل الملف",
   "Fechar pré-visualização": "إغلاق المعاينة",
   "Fechar": "إغلاق",
@@ -3477,5 +3477,14 @@
   "Código AFROLOC": "رمز AFROLOC",
   "Abrir no NJILA": "فتح في NJILA",
   "Código fornecido pelo remetente. O NJILA consulta a disponibilidade pública do endereço.": "رمز قدّمه المرسل. يتحقق NJILA مما إذا كان العنوان متاحاً للعامة.",
-  "Partilha o código de um local público, como uma loja. Não é necessário partilhar a tua localização actual.": "شارك رمز مكان عام، مثل متجر. لا تحتاج إلى مشاركة موقعك الحالي."
+  "Partilha o código de um local público, como uma loja. Não é necessário partilhar a tua localização actual.": "شارك رمز مكان عام، مثل متجر. لا تحتاج إلى مشاركة موقعك الحالي.",
+  "Fotos": "الصور",
+  "Grelha": "شبكة",
+  "Lista": "قائمة",
+  "Abrir fotografia": "فتح الصورة",
+  "Fotografia anterior": "الصورة السابقة",
+  "Fotografia seguinte": "الصورة التالية",
+  "Ver publicação": "عرض المنشور",
+  "Publicação": "منشور",
+  "Sem fotografias disponíveis para ti neste perfil.": "لا توجد صور متاحة لك في هذا الملف الشخصي."
 }

@@ -956,7 +956,7 @@
   "Reproduzir vídeo": "ቪዲዮ አጫውት።",
   "Ver fotografia": "ፎቶ ይመልከቱ",
   "Vídeo": "ቪዲዮ",
-  "Fotografia": "ፎቶግራፊ",
+  "Fotografia": "ፎቶ",
   "Descarregar ficheiro": "ፋይል አውርድ",
   "Fechar pré-visualização": "ቅድመ እይታን ዝጋ",
   "Fechar": "ዝጋ",
@@ -3477,5 +3477,14 @@
   "Código AFROLOC": "የAFROLOC ኮድ",
   "Abrir no NJILA": "በNJILA ክፈት",
   "Código fornecido pelo remetente. O NJILA consulta a disponibilidade pública do endereço.": "ኮዱ በላኪው የቀረበ ነው። NJILA አድራሻው ለሕዝብ የሚገኝ መሆኑን ያረጋግጣል።",
-  "Partilha o código de um local público, como uma loja. Não é necessário partilhar a tua localização actual.": "እንደ ሱቅ ያለ የሕዝብ ቦታ ኮድ አጋራ። አሁን ያለህበትን ቦታ ማጋራት አያስፈልግም።"
+  "Partilha o código de um local público, como uma loja. Não é necessário partilhar a tua localização actual.": "እንደ ሱቅ ያለ የሕዝብ ቦታ ኮድ አጋራ። አሁን ያለህበትን ቦታ ማጋራት አያስፈልግም።",
+  "Fotos": "ፎቶዎች",
+  "Grelha": "ፍርግርግ",
+  "Lista": "ዝርዝር",
+  "Abrir fotografia": "ፎቶ ክፈት",
+  "Fotografia anterior": "ያለፈው ፎቶ",
+  "Fotografia seguinte": "ቀጣዩ ፎቶ",
+  "Ver publicação": "ልጥፉን ይመልከቱ",
+  "Publicação": "ልጥፍ",
+  "Sem fotografias disponíveis para ti neste perfil.": "በዚህ መገለጫ ላይ ለእርስዎ የሚታዩ ፎቶዎች የሉም።"
 }

@@ -956,7 +956,7 @@
   "Reproduzir vídeo": "Play video",
   "Ver fotografia": "See photo",
   "Vídeo": "Video",
-  "Fotografia": "Photography",
+  "Fotografia": "Photo",
   "Descarregar ficheiro": "Download file",
   "Fechar pré-visualização": "Close preview",
   "Fechar": "Close",
@@ -3477,5 +3477,14 @@
   "Código AFROLOC": "AFROLOC code",
   "Abrir no NJILA": "Open in NJILA",
   "Código fornecido pelo remetente. O NJILA consulta a disponibilidade pública do endereço.": "Code provided by the sender. NJILA checks whether the address is publicly available.",
-  "Partilha o código de um local público, como uma loja. Não é necessário partilhar a tua localização actual.": "Share the code of a public place, such as a shop. You do not need to share your current location."
+  "Partilha o código de um local público, como uma loja. Não é necessário partilhar a tua localização actual.": "Share the code of a public place, such as a shop. You do not need to share your current location.",
+  "Fotos": "Photos",
+  "Grelha": "Grid",
+  "Lista": "List",
+  "Abrir fotografia": "Open photo",
+  "Fotografia anterior": "Previous photo",
+  "Fotografia seguinte": "Next photo",
+  "Ver publicação": "View post",
+  "Publicação": "Post",
+  "Sem fotografias disponíveis para ti neste perfil.": "No photos available to you on this profile."
 }
