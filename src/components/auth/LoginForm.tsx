@@ -46,7 +46,7 @@ export function LoginForm() {
   const { signIn } = useAuth();
   const navigate = useNavigate();
   const loginSearch = useLocation().search;
-  const returnToCommunity = new URLSearchParams(loginSearch).get("next") === "/afroloc" ? "/afroloc" : communityReturn(loginSearch);
+  const returnToCommunity = ["/afroloc", "/afroloc/cartao"].includes(new URLSearchParams(loginSearch).get("next") || "") ? new URLSearchParams(loginSearch).get("next") : communityReturn(loginSearch);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
