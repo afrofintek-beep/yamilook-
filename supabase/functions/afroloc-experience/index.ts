@@ -11,7 +11,7 @@ Deno.serve(async(req:Request)=>{
  try{
   const authorization=req.headers.get('authorization');if(!authorization?.startsWith('Bearer '))return json({error:'Entre na Yamilook.'},401);
   const db=createClient(Deno.env.get('SUPABASE_URL')!,Deno.env.get('SUPABASE_ANON_KEY')!,{global:{headers:{Authorization:authorization}},auth:{persistSession:false,autoRefreshToken:false}});
-  const {data:auth,error:authError}=await db.auth.getUser();if(authError||!auth.user||auth.user.is_anonymous)return json({error:'Volte a entrar na Yamilook.'},401);
+  const {data:auth,error:authError}=await db.auth.getUser(authorization.slice(7));if(authError||!auth.user||auth.user.is_anonymous)return json({error:'Volte a entrar na Yamilook.'},401);
   const {data:profile,error:profileError}=await db.from('profiles').select('country_code').eq('id',auth.user.id).single();
   if(profileError||profile?.country_code?.trim().toUpperCase()!=='AO')return json({error:'Seleccione Angola no seu perfil.'},403);
   const raw=await req.text();if(raw.length>7000)return json({error:'Pedido demasiado grande.'},413);
