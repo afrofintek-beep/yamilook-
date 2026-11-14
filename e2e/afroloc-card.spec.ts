@@ -1,12 +1,13 @@
 import {test,expect} from '@playwright/test';
 const me='11111111-1111-4111-8111-111111111111';
+const avatar='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAIAAABvFaqvAAAAIklEQVR4nGPUSfBioAZgooopowaNGjRq0KhBowaNGkQRAABiOAEGuoPnkgAAAABJRU5ErkJggg==';
 const code='AO-LDA-ING-000-DIG-G10-35Q1-N23WC';
 test('mobile owner card shares a readable PNG QR, updates data and keeps contacts opt-in',async({page})=>{
  let currentCode=code;
  await page.route('**/127.0.0.1:54321/**',async route=>{
   const table=new URL(route.request().url()).pathname.split('/').pop();let data:unknown=[];
   if(table==='user')data={id:me,email:'test@example.invalid'};
-  if(table==='profiles')data={id:me,display_name:'António — teste do cartão',username:'teste',onboarding_completed:true,app_tour_completed:true,avatar_url:null,country_code:'AO',city:'Luanda',neighborhood:'Centro',afroloc_code:currentCode,afroloc_certification_status:'pending',phone_number:'923123456',email:'private@example.invalid'};
+  if(table==='profiles')data={id:me,display_name:'António — teste do cartão',username:'teste',onboarding_completed:true,app_tour_completed:true,avatar_url:avatar,country_code:'AO',city:'Luanda',neighborhood:'Centro',afroloc_code:currentCode,afroloc_certification_status:'pending',phone_number:'923123456',email:'private@example.invalid'};
   if(table==='my_residence_administrative')data=null;
   if(table==='afroloc-experience')data={addresses:[]};
   await route.fulfill({json:data});
@@ -21,6 +22,7 @@ test('mobile owner card shares a readable PNG QR, updates data and keeps contact
  await page.goto('/afroloc/cartao');
  const share=page.getByRole('button',{name:'Partilhar cartão'});await expect(share).toBeEnabled({timeout:30000});
  await expect(page.getByRole('img')).toHaveAttribute('aria-label',new RegExp(code));
+ await expect(page.locator('svg[role=img] > image')).toHaveAttribute('href',/^data:image\/png/);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
  await share.click();
  const first=await page.evaluate(async()=>{
