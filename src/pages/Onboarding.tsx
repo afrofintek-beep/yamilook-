@@ -179,7 +179,7 @@ export default function Onboarding() {
     setUsernameAvailable(null);
     setAvatarFile(null);
     setAvatarUrl(profile?.avatar_url ?? null);
-    setResidencePlan({method:draft?.residenceMethod || 'later'});
+    setResidencePlan({method:draft?.residenceMethod || 'later',administrative:draft?.administrative});
     setResumedDraft(!!draft);
     setDraftSaved(draft ? true : null);
     setDraftReady(true);
@@ -191,11 +191,11 @@ export default function Onboarding() {
     setDraftSaved(saveOnboardingDraft({
       currentStep, displayName, username, email: user?.email || email, inviteCode: accessCode,
       gender: selectedGender, birthDay, birthMonth, birthYear, country: selectedCountry,
-      city: selectedCity, neighborhood: selectedNeighborhood, customNeighborhood, bio, residenceMethod: residencePlan.method,
+      city: selectedCity, neighborhood: selectedNeighborhood, customNeighborhood, bio, residenceMethod: residencePlan.method, administrative:residencePlan.administrative,
     }, user?.email));
   }, [draftReady, authLoading, currentStep, displayName, username, email, accessCode,
       selectedGender, birthDay, birthMonth, birthYear, selectedCountry, selectedCity,
-      selectedNeighborhood, customNeighborhood, bio, residencePlan.method, user?.email, profile?.onboarding_completed]);
+      selectedNeighborhood, customNeighborhood, bio, residencePlan.method, residencePlan.administrative, user?.email, profile?.onboarding_completed]);
 
   const handleGenderSelect = (gender: 'male' | 'female' | 'other') => {
     setSelectedGender(gender);

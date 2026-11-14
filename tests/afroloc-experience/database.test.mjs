@@ -15,6 +15,7 @@ test('isolated ownership, persistence, code, review and revocation',async()=>{
  const end=codec.indexOf('create or replace function public.set_afroloc_code');
  await db.exec(codec.slice(first,end));
  await db.exec(await readFile('docs/database/yamilook-afroloc-experience.sql','utf8'));
+ await db.exec((await readFile('docs/database/afroloc-municipalities-without-communes.sql','utf8')).replace('afroloc_experience_private.handle(', 'public.afroloc_experience_action('));
  const ids=[1,2,3].map(n=>'00000000-0000-4000-8000-00000000000'+n);const sessions=[1,2,3].map(n=>'10000000-0000-4000-8000-00000000000'+n);
  for(let i=0;i<3;i++)await db.query('insert into auth.users(id) values($1);',[ids[i]]);
  for(let i=0;i<3;i++){await db.query('insert into auth.sessions values($1,$2)',[sessions[i],ids[i]]);await db.query("insert into profiles values($1,'AO')",[ids[i]])}
@@ -27,6 +28,11 @@ test('isolated ownership, persistence, code, review and revocation',async()=>{
  await login(1);assert.equal((await call('list')).addresses.length,0);await assert.rejects(call('position',{id:input.id}));await assert.rejects(call('close',{id:input.id}));await assert.rejects(call('queue'));
  await login(2);assert.equal((await call('queue')).addresses.length,1);await call('review',{id:input.id,decision:'approved',confirmed:true,note:'Revisão sintética para teste'});
  await login(0);assert.equal((await call('list')).addresses[0].status,'approved');await call('close',{id:input.id});await assert.rejects(call('position',{id:input.id}));
+ await db.exec("insert into afroloc_official_divisions values ('AO-LDA-INGOMBOTA',2,'Ingombota','AO-LDA')");
+ const noCommune={...input,id:'20000000-0000-4000-8000-000000000002',municipality:'AO-LDA-INGOMBOTA',commune:''};
+ await assert.rejects(call('create',{...noCommune,commune:'AO-LDA-KTA'}));
+ const noCommuneResult=await call('create',noCommune);assert.match(noCommuneResult.code,/^AO-LDA-ING-000-DIG-/);
+ assert.equal((await call('position',{id:noCommune.id})).point.lat,input.latitude);
  await db.query('delete from auth.sessions where id=$1',[sessions[0]]);await assert.rejects(call('list'));
  await db.close();
 });
