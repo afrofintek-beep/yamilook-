@@ -59,8 +59,8 @@ export function ResidenceForm(p: Props) {
  const capture=<div className="space-y-2"><Button type="button" variant="outline" className="h-auto whitespace-normal" onClick={locate} disabled={locating||p.saving}>{locating?t("onboardingFlow.locating"):p.plan.lat!==undefined?t("onboardingFlow.updateLocation"):t("onboardingFlow.captureLocation")}</Button>{p.plan.accuracy&&<p role="status" className="text-sm">{t('onboardingFlow.locationCaptured', { accuracy: Math.ceil(p.plan.accuracy) })}</p>}</div>;
  const selectClass='w-full rounded-xl border bg-background px-3 py-3 text-base';
  return <div className="space-y-4 text-start">
-  <h2 className="text-xl font-bold">{t("onboardingFlow.residenceTitle")}</h2>
-  <p className="text-sm text-muted-foreground">{t("onboardingFlow.residenceHint")}</p>
+  <h2 className="text-xl font-bold">{isAngola?uiText("Qual é a tua Banda de residência?"):t("onboardingFlow.residenceTitle")}</h2>
+  <p className="text-sm text-muted-foreground">{isAngola?uiText("Indica onde vives, mesmo que agora estejas noutro local."):t("onboardingFlow.residenceHint")}</p>
   <label className="block text-sm">{t("onboardingFlow.country")}<select className={selectClass} value={p.country} onChange={e=>{resetHomeCapture();p.onCountry(e.target.value);p.onCity('');p.onNeighborhood('');p.onCustomNeighborhood('');}}>{countryCodes.map(code=><option key={code} value={code}>{localizedCountryName(code, language)}</option>)}</select></label>
   <label className="block text-sm">{t("onboardingFlow.city")}<Input list={cityListId} autoComplete="address-level2" maxLength={200} className={selectClass} value={p.city} aria-describedby={`${cityListId}-hint`} onChange={e=>{resetHomeCapture();p.onCity(e.target.value);p.onNeighborhood('');p.onCustomNeighborhood('');}} placeholder={t("onboardingFlow.selectCity")}/></label>
   <datalist id={cityListId}>{suggestions.map(name=><option key={name} value={name}/>)}</datalist>
@@ -69,12 +69,13 @@ export function ResidenceForm(p: Props) {
   <label className="block text-sm">{t("onboardingFlow.neighborhood")}<select className={selectClass} value={p.neighborhood} onChange={e=>{resetHomeCapture();p.onNeighborhood(e.target.value);}}><option value="">{t("onboardingFlow.selectNeighborhood")}</option>{neighborhoods.map(n=><option key={n} value={n}>{n}</option>)}{p.neighborhood && p.neighborhood!=='__other__' && !neighborhoods.includes(p.neighborhood) && <option value={p.neighborhood}>{p.neighborhood}</option>}<option value="__other__">{t("onboardingFlow.otherNeighborhood")}</option></select></label>
   {p.neighborhood==='__other__'&&<Input aria-label={t("onboardingFlow.neighborhoodName")} value={p.customNeighborhood} onChange={e=>p.onCustomNeighborhood(e.target.value)} placeholder={t("onboardingFlow.neighborhoodName")}/>}
   {isAngola ? <fieldset className="space-y-3" disabled={p.saving}>
-   <legend className="font-semibold mb-2">{uiText('O teu endereço AFROLOC')}</legend>
+   <legend className="font-semibold mb-2">{uiText('Já tens um endereço AFROLOC?')}</legend>
+   <p className="text-sm text-muted-foreground">{uiText('Podes concluir a inscrição e tratar do endereço mais tarde no teu perfil.')}</p>
    {([['existing','Já tenho um endereço AFROLOC'],['create','Quero criar um endereço'],['later','Fazer mais tarde']] as const).map(([value,label])=><div key={value} className="min-w-0 rounded-xl border p-3 space-y-3">
     <label className="flex items-center gap-3 text-sm"><input type="radio" name={`${cityListId}-address-choice`} className="shrink-0 accent-primary" checked={choice===value} onChange={()=>changeMode(value==='create'?'away':value)}/><span>{uiText(label)}</span></label>
     {choice===value && value==='existing' && <ExistingAfrolocAddress code={p.plan.code||''} onChange={code=>p.onPlan({method:'existing',code})} disabled={p.saving}/>}
     {choice===value && value==='create' && <div className="space-y-3">
-     <fieldset className="space-y-2"><legend className="text-sm font-medium mb-2">{t('onboardingFlow.atAddress')}</legend>{options.filter(o=>o.value==='home'||o.value==='away').map(o=><label key={o.value} className="flex gap-3 items-center text-sm"><input className="accent-primary" type="radio" name={`${cityListId}-presence`} checked={p.plan.method===o.value} onChange={()=>changeMode(o.value)}/>{t(o.key)}</label>)}</fieldset>
+     <fieldset className="space-y-2"><legend className="text-sm font-medium mb-2">{uiText('Estás neste momento na tua residência?')}</legend>{options.filter(o=>o.value==='home'||o.value==='away').map(o=><label key={o.value} className="flex gap-3 items-center text-sm"><input className="accent-primary" type="radio" name={`${cityListId}-presence`} checked={p.plan.method===o.value} onChange={()=>changeMode(o.value)}/>{t(o.key)}</label>)}</fieldset>
      {p.plan.method==='home'?capture:<p className="text-sm text-muted-foreground">{uiText('Podes guardar a Banda agora. Cria o endereço quando estiveres no local da tua residência.')}</p>}
     </div>}
     {choice===value && value==='later' && <p className="text-sm text-muted-foreground">{t('onboardingFlow.confirmLaterHint')}</p>}
