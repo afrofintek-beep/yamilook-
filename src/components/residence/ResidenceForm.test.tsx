@@ -71,3 +71,11 @@ it('recovers a card hierarchy and does not invent a neighborhood',()=>{
  expect(screen.getByLabelText('Comuna')).toHaveValue('AO-LDA-KBENFICA');
  expect(screen.getByLabelText('Bairro / povoação / localidade')).toHaveValue('Talatona');
 });
+it('fills an empty locality on card import and preserves the address complement',()=>{
+ function Form(){const[city,setCity]=useState('');const[plan,setPlan]=useState<ResidencePlan>({method:'existing',administrative:{province:'AO-LDA',municipality:'AO-LDA-TALATONA',commune:'AO-LDA-KTALATONA',complement:'Casa 12'}});return <ResidenceForm country="AO" city={city} neighborhood="Bairro teste" customNeighborhood="" onCountry={()=>{}} onCity={setCity} onNeighborhood={()=>{}} onCustomNeighborhood={()=>{}} plan={plan} onPlan={setPlan} onContinue={done}/>;}
+ render(<Form/>);
+ fireEvent.change(screen.getByLabelText('Código AFROLOC existente'),{target:{value:'AO-LDA-TAL-KBE-DIG-G10-ABC-DEF'}});
+ expect(screen.getByLabelText('Cidade / localidade (informação complementar)')).toHaveValue('Talatona');
+ expect(screen.getByLabelText('Complemento do endereço (opcional)')).toHaveValue('Casa 12');
+ expect(screen.getByText('Confirmar Banda e continuar')).toBeEnabled();
+});
