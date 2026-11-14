@@ -1,3 +1,4 @@
+import { cardImportText } from '@/lib/afroloc-card-copy';
 import { useEffect, useId, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,14 +29,14 @@ export function ExistingAfrolocAddress({ code, onChange, disabled = false }: { c
   };
   return <section className="min-w-0 space-y-3" aria-label={uiText('Carregar cartão ou endereço AFROLOC')}>
     <input ref={fileInput} id={`${id}-file`} aria-label={uiText('Carregar imagem do cartão AFROLOC')} type="file" accept="image/jpeg,image/png,image/webp" disabled={disabled || reading} className="sr-only" tabIndex={-1} onChange={e => { const file = e.target.files?.[0]; e.target.value = ''; void importCard(file); }} />
-    <Button type="button" className="w-full h-auto whitespace-normal" disabled={disabled || reading} onClick={()=>fileInput.current?.click()}>{uiText(reading?'A ler o cartão…':'Escolher imagem do cartão')}</Button>
-    {filename&&<p className="text-sm break-all">{filename}</p>}
+    <Button type="button" className="w-full h-auto whitespace-normal" disabled={disabled || reading} onClick={()=>fileInput.current?.click()}>{reading?uiText('A ler o cartão…'):uiText('Escolher imagem do cartão')}</Button>
+    {filename&&<p dir="auto" className="text-sm break-all">{filename}</p>}
     <p className="text-xs text-muted-foreground">{uiText('JPG, PNG ou WebP, até 10 MB. A imagem é lida neste dispositivo e não é enviada nem guardada.')}</p>
     <label className="block text-sm space-y-2" htmlFor={`${id}-code`}><span>{uiText('Código AFROLOC existente')}</span>
-      <Input id={`${id}-code`} value={code} disabled={disabled} maxLength={160} className="text-base" autoCapitalize="characters" spellCheck={false} placeholder={uiText('Cola o código aqui')} onChange={e => { request.current++; setReading(false); setError(''); setMessage(''); onChange(addressFromCard(e.target.value) || e.target.value.toUpperCase()); }} />
+      <Input dir="ltr" id={`${id}-code`} value={code} disabled={disabled} maxLength={160} className="text-base" autoCapitalize="characters" spellCheck={false} placeholder={uiText('Cola o código aqui')} onChange={e => { request.current++; setReading(false); setError(''); setMessage(''); onChange(addressFromCard(e.target.value) || e.target.value.toUpperCase()); }} />
     </label>
-    {(reading || message) && <p role="status" className="text-sm">{uiText(reading ? 'A ler o cartão…' : message)}</p>}
-    {error && <p role="alert" className="text-sm text-destructive">{uiText(error)}</p>}
+    {(reading || message) && <p role="status" className="text-sm">{reading ? uiText('A ler o cartão…') : cardImportText(message)}</p>}
+    {error && <p role="alert" className="text-sm text-destructive">{cardImportText(error)}</p>}
     <p className="text-xs text-muted-foreground">{uiText('Confirma a Banda para associar este endereço à tua conta. O cartão ou código, por si só, não comprova residência; o direito de utilização será verificado.')}</p>
   </section>;
 }

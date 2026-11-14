@@ -7,7 +7,9 @@ import adminPortuguese from './admin-interface/pt.json';
 
 import manualPortuguese from './manuals/pt.json';
 
-const copy = { ...portuguese, ...adminPortuguese, ...manualPortuguese };
+import residencePortuguese from './residence/pt.json';
+
+const copy = { ...portuguese, ...adminPortuguese, ...manualPortuguese, ...residencePortuguese };
 
 it('has a dictionary entry for every fixed UI source and never translates a runtime value', () => {
   const root = process.cwd();
