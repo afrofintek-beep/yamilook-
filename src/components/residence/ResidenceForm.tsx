@@ -1,3 +1,4 @@
+import { AngolaAfrolocExperience } from './AngolaAfrolocExperience';
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import locationHints from '@/i18n/location-labels.json';
 import { RESIDENCE_COUNTRY_CODES, loadResidenceCities, matchingResidenceCities } from '@/lib/residence-locations';
@@ -57,6 +58,7 @@ export function ResidenceForm(p: Props) {
   <h2 className="text-xl font-bold">{t("onboardingFlow.residenceTitle")}</h2>
   <p className="text-sm text-muted-foreground">{t("onboardingFlow.residenceHint")}</p>
   <label className="block text-sm">{t("onboardingFlow.country")}<select className={selectClass} value={p.country} onChange={e=>{resetHomeCapture();p.onCountry(e.target.value);p.onCity('');p.onNeighborhood('');p.onCustomNeighborhood('');}}>{countryCodes.map(code=><option key={code} value={code}>{localizedCountryName(code, language)}</option>)}</select></label>
+  <AngolaAfrolocExperience country={p.country} />
   <label className="block text-sm">{t("onboardingFlow.city")}<Input list={cityListId} autoComplete="address-level2" maxLength={200} className={selectClass} value={p.city} aria-describedby={`${cityListId}-hint`} onChange={e=>{resetHomeCapture();p.onCity(e.target.value);p.onNeighborhood('');p.onCustomNeighborhood('');}} placeholder={t("onboardingFlow.selectCity")}/></label>
   <datalist id={cityListId}>{suggestions.map(name=><option key={name} value={name}/>)}</datalist>
   <p id={`${cityListId}-hint`} className="text-xs text-muted-foreground">{locationHints[locale] || locationHints.pt}</p>
