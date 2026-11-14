@@ -55,7 +55,7 @@ export function ResidenceForm(p: Props) {
  const valid=!!p.country&&!!p.city.trim()&&!!p.neighborhood&&(p.neighborhood!=='__other__'||!!p.customNeighborhood.trim())&&validResidencePlan(p.plan);
  const isAngola=p.country.trim().toUpperCase()==='AO';
  const choice=p.plan.method==='existing'?'existing':p.plan.method==='later'?'later':'create';
- const missing=!p.country ? 'Selecciona o país.' : !p.city.trim() ? 'Indica a cidade ou localidade.' : !p.neighborhood || (p.neighborhood==='__other__'&&!p.customNeighborhood.trim()) ? 'Indica o bairro.' : p.plan.method==='existing'&&!validResidencePlan(p.plan) ? 'Introduz um código AFROLOC válido ou carrega uma imagem do cartão com um QR legível.' : p.plan.method==='home'&&!validResidencePlan(p.plan) ? 'Capta a localização do teu endereço para continuar.' : '';
+ const missing=!p.country ? uiText("Selecciona o país.") : !p.city.trim() ? uiText("Indica a cidade ou localidade.") : !p.neighborhood || (p.neighborhood==='__other__'&&!p.customNeighborhood.trim()) ? uiText("Indica o bairro.") : p.plan.method==='existing'&&!validResidencePlan(p.plan) ? uiText("Introduz um código AFROLOC válido ou carrega uma imagem do cartão com um QR legível.") : p.plan.method==='home'&&!validResidencePlan(p.plan) ? uiText("Capta a localização do teu endereço para continuar.") : '';
  const capture=<div className="space-y-2"><Button type="button" variant="outline" className="h-auto whitespace-normal" onClick={locate} disabled={locating||p.saving}>{locating?t("onboardingFlow.locating"):p.plan.lat!==undefined?t("onboardingFlow.updateLocation"):t("onboardingFlow.captureLocation")}</Button>{p.plan.accuracy&&<p role="status" className="text-sm">{t('onboardingFlow.locationCaptured', { accuracy: Math.ceil(p.plan.accuracy) })}</p>}</div>;
  const selectClass='w-full rounded-xl border bg-background px-3 py-3 text-base';
  return <div className="space-y-4 text-start">
@@ -71,8 +71,8 @@ export function ResidenceForm(p: Props) {
   {isAngola ? <fieldset className="space-y-3" disabled={p.saving}>
    <legend className="font-semibold mb-2">{uiText('Já tens um endereço AFROLOC?')}</legend>
    <p className="text-sm text-muted-foreground">{uiText('Podes concluir a inscrição e tratar do endereço mais tarde no teu perfil.')}</p>
-   {([['existing','Já tenho um endereço AFROLOC'],['create','Quero criar um endereço'],['later','Fazer mais tarde']] as const).map(([value,label])=><div key={value} className="min-w-0 rounded-xl border p-3 space-y-3">
-    <label className="flex items-center gap-3 text-sm"><input type="radio" name={`${cityListId}-address-choice`} className="shrink-0 accent-primary" checked={choice===value} onChange={()=>changeMode(value==='create'?'away':value)}/><span>{uiText(label)}</span></label>
+   {([['existing',uiText('Já tenho um endereço AFROLOC')],['create',uiText('Quero criar um endereço')],['later',uiText('Fazer mais tarde')]] as const).map(([value,label])=><div key={value} className="min-w-0 rounded-xl border p-3 space-y-3">
+    <label className="flex items-center gap-3 text-sm"><input type="radio" name={`${cityListId}-address-choice`} className="shrink-0 accent-primary" checked={choice===value} onChange={()=>changeMode(value==='create'?'away':value)}/><span>{label}</span></label>
     {choice===value && value==='existing' && <ExistingAfrolocAddress code={p.plan.code||''} onChange={code=>p.onPlan({method:'existing',code})} disabled={p.saving}/>}
     {choice===value && value==='create' && <div className="space-y-3">
      <fieldset className="space-y-2"><legend className="text-sm font-medium mb-2">{uiText('Estás neste momento na tua residência?')}</legend>{options.filter(o=>o.value==='home'||o.value==='away').map(o=><label key={o.value} className="flex gap-3 items-center text-sm"><input className="accent-primary" type="radio" name={`${cityListId}-presence`} checked={p.plan.method===o.value} onChange={()=>changeMode(o.value)}/>{t(o.key)}</label>)}</fieldset>
@@ -88,7 +88,7 @@ export function ResidenceForm(p: Props) {
   </>}
   <p className="text-xs text-muted-foreground">{t("onboardingFlow.residenceNotice")}</p>
   {error&&<p role="alert" className="text-sm text-destructive">{t(error)}</p>}
-  {missing&&<p id={`${cityListId}-missing`} role="status" className="text-sm text-muted-foreground">{uiText(missing)}</p>}
+  {missing&&<p id={`${cityListId}-missing`} role="status" className="text-sm text-muted-foreground">{missing}</p>}
   <div className="flex flex-wrap gap-3">{p.onBack&&<Button variant="outline" onClick={p.onBack} disabled={p.saving}>{t("common.back")}</Button>}<Button className="h-auto whitespace-normal" aria-describedby={missing?`${cityListId}-missing`:undefined} onClick={p.onContinue} disabled={!valid||locating||p.saving}>{p.saving?t("common.saving"):t("onboardingFlow.confirmBanda")}</Button></div>
  </div>;
 }

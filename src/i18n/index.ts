@@ -7,12 +7,14 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 // Only load Portuguese (default) synchronously, others will be lazy-loaded
 import pt from './locales/pt.json';
 import ptInterface from './interface/pt.json';
+import ptResidence from './residence/pt.json';
 import ptAdminInterface from './admin-interface/pt.json';
 import ptManuals from './manuals/pt.json';
 
 const manualLoaders = import.meta.glob('./manuals/*.json', { import: 'default' }) as Record<string, () => Promise<Record<string, string>>>;
 
 const adminInterfaceLoaders = import.meta.glob('./admin-interface/*.json', { import: 'default' }) as Record<string, () => Promise<Record<string, string>>>;
+const residenceLoaders = import.meta.glob('./residence/*.json', { import: 'default' }) as Record<string, () => Promise<Record<string, string>>>;
 const interfaceLoaders = import.meta.glob('./interface/*.json', { import: 'default' }) as Record<string, () => Promise<Record<string, string>>>;
 
 export const languages = appLanguages;
@@ -84,13 +86,14 @@ const loadBaseLanguage = async (lng: string): Promise<{ translation: Record<stri
 
 const loadLanguage = async (lng: string) => {
   const code = normalizeAppLanguage(lng);
-  const [resources, interfaceCopy, adminCopy, manualCopy] = await Promise.all([
+  const [resources, interfaceCopy, adminCopy, manualCopy, residenceCopy] = await Promise.all([
     loadBaseLanguage(lng),
     interfaceLoaders[`./interface/${code}.json`]?.() ?? Promise.resolve(ptInterface),
     adminInterfaceLoaders[`./admin-interface/${code}.json`]?.() ?? Promise.resolve(ptAdminInterface),
     manualLoaders[`./manuals/${code}.json`]?.() ?? Promise.resolve(ptManuals),
+    residenceLoaders[`./residence/${code}.json`]?.() ?? Promise.resolve(ptResidence),
   ]);
-  return { translation: { ...resources.translation, entry: entryTranslations[code] || entryTranslations.pt }, interface: { ...interfaceCopy, ...adminCopy, ...manualCopy } };
+  return { translation: { ...resources.translation, entry: entryTranslations[code] || entryTranslations.pt }, interface: { ...interfaceCopy, ...adminCopy, ...manualCopy, ...residenceCopy } };
 };
 
 i18n
@@ -98,7 +101,7 @@ i18n
   .use(initReactI18next)
   .init({
     resources: {
-      pt: { translation: { ...pt, entry: entryTranslations.pt }, interface: { ...ptInterface, ...ptAdminInterface, ...ptManuals } },
+      pt: { translation: { ...pt, entry: entryTranslations.pt }, interface: { ...ptInterface, ...ptAdminInterface, ...ptManuals, ...ptResidence } },
     },
     fallbackLng: { yo: ['en', 'pt'], sn: ['en', 'pt'], zu: ['en', 'pt'], default: ['pt'] },
     interpolation: {
