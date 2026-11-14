@@ -14,7 +14,7 @@ export function ResidencePanel() {
  const status=isCertified?uiText('Banda validada'):profile?.afroloc_code?uiText('Endereço associado — validação pendente'):uiText('Banda declarada — endereço por confirmar');
  const save=async()=>{setSaving(true);setError('');try{await submitResidence(plan,country,city,neighborhood==='__other__'?custom:neighborhood);await refreshProfile();setOpen(false);}catch(e){setError((e as Error).message);}finally{setSaving(false);}};
  return <section className="mx-4 mb-4 rounded-xl border p-4 space-y-3" aria-label={uiText("Validação da Banda")}><p className="font-medium text-sm">{status}</p><p className="text-xs text-muted-foreground">{uiText("Os benefícios territoriais dependem da validação. Uma viagem não muda a tua Banda de residência.")}</p>
- {!open&&<AngolaAfrolocExperience country={profile?.country_code} />}
+ {!open&&<AngolaAfrolocExperience country={profile?.country_code} onExisting={()=>{setPlan({method:'existing'});setOpen(true);}} />}
  {!open&&<Button variant="outline" onClick={()=>setOpen(true)}>{profile?.afroloc_certification_status==='certified'?uiText("Atualizar endereço de residência"):uiText("Validar a minha Banda")}</Button>}
  {open&&<><p className="text-xs text-muted-foreground">{uiText("Alterar o endereço inicia uma nova validação e está sujeito ao prazo de mudança de Banda.")}</p><ResidenceForm country={country} city={city} neighborhood={neighborhood} customNeighborhood={custom} onCountry={setCountry} onCity={setCity} onNeighborhood={setNeighborhood} onCustomNeighborhood={setCustom} plan={plan} onPlan={setPlan} onContinue={save} onBack={()=>setOpen(false)} saving={saving}/></>}
  {error&&<p role="alert" className="text-sm text-destructive">{error}</p>}

@@ -1,3 +1,4 @@
+import { ExistingAfrolocAddress } from './ExistingAfrolocAddress';
 import { AngolaAfrolocExperience } from './AngolaAfrolocExperience';
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import locationHints from '@/i18n/location-labels.json';
@@ -58,7 +59,8 @@ export function ResidenceForm(p: Props) {
   <h2 className="text-xl font-bold">{t("onboardingFlow.residenceTitle")}</h2>
   <p className="text-sm text-muted-foreground">{t("onboardingFlow.residenceHint")}</p>
   <label className="block text-sm">{t("onboardingFlow.country")}<select className={selectClass} value={p.country} onChange={e=>{resetHomeCapture();p.onCountry(e.target.value);p.onCity('');p.onNeighborhood('');p.onCustomNeighborhood('');}}>{countryCodes.map(code=><option key={code} value={code}>{localizedCountryName(code, language)}</option>)}</select></label>
-  <AngolaAfrolocExperience country={p.country} />
+  <AngolaAfrolocExperience country={p.country} onExisting={()=>changeMode('existing')} />
+  {p.country==='AO' && p.plan.method==='existing' && <ExistingAfrolocAddress code={p.plan.code || ''} onChange={code=>p.onPlan({method:'existing',code})} disabled={p.saving} />}
   <label className="block text-sm">{t("onboardingFlow.city")}<Input list={cityListId} autoComplete="address-level2" maxLength={200} className={selectClass} value={p.city} aria-describedby={`${cityListId}-hint`} onChange={e=>{resetHomeCapture();p.onCity(e.target.value);p.onNeighborhood('');p.onCustomNeighborhood('');}} placeholder={t("onboardingFlow.selectCity")}/></label>
   <datalist id={cityListId}>{suggestions.map(name=><option key={name} value={name}/>)}</datalist>
   <p id={`${cityListId}-hint`} className="text-xs text-muted-foreground">{locationHints[locale] || locationHints.pt}</p>
@@ -67,7 +69,7 @@ export function ResidenceForm(p: Props) {
   {p.neighborhood==='__other__'&&<Input aria-label={t("onboardingFlow.neighborhoodName")} value={p.customNeighborhood} onChange={e=>p.onCustomNeighborhood(e.target.value)} placeholder={t("onboardingFlow.neighborhoodName")}/>}
   <fieldset className="space-y-2"><legend className="font-medium mb-2">{t("onboardingFlow.atAddress")}</legend>{options.map(o=><label key={o.value} className="flex gap-3 items-center rounded-xl border p-3 text-sm"><input type="radio" name="residence-method" value={o.value} checked={p.plan.method===o.value} onChange={()=>changeMode(o.value)}/>{t(o.key)}</label>)}</fieldset>
   {p.plan.method==='home'&&<div className="space-y-2"><Button type="button" variant="outline" onClick={locate} disabled={locating}>{locating?t("onboardingFlow.locating"):p.plan.lat!==undefined?t("onboardingFlow.updateLocation"):t("onboardingFlow.captureLocation")}</Button>{p.plan.accuracy&&<p role="status" className="text-sm">{t('onboardingFlow.locationCaptured', { accuracy: Math.ceil(p.plan.accuracy) })}</p>}</div>}
-  {p.plan.method==='existing'&&<><Input aria-label={t("onboardingFlow.existingCode")} value={p.plan.code||''} onChange={e=>p.onPlan({method:'existing',code:e.target.value.toUpperCase()})} placeholder={t("onboardingFlow.enterCode")} autoCapitalize="characters"/><p className="text-xs text-muted-foreground">{t("onboardingFlow.codeHint")}</p></>}
+  {p.plan.method==='existing'&&p.country!=='AO'&&<><Input aria-label={t("onboardingFlow.existingCode")} value={p.plan.code||''} onChange={e=>p.onPlan({method:'existing',code:e.target.value.toUpperCase()})} placeholder={t("onboardingFlow.enterCode")} autoCapitalize="characters"/><p className="text-xs text-muted-foreground">{t("onboardingFlow.codeHint")}</p></>}
   {(p.plan.method==='away'||p.plan.method==='later')&&<p className="text-sm text-muted-foreground">{t("onboardingFlow.confirmLaterHint")}</p>}
   <p className="text-xs text-muted-foreground">{t("onboardingFlow.residenceNotice")}</p>
   {error&&<p role="alert" className="text-sm text-destructive">{t(error)}</p>}
