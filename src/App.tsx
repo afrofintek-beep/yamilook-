@@ -25,6 +25,7 @@ import { AutomaticAccountBackup } from "@/components/AutomaticAccountBackup";
 const ActiveCallProvider = lazy(() => import("@/components/calls/ActiveCallProvider").then(m => ({ default: m.ActiveCallProvider })));
 
 // Lazy load all pages for faster initial load (Instagram/TikTok style)
+const AfrolocExperience = lazy(() => import("./features/afroloc-experience/AfrolocExperience"));
 const Home = lazy(() => import("./pages/Home"));
 const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
@@ -218,6 +219,7 @@ const queryClient = new QueryClient({
 });
 
 function ProtectedRoute({ children, skipOnboardingCheck }: { children: React.ReactNode; skipOnboardingCheck?: boolean }) {
+  const protectedLocation = useLocation();
   const { user, profile, loading, profileError, refreshProfile, signOut, recoveringPassword } = useAuth();
   if (recoveringPassword) return <Navigate to="/reset-password" replace />;
   
@@ -226,7 +228,7 @@ function ProtectedRoute({ children, skipOnboardingCheck }: { children: React.Rea
   }
   
   if (!user) {
-    return <Navigate to="/welcome" replace />;
+    return <Navigate to={protectedLocation.pathname === "/afroloc" ? "/login?next=%2Fafroloc" : "/welcome"} replace />;
   }
 
   // Do not expose protected content while the profile is still being fetched.
@@ -331,6 +333,7 @@ function AnimatedRoutes() {
           <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
           <Route path="/admin/monetization" element={<ProtectedRoute><AdminMonetization /></ProtectedRoute>} />
           <Route path="/admin/applications" element={<ProtectedRoute><AdminApplications /></ProtectedRoute>} />
+          <Route path="/afroloc" element={<ProtectedRoute><AfrolocExperience /></ProtectedRoute>} />
           <Route path="/admin/afroloc-certifications" element={<ProtectedRoute><AdminAfrolocCertifications /></ProtectedRoute>} />
           <Route path="/admin/payouts" element={<ProtectedRoute><AdminPayoutsPage /></ProtectedRoute>} />
           <Route path="/admin/mentors" element={<ProtectedRoute><AdminMentors /></ProtectedRoute>} />
