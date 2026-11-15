@@ -24,6 +24,10 @@ test('mobile owner card shares a readable PNG QR, updates data and keeps contact
  await expect(page.getByRole('img')).toHaveAttribute('aria-label',new RegExp(code));
  await expect(page.locator('svg[role=img] > image')).toHaveAttribute('href',/^data:image\/png/);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
+ const photoBox=await page.locator('[data-card-photo]').boundingBox();const codeBox=await page.locator('[data-card-code]').boundingBox();
+ expect(codeBox!.y).toBeGreaterThanOrEqual(photoBox!.y+photoBox!.height);
+ await expect(page.getByRole('img')).not.toContainText('Africa/Luanda');
+ await expect(page.getByRole('img')).toContainText('Cartão gerado em');
  await share.click();
  const first=await page.evaluate(async()=>{
   const data=(window as unknown as {shared:ShareData}).shared;

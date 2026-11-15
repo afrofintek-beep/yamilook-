@@ -91,5 +91,13 @@
   "Não foi possível actualizar o cartão. Verifica a ligação e tenta novamente.": "Tokoki kosikisa karte te. Tala connexion mpe meka lisusu.",
   "Não foi possível partilhar. Usa Guardar imagem ou Copiar dados.": "Kotinda esimbi te. Salelá Bomba elilingi to Kopɛ bansango.",
   "Email": "Email",
-  "Yamilook": "Yamilook"
+  "Yamilook": "Yamilook",
+  "Tipo de endereço": "Lolenge ya adresi",
+  "Endereço temporário": "Adresi ya ntango mokuse",
+  "Por confirmar": "Ezali kozela bondimisi",
+  "Revisão local": "Botali ya esika",
+  "Cartão gerado em": "Mokolo karte esalemi",
+  "Dados à data de geração. Não substitui um certificado de residência.": "Makambo na mokolo ya kosala karte. Ezali kozwa esika ya mokanda ya bofandi te.",
+  "Cartão de endereço digital": "Karte ya adresi ya nimero",
+  "Código AFROLOC": "Kode AFROLOC"
 }

@@ -91,5 +91,13 @@
   "Não foi possível actualizar o cartão. Verifica a ligação e tenta novamente.": "Não foi possível actualizar o cartão. Verifica a ligação e tenta novamente.",
   "Não foi possível partilhar. Usa Guardar imagem ou Copiar dados.": "Não foi possível partilhar. Usa Guardar imagem ou Copiar dados.",
   "Email": "Email",
-  "Yamilook": "Yamilook"
+  "Yamilook": "Yamilook",
+  "Tipo de endereço": "Tipo de endereço",
+  "Endereço temporário": "Endereço temporário",
+  "Por confirmar": "Por confirmar",
+  "Revisão local": "Revisão local",
+  "Cartão gerado em": "Cartão gerado em",
+  "Dados à data de geração. Não substitui um certificado de residência.": "Dados à data de geração. Não substitui um certificado de residência.",
+  "Cartão de endereço digital": "Cartão de endereço digital",
+  "Código AFROLOC": "Código AFROLOC"
 }

@@ -91,5 +91,13 @@
   "Não foi possível actualizar o cartão. Verifica a ligação e tenta novamente.": "ካርዱን ማዘመን አልተቻለም። ግንኙነትዎን ያረጋግጡና እንደገና ይሞክሩ።",
   "Não foi possível partilhar. Usa Guardar imagem ou Copiar dados.": "ማጋራት አልተቻለም። ምስሉን ያስቀምጡ ወይም መረጃውን ይቅዱ።",
   "Email": "ኢሜይል",
-  "Yamilook": "Yamilook"
+  "Yamilook": "Yamilook",
+  "Tipo de endereço": "የአድራሻ ዓይነት",
+  "Endereço temporário": "ጊዜያዊ አድራሻ",
+  "Por confirmar": "ማረጋገጫ ይጠበቃል",
+  "Revisão local": "የአካባቢ ግምገማ",
+  "Cartão gerado em": "ካርዱ የተፈጠረበት ቀን",
+  "Dados à data de geração. Não substitui um certificado de residência.": "ካርዱ በተፈጠረበት ጊዜ ያለ መረጃ። የመኖሪያ ማረጋገጫን አይተካም።",
+  "Cartão de endereço digital": "የዲጂታል አድራሻ ካርድ",
+  "Código AFROLOC": "የAFROLOC ኮድ"
 }
