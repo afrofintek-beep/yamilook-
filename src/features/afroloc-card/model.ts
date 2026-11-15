@@ -12,7 +12,7 @@ export function cardAddresses(profile:CardProfile, administrative:Administrative
  return addresses;
 }
 export const divisionName=(code?:string)=>divisions.find(d=>d.code===code)?.name||'';
-export type CardLine={label:string;value:string};
+export type CardLine={label:string;value:string;group?:'identity'|'location'|'status'|'footer'};
 export function cardText(name:string,code:string,lines:CardLine[],notice:string){return ['AFROLOC · Yamilook',name,code,...lines.map(l=>`${l.label}: ${l.value}`),notice].filter(Boolean).join('\n');}
 /** QR contains the canonical address only, never identity fields, sessions or a location grant. */
 export function cardQrValue(address:CardAddress){return address.code;}

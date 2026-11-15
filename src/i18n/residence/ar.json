@@ -91,5 +91,13 @@
   "Não foi possível actualizar o cartão. Verifica a ligação e tenta novamente.": "تعذر تحديث البطاقة. تحقق من الاتصال وحاول مجدداً.",
   "Não foi possível partilhar. Usa Guardar imagem ou Copiar dados.": "تعذرت المشاركة. استخدم حفظ الصورة أو نسخ البيانات.",
   "Email": "البريد الإلكتروني",
-  "Yamilook": "Yamilook"
+  "Yamilook": "Yamilook",
+  "Tipo de endereço": "نوع العنوان",
+  "Endereço temporário": "عنوان مؤقت",
+  "Por confirmar": "بانتظار التأكيد",
+  "Revisão local": "مراجعة محلية",
+  "Cartão gerado em": "تاريخ إنشاء البطاقة",
+  "Dados à data de geração. Não substitui um certificado de residência.": "البيانات بتاريخ إنشاء البطاقة. لا تحل محل شهادة الإقامة.",
+  "Cartão de endereço digital": "بطاقة العنوان الرقمي",
+  "Código AFROLOC": "رمز AFROLOC"
 }

@@ -91,5 +91,13 @@
   "Não foi possível actualizar o cartão. Verifica a ligação e tenta novamente.": "Ikhadi alikwazanga ukubuyekezwa. Hlola uxhumano bese uzama futhi.",
   "Não foi possível partilhar. Usa Guardar imagem ou Copiar dados.": "Ukwabelana kuhlulekile. Sebenzisa Gcina isithombe noma Kopisha imininingwane.",
   "Email": "Email",
-  "Yamilook": "Yamilook"
+  "Yamilook": "Yamilook",
+  "Tipo de endereço": "Uhlobo lwekheli",
+  "Endereço temporário": "Ikheli lesikhashana",
+  "Por confirmar": "Kusazolindelwa ukuqinisekiswa",
+  "Revisão local": "Ukubuyekezwa kwendawo",
+  "Cartão gerado em": "Ikhadi lenziwe ngomhla ka",
+  "Dados à data de geração. Não substitui um certificado de residência.": "Imininingwane ngosuku lokwenziwa kwekhadi. Ayithathi indawo yesitifiketi sokuhlala.",
+  "Cartão de endereço digital": "Ikhadi lekheli ledijithali",
+  "Código AFROLOC": "Ikhodi ye-AFROLOC"
 }

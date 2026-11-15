@@ -52,19 +52,20 @@ function CardScreen({userId}:{userId:string}){
  },[avatar]);
  const addresses=snapshot?cardAddresses(snapshot.profile,snapshot.admin,snapshot.saved):[];
  const address=addresses.find(a=>a.id===selected)||addresses[0];
- const lines:CardLine[]=[];const add=(label:string,value?:string|null)=>{if(value)lines.push({label:t(label),value})};
+ const lines:CardLine[]=[];const add=(label:string,value?:string|null,group:CardLine['group']='location')=>{if(value)lines.push({label:t(label),value,group})};
  if(address&&profile){
-  add('Endereço',address.temporary?address.label:t('Residência associada'));
-  if(include.name&&profile.username)add('Yamilook','@'+profile.username);
+  add('Tipo de endereço',t(address.temporary?'Endereço temporário':'Residência associada'),'identity');
+  if(address.temporary)add('Endereço',address.label,'identity');
+  if(include.name&&profile.username)add('Yamilook','@'+profile.username,'identity');
   let country=address.country;try{country=new Intl.DisplayNames([locale==='pt-banda'?'pt':locale],{type:'region'}).of(address.country)||country}catch{/* Keep known country code. */}
-  add('País',country);add('Província',divisionName(address.administrative?.province));add('Município',divisionName(address.administrative?.municipality));add('Comuna',divisionName(address.administrative?.commune));add('Cidade',address.city);add('Bairro / zona',address.neighborhood);add('Complemento',address.administrative?.complement);
-  add('Estado',t(address.status==='certified'||address.status==='approved'?'Revisto pela Yamilook':address.status==='rejected'?'Não aprovado':'Validação pendente'));
-  add('Validade',address.expiresAt?new Date(address.expiresAt).toLocaleString(locale==='pt-banda'?'pt':locale,{timeZone:'Africa/Luanda'}):t('Validade não confirmada'));
-  if(include.phone)add('Telefone',profile.phone_number);if(include.email)add('Email',profile.email);
-  add('Emitido em',new Date(snapshot!.at).toLocaleString(locale==='pt-banda'?'pt':locale,{timeZone:'Africa/Luanda'})+' · Africa/Luanda');
+  add('País',country);add('Província',divisionName(address.administrative?.province)||(address.country==='AO'?t('Por confirmar'):''));add('Município',divisionName(address.administrative?.municipality)||(address.country==='AO'?t('Por confirmar'):''));add('Comuna',divisionName(address.administrative?.commune)||(!address.administrative&&address.country==='AO'?t('Por confirmar'):''));add('Cidade',address.city);add('Bairro / zona',address.neighborhood);add('Complemento',address.administrative?.complement);
+  add('Revisão local',t(address.status==='certified'||address.status==='approved'?'Revisto pela Yamilook':address.status==='rejected'?'Não aprovado':'Validação pendente'),'status');
+  add('Validade',address.expiresAt?new Date(address.expiresAt).toLocaleString(locale==='pt-banda'?'pt':locale,{timeZone:'Africa/Luanda',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):t('Por confirmar'),'footer');
+  if(include.phone)add('Telefone',profile.phone_number,'identity');if(include.email)add('Email',profile.email,'identity');
+  add('Cartão gerado em',new Date(snapshot!.at).toLocaleDateString(locale==='pt-banda'?'pt':locale,{timeZone:'Africa/Luanda'}),'footer');
  }
  const name=include.name?(profile?.display_name||profile?.username||''):'';
- const notice=t('Cópia dos dados à data de emissão. Não substitui um certificado de residência.');
+ const notice=t('Dados à data de geração. Não substitui um certificado de residência.');
  const photoData=avatar&&photo?.url===avatar?photo.data:undefined;
  const key=JSON.stringify([snapshot?.at,address?.id,address?.code,name,lines,photoData,notice,locale]);
  const hasAddress=!!address;
@@ -87,7 +88,7 @@ function CardScreen({userId}:{userId:string}){
     {([['name','Nome',!!(profile.display_name||profile.username)],['photo','Fotografia',!!profile.avatar_url],['phone','Telefone',!!profile.phone_number],['email','Email',!!profile.email]] as const).filter(([, ,available])=>available).map(([field,label])=><label className="flex items-center gap-3" key={field}><input type="checkbox" checked={include[field]} onChange={e=>setInclude(v=>({...v,[field]:e.target.checked}))}/>{t(label)}</label>)}
    </fieldset>
    {photoFailed===avatar&&avatar&&<p role="status">{t('Fotografia indisponível. O cartão pode ser partilhado sem fotografia.')}</p>}
-   <CardPreview ref={svg} name={name} code={address.code} lines={lines} photo={photoData} notice={notice} rtl={locale==='ar'}/>
+   <CardPreview ref={svg} name={name} code={address.code} lines={lines} photo={photoData} notice={notice} rtl={locale==='ar'} title={t('Cartão de endereço digital')} qrLabel={t('Código AFROLOC')} />
    <p className="text-xs text-muted-foreground">{t('O QR contém apenas o endereço AFROLOC. Os contactos seleccionados aparecem no cartão.')}</p>
    {imageError&&<p role="alert">{t('Não foi possível preparar a imagem. Podes copiar os dados.')}</p>}
    <div className="flex flex-wrap gap-2">

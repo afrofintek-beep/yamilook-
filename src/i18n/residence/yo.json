@@ -91,5 +91,13 @@
   "Não foi possível actualizar o cartão. Verifica a ligação e tenta novamente.": "A kò lè ṣe ìmúdójúìwọ̀n káàdì. Ṣàyẹ̀wò ìsopọ̀ rẹ kí o tún gbìyànjú.",
   "Não foi possível partilhar. Usa Guardar imagem ou Copiar dados.": "Pínpín kùnà. Lo Fi àwòrán pamọ́ tàbí Da àwọn àlàyé kọ.",
   "Email": "Email",
-  "Yamilook": "Yamilook"
+  "Yamilook": "Yamilook",
+  "Tipo de endereço": "Irú àdírẹ́sì",
+  "Endereço temporário": "Àdírẹ́sì fún ìgbà díẹ̀",
+  "Por confirmar": "Ó ń dúró de ìmúdájú",
+  "Revisão local": "Àyẹ̀wò agbègbè",
+  "Cartão gerado em": "Ọjọ́ tí a dá káàdì sílẹ̀",
+  "Dados à data de geração. Não substitui um certificado de residência.": "Àwọn dátà ní ọjọ́ tí a dá káàdì sílẹ̀. Kò rọ́pò ìwé ẹ̀rí ibùgbé.",
+  "Cartão de endereço digital": "Káàdì àdírẹ́sì díjítà",
+  "Código AFROLOC": "Kóòdù AFROLOC"
 }
