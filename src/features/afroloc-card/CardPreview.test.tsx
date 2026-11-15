@@ -12,3 +12,9 @@ it.each([false,true])('reserves photo space and preserves full long fields (rtl=
  expect(container.querySelector('svg')?.getAttribute('aria-label')).toContain(code);
  expect(container.textContent).not.toContain('Africa/Luanda');
 });
+
+it('makes the QR a clickable destination link',()=>{
+ const code='AO-LUA-TAL-TAL-GEN-G10-X6AI6-Y4A2H';
+ const {container}=render(<CardPreview name="" code={code} rtl={false} notice="" lines={[]} qrLabel="Abrir endereço AFROLOC"/>);
+ expect(container.querySelector('a')).toHaveAttribute('href','https://www.njilamaps.com/?to='+code);
+});

@@ -7,7 +7,7 @@ import type {AdministrativeAddress} from '@/lib/angola-administrative';
 import {Button} from '@/components/ui/button';
 import {cardPhoto} from './photo';
 import {CardPreview} from './CardPreview';
-import {cardAddresses,cardText,divisionName,type CardProfile,type SavedAddress,type CardLine} from './model';
+import {cardAddresses,cardQrValue,cardText,divisionName,type CardProfile,type SavedAddress,type CardLine} from './model';
 import {cardImage,downloadCard,shareCard} from './export';
 
 const PROFILE_FIELDS='id,display_name,username,avatar_url,phone_number,email,country_code,city,neighborhood,afroloc_code,afroloc_certification_status';
@@ -88,10 +88,11 @@ function CardScreen({userId}:{userId:string}){
     {([['name','Nome',!!(profile.display_name||profile.username)],['photo','Fotografia',!!profile.avatar_url],['phone','Telefone',!!profile.phone_number],['email','Email',!!profile.email]] as const).filter(([, ,available])=>available).map(([field,label])=><label className="flex items-center gap-3" key={field}><input type="checkbox" checked={include[field]} onChange={e=>setInclude(v=>({...v,[field]:e.target.checked}))}/>{t(label)}</label>)}
    </fieldset>
    {photoFailed===avatar&&avatar&&<p role="status">{t('Fotografia indisponível. O cartão pode ser partilhado sem fotografia.')}</p>}
-   <CardPreview ref={svg} name={name} code={address.code} lines={lines} photo={photoData} notice={notice} rtl={locale==='ar'} title={t('Cartão de endereço digital')} qrLabel={t('Código AFROLOC')} />
-   <p className="text-xs text-muted-foreground">{t('O QR contém apenas o endereço AFROLOC. Os contactos seleccionados aparecem no cartão.')}</p>
+   <CardPreview ref={svg} name={name} code={address.code} lines={lines} photo={photoData} notice={notice} rtl={locale==='ar'} title={t('Cartão de endereço digital')} qrLabel={t('Abrir endereço AFROLOC')} />
+   <p className="text-xs text-muted-foreground">{t('Lê o QR ou toca em Abrir endereço AFROLOC para ver o destino no mapa NJILA. Os contactos seleccionados aparecem apenas no cartão.')}</p>
    {imageError&&<p role="alert">{t('Não foi possível preparar a imagem. Podes copiar os dados.')}</p>}
    <div className="flex flex-wrap gap-2">
+    <Button asChild><a href={cardQrValue(address)} target="_blank" rel="noopener noreferrer">{t('Abrir endereço AFROLOC')}</a></Button>
     <Button disabled={!ready} onClick={()=>void share()}>{t('Partilhar cartão')}</Button>
     <Button variant="outline" disabled={!ready} onClick={()=>{if(image&&unexpired())downloadCard(image.blob)}}>{t('Guardar imagem')}</Button>
     <Button variant="outline" disabled={!fresh||busy||sharing} onClick={()=>{if(!unexpired())return;void (navigator.clipboard?.writeText(text)??Promise.reject(new Error('clipboard'))).then(()=>setFeedback('Dados copiados.')).catch(()=>setFeedback('Não foi possível partilhar. Usa Guardar imagem ou Copiar dados.'));}}>{t('Copiar dados')}</Button>

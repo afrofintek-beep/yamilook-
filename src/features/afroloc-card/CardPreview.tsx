@@ -1,8 +1,9 @@
 import {forwardRef} from 'react';
 import {QRCodeSVG} from 'qrcode.react';
-import type {CardLine} from './model';
+import {cardQrValue,type CardLine} from './model';
 import {wrapCardText,wrapCardCode} from './layout';
 export const CardPreview=forwardRef<SVGSVGElement,{name:string;code:string;lines:CardLine[];photo?:string;notice:string;rtl:boolean;title?:string;qrLabel?:string}>(function CardPreview({name,code,lines,photo,notice,rtl,title='AFROLOC',qrLabel='AFROLOC'},ref){
+ const qrUrl=cardQrValue({code});
  const nameRows=wrapCardText(name,photo?25:36),codeRows=wrapCardCode(code);
  const identityBottom=Math.max(145+nameRows.length*32,photo?258:180);
  const codeY=identityBottom+26,bodyY=codeY+codeRows.length*32+42;
@@ -42,7 +43,9 @@ export const CardPreview=forwardRef<SVGSVGElement,{name:string;code:string;lines
   {codeRows.map((v,i)=><text key={i} x="44" y={codeY+i*32} fontSize="27" fontWeight="700" fontFamily="monospace" fill="#142a21" direction="ltr">{v}</text>)}
   {rules.map(y=><path key={y} d={`M36 ${y}H684`} stroke="#d5cebd"/>)}
   {cells.map(({line,x,y,values,labels},i)=><g key={i}><title>{line.label+': '+line.value}</title>{labels.map((v,j)=><text key={'l'+j} x={x} y={y+j*18} fontSize="14" fill="#526058" {...textStyle}>{v}</text>)}{values.map((v,j)=><text key={j} x={x} y={y+labels.length*18+7+j*25} fontSize="21" fontWeight="600" fill="#142a21" {...textStyle}>{v}</text>)}</g>)}
-  <QRCodeSVG aria-hidden="true" focusable="false" value={code} x={rtl?484:36} y={qrY} size={200} level="M" marginSize={4} bgColor="#ffffff" fgColor="#142a21"/>
+  <a href={qrUrl} target="_blank" rel="noopener noreferrer" aria-label={qrLabel}>
+  <QRCodeSVG aria-hidden="true" focusable="false" value={qrUrl} x={rtl?484:36} y={qrY} size={200} level="M" marginSize={4} bgColor="#ffffff" fgColor="#142a21"/>
+  </a>
   <text x={rtl?584:136} y={qrY+218} textAnchor="middle" fontSize="14" fill="#526058" fontFamily="sans-serif">{qrLabel}</text>
   {footer.map(({line,y,values,labels},i)=><g key={i}>{labels.map((v,j)=><text key={'l'+j} x={rtl?448:272} y={y+j*18} fontSize="14" fill="#526058" {...textStyle}>{v}</text>)}{values.map((v,j)=><text key={j} x={rtl?448:272} y={y+labels.length*18+7+j*24} fontSize="19" fill="#142a21" {...textStyle}>{v}</text>)}</g>)}
   {noteRows.map((v,i)=><text key={i} x={rtl?684:36} y={noteY+i*22} fontSize="16" fill="#526058" {...textStyle}>{v}</text>)}

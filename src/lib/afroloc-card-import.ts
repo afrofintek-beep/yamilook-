@@ -6,7 +6,7 @@ export function addressFromCard(value: string): string | null {
     try {
       const url = new URL(candidate);
       if (!['app.afroloc.ao', 'afroloc.ao', 'www.afroloc.ao', 'www.njilamaps.com', 'njilamaps.com'].includes(url.hostname) || url.port || url.username || url.password) return null;
-      candidate = url.searchParams.get('code') || url.searchParams.get('afroloc') || '';
+      candidate = url.searchParams.get('code') || url.searchParams.get('afroloc') || (['www.njilamaps.com', 'njilamaps.com'].includes(url.hostname) ? url.searchParams.get('to') : '') || '';
     } catch { return null; }
   }
   candidate = candidate.replace(/^AFROLOC\s*:\s*/i, '').trim().toUpperCase();
