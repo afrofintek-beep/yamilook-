@@ -92,7 +92,7 @@ function CardScreen({userId}:{userId:string}){
    </fieldset>
    {photoFailed===avatar&&avatar&&<p role="status">{t('Fotografia indisponível. O cartão pode ser partilhado sem fotografia.')}</p>}
    <CardPreview ref={svg} name={name} code={address.code} lines={lines} photo={photoData} notice={notice} rtl={locale==='ar'} title={t('Cartão de endereço digital')} qrLabel={t('Abrir endereço AFROLOC')} />
-   <p className="text-xs text-muted-foreground">{t('Lê o QR ou toca em Abrir endereço AFROLOC para ver o destino no mapa NJILA. Os contactos seleccionados aparecem apenas no cartão.')}</p>
+   <p className="text-xs text-muted-foreground">{t('Qualquer pessoa que leia este QR pode ver gratuitamente a localização no mapa. Percursos, radar e realidade aumentada estão disponíveis na versão paga da NJILA. Os contactos seleccionados aparecem apenas no cartão.')}</p>
    {imageError&&<p role="alert">{t('Não foi possível preparar a imagem. Podes copiar os dados.')}</p>}
    <div className="flex flex-wrap gap-2">
     <Button asChild><a href={cardQrValue(address)} target="_blank" rel="noopener noreferrer">{t('Abrir endereço AFROLOC')}</a></Button>

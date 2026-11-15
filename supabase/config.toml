@@ -61,3 +61,7 @@ verify_jwt = false
 
 [functions.social-initiatives]
 verify_jwt = false
+
+# Public, exact-reference QR location lookup; no profile identity or directory.
+[functions.afroloc-card-location]
+verify_jwt = false
