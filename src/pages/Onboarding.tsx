@@ -1,3 +1,4 @@
+import { createSignupOnboarding, recoverSignupOnboarding, resumeOnboardingStep } from '@/lib/signup-onboarding';
 import { legalLabel } from '@/i18n/legal-labels';
 import { onboardingImage } from '@/components/auth/onboarding-images';
 import { EntryLanguageSelector } from '@/components/auth/EntryLanguageSelector';
@@ -159,9 +160,12 @@ export default function Onboarding() {
     skipDraftSave.current = true;
     captureReferralCode();
     const invite = getReferralCode() || '';
-    const draft = loadOnboardingDraft(user ? { email: user.email } : { inviteCode: invite || undefined });
+    const localDraft = loadOnboardingDraft(user ? { email: user.email } : { inviteCode: invite || undefined });
+    const remoteDraft = user && !profile?.onboarding_completed
+      ? recoverSignupOnboarding(user.user_metadata?.onboarding_draft, user.email) : null;
+    const draft = localDraft && (!remoteDraft || localDraft.savedAt >= remoteDraft.savedAt) ? localDraft : remoteDraft;
     const birthday = profile?.birthday?.split('-');
-    setCurrentStep(draft?.currentStep ?? 0);
+    setCurrentStep(user ? resumeOnboardingStep(draft, profile) : draft?.currentStep ?? 0);
     setDisplayName(draft?.displayName ?? profile?.display_name ?? '');
     setUsername(draft?.username ?? profile?.username?.trim() ?? '');
     setEmail(user?.email ?? draft?.email ?? '');
@@ -304,6 +308,12 @@ export default function Onboarding() {
           display_name: displayName,
           username: username.toLowerCase(),
           access_code: code,
+          onboarding_draft: createSignupOnboarding({
+            currentStep, displayName, username, email, inviteCode: code,
+            gender: selectedGender, birthDay, birthMonth, birthYear, country: selectedCountry,
+            city: selectedCity, neighborhood: selectedNeighborhood, customNeighborhood, bio,
+            residenceMethod: residencePlan.method, administrative: residencePlan.administrative,
+          }),
         });
 
         if (error) {
@@ -385,7 +395,9 @@ export default function Onboarding() {
       const { error: updateError } = await supabase
         .from('profiles')
         .update(profileUpdate)
-        .eq('id', userId);
+        .eq('id', userId)
+        .select('id')
+        .single();
 
       if (updateError) {
         logger.error('Error saving onboarding profile', 'onboarding', updateError);
