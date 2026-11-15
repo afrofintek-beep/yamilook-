@@ -1,3 +1,4 @@
+import type { SignupOnboarding } from '@/lib/signup-onboarding';
 import { communityReturn } from '@/features/academia/community-links';
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { recoverySession } from '@/lib/recovery-session';
@@ -57,7 +58,7 @@ interface AuthContextType {
   loading: boolean;
   profileError: boolean;
   recoveringPassword: boolean;
-  signUp: (email: string, password: string, metadata?: { display_name?: string; username?: string; ref?: string; access_code?: string }) => Promise<{ error: AuthError | null }>;
+  signUp: (email: string, password: string, metadata?: { display_name?: string; username?: string; ref?: string; access_code?: string; onboarding_draft?: SignupOnboarding }) => Promise<{ error: AuthError | null }>;
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signInWithSocial: (provider: SocialProvider) => Promise<{ error: AuthError | null }>;
   signOut: (scope?: 'global' | 'local') => Promise<void>;
@@ -381,7 +382,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signUp = async (
     email: string,
     password: string,
-    metadata?: { display_name?: string; username?: string; ref?: string; access_code?: string }
+    metadata?: { display_name?: string; username?: string; ref?: string; access_code?: string; onboarding_draft?: SignupOnboarding }
   ) => {
     const { error } = await supabase.auth.signUp({
       email,
