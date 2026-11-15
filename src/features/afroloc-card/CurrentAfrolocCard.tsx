@@ -59,7 +59,10 @@ function CardScreen({userId}:{userId:string}){
   if(include.name&&profile.username)add('Yamilook','@'+profile.username,'identity');
   let country=address.country;try{country=new Intl.DisplayNames([locale==='pt-banda'?'pt':locale],{type:'region'}).of(address.country)||country}catch{/* Keep known country code. */}
   add('País',country);add('Província',divisionName(address.administrative?.province)||(address.country==='AO'?t('Por confirmar'):''));add('Município',divisionName(address.administrative?.municipality)||(address.country==='AO'?t('Por confirmar'):''));add('Comuna',divisionName(address.administrative?.commune)||(!address.administrative&&address.country==='AO'?t('Por confirmar'):''));add('Cidade',address.city);add('Bairro / zona',address.neighborhood);add('Complemento',address.administrative?.complement);
+  add('Rua',t('Não indicado'));add('Número',t('Não indicado'));add('Fração / unidade',t('Não indicado'));
   add('Revisão local',t(address.status==='certified'||address.status==='approved'?'Revisto pela Yamilook':address.status==='rejected'?'Não aprovado':'Validação pendente'),'status');
+  add('Entidade de validação',t('Revisão local da Yamilook'),'status');
+  add('Emissão do endereço',t('Por confirmar'),'footer');
   add('Validade',address.expiresAt?new Date(address.expiresAt).toLocaleString(locale==='pt-banda'?'pt':locale,{timeZone:'Africa/Luanda',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):t('Por confirmar'),'footer');
   if(include.phone)add('Telefone',profile.phone_number,'identity');if(include.email)add('Email',profile.email,'identity');
   add('Cartão gerado em',new Date(snapshot!.at).toLocaleDateString(locale==='pt-banda'?'pt':locale,{timeZone:'Africa/Luanda'}),'footer');
@@ -73,7 +76,7 @@ function CardScreen({userId}:{userId:string}){
  useEffect(()=>{let active=true;setImageError(false);if(!hasAddress||!svg.current||!photoReady)return;void cardImage(svg.current).then(blob=>{if(active)setImage({key,blob})}).catch(()=>{if(active)setImageError(true)});return()=>{active=false};},[key,photoReady,hasAddress]);
  const unexpired=()=>!address?.expiresAt||Date.parse(address.expiresAt)>Date.now();
  const ready=!!address&&unexpired()&&fresh&&!busy&&photoReady&&image?.key===key&&!sharing;
- const text=address?cardText(name,address.code,lines,notice):'';
+ const text=address?cardText(name,address.code,lines,notice)+'\n'+cardQrValue(address):'';
  const share=async()=>{if(!ready||!image||!unexpired())return;setSharing(true);setFeedback('');try{const result=await shareCard(image.blob,text);if(result!=='cancelled')setFeedback(result==='downloaded'?'Imagem guardada. Podes anexá-la à tua mensagem.':'Cartão partilhado.');}catch{setFeedback('Não foi possível partilhar. Usa Guardar imagem ou Copiar dados.');}finally{setSharing(false)}};
  return <main className="mx-auto max-w-xl p-4 pb-28 space-y-4" dir={locale==='ar'?'rtl':'ltr'}>
   <nav className="sticky top-0 z-10 bg-background py-3 flex flex-wrap gap-3"><Link to="/profile">← {t('Voltar ao perfil')}</Link><Link to="/afroloc">{t('O meu endereço AFROLOC')}</Link></nav>
@@ -95,6 +98,7 @@ function CardScreen({userId}:{userId:string}){
     <Button asChild><a href={cardQrValue(address)} target="_blank" rel="noopener noreferrer">{t('Abrir endereço AFROLOC')}</a></Button>
     <Button disabled={!ready} onClick={()=>void share()}>{t('Partilhar cartão')}</Button>
     <Button variant="outline" disabled={!ready} onClick={()=>{if(image&&unexpired())downloadCard(image.blob)}}>{t('Guardar imagem')}</Button>
+    <Button variant="outline" disabled={!ready} onClick={()=>{if(!ready||!image)return;const w=window.open('','_blank');if(!w){setFeedback('Permita abrir a janela de impressão.');return;}const img=w.document.createElement('img'),u=URL.createObjectURL(image.blob);img.style.cssText='width:100%;max-width:180mm;display:block;margin:auto';img.onload=()=>{w.focus();w.print();URL.revokeObjectURL(u)};img.src=u;w.document.title='Cartão AFROLOC';w.document.body.replaceChildren(img);}}>{t('Imprimir cartão')}</Button>
     <Button variant="outline" disabled={!fresh||busy||sharing} onClick={()=>{if(!unexpired())return;void (navigator.clipboard?.writeText(text)??Promise.reject(new Error('clipboard'))).then(()=>setFeedback('Dados copiados.')).catch(()=>setFeedback('Não foi possível partilhar. Usa Guardar imagem ou Copiar dados.'));}}>{t('Copiar dados')}</Button>
    </div>
   </>:!busy&&!warning?<p>{t('Ainda não tens um endereço AFROLOC associado ou activo.')} <Link className="underline" to="/profile">{t('Carregar cartão ou endereço AFROLOC')}</Link> · <Link className="underline" to="/afroloc">{t('Experimentar AFROLOC')}</Link></p>:null}

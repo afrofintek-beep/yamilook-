@@ -1,17 +1,5 @@
-/** Import address data only. Never follow QR links or import access credentials. */
-export function addressFromCard(value: string): string | null {
-  if (value.length > 2048) return null;
-  let candidate = value.trim().replace(/[–—−]/g, '-');
-  if (/^https:\/\//i.test(candidate)) {
-    try {
-      const url = new URL(candidate);
-      if (!['app.afroloc.ao', 'afroloc.ao', 'www.afroloc.ao', 'www.njilamaps.com', 'njilamaps.com'].includes(url.hostname) || url.port || url.username || url.password) return null;
-      candidate = url.searchParams.get('code') || url.searchParams.get('afroloc') || (['www.njilamaps.com', 'njilamaps.com'].includes(url.hostname) ? url.searchParams.get('to') : '') || '';
-    } catch { return null; }
-  }
-  candidate = candidate.replace(/^AFROLOC\s*:\s*/i, '').trim().toUpperCase();
-  return candidate.length <= 160 && /^[A-Z]{2}(?:-[A-Z0-9]+){2,}$/.test(candidate) ? candidate : null;
-}
+import {readCardReference} from '../shared/afroloc-card/protocol';
+export function addressFromCard(value:string):string|null{const ref=readCardReference(value);return ref?.kind==='address'?ref.code:null;}
 
 export async function readAfrolocCard(file: File): Promise<string> {
   if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) throw new Error('Escolhe uma imagem JPG, PNG ou WebP do cartão. Também podes escrever o código abaixo.');

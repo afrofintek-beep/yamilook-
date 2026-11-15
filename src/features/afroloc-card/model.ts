@@ -1,4 +1,4 @@
-import {njilaAddressUrl} from '@/lib/chat-afroloc';
+import {addressLink} from '../../shared/afroloc-card/protocol';
 import { administrativeFromCode, divisions, validAdministrativeAddress, type AdministrativeAddress } from '@/lib/angola-administrative';
 export interface CardProfile { id:string; display_name:string; username:string; avatar_url:string|null; phone_number:string|null; email:string|null; country_code:string|null; city:string|null; neighborhood:string|null; afroloc_code:string|null; afroloc_certification_status:string }
 export interface SavedAddress {id:string;label:string;code:string;neighborhood:string;status:string;created_at:string;expires_at:string}
@@ -16,4 +16,4 @@ export const divisionName=(code?:string)=>divisions.find(d=>d.code===code)?.name
 export type CardLine={label:string;value:string;group?:'identity'|'location'|'status'|'footer'};
 export function cardText(name:string,code:string,lines:CardLine[],notice:string){return ['AFROLOC · Yamilook',name,code,...lines.map(l=>`${l.label}: ${l.value}`),notice].filter(Boolean).join('\n');}
 /** Public address link only: no identity fields, session or location grant. */
-export function cardQrValue(address:Pick<CardAddress,'code'>){return njilaAddressUrl(address.code) || '';}
+export function cardQrValue(address:Pick<CardAddress,'code'>){return addressLink(address.code);}
