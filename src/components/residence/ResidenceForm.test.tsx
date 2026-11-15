@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { render,screen,fireEvent,cleanup } from '@testing-library/react';
 import { afterEach,beforeEach,expect,it,vi } from 'vitest';
 vi.mock('@/integrations/supabase/client',()=>({supabase:{}}));
+vi.mock('./ResidenceMapPicker',()=>({default:({onChange}:{onChange:(p:{lat:number;lng:number})=>void})=><button onClick={()=>onChange({lat:-8.9,lng:13.2})}>Marcar casa de teste</button>}));
 import { ResidenceForm } from './ResidenceForm';
 import type { ResidencePlan } from '@/lib/residence';
 let location: ReturnType<typeof vi.fn>;
@@ -78,4 +79,17 @@ it('fills an empty locality on card import and preserves the address complement'
  expect(screen.getByLabelText('Cidade / localidade (informação complementar)')).toHaveValue('Talatona');
  expect(screen.getByLabelText('Complemento do endereço (opcional)')).toHaveValue('Casa 12');
  expect(screen.getByText('Confirmar Banda e continuar')).toBeEnabled();
+});
+
+it('requires a selected and explicitly confirmed home point remotely, without GPS',async()=>{
+ render(<Harness/>);fireEvent.click(screen.getByLabelText('Quero criar um endereço'));
+ fireEvent.click(screen.getByRole('button',{name:'Escolher a minha casa no mapa'}));
+ const save=screen.getByRole('button',{name:'Criar endereço e cartão'});
+ expect(save).toBeDisabled();
+ fireEvent.click(await screen.findByText('Marcar casa de teste'));
+ expect(save).toBeDisabled();
+ fireEvent.click(screen.getByLabelText('Confirmo que o ponto marcado corresponde à minha residência. A validação fica pendente.'));
+ expect(save).toBeEnabled();fireEvent.click(save);expect(done).toHaveBeenCalledOnce();expect(location).not.toHaveBeenCalled();
+ fireEvent.click(screen.getByText('Marcar casa de teste'));expect(save).toBeDisabled();
+ fireEvent.change(screen.getByLabelText('Província'),{target:{value:'AO-BGO'}});expect(save).toBeDisabled();
 });

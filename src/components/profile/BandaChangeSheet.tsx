@@ -1,3 +1,4 @@
+import { residenceChangeDate } from '@/lib/residence-date';
 import { uiText, useUiLocale, uiLocale } from '@/i18n/ui-copy';
 import { useTranslation } from 'react-i18next';
 import { useId, useRef } from 'react';
@@ -130,9 +131,7 @@ export function BandaChangeSheet({ open, onOpenChange, current, onChanged }: Pro
   const changingBanda = country !== (current.country_code || 'AO') || neighborhood.trim() !== (current.neighborhood || '').trim()
     || city.trim() !== (current.city || '').trim();
   const blockedByCooldown = changingBanda && residency?.can_change_now === false;
-  const nextChange = residency?.next_change_at
-    ? new Date(residency.next_change_at).toLocaleDateString(uiLocale(), { day: '2-digit', month: 'long', year: 'numeric' })
-    : null;
+  const nextChange = residenceChangeDate(residency?.next_change_at,uiLocale());
 
   const useGps = async () => {
     if (!homeConfirmed) return;

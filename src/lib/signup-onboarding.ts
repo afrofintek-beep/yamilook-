@@ -12,7 +12,7 @@ const schema = z.object({
   gender: z.enum(['male', 'female', 'other']).nullable(),
   birthDay: z.string().max(2), birthMonth: z.string().max(2), birthYear: z.string().max(4),
   country: text, city: text, neighborhood: text, customNeighborhood: text, bio: text,
-  residenceMethod: z.enum(['home', 'away', 'existing', 'later']).optional(),
+  residenceMethod: z.enum(['home', 'away', 'existing', 'later', 'map']).optional(),
   administrative: z.object({ province: text, municipality: text, commune: text }).optional(),
 });
 export type SignupOnboarding = z.infer<typeof schema>;
@@ -41,6 +41,6 @@ export function resumeOnboardingStep(draft: OnboardingDraft | null, profile?: Sa
       (draft?.neighborhood === '__other__' && !draft.customNeighborhood.trim())) return 2;
   // Home GPS and existing-card access are deliberately not persisted. Reconfirm
   // only that step, retaining all other answers and the original address choice.
-  if (draft?.residenceMethod === 'home' || draft?.residenceMethod === 'existing') return 2;
+  if (draft?.residenceMethod === 'map' || draft?.residenceMethod === 'home' || draft?.residenceMethod === 'existing') return 2;
   return draft?.currentStep ?? 2;
 }

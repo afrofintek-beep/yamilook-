@@ -1,0 +1,33 @@
+name: Remote residence cards
+on:
+  push:
+    branches: [main, 'fix/remote-residence-card']
+    paths:
+      - 'src/components/residence/**'
+      - 'src/lib/residence*'
+      - 'src/features/afroloc-card/**'
+      - 'tests/remote-residence/**'
+      - 'tests/afroloc-experience/remote-residence.test.mjs'
+      - 'supabase/migrations/*remote_residence_map.sql'
+      - '.github/workflows/remote-residence.yml'
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npx vitest run src/components/residence src/lib/residence.test.ts src/lib/residence-date.test.ts src/lib/onboarding-draft.test.ts src/lib/signup-onboarding.test.ts src/components/profile/BandaChangeSheet.test.tsx src/features/afroloc-card
+      - run: node --test tests/afroloc-experience/remote-residence.test.mjs
+      - run: npx tsc --noEmit -p tsconfig.app.json
+      - run: npx playwright install --with-deps chromium webkit
+      - run: npx playwright test --config tests/remote-residence/playwright.config.ts
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: remote-residence-test-results
+          path: test-results/

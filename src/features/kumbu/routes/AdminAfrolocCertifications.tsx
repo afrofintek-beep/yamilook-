@@ -132,7 +132,7 @@ export default function AdminAfrolocCertifications() {
                 <span className="font-mono truncate">{r.afroloc_code ?? uiText("sem endereço")}</span>
               </div>
 
-              {declarations[r.id] && <p className="text-xs text-muted-foreground">{uiText("Banda declarada: {{value1}}, {{value2}}. Origem: {{value3}}.", { value1: (declarations[r.id].neighborhood) ?? "", value2: (declarations[r.id].city) ?? "", value3: (declarations[r.id].method === 'home' ? uiText("captura no endereço") : declarations[r.id].method === 'existing' ? uiText("código indicado pelo utilizador") : uiText("confirmação adiada")) ?? "" })}</p>}
+              {declarations[r.id] && <p className="text-xs text-muted-foreground">{uiText("Banda declarada: {{value1}}, {{value2}}. Origem: {{value3}}.", { value1: (declarations[r.id].neighborhood) ?? "", value2: (declarations[r.id].city) ?? "", value3: (declarations[r.id].method === 'home' ? uiText("captura no endereço") : declarations[r.id].method === 'map' ? uiText('residência indicada no mapa à distância') : declarations[r.id].method === 'existing' ? uiText("código indicado pelo utilizador") : uiText("confirmação adiada")) ?? "" })}</p>}
               {r.afroloc_certification_status !== 'certified' && <label className="flex gap-2 text-xs"><input type="checkbox" checked={!!reviewed[r.id]} onChange={e=>setReviewed(p=>({...p,[r.id]:e.target.checked}))}/>{uiText("Verifiquei a ligação do utilizador a este endereço e à Banda declarada.")}</label>}
               {r.afroloc_certification_status !== 'certified' && (
                 <div className="flex gap-2 pt-1">

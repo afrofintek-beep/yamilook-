@@ -22,3 +22,13 @@ it('localizes save errors without exposing database details',async()=>{
   }
  }
 });
+
+it('submits a remote residence as map with no claimed GPS accuracy or certification',async()=>{
+ const plan={method:'map' as const,lat:-8.9,lng:13.2,mapConfirmed:true,accuracy:5,administrative:{province:'AO-LDA',municipality:'AO-LDA-TALATONA',commune:'AO-LDA-KTALATONA'}};
+ await submitResidence(plan,'AO','Luanda','Talatona');
+ expect(rpc).toHaveBeenCalledWith('submit_residence_administrative',expect.objectContaining({p_method:'map',p_lat:-8.9,p_lng:13.2,p_accuracy:null}));
+ expect(validResidencePlan({...plan,mapConfirmed:false})).toBe(false);
+ expect(validResidencePlan({...plan,lat:Infinity})).toBe(false);
+ expect(validResidencePlan({...plan,lat:40})).toBe(false);
+ await expect(submitResidence({...plan,administrative:undefined},'AO','Luanda','Talatona')).rejects.toThrow();
+});

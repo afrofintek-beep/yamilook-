@@ -19,7 +19,7 @@ export interface OnboardingDraft {
   customNeighborhood: string;
   bio: string;
   administrative?: AdministrativeAddress;
-  residenceMethod?: 'home' | 'away' | 'existing' | 'later';
+  residenceMethod?: 'home' | 'away' | 'existing' | 'later' | 'map';
 }
 type DraftInput = Omit<OnboardingDraft, 'version' | 'savedAt'>;
 // Explicit allowlist: passwords, session tokens, photos and GPS never enter storage.
@@ -33,7 +33,7 @@ export function saveOnboardingDraft(input: DraftInput, accountEmail?: string): b
     city: input.city, neighborhood: input.neighborhood,
     customNeighborhood: input.customNeighborhood, bio: input.bio,
     administrative: input.administrative ? {province:input.administrative.province,municipality:input.administrative.municipality,commune:input.administrative.commune} : undefined,
-    residenceMethod: ['home','away','existing','later'].includes(input.residenceMethod || '') ? input.residenceMethod : 'later',
+    residenceMethod: ['home','away','existing','later','map'].includes(input.residenceMethod || '') ? input.residenceMethod : 'later',
   };
   try { localStorage.setItem(keyFor(accountEmail), JSON.stringify(draft)); return true; } catch { return false; }
 }
@@ -48,7 +48,7 @@ export function loadOnboardingDraft(context: { email?: string; inviteCode?: stri
     if (![null, 'male', 'female', 'other'].includes(draft.gender)) return null;
     if (context.email && draft.email.toLowerCase().trim() !== context.email.toLowerCase().trim()) return null;
     if (context.inviteCode && draft.inviteCode.toUpperCase() !== context.inviteCode.toUpperCase()) return null;
-    if (draft.residenceMethod && !['home','away','existing','later'].includes(draft.residenceMethod)) return null;
+    if (draft.residenceMethod && !['home','away','existing','later','map'].includes(draft.residenceMethod)) return null;
     if(draft.administrative && !validAdministrativeAddress(draft.administrative)) delete draft.administrative;
     return draft;
   } catch { return null; }

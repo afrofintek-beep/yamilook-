@@ -54,7 +54,7 @@ function CardScreen({userId}:{userId:string}){
  const address=addresses.find(a=>a.id===selected)||addresses[0];
  const lines:CardLine[]=[];const add=(label:string,value?:string|null,group:CardLine['group']='location')=>{if(value)lines.push({label:t(label),value,group})};
  if(address&&profile){
-  add('Tipo de endereço',t(address.temporary?'Endereço temporário':'Residência associada'),'identity');
+  add('Tipo de endereço',t(address.temporary?'Endereço temporário':address.status==='certified'?'Residência associada':'Residência declarada — validação pendente'),'identity');
   if(address.temporary)add('Endereço',address.label,'identity');
   if(include.name&&profile.username)add('Yamilook','@'+profile.username,'identity');
   let country=address.country;try{country=new Intl.DisplayNames([locale==='pt-banda'?'pt':locale],{type:'region'}).of(address.country)||country}catch{/* Keep known country code. */}
@@ -101,7 +101,7 @@ function CardScreen({userId}:{userId:string}){
     <Button variant="outline" disabled={!ready} onClick={()=>{if(!ready||!image)return;const w=window.open('','_blank');if(!w){setFeedback('Permita abrir a janela de impressão.');return;}const img=w.document.createElement('img'),u=URL.createObjectURL(image.blob);img.style.cssText='width:100%;max-width:180mm;display:block;margin:auto';img.onload=()=>{w.focus();w.print();URL.revokeObjectURL(u)};img.src=u;w.document.title='Cartão AFROLOC';w.document.body.replaceChildren(img);}}>{t('Imprimir cartão')}</Button>
     <Button variant="outline" disabled={!fresh||busy||sharing} onClick={()=>{if(!unexpired())return;void (navigator.clipboard?.writeText(text)??Promise.reject(new Error('clipboard'))).then(()=>setFeedback('Dados copiados.')).catch(()=>setFeedback('Não foi possível partilhar. Usa Guardar imagem ou Copiar dados.'));}}>{t('Copiar dados')}</Button>
    </div>
-  </>:!busy&&!warning?<p>{t('Ainda não tens um endereço AFROLOC associado ou activo.')} <Link className="underline" to="/profile">{t('Carregar cartão ou endereço AFROLOC')}</Link> · <Link className="underline" to="/afroloc">{t('Experimentar AFROLOC')}</Link></p>:null}
+  </>:!busy&&!warning?<p>{t('Ainda não tens um endereço AFROLOC associado ou activo.')} <Link className="underline" to="/profile">{t('Criar ou associar o meu endereço AFROLOC')}</Link> · <Link className="underline" to="/afroloc">{t('Experimentar AFROLOC')}</Link></p>:null}
   {feedback&&<p role="status">{t(feedback)}</p>}
  </main>;
 }
