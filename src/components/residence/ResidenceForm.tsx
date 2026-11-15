@@ -1,3 +1,5 @@
+import { lazy, Suspense } from 'react';
+const ResidenceMapPicker = lazy(() => import('./ResidenceMapPicker'));
 import { AdministrativeFields } from './AdministrativeFields';
 import { administrativeFromCode, emptyAdministrativeAddress, validAdministrativeAddress, administrativeCodeMismatch, divisions } from '@/lib/angola-administrative';
 import { ExistingAfrolocAddress } from './ExistingAfrolocAddress';
@@ -39,7 +41,7 @@ export function ResidenceForm(p: Props) {
  const suggestions = useMemo(() => matchingResidenceCities(cityData.country === p.country ? cityData.cities : [],p.city,language), [cityData, p.country, p.city, language]);
  const [locating,setLocating]=useState(false); const [error,setError]=useState(''); const generation=useRef(0);
  useEffect(()=>()=>{generation.current++;},[]);
- const resetHomeCapture=()=>{if(p.plan.method==='home'){generation.current++;setLocating(false);p.onPlan({method:'home',administrative:p.plan.administrative});}};
+ const resetHomeCapture=()=>{if(p.plan.method==='home'||p.plan.method==='map'){generation.current++;setLocating(false);p.onPlan({method:p.plan.method,administrative:p.plan.administrative});}};
  const country=AFRICAN_LOCATIONS.find(c=>c.countryCode===p.country);
  const neighborhoods=country?.cities.find(c=>c.name===p.city)?.neighborhoods || [];
  const changeMode=(method:ResidenceMethod)=>{generation.current++;setLocating(false);setError('');p.onPlan({method,administrative:p.plan.administrative});};
@@ -60,7 +62,7 @@ export function ResidenceForm(p: Props) {
  const valid=!mismatch&&adminValid&&!!p.country&&!!p.city.trim()&&!!p.neighborhood&&(p.neighborhood!=='__other__'||!!p.customNeighborhood.trim())&&validResidencePlan(p.plan);
  const isAngola=p.country.trim().toUpperCase()==='AO';
  const choice=p.plan.method==='existing'?'existing':p.plan.method==='later'?'later':'create';
- const missing=mismatch ? uiText('O código AFROLOC não corresponde à divisão administrativa escolhida. Confirma os dados.') : !adminValid ? uiText('Selecciona a província, o município e a comuna, quando exista.') : !p.country ? uiText("Selecciona o país.") : !p.city.trim() ? uiText("Indica a cidade ou localidade.") : !p.neighborhood || (p.neighborhood==='__other__'&&!p.customNeighborhood.trim()) ? uiText("Indica o bairro.") : p.plan.method==='existing'&&!validResidencePlan(p.plan) ? uiText("Introduz um código AFROLOC válido ou carrega uma imagem do cartão com um QR legível.") : p.plan.method==='home'&&!validResidencePlan(p.plan) ? uiText("Capta a localização do teu endereço para continuar.") : '';
+ const missing=p.plan.method==='map'&&!validResidencePlan(p.plan)?uiText('Selecciona a casa no mapa e confirma que é a tua residência.') : mismatch ? uiText('O código AFROLOC não corresponde à divisão administrativa escolhida. Confirma os dados.') : !adminValid ? uiText('Selecciona a província, o município e a comuna, quando exista.') : !p.country ? uiText("Selecciona o país.") : !p.city.trim() ? uiText("Indica a cidade ou localidade.") : !p.neighborhood || (p.neighborhood==='__other__'&&!p.customNeighborhood.trim()) ? uiText("Indica o bairro.") : p.plan.method==='existing'&&!validResidencePlan(p.plan) ? uiText("Introduz um código AFROLOC válido ou carrega uma imagem do cartão com um QR legível.") : p.plan.method==='home'&&!validResidencePlan(p.plan) ? uiText("Capta a localização do teu endereço para continuar.") : '';
  const capture=<div className="space-y-2"><Button type="button" variant="outline" className="h-auto whitespace-normal" onClick={locate} disabled={locating||p.saving}>{locating?t("onboardingFlow.locating"):p.plan.lat!==undefined?t("onboardingFlow.updateLocation"):t("onboardingFlow.captureLocation")}</Button>{p.plan.accuracy&&<p role="status" className="text-sm">{t('onboardingFlow.locationCaptured', { accuracy: Math.ceil(p.plan.accuracy) })}</p>}</div>;
  const selectClass='w-full rounded-xl border bg-background px-3 py-3 text-base';
  return <div className="space-y-4 text-start">
@@ -89,13 +91,19 @@ export function ResidenceForm(p: Props) {
     <label className="flex items-center gap-3 text-sm"><input type="radio" name={`${cityListId}-address-choice`} className="shrink-0 accent-primary" checked={choice===value} onChange={()=>changeMode(value==='create'?'away':value)}/><span>{label}</span></label>
     {choice===value && value==='existing' && <ExistingAfrolocAddress code={p.plan.code||''} onChange={code=>{const recovered=administrativeFromCode(code);if(recovered&&!p.city)p.onCity(divisions.find(d=>d.code===recovered.municipality)?.name||'');p.onPlan({method:'existing',code,administrative:recovered?{...recovered,complement:p.plan.administrative?.complement}:p.plan.administrative});}} disabled={p.saving}/>}
     {choice===value && value==='create' && <div className="space-y-3">
-     <fieldset className="space-y-2"><legend className="text-sm font-medium mb-2">{uiText('Estás neste momento na tua residência?')}</legend>{options.filter(o=>o.value==='home'||o.value==='away').map(o=><label key={o.value} className="flex gap-3 items-center text-sm"><input className="accent-primary" type="radio" name={`${cityListId}-presence`} checked={p.plan.method===o.value} onChange={()=>changeMode(o.value)}/>{t(o.key)}</label>)}</fieldset>
-     {p.plan.method==='home'?capture:<p className="text-sm text-muted-foreground">{uiText('Podes guardar a Banda agora. Cria o endereço quando estiveres no local da tua residência.')}</p>}
+     <fieldset className="space-y-2"><legend className="text-sm font-medium mb-2">{uiText('Estás neste momento na tua residência?')}</legend>{options.filter(o=>o.value==='home'||o.value==='away').map(o=><label key={o.value} className="flex gap-3 items-center text-sm"><input className="accent-primary" type="radio" name={`${cityListId}-presence`} checked={p.plan.method===o.value||(o.value==='away'&&p.plan.method==='map')} onChange={()=>changeMode(o.value)}/>{t(o.key)}</label>)}</fieldset>
+     {p.plan.method==='home'?capture:<div className="space-y-3">
+      <p className="text-sm text-muted-foreground">{uiText('Mesmo fora de casa, podes marcar a tua residência no mapa e criar o cartão com validação pendente.')}</p>
+      {p.plan.method==='away' ? <Button type="button" variant="outline" className="h-auto whitespace-normal" onClick={()=>changeMode('map')}>{uiText('Escolher a minha casa no mapa')}</Button> : <>
+       <Suspense fallback={<p role="status">{uiText('A carregar o mapa…')}</p>}><ResidenceMapPicker key={JSON.stringify([p.country,p.plan.administrative?.province,p.plan.administrative?.municipality,p.plan.administrative?.commune])} point={p.plan.lat!==undefined&&p.plan.lng!==undefined?{lat:p.plan.lat,lng:p.plan.lng}:undefined} onChange={point=>p.onPlan({method:'map',administrative:p.plan.administrative,...point,mapConfirmed:false})} disabled={p.saving}/></Suspense>
+       <label className="flex items-start gap-3 text-sm"><input type="checkbox" className="mt-1" checked={p.plan.mapConfirmed===true} disabled={p.plan.lat===undefined||p.plan.lng===undefined} onChange={e=>p.onPlan({...p.plan,mapConfirmed:e.target.checked})}/>{uiText('Confirmo que o ponto marcado corresponde à minha residência. A validação fica pendente.')}</label>
+      </>}
+     </div>}
     </div>}
     {choice===value && value==='later' && <p className="text-sm text-muted-foreground">{t('onboardingFlow.confirmLaterHint')}</p>}
    </div>)}
   </fieldset> : <>
-   <fieldset className="space-y-2"><legend className="font-medium mb-2">{t("onboardingFlow.atAddress")}</legend>{options.map(o=><label key={o.value} className="flex gap-3 items-center rounded-xl border p-3 text-sm"><input type="radio" name={`${cityListId}-residence-method`} value={o.value} checked={p.plan.method===o.value} onChange={()=>changeMode(o.value)}/>{t(o.key)}</label>)}</fieldset>
+   <fieldset className="space-y-2"><legend className="font-medium mb-2">{t("onboardingFlow.atAddress")}</legend>{options.map(o=><label key={o.value} className="flex gap-3 items-center rounded-xl border p-3 text-sm"><input type="radio" name={`${cityListId}-residence-method`} value={o.value} checked={p.plan.method===o.value||(o.value==='away'&&p.plan.method==='map')} onChange={()=>changeMode(o.value)}/>{t(o.key)}</label>)}</fieldset>
    {p.plan.method==='home'&&capture}
    {p.plan.method==='existing'&&<><Input aria-label={t("onboardingFlow.existingCode")} value={p.plan.code||''} onChange={e=>p.onPlan({method:'existing',code:e.target.value.toUpperCase()})} placeholder={t("onboardingFlow.enterCode")} autoCapitalize="characters"/><p className="text-xs text-muted-foreground">{t("onboardingFlow.codeHint")}</p></>}
    {(p.plan.method==='away'||p.plan.method==='later')&&<p className="text-sm text-muted-foreground">{t("onboardingFlow.confirmLaterHint")}</p>}
@@ -103,6 +111,6 @@ export function ResidenceForm(p: Props) {
   <p className="text-xs text-muted-foreground">{t("onboardingFlow.residenceNotice")}</p>
   {error&&<p role="alert" className="text-sm text-destructive">{t(error)}</p>}
   {missing&&<p id={`${cityListId}-missing`} role="status" className="text-sm text-muted-foreground">{missing}</p>}
-  <div className="flex flex-wrap gap-3">{p.onBack&&<Button variant="outline" onClick={p.onBack} disabled={p.saving}>{t("common.back")}</Button>}<Button className="h-auto whitespace-normal" aria-describedby={missing?`${cityListId}-missing`:undefined} onClick={p.onContinue} disabled={!valid||locating||p.saving}>{p.saving?t("common.saving"):t("onboardingFlow.confirmBanda")}</Button></div>
+  <div className="flex flex-wrap gap-3">{p.onBack&&<Button variant="outline" onClick={p.onBack} disabled={p.saving}>{t("common.back")}</Button>}<Button className="h-auto whitespace-normal" aria-describedby={missing?`${cityListId}-missing`:undefined} onClick={p.onContinue} disabled={!valid||locating||p.saving}>{p.saving?t("common.saving"):p.plan.method==='map'?uiText('Criar endereço e cartão'):t("onboardingFlow.confirmBanda")}</Button></div>
  </div>;
 }

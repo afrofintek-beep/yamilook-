@@ -1,0 +1,11 @@
+import React from 'react';
+import {createRoot} from 'react-dom/client';
+import {BrowserRouter} from 'react-router-dom';
+import '@/i18n';
+import i18n from '@/i18n';
+import '@/index.css';
+import {ResidencePanel} from '@/components/residence/ResidencePanel';
+import Card from '@/features/afroloc-card/CurrentAfrolocCard';
+await i18n.changeLanguage('pt');
+document.documentElement.classList.add('dark');
+createRoot(document.getElementById('root')!).render(<BrowserRouter>{location.pathname==='/afroloc/cartao'?<Card/>:<ResidencePanel/>}</BrowserRouter>);

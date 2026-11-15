@@ -22,7 +22,7 @@ describe('confirmation across browsers', () => {
     expect(recoverSignupOnboarding({ ...draft, gender: 'invalid' }, input.email)).toBeNull();
   });
   it('reconfirms only residence when GPS or a private card code was not persisted', () => {
-    for (const residenceMethod of ['home', 'existing'] as const) {
+    for (const residenceMethod of ['home', 'existing', 'map'] as const) {
       const draft = createSignupOnboarding({ ...input, residenceMethod });
       expect(resumeOnboardingStep(recoverSignupOnboarding(draft, input.email))).toBe(2);
     }
