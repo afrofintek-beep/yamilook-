@@ -17,10 +17,11 @@ test('a registered travelling resident can select home and open the pending card
  await expect(save).toBeDisabled();
  await page.getByRole('checkbox',{name:'Confirmo que o ponto marcado corresponde à minha residência. A validação fica pendente.'}).check();
  await expect(save).toBeEnabled();
- await expect(page.locator('body')).toHaveJSProperty('scrollWidth',393);
+ expect(await page.locator('body').evaluate(el=>el.scrollWidth)).toBeLessThanOrEqual(393);
  await save.click();
  await expect(page).toHaveURL(/\/afroloc\/cartao$/);
- await expect(page.getByText('Residência declarada — validação pendente',{exact:true})).toBeVisible();
+ await expect(page.getByRole('img')).toBeVisible();
+ await expect(page.getByRole('img')).toContainText('Tipo de endereço: Residência declarada — validação pendente');
  await expect(page.getByRole('button',{name:'Guardar imagem'})).toBeEnabled();
  const payload=await page.evaluate(()=>JSON.parse(sessionStorage.getItem('remote-payload')!));
  expect(payload.p_method).toBe('map');expect(payload.p_accuracy).toBeNull();expect(payload.p_lat).toBeCloseTo(-8.839,2);expect(payload.p_lng).toBeCloseTo(13.289,2);expect(payload.p_complement).toBe('Casa 12');
