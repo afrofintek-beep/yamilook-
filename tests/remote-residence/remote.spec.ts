@@ -8,7 +8,7 @@ test('a registered travelling resident can select home and open the pending card
  await expect(page.getByRole('link',{name:'Ver o meu cartão AFROLOC'})).toHaveCount(0);
  await page.getByRole('button',{name:'Criar o meu endereço AFROLOC'}).click();
  await expect(page.getByLabel('Bairro / povoação / localidade')).toHaveValue('Ingombota');
- await expect(page.getByLabel('Município',{exact:true})).toHaveValue('AO-LDA-INGOMBOTA');
+ await expect(page.getByRole('combobox',{name:/^Município/})).toHaveValue('AO-LDA-INGOMBOTA');
  await page.getByRole('button',{name:'Escolher a minha casa no mapa'}).click();
  const save=page.getByRole('button',{name:'Criar endereço e cartão'});
  await expect(save).toBeDisabled();
