@@ -66,3 +66,21 @@ it('keeps the postal example and its qualification together on screen and in exp
  fireEvent.click(screen.getByRole('button',{name:'Partilhar cartão'}));await waitFor(()=>expect(state.share).toHaveBeenCalledOnce());
  const text=state.share.mock.calls[0][1];expect(text).toContain('Cx. Postal*');expect(text).toContain('5051500-10000');expect(text).toContain('Não corresponde a uma caixa atribuída');expect(text).not.toContain(state.profile.afroloc_code);
 });
+
+it('omits deselected address fields from both card images and share text, and can restore them',async()=>{
+ state.postal={status:'ready',kind:'example',reference:'5051500-10000'};
+ const {container}=render(<MemoryRouter><CurrentAfrolocCard/></MemoryRouter>);
+ await waitFor(()=>expect(screen.getByRole('button',{name:'Partilhar cartão'})).toBeEnabled());
+ fireEvent.click(screen.getByText('Detalhes do endereço',{selector:'summary'}));
+ for(const name of ['País','Província','Município','Bairro / zona','Cx. Postal*','Tipo de endereço','Código AFROLOC'])fireEvent.click(screen.getByRole('checkbox',{name,exact:true}));
+ await waitFor(()=>expect(screen.getByRole('button',{name:'Partilhar cartão'})).toBeEnabled());
+ for(const card of container.querySelectorAll('svg[role="img"][aria-label]')){
+  for(const value of ['Angola','Luanda','Ingombota','Centro','5051500-10000','Residência principal',state.profile.afroloc_code,'Exemplo ilustrativo'])expect(card.textContent).not.toContain(value);
+  expect(card.textContent).toContain('Titular');
+ }
+ fireEvent.click(screen.getByRole('button',{name:'Partilhar cartão'}));await waitFor(()=>expect(state.share).toHaveBeenCalledOnce());
+ const text=state.share.mock.calls[0][1];expect(text).not.toContain('Angola');expect(text).not.toContain('5051500-10000');expect(text).toContain('/afroloc/acesso/');
+ fireEvent.click(screen.getByRole('checkbox',{name:'Cx. Postal*',exact:true}));
+ await waitFor(()=>expect(screen.getByRole('button',{name:'Partilhar cartão'})).toBeEnabled());
+ for(const card of container.querySelectorAll('svg[role="img"][aria-label]')){expect(card.textContent).toContain('5051500-10000');expect(card.textContent).toContain('Exemplo ilustrativo');expect(card.textContent).not.toContain('Angola');}
+});

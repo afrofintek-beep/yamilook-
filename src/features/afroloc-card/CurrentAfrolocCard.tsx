@@ -27,6 +27,7 @@ function CardScreen({userId,requested}:{userId:string;requested?:string}){
  const [snapshot,setSnapshot]=useState<{profile:CardProfile;admin:AdministrativeAddress|null;saved:SavedAddress[];at:number}|null>(null);
  const [revision,setRevision]=useState(0),[busy,setBusy]=useState(true),[fresh,setFresh]=useState(false),[warning,setWarning]=useState(''),[feedback,setFeedback]=useState('');
  const [selected,setSelected]=useState(''),[include,setInclude]=useState({name:true,photo:true,phone:false,email:false});
+ const [excluded,setExcluded]=useState<Record<string,boolean>>({});
  const [photo,setPhoto]=useState<{url:string;data:string}|null>(null),[photoFailed,setPhotoFailed]=useState('');
  const [image,setImage]=useState<{key:string;blob:Blob}|null>(null),[imageError,setImageError]=useState(false),[sharing,setSharing]=useState(false);
  useEffect(()=>{
@@ -65,7 +66,7 @@ function CardScreen({userId,requested}:{userId:string;requested?:string}){
  const access=useAccessControl(address?.id,address?.code);
  const postal=usePostalCard(address?.id,address?.code,snapshot?.at||0);
  const postalReady=postal.value?.status==='ready'?postal.value:null;
- const lines:CardLine[]=[];const add=(label:string,value?:string|null,group:CardLine['group']='location')=>{if(value)lines.push({label:t(label),value,group})};
+ const lines:(CardLine&{field:string})[]=[];const add=(label:string,value?:string|null,group:CardLine['group']='location')=>{if(value)lines.push({field:label,label:t(label),value,group})};
  if(address&&profile){
   add('Tipo de endereço',t(address.temporary?'Endereço temporário':'Residência principal'),'identity');
   if(address.temporary)add('Endereço',address.label,'identity');
@@ -73,7 +74,7 @@ function CardScreen({userId,requested}:{userId:string;requested?:string}){
   let country=address.country;try{country=new Intl.DisplayNames([locale==='pt-banda'?'pt':locale],{type:'region'}).of(address.country)||country}catch{/* Keep known country code. */}
   add('País',country);add('Província',divisionName(address.administrative?.province)||(address.country==='AO'?t('Por confirmar'):''));add('Município',divisionName(address.administrative?.municipality)||(address.country==='AO'?t('Por confirmar'):''));add('Comuna',divisionName(address.administrative?.commune)||(!address.administrative&&address.country==='AO'?t('Por confirmar'):''));add('Cidade',address.city);add('Bairro / zona',address.neighborhood);add('Complemento',address.administrative?.complement);
   add('Rua',t('Não indicado'));add('Número',t('Não indicado'));add('Fração / unidade',t('Não indicado'));
-  if(postalReady)lines.push({label:POSTAL_LABELS.box+'*',value:postalReady.reference+(postalReady.kind==='example'?' · '+t('Exemplo'):''),group:'location'});
+  if(postalReady)lines.push({field:'postal',label:POSTAL_LABELS.box+'*',value:postalReady.reference+(postalReady.kind==='example'?' · '+t('Exemplo'):''),group:'location'});
   add('Revisão local',t(address.status==='certified'||address.status==='approved'?'Revisto pela Yamilook':address.status==='rejected'?'Não aprovado':'Validação pendente'),'status');
   add('Entidade de validação',t('Revisão local da Yamilook'),'status');
   add('Emissão do endereço',t('Por confirmar'),'footer');
@@ -81,15 +82,15 @@ function CardScreen({userId,requested}:{userId:string;requested?:string}){
   if(include.phone)add('Telefone',profile.phone_number,'identity');if(include.email)add('Email',profile.email,'identity');
   add('Cartão gerado em',new Date(snapshot!.at).toLocaleDateString(locale==='pt-banda'?'pt':locale,{timeZone:'Africa/Luanda'}),'footer');
  }
- const compactLines=lines.filter(line=>![t('Por confirmar'),t('Não indicado')].includes(line.value)&&
+ const compactLines=lines.filter(line=>!excluded[line.field]).filter(line=>![t('Por confirmar'),t('Não indicado')].includes(line.value)&&
   (line.group==='location'&&line.label!==t('Cidade')||
    line.group==='identity'&&![t('Tipo de endereço'),t('Yamilook')].includes(line.label)||
    line.label===t('Revisão local')||line.label===t('Validade')));
  const protectedLines=compactLines.filter(l=>[POSTAL_LABELS.box+'*',t('País'),t('Província'),t('Município'),t('Revisão local'),t('Validade'),t('Telefone'),t('Email')].includes(l.label));
  const name=include.name?(profile?.display_name||profile?.username||''):'';
- const notice=t('Dados à data de geração. Não substitui um certificado de residência.')+(postalReady?' '+t(postalReady.kind==='example'?POSTAL_EXAMPLE_NOTE:POSTAL_LINKED_NOTE):'');
+ const notice=t('Dados à data de geração. Não substitui um certificado de residência.')+(postalReady&&!excluded.postal?' '+t(postalReady.kind==='example'?POSTAL_EXAMPLE_NOTE:POSTAL_LINKED_NOTE):'');
  const photoData=avatar&&photo?.url===avatar?photo.data:undefined;
- const key=JSON.stringify([snapshot?.at,address?.id,address?.code,name,protectedLines,photoData,notice,locale,access.url]);
+ const key=JSON.stringify([snapshot?.at,address?.id,address?.code,name,protectedLines,photoData,notice,locale,access.url,excluded['Tipo de endereço']]);
  const hasAddress=!!address;
  const photoReady=!avatar||photo?.url===avatar||photoFailed===avatar;
  useEffect(()=>{let active=true;setImageError(false);if(!hasAddress||!access.url||!svg.current||!photoReady)return;void cardImage(svg.current).then(blob=>{if(active)setImage({key,blob})}).catch(()=>{if(active)setImageError(true)});return()=>{active=false};},[key,photoReady,hasAddress,access.url]);
@@ -100,6 +101,7 @@ function CardScreen({userId,requested}:{userId:string;requested?:string}){
  const print=()=>{if(!ready||!image)return;const w=window.open('','_blank');if(!w){setFeedback('Permita abrir a janela de impressão.');return;}const img=w.document.createElement('img'),u=URL.createObjectURL(image.blob);img.style.cssText='width:100%;max-width:180mm;display:block;margin:auto';img.onload=()=>{w.focus();w.print();URL.revokeObjectURL(u)};img.src=u;w.document.title='Cartão AFROLOC';w.document.body.replaceChildren(img);};
  const copy=()=>{if(!access.url||access.busy||!fresh||busy||postal.busy||sharing||!unexpired())return;void (navigator.clipboard?.writeText(text)??Promise.reject(new Error('clipboard'))).then(()=>setFeedback('Dados copiados.')).catch(()=>setFeedback('Não foi possível partilhar. Usa Guardar imagem ou Copiar dados.'));};
  const type=address?.temporary?t('Endereço temporário'):t('Residência principal');
+ const cardTitle=excluded['Tipo de endereço']?'':type;
  return <main className="mx-auto w-full max-w-xl px-4 pb-12 space-y-4" dir={locale==='ar'?'rtl':'ltr'}>
   <header className="sticky top-0 z-10 -mx-4 flex items-center gap-3 border-b bg-background px-4 py-3">
    <Link to="/settings" aria-label={t('Voltar à Yamilook')} className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border"><ArrowLeft className="h-5 w-5"/></Link>
@@ -119,9 +121,9 @@ function CardScreen({userId,requested}:{userId:string;requested?:string}){
   {(addresses.length>1||(!address&&addresses.length>0))?<label className="block space-y-1 text-sm"><span className="text-muted-foreground">{t('Endereço')}</span><select className="w-full min-w-0 rounded-lg border bg-background p-3 text-sm" value={address?.id||''} onChange={e=>setSelected(e.target.value)}>{!address&&<option value="" disabled>{t('Endereço')}</option>}{addresses.map(a=><option key={a.id} value={a.id}>{a.temporary?a.label:t('Residência principal')} · {a.code}</option>)}</select></label>:address?<p className="text-sm font-medium">{type}</p>:null}
   {address&&profile?<>
    <section aria-label={t('Cartão AFROLOC')} className="overflow-hidden rounded-2xl border shadow-sm">
-    <CardPreview link={access.url||null} name={name} code={address.code} lines={compactLines} photo={photoData} notice={notice} rtl={locale==='ar'} title={type} qrLabel={t('Abrir localização')} />
+    <CardPreview link={access.url||null} name={name} code={excluded.code?'ACESSO PROTEGIDO':address.code} lines={compactLines} photo={photoData} notice={notice} rtl={locale==='ar'} title={cardTitle} qrLabel={t('Abrir localização')} />
    </section>
-   <div hidden aria-hidden="true"><CardPreview ref={svg} link={access.url||null} name={name} code="ACESSO PROTEGIDO" lines={protectedLines} photo={photoData} notice={notice} rtl={locale==='ar'} title={type} qrLabel="Abrir acesso protegido"/></div>
+   <div hidden aria-hidden="true"><CardPreview ref={svg} link={access.url||null} name={name} code="ACESSO PROTEGIDO" lines={protectedLines} photo={photoData} notice={notice} rtl={locale==='ar'} title={cardTitle} qrLabel="Abrir acesso protegido"/></div>
    <div className="grid grid-cols-2 gap-3">
     <Button className="h-12 gap-2" aria-label={t('Partilhar cartão')} disabled={!ready} onClick={()=>void share()}><Share2 className="h-4 w-4"/>{t('Partilhar')}</Button>
     <Button variant="outline" className="h-12 gap-2" disabled={!access.url} onClick={()=>{if(access.url)window.location.assign(access.url)}}><MapPin className="h-4 w-4"/>{t('Ver no mapa')}</Button>
@@ -138,7 +140,13 @@ function CardScreen({userId,requested}:{userId:string;requested?:string}){
     </fieldset>
    </details>
    <details className="rounded-xl border p-4"><summary className="cursor-pointer font-medium">{t('Detalhes do endereço')}</summary>
-    <dl className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">{lines.map((line,i)=><div className="min-w-0" key={i}><dt className="text-xs text-muted-foreground">{line.label}</dt><dd className="break-words text-sm">{line.value}</dd></div>)}</dl>
+    <p className="mt-3 text-xs text-muted-foreground">Marca os campos a manter no cartão. Desmarcar não apaga os dados guardados nem altera as autorizações do QR.</p>
+    <fieldset className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2"><legend className="sr-only">Campos do endereço a incluir no cartão</legend>
+     {[{field:'code',label:'Código AFROLOC',value:address.code},...lines].map(line=><label className="flex min-h-11 items-start gap-3 rounded-lg border p-3" key={line.field}>
+      <input type="checkbox" className="mt-1 h-4 w-4 shrink-0" aria-label={line.label} checked={!excluded[line.field]} onChange={e=>setExcluded(v=>({...v,[line.field]:!e.target.checked}))}/>
+      <span className="min-w-0"><span className="block text-xs text-muted-foreground">{line.label}</span><span className="block break-words text-sm">{line.value}</span></span>
+     </label>)}
+    </fieldset>
    </details>
    <details className="rounded-xl border p-4"><summary className="cursor-pointer font-medium">{t('Sobre este endereço')}</summary>
     <p className="mt-3 text-sm text-muted-foreground">{notice}</p>
