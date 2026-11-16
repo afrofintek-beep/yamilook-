@@ -16,6 +16,7 @@ import {cardAddresses,selectCardAddress,cardText,divisionName,type CardProfile,t
 import {cardImage,downloadCard,shareCard} from './export';
 
 const PROFILE_FIELDS='id,display_name,username,avatar_url,phone_number,email,country_code,city,neighborhood,afroloc_code,afroloc_certification_status';
+const GENERATED_AT_FIELD='Cartão gerado em';
 export default function CurrentAfrolocCard(){
  const {user}=useAuth(),location=useLocation();
  const value=location.state?.afrolocAddressId;
@@ -80,13 +81,14 @@ function CardScreen({userId,requested}:{userId:string;requested?:string}){
   add('Emissão do endereço',t('Por confirmar'),'footer');
   add('Validade',address.expiresAt?new Date(address.expiresAt).toLocaleString(locale==='pt-banda'?'pt':locale,{timeZone:'Africa/Luanda',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):t('Por confirmar'),'footer');
   if(include.phone)add('Telefone',profile.phone_number,'identity');if(include.email)add('Email',profile.email,'identity');
-  add('Cartão gerado em',new Date(snapshot!.at).toLocaleDateString(locale==='pt-banda'?'pt':locale,{timeZone:'Africa/Luanda'}),'footer');
+  add(GENERATED_AT_FIELD,new Date(snapshot!.at).toLocaleDateString(locale==='pt-banda'?'pt':locale,{timeZone:'Africa/Luanda'}),'footer');
  }
- const compactLines=lines.filter(line=>!excluded[line.field]).filter(line=>![t('Por confirmar'),t('Não indicado')].includes(line.value)&&
+ const generationLine=lines.find(line=>line.field===GENERATED_AT_FIELD);
+ const compactLines=lines.filter(line=>line.field===GENERATED_AT_FIELD||!excluded[line.field]).filter(line=>![t('Por confirmar'),t('Não indicado')].includes(line.value)&&
   (line.group==='location'&&line.label!==t('Cidade')||
    line.group==='identity'&&![t('Tipo de endereço'),t('Yamilook')].includes(line.label)||
-   line.label===t('Revisão local')||line.label===t('Validade')));
- const protectedLines=compactLines.filter(l=>[POSTAL_LABELS.box+'*',t('País'),t('Província'),t('Município'),t('Revisão local'),t('Validade'),t('Telefone'),t('Email')].includes(l.label));
+   line.label===t('Revisão local')||line.label===t('Validade')||line.field===GENERATED_AT_FIELD));
+ const protectedLines=compactLines.filter(l=>l.field===GENERATED_AT_FIELD||[POSTAL_LABELS.box+'*',t('País'),t('Província'),t('Município'),t('Revisão local'),t('Validade'),t('Telefone'),t('Email')].includes(l.label));
  const name=include.name?(profile?.display_name||profile?.username||''):'';
  const notice=t('Dados à data de geração. Não substitui um certificado de residência.')+(postalReady&&!excluded.postal?' '+t(postalReady.kind==='example'?POSTAL_EXAMPLE_NOTE:POSTAL_LINKED_NOTE):'');
  const photoData=avatar&&photo?.url===avatar?photo.data:undefined;
@@ -142,11 +144,15 @@ function CardScreen({userId,requested}:{userId:string;requested?:string}){
    <details className="rounded-xl border p-4"><summary className="cursor-pointer font-medium">{t('Detalhes do endereço')}</summary>
     <p className="mt-3 text-xs text-muted-foreground">Marca os campos a manter no cartão. Desmarcar não apaga os dados guardados nem altera as autorizações do QR.</p>
     <fieldset className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2"><legend className="sr-only">Campos do endereço a incluir no cartão</legend>
-     {[{field:'code',label:'Código AFROLOC',value:address.code},...lines].map(line=><label className="flex min-h-11 items-start gap-3 rounded-lg border p-3" key={line.field}>
+     {[{field:'code',label:'Código AFROLOC',value:address.code},...lines].filter(line=>line.field!==GENERATED_AT_FIELD).map(line=><label className="flex min-h-11 items-start gap-3 rounded-lg border p-3" key={line.field}>
       <input type="checkbox" className="mt-1 h-4 w-4 shrink-0" aria-label={line.label} checked={!excluded[line.field]} onChange={e=>setExcluded(v=>({...v,[line.field]:!e.target.checked}))}/>
       <span className="min-w-0"><span className="block text-xs text-muted-foreground">{line.label}</span><span className="block break-words text-sm">{line.value}</span></span>
      </label>)}
     </fieldset>
+    {generationLine&&<dl className="mt-3 rounded-lg border p-3">
+     <dt className="text-xs text-muted-foreground">{generationLine.label} · {t('Campo obrigatório')}</dt>
+     <dd className="mt-1 text-sm">{generationLine.value}</dd>
+    </dl>}
    </details>
    <details className="rounded-xl border p-4"><summary className="cursor-pointer font-medium">{t('Sobre este endereço')}</summary>
     <p className="mt-3 text-sm text-muted-foreground">{notice}</p>

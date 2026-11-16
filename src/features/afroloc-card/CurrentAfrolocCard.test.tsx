@@ -1,4 +1,4 @@
-import {act,cleanup,fireEvent,render,screen,waitFor} from '@testing-library/react';
+import {act,cleanup,fireEvent,render,screen,waitFor,within} from '@testing-library/react';
 import {MemoryRouter} from 'react-router-dom';
 import {afterEach,beforeEach,expect,it,vi} from 'vitest';
 const state=vi.hoisted(()=>({user:'me',profile:{id:'me',display_name:'Titular',username:'titular',avatar_url:null,phone_number:'923123456',email:'titular@example.invalid',country_code:'AO',city:'Luanda',neighborhood:'Centro',afroloc_code:'AO-LDA-ING-000-DIG-G10-35Q1-N23WC',afroloc_certification_status:'pending'},saved:[] as {id:string;code:string;label:string;status:string;created_at:string;expires_at:string}[],postal:null as null|{status:'ready';kind:'example'|'linked';reference:string},fail:false,share:vi.fn().mockResolvedValue('shared')}));
@@ -9,6 +9,23 @@ vi.mock('./export',()=>({cardImage:async()=>new Blob(['PNG'],{type:'image/png'})
 import CurrentAfrolocCard from './CurrentAfrolocCard';
 beforeEach(()=>{state.saved=[];state.postal=null;state.fail=false;state.profile.afroloc_code='AO-LDA-ING-000-DIG-G10-35Q1-N23WC';state.user='me';state.share.mockClear()});
 afterEach(cleanup);
+it('always includes the generation date without an option to hide it',async()=>{
+ const {container}=render(<MemoryRouter><CurrentAfrolocCard/></MemoryRouter>);
+ await waitFor(()=>expect(screen.getByRole('button',{name:'Partilhar cartão'})).toBeEnabled());
+ fireEvent.click(screen.getByText('Detalhes do endereço',{selector:'summary'}));
+ expect(screen.queryByRole('checkbox',{name:'Cartão gerado em',exact:true})).toBeNull();
+ const date=new Date().toLocaleDateString('pt',{timeZone:'Africa/Luanda'});
+ const fields=screen.getByRole('group',{name:'Campos do endereço a incluir no cartão'});
+ for(const checkbox of within(fields).getAllByRole('checkbox'))fireEvent.click(checkbox);
+ await waitFor(()=>expect(screen.getByRole('button',{name:'Partilhar cartão'})).toBeEnabled());
+ const cards=container.querySelectorAll('svg[role="img"][aria-label]');
+ expect(cards).toHaveLength(2);
+ for(const card of cards){expect(card.textContent).toContain('Cartão gerado em');expect(card.textContent).toContain(date);}
+ fireEvent.click(screen.getByRole('button',{name:'Partilhar cartão'}));
+ await waitFor(()=>expect(state.share).toHaveBeenCalledOnce());
+ expect(state.share.mock.calls[0][1]).toContain('Cartão gerado em');
+ expect(state.share.mock.calls[0][1]).toContain(date);
+});
 async function updateCard(){
  fireEvent.keyDown(screen.getByRole('button',{name:'Opções do cartão'}),{key:'Enter'});
  const item=await screen.findByRole('menuitem',{name:'Actualizar cartão'});
