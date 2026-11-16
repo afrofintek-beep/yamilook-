@@ -5,13 +5,13 @@ vi.mock('./api',()=>({locaccess:api.call,validHandle:()=>true,accessLink:()=>''}
 import {AccessControl} from './AccessControl';
 const person={id:'11111111-1111-4111-8111-111111111111',username:'ataide',display_name:'António Ataíde'};
 const change=vi.fn();
-const show=()=>{render(<AccessControl control={{policy:{handle:'test',grants:[]},url:'',busy:false,error:'',change,retry:vi.fn()} as never}/>);fireEvent.click(screen.getByText('Escolher quem pode aceder'))};
+const show=()=>{render(<AccessControl control={{policy:{handle:'test',grants:[]},url:'',busy:false,error:'',change,retry:vi.fn()} as never}/>)};
 const search=async(query='@ataide')=>{fireEvent.change(screen.getByRole('searchbox'),{target:{value:query}});await act(async()=>vi.advanceTimersByTimeAsync(251))};
 beforeEach(()=>{vi.useFakeTimers();api.call.mockReset();change.mockReset().mockResolvedValue(undefined)});
 afterEach(()=>{cleanup();vi.useRealTimers()});
 it('requires explicit selection and binds permission to the selected account',async()=>{
  api.call.mockResolvedValue([person]);show();const grant=screen.getByRole('button',{name:'Autorizar pessoa seleccionada'});expect(grant).toBeDisabled();await search();expect(api.call).toHaveBeenCalledWith('search',{query:'ataide'});expect(grant).toBeDisabled();
- fireEvent.click(screen.getByRole('button',{name:/António Ataíde/}));expect(change).not.toHaveBeenCalled();expect(grant).toBeEnabled();await act(async()=>fireEvent.click(grant));expect(change).toHaveBeenCalledWith('grant',{username:'ataide',recipient_id:person.id,radius:500,hours:24});expect(grant).toBeDisabled();
+ fireEvent.click(screen.getByRole('button',{name:/António Ataíde/}));expect(change).not.toHaveBeenCalled();expect(screen.getByRole('button',{name:/António Ataíde/})).toHaveAttribute('aria-pressed','true');expect(grant).toBeEnabled();await act(async()=>fireEvent.click(grant));expect(change).toHaveBeenCalledWith('grant',{username:'ataide',recipient_id:person.id,radius:500,hours:24});expect(grant).toBeDisabled();
 });
 it('editing the selected name clears permission readiness',async()=>{
  api.call.mockResolvedValue([person]);show();await search();fireEvent.click(screen.getByRole('button',{name:/António Ataíde/}));fireEvent.change(screen.getByRole('searchbox'),{target:{value:'ana'}});expect(screen.getByRole('button',{name:'Autorizar pessoa seleccionada'})).toBeDisabled();expect(change).not.toHaveBeenCalled();

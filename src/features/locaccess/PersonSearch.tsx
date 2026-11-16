@@ -1,5 +1,6 @@
 import {useEffect,useId,useState} from 'react';
 import {locaccess,validHandle} from './api';
+import {Check,Search} from 'lucide-react';
 export type AccessPerson={id:string;username:string;display_name:string|null;avatar_url?:string|null};
 export function PersonSearch({query,selected,onQuery,onSelect,disabled=false}:{query:string;selected:AccessPerson|null;onQuery:(query:string)=>void;onSelect:(person:AccessPerson)=>void;disabled?:boolean}){
  const id=useId(),term=query.trim().replace(/^@+/,'');
@@ -14,19 +15,21 @@ export function PersonSearch({query,selected,onQuery,onSelect,disabled=false}:{q
   return()=>{active=false;clearTimeout(timer)};
  },[term,selected,retry]);
  const current=snapshot?.term===term?snapshot:null;
- return <div className="space-y-2">
+ const people=selected?(snapshot?.people.some(p=>p.id===selected.id)?snapshot.people:[selected]):current?.people||[];
+ return <div className="locaccess-search">
   <label htmlFor={id} className="block text-sm">Pesquisar por nome ou @utilizador</label>
-  <input id={id} type="search" className="w-full rounded-lg border bg-background p-3 text-base" maxLength={64} value={query} disabled={disabled} onChange={e=>onQuery(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')e.preventDefault()}} placeholder="Escreve pelo menos 2 letras" autoCapitalize="none" autoComplete="off" spellCheck={false} aria-describedby={id+'-status'}/>
-  <div id={id+'-status'} role="status" className="text-sm text-muted-foreground">
-   {selected?<>Seleccionado: <strong className="text-foreground">{selected.display_name||selected.username}</strong> · @{selected.username}</>:term.length<2?'Pesquisa pelo nome ou por parte do @utilizador.':!current?'A procurar pessoas…':current.error?'Não foi possível pesquisar. Verifica a ligação.':current.people.length?'Toca na pessoa certa para a seleccionar.':'Nenhuma pessoa encontrada. Tenta outra parte do nome ou do @utilizador.'}
-  </div>
+  <div className="locaccess-search-field"><input id={id} type="search" className="locaccess-search-input" maxLength={64} value={query} disabled={disabled} onChange={e=>onQuery(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')e.preventDefault()}} placeholder="Escreve pelo menos 2 letras" autoCapitalize="none" autoComplete="off" spellCheck={false} aria-describedby={id+'-status'}/><Search aria-hidden="true" size={20}/></div>
   {!selected&&current?.error&&<button type="button" className="min-h-11 underline" disabled={disabled} onClick={()=>{setSnapshot(null);setRetry(n=>n+1)}}>Tentar novamente</button>}
-  {!selected&&current&&!current.error&&current.people.length>0&&<ul aria-label="Pessoas encontradas" className="max-h-64 overflow-y-auto rounded-lg border divide-y">
-   {current.people.map(p=><li key={p.id}><button type="button" className="flex min-h-16 w-full items-center gap-3 p-3 text-start hover:bg-secondary focus-visible:bg-secondary" disabled={disabled} onClick={()=>onSelect(p)}>
-    <span aria-hidden="true" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary font-semibold">{(p.display_name||p.username).slice(0,1).toUpperCase()}</span>
+  {people.length>0&&<ul aria-label="Pessoas encontradas" className="locaccess-people">
+   {people.map(p=><li key={p.id}><button type="button" aria-pressed={selected?.id===p.id} className="locaccess-person" disabled={disabled} onClick={()=>onSelect(p)}>
+    <span aria-hidden="true" className="locaccess-avatar">{(p.display_name||p.username).slice(0,1).toUpperCase()}</span>
     <span className="min-w-0"><strong className="block break-words">{p.display_name||p.username}</strong><span className="block break-all text-sm text-muted-foreground">@{p.username}</span></span>
+    {selected?.id===p.id&&<span className="locaccess-check"><Check aria-hidden="true" size={18}/></span>}
    </button></li>)}
   </ul>}
-  <p className="text-xs text-muted-foreground">Pesquisar e seleccionar não concede acesso. Confirma no botão abaixo.</p>
+  <div id={id+'-status'} role="status" className="text-sm text-muted-foreground">
+   {selected?<>Pessoa seleccionada: <strong className="text-foreground">{selected.display_name||selected.username}</strong> · @{selected.username}</>:term.length<2?'Pesquisa pelo nome ou por parte do @utilizador.':!current?'A procurar pessoas…':current.error?'Não foi possível pesquisar. Verifica a ligação.':current.people.length?'Toca na pessoa certa para a seleccionar.':'Nenhuma pessoa encontrada. Tenta outra parte do nome ou do @utilizador.'}
+  </div>
+
  </div>;
 }
