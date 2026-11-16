@@ -1,3 +1,5 @@
+import { useBetaStatus } from '@/features/angola-beta/AngolaBeta';
+import { betaAction, type BetaStatus } from '@/features/angola-beta/api';
 import { createSignupOnboarding, recoverSignupOnboarding, resumeOnboardingStep } from '@/lib/signup-onboarding';
 import { legalLabel } from '@/i18n/legal-labels';
 import { onboardingImage } from '@/components/auth/onboarding-images';
@@ -89,6 +91,7 @@ const tourSlides = [
 
 export default function Onboarding() {
   const { user, profile, loading: authLoading, updateProfile, signUp, refreshProfile } = useAuth();
+  const { data: betaStatus } = useBetaStatus();
   const navigate = useNavigate();
   const returnToCommunity = afrolocReturn(useLocation().search);
   const { t, i18n } = useTranslation();
@@ -291,19 +294,25 @@ export default function Onboarding() {
 
     let userId = user?.id;
     const code = accessCode.trim().toUpperCase();
-    if (!isAuthenticated && !code) {
+    if (!isAuthenticated && !code && !(selectedCountry === 'AO' && betaStatus?.open)) {
       toast.error(t("onboardingFlow.inviteHint"));
       return;
     }
     setIsRegistering(true);
     try {
       if (!userId) {
-        const { data: validation, error: validationError } = await supabase.rpc('validate_mvp_access_code', { p_code: code });
-        const result = validation as { valid?: boolean; error?: string } | null;
-        if (validationError || !result?.valid) {
-          toast.error(t('onboardingFlow.invalidInvite'));
-          return;
+        // The server reserves capacity atomically at signup. This preflight is only UX.
+        const campaign = await betaAction<BetaStatus>('check', { code });
+        if (selectedCountry === 'AO' && !campaign.open) {
+          toast.error('As novas entradas estão fechadas. Consulta a lista de espera.');
+          navigate('/angola'); return;
         }
+        if (campaign.banda_invite) {
+          if (!campaign.valid || selectedCountry !== 'AO') { toast.error('Este convite está indisponível ou não se aplica ao país seleccionado.'); return; }
+        } else if (code) {
+          const { data: validation, error: validationError } = await supabase.rpc('validate_mvp_access_code', { p_code: code });
+          if (validationError || !(validation as {valid?:boolean})?.valid) { toast.error(t('onboardingFlow.invalidInvite')); return; }
+        } else if (selectedCountry !== 'AO' || !campaign.open) { toast.error(t('onboardingFlow.inviteHint')); return; }
         const { error } = await signUp(email, password, {
           display_name: displayName,
           username: username.toLowerCase(),
@@ -971,7 +980,7 @@ export default function Onboarding() {
                   spellCheck={false}
                   aria-describedby="onboarding-invite-help"
                 />
-                <p id="onboarding-invite-help" className="text-xs text-muted-foreground mt-2">{t("onboardingFlow.inviteHint")}</p>
+                <p id="onboarding-invite-help" className="text-xs text-muted-foreground mt-2">{selectedCountry === 'AO' && betaStatus?.open ? 'Convite opcional em Angola. Se recebeste um, mantém o código para associar quem te convidou. Depois de confirmares a conta, recebes cinco convites.' : t('onboardingFlow.inviteHint')}</p>
               </div>
               {/* Display Name */}
               <div>
@@ -1100,7 +1109,7 @@ export default function Onboarding() {
                 <ChevronLeft className="rtl:rotate-180 w-5 h-5 me-2" />{t("common.back")}</Button>
               <Button
                 onClick={handleRegister}
-                disabled={!isRegisterFormValid || !accessCode.trim() || isRegistering}
+                disabled={!isRegisterFormValid || (!accessCode.trim() && !(selectedCountry === 'AO' && betaStatus?.open)) || isRegistering}
                 className="h-14 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-lg"
               >
                 {isRegistering ? (

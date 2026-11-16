@@ -1,3 +1,4 @@
+import { AngolaBetaBanner } from '@/features/angola-beta/AngolaBeta';
 import { legalLabel } from '@/i18n/legal-labels';
 import { EntryLanguageSelector } from './EntryLanguageSelector';
 import { ReactNode } from 'react';
@@ -69,6 +70,7 @@ export function AuthLayout({ children, title, subtitle, tagline, footerNote, sho
         </motion.div>
 
         <EntryLanguageSelector />
+        <div className="w-full max-w-md"><AngolaBetaBanner /></div>
 
         {/* Card - Seamless, no borders */}
         <div className="w-full max-w-md">

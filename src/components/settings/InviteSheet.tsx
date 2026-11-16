@@ -1,3 +1,4 @@
+import { BandaInvites } from '@/features/angola-beta/AngolaBeta';
 import { uiServerMessage } from '@/i18n/server-copy';
 import { uiText, uiLocale, useUiLocale } from '@/i18n/ui-copy';
 import { CampaignInvites } from './CampaignInvites';
@@ -175,7 +176,7 @@ export function InviteSheet({ open, onOpenChange, isAdmin = false }: InviteSheet
         </SheetHeader>
         <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain break-words px-6 pt-4 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]">
           <SheetDescription>{uiText("Convida alguém pelos contactos do telemóvel, por WhatsApp ou email. Cada convite só pode ser utilizado por uma pessoa.{{value1}}", { value1: (isKosolola && uiText(" O registo é feito na Yamilook, com a mesma conta para entrar na KOSOLOLA.")) ?? "" })}</SheetDescription>
-        {open && userId && <CampaignInvites key={userId} />}
+        {open && userId && <><BandaInvites key={`banda-${userId}`} /><CampaignInvites key={userId} /></>}
         {allowed ? <>
         {open && <ContactInviteActions key={userId} />}
         <details className="mt-6 border-t pt-4">

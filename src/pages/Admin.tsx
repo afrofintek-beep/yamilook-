@@ -1,3 +1,4 @@
+import { AngolaBetaAdmin } from '@/features/angola-beta/AngolaBeta';
 import InitiativeAdmin from "@/features/social-initiatives/InitiativeAdmin";
 import { socialInitiativesEnabled } from "@/features/social-initiatives/api";
 import { uiText, useUiLocale, uiLocale } from '@/i18n/ui-copy';
@@ -522,6 +523,7 @@ export default function Admin() {
         <FounderInviteAssistant />
         <SharedRegistrationLinks />
         <InvitationCampaignAdmin />
+        <AngolaBetaAdmin />
         {socialInitiativesEnabled && <InitiativeAdmin />}
 
         {/* MVP Candidates Manager */}

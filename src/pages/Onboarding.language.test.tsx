@@ -1,3 +1,5 @@
+vi.mock('@/features/angola-beta/AngolaBeta', () => ({ useBetaStatus: () => ({ data: {open:true} }) }));
+vi.mock('@/features/angola-beta/api', () => ({ betaAction: async () => ({open:true,banda_invite:false}) }));
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
