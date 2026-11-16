@@ -17,3 +17,12 @@ export type CardLine={label:string;value:string;group?:'identity'|'location'|'st
 export function cardText(name:string,code:string,lines:CardLine[],notice:string){return ['AFROLOC · Yamilook',name,code,...lines.map(l=>`${l.label}: ${l.value}`),notice].filter(Boolean).join('\n');}
 /** Public address link only: no identity fields, session or location grant. */
 export function cardQrValue(address:Pick<CardAddress,'code'>){return addressLink(address.code);}
+
+/** Resolve only against the signed-in owner's current addresses, never an arbitrary code. */
+export function selectCardAddress(addresses:CardAddress[], selected:string, requested?:string):CardAddress|undefined {
+ if(selected)return addresses.find(a=>a.id===selected);
+ if(!requested)return addresses[0];
+ const match=addresses.find(a=>a.id===requested);
+ if(!match)return undefined;
+ return addresses.find(a=>!a.temporary&&a.code===match.code)||match;
+}

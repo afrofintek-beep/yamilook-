@@ -9,3 +9,5 @@ The generator uses the official administrative catalog and the canonical Angola 
 Source is coordinated across yamilook-, AFROLOC_2026 (feat/witness-identity-sms-review production branch) and njila. Publish backend, NJILA and AFROLOC before the Yamilook entry links. Keep the existing event route independent.
 
 Validation: PGlite database integration fixtures use synthetic accounts only; UI/protocol tests and builds. A real authenticated production create/logout/login/map check remains a separate acceptance check and must not be reported as completed from mocks alone.
+
+The location marker uses the `open-card` UI action to open `/afroloc/cartao` with the address ID in router state. Yamilook validates the message origin and source window; this action never reaches the backend operation endpoint. The card loads only the signed-in owner's addresses and selects that ID, preferring the profile residence if it has the same code. Missing/expired addresses do not fall back to a different card. Coordinates and grants are not included in the navigation message or URL.

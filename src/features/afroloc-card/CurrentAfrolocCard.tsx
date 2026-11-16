@@ -1,5 +1,5 @@
 import {useEffect,useRef,useState} from 'react';
-import {Link} from 'react-router-dom';
+import {Link,useLocation} from 'react-router-dom';
 import {useAuth} from '@/hooks/useAuth';
 import {supabase} from '@/integrations/supabase/client';
 import {uiText as t,useUiLocale} from '@/i18n/ui-copy';
@@ -7,12 +7,17 @@ import type {AdministrativeAddress} from '@/lib/angola-administrative';
 import {Button} from '@/components/ui/button';
 import {cardPhoto} from './photo';
 import {CardPreview} from './CardPreview';
-import {cardAddresses,cardQrValue,cardText,divisionName,type CardProfile,type SavedAddress,type CardLine} from './model';
+import {cardAddresses,selectCardAddress,cardQrValue,cardText,divisionName,type CardProfile,type SavedAddress,type CardLine} from './model';
 import {cardImage,downloadCard,shareCard} from './export';
 
 const PROFILE_FIELDS='id,display_name,username,avatar_url,phone_number,email,country_code,city,neighborhood,afroloc_code,afroloc_certification_status';
-export default function CurrentAfrolocCard(){const {user}=useAuth();return user?<CardScreen key={user.id} userId={user.id}/>:null;}
-function CardScreen({userId}:{userId:string}){
+export default function CurrentAfrolocCard(){
+ const {user}=useAuth(),location=useLocation();
+ const value=location.state?.afrolocAddressId;
+ const requested=typeof value==='string'&&/^[a-zA-Z0-9-]{1,64}$/.test(value)?value:undefined;
+ return user?<CardScreen key={user.id+':'+location.key} userId={user.id} requested={requested}/>:null;
+}
+function CardScreen({userId,requested}:{userId:string;requested?:string}){
  const locale=useUiLocale(),svg=useRef<SVGSVGElement>(null);
  const [snapshot,setSnapshot]=useState<{profile:CardProfile;admin:AdministrativeAddress|null;saved:SavedAddress[];at:number}|null>(null);
  const [revision,setRevision]=useState(0),[busy,setBusy]=useState(true),[fresh,setFresh]=useState(false),[warning,setWarning]=useState(''),[feedback,setFeedback]=useState('');
@@ -51,7 +56,7 @@ function CardScreen({userId}:{userId:string}){
   }catch{if(active)setPhotoFailed(avatar);}})();return()=>{active=false;clearTimeout(timeout);controller.abort();};
  },[avatar]);
  const addresses=snapshot?cardAddresses(snapshot.profile,snapshot.admin,snapshot.saved):[];
- const address=addresses.find(a=>a.id===selected)||addresses[0];
+ const address=selectCardAddress(addresses,selected,requested);
  const lines:CardLine[]=[];const add=(label:string,value?:string|null,group:CardLine['group']='location')=>{if(value)lines.push({label:t(label),value,group})};
  if(address&&profile){
   add('Tipo de endereço',t(address.temporary?'Endereço temporário':address.status==='certified'?'Residência associada':'Residência declarada — validação pendente'),'identity');
@@ -85,7 +90,7 @@ function CardScreen({userId}:{userId:string}){
   {busy&&<p role="status">{t('A actualizar o cartão…')}</p>}
   {warning&&<p role="alert">{t(warning)}</p>}
   {!fresh&&!busy&&snapshot&&!warning&&<p role="alert">{t('Não foi possível actualizar o cartão. Verifica a ligação e tenta novamente.')}</p>}
-  {addresses.length>1&&<label className="block space-y-2">{t('Endereço')}<select className="w-full rounded-lg border bg-background p-3" value={address?.id} onChange={e=>setSelected(e.target.value)}>{addresses.map(a=><option key={a.id} value={a.id}>{a.temporary?a.label:t('Residência associada')} · {a.code}</option>)}</select></label>}
+  {(addresses.length>1||(!address&&addresses.length>0))&&<label className="block space-y-2">{t('Endereço')}<select className="w-full rounded-lg border bg-background p-3" value={address?.id||''} onChange={e=>setSelected(e.target.value)}>{!address&&<option value="" disabled>{t('Endereço')}</option>}{addresses.map(a=><option key={a.id} value={a.id}>{a.temporary?a.label:t('Residência associada')} · {a.code}</option>)}</select></label>}
   {address&&profile?<>
    <fieldset className="rounded-xl border p-4 space-y-3"><legend className="px-2">{t('Dados a incluir na partilha')}</legend>
     {([['name','Nome',!!(profile.display_name||profile.username)],['photo','Fotografia',!!profile.avatar_url],['phone','Telefone',!!profile.phone_number],['email','Email',!!profile.email]] as const).filter(([, ,available])=>available).map(([field,label])=><label className="flex items-center gap-3" key={field}><input type="checkbox" checked={include[field]} onChange={e=>setInclude(v=>({...v,[field]:e.target.checked}))}/>{t(label)}</label>)}
@@ -101,7 +106,7 @@ function CardScreen({userId}:{userId:string}){
     <Button variant="outline" disabled={!ready} onClick={()=>{if(!ready||!image)return;const w=window.open('','_blank');if(!w){setFeedback('Permita abrir a janela de impressão.');return;}const img=w.document.createElement('img'),u=URL.createObjectURL(image.blob);img.style.cssText='width:100%;max-width:180mm;display:block;margin:auto';img.onload=()=>{w.focus();w.print();URL.revokeObjectURL(u)};img.src=u;w.document.title='Cartão AFROLOC';w.document.body.replaceChildren(img);}}>{t('Imprimir cartão')}</Button>
     <Button variant="outline" disabled={!fresh||busy||sharing} onClick={()=>{if(!unexpired())return;void (navigator.clipboard?.writeText(text)??Promise.reject(new Error('clipboard'))).then(()=>setFeedback('Dados copiados.')).catch(()=>setFeedback('Não foi possível partilhar. Usa Guardar imagem ou Copiar dados.'));}}>{t('Copiar dados')}</Button>
    </div>
-  </>:!busy&&!warning?<p>{t('Ainda não tens um endereço AFROLOC associado ou activo.')} <Link className="underline" to="/profile">{t('Criar ou associar o meu endereço AFROLOC')}</Link> · <Link className="underline" to="/afroloc">{t('Experimentar AFROLOC')}</Link></p>:null}
+  </>:!busy&&!warning?<p>{requested?'O cartão deste endereço não está disponível. Volta ao mapa e actualiza os teus endereços.':t('Ainda não tens um endereço AFROLOC associado ou activo.')} <Link className="underline" to="/profile">{t('Criar ou associar o meu endereço AFROLOC')}</Link> · <Link className="underline" to="/afroloc">{t('Experimentar AFROLOC')}</Link></p>:null}
   {feedback&&<p role="status">{t(feedback)}</p>}
  </main>;
 }
