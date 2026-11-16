@@ -1,10 +1,12 @@
-import {forwardRef} from 'react';
+import {forwardRef,useId} from 'react';
+import afrolocLogo from '@/assets/brand/afroloc-logo.data.txt?raw';
 import {QRCodeSVG} from 'qrcode.react';
 import {cardQrValue,type CardLine} from './model';
 import {wrapCardText,wrapCardCode} from '../../shared/afroloc-card/layout';
 
 /** A compact, exportable card; the complete record remains in the page details. */
 export const CardPreview=forwardRef<SVGSVGElement,{name:string;code:string;lines:CardLine[];photo?:string;notice:string;rtl:boolean;title?:string;qrLabel?:string;link?:string|null}>(function CardPreview({name,code,lines,photo,notice,rtl,title='AFROLOC',qrLabel='Abrir localização',link},ref){
+ const logoClip=useId().replace(/:/g,'');
  const qr=link===undefined?cardQrValue({code}):link;
  const names=wrapCardText(name,photo?26:39),codes=wrapCardCode(code);
  const codeY=Math.max(156+names.length*32,photo?262:184)+28;
@@ -21,8 +23,12 @@ export const CardPreview=forwardRef<SVGSVGElement,{name:string;code:string;lines
  return <svg ref={ref} xmlns="http://www.w3.org/2000/svg" viewBox={`0 0 720 ${height}`} role="img" aria-label={name+' · '+code} style={{width:'100%',height:'auto',display:'block'}}>
   <rect width="720" height={height} rx="24" fill="#f5f1e8"/>
   <path d="M24 0H696Q720 0 720 24V106H0V24Q0 0 24 0" fill="#171719"/>
-  <text x="36" y="45" fontSize="31" fontWeight="700" fill="#d7b14b" fontFamily="sans-serif">AFROLOC</text>
-  <text x={left} y="80" fontSize="22" fill="#fff" {...style}>{title}</text>
+  <defs><clipPath id={logoClip}><rect x="28" y="14" width="78" height="78" rx="12"/></clipPath></defs>
+  <image data-card-brand="afroloc" href={afrolocLogo} x="28" y="14" width="78" height="78" preserveAspectRatio="xMidYMid meet" clipPath={`url(#${logoClip})`} aria-label="Logótipo AFROLOC"/>
+  <rect x="28.5" y="14.5" width="77" height="77" rx="12" fill="none" stroke="#f3d57f" strokeOpacity="0.55"/>
+  <text x="126" y="48" fontSize="30" letterSpacing="2.5" fontWeight="700" fill="#e0bf66" fontFamily="sans-serif">AFROLOC</text>
+  <text x={rtl?684:126} y="78" fontSize="20" fill="#f5f1e8" {...style}>{title}</text>
+  <path d="M28 105H692" stroke="#d7b14b" strokeOpacity="0.45"/>
   {photo&&<image data-card-photo="true" href={photo} x={rtl?36:564} y="126" width="120" height="120" preserveAspectRatio="xMidYMid slice"/>}
   {names.map((text,i)=><text key={i} x={left} y={156+i*32} fontSize="28" fontWeight="700" fill="#24221d" {...style}>{text}</text>)}
   <rect data-card-code="true" x="28" y={codeY-28} width="664" height={codes.length*32+20} rx="12" fill="#e8ddb9"/>
