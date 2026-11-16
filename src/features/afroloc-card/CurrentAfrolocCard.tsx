@@ -1,3 +1,5 @@
+import {usePostalCard} from './usePostalCard';
+import {POSTAL_LABELS,POSTAL_EXAMPLE_NOTE,POSTAL_LINKED_NOTE} from './postal';
 import {useEffect,useRef,useState} from 'react';
 import {Link,useLocation} from 'react-router-dom';
 import {useAuth} from '@/hooks/useAuth';
@@ -61,6 +63,8 @@ function CardScreen({userId,requested}:{userId:string;requested?:string}){
  const addresses=snapshot?cardAddresses(snapshot.profile,snapshot.admin,snapshot.saved):[];
  const address=selectCardAddress(addresses,selected,requested);
  const access=useAccessControl(address?.id,address?.code);
+ const postal=usePostalCard(address?.id,address?.code,snapshot?.at||0);
+ const postalReady=postal.value?.status==='ready'?postal.value:null;
  const lines:CardLine[]=[];const add=(label:string,value?:string|null,group:CardLine['group']='location')=>{if(value)lines.push({label:t(label),value,group})};
  if(address&&profile){
   add('Tipo de endereço',t(address.temporary?'Endereço temporário':'Residência principal'),'identity');
@@ -69,6 +73,7 @@ function CardScreen({userId,requested}:{userId:string;requested?:string}){
   let country=address.country;try{country=new Intl.DisplayNames([locale==='pt-banda'?'pt':locale],{type:'region'}).of(address.country)||country}catch{/* Keep known country code. */}
   add('País',country);add('Província',divisionName(address.administrative?.province)||(address.country==='AO'?t('Por confirmar'):''));add('Município',divisionName(address.administrative?.municipality)||(address.country==='AO'?t('Por confirmar'):''));add('Comuna',divisionName(address.administrative?.commune)||(!address.administrative&&address.country==='AO'?t('Por confirmar'):''));add('Cidade',address.city);add('Bairro / zona',address.neighborhood);add('Complemento',address.administrative?.complement);
   add('Rua',t('Não indicado'));add('Número',t('Não indicado'));add('Fração / unidade',t('Não indicado'));
+  if(postalReady)lines.push({label:POSTAL_LABELS.box+'*',value:postalReady.reference+(postalReady.kind==='example'?' · '+t('Exemplo'):''),group:'location'});
   add('Revisão local',t(address.status==='certified'||address.status==='approved'?'Revisto pela Yamilook':address.status==='rejected'?'Não aprovado':'Validação pendente'),'status');
   add('Entidade de validação',t('Revisão local da Yamilook'),'status');
   add('Emissão do endereço',t('Por confirmar'),'footer');
@@ -80,20 +85,20 @@ function CardScreen({userId,requested}:{userId:string;requested?:string}){
   (line.group==='location'&&line.label!==t('Cidade')||
    line.group==='identity'&&![t('Tipo de endereço'),t('Yamilook')].includes(line.label)||
    line.label===t('Revisão local')||line.label===t('Validade')));
- const protectedLines=compactLines.filter(l=>[t('País'),t('Província'),t('Município'),t('Revisão local'),t('Validade'),t('Telefone'),t('Email')].includes(l.label));
+ const protectedLines=compactLines.filter(l=>[POSTAL_LABELS.box+'*',t('País'),t('Província'),t('Município'),t('Revisão local'),t('Validade'),t('Telefone'),t('Email')].includes(l.label));
  const name=include.name?(profile?.display_name||profile?.username||''):'';
- const notice=t('Dados à data de geração. Não substitui um certificado de residência.');
+ const notice=t('Dados à data de geração. Não substitui um certificado de residência.')+(postalReady?' '+t(postalReady.kind==='example'?POSTAL_EXAMPLE_NOTE:POSTAL_LINKED_NOTE):'');
  const photoData=avatar&&photo?.url===avatar?photo.data:undefined;
  const key=JSON.stringify([snapshot?.at,address?.id,address?.code,name,protectedLines,photoData,notice,locale,access.url]);
  const hasAddress=!!address;
  const photoReady=!avatar||photo?.url===avatar||photoFailed===avatar;
  useEffect(()=>{let active=true;setImageError(false);if(!hasAddress||!access.url||!svg.current||!photoReady)return;void cardImage(svg.current).then(blob=>{if(active)setImage({key,blob})}).catch(()=>{if(active)setImageError(true)});return()=>{active=false};},[key,photoReady,hasAddress,access.url]);
  const unexpired=()=>!address?.expiresAt||Date.parse(address.expiresAt)>Date.now();
- const ready=!!access.url&&!access.busy&&!!address&&unexpired()&&fresh&&!busy&&photoReady&&image?.key===key&&!sharing;
+ const ready=!!access.url&&!access.busy&&!!address&&unexpired()&&fresh&&!busy&&!postal.busy&&photoReady&&image?.key===key&&!sharing;
  const text=address?cardText(name,'ACESSO PROTEGIDO',protectedLines,notice)+'\n'+access.url:'';
  const share=async()=>{if(!ready||!image||!unexpired())return;setSharing(true);setFeedback('');try{const result=await shareCard(image.blob,text);if(result!=='cancelled')setFeedback(result==='downloaded'?'Imagem guardada. Podes anexá-la à tua mensagem.':'Cartão partilhado.');}catch{setFeedback('Não foi possível partilhar. Usa Guardar imagem ou Copiar dados.');}finally{setSharing(false)}};
  const print=()=>{if(!ready||!image)return;const w=window.open('','_blank');if(!w){setFeedback('Permita abrir a janela de impressão.');return;}const img=w.document.createElement('img'),u=URL.createObjectURL(image.blob);img.style.cssText='width:100%;max-width:180mm;display:block;margin:auto';img.onload=()=>{w.focus();w.print();URL.revokeObjectURL(u)};img.src=u;w.document.title='Cartão AFROLOC';w.document.body.replaceChildren(img);};
- const copy=()=>{if(!access.url||access.busy||!fresh||busy||sharing||!unexpired())return;void (navigator.clipboard?.writeText(text)??Promise.reject(new Error('clipboard'))).then(()=>setFeedback('Dados copiados.')).catch(()=>setFeedback('Não foi possível partilhar. Usa Guardar imagem ou Copiar dados.'));};
+ const copy=()=>{if(!access.url||access.busy||!fresh||busy||postal.busy||sharing||!unexpired())return;void (navigator.clipboard?.writeText(text)??Promise.reject(new Error('clipboard'))).then(()=>setFeedback('Dados copiados.')).catch(()=>setFeedback('Não foi possível partilhar. Usa Guardar imagem ou Copiar dados.'));};
  const type=address?.temporary?t('Endereço temporário'):t('Residência principal');
  return <main className="mx-auto w-full max-w-xl px-4 pb-12 space-y-4" dir={locale==='ar'?'rtl':'ltr'}>
   <header className="sticky top-0 z-10 -mx-4 flex items-center gap-3 border-b bg-background px-4 py-3">
@@ -103,7 +108,7 @@ function CardScreen({userId,requested}:{userId:string;requested?:string}){
     <DropdownMenuContent align="end" className="min-w-52">
      <DropdownMenuItem disabled={!ready} onSelect={()=>{if(image&&unexpired())downloadCard(image.blob)}}><Download className="mr-2 h-4 w-4"/>{t('Guardar imagem')}</DropdownMenuItem>
      <DropdownMenuItem disabled={!ready} onSelect={print}><Printer className="mr-2 h-4 w-4"/>{t('Imprimir cartão')}</DropdownMenuItem>
-     <DropdownMenuItem disabled={!access.url||access.busy||!fresh||busy||sharing||!address} onSelect={copy}><Copy className="mr-2 h-4 w-4"/>{t('Copiar dados')}</DropdownMenuItem>
+     <DropdownMenuItem disabled={!access.url||access.busy||!fresh||busy||postal.busy||sharing||!address} onSelect={copy}><Copy className="mr-2 h-4 w-4"/>{t('Copiar dados')}</DropdownMenuItem>
      <DropdownMenuItem disabled={busy} onSelect={()=>setRevision(v=>v+1)}><RefreshCw className="mr-2 h-4 w-4"/>{t('Actualizar cartão')}</DropdownMenuItem>
     </DropdownMenuContent>
    </DropdownMenu>
@@ -122,6 +127,7 @@ function CardScreen({userId,requested}:{userId:string;requested?:string}){
     <Button variant="outline" className="h-12 gap-2" disabled={!access.url} onClick={()=>{if(access.url)window.location.assign(access.url)}}><MapPin className="h-4 w-4"/>{t('Ver no mapa')}</Button>
    </div>
    <p className="text-xs text-muted-foreground">Ao partilhar ou imprimir, o cartão oculta o código da morada e usa um QR protegido. Uma captura deste ecrã pode revelar o código.</p>
+   {postal.busy?<p role="status" className="text-xs text-muted-foreground">{t('A consultar a Cx. Postal na AFROLOC…')}</p>:postal.error?<p role="status" className="text-xs text-muted-foreground">{t('Não foi possível consultar a Cx. Postal. Usa Actualizar cartão para tentar novamente.')}</p>:postal.value?.status==='unavailable'?<p className="text-xs text-muted-foreground">{t('Cx. Postal: sem referência disponível para este endereço na AFROLOC.')}</p>:null}
    <AccessControl key={address.id+address.code} control={access}/>
    {feedback&&<p role="status" className="text-sm">{t(feedback)}</p>}
    {imageError&&<p role="alert" className="text-sm">{t('Não foi possível preparar a imagem. Podes copiar os dados.')}</p>}
