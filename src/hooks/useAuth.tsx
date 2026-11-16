@@ -1,5 +1,5 @@
 import type { SignupOnboarding } from '@/lib/signup-onboarding';
-import { communityReturn } from '@/features/academia/community-links';
+import {afrolocReturn} from '@/features/locaccess/return-path';
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { recoverySession } from '@/lib/recovery-session';
 import { clearListCache } from '@/lib/list-cache';
@@ -388,8 +388,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email,
       password,
       options: {
-        emailRedirectTo: getYamilookPublicUrl(communityReturn(window.location.search)?.startsWith('/feira-natalicia-talatona')
-          ? `/onboarding?next=${encodeURIComponent(communityReturn(window.location.search)!)}` : '/onboarding'),
+        emailRedirectTo: getYamilookPublicUrl(afrolocReturn(window.location.search)
+          ? `/onboarding?next=${encodeURIComponent(afrolocReturn(window.location.search)!)}` : '/onboarding'),
         data: metadata,
       },
     });

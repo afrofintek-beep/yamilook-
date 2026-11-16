@@ -4,6 +4,8 @@ const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SE
   auth: { persistSession: false, autoRefreshToken: false }
 });
 Deno.serve(createHandler(async reference => {
+  const {data:protectedCode,error:policyError}=await db.rpc('locaccess_reference_protected',{p_reference:reference});
+  if(policyError||protectedCode!==false)return null;
   // Exact-code public lookup was approved for Yamilook cards. Keep profiles
   // protected by RLS: only this small location projection leaves the server.
   const {data:profile,error} = await db.from('profiles').select('latitude,longitude')

@@ -3,7 +3,7 @@ import {MemoryRouter} from 'react-router-dom';
 import {afterEach,beforeEach,expect,it,vi} from 'vitest';
 const state=vi.hoisted(()=>({user:'me',profile:{id:'me',display_name:'Titular',username:'titular',avatar_url:null,phone_number:'923123456',email:'titular@example.invalid',country_code:'AO',city:'Luanda',neighborhood:'Centro',afroloc_code:'AO-LDA-ING-000-DIG-G10-35Q1-N23WC',afroloc_certification_status:'pending'},saved:[] as {id:string;code:string;label:string;status:string;created_at:string;expires_at:string}[],fail:false,share:vi.fn().mockResolvedValue('shared')}));
 vi.mock('@/hooks/useAuth',()=>({useAuth:()=>({user:{id:state.user}})}));
-vi.mock('@/integrations/supabase/client',()=>({supabase:{from:()=>({select:()=>({eq:()=>({single:async()=>({data:{...state.profile},error:state.fail?new Error('offline'):null})})})}),rpc:async()=>({data:null,error:null}),functions:{invoke:async()=>({data:{addresses:state.saved},error:null})}}}));
+vi.mock('@/integrations/supabase/client',()=>({supabase:{from:()=>({select:()=>({eq:()=>({single:async()=>({data:{...state.profile},error:state.fail?new Error('offline'):null})})})}),rpc:async(name:string)=>({data:name==='locaccess_action'?{handle:'00000000-0000-4000-8000-000000000001',enabled:false,grants:[]}:null,error:null}),functions:{invoke:async()=>({data:{addresses:state.saved},error:null})}}}));
 vi.mock('./export',()=>({cardImage:async()=>new Blob(['PNG'],{type:'image/png'}),shareCard:state.share,downloadCard:vi.fn()}));
 import CurrentAfrolocCard from './CurrentAfrolocCard';
 beforeEach(()=>{state.saved=[];state.fail=false;state.profile.afroloc_code='AO-LDA-ING-000-DIG-G10-35Q1-N23WC';state.user='me';state.share.mockClear()});
@@ -17,7 +17,7 @@ async function updateCard(){
 it('shares only the reviewed contact fields and fetches the current code again',async()=>{
  render(<MemoryRouter><CurrentAfrolocCard/></MemoryRouter>);await waitFor(()=>expect(screen.getByRole('button',{name:'Partilhar cartão'})).toBeEnabled());
  fireEvent.click(screen.getByRole('button',{name:'Partilhar cartão'}));await waitFor(()=>expect(state.share).toHaveBeenCalledOnce());
- expect(state.share.mock.calls[0][1]).not.toContain(state.profile.email);expect(state.share.mock.calls[0][1]).not.toContain(state.profile.phone_number);
+ expect(state.share.mock.calls[0][1]).not.toContain(state.profile.afroloc_code);expect(state.share.mock.calls[0][1]).not.toContain(state.profile.neighborhood);expect(state.share.mock.calls[0][1]).toContain('/afroloc/acesso/');expect(state.share.mock.calls[0][1]).not.toContain(state.profile.email);expect(state.share.mock.calls[0][1]).not.toContain(state.profile.phone_number);
  fireEvent.click(screen.getByText('Dados a incluir na partilha',{selector:'summary'}));
  fireEvent.click(screen.getByRole('checkbox',{name:'Telefone'}));await waitFor(()=>expect(screen.getByRole('button',{name:'Partilhar cartão'})).toBeEnabled());
  fireEvent.click(screen.getByRole('button',{name:'Partilhar cartão'}));await waitFor(()=>expect(state.share).toHaveBeenCalledTimes(2));expect(state.share.mock.calls[1][1]).toContain(state.profile.phone_number);
@@ -33,12 +33,12 @@ it('opens the card of the clicked address instead of a different residence',asyn
  state.saved=[{id:'saved-address',code:'AO-ZU-G10-ABC-DEF',label:'Casa',status:'pending',created_at:'2026-01-01',expires_at:'2099-01-01'}];
  render(<MemoryRouter initialEntries={[{pathname:'/afroloc/cartao',state:{afrolocAddressId:'saved-address'}}]}><CurrentAfrolocCard/></MemoryRouter>);
  await waitFor(()=>expect(screen.getByRole('img').getAttribute('aria-label')).toContain('AO-ZU-G10-ABC-DEF'));
- expect(screen.getByRole('combobox')).toHaveValue('saved-address');
+ expect(screen.getByRole('combobox',{name:'Endereço'})).toHaveValue('saved-address');
 });
 it('prefers the base residence card when the clicked address has the same code',async()=>{
  state.saved=[{id:'saved-address',code:state.profile.afroloc_code,label:'Casa',status:'pending',created_at:'2026-01-01',expires_at:'2099-01-01'}];
  render(<MemoryRouter initialEntries={[{pathname:'/afroloc/cartao',state:{afrolocAddressId:'saved-address'}}]}><CurrentAfrolocCard/></MemoryRouter>);
- await waitFor(()=>expect(screen.getByRole('img')).toBeVisible());expect(screen.getByRole('combobox')).toHaveValue('residence');expect(screen.getByRole('link',{name:'Ver no mapa'})).toHaveAttribute('href','/afroloc/enderecos');
+ await waitFor(()=>expect(screen.getByRole('img')).toBeVisible());expect(screen.getByRole('combobox',{name:'Endereço'})).toHaveValue('residence');expect(screen.getByRole('button',{name:'Ver no mapa'})).toBeEnabled();
 });
 it('does not substitute a different card when the requested address is unavailable',async()=>{
  render(<MemoryRouter initialEntries={[{pathname:'/afroloc/cartao',state:{afrolocAddressId:'not-owned'}}]}><CurrentAfrolocCard/></MemoryRouter>);
@@ -49,7 +49,8 @@ it('places the card and primary actions before collapsed details and management'
  const {container}=render(<MemoryRouter><CurrentAfrolocCard/></MemoryRouter>);
  const card=await screen.findByRole('img');
  expect(card.compareDocumentPosition(screen.getByRole('button',{name:'Partilhar cartão'}))&Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
- expect(screen.getByRole('link',{name:'Ver no mapa'})).toHaveAttribute('href',expect.stringContaining('njilamaps.com'));
+ await waitFor(()=>expect(screen.getByRole('button',{name:'Ver no mapa'})).toBeEnabled());
+ expect(container.querySelector('section[aria-label="Cartão AFROLOC"] a')).toHaveAttribute('href',expect.stringContaining('/afroloc/acesso/'));
  for(const panel of container.querySelectorAll('details'))expect(panel.open).toBe(false);
  expect(screen.queryByRole('menuitem',{name:'Guardar imagem'})).toBeNull();
  expect(screen.getByRole('link',{name:'Adicionar ou gerir endereços'})).toHaveAttribute('href','/afroloc/enderecos');

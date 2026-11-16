@@ -1,5 +1,5 @@
 import { uiLocale, uiText, useUiLocale } from '@/i18n/ui-copy';
-import { communityReturn } from '@/features/academia/community-links';
+import {afrolocReturn} from '@/features/locaccess/return-path';
 import { getYamilookPublicUrl } from '@/lib/public-site';
 import { captureReferralCode, getReferralCode, clearReferralCode } from '@/lib/referral';
 import { buildInvitationSignupMetadata, createRegisterSchema, hasInviteCodeInSearch, accessCodeSchema, type RegisterFormValues } from '@/lib/invitation-registration';
@@ -40,7 +40,7 @@ export function RegisterForm() {
   const [checkingCode, setCheckingCode] = useState(false);
   const codeCheckVersion = useRef(0);
   const navigate = useNavigate();
-  const returnToCommunity = communityReturn(useLocation().search);
+  const returnToCommunity = afrolocReturn(useLocation().search);
   const communitySearch = returnToCommunity ? `?next=${(encodeURIComponent(returnToCommunity))}` : "";
 
   const passwordRequirements = [

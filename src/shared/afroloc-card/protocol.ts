@@ -17,6 +17,7 @@ export function readCardReference(raw:string):CardReference|null {
    if(u.port||u.username||u.password)return null;
    const afro=['app.afroloc.ao','afroloc.ao','www.afroloc.ao'].includes(u.hostname);
    const njila=['www.njilamaps.com','njilamaps.com'].includes(u.hostname);
+   if(['yamilook.com','www.yamilook.com'].includes(u.hostname)&&/^\/afroloc\/acesso\/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(u.pathname)&&!u.search&&!u.hash)return {kind:'access',url:u.href};
    if(!afro&&!njila)return null;
    if(u.pathname==='/experiencia/'&&u.hostname==='app.afroloc.ao'&&!u.search){
     const hash=new URLSearchParams(u.hash.slice(1));

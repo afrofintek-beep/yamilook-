@@ -1,6 +1,6 @@
+import {afrolocReturn} from '@/features/locaccess/return-path';
 import { PhoneAccess } from '@/features/phone-access/PhoneAccess';
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
-import { communityReturn } from '@/features/academia/community-links';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -46,7 +46,7 @@ export function LoginForm() {
   const { signIn } = useAuth();
   const navigate = useNavigate();
   const loginSearch = useLocation().search;
-  const returnToCommunity = ["/afroloc", "/afroloc/cartao", "/afroloc/enderecos"].includes(new URLSearchParams(loginSearch).get("next") || "") ? new URLSearchParams(loginSearch).get("next") : communityReturn(loginSearch);
+  const returnToCommunity = afrolocReturn(loginSearch);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),

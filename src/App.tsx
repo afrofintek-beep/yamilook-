@@ -1,5 +1,5 @@
 import { loadingText } from '@/i18n/startup-copy';
-import { communityReturn } from './features/academia/community-links';
+import {afrolocReturn} from './features/locaccess/return-path';
 import { AppLoadingScreen } from '@/components/AppStartupBoundary';
 import { recoverApplicationAssets } from '@/lib/app-assets';
 import { getSharedAudioContext } from '@/lib/audio-context';
@@ -25,6 +25,7 @@ import { AutomaticAccountBackup } from "@/components/AutomaticAccountBackup";
 const ActiveCallProvider = lazy(() => import("@/components/calls/ActiveCallProvider").then(m => ({ default: m.ActiveCallProvider })));
 
 // Lazy load all pages for faster initial load (Instagram/TikTok style)
+const AccessVisit = lazy(() => import("./features/locaccess/AccessVisit"));
 const CurrentAfrolocCard = lazy(() => import("./features/afroloc-card/CurrentAfrolocCard"));
 const AfrolocExperience = lazy(() => import("./features/afroloc-experience/AfrolocExperience"));
 const Home = lazy(() => import("./pages/Home"));
@@ -255,7 +256,7 @@ function ProtectedRoute({ children, skipOnboardingCheck }: { children: React.Rea
 
   // Redirect to onboarding if not completed (except on the onboarding page itself)
   if (!skipOnboardingCheck && profile && !profile.onboarding_completed) {
-    return <Navigate to="/onboarding" replace />;
+    return <Navigate to={protectedLocation.pathname.startsWith("/afroloc/acesso/") ? `/onboarding?next=${encodeURIComponent(protectedLocation.pathname)}` : "/onboarding"} replace />;
   }
   
   return <>{children}</>;
@@ -271,7 +272,7 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   }
   
   if (user) {
-    return <Navigate to={communityReturn(location.search) || "/feed"} replace />;
+    return <Navigate to={afrolocReturn(location.search) || "/feed"} replace />;
   }
   
   return <>{children}</>;
@@ -334,6 +335,7 @@ function AnimatedRoutes() {
           <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
           <Route path="/admin/monetization" element={<ProtectedRoute><AdminMonetization /></ProtectedRoute>} />
           <Route path="/admin/applications" element={<ProtectedRoute><AdminApplications /></ProtectedRoute>} />
+          <Route path="/afroloc/acesso/:handle" element={<ProtectedRoute><AccessVisit /></ProtectedRoute>} />
           <Route path="/afroloc/cartao" element={<ProtectedRoute><CurrentAfrolocCard /></ProtectedRoute>} />
           <Route path="/afroloc" element={<ProtectedRoute><CurrentAfrolocCard /></ProtectedRoute>} />
           <Route path="/afroloc/enderecos" element={<ProtectedRoute><AfrolocExperience /></ProtectedRoute>} />

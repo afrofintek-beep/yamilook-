@@ -7,9 +7,10 @@ import type {AdministrativeAddress} from '@/lib/angola-administrative';
 import {ArrowLeft,MoreHorizontal,Share2,MapPin,Download,Printer,RefreshCw,Copy} from 'lucide-react';
 import {DropdownMenu,DropdownMenuTrigger,DropdownMenuContent,DropdownMenuItem} from '@/components/ui/dropdown-menu';
 import {Button} from '@/components/ui/button';
+import {AccessControl,useAccessControl} from '../locaccess/AccessControl';
 import {cardPhoto} from './photo';
 import {CardPreview} from './CardPreview';
-import {cardAddresses,selectCardAddress,cardQrValue,cardText,divisionName,type CardProfile,type SavedAddress,type CardLine} from './model';
+import {cardAddresses,selectCardAddress,cardText,divisionName,type CardProfile,type SavedAddress,type CardLine} from './model';
 import {cardImage,downloadCard,shareCard} from './export';
 
 const PROFILE_FIELDS='id,display_name,username,avatar_url,phone_number,email,country_code,city,neighborhood,afroloc_code,afroloc_certification_status';
@@ -59,6 +60,7 @@ function CardScreen({userId,requested}:{userId:string;requested?:string}){
  },[avatar]);
  const addresses=snapshot?cardAddresses(snapshot.profile,snapshot.admin,snapshot.saved):[];
  const address=selectCardAddress(addresses,selected,requested);
+ const access=useAccessControl(address?.id,address?.code);
  const lines:CardLine[]=[];const add=(label:string,value?:string|null,group:CardLine['group']='location')=>{if(value)lines.push({label:t(label),value,group})};
  if(address&&profile){
   add('Tipo de endereço',t(address.temporary?'Endereço temporário':'Residência principal'),'identity');
@@ -78,20 +80,20 @@ function CardScreen({userId,requested}:{userId:string;requested?:string}){
   (line.group==='location'&&line.label!==t('Cidade')||
    line.group==='identity'&&![t('Tipo de endereço'),t('Yamilook')].includes(line.label)||
    line.label===t('Revisão local')||line.label===t('Validade')));
+ const protectedLines=compactLines.filter(l=>[t('País'),t('Província'),t('Município'),t('Revisão local'),t('Validade'),t('Telefone'),t('Email')].includes(l.label));
  const name=include.name?(profile?.display_name||profile?.username||''):'';
  const notice=t('Dados à data de geração. Não substitui um certificado de residência.');
  const photoData=avatar&&photo?.url===avatar?photo.data:undefined;
- const key=JSON.stringify([snapshot?.at,address?.id,address?.code,name,compactLines,photoData,notice,locale]);
+ const key=JSON.stringify([snapshot?.at,address?.id,address?.code,name,protectedLines,photoData,notice,locale,access.url]);
  const hasAddress=!!address;
  const photoReady=!avatar||photo?.url===avatar||photoFailed===avatar;
- useEffect(()=>{let active=true;setImageError(false);if(!hasAddress||!svg.current||!photoReady)return;void cardImage(svg.current).then(blob=>{if(active)setImage({key,blob})}).catch(()=>{if(active)setImageError(true)});return()=>{active=false};},[key,photoReady,hasAddress]);
+ useEffect(()=>{let active=true;setImageError(false);if(!hasAddress||!access.url||!svg.current||!photoReady)return;void cardImage(svg.current).then(blob=>{if(active)setImage({key,blob})}).catch(()=>{if(active)setImageError(true)});return()=>{active=false};},[key,photoReady,hasAddress,access.url]);
  const unexpired=()=>!address?.expiresAt||Date.parse(address.expiresAt)>Date.now();
- const ready=!!address&&unexpired()&&fresh&&!busy&&photoReady&&image?.key===key&&!sharing;
- const text=address?cardText(name,address.code,lines,notice)+'\n'+cardQrValue(address):'';
+ const ready=!!access.url&&!access.busy&&!!address&&unexpired()&&fresh&&!busy&&photoReady&&image?.key===key&&!sharing;
+ const text=address?cardText(name,'ACESSO PROTEGIDO',protectedLines,notice)+'\n'+access.url:'';
  const share=async()=>{if(!ready||!image||!unexpired())return;setSharing(true);setFeedback('');try{const result=await shareCard(image.blob,text);if(result!=='cancelled')setFeedback(result==='downloaded'?'Imagem guardada. Podes anexá-la à tua mensagem.':'Cartão partilhado.');}catch{setFeedback('Não foi possível partilhar. Usa Guardar imagem ou Copiar dados.');}finally{setSharing(false)}};
  const print=()=>{if(!ready||!image)return;const w=window.open('','_blank');if(!w){setFeedback('Permita abrir a janela de impressão.');return;}const img=w.document.createElement('img'),u=URL.createObjectURL(image.blob);img.style.cssText='width:100%;max-width:180mm;display:block;margin:auto';img.onload=()=>{w.focus();w.print();URL.revokeObjectURL(u)};img.src=u;w.document.title='Cartão AFROLOC';w.document.body.replaceChildren(img);};
- const copy=()=>{if(!fresh||busy||sharing||!unexpired())return;void (navigator.clipboard?.writeText(text)??Promise.reject(new Error('clipboard'))).then(()=>setFeedback('Dados copiados.')).catch(()=>setFeedback('Não foi possível partilhar. Usa Guardar imagem ou Copiar dados.'));};
- const mapAddress=snapshot?.saved.find(a=>a.code===address?.code&&a.status!=='closed'&&Date.parse(a.expires_at)>Date.now());
+ const copy=()=>{if(!access.url||access.busy||!fresh||busy||sharing||!unexpired())return;void (navigator.clipboard?.writeText(text)??Promise.reject(new Error('clipboard'))).then(()=>setFeedback('Dados copiados.')).catch(()=>setFeedback('Não foi possível partilhar. Usa Guardar imagem ou Copiar dados.'));};
  const type=address?.temporary?t('Endereço temporário'):t('Residência principal');
  return <main className="mx-auto w-full max-w-xl px-4 pb-12 space-y-4" dir={locale==='ar'?'rtl':'ltr'}>
   <header className="sticky top-0 z-10 -mx-4 flex items-center gap-3 border-b bg-background px-4 py-3">
@@ -101,7 +103,7 @@ function CardScreen({userId,requested}:{userId:string;requested?:string}){
     <DropdownMenuContent align="end" className="min-w-52">
      <DropdownMenuItem disabled={!ready} onSelect={()=>{if(image&&unexpired())downloadCard(image.blob)}}><Download className="mr-2 h-4 w-4"/>{t('Guardar imagem')}</DropdownMenuItem>
      <DropdownMenuItem disabled={!ready} onSelect={print}><Printer className="mr-2 h-4 w-4"/>{t('Imprimir cartão')}</DropdownMenuItem>
-     <DropdownMenuItem disabled={!fresh||busy||sharing||!address} onSelect={copy}><Copy className="mr-2 h-4 w-4"/>{t('Copiar dados')}</DropdownMenuItem>
+     <DropdownMenuItem disabled={!access.url||access.busy||!fresh||busy||sharing||!address} onSelect={copy}><Copy className="mr-2 h-4 w-4"/>{t('Copiar dados')}</DropdownMenuItem>
      <DropdownMenuItem disabled={busy} onSelect={()=>setRevision(v=>v+1)}><RefreshCw className="mr-2 h-4 w-4"/>{t('Actualizar cartão')}</DropdownMenuItem>
     </DropdownMenuContent>
    </DropdownMenu>
@@ -112,12 +114,15 @@ function CardScreen({userId,requested}:{userId:string;requested?:string}){
   {(addresses.length>1||(!address&&addresses.length>0))?<label className="block space-y-1 text-sm"><span className="text-muted-foreground">{t('Endereço')}</span><select className="w-full min-w-0 rounded-lg border bg-background p-3 text-sm" value={address?.id||''} onChange={e=>setSelected(e.target.value)}>{!address&&<option value="" disabled>{t('Endereço')}</option>}{addresses.map(a=><option key={a.id} value={a.id}>{a.temporary?a.label:t('Residência principal')} · {a.code}</option>)}</select></label>:address?<p className="text-sm font-medium">{type}</p>:null}
   {address&&profile?<>
    <section aria-label={t('Cartão AFROLOC')} className="overflow-hidden rounded-2xl border shadow-sm">
-    <CardPreview ref={svg} name={name} code={address.code} lines={compactLines} photo={photoData} notice={notice} rtl={locale==='ar'} title={type} qrLabel={t('Abrir localização')} />
+    <CardPreview link={access.url||null} name={name} code={address.code} lines={compactLines} photo={photoData} notice={notice} rtl={locale==='ar'} title={type} qrLabel={t('Abrir localização')} />
    </section>
+   <div hidden aria-hidden="true"><CardPreview ref={svg} link={access.url||null} name={name} code="ACESSO PROTEGIDO" lines={protectedLines} photo={photoData} notice={notice} rtl={locale==='ar'} title={type} qrLabel="Acesso sujeito a autorização"/></div>
    <div className="grid grid-cols-2 gap-3">
     <Button className="h-12 gap-2" aria-label={t('Partilhar cartão')} disabled={!ready} onClick={()=>void share()}><Share2 className="h-4 w-4"/>{t('Partilhar')}</Button>
-    <Button variant="outline" className="h-12 gap-2" asChild>{mapAddress?<Link to="/afroloc/enderecos" state={{afrolocMapAddressId:mapAddress.id}}><MapPin className="h-4 w-4"/>{t('Ver no mapa')}</Link>:<a href={cardQrValue(address)} target="_blank" rel="noopener noreferrer"><MapPin className="h-4 w-4"/>{t('Ver no mapa')}</a>}</Button>
+    <Button variant="outline" className="h-12 gap-2" disabled={!access.url} onClick={()=>{if(access.url)window.location.assign(access.url)}}><MapPin className="h-4 w-4"/>{t('Ver no mapa')}</Button>
    </div>
+   <p className="text-xs text-muted-foreground">Ao partilhar ou imprimir, o cartão oculta o código da morada e usa um QR protegido. Uma captura deste ecrã pode revelar o código.</p>
+   <AccessControl key={address.id+address.code} control={access}/>
    {feedback&&<p role="status" className="text-sm">{t(feedback)}</p>}
    {imageError&&<p role="alert" className="text-sm">{t('Não foi possível preparar a imagem. Podes copiar os dados.')}</p>}
    {photoFailed===avatar&&avatar&&<p role="status" className="text-sm">{t('Fotografia indisponível. O cartão pode ser partilhado sem fotografia.')}</p>}
@@ -131,7 +136,7 @@ function CardScreen({userId,requested}:{userId:string;requested?:string}){
    </details>
    <details className="rounded-xl border p-4"><summary className="cursor-pointer font-medium">{t('Sobre este endereço')}</summary>
     <p className="mt-3 text-sm text-muted-foreground">{notice}</p>
-    <p className="mt-3 text-sm text-muted-foreground">{t('Qualquer pessoa que leia este QR pode ver gratuitamente a localização no mapa. Percursos, radar e realidade aumentada estão disponíveis na versão paga da NJILA. Os contactos seleccionados aparecem apenas no cartão.')}</p>
+    <p className="mt-3 text-sm text-muted-foreground">{t('Este QR abre o mapa com as opções Mapa e Satélite. Só o titular e as contas autorizadas no LOCACCESS podem consultar a morada. Os contactos seleccionados aparecem no cartão partilhado.')}</p>
     {address.temporary&&<p className="mt-3 text-sm text-muted-foreground">{t('Um endereço temporário não altera a tua residência principal.')}</p>}
    </details>
   </>:!busy&&!warning?<section className="rounded-xl border p-4 space-y-4"><p>{requested?t('O cartão deste endereço não está disponível. Volta ao mapa e actualiza os teus endereços.'):t('Ainda não tens um endereço AFROLOC associado ou activo.')}</p><Button asChild><Link to="/profile">{t('Criar ou associar o meu endereço AFROLOC')}</Link></Button></section>:null}

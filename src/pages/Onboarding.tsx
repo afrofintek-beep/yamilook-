@@ -2,7 +2,7 @@ import { createSignupOnboarding, recoverSignupOnboarding, resumeOnboardingStep }
 import { legalLabel } from '@/i18n/legal-labels';
 import { onboardingImage } from '@/components/auth/onboarding-images';
 import { EntryLanguageSelector } from '@/components/auth/EntryLanguageSelector';
-import { communityReturn } from '@/features/academia/community-links';
+import {afrolocReturn} from '@/features/locaccess/return-path';
 import { ResidenceForm } from '@/components/residence/ResidenceForm';
 import { submitResidence, validResidencePlan, type ResidencePlan } from '@/lib/residence';
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -90,7 +90,7 @@ const tourSlides = [
 export default function Onboarding() {
   const { user, profile, loading: authLoading, updateProfile, signUp, refreshProfile } = useAuth();
   const navigate = useNavigate();
-  const returnToCommunity = communityReturn(useLocation().search);
+  const returnToCommunity = afrolocReturn(useLocation().search);
   const { t, i18n } = useTranslation();
 
   const imageLanguage = i18n.resolvedLanguage || i18n.language;
