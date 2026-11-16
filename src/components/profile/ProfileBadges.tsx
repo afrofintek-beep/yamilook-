@@ -1,9 +1,11 @@
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { Crown, Users, ShieldCheck, Star } from 'lucide-react';
 
 interface ProfileBadge {
   type: 'founder' | 'community' | 'verified' | 'creator' | string;
   label: string;
+  to?: string;
 }
 
 interface ProfileBadgesProps {
@@ -64,8 +66,20 @@ export function ProfileBadges({ badges }: ProfileBadgesProps) {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2 + index * 0.08 }}
           >
-            <Icon className="w-3 h-3" strokeWidth={2} />
-            {badge.label}
+            {badge.to ? (
+              <Link
+                to={badge.to}
+                className="flex min-h-11 items-center gap-1.5 -mx-3 -my-1.5 px-3 py-1.5 rounded-lg hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              >
+                <Icon className="w-3 h-3" strokeWidth={2} aria-hidden="true" />
+                {badge.label}
+              </Link>
+            ) : (
+              <>
+                <Icon className="w-3 h-3" strokeWidth={2} aria-hidden="true" />
+                {badge.label}
+              </>
+            )}
           </motion.div>
         );
       })}

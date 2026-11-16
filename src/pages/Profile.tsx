@@ -488,7 +488,7 @@ function ProfileContent() {
 
   // Build badges based on profile
   const getBadges = () => {
-    const badges: { type: string; label: string }[] = [];
+    const badges: { type: string; label: string; to?: string }[] = [];
     // First 100 members of the network — "Fundador #N" (see founder_number).
     if (profileData?.founder_number) {
       badges.push({ type: 'founder', label: `Fundador #${profileData.founder_number}` });
@@ -500,7 +500,7 @@ function ProfileContent() {
       badges.push({ type: 'creator', label: uiText("Mentor") });
     }
     if (contacts.length >= 10) {
-      badges.push({ type: 'community', label: uiText("Comunidade") });
+      badges.push({ type: 'community', label: uiText("Comunidade"), to: '/academia/comunidades' });
     }
     return badges;
   };
