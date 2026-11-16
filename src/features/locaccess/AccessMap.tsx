@@ -1,9 +1,12 @@
+import {addNjilaMapBrand} from '@/components/brand/addNjilaMapBrand';
 import {useEffect,useRef,useState} from 'react';import L from 'leaflet';import 'leaflet/dist/leaflet.css';
 export type MapPoint={lat:number;lon:number};
 export function AccessMap({point,approximate=false}:{point:MapPoint;approximate?:boolean}){
  const host=useRef<HTMLDivElement>(null);const [error,setError]=useState('');
  useEffect(()=>{if(!host.current)return;setError('');
-  const map=L.map(host.current,{scrollWheelZoom:false,zoomControl:true}).setView([point.lat,point.lon],approximate?13:18);
+  const map=L.map(host.current,{scrollWheelZoom:false,zoomControl:false}).setView([point.lat,point.lon],approximate?13:18);
+  addNjilaMapBrand(map);
+  L.control.zoom({zoomInTitle:'Aproximar',zoomOutTitle:'Afastar'}).addTo(map);
   const streets=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'});
   const satellite=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Tiles &copy; Esri — Esri, Maxar, Earthstar Geographics, GIS User Community'});
   for(const layer of [streets,satellite]){layer.on('tileerror',()=>setError('Algumas imagens não carregaram. Tenta a outra vista.'));layer.on('tileload',()=>setError(''));}

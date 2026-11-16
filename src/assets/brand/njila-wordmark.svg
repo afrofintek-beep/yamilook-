@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 265" role="img" aria-label="NJILA" fill="none">
+  <title>NJILA</title>
+  <path d="M52 205 L58 74 L206 205 L237 78" stroke="#C99D46" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="52" cy="205" r="21" fill="#C99D46"/>
+  <path d="M237 24 L263 50 L237 76 L211 50 Z" stroke="#C99D46" stroke-width="12" stroke-linejoin="miter" fill="none"/>
+  <g stroke="#1F4037" stroke-width="26" stroke-linecap="butt" stroke-linejoin="round" fill="none">
+    <path d="M336 82 L336 180 Q336 204 312 204 L280 204"/>
+    <path d="M418 82 L418 216"/>
+    <path d="M501 82 L501 203 L584 203"/>
+    <path d="M628 216 L705 86 L782 216"/>
+  </g>
+</svg>

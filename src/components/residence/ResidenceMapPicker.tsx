@@ -1,3 +1,4 @@
+import {addNjilaMapBrand} from '@/components/brand/addNjilaMapBrand';
 import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -19,6 +20,7 @@ export default function ResidenceMapPicker({point,onChange,disabled=false}:Props
   if(!container.current)return;
   const m=L.map(container.current,{zoomControl:false,scrollWheelZoom:false,maxZoom:19,minZoom:5,maxBounds:[[-19,10],[-3,25]],maxBoundsViscosity:1}).setView(initial.current||{lat:-8.839,lng:13.289},initial.current?18:11);
   map.current=m;
+  addNjilaMapBrand(m);
   L.control.zoom({zoomInTitle:t('Aproximar'),zoomOutTitle:t('Afastar')}).addTo(m);
   const streets=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>'});
   const satellite=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics, GIS User Community'});
