@@ -1,3 +1,4 @@
+import { AngolaBetaBanner } from '@/features/angola-beta/AngolaBeta';
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect, useRef, useMemo, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -196,6 +197,7 @@ export default function Feed() {
         {/* Responsive feed with room for desktop navigation and the right rail. */}
         <div className="feed-grid">
           <main className="feed-column min-w-0 w-full">
+            <AngolaBetaBanner />
         {/* Status stories */}
         <div className="feed-stories bg-card border-b border-border">
           <StatusList />

@@ -1,3 +1,5 @@
+vi.mock('@/features/angola-beta/AngolaBeta', () => ({ useBetaStatus: () => ({ data: {open:true} }) }));
+vi.mock('@/features/angola-beta/api', () => ({ betaAction: async () => ({open:true,banda_invite:false}) }));
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
@@ -35,6 +37,17 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 describe('email confirmation continuation', () => {
+  it('allows Angola registration without a code and preserves the residence declaration', async () => {
+    saveOnboardingDraft({...input,inviteCode:''}); mount();
+    fireEvent.change(await screen.findByPlaceholderText('••••••••'), {target:{value:'Password123'}});
+    const button=screen.getByRole('button',{name:/Entrar na comunidade/i});
+    expect(button).not.toBeDisabled();fireEvent.click(button);
+    await waitFor(()=>expect(state.signUp).toHaveBeenCalled());
+    expect(state.signUp.mock.calls[0][2]).toMatchObject({access_code:'',onboarding_draft:{country:'AO'}});
+    expect(state.rpc).not.toHaveBeenCalledWith('validate_mvp_access_code',expect.anything());
+    await screen.findByText('Confirm email then sign in',{}, {timeout:7000});
+  },10000);
+
   it('sends the collected fields with signup even when no session is issued', async () => {
     saveOnboardingDraft(input); mount();
     fireEvent.change(await screen.findByPlaceholderText('••••••••'), { target: { value: 'Password123' } });

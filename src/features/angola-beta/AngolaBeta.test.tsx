@@ -1,0 +1,15 @@
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
+import { MemoryRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import AngolaBeta, { BandaInvites, AngolaBetaBanner } from './AngolaBeta';
+const { action, auth } = vi.hoisted(()=>({action:vi.fn(),auth:{user:null as null|{id:string}}}));
+vi.mock('./api',()=>({betaAction:action}));
+vi.mock('@/hooks/useAuth',()=>({useAuth:()=>auth}));
+const status={confirmed:144,capacity:10000,available:9832,open:true,starts_at:'2026-11-16T00:00:00Z',ends_at:'2027-01-15T00:00:00Z'};
+const show=(child=<AngolaBeta/>)=>render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false,gcTime:0}}})}><MemoryRouter>{child}</MemoryRouter></QueryClientProvider>);
+afterEach(cleanup);beforeEach(()=>{action.mockReset();auth.user=null;action.mockImplementation(async a=>a==='status'?status:{eligible:false,invites:[]});});
+it('shows real confirmed count and opens registration without invitation',async()=>{show();expect(await screen.findByText('144')).toBeInTheDocument();expect(screen.getByRole('link',{name:'Criar conta sem convite'})).toHaveAttribute('href','/onboarding?campaign=angola');expect(action).not.toHaveBeenCalledWith('waitlist',expect.anything());});
+it('full campaign offers a consented waitlist without promising a place',async()=>{action.mockImplementation(async a=>a==='status'?{...status,open:false,available:0}:{ok:true});show();const button=await screen.findByRole('button',{name:'Entrar na lista de espera'});expect(button).toBeDisabled();fireEvent.change(screen.getByLabelText('Email para lista de espera'),{target:{value:'person@example.test'}});fireEvent.click(screen.getByRole('checkbox'));fireEvent.click(button);await waitFor(()=>expect(action).toHaveBeenCalledWith('waitlist',{email:'person@example.test',consent:true}));expect(await screen.findByText(/Pedido de inscrição na lista/)).toBeInTheDocument();});
+it('does not fabricate a zero counter when the backend is unavailable',async()=>{action.mockRejectedValue(Error('offline'));show(<AngolaBetaBanner/>);await waitFor(()=>expect(action).toHaveBeenCalled());expect(screen.queryByText(/0 de/)).not.toBeInTheDocument();});
+it('shows five individual invites, disables used slots, no automatic sharing or community joining',async()=>{auth.user={id:'member'};action.mockResolvedValue({eligible:true,invites:Array.from({length:5},(_,n)=>({slot:n+1,code:`BA0000000000000${n}`,used:n===0,confirmed:n===0}))});const share=vi.fn();Object.defineProperty(navigator,'share',{configurable:true,value:share});show(<BandaInvites/>);expect(await screen.findByText('Os teus 5 convites para a tua banda')).toBeInTheDocument();expect(screen.getAllByRole('button',{name:/Partilhar convite/})).toHaveLength(4);expect(share).not.toHaveBeenCalled();fireEvent.click(screen.getByRole('button',{name:'Partilhar convite 2'}));await waitFor(()=>expect(share).toHaveBeenCalledOnce());expect(screen.getByRole('link',{name:'Descobrir comunidades'})).toHaveAttribute('href','/academia/comunidades');});

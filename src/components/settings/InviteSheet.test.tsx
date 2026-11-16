@@ -1,3 +1,4 @@
+vi.mock('@/features/angola-beta/AngolaBeta', () => ({ BandaInvites: () => <div>Convites da banda</div> }));
 import { fireEvent, render, screen, waitFor, cleanup } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { InviteSheet } from './InviteSheet';

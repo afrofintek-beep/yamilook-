@@ -1,3 +1,4 @@
+import AngolaBeta from '@/features/angola-beta/AngolaBeta';
 import { loadingText } from '@/i18n/startup-copy';
 import { communityReturn } from './features/academia/community-links';
 import { AppLoadingScreen } from '@/components/AppStartupBoundary';
@@ -286,6 +287,7 @@ function AnimatedRoutes() {
       <AnimatePresence mode="wait">
         <Routes location={location}>
           <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+          <Route path="/angola" element={<AngolaBeta />} />
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/profile/:userId" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
