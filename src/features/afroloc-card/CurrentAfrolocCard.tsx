@@ -116,7 +116,7 @@ function CardScreen({userId,requested}:{userId:string;requested?:string}){
    <section aria-label={t('Cartão AFROLOC')} className="overflow-hidden rounded-2xl border shadow-sm">
     <CardPreview link={access.url||null} name={name} code={address.code} lines={compactLines} photo={photoData} notice={notice} rtl={locale==='ar'} title={type} qrLabel={t('Abrir localização')} />
    </section>
-   <div hidden aria-hidden="true"><CardPreview ref={svg} link={access.url||null} name={name} code="ACESSO PROTEGIDO" lines={protectedLines} photo={photoData} notice={notice} rtl={locale==='ar'} title={type} qrLabel="Acesso sujeito a autorização"/></div>
+   <div hidden aria-hidden="true"><CardPreview ref={svg} link={access.url||null} name={name} code="ACESSO PROTEGIDO" lines={protectedLines} photo={photoData} notice={notice} rtl={locale==='ar'} title={type} qrLabel="Abrir acesso protegido"/></div>
    <div className="grid grid-cols-2 gap-3">
     <Button className="h-12 gap-2" aria-label={t('Partilhar cartão')} disabled={!ready} onClick={()=>void share()}><Share2 className="h-4 w-4"/>{t('Partilhar')}</Button>
     <Button variant="outline" className="h-12 gap-2" disabled={!access.url} onClick={()=>{if(access.url)window.location.assign(access.url)}}><MapPin className="h-4 w-4"/>{t('Ver no mapa')}</Button>
