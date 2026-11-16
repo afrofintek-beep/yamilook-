@@ -335,7 +335,8 @@ function AnimatedRoutes() {
           <Route path="/admin/monetization" element={<ProtectedRoute><AdminMonetization /></ProtectedRoute>} />
           <Route path="/admin/applications" element={<ProtectedRoute><AdminApplications /></ProtectedRoute>} />
           <Route path="/afroloc/cartao" element={<ProtectedRoute><CurrentAfrolocCard /></ProtectedRoute>} />
-          <Route path="/afroloc" element={<ProtectedRoute><AfrolocExperience /></ProtectedRoute>} />
+          <Route path="/afroloc" element={<ProtectedRoute><CurrentAfrolocCard /></ProtectedRoute>} />
+          <Route path="/afroloc/enderecos" element={<ProtectedRoute><AfrolocExperience /></ProtectedRoute>} />
           <Route path="/admin/afroloc-certifications" element={<ProtectedRoute><AdminAfrolocCertifications /></ProtectedRoute>} />
           <Route path="/admin/payouts" element={<ProtectedRoute><AdminPayoutsPage /></ProtectedRoute>} />
           <Route path="/admin/mentors" element={<ProtectedRoute><AdminMentors /></ProtectedRoute>} />

@@ -25,3 +25,13 @@ it('carries the interface language and avoids a duplicate address-back control',
  expect(screen.queryByRole('button',{name:'Voltar aos endereços'})).toBeNull();
  expect(screen.getByRole('link',{name:/Voltar à Yamilook/})).toBeVisible();
 });
+it.each([true,false])('opens a requested map only after its ID appears in the authorised list (owned=%s)',async owned=>{
+ invoke.mockResolvedValue({data:{addresses:owned?[{id:'saved-address'}]:[]},error:null});
+ render(<MemoryRouter initialEntries={[{pathname:'/afroloc/enderecos',state:{afrolocMapAddressId:'saved-address'}}]}><AfrolocExperience/></MemoryRouter>);
+ const frame=screen.getByTitle('O meu endereço AFROLOC') as HTMLIFrameElement;
+ const post=vi.spyOn(frame.contentWindow!,'postMessage');
+ await act(async()=>window.dispatchEvent(new MessageEvent('message',{origin:'https://app.afroloc.ao',source:frame.contentWindow,data:{type:'yamilook-afroloc-request',id:'list',action:'list',data:{}}})));
+ const navigation=post.mock.calls.filter(([message])=>message.type==='yamilook-afroloc-navigation');
+ expect(navigation.length).toBe(owned?1:0);
+ if(owned)expect(navigation[0]).toEqual([{type:'yamilook-afroloc-navigation',action:'map',id:'saved-address'},'https://app.afroloc.ao']);
+});
