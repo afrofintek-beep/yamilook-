@@ -4,14 +4,18 @@ await db.exec(`create role anon;create role authenticated;create role service_ro
 create table auth.users(id uuid primary key,is_anonymous boolean default false);create table auth.sessions(id uuid primary key,user_id uuid);
 create function auth.uid() returns uuid language sql as $$ select nullif(current_setting('test.uid',true),'')::uuid $$;
 create function auth.jwt() returns jsonb language sql as $$ select jsonb_build_object('session_id',current_setting('test.sid',true)) $$;
-create table public.profiles(id uuid primary key,username text,account_status text default 'active',country_code text default 'AO',afroloc_code text,afroloc_certification_status text default 'pending',latitude double precision,longitude double precision);
+create table public.profiles(id uuid primary key,username text,display_name text,avatar_url text,account_status text default 'active',country_code text default 'AO',afroloc_code text,afroloc_certification_status text default 'pending',latitude double precision,longitude double precision);
 create table public.afroloc_experience_addresses(id uuid primary key,owner_id uuid,code text,status text,expires_at timestamptz,latitude double precision,longitude double precision);`);
 await db.exec(fs.readFileSync('supabase/migrations/20261116162311_yamilook_locaccess_experimental.sql','utf8'));
+await db.exec(fs.readFileSync('supabase/migrations/20261116181843_locaccess_recipient_search.sql','utf8'));
 const ids=[1,2,3].map(i=>`00000000-0000-4000-8000-00000000000${i}`),sessions=[1,2,3].map(i=>`10000000-0000-4000-8000-00000000000${i}`);
 for(let i=0;i<3;i++){await db.query('insert into auth.users(id) values($1)',[ids[i]]);await db.query('insert into auth.sessions values($1,$2)',[sessions[i],ids[i]]);await db.query('insert into profiles(id,username,afroloc_code,latitude,longitude) values($1,$2,$3,-8.9,13.2)',[ids[i],['owner','guest','other'][i],'AO-TEST-'+i]);}
 const login=async i=>{await db.query("select set_config('test.uid',$1,false),set_config('test.sid',$2,false)",[ids[i],sessions[i]]);};
 const action=async(a,d)=> {await db.exec('set role authenticated');try{return (await db.query('select public.locaccess_action($1,$2) as result',[a,JSON.stringify(d)])).rows[0].result}finally{await db.exec('reset role')}};
-const source={id:'residence',code:'AO-TEST-0'};await login(0);let policy=await action('owner',source);ok(policy.enabled===false&&policy.grants.length===0,'closed by default');const handle=policy.handle;
+await login(0);await db.query("update profiles set display_name='António Ataíde',avatar_url='https://example.invalid/avatar.png' where id=$1",[ids[1]]);
+for(const query of ['@guest','Ataide','ATAÍDE','antonio']){const people=await action('search',{query});ok(people.length===1&&people[0].id===ids[1],'search by name/username/accent');ok(Object.keys(people[0]).sort().join(',')==='avatar_url,display_name,id,username','public fields only');}
+ok((await action('search',{query:'owner'})).length===0,'exclude self');ok((await action('search',{query:'a'})).length===0,'minimum two characters');ok((await action('search',{query:'%_'})).length===0,'wildcards are literal');
+const source={id:'residence',code:'AO-TEST-0'};await login(0);let policy=await action('owner',source);ok(policy.enabled===false&&policy.grants.length===0,'closed by default');const handle=policy.handle;await assert.rejects(()=>action('grant',{...source,username:'guest',recipient_id:ids[2],radius:0,hours:24}));checks++;
 ok((await db.query('select public.locaccess_reference_protected($1) as blocked',[source.code])).rows[0].blocked,'legacy public lookup blocked');
 await login(1);ok((await action('visit',{handle})).status==='denied','ungranted denied');
 for(const radius of [100,250,500]){
