@@ -782,6 +782,11 @@ export default function Settings() {
                   }
                 />
                 <SettingItem
+                  icon={BellRing}
+                  label={uiText('Pedidos de amizade por e-mail')}
+                  rightElement={<Switch checked={settings?.friend_request_emails ?? true} onCheckedChange={(v) => handleToggleSetting('friend_request_emails', v)} />}
+                />
+                <SettingItem
                   icon={Volume2}
                   label={t('settings.notificationSound')}
                   rightElement={

@@ -26,6 +26,7 @@ interface UserSettings {
   ringtone_pattern: string;
   // Notifications
   notifications_enabled: boolean;
+  friend_request_emails: boolean;
   // Journey visibility settings
   show_journey_friends: boolean;
   show_journey_posts: boolean;

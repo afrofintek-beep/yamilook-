@@ -1,3 +1,4 @@
+import {FriendNotificationBell} from '@/features/friend-requests/alerts';
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect, useRef, useMemo, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -145,6 +146,7 @@ export default function Feed() {
                 {hasActiveStreams && <LiveIndicatorBadge />}
               </div>
             </LivePreviewTooltip>
+            <FriendNotificationBell />
             <Button
               variant="ghost"
               size="icon"

@@ -1,3 +1,4 @@
+import {FriendRequestAlerts} from '@/features/friend-requests/alerts';
 import { loadingText } from '@/i18n/startup-copy';
 import {afrolocReturn} from './features/locaccess/return-path';
 import { AppLoadingScreen } from '@/components/AppStartupBoundary';
@@ -230,7 +231,7 @@ function ProtectedRoute({ children, skipOnboardingCheck }: { children: React.Rea
   }
   
   if (!user) {
-    return <Navigate to={protectedLocation.pathname.startsWith("/afroloc") ? `/login?next=${encodeURIComponent(protectedLocation.pathname)}` : "/welcome"} replace />;
+    return <Navigate to={(protectedLocation.pathname.startsWith("/afroloc") || protectedLocation.pathname==="/notifications") ? `/login?next=${encodeURIComponent(protectedLocation.pathname+protectedLocation.search)}` : "/welcome"} replace />;
   }
 
   // Do not expose protected content while the profile is still being fetched.
@@ -256,7 +257,7 @@ function ProtectedRoute({ children, skipOnboardingCheck }: { children: React.Rea
 
   // Redirect to onboarding if not completed (except on the onboarding page itself)
   if (!skipOnboardingCheck && profile && !profile.onboarding_completed) {
-    return <Navigate to={protectedLocation.pathname.startsWith("/afroloc/acesso/") ? `/onboarding?next=${encodeURIComponent(protectedLocation.pathname)}` : "/onboarding"} replace />;
+    return <Navigate to={(protectedLocation.pathname.startsWith("/afroloc/acesso/") || protectedLocation.pathname==="/notifications") ? `/onboarding?next=${encodeURIComponent(protectedLocation.pathname+protectedLocation.search)}` : "/onboarding"} replace />;
   }
   
   return <>{children}</>;
@@ -437,6 +438,7 @@ function AppContent() {
   return (
     <BrowserRouter>
 
+      <FriendRequestAlerts>
       <OnlineStatusTracker />
       <GlobalMessageNotifier />
       <GlobalLiveInviteNotifier />
@@ -446,6 +448,7 @@ function AppContent() {
       <ActiveCallProvider>
         <AnimatedRoutes />
       </ActiveCallProvider>
+      </FriendRequestAlerts>
     </BrowserRouter>
   );
 }

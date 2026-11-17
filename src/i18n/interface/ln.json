@@ -3492,5 +3492,9 @@
   "Experimenta o AFROLOC e explora Angola no mapa NJILA. Podes continuar o registo e experimentar mais tarde.": "Meká AFROLOC mpe talá Angola na karte NJILA. Okoki kokoba kokomisa nkombo mpe komeka na nsima.",
   "Experimentar AFROLOC": "Meká AFROLOC",
   "Abrir mapa NJILA": "Fungolá karte NJILA",
-  "Abre numa nova janela. O AFROLOC pode pedir início de sessão. A escolha do país não verifica a residência; confirma a validade e as permissões do endereço no AFROLOC antes de o partilhares.": "Ekofungwama na fenêtre ya sika. AFROLOC ekoki kosɛnga okɔta na konti. Kopona mboka endimisi esika ofandi te; talá ntango adresi ezali naino na nguya mpe ndingisa na AFROLOC liboso ya kokabola yango."
+  "Abre numa nova janela. O AFROLOC pode pedir início de sessão. A escolha do país não verifica a residência; confirma a validade e as permissões do endereço no AFROLOC antes de o partilhares.": "Ekofungwama na fenêtre ya sika. AFROLOC ekoki kosɛnga okɔta na konti. Kopona mboka endimisi esika ofandi te; talá ntango adresi ezali naino na nguya mpe ndingisa na AFROLOC liboso ya kokabola yango.",
+  "Pedidos de amizade": "Bosengi ya boninga",
+  "Tens {{count}} pedido(s) de amizade por responder.": "Ozali na bosengi {{count}} ya boninga oyo ezali kozela eyano.",
+  "Ver pedidos": "Tala bosengi",
+  "Pedidos de amizade por e-mail": "Bosengi ya boninga na email"
 }

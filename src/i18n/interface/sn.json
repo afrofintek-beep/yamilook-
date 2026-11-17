@@ -3492,5 +3492,9 @@
   "Experimenta o AFROLOC e explora Angola no mapa NJILA. Podes continuar o registo e experimentar mais tarde.": "Edza AFROLOC uye ongorora Angola pamepu yeNJILA. Unogona kuenderera mberi nekunyoresa wozoedza gare gare.",
   "Experimentar AFROLOC": "Edza AFROLOC",
   "Abrir mapa NJILA": "Vhura mepu yeNJILA",
-  "Abre numa nova janela. O AFROLOC pode pedir início de sessão. A escolha do país não verifica a residência; confirma a validade e as permissões do endereço no AFROLOC antes de o partilhares.": "Inovhurika muhwindo idzva. AFROLOC inogona kukukumbira kupinda muakaundi. Kusarudza nyika hakusimbisi kwaunogara; tarisa nguva yekushanda nemvumo dzekero muAFROLOC usati waigovera."
+  "Abre numa nova janela. O AFROLOC pode pedir início de sessão. A escolha do país não verifica a residência; confirma a validade e as permissões do endereço no AFROLOC antes de o partilhares.": "Inovhurika muhwindo idzva. AFROLOC inogona kukukumbira kupinda muakaundi. Kusarudza nyika hakusimbisi kwaunogara; tarisa nguva yekushanda nemvumo dzekero muAFROLOC usati waigovera.",
+  "Pedidos de amizade": "Zvikumbiro zveushamwari",
+  "Tens {{count}} pedido(s) de amizade por responder.": "Une zvikumbiro {{count}} zveushamwari zvakamirira mhinduro.",
+  "Ver pedidos": "Ona zvikumbiro",
+  "Pedidos de amizade por e-mail": "Zvikumbiro zveushamwari neemail"
 }

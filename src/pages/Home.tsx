@@ -1,3 +1,4 @@
+import {useFriendRequestAlerts} from '@/features/friend-requests/alerts';
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import PaposBrand from '@/features/papos/PaposBrand';
 import { useAppSurface } from '@/lib/app-surface';
@@ -34,6 +35,7 @@ import { useActiveCall } from '@/components/calls/ActiveCallProvider';
 
 export default function Home() {
   useUiLocale();
+  const {count:friendRequestCount}=useFriendRequestAlerts();
   const { t } = useTranslation();
   const surface = useAppSurface();
   const { user, profile, loading: authLoading } = useAuth();
@@ -243,7 +245,7 @@ export default function Home() {
                   onClick={() => navigate(surface === 'papos' ? '/install' : '/notifications')}
                 >
                   <Bell className="w-4.5 h-4.5" />
-                  {surface !== 'papos' && totalUnread > 0 && <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-destructive rounded-full" />}
+                  {surface !== 'papos' && (totalUnread > 0 || friendRequestCount > 0) && <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-destructive rounded-full" />}
                 </Button>
                 <Button
                   variant="ghost"

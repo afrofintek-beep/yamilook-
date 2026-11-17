@@ -1,3 +1,4 @@
+import {respondFriendRequest} from '@/features/friend-requests/api';
 import { normalizePhone, phoneAccessEnabled, phoneDirectory } from '@/features/phone-access/api';
 import { uiText } from '@/i18n/ui-copy';
 import { useCachedList } from './useCachedList';
@@ -264,39 +265,8 @@ export function useContacts() {
       return { error: new Error(uiText("Not authorized to accept this request")) };
     }
 
-    // First, add MY contact (current user -> sender) - this uses "Users can insert own contacts" policy
-    const { error: myContactError } = await supabase.from('contacts').insert({
-      user_id: user.id,
-      contact_user_id: request.sender_id,
-    });
-
-    if (myContactError) return { error: new Error(myContactError.message) };
-
-    // Then add the reciprocal contact (sender -> current user) - uses "Users can insert reciprocal contact on friend accept"
-    const { error: reciprocalError } = await supabase.from('contacts').insert({
-      user_id: request.sender_id,
-      contact_user_id: user.id,
-    });
-
-    if (reciprocalError) {
-      // Rollback: remove my contact if reciprocal failed
-      await supabase
-        .from('contacts')
-        .delete()
-        .eq('user_id', user.id)
-        .eq('contact_user_id', request.sender_id);
-      return { error: new Error(reciprocalError.message) };
-    }
-
-    // Update the request status AFTER contacts are created
-    const { error: updateError } = await supabase
-      .from('friend_requests')
-      .update({ status: 'accepted' })
-      .eq('id', request.id);
-
-    if (updateError) {
-      console.error('Failed to update friend request status:', updateError);
-    }
+    const { error } = await respondFriendRequest(request.id, true);
+    if (error) return { error: new Error(error.message) };
 
     // If both users sent pending requests to each other, remove the redundant outgoing request
     await supabase
@@ -381,10 +351,7 @@ export function useContacts() {
   const rejectFriendRequest = async (requestId: string) => {
     if (!user) return { error: new Error(uiText("Not authenticated")) };
 
-    const { error } = await supabase
-      .from('friend_requests')
-      .update({ status: 'rejected' })
-      .eq('id', requestId);
+    const { error } = await respondFriendRequest(requestId, false);
 
     if (!error) {
       await fetchFriendRequests();

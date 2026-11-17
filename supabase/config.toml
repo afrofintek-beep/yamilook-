@@ -65,3 +65,7 @@ verify_jwt = false
 # Public, exact-reference QR location lookup; no profile identity or directory.
 [functions.afroloc-card-location]
 verify_jwt = false
+
+[functions.friend-request-mail]
+# Database scheduler token is authenticated inside the function.
+verify_jwt = false

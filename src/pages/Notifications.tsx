@@ -1,6 +1,8 @@
+import {respondFriendRequest} from '@/features/friend-requests/api';
+import {useFriendRequestAlerts} from '@/features/friend-requests/alerts';
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -54,7 +56,13 @@ export default function Notifications() {
   const { toast } = useToast();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('all');
+  const [searchParams] = useSearchParams();
+  const requestedId = searchParams.get('request');
+  const {revision} = useFriendRequestAlerts();
+  const [activeTab, setActiveTab] = useState(searchParams.has('request') || searchParams.get('tab')==='requests' ? 'friend_request' : 'all');
+  const [responding,setResponding] = useState<string|null>(null);
+  const busy=useRef(false);
+
 
   const requestVersion = useRef(0);
 
@@ -64,7 +72,7 @@ export default function Notifications() {
       fetchNotifications();
     }
     return () => { requestVersion.current += 1; };
-  }, [user?.id]);
+  }, [user?.id,revision,requestedId]);
 
   const fetchNotifications = async () => {
     if (!user) return;
@@ -91,6 +99,11 @@ export default function Notifications() {
         .eq('status', 'pending')
         .order('created_at', { ascending: false })
         .limit(20);
+
+      if (requestedId && !friendRequests?.some(r=>r.id===requestedId) && /^[0-9a-f-]{36}$/i.test(requestedId)) {
+        const {data:target}=await supabase.from('friend_requests').select('id,created_at,status,sender_id').eq('id',requestedId).eq('receiver_id',user.id).eq('status','pending').maybeSingle();
+        if(target) friendRequests?.unshift(target);
+      }
 
       if (friendRequests && friendRequests.length > 0) {
         // Get sender profiles
@@ -335,9 +348,11 @@ export default function Notifications() {
       }
 
       // Sort all notifications by date
-      allNotifications.sort((a, b) =>
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
+      allNotifications.sort((a,b)=>{
+        if (a.action_data?.request_id===requestedId) return -1;
+        if (b.action_data?.request_id===requestedId) return 1;
+        return new Date(b.created_at).getTime()-new Date(a.created_at).getTime();
+      });
 
       if (version === requestVersion.current) setNotifications(allNotifications);
     } catch (error) {
@@ -347,36 +362,17 @@ export default function Notifications() {
     }
   };
 
-  const handleAcceptRequest = async (requestId: string) => {
+  const handleRespond = async (requestId: string, accept: boolean) => {
+    if(busy.current)return;
+    busy.current=true;setResponding(requestId);
     try {
-      const { error } = await supabase
-        .from('friend_requests')
-        .update({ status: 'accepted' })
-        .eq('id', requestId);
-
-      if (error) throw error;
-
-      toast({ title: uiText("Pedido aceite!") });
-      setNotifications(prev => prev.filter(n => n.action_data?.request_id !== requestId));
-    } catch (error) {
-      toast({ title: uiText("Erro ao aceitar pedido"), variant: 'destructive' });
-    }
-  };
-
-  const handleRejectRequest = async (requestId: string) => {
-    try {
-      const { error } = await supabase
-        .from('friend_requests')
-        .update({ status: 'rejected' })
-        .eq('id', requestId);
-
-      if (error) throw error;
-
-      toast({ title: uiText("Pedido rejeitado") });
-      setNotifications(prev => prev.filter(n => n.action_data?.request_id !== requestId));
-    } catch (error) {
-      toast({ title: uiText("Erro ao rejeitar pedido"), variant: 'destructive' });
-    }
+      const {error}=await respondFriendRequest(requestId,accept);
+      if(error)throw error;
+      toast({title:uiText(accept ? 'Pedido aceite!' : 'Pedido rejeitado')});
+      setNotifications(prev=>prev.filter(n=>n.action_data?.request_id!==requestId));
+    } catch {
+      toast({title:uiText(accept ? 'Erro ao aceitar pedido' : 'Erro ao rejeitar pedido'),variant:'destructive'});
+    } finally {busy.current=false;setResponding(null);}
   };
 
   const getNotificationIcon = (type: string) => {
@@ -402,7 +398,7 @@ export default function Notifications() {
     ? notifications
     : notifications.filter(n => n.type === activeTab);
 
-  const pendingRequests = notifications.filter(n => n.type === 'friend_request');
+  const pendingRequests = notifications.filter(n => n.type === 'friend_request' && n.action_data?.request_id);
 
   return (
     <div className="h-screen-safe overflow-hidden pb-[env(safe-area-inset-bottom,0px)] bg-background flex flex-col">
@@ -413,7 +409,7 @@ export default function Notifications() {
             variant="ghost"
             size="icon"
             className="rounded-full"
-            onClick={() => navigate(-1)}
+            onClick={() => navigate('/feed')}
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
@@ -558,14 +554,16 @@ export default function Notifications() {
                           <Button
                             size="sm"
                             className="rounded-full flex-1 bg-primary hover:bg-primary/90"
-                            onClick={() => handleAcceptRequest(notification.action_data!.request_id!)}
+                            disabled={responding!==null}
+                            onClick={() => void handleRespond(notification.action_data!.request_id!,true)}
                           >
                             <Check className="w-4 h-4 mr-1" />{uiText("Aceitar")}</Button>
                           <Button
                             size="sm"
                             variant="outline"
                             className="rounded-full flex-1"
-                            onClick={() => handleRejectRequest(notification.action_data!.request_id!)}
+                            disabled={responding!==null}
+                            onClick={() => void handleRespond(notification.action_data!.request_id!,false)}
                           >
                             <X className="w-4 h-4 mr-1" />{uiText("Recusar")}</Button>
                         </div>

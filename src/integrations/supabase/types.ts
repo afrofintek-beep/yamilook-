@@ -5867,6 +5867,7 @@ export type Database = {
           language_variant: string | null
           media_visibility: boolean | null
           notification_sound: string | null
+          friend_request_emails: boolean
           notifications_enabled: boolean
           quiet_hours_enabled: boolean | null
           quiet_hours_end: string | null
@@ -5900,6 +5901,7 @@ export type Database = {
           language_variant?: string | null
           media_visibility?: boolean | null
           notification_sound?: string | null
+          friend_request_emails?: boolean
           notifications_enabled?: boolean
           quiet_hours_enabled?: boolean | null
           quiet_hours_end?: string | null
@@ -5933,6 +5935,7 @@ export type Database = {
           language_variant?: string | null
           media_visibility?: boolean | null
           notification_sound?: string | null
+          friend_request_emails?: boolean
           notifications_enabled?: boolean
           quiet_hours_enabled?: boolean | null
           quiet_hours_end?: string | null
@@ -6470,6 +6473,7 @@ export type Database = {
       }
     }
     Functions: {
+      respond_friend_request: { Args: { p_request_id: string; p_accept: boolean }; Returns: undefined }
       group_conference_action: {
         Args: { p_action: string; p_id?: string; p_payload?: Json }
         Returns: Json

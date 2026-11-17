@@ -3492,5 +3492,9 @@
   "Experimenta o AFROLOC e explora Angola no mapa NJILA. Podes continuar o registo e experimentar mais tarde.": "Try AFROLOC and explore Angola on the NJILA map. You can continue registration and try it later.",
   "Experimentar AFROLOC": "Try AFROLOC",
   "Abrir mapa NJILA": "Open NJILA map",
-  "Abre numa nova janela. O AFROLOC pode pedir início de sessão. A escolha do país não verifica a residência; confirma a validade e as permissões do endereço no AFROLOC antes de o partilhares.": "Opens in a new window. AFROLOC may ask you to sign in. Choosing a country does not verify residence; check the address validity and permissions in AFROLOC before sharing it."
+  "Abre numa nova janela. O AFROLOC pode pedir início de sessão. A escolha do país não verifica a residência; confirma a validade e as permissões do endereço no AFROLOC antes de o partilhares.": "Opens in a new window. AFROLOC may ask you to sign in. Choosing a country does not verify residence; check the address validity and permissions in AFROLOC before sharing it.",
+  "Pedidos de amizade": "Friend requests",
+  "Tens {{count}} pedido(s) de amizade por responder.": "You have {{count}} friend request(s) to answer.",
+  "Ver pedidos": "View requests",
+  "Pedidos de amizade por e-mail": "Friend requests by email"
 }

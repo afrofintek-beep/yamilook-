@@ -11,3 +11,9 @@ it('keeps the access opaque when scanning and rejects modified links',()=>{
  expect(readCardReference(url)).toEqual({kind:'access',url});
  for(const v of [url+'?code=AO-TEST-CODE',url+'#x',url.replace('yamilook.com','yamilook.com.evil.invalid')])expect(readCardReference(v)).toBeNull();
 });
+it('preserves friendship review after login without accepting arbitrary redirects',()=>{
+ const target='/notifications?request=00000000-0000-4000-8000-000000000001';
+ expect(afrolocReturn('?next='+encodeURIComponent(target))).toBe(target);
+ expect(afrolocReturn('?next='+encodeURIComponent('/notifications?tab=requests'))).toBe('/notifications?tab=requests');
+ for(const bad of ['//evil.invalid/notifications','/notifications?request=bad',target+'&accept=true','/notifications?next=https://evil.invalid']) expect(afrolocReturn('?next='+encodeURIComponent(bad))).toBeNull();
+});
