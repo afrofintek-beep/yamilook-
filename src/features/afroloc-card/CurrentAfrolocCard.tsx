@@ -75,7 +75,7 @@ function CardScreen({userId,requested}:{userId:string;requested?:string}){
   let country=address.country;try{country=new Intl.DisplayNames([locale==='pt-banda'?'pt':locale],{type:'region'}).of(address.country)||country}catch{/* Keep known country code. */}
   add('País',country);add('Província',divisionName(address.administrative?.province)||(address.country==='AO'?t('Por confirmar'):''));add('Município',divisionName(address.administrative?.municipality)||(address.country==='AO'?t('Por confirmar'):''));add('Comuna',divisionName(address.administrative?.commune)||(!address.administrative&&address.country==='AO'?t('Por confirmar'):''));add('Cidade',address.city);add('Bairro / zona',address.neighborhood);add('Complemento',address.administrative?.complement);
   add('Rua',t('Não indicado'));add('Número',t('Não indicado'));add('Fração / unidade',t('Não indicado'));
-  if(postalReady)lines.push({field:'postal',label:POSTAL_LABELS.box+'*',value:postalReady.reference+(postalReady.kind==='example'?' · '+t('Exemplo'):''),group:'location'});
+  if(postalReady)lines.push({field:'postal',label:t(POSTAL_LABELS.box)+'*',value:postalReady.reference+(postalReady.kind==='example'?' · '+t('Exemplo'):''),group:'location'});
   add('Revisão local',t(address.status==='certified'||address.status==='approved'?'Revisto pela Yamilook':address.status==='rejected'?'Não aprovado':'Validação pendente'),'status');
   add('Entidade de validação',t('Revisão local da Yamilook'),'status');
   add('Emissão do endereço',t('Por confirmar'),'footer');
@@ -88,7 +88,7 @@ function CardScreen({userId,requested}:{userId:string;requested?:string}){
   (line.group==='location'&&line.label!==t('Cidade')||
    line.group==='identity'&&![t('Tipo de endereço'),t('Yamilook')].includes(line.label)||
    line.label===t('Revisão local')||line.label===t('Validade')||line.field===GENERATED_AT_FIELD));
- const protectedLines=compactLines.filter(l=>l.field===GENERATED_AT_FIELD||[POSTAL_LABELS.box+'*',t('País'),t('Província'),t('Município'),t('Revisão local'),t('Validade'),t('Telefone'),t('Email')].includes(l.label));
+ const protectedLines=compactLines.filter(l=>l.field===GENERATED_AT_FIELD||[t(POSTAL_LABELS.box)+'*',t('País'),t('Província'),t('Município'),t('Revisão local'),t('Validade'),t('Telefone'),t('Email')].includes(l.label));
  const name=include.name?(profile?.display_name||profile?.username||''):'';
  const notice=t('Dados à data de geração. Não substitui um certificado de residência.')+(postalReady&&!excluded.postal?' '+t(postalReady.kind==='example'?POSTAL_EXAMPLE_NOTE:POSTAL_LINKED_NOTE):'');
  const photoData=avatar&&photo?.url===avatar?photo.data:undefined;
@@ -98,9 +98,9 @@ function CardScreen({userId,requested}:{userId:string;requested?:string}){
  useEffect(()=>{let active=true;setImageError(false);if(!hasAddress||!access.url||!svg.current||!photoReady)return;void cardImage(svg.current).then(blob=>{if(active)setImage({key,blob})}).catch(()=>{if(active)setImageError(true)});return()=>{active=false};},[key,photoReady,hasAddress,access.url]);
  const unexpired=()=>!address?.expiresAt||Date.parse(address.expiresAt)>Date.now();
  const ready=!!access.url&&!access.busy&&!!address&&unexpired()&&fresh&&!busy&&!postal.busy&&photoReady&&image?.key===key&&!sharing;
- const text=address?cardText(name,'ACESSO PROTEGIDO',protectedLines,notice)+'\n'+access.url:'';
+ const text=address?cardText(name,t('ACESSO PROTEGIDO'),protectedLines,notice)+'\n'+access.url:'';
  const share=async()=>{if(!ready||!image||!unexpired())return;setSharing(true);setFeedback('');try{const result=await shareCard(image.blob,text);if(result!=='cancelled')setFeedback(result==='downloaded'?'Imagem guardada. Podes anexá-la à tua mensagem.':'Cartão partilhado.');}catch{setFeedback('Não foi possível partilhar. Usa Guardar imagem ou Copiar dados.');}finally{setSharing(false)}};
- const print=()=>{if(!ready||!image)return;const w=window.open('','_blank');if(!w){setFeedback('Permita abrir a janela de impressão.');return;}const img=w.document.createElement('img'),u=URL.createObjectURL(image.blob);img.style.cssText='width:100%;max-width:180mm;display:block;margin:auto';img.onload=()=>{w.focus();w.print();URL.revokeObjectURL(u)};img.src=u;w.document.title='Cartão AFROLOC';w.document.body.replaceChildren(img);};
+ const print=()=>{if(!ready||!image)return;const w=window.open('','_blank');if(!w){setFeedback('Permita abrir a janela de impressão.');return;}const img=w.document.createElement('img'),u=URL.createObjectURL(image.blob);img.style.cssText='width:100%;max-width:180mm;display:block;margin:auto';img.onload=()=>{w.focus();w.print();URL.revokeObjectURL(u)};img.src=u;w.document.title=t('Cartão AFROLOC');w.document.body.replaceChildren(img);};
  const copy=()=>{if(!access.url||access.busy||!fresh||busy||postal.busy||sharing||!unexpired())return;void (navigator.clipboard?.writeText(text)??Promise.reject(new Error('clipboard'))).then(()=>setFeedback('Dados copiados.')).catch(()=>setFeedback('Não foi possível partilhar. Usa Guardar imagem ou Copiar dados.'));};
  const type=address?.temporary?t('Endereço temporário'):t('Residência principal');
  const cardTitle=excluded['Tipo de endereço']?'':type;
@@ -123,14 +123,14 @@ function CardScreen({userId,requested}:{userId:string;requested?:string}){
   {(addresses.length>1||(!address&&addresses.length>0))?<label className="block space-y-1 text-sm"><span className="text-muted-foreground">{t('Endereço')}</span><select className="w-full min-w-0 rounded-lg border bg-background p-3 text-sm" value={address?.id||''} onChange={e=>setSelected(e.target.value)}>{!address&&<option value="" disabled>{t('Endereço')}</option>}{addresses.map(a=><option key={a.id} value={a.id}>{a.temporary?a.label:t('Residência principal')} · {a.code}</option>)}</select></label>:address?<p className="text-sm font-medium">{type}</p>:null}
   {address&&profile?<>
    <section aria-label={t('Cartão AFROLOC')} className="overflow-hidden rounded-2xl border shadow-sm">
-    <CardPreview link={access.url||null} name={name} code={excluded.code?'ACESSO PROTEGIDO':address.code} lines={compactLines} photo={photoData} notice={notice} rtl={locale==='ar'} title={cardTitle} qrLabel={t('Abrir localização')} />
+    <CardPreview link={access.url||null} name={name} code={excluded.code?t('ACESSO PROTEGIDO'):address.code} lines={compactLines} photo={photoData} notice={notice} rtl={locale==='ar'} title={cardTitle} qrLabel={t('Abrir localização')} />
    </section>
-   <div hidden aria-hidden="true"><CardPreview ref={svg} link={access.url||null} name={name} code="ACESSO PROTEGIDO" lines={protectedLines} photo={photoData} notice={notice} rtl={locale==='ar'} title={cardTitle} qrLabel="Abrir acesso protegido"/></div>
+   <div hidden aria-hidden="true"><CardPreview ref={svg} link={access.url||null} name={name} code={t('ACESSO PROTEGIDO')} lines={protectedLines} photo={photoData} notice={notice} rtl={locale==='ar'} title={cardTitle} qrLabel={t('Abrir acesso protegido')}/></div>
    <div className="grid grid-cols-2 gap-3">
     <Button className="h-12 gap-2" aria-label={t('Partilhar cartão')} disabled={!ready} onClick={()=>void share()}><Share2 className="h-4 w-4"/>{t('Partilhar')}</Button>
     <Button variant="outline" className="h-12 gap-2" disabled={!access.url} onClick={()=>{if(access.url)window.location.assign(access.url)}}><MapPin className="h-4 w-4"/>{t('Ver no mapa')}</Button>
    </div>
-   <p className="text-xs text-muted-foreground">Ao partilhar ou imprimir, o cartão oculta o código da morada e usa um QR protegido. Uma captura deste ecrã pode revelar o código.</p>
+   <p className="text-xs text-muted-foreground">{t("Ao partilhar ou imprimir, o cartão oculta o código da morada e usa um QR protegido. Uma captura deste ecrã pode revelar o código.")}</p>
    {postal.busy?<p role="status" className="text-xs text-muted-foreground">{t('A consultar a Cx. Postal na AFROLOC…')}</p>:postal.error?<p role="status" className="text-xs text-muted-foreground">{t('Não foi possível consultar a Cx. Postal. Usa Actualizar cartão para tentar novamente.')}</p>:postal.value?.status==='unavailable'?<p className="text-xs text-muted-foreground">{t('Cx. Postal: sem referência disponível para este endereço na AFROLOC.')}</p>:null}
    <AccessControl key={address.id+address.code} control={access}/>
    {feedback&&<p role="status" className="text-sm">{t(feedback)}</p>}
@@ -142,9 +142,9 @@ function CardScreen({userId,requested}:{userId:string;requested?:string}){
     </fieldset>
    </details>
    <details className="rounded-xl border p-4"><summary className="cursor-pointer font-medium">{t('Detalhes do endereço')}</summary>
-    <p className="mt-3 text-xs text-muted-foreground">Marca os campos a manter no cartão. Desmarcar não apaga os dados guardados nem altera as autorizações do QR.</p>
-    <fieldset className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2"><legend className="sr-only">Campos do endereço a incluir no cartão</legend>
-     {[{field:'code',label:'Código AFROLOC',value:address.code},...lines].filter(line=>line.field!==GENERATED_AT_FIELD).map(line=><label className="flex min-h-11 items-start gap-3 rounded-lg border p-3" key={line.field}>
+    <p className="mt-3 text-xs text-muted-foreground">{t("Marca os campos a manter no cartão. Desmarcar não apaga os dados guardados nem altera as autorizações do QR.")}</p>
+    <fieldset className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2"><legend className="sr-only">{t("Campos do endereço a incluir no cartão")}</legend>
+     {[{field:'code',label:t('Código AFROLOC'),value:address.code},...lines].filter(line=>line.field!==GENERATED_AT_FIELD).map(line=><label className="flex min-h-11 items-start gap-3 rounded-lg border p-3" key={line.field}>
       <input type="checkbox" className="mt-1 h-4 w-4 shrink-0" aria-label={line.label} checked={!excluded[line.field]} onChange={e=>setExcluded(v=>({...v,[line.field]:!e.target.checked}))}/>
       <span className="min-w-0"><span className="block text-xs text-muted-foreground">{line.label}</span><span className="block break-words text-sm">{line.value}</span></span>
      </label>)}

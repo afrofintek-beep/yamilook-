@@ -1,4 +1,4 @@
-import {uiText,useUiLocale} from '@/i18n/ui-copy';
+import {uiText,uiText as t,useUiLocale} from '@/i18n/ui-copy';
 import { useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -39,6 +39,6 @@ export default function AfrolocExperience() {
   return () => { active = false; window.removeEventListener('message', receive); pending.clear(); };
  }, [user?.id, profile?.country_code, navigate, requestedMap]);
  if (!user) return null;
- if (profile?.country_code?.trim().toUpperCase() !== 'AO') return <main className="p-6"><Link to="/settings">Voltar à Yamilook</Link><p>Esta experiência está disponível para contas com Angola seleccionado como país.</p></main>;
- return <main style={{height:"100dvh",display:"flex",flexDirection:"column",overflow:"hidden"}}><nav className="p-3" style={{display:"flex",gap:12,flexWrap:"wrap",flexShrink:0,fontSize:14,paddingTop:"max(12px, env(safe-area-inset-top))"}}><Link to="/afroloc/cartao">← {uiText("O meu cartão AFROLOC")}</Link><Link to="/settings">{uiText("Voltar à Yamilook")}</Link></nav><iframe key={user.id} ref={frame} title="O meu endereço AFROLOC" src={AFROLOC_EXPERIENCE_URL+'?lang='+encodeURIComponent(locale)} style={{width:"100%",flex:1,minHeight:0,border:0}} referrerPolicy="no-referrer" sandbox="allow-scripts allow-same-origin" allow="geolocation https://app.afroloc.ao https://www.njilamaps.com; camera https://app.afroloc.ao https://www.njilamaps.com; accelerometer https://app.afroloc.ao https://www.njilamaps.com; gyroscope https://app.afroloc.ao https://www.njilamaps.com" /></main>;
+ if (profile?.country_code?.trim().toUpperCase() !== 'AO') return <main className="p-6"><Link to="/settings">{t("Voltar à Yamilook")}</Link><p>{t("Esta experiência está disponível para contas com Angola seleccionado como país.")}</p></main>;
+ return <main style={{height:"100dvh",display:"flex",flexDirection:"column",overflow:"hidden"}}><nav className="p-3" style={{display:"flex",gap:12,flexWrap:"wrap",flexShrink:0,fontSize:14,paddingTop:"max(12px, env(safe-area-inset-top))"}}><Link to="/afroloc/cartao">← {uiText("O meu cartão AFROLOC")}</Link><Link to="/settings">{uiText("Voltar à Yamilook")}</Link></nav><iframe key={user.id} ref={frame} title={t("O meu endereço AFROLOC")} src={AFROLOC_EXPERIENCE_URL+'?lang='+encodeURIComponent(locale)} style={{width:"100%",flex:1,minHeight:0,border:0}} referrerPolicy="no-referrer" sandbox="allow-scripts allow-same-origin" allow="geolocation https://app.afroloc.ao https://www.njilamaps.com; camera https://app.afroloc.ao https://www.njilamaps.com; accelerometer https://app.afroloc.ao https://www.njilamaps.com; gyroscope https://app.afroloc.ao https://www.njilamaps.com" /></main>;
 }

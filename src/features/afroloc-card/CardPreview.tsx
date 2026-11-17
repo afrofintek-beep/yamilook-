@@ -1,3 +1,4 @@
+import {uiText as t,useUiLocale} from '@/i18n/ui-copy';
 import {forwardRef,useId} from 'react';
 import afrolocLogo from '@/assets/brand/afroloc-logo.data.txt?raw';
 import {QRCodeSVG} from 'qrcode.react';
@@ -6,6 +7,7 @@ import {wrapCardText,wrapCardCode} from '../../shared/afroloc-card/layout';
 
 /** A compact, exportable card; the complete record remains in the page details. */
 export const CardPreview=forwardRef<SVGSVGElement,{name:string;code:string;lines:CardLine[];photo?:string;notice:string;rtl:boolean;title?:string;qrLabel?:string;link?:string|null}>(function CardPreview({name,code,lines,photo,notice,rtl,title='AFROLOC',qrLabel='Abrir localização',link},ref){
+ useUiLocale();
  const logoClip=useId().replace(/:/g,'');
  const qr=link===undefined?cardQrValue({code}):link;
  const names=wrapCardText(name,photo?26:39),codes=wrapCardCode(code);
@@ -24,7 +26,7 @@ export const CardPreview=forwardRef<SVGSVGElement,{name:string;code:string;lines
   <rect width="720" height={height} rx="24" fill="#f5f1e8"/>
   <path d="M24 0H696Q720 0 720 24V106H0V24Q0 0 24 0" fill="#171719"/>
   <defs><clipPath id={logoClip}><rect x="28" y="14" width="78" height="78" rx="12"/></clipPath></defs>
-  <image data-card-brand="afroloc" href={afrolocLogo} x="28" y="14" width="78" height="78" preserveAspectRatio="xMidYMid meet" clipPath={`url(#${logoClip})`} aria-label="Logótipo AFROLOC"/>
+  <image data-card-brand="afroloc" href={afrolocLogo} x="28" y="14" width="78" height="78" preserveAspectRatio="xMidYMid meet" clipPath={`url(#${logoClip})`} aria-label={t("Logótipo AFROLOC")}/>
   <rect x="28.5" y="14.5" width="77" height="77" rx="12" fill="none" stroke="#f3d57f" strokeOpacity="0.55"/>
   <text x="126" y="48" fontSize="30" letterSpacing="2.5" fontWeight="700" fill="#e0bf66" fontFamily="sans-serif">AFROLOC</text>
   <text x={rtl?684:126} y="78" fontSize="20" fill="#f5f1e8" {...style}>{title}</text>

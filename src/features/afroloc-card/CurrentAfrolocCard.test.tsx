@@ -1,3 +1,5 @@
+import {changeAppLanguage} from '@/i18n';
+import {uiText as t} from '@/i18n/ui-copy';
 import {act,cleanup,fireEvent,render,screen,waitFor,within} from '@testing-library/react';
 import {MemoryRouter} from 'react-router-dom';
 import {afterEach,beforeEach,expect,it,vi} from 'vitest';
@@ -8,7 +10,7 @@ vi.mock('./usePostalCard',()=>({usePostalCard:()=>({value:state.postal,error:fal
 vi.mock('./export',()=>({cardImage:async()=>new Blob(['PNG'],{type:'image/png'}),shareCard:state.share,downloadCard:vi.fn()}));
 import CurrentAfrolocCard from './CurrentAfrolocCard';
 beforeEach(()=>{state.saved=[];state.postal=null;state.fail=false;state.profile.afroloc_code='AO-LDA-ING-000-DIG-G10-35Q1-N23WC';state.user='me';state.share.mockClear()});
-afterEach(cleanup);
+afterEach(async()=>{cleanup();await changeAppLanguage('pt')});
 it('always includes the generation date without an option to hide it',async()=>{
  const {container}=render(<MemoryRouter><CurrentAfrolocCard/></MemoryRouter>);
  await waitFor(()=>expect(screen.getByRole('button',{name:'Partilhar cartão'})).toBeEnabled());
@@ -100,4 +102,21 @@ it('omits deselected address fields from both card images and share text, and ca
  fireEvent.click(screen.getByRole('checkbox',{name:'Cx. Postal*',exact:true}));
  await waitFor(()=>expect(screen.getByRole('button',{name:'Partilhar cartão'})).toBeEnabled());
  for(const card of container.querySelectorAll('svg[role="img"][aria-label]')){expect(card.textContent).toContain('5051500-10000');expect(card.textContent).toContain('Exemplo ilustrativo');expect(card.textContent).not.toContain('Angola');}
+});
+
+it('localizes the mandatory generation date and protected export in every supported language',async()=>{
+ for(const language of ['pt','en','fr','ar','am','sw','ln','yo','sn','zu']){
+  await changeAppLanguage(language);state.share.mockClear();
+  const view=render(<MemoryRouter><CurrentAfrolocCard/></MemoryRouter>);
+  await waitFor(()=>expect(screen.getByRole('button',{name:t('Partilhar cartão')})).toBeEnabled());
+  fireEvent.click(screen.getByText(t('Detalhes do endereço'),{selector:'summary'}));
+  expect(screen.queryByRole('checkbox',{name:t('Cartão gerado em'),exact:true})).toBeNull();
+  expect(view.container.textContent).toContain(t('Campo obrigatório'));
+  fireEvent.click(screen.getByRole('button',{name:t('Partilhar cartão')}));
+  await waitFor(()=>expect(state.share).toHaveBeenCalledOnce());
+  const text=state.share.mock.calls[0][1];
+  expect(text).toContain(t('Cartão gerado em'));expect(text).toContain(t('ACESSO PROTEGIDO'));expect(text).toContain('Titular');
+  expect(text).toContain('?lang='+language);expect(text).not.toContain(state.profile.afroloc_code);expect(text).not.toContain('{{');
+  view.unmount();
+ }
 });

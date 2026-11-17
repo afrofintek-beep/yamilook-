@@ -1,8 +1,10 @@
+import {uiText as t,useUiLocale} from '@/i18n/ui-copy';
 import {useEffect,useState} from 'react';import {Link,useParams} from 'react-router-dom';
 import {Button} from '@/components/ui/button';import {locaccess,validHandle} from './api';import {AccessMap,type MapPoint} from './AccessMap';
 type Result={status:'ready'|'proximity'|'denied';point?:MapPoint;area?:MapPoint;radius?:number;expiresAt?:string;owner?:boolean};
 type Fix=MapPoint&{accuracy:number;timestamp:number};
 export default function AccessVisit(){
+ useUiLocale();
  const {handle=''}=useParams();const [tracking,setTracking]=useState(false),[result,setResult]=useState<Result|null>(null),[message,setMessage]=useState('A verificar a autorização…');
  const [retry,setRetry]=useState(0);
  useEffect(()=>{let active=true,busy=false,epoch=0,fix:Fix|null=null,watch:number|undefined,expiry:ReturnType<typeof setTimeout>|undefined;
@@ -13,7 +15,7 @@ export default function AccessVisit(){
     if(data.status==='ready'){
      const until=Date.parse(data.expiresAt||'');if(!data.point||!Number.isFinite(data.point.lat)||!Number.isFinite(data.point.lon)||!Number.isFinite(until)||until<=Date.now()||until>Date.now()+25000)throw new Error('A autorização expirou. Tenta novamente.');
      setResult(data);setMessage(data.owner?'A tua morada. O acesso de terceiros depende das tuas autorizações.':'Acesso autorizado.');expiry=setTimeout(()=>{clear();setMessage('A renovar a autorização…')},until-Date.now());
-    }else if(data.status==='proximity'){setResult(data);setMessage(`A morada exacta só aparece a ${data.radius} metros. A área indicada é aproximada.`)}
+    }else if(data.status==='proximity'){setResult(data);setMessage('A morada exacta só aparece a {{distance}} metros. A área indicada é aproximada.')}
     else{clear();setMessage('Este acesso está fechado, expirou ou não foi autorizado para a tua conta.')}
    }catch(e){if(active&&epoch===generation){clear();setMessage((e as Error).message)}}finally{busy=false}
   };
@@ -24,9 +26,9 @@ export default function AccessVisit(){
   window.addEventListener('offline',pause);window.addEventListener('online',refresh);window.addEventListener('pagehide',pause);document.addEventListener('visibilitychange',visibility);
   return()=>{active=false;epoch++;if(expiry)clearTimeout(expiry);if(watch!==undefined)navigator.geolocation.clearWatch(watch);clearInterval(timer);window.removeEventListener('offline',pause);window.removeEventListener('online',refresh);window.removeEventListener('pagehide',pause);document.removeEventListener('visibilitychange',visibility)};
  },[handle,tracking,retry]);
- return <main className="mx-auto max-w-2xl space-y-4 p-4"><Link to="/afroloc">← O meu cartão AFROLOC</Link><h1 className="text-xl font-semibold">Localização AFROLOC</h1><p className="text-sm text-muted-foreground">LOCACCESS · Consulta experimental protegida</p><p role="status">{message}</p>
+ return <main className="mx-auto max-w-2xl space-y-4 p-4"><Link to="/afroloc">{t("← O meu cartão AFROLOC")}</Link><h1 className="text-xl font-semibold">{t("Localização AFROLOC")}</h1><p className="text-sm text-muted-foreground">{t("LOCACCESS · Consulta experimental protegida")}</p><p role="status">{t(message,{distance:result?.radius||0})}</p>
   {result?.status==='ready'&&result.point?<AccessMap point={result.point}/>:result?.status==='proximity'&&result.area?<AccessMap point={result.area} approximate/>:null}
-  {result?.status==='proximity'&&<Button disabled={tracking} onClick={()=>{if(navigator.geolocation)setTracking(true);else setMessage('Este dispositivo não disponibiliza a localização.')}}>{tracking?'A verificar proximidade…':'Activar localização e verificar proximidade'}</Button>}
-  <Button variant="outline" onClick={()=>setRetry(n=>n+1)}>Verificar novamente</Button>
+  {result?.status==='proximity'&&<Button disabled={tracking} onClick={()=>{if(navigator.geolocation)setTracking(true);else setMessage('Este dispositivo não disponibiliza a localização.')}}>{t(tracking?'A verificar proximidade…':'Activar localização e verificar proximidade')}</Button>}
+  <Button variant="outline" onClick={()=>setRetry(n=>n+1)}>{t("Verificar novamente")}</Button>
  </main>;
 }

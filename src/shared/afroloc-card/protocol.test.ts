@@ -19,3 +19,12 @@ describe('cross-application card contract',()=>{
   expect(lines.find(l=>l.label==='Estado do registo')?.value).toBe('Revisão local pendente');
  });
 });
+
+it('accepts an optional approved language on protected QR links without widening their authority',()=>{
+ const base='https://www.yamilook.com/afroloc/acesso/00000000-0000-4000-8000-000000000001';
+ expect(readCardReference(base)).toEqual({kind:'access',url:base});
+ for(const lang of ['pt','pt-AO','pt-banda','en','fr','ar','am','sw','ln','yo','sn','zu']){
+  const url=base+'?lang='+lang;expect(readCardReference(url)).toEqual({kind:'access',url});
+ }
+ for(const query of ['lang=xx','lang=fr&lang=en','lang=fr&grant=secret','lang=fr#secret','lang=fr&to=AO-TEST','lat=1&lon=2','next=https://evil.invalid'])expect(readCardReference(base+'?'+query)).toBeNull();
+});
