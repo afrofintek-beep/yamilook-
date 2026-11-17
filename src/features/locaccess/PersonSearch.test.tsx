@@ -11,14 +11,47 @@ beforeEach(()=>{vi.useFakeTimers();api.call.mockReset();change.mockReset().mockR
 afterEach(()=>{cleanup();vi.useRealTimers()});
 it('requires explicit selection and binds permission to the selected account',async()=>{
  api.call.mockResolvedValue([person]);show();const grant=screen.getByRole('button',{name:'Autorizar pessoa seleccionada'});expect(grant).toBeDisabled();await search();expect(api.call).toHaveBeenCalledWith('search',{query:'ataide'});expect(grant).toBeDisabled();
- fireEvent.click(screen.getByRole('button',{name:/António Ataíde/}));expect(change).not.toHaveBeenCalled();expect(screen.getByRole('button',{name:/António Ataíde/})).toHaveAttribute('aria-pressed','true');expect(grant).toBeEnabled();await act(async()=>fireEvent.click(grant));expect(change).toHaveBeenCalledWith('grant',{username:'ataide',recipient_id:person.id,radius:500,hours:24});expect(grant).toBeDisabled();
+ fireEvent.click(screen.getByRole('button',{name:/^António Ataíde/}));expect(change).not.toHaveBeenCalled();expect(screen.getByRole('button',{name:/^António Ataíde/})).toHaveAttribute('aria-pressed','true');expect(grant).toBeEnabled();await act(async()=>fireEvent.click(grant));expect(change).toHaveBeenCalledWith('grant',{username:'ataide',recipient_id:person.id,radius:500,hours:24});expect(grant).toBeDisabled();
 });
-it('editing the selected name clears permission readiness',async()=>{
- api.call.mockResolvedValue([person]);show();await search();fireEvent.click(screen.getByRole('button',{name:/António Ataíde/}));fireEvent.change(screen.getByRole('searchbox'),{target:{value:'ana'}});expect(screen.getByRole('button',{name:'Autorizar pessoa seleccionada'})).toBeDisabled();expect(change).not.toHaveBeenCalled();
+it('keeps selections across searches and allows removal before granting',async()=>{
+ api.call.mockResolvedValue([person]);show();await search();fireEvent.click(screen.getByRole('button',{name:/^António Ataíde/}));
+ await search('outra');expect(screen.getByRole('button',{name:'Autorizar pessoa seleccionada'})).toBeEnabled();
+ fireEvent.click(screen.getByRole('button',{name:'Retirar António Ataíde da selecção'}));expect(screen.getByRole('button',{name:'Autorizar pessoa seleccionada'})).toBeDisabled();expect(change).not.toHaveBeenCalled();
 });
 it('reports no results and retries connection errors',async()=>{
  api.call.mockRejectedValueOnce(new Error('offline')).mockResolvedValue([]);show();await search();expect(screen.getByText(/Não foi possível pesquisar/)).toBeVisible();fireEvent.click(screen.getByRole('button',{name:'Tentar novamente'}));await act(async()=>vi.advanceTimersByTimeAsync(251));expect(screen.getByText(/Nenhuma pessoa encontrada/)).toBeVisible();expect(change).not.toHaveBeenCalled();
 });
 it('ignores late results from a previous query',async()=>{
- let resolve!:(p:typeof person[])=>void;api.call.mockImplementationOnce(()=>new Promise(r=>{resolve=r})).mockResolvedValue([]);show();await search();await search('outro');await act(async()=>resolve([person]));expect(screen.queryByRole('button',{name:/António Ataíde/})).toBeNull();expect(screen.getByText(/Nenhuma pessoa encontrada/)).toBeVisible();
+ let resolve!:(p:typeof person[])=>void;api.call.mockImplementationOnce(()=>new Promise(r=>{resolve=r})).mockResolvedValue([]);show();await search();await search('outro');await act(async()=>resolve([person]));expect(screen.queryByRole('button',{name:/^António Ataíde/})).toBeNull();expect(screen.getByText(/Nenhuma pessoa encontrada/)).toBeVisible();
+});
+
+const other={id:'22222222-2222-4222-8222-222222222222',username:'@ana',display_name:'Ana'};
+async function selectBoth(){
+ api.call.mockResolvedValueOnce([person]).mockResolvedValueOnce([other]);show();await search();fireEvent.click(screen.getByRole('button',{name:/^António Ataíde/}));
+ await search('ana');fireEvent.click(screen.getByRole('button',{name:/^Ana *@ana/}));
+}
+it('grants several recipients with chosen settings only after confirmation',async()=>{
+ await selectBoth();expect(change).not.toHaveBeenCalled();expect(screen.queryByText('@@ana')).toBeNull();
+ fireEvent.change(screen.getAllByRole('combobox')[0],{target:{value:'250'}});fireEvent.change(screen.getAllByRole('combobox')[1],{target:{value:'168'}});
+ await act(async()=>fireEvent.click(screen.getByRole('button',{name:'Autorizar pessoas seleccionadas (2)'})));
+ expect(change.mock.calls).toEqual([['grant',{username:'ataide',recipient_id:person.id,radius:250,hours:168}],['grant',{username:'@ana',recipient_id:other.id,radius:250,hours:168}]]);
+ expect(screen.getByText('Acessos autorizados: 2.')).toBeVisible();expect(screen.queryByRole('button',{name:/Retirar/})).toBeNull();
+});
+it('retains unfinished recipients after failure and retries without repeating successes',async()=>{
+ await selectBoth();change.mockResolvedValueOnce(undefined).mockRejectedValueOnce(new Error('offline'));
+ await act(async()=>fireEvent.click(screen.getByRole('button',{name:'Autorizar pessoas seleccionadas (2)'})));
+ expect(screen.getByRole('alert')).toHaveTextContent('Acessos autorizados: 1. Não foi possível concluir.');
+ expect(screen.queryByRole('button',{name:'Retirar António Ataíde da selecção'})).toBeNull();expect(screen.getByRole('button',{name:'Retirar Ana da selecção'})).toBeVisible();
+ await act(async()=>fireEvent.click(screen.getByRole('button',{name:'Autorizar pessoa seleccionada'})));
+ expect(change).toHaveBeenCalledTimes(3);expect(change.mock.calls[2][1].recipient_id).toBe(other.id);
+});
+it('prevents duplicate submissions while pending',async()=>{
+ await selectBoth();let done!:()=>void;change.mockImplementationOnce(()=>new Promise<void>(resolve=>{done=resolve}));
+ const form=screen.getByRole('form',{name:'Escolher quem pode aceder'});fireEvent.submit(form);fireEvent.submit(form);expect(change).toHaveBeenCalledTimes(1);
+ expect(screen.getByRole('searchbox')).toBeDisabled();expect(screen.getAllByRole('combobox')[0]).toBeDisabled();
+ await act(async()=>done());expect(change).toHaveBeenCalledTimes(2);
+});
+it('stops new authorizations after leaving the screen',async()=>{
+ await selectBoth();let done!:()=>void;change.mockImplementationOnce(()=>new Promise<void>(resolve=>{done=resolve}));
+ fireEvent.click(screen.getByRole('button',{name:'Autorizar pessoas seleccionadas (2)'}));cleanup();await act(async()=>done());expect(change).toHaveBeenCalledTimes(1);
 });

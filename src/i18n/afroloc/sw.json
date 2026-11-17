@@ -242,5 +242,11 @@
   "Área aproximada": "Eneo la kukadiria",
   "Última verificação": "Uthibitishaji wa mwisho",
   "← O meu cartão AFROLOC": "← Kadi yangu ya AFROLOC",
-  "residência indicada no mapa à distância": "makazi yaliyowekwa alama kwenye ramani kutoka mbali"
+  "residência indicada no mapa à distância": "makazi yaliyowekwa alama kwenye ramani kutoka mbali",
+  "Só as pessoas que autorizares podem consultar a localização. A distância e a validade escolhidas aplicam-se a todas as pessoas seleccionadas. Podes fechar cada acesso individualmente.": "Watu unaowaruhusu pekee ndio wanaoweza kuona eneo. Umbali na muda uliochagua vinatumika kwa watu wote waliochaguliwa. Unaweza kufuta ruhusa ya kila mtu kivyake.",
+  "Pessoas seleccionadas: {{count}}": "Watu waliochaguliwa: {{count}}",
+  "Retirar {{name}} da selecção": "Ondoa {{name}} kwenye chaguo",
+  "Autorizar pessoas seleccionadas ({{count}})": "Ruhusu watu waliochaguliwa ({{count}})",
+  "Acessos autorizados: {{count}}. Não foi possível concluir. As pessoas restantes continuam seleccionadas.": "Ruhusa zilizotolewa: {{count}}. Imeshindikana kumaliza. Watu waliobaki bado wamechaguliwa.",
+  "Acessos autorizados: {{count}}.": "Ruhusa zilizotolewa: {{count}}."
 }

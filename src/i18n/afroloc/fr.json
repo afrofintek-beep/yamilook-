@@ -242,5 +242,11 @@
   "Área aproximada": "Zone approximative",
   "Última verificação": "Dernière vérification",
   "← O meu cartão AFROLOC": "← Ma carte AFROLOC",
-  "residência indicada no mapa à distância": "résidence indiquée à distance sur le plan"
+  "residência indicada no mapa à distância": "résidence indiquée à distance sur le plan",
+  "Só as pessoas que autorizares podem consultar a localização. A distância e a validade escolhidas aplicam-se a todas as pessoas seleccionadas. Podes fechar cada acesso individualmente.": "Seules les personnes que tu autorises peuvent consulter la localisation. La distance et la durée choisies s’appliquent à toutes les personnes sélectionnées. Tu peux révoquer chaque accès individuellement.",
+  "Pessoas seleccionadas: {{count}}": "Personnes sélectionnées : {{count}}",
+  "Retirar {{name}} da selecção": "Retirer {{name}} de la sélection",
+  "Autorizar pessoas seleccionadas ({{count}})": "Autoriser les personnes sélectionnées ({{count}})",
+  "Acessos autorizados: {{count}}. Não foi possível concluir. As pessoas restantes continuam seleccionadas.": "Accès autorisés : {{count}}. Impossible de terminer. Les autres personnes restent sélectionnées.",
+  "Acessos autorizados: {{count}}.": "Accès autorisés : {{count}}."
 }

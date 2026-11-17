@@ -242,5 +242,11 @@
   "Área aproximada": "Etando ya pene",
   "Última verificação": "Bondimisi ya nsuka",
   "← O meu cartão AFROLOC": "← Karte na ngai ya AFROLOC",
-  "residência indicada no mapa à distância": "ndako ya kofanda oyo etyami elembo na karte uta mosika"
+  "residência indicada no mapa à distância": "ndako ya kofanda oyo etyami elembo na karte uta mosika",
+  "Só as pessoas que autorizares podem consultar a localização. A distância e a validade escolhidas aplicam-se a todas as pessoas seleccionadas. Podes fechar cada acesso individualmente.": "Kaka bato oyo opesi ndingisa nde bakoki komona esika. Ntaka mpe ntango oyo oponi etali bato nyonso oyo oponi. Okoki kolongola ndingisa ya moto mokomoko.",
+  "Pessoas seleccionadas: {{count}}": "Bato oyo oponi: {{count}}",
+  "Retirar {{name}} da selecção": "Longola {{name}} na bato oyo oponi",
+  "Autorizar pessoas seleccionadas ({{count}})": "Pesa ndingisa na bato oyo oponi ({{count}})",
+  "Acessos autorizados: {{count}}. Não foi possível concluir. As pessoas restantes continuam seleccionadas.": "Ndingisa epesami: {{count}}. Tokoki te kosilisa. Bato oyo batikali bazali kaka na bato oyo oponi.",
+  "Acessos autorizados: {{count}}.": "Ndingisa epesami: {{count}}."
 }

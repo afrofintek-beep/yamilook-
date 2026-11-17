@@ -242,5 +242,11 @@
   "Área aproximada": "Agbègbè àfojúsùn",
   "Última verificação": "Ìjẹ́rìí tó kẹ́yìn",
   "← O meu cartão AFROLOC": "← Káàdì AFROLOC mi",
-  "residência indicada no mapa à distância": "ibùgbé tí a samisi lórí máàpù láti ọ̀nà jíjìn"
+  "residência indicada no mapa à distância": "ibùgbé tí a samisi lórí máàpù láti ọ̀nà jíjìn",
+  "Só as pessoas que autorizares podem consultar a localização. A distância e a validade escolhidas aplicam-se a todas as pessoas seleccionadas. Podes fechar cada acesso individualmente.": "Àwọn tí o fún ní àṣẹ nìkan ló lè wo ibi náà. Ìjìnnà àti àkókò àṣẹ tí o yàn kan gbogbo àwọn tí a yàn. O lè fagilé àṣẹ ẹnìkọ̀ọ̀kan lọ́tọ̀.",
+  "Pessoas seleccionadas: {{count}}": "Àwọn ènìyàn tí a yàn: {{count}}",
+  "Retirar {{name}} da selecção": "Yọ {{name}} kúrò nínú àṣàyàn",
+  "Autorizar pessoas seleccionadas ({{count}})": "Fún àwọn tí a yàn ní àṣẹ ({{count}})",
+  "Acessos autorizados: {{count}}. Não foi possível concluir. As pessoas restantes continuam seleccionadas.": "Àwọn àṣẹ tí a fún: {{count}}. A kò lè parí. Àwọn tó kù ṣì wà nínú àṣàyàn.",
+  "Acessos autorizados: {{count}}.": "Àwọn àṣẹ tí a fún: {{count}}."
 }

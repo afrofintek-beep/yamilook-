@@ -242,5 +242,11 @@
   "Área aproximada": "ግምታዊ አካባቢ",
   "Última verificação": "የመጨረሻ ማረጋገጫ",
   "← O meu cartão AFROLOC": "← የእኔ AFROLOC ካርድ",
-  "residência indicada no mapa à distância": "በርቀት በካርታው ላይ የተመለከተ መኖሪያ"
+  "residência indicada no mapa à distância": "በርቀት በካርታው ላይ የተመለከተ መኖሪያ",
+  "Só as pessoas que autorizares podem consultar a localização. A distância e a validade escolhidas aplicam-se a todas as pessoas seleccionadas. Podes fechar cada acesso individualmente.": "ቦታውን ማየት የሚችሉት አንተ የፈቀድክላቸው ሰዎች ብቻ ናቸው። የመረጥከው ርቀትና የፈቃድ ጊዜ ለሁሉም የተመረጡ ሰዎች ይተገበራሉ። የእያንዳንዱን ሰው ፈቃድ በተናጠል ማቋረጥ ትችላለህ።",
+  "Pessoas seleccionadas: {{count}}": "የተመረጡ ሰዎች፦ {{count}}",
+  "Retirar {{name}} da selecção": "{{name}}ን ከምርጫው አስወግድ",
+  "Autorizar pessoas seleccionadas ({{count}})": "ለተመረጡ ሰዎች ፍቀድ ({{count}})",
+  "Acessos autorizados: {{count}}. Não foi possível concluir. As pessoas restantes continuam seleccionadas.": "ፈቃድ የተሰጣቸው፦ {{count}}። ማጠናቀቅ አልተቻለም። የቀሩት ሰዎች እንደተመረጡ ይቆያሉ።",
+  "Acessos autorizados: {{count}}.": "ፈቃድ የተሰጣቸው፦ {{count}}።"
 }

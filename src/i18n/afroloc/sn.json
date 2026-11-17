@@ -242,5 +242,11 @@
   "Área aproximada": "Nzvimbo yefungidziro",
   "Última verificação": "Kusimbiswa kwekupedzisira",
   "← O meu cartão AFROLOC": "← Kadhi rangu reAFROLOC",
-  "residência indicada no mapa à distância": "pekugara pakamakiwa pamepu uri kure"
+  "residência indicada no mapa à distância": "pekugara pakamakiwa pamepu uri kure",
+  "Só as pessoas que autorizares podem consultar a localização. A distância e a validade escolhidas aplicam-se a todas as pessoas seleccionadas. Podes fechar cada acesso individualmente.": "Vanhu vaunobvumira chete ndivo vanogona kuona nzvimbo. Chinhambwe nenguva yawasarudza zvinoshanda kuvanhu vose vakasarudzwa. Unogona kubvisa mvumo yemunhu mumwe nomumwe.",
+  "Pessoas seleccionadas: {{count}}": "Vanhu vakasarudzwa: {{count}}",
+  "Retirar {{name}} da selecção": "Bvisa {{name}} pavanhu vakasarudzwa",
+  "Autorizar pessoas seleccionadas ({{count}})": "Bvumira vanhu vakasarudzwa ({{count}})",
+  "Acessos autorizados: {{count}}. Não foi possível concluir. As pessoas restantes continuam seleccionadas.": "Mvumo dzapihwa: {{count}}. Hazvina kukwanisika kupedza. Vanhu vasara vachiri vakasarudzwa.",
+  "Acessos autorizados: {{count}}.": "Mvumo dzapihwa: {{count}}."
 }

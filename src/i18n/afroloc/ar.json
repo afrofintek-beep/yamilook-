@@ -242,5 +242,11 @@
   "Área aproximada": "منطقة تقريبية",
   "Última verificação": "آخر تحقق",
   "← O meu cartão AFROLOC": "← بطاقتي في AFROLOC",
-  "residência indicada no mapa à distância": "مسكن محدد عن بُعد على الخريطة"
+  "residência indicada no mapa à distância": "مسكن محدد عن بُعد على الخريطة",
+  "Só as pessoas que autorizares podem consultar a localização. A distância e a validade escolhidas aplicam-se a todas as pessoas seleccionadas. Podes fechar cada acesso individualmente.": "لا يمكن الاطلاع على الموقع إلا للأشخاص الذين تمنحهم الإذن. تُطبَّق المسافة ومدة الصلاحية المختارتان على جميع الأشخاص المحددين. يمكنك إلغاء وصول كل شخص على حدة.",
+  "Pessoas seleccionadas: {{count}}": "الأشخاص المحددون: {{count}}",
+  "Retirar {{name}} da selecção": "إزالة {{name}} من الاختيار",
+  "Autorizar pessoas seleccionadas ({{count}})": "السماح للأشخاص المحددين ({{count}})",
+  "Acessos autorizados: {{count}}. Não foi possível concluir. As pessoas restantes continuam seleccionadas.": "تم منح الوصول: {{count}}. تعذّر إكمال العملية. يظل الأشخاص المتبقون محددين.",
+  "Acessos autorizados: {{count}}.": "تم منح الوصول: {{count}}."
 }

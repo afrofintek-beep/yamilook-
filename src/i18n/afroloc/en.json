@@ -242,5 +242,11 @@
   "Área aproximada": "Approximate area",
   "Última verificação": "Last verification",
   "← O meu cartão AFROLOC": "← My AFROLOC card",
-  "residência indicada no mapa à distância": "residence marked remotely on the map"
+  "residência indicada no mapa à distância": "residence marked remotely on the map",
+  "Só as pessoas que autorizares podem consultar a localização. A distância e a validade escolhidas aplicam-se a todas as pessoas seleccionadas. Podes fechar cada acesso individualmente.": "Only people you authorize can view the location. The chosen distance and validity apply to everyone selected. You can revoke each person’s access individually.",
+  "Pessoas seleccionadas: {{count}}": "Selected people: {{count}}",
+  "Retirar {{name}} da selecção": "Remove {{name}} from selection",
+  "Autorizar pessoas seleccionadas ({{count}})": "Authorize selected people ({{count}})",
+  "Acessos autorizados: {{count}}. Não foi possível concluir. As pessoas restantes continuam seleccionadas.": "Access granted: {{count}}. Could not finish. The remaining people are still selected.",
+  "Acessos autorizados: {{count}}.": "Access granted: {{count}}."
 }

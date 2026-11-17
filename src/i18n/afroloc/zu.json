@@ -242,5 +242,11 @@
   "Área aproximada": "Indawo elinganiselwe",
   "Última verificação": "Ukuqinisekiswa kokugcina",
   "← O meu cartão AFROLOC": "← Ikhadi lami le-AFROLOC",
-  "residência indicada no mapa à distância": "indawo yokuhlala emakwe emephini ukude"
+  "residência indicada no mapa à distância": "indawo yokuhlala emakwe emephini ukude",
+  "Só as pessoas que autorizares podem consultar a localização. A distância e a validade escolhidas aplicam-se a todas as pessoas seleccionadas. Podes fechar cada acesso individualmente.": "Abantu obagunyazile kuphela abangabona indawo. Ibanga nesikhathi osikhethile kusebenza kubo bonke abakhethiwe. Ungahoxisa imvume yomuntu ngamunye.",
+  "Pessoas seleccionadas: {{count}}": "Abantu abakhethiwe: {{count}}",
+  "Retirar {{name}} da selecção": "Susa u-{{name}} kwabakhethiwe",
+  "Autorizar pessoas seleccionadas ({{count}})": "Gunyaza abantu abakhethiwe ({{count}})",
+  "Acessos autorizados: {{count}}. Não foi possível concluir. As pessoas restantes continuam seleccionadas.": "Izimvume ezinikeziwe: {{count}}. Akuqedwanga. Abantu abasele basakhethiwe.",
+  "Acessos autorizados: {{count}}.": "Izimvume ezinikeziwe: {{count}}."
 }
