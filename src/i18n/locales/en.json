@@ -901,7 +901,16 @@
     "codeHint": "The code identifies the address. The right to use it will be verified before certification.",
     "confirmLaterHint": "You can finish registration and participate. Confirm your address later in Profile → Validate my Banda.",
     "residenceNotice": "Your current presence does not prove residence. Territorial benefits require a validated Banda; traveling does not automatically change your Banda.",
-    "confirmBanda": "Confirm Banda and continue"
+    "confirmBanda": "Confirm Banda and continue",
+    "setupRequired": "Add a profile photo and publish your first Muxi post to complete setup.",
+    "firstPost": "First Muxi post",
+    "firstPostHint": "Introduce yourself or say hello to the community.",
+    "postAudience": "Who can see this post?",
+    "audienceContacts": "Contacts",
+    "audienceEveryone": "Everyone",
+    "audienceMe": "Only me",
+    "publishAndFinish": "Publish and finish",
+    "photoFormat": "JPG, PNG or WebP photo, up to 5 MB."
   },
   "academiaPublic": {
     "back": "Back",

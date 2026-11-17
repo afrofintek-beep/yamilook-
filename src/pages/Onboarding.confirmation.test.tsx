@@ -51,6 +51,28 @@ describe('email confirmation continuation', () => {
     expect(screen.queryByPlaceholderText('••••••••')).not.toBeInTheDocument();
     expect(state.signUp).not.toHaveBeenCalled();
   });
+  it('requires both a photo and nonblank post before publishing', async () => {
+    state.user = { id: 'one', email: input.email, user_metadata: { onboarding_draft: createSignupOnboarding(input) } };
+    state.profile = { display_name: 'Pessoa', onboarding_completed: false };
+    mount();
+    const publish = await screen.findByRole('button', { name: /Publicar e concluir/i });
+    expect(publish).toBeDisabled();
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'Hello Muxi' } });
+    expect(publish).toBeDisabled();
+    expect(state.rpc).not.toHaveBeenCalled();
+  });
+  it('allows publishing only with a saved photo and explicit post text', async () => {
+    state.user = { id: 'one', email: input.email, user_metadata: { onboarding_draft: createSignupOnboarding(input) } };
+    state.profile = { display_name: 'Pessoa', onboarding_completed: false, avatar_url: 'https://example.com/avatar.jpg' };
+    mount();
+    const publish = await screen.findByRole('button', { name: /Publicar e concluir/i });
+    expect(publish).toBeDisabled();
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: '   ' } });
+    expect(publish).toBeDisabled();
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'Hello Muxi' } });
+    expect(publish).toBeEnabled();
+    expect(screen.getByRole('combobox', { name: /Quem pode ver/ })).toHaveValue('contacts');
+  });
   it('leaves completed accounts on their existing profile even with an old draft', async () => {
     state.user = { id: 'one', email: input.email, user_metadata: { onboarding_draft: createSignupOnboarding(input) } };
     state.profile = { onboarding_completed: true };

@@ -123,6 +123,8 @@ export default function Onboarding() {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [bio, setBio] = useState('');
+  const [firstPost, setFirstPost] = useState('');
+  const [postPrivacy, setPostPrivacy] = useState<'contacts' | 'everyone' | 'only_me'>('contacts');
   const [selectedGender, setSelectedGender] = useState<'male' | 'female' | 'other' | null>(null);
   const [birthDay, setBirthDay] = useState('');
   const [birthMonth, setBirthMonth] = useState('');
@@ -226,6 +228,10 @@ export default function Onboarding() {
   const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
+      toast.error(t('onboardingFlow.photoFormat'));
+      return;
+    }
 
     setAvatarFile(file);
     // Create local preview URL
@@ -280,7 +286,11 @@ export default function Onboarding() {
 
   // Final registration: create account + save all onboarding data
   const handleRegister = async () => {
-    if (!isAuthenticated && !isRegisterFormValid) return;
+    if (isRegistering || (!isAuthenticated && !isRegisterFormValid)) return;
+    if (isAuthenticated && (!avatarUrl || !firstPost.trim())) {
+      toast.error(t('onboardingFlow.setupRequired'));
+      return;
+    }
     if (!selectedGender || !birthDay || !birthMonth || !birthYear || !selectedCity ||
         !selectedNeighborhood || (selectedNeighborhood === '__other__' && !customNeighborhood.trim())) {
       toast.error(t("onboardingFlow.missing"));
@@ -345,14 +355,19 @@ export default function Onboarding() {
         userId = session.user.id;
       }
 
+      // A new session must review and explicitly publish the first post.
+      // Email-confirmation returns also reach this authenticated finish screen.
+      if (!isAuthenticated) { await refreshProfile(); return; }
+
       // Upload avatar if selected
-      let finalAvatarUrl: string | null = null;
+      let finalAvatarUrl: string | null = profile?.avatar_url || null;
       if (avatarFile) {
         const fileExt = avatarFile.name.split('.').pop();
         const filePath = `${userId}/avatar.${fileExt}`;
         const { error: uploadError } = await supabase.storage
           .from('avatars')
           .upload(filePath, avatarFile, { upsert: true });
+        if (uploadError) throw uploadError;
         if (!uploadError) {
           const { data: { publicUrl } } = supabase.storage
             .from('avatars')
@@ -361,10 +376,11 @@ export default function Onboarding() {
         }
       }
 
+      if (!finalAvatarUrl) throw new Error("Profile photo required");
+
       // Build profile update with all onboarding data
       const profileUpdate: TablesUpdate<'profiles'> = {
         gender: selectedGender,
-        onboarding_completed: true,
         app_tour_completed: true,
       };
 
@@ -405,6 +421,11 @@ export default function Onboarding() {
         setIsRegistering(false);
         return;
       }
+
+      const { error: completionError } = await supabase.rpc('complete_muxi_onboarding', {
+        p_content: firstPost.trim(), p_privacy: postPrivacy,
+      });
+      if (completionError) throw completionError;
 
       justCompletedRef.current = true;
       clearOnboardingDraft(user?.email || email);
@@ -726,7 +747,7 @@ export default function Onboarding() {
               <input
                 id="avatar-upload"
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/png,image/webp"
                 className="hidden"
                 onChange={handleAvatarUpload}
                 disabled={uploading}
@@ -932,10 +953,28 @@ export default function Onboarding() {
             <div className="space-y-5 px-4 max-w-sm mx-auto">
               <h2 className="text-2xl font-bold">{t("onboardingFlow.finish")}</h2>
               <p>{t('onboardingFlow.name')}: {profile?.display_name || user?.email}</p>
-              <p>{t("onboardingFlow.finishHint")}</p>
+              <p>{t("onboardingFlow.setupRequired")}</p>
+              <label className="block space-y-2">
+                <span>{t('onboardingFlow.photo')}</span>
+                {avatarUrl && <Avatar><AvatarImage src={avatarUrl} /><AvatarFallback><User /></AvatarFallback></Avatar>}
+                <Input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleAvatarUpload} disabled={isRegistering} />
+                <span className="text-xs text-muted-foreground">{t('onboardingFlow.photoFormat')}</span>
+              </label>
+              <label className="block space-y-2">
+                <span>{t('onboardingFlow.firstPost')}</span>
+                <Textarea value={firstPost} onChange={e => setFirstPost(e.target.value)} maxLength={2000} disabled={isRegistering} placeholder={t('onboardingFlow.firstPostHint')} />
+              </label>
+              <label className="block space-y-2">
+                <span>{t('onboardingFlow.postAudience')}</span>
+                <select className="w-full rounded-lg bg-background border p-3" value={postPrivacy} onChange={e => setPostPrivacy(e.target.value as typeof postPrivacy)} disabled={isRegistering}>
+                  <option value="contacts">{t('onboardingFlow.audienceContacts')}</option>
+                  <option value="everyone">{t('onboardingFlow.audienceEveryone')}</option>
+                  <option value="only_me">{t('onboardingFlow.audienceMe')}</option>
+                </select>
+              </label>
               <Button variant="outline" onClick={prevStep} disabled={isRegistering}>{t("common.back")}</Button>
-              <Button onClick={handleRegister} disabled={isRegistering}>
-                {isRegistering ? t("common.saving") : t("onboardingFlow.finish")}
+              <Button onClick={handleRegister} disabled={isRegistering || !avatarUrl || !firstPost.trim()}>
+                {isRegistering ? t("common.saving") : t("onboardingFlow.publishAndFinish")}
               </Button>
             </div>
           );
