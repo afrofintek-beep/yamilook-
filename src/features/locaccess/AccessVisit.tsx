@@ -26,7 +26,13 @@ export default function AccessVisit(){
   window.addEventListener('offline',pause);window.addEventListener('online',refresh);window.addEventListener('pagehide',pause);document.addEventListener('visibilitychange',visibility);
   return()=>{active=false;epoch++;if(expiry)clearTimeout(expiry);if(watch!==undefined)navigator.geolocation.clearWatch(watch);clearInterval(timer);window.removeEventListener('offline',pause);window.removeEventListener('online',refresh);window.removeEventListener('pagehide',pause);document.removeEventListener('visibilitychange',visibility)};
  },[handle,tracking,retry]);
- return <main className="mx-auto max-w-2xl space-y-4 p-4"><Link to="/afroloc">{t("← O meu cartão AFROLOC")}</Link><h1 className="text-xl font-semibold">{t("Localização AFROLOC")}</h1><p className="text-sm text-muted-foreground">{t("LOCACCESS · Consulta experimental protegida")}</p><p role="status">{t(message,{distance:result?.radius||0})}</p>
+ return <main className="mx-auto max-w-2xl space-y-4 px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+  <header className="sticky top-0 z-50 -mx-4 border-b bg-background px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
+   <Button asChild variant="outline" className="min-h-11 h-auto max-w-full whitespace-normal py-2 text-start">
+    <Link to="/afroloc">{t("← O meu cartão AFROLOC")}</Link>
+   </Button>
+  </header>
+  <h1 className="text-xl font-semibold">{t("Localização AFROLOC")}</h1><p className="text-sm text-muted-foreground">{t("LOCACCESS · Consulta experimental protegida")}</p><p role="status">{t(message,{distance:result?.radius||0})}</p>
   {result?.status==='ready'&&result.point?<AccessMap point={result.point}/>:result?.status==='proximity'&&result.area?<AccessMap point={result.area} approximate/>:null}
   {result?.status==='proximity'&&<Button disabled={tracking} onClick={()=>{if(navigator.geolocation)setTracking(true);else setMessage('Este dispositivo não disponibiliza a localização.')}}>{t(tracking?'A verificar proximidade…':'Activar localização e verificar proximidade')}</Button>}
   <Button variant="outline" onClick={()=>setRetry(n=>n+1)}>{t("Verificar novamente")}</Button>
