@@ -75,7 +75,7 @@ function CardScreen({userId,requested}:{userId:string;requested?:string}){
   let country=address.country;try{country=new Intl.DisplayNames([locale==='pt-banda'?'pt':locale],{type:'region'}).of(address.country)||country}catch{/* Keep known country code. */}
   add('País',country);add('Província',divisionName(address.administrative?.province)||(address.country==='AO'?t('Por confirmar'):''));add('Município',divisionName(address.administrative?.municipality)||(address.country==='AO'?t('Por confirmar'):''));add('Comuna',divisionName(address.administrative?.commune)||(!address.administrative&&address.country==='AO'?t('Por confirmar'):''));add('Cidade',address.city);add('Bairro / zona',address.neighborhood);add('Complemento',address.administrative?.complement);
   add('Rua',t('Não indicado'));add('Número',t('Não indicado'));add('Fração / unidade',t('Não indicado'));
-  if(postalReady)lines.push({field:'postal',label:t(POSTAL_LABELS.box)+'*',value:postalReady.reference+(postalReady.kind==='example'?' · '+t('Exemplo'):''),group:'location'});
+  if(postalReady)lines.push({field:'postal',label:t(POSTAL_LABELS.box)+'*',value:postalReady.reference,group:'location'});
   add('Revisão local',t(address.status==='certified'||address.status==='approved'?'Revisto pela Yamilook':address.status==='rejected'?'Não aprovado':'Validação pendente'),'status');
   add('Entidade de validação',t('Revisão local da Yamilook'),'status');
   add('Emissão do endereço',t('Por confirmar'),'footer');
