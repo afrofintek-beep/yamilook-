@@ -22,12 +22,13 @@ await db.exec(`
  create policy own_contacts on contacts for all to authenticated using(auth.uid()=user_id) with check(auth.uid()=user_id);
  create policy reciprocal on contacts for insert to authenticated with check(contact_user_id=auth.uid() and exists(select 1 from friend_requests where sender_id=contacts.user_id and receiver_id=auth.uid() and status in('pending','accepted')));
  grant select,insert,update,delete on friend_requests,contacts to authenticated;
- grant select on all tables in schema public,auth to service_role;
+ grant select on all tables in schema public to service_role;
  create function cron.schedule(text,text,text) returns bigint language sql as $$select 1::bigint$$;
  create function net.http_post(url text,headers jsonb,body jsonb,timeout_milliseconds integer) returns bigint language sql as $$select 1::bigint$$;
 `);
 const migration=readFileSync(new URL('../../supabase/migrations/20261117110209_friend_request_alerts.sql',import.meta.url),'utf8');
 await db.exec(migration.slice(0,migration.indexOf('do $$ begin\n if not exists(select 1 from pg_publication_tables')));
+await db.exec(readFileSync(new URL('../../supabase/migrations/20261117111517_friend_mail_user_lookup.sql',import.meta.url),'utf8'));
 for(let n=1;n<=9;n++) {
  await db.query('insert into auth.users(id,email) values($1,$2)',[id(n),`synthetic-${n}@example.test`]);
  await db.query('insert into profiles(id,display_name) values($1,$2)',[id(n),`User ${n}`]);
