@@ -860,7 +860,16 @@
     "codeHint": "Le code identifie l'adresse. Le droit de l'utiliser sera vérifié avant la certification.",
     "confirmLaterHint": "Tu peux terminer l'inscription et participer. Confirme ton adresse plus tard dans Profil → Valider ma Banda.",
     "residenceNotice": "Ta présence actuelle ne prouve pas ta résidence. Les avantages territoriaux exigent une Banda validée ; voyager ne modifie pas automatiquement ta Banda.",
-    "confirmBanda": "Confirmer la Banda et continuer"
+    "confirmBanda": "Confirmer la Banda et continuer",
+    "setupRequired": "Ajoutez une photo de profil et publiez votre premier message sur Muxi pour terminer.",
+    "firstPost": "Première publication sur Muxi",
+    "firstPostHint": "Présentez-vous ou saluez la communauté.",
+    "postAudience": "Qui peut voir cette publication ?",
+    "audienceContacts": "Contacts",
+    "audienceEveryone": "Tout le monde",
+    "audienceMe": "Moi uniquement",
+    "publishAndFinish": "Publier et terminer",
+    "photoFormat": "Photo JPG, PNG ou WebP, 5 Mo maximum."
   },
   "groupCalls": {
     "conferenceLabel": "Conférence",

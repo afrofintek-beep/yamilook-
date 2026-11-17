@@ -1,0 +1,31 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import { PGlite } from '@electric-sql/pglite';
+
+test('setup requires a saved photo and post; publishing is atomic and retry-safe', async () => {
+ const db = new PGlite();
+ await db.exec(`CREATE ROLE anon; CREATE ROLE authenticated;
+ CREATE SCHEMA auth; CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql AS $$ SELECT '00000000-0000-0000-0000-000000000001'::uuid $$;
+ CREATE SCHEMA storage; CREATE TABLE storage.objects(bucket_id text, name text);
+ CREATE TABLE profiles(id uuid PRIMARY KEY, gender text, birthday date, city text, neighborhood text, avatar_url text, onboarding_completed boolean DEFAULT false);
+ CREATE TABLE posts(id serial PRIMARY KEY, user_id uuid, type text, content text, privacy text);
+ INSERT INTO profiles(id,gender,birthday,city,neighborhood) VALUES(auth.uid(),'male','1990-01-01','Luanda','Banda');`);
+ await db.exec(await readFile(new URL('../../supabase/migrations/20261117170000_require_photo_and_muxi_onboarding.sql',import.meta.url),'utf8'));
+ await assert.rejects(db.exec('UPDATE profiles SET onboarding_completed=true'), /photo/);
+ await assert.rejects(db.exec("SELECT complete_muxi_onboarding('Hello','contacts')"), /photo/);
+ assert.equal((await db.query('SELECT * FROM posts')).rows.length,0);
+ await db.exec("UPDATE profiles SET avatar_url='https://example.com/storage/v1/object/public/avatars/00000000-0000-0000-0000-000000000001/avatar.jpg'");
+ await assert.rejects(db.exec("SELECT complete_muxi_onboarding('Hello','contacts')"), /Upload/);
+ await db.exec("INSERT INTO storage.objects VALUES('avatars','00000000-0000-0000-0000-000000000001/avatar.jpg')");
+ await assert.rejects(db.exec('UPDATE profiles SET onboarding_completed=true'), /first Muxi/);
+ await assert.rejects(db.exec("SELECT complete_muxi_onboarding('  ','contacts')"), /Write/);
+ await assert.rejects(db.exec("SELECT complete_muxi_onboarding('Hello','invalid')"), /audience/);
+ await db.exec("SELECT complete_muxi_onboarding('Hello','only_me')");
+ await db.exec("SELECT complete_muxi_onboarding('Hello','only_me')");
+ const posts=(await db.query('SELECT * FROM posts')).rows;
+ assert.equal(posts.length,1); assert.equal(posts[0].privacy,'only_me');
+ assert.equal((await db.query('SELECT onboarding_completed FROM profiles')).rows[0].onboarding_completed,true);
+ await db.exec('DELETE FROM posts; UPDATE profiles SET city=\'New city\'');
+ await db.close();
+});

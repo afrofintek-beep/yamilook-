@@ -1034,7 +1034,16 @@
     "codeHint": "O código identifica o endereço. O direito de utilização será verificado antes da certificação.",
     "confirmLaterHint": "Podes concluir a inscrição e participar. Confirma o endereço mais tarde em Perfil → Validar a minha Banda.",
     "residenceNotice": "A presença atual não prova residência. Os benefícios territoriais exigem uma Banda validada; viajar não altera automaticamente a tua Banda.",
-    "confirmBanda": "Confirmar Banda e continuar"
+    "confirmBanda": "Confirmar Banda e continuar",
+    "setupRequired": "Adiciona uma fotografia de perfil e publica a tua primeira mensagem no Muxi para concluir a configuração.",
+    "firstPost": "Primeira publicação no Muxi",
+    "firstPostHint": "Apresenta-te ou diz olá à comunidade.",
+    "postAudience": "Quem pode ver esta publicação?",
+    "audienceContacts": "Contactos",
+    "audienceEveryone": "Todos",
+    "audienceMe": "Só eu",
+    "publishAndFinish": "Publicar e concluir",
+    "photoFormat": "Fotografia JPG, PNG ou WebP, até 5 MB."
   },
   "academiaPublic": {
     "back": "Voltar",
