@@ -19,7 +19,7 @@ export default defineConfig(({ mode }) => ({
     sourcemap: mode === "development",
     minify: "esbuild",
     rollupOptions: {
-      input: { yamilook: path.resolve(__dirname, "index.html"), papos: path.resolve(__dirname, "papos-app/index.html") },
+      input: { dangereux: path.resolve(__dirname, "dangereux/index.html"), yamilook: path.resolve(__dirname, "index.html"), papos: path.resolve(__dirname, "papos-app/index.html") },
       output: {
         manualChunks: {
           "vendor-react": ["react", "react-dom", "react-router-dom"],
@@ -39,7 +39,7 @@ export default defineConfig(({ mode }) => ({
       workbox: {
         globIgnores: ["papos-app/**"],
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
-        navigateFallbackDenylist: [/^\/caminho(?:\/|$)/, /^\/post(?:\/|$)/, /^\/api(?:\/|$)/, /^\/papos-app(?:\/|$)/,/^\/~oauth/, /^\/guia/, /^\/app/, /^\/download/, /^\/store/],
+        navigateFallbackDenylist: [/^\/dangereux(?:\/|$)/, /^\/caminho(?:\/|$)/, /^\/post(?:\/|$)/, /^\/api(?:\/|$)/, /^\/papos-app(?:\/|$)/,/^\/~oauth/, /^\/guia/, /^\/app/, /^\/download/, /^\/store/],
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,

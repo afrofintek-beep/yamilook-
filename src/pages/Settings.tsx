@@ -408,6 +408,12 @@ export default function Settings() {
             <Smartphone className="w-5 h-5" />{uiText("Instalar Yamilook · modo aplicação")}<ChevronRight className="w-4 h-4 ml-auto" />
           </Button>
 
+          <a href="/dangereux/" className="flex items-center gap-3 px-4 py-3 hover:bg-secondary/50">
+            <MapPin aria-hidden="true" className="w-5 h-5 shrink-0" />
+            <span><strong>Dangereux</strong><br/><span className="text-sm text-muted-foreground">{uiText("Administração Digital do Bairro")}</span></span>
+            <ChevronRight aria-hidden="true" className="w-4 h-4 ml-auto" />
+          </a>
+
           {/* Appearance */}
           <SectionHeader title={t('settings.appearance')} delay={0.1} />
           <SettingItem
