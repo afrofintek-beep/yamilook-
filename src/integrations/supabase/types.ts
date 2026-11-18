@@ -6675,6 +6675,7 @@ export type Database = {
         Args: { p_code: string; p_user_id: string }
         Returns: boolean
       }
+      claim_waiting_livekit_call: { Args: { p_call_id: string; p_held_id: string }; Returns: boolean };
       claim_direct_call: {
         Args: { p_call_id: string }
         Returns: boolean

@@ -13,6 +13,7 @@ interface IncomingCallOverlayProps {
   callerId: string;
   onAnswer: () => void;
   onDecline: () => void;
+  onHoldAnswer?: () => void;
   onAddToCall?: () => void;
   waiting?: boolean;
   busy?: boolean;
@@ -24,7 +25,7 @@ export function IncomingCallOverlay({
   callerId,
   onAnswer,
   onDecline,
-  onAddToCall,
+  onHoldAnswer, onAddToCall,
   waiting = false,
   busy = false,
 }: IncomingCallOverlayProps) {
@@ -92,6 +93,7 @@ export function IncomingCallOverlay({
       </div>
     </div> : <div className="flex flex-wrap gap-2">
       <Button disabled={busy} variant="outline" onClick={handleDecline}>{t('calls.decline')}</Button>
+      {onHoldAnswer && <Button disabled={busy} onClick={() => { stopRingtone(); onHoldAnswer(); }}>Atender e pôr em espera</Button>}
       <Button disabled={busy} onClick={handleAnswer}>{t('calls.endAndAnswer')}</Button>
       {onAddToCall && <Button disabled={busy} variant="secondary" onClick={() => setConfirmAdd(true)}>{t('calls.addToCall')}</Button>}
     </div>}

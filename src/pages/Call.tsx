@@ -31,7 +31,7 @@ export default function Call() {
   const { callId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { joinCall } = useActiveCallRequired();
+  const { joinCall, currentCallId } = useActiveCallRequired();
   const [callInfo, setCallInfo] = useState<CallInfo | null>(null);
   const [participants, setParticipants] = useState<ParticipantInfo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,6 +42,8 @@ export default function Call() {
   }, [callId]);
 
   useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
     const fetchCallInfo = async () => {
       if (!callId) return;
 
@@ -51,6 +53,7 @@ export default function Call() {
         .eq('id', callId)
         .single();
 
+      if (cancelled) return;
       if (error || !data) {
         console.error('Error fetching call:', error);
         navigate('/calls');
@@ -114,6 +117,7 @@ export default function Call() {
             is_spotlight: p.is_spotlight,
           };
         });
+        if (cancelled) return;
         setParticipants(participantsWithProfiles);
       }
 
@@ -154,6 +158,7 @@ export default function Call() {
       .subscribe();
 
     return () => {
+      cancelled = true;
       supabase.removeChannel(channel);
     };
   }, [callId, navigate, user?.id]);
@@ -173,6 +178,10 @@ export default function Call() {
   const handleEndCall = () => {
     navigate('/calls');
   };
+
+  if (currentCallId && currentCallId !== callId) {
+    return <button className="m-4 rounded-xl border p-3" onClick={() => navigate(`/call/${currentCallId}`, { replace: true })}>Voltar à chamada activa</button>;
+  }
 
   if (loading) {
     return (
@@ -197,6 +206,7 @@ export default function Call() {
       callType={callInfo.type}
       isGroupCall={callInfo.is_group_call}
       participants={participants}
+      onMinimize={() => navigate('/')}
       onEndCall={handleEndCall}
     />
   );

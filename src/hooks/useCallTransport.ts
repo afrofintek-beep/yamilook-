@@ -9,7 +9,11 @@ import { hasActiveCall, holdCallUpdates } from '@/lib/call-update-guard';
  * original transport. Both hooks remain idle until explicitly selected. */
 export function useCallTransport() {
   const legacy = useWebRTC();
-  const livekit = useLiveKitCall();
+  const first = useLiveKitCall();
+  const second = useLiveKitCall();
+  const [secondActive, setSecondActive] = useState(false);
+  const livekit = secondActive ? second : first;
+  const alternate = secondActive ? first : second;
   const [selected, setSelected] = useState<'livekit' | 'webrtc'>('livekit');
   const pending = useRef(false);
   const operation = useRef(0);
@@ -24,7 +28,7 @@ export function useCallTransport() {
   }, [active.state.callStatus]);
   useEffect(() => () => { updateHold.current?.(); updateHold.current = null; }, []);
   const assertAvailable = () => {
-    if (pending.current || legacy.state.callId || livekit.state.callId || (hasActiveCall() && !updateHold.current)) throw new Error(uiText("Já existe uma chamada em curso."));
+    if (pending.current || alternate.state.callId || legacy.state.callId || livekit.state.callId || (hasActiveCall() && !updateHold.current)) throw new Error(uiText("Já existe uma chamada em curso."));
   };
   const connectIncoming = async (id: string, type: 'voice' | 'video', target: string, epoch: number) => {
     const { data, error } = await supabase.from('calls').select('sdp_offer, is_group_call').eq('id', id).single();
@@ -37,6 +41,32 @@ export function useCallTransport() {
   };
   return {
     ...active,
+    reportInterruption: selected === 'livekit' ? livekit.reportInterruption : undefined,
+    heldId: alternate.state.callId,
+    canHold: selected === 'livekit' && active.state.callStatus === 'connected' && !alternate.state.callId,
+    recoverAudio: selected === 'livekit' ? livekit.recoverAudio : undefined,
+    switchToHeld: async () => {
+      if (pending.current || !alternate.state.callId) return;
+      pending.current = true;
+      try {
+        if (livekit.state.callId) await livekit.setHeld(true);
+        try { await alternate.setHeld(false); }
+        catch (error) { await alternate.setHeld(true); if (livekit.state.callId) await livekit.setHeld(false); throw error; }
+        setSecondActive(value => !value);
+        return alternate.state.callId;
+      } finally { pending.current = false; }
+    },
+    holdAndAnswer: async (id: string, type: 'voice' | 'video', caller: string) => {
+      const heldId = livekit.state.callId;
+      if (!heldId || pending.current || alternate.state.callId) throw new Error(uiText("A chamada atual mudou. Tenta novamente."));
+      pending.current = true;
+      try {
+        await livekit.setHeld(true);
+        await alternate.answerCall(id, type, caller, heldId);
+        setSecondActive(value => !value);
+      } catch (error) { await livekit.setHeld(false); throw error; }
+      finally { pending.current = false; }
+    },
     initiateCall: async (target: string, type: 'voice' | 'video', conversationId?: string) => {
       assertAvailable(); protect(); const epoch = ++operation.current; pending.current = true; setSelected('livekit');
       try { return await livekit.initiateCall(target, type, conversationId); }

@@ -14,6 +14,8 @@ export interface CallState {
   isInitiator: boolean;
   localStream: MediaStream | null;
   remoteStreams: Map<string, MediaStream>;
+  peerAudioInterrupted?: boolean;
+  peerOnHold?: boolean;
   isMuted: boolean;
   isVideoEnabled: boolean;
   isScreenSharing: boolean;
