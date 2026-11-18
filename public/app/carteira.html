@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#121214">
+  <title>Abrir carteira · Yamilook</title>
+  <style>
+    body { margin:0; min-height:100dvh; display:grid; place-items:center; background:#121214; color:#fafafa; font:16px/1.6 system-ui; }
+    main { padding:24px; max-width:400px; }
+    a { color:#d3b24e; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Carteira Yamilook</h1>
+    <p role="status">A abrir a versão actualizada…</p>
+    <a href="/payment-point">Continuar para a carteira</a>
+  </main>
+  <script>
+    (async function () {
+      // This standalone entry bypasses the cached app shell.
+      // Only the root app worker and its precache are refreshed.
+      const repair = Promise.allSettled([
+        (async function () {
+          if (!('serviceWorker' in navigator)) return;
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(registrations.filter(function (registration) {
+            return registration.scope === new URL('/', location.origin).href;
+          }).map(function (registration) { return registration.unregister(); }));
+        })(),
+        (async function () {
+          if (!('caches' in window)) return;
+          const names = await caches.keys();
+          await Promise.all(names.filter(function (name) {
+            return name.startsWith('workbox-precache');
+          }).map(function (name) { return caches.delete(name); }));
+        })()
+      ]);
+      await Promise.race([repair, new Promise(function (resolve) { setTimeout(resolve, 4000); })]);
+      location.replace('/payment-point?wallet-update=' + Date.now());
+    })();
+  </script>
+</body>
+</html>
