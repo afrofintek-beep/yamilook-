@@ -3496,5 +3496,12 @@
   "Pedidos de amizade": "የጓደኝነት ጥያቄዎች",
   "Tens {{count}} pedido(s) de amizade por responder.": "መልስ የሚጠብቁ {{count}} የጓደኝነት ጥያቄዎች አሉዎት።",
   "Ver pedidos": "ጥያቄዎችን ይመልከቱ",
-  "Pedidos de amizade por e-mail": "የጓደኝነት ጥያቄዎች በኢሜይል"
+  "Pedidos de amizade por e-mail": "የጓደኝነት ጥያቄዎች በኢሜይል",
+  "Nome da campanha": "የዘመቻው ስም",
+  "Gerar 10 convites": "10 ግብዣዎችን ፍጠር",
+  "Convite {{number}}": "ግብዣ {{number}}",
+  "Email do promotor (campanha de 10 convites)": "የአዘጋጁ ኢሜይል (የ10 ግብዣዎች ዘመቻ)",
+  "Convite para {{campaign}}": "ወደ {{campaign}} የቀረበ ግብዣ",
+  "Recebeste um convite pessoal para te inscreveres na Yamilook.": "በ Yamilook ለመመዝገብ የግል ግብዣ ደርሶዎታል።",
+  "Aceitar convite e inscrever-me": "ግብዣውን ተቀብዬ ልመዝገብ"
 }

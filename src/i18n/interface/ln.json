@@ -3496,5 +3496,12 @@
   "Pedidos de amizade": "Bosengi ya boninga",
   "Tens {{count}} pedido(s) de amizade por responder.": "Ozali na bosengi {{count}} ya boninga oyo ezali kozela eyano.",
   "Ver pedidos": "Tala bosengi",
-  "Pedidos de amizade por e-mail": "Bosengi ya boninga na email"
+  "Pedidos de amizade por e-mail": "Bosengi ya boninga na email",
+  "Nome da campanha": "Nkombo ya kampanye",
+  "Gerar 10 convites": "Salá mabiangi 10",
+  "Convite {{number}}": "Libyangi {{number}}",
+  "Email do promotor (campanha de 10 convites)": "Email ya mobongisi (kampanye ya mabiangi 10)",
+  "Convite para {{campaign}}": "Libyangi na {{campaign}}",
+  "Recebeste um convite pessoal para te inscreveres na Yamilook.": "Ozwi libyangi mpo na komikomisa na Yamilook.",
+  "Aceitar convite e inscrever-me": "Kondima libyangi mpe komikomisa"
 }

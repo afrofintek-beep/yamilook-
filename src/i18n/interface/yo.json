@@ -3496,5 +3496,12 @@
   "Pedidos de amizade": "Àwọn ìbéèrè ọ̀rẹ́",
   "Tens {{count}} pedido(s) de amizade por responder.": "O ní ìbéèrè ọ̀rẹ́ {{count}} tí ń dúró de ìdáhùn.",
   "Ver pedidos": "Wo àwọn ìbéèrè",
-  "Pedidos de amizade por e-mail": "Àwọn ìbéèrè ọ̀rẹ́ nípasẹ̀ ímeèlì"
+  "Pedidos de amizade por e-mail": "Àwọn ìbéèrè ọ̀rẹ́ nípasẹ̀ ímeèlì",
+  "Nome da campanha": "Orúkọ ìpolongo",
+  "Gerar 10 convites": "Ṣẹ̀dá ìpè mẹ́wàá",
+  "Convite {{number}}": "Ìpè {{number}}",
+  "Email do promotor (campanha de 10 convites)": "Ímeèlì olùṣètò (ìpolongo ìpè mẹ́wàá)",
+  "Convite para {{campaign}}": "Ìpè sí {{campaign}}",
+  "Recebeste um convite pessoal para te inscreveres na Yamilook.": "O ti gba ìpè àdáni láti forúkọ sílẹ̀ lórí Yamilook.",
+  "Aceitar convite e inscrever-me": "Gba ìpè kí o sì forúkọ sílẹ̀"
 }

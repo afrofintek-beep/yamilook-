@@ -4,11 +4,11 @@ import { buildInviteUrl } from './referral';
 export type InvitationBrand = 'YAMILOOK' | 'KOSOLOLA';
 
 /** Only fixed app copy is translated. Recipient, token and URL are interpolated locally. */
-export function invitationMessage(recipientEmail: string, code: string, brand: InvitationBrand = 'YAMILOOK', expiresAt?: string): string {
+export function invitationMessage(recipientEmail: string, code: string, brand: InvitationBrand = 'YAMILOOK', expiresAt?: string, campaignName?: string): string {
   const url = new URL(buildInviteUrl(code));
   url.searchParams.set('lang', uiLocale());
   const paragraphs = [
-    uiText('Foste convidado(a) para a {{brand}}!', { brand }),
+    campaignName ? uiText('Convite para {{campaign}}', { campaign: campaignName }) : uiText('Foste convidado(a) para a {{brand}}!', { brand }),
     uiText('Abre este link para te registares: {{url}}', { url: url.toString() }),
     uiText('O convite é pessoal e de utilização única.'),
     recipientEmail ? uiText('Regista-te com o email {{email}}.', { email: recipientEmail }) : uiText('Indica o teu email ao registar-te.'),
@@ -20,8 +20,8 @@ export function invitationMessage(recipientEmail: string, code: string, brand: I
 }
 
 /** Opens a composer. The sender confirms the recipient and sends. */
-export function buildWhatsAppInviteUrl(recipientEmail: string, code: string, brand: InvitationBrand = 'YAMILOOK', expiresAt?: string): string {
-  return `https://api.whatsapp.com/send?text=${encodeURIComponent(invitationMessage(recipientEmail, code, brand, expiresAt))}`;
+export function buildWhatsAppInviteUrl(recipientEmail: string, code: string, brand: InvitationBrand = 'YAMILOOK', expiresAt?: string, campaignName?: string): string {
+  return `https://api.whatsapp.com/send?text=${encodeURIComponent(invitationMessage(recipientEmail, code, brand, expiresAt, campaignName))}`;
 }
 
 /** Opening a draft does not imply delivery. */

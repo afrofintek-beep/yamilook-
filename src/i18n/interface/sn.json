@@ -3496,5 +3496,12 @@
   "Pedidos de amizade": "Zvikumbiro zveushamwari",
   "Tens {{count}} pedido(s) de amizade por responder.": "Une zvikumbiro {{count}} zveushamwari zvakamirira mhinduro.",
   "Ver pedidos": "Ona zvikumbiro",
-  "Pedidos de amizade por e-mail": "Zvikumbiro zveushamwari neemail"
+  "Pedidos de amizade por e-mail": "Zvikumbiro zveushamwari neemail",
+  "Nome da campanha": "Zita remushandirapamwe",
+  "Gerar 10 convites": "Gadzira kokero 10",
+  "Convite {{number}}": "Kokero {{number}}",
+  "Email do promotor (campanha de 10 convites)": "Imeyili yemurongi (mushandirapamwe wekokero 10)",
+  "Convite para {{campaign}}": "Kokero ku{{campaign}}",
+  "Recebeste um convite pessoal para te inscreveres na Yamilook.": "Wagamuchira kokero yako pachako yekunyoresa paYamilook.",
+  "Aceitar convite e inscrever-me": "Gamuchira kokero unyorese"
 }

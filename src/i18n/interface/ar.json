@@ -3496,5 +3496,12 @@
   "Pedidos de amizade": "طلبات الصداقة",
   "Tens {{count}} pedido(s) de amizade por responder.": "لديك {{count}} طلب صداقة بانتظار الرد.",
   "Ver pedidos": "عرض الطلبات",
-  "Pedidos de amizade por e-mail": "طلبات الصداقة عبر البريد الإلكتروني"
+  "Pedidos de amizade por e-mail": "طلبات الصداقة عبر البريد الإلكتروني",
+  "Nome da campanha": "اسم الحملة",
+  "Gerar 10 convites": "إنشاء 10 دعوات",
+  "Convite {{number}}": "الدعوة {{number}}",
+  "Email do promotor (campanha de 10 convites)": "البريد الإلكتروني لمنظّم الحملة (10 دعوات)",
+  "Convite para {{campaign}}": "دعوة إلى {{campaign}}",
+  "Recebeste um convite pessoal para te inscreveres na Yamilook.": "تلقيت دعوة شخصية للتسجيل في Yamilook.",
+  "Aceitar convite e inscrever-me": "قبول الدعوة والتسجيل"
 }

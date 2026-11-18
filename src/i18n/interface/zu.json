@@ -3496,5 +3496,12 @@
   "Pedidos de amizade": "Izicelo zobungani",
   "Tens {{count}} pedido(s) de amizade por responder.": "Unezicelo zobungani ezingu-{{count}} ezilinde impendulo.",
   "Ver pedidos": "Buka izicelo",
-  "Pedidos de amizade por e-mail": "Izicelo zobungani nge-imeyili"
+  "Pedidos de amizade por e-mail": "Izicelo zobungani nge-imeyili",
+  "Nome da campanha": "Igama lomkhankaso",
+  "Gerar 10 convites": "Dala izimemo eziyi-10",
+  "Convite {{number}}": "Isimemo {{number}}",
+  "Email do promotor (campanha de 10 convites)": "I-imeyili yomgqugquzeli (umkhankaso wezimemo eziyi-10)",
+  "Convite para {{campaign}}": "Isimemo sokujoyina i-{{campaign}}",
+  "Recebeste um convite pessoal para te inscreveres na Yamilook.": "Uthole isimemo sakho sokubhalisa ku-Yamilook.",
+  "Aceitar convite e inscrever-me": "Yamukela isimemo bese ubhalisa"
 }
