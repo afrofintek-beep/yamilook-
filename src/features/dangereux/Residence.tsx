@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { ArrowUpRight, KeyRound, LockKeyhole, MapPin, ShieldCheck } from 'lucide-react';
-import { accessState, examplePeople, type Grant } from './model';
+import { accessState, examplePeople, type Grant, type Place } from './model';
 import { Plan } from './Plan';
 
-export function Residence({ grant, setGrant, showAtelier, setShowAtelier }: {grant: Grant | null; setGrant: (value: Grant) => void; showAtelier: boolean; setShowAtelier: (value: boolean) => void}) {
+export function Residence({ places, grant, setGrant, showAtelier, setShowAtelier }: {places: Place[]; grant: Grant | null; setGrant: (value: Grant) => void; showAtelier: boolean; setShowAtelier: (value: boolean) => void}) {
   const [person, setPerson] = useState(examplePeople[0]);
   const [hours, setHours] = useState(1);
   const [radius, setRadius] = useState(500);
@@ -49,7 +49,7 @@ export function Residence({ grant, setGrant, showAtelier, setShowAtelier }: {gra
           <div className="dg-fields"><label>Consultar como<select value={viewer} onChange={e=>setViewer(e.target.value)}>{examplePeople.map(p=><option key={p}>{p}</option>)}</select></label>
           <label>Distância simulada<select value={distance} onChange={e=>setDistance(Number(e.target.value))}>{[1000,500,250,100].map(n=><option value={n} key={n}>{n} m</option>)}</select></label></div>
           <div role="status" className="dg-notice">{state==='closed'?'Acesso fechado para esta visita.':state==='approach'?`Convite válido. A morada será revelada a ${grant!.radius} metros.`:'Visita autorizada. Percurso ilustrativo até à casa.'}</div>
-          {state==='open' && <Plan destination="casa"/>}
+          {state==='open' && <Plan places={places} destination="casa"/>}
         </>}
       </section>
       <section className="dg-box"><div className="dg-kicker">Negócio em casa</div><h3>Ateliê Linha da Banda</h3>

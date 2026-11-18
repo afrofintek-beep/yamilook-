@@ -27,7 +27,7 @@ import { AutomaticAccountBackup } from "@/components/AutomaticAccountBackup";
 const ActiveCallProvider = lazy(() => import("@/components/calls/ActiveCallProvider").then(m => ({ default: m.ActiveCallProvider })));
 
 // Lazy load all pages for faster initial load (Instagram/TikTok style)
-const DangereuxPilot = lazy(() => import('./features/dangereux/Pilot'));
+const DangereuxPilot = lazy(() => import('./features/dangereux/Access'));
 const pilotRoutesElements = pilotRoutes.map(path => <Route key={path} path={path} element={<DangereuxPilot />} />);
 const AccessVisit = lazy(() => import("./features/locaccess/AccessVisit"));
 const CurrentAfrolocCard = lazy(() => import("./features/afroloc-card/CurrentAfrolocCard"));
