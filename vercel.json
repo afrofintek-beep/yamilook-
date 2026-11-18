@@ -1,8 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
-    { "source": "/dangereux", "destination": "/dangereux/index.html" },
-    { "source": "/dangereux/", "destination": "/dangereux/index.html" },
+    { "source": "/app/dangereux", "destination": "/app/dangereux/index.html" },
+    { "source": "/app/dangereux/", "destination": "/app/dangereux/index.html" },
+    { "source": "/app/dangereux/index.html", "destination": "/app/dangereux/index.html" },
     {
       "source": "/app/caminho",
       "destination": "/index.html"
@@ -139,6 +140,9 @@
     }
   ],
   "redirects": [
+    { "source": "/dangereux", "destination": "/app/dangereux/", "permanent": false },
+    { "source": "/dangereux/", "destination": "/app/dangereux/", "permanent": false },
+    { "source": "/dangereux/index.html", "destination": "/app/dangereux/", "permanent": false },
     {
       "source": "/",
       "has": [

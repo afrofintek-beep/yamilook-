@@ -1,4 +1,5 @@
 import {FriendRequestAlerts} from '@/features/friend-requests/alerts';
+import { isPilotPath, pilotRoutes } from './features/dangereux/paths';
 import { loadingText } from '@/i18n/startup-copy';
 import {afrolocReturn} from './features/locaccess/return-path';
 import { AppLoadingScreen } from '@/components/AppStartupBoundary';
@@ -26,6 +27,8 @@ import { AutomaticAccountBackup } from "@/components/AutomaticAccountBackup";
 const ActiveCallProvider = lazy(() => import("@/components/calls/ActiveCallProvider").then(m => ({ default: m.ActiveCallProvider })));
 
 // Lazy load all pages for faster initial load (Instagram/TikTok style)
+const DangereuxPilot = lazy(() => import('./features/dangereux/Pilot'));
+const pilotRoutesElements = pilotRoutes.map(path => <Route key={path} path={path} element={<DangereuxPilot />} />);
 const AccessVisit = lazy(() => import("./features/locaccess/AccessVisit"));
 const CurrentAfrolocCard = lazy(() => import("./features/afroloc-card/CurrentAfrolocCard"));
 const AfrolocExperience = lazy(() => import("./features/afroloc-experience/AfrolocExperience"));
@@ -298,6 +301,7 @@ function AnimatedRoutes() {
           <Route path="/scheduled-call/:sessionId" element={<ProtectedRoute><ScheduledCallRoom /></ProtectedRoute>} />
           <Route path="/call/:callId" element={<ProtectedRoute><Call /></ProtectedRoute>} />
           <Route path="/status" element={<ProtectedRoute><Status /></ProtectedRoute>} />
+          {pilotRoutesElements}
           <Route path="/post/:postId" element={<PublicPost />} />
           <Route path="/feed" element={<ProtectedRoute><Feed /></ProtectedRoute>} />
           <Route path="/muxi" element={<ProtectedRoute><Feed /></ProtectedRoute>} />
@@ -455,11 +459,11 @@ function AppContent() {
 
 // A shared public link must not wait for login, calls or presence services.
 // Keep the SPA route too, for navigation from an already running application.
-const App = () => /^\/post\//.test(window.location.pathname) ? (
+const App = () => (isPilotPath(window.location.pathname) || /^\/post\//.test(window.location.pathname)) ? (
   <BrowserRouter>
     <LazyLoadErrorBoundary>
       <Suspense fallback={<PageLoader />}>
-        <Routes><Route path="/post/:postId" element={<PublicPost />} /></Routes>
+        <Routes>{pilotRoutesElements}<Route path="/post/:postId" element={<PublicPost />} /></Routes>
       </Suspense>
     </LazyLoadErrorBoundary>
   </BrowserRouter>

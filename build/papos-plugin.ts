@@ -9,9 +9,14 @@ export function paposApplication(): Plugin {
     transformIndexHtml: {
       order: 'post',
       handler(html, context) {
-        if (context.path !== '/papos-app/index.html') return html;
+        const entryManifests: Record<string, string> = {
+          '/papos-app/index.html': '/papos-app/manifest.webmanifest',
+          '/app/dangereux/index.html': '/app/dangereux/manifest.webmanifest',
+        };
+        const manifest = entryManifests[context.path];
+        if (!manifest) return html;
         return html.replace(/<link\b[^>]*rel=["']manifest["'][^>]*>/g, '')
-          .replace('</head>', '<link rel="manifest" href="/papos-app/manifest.webmanifest"></head>');
+          .replace('</head>', `<link rel="manifest" href="${manifest}"></head>`);
       },
     },
     generateBundle(_options, bundle) {

@@ -1,5 +1,6 @@
 import { PhoneAccess } from '@/features/phone-access/PhoneAccess';
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
+import { pilotPath } from '@/features/dangereux/paths';
 import AuthorizedAfrolocLink from '@/components/account-link/AuthorizedAfrolocLink';
 import { genderCtx } from '@/lib/i18n-gender';
 import React, { useState, useCallback } from 'react';
@@ -408,7 +409,7 @@ export default function Settings() {
             <Smartphone className="w-5 h-5" />{uiText("Instalar Yamilook · modo aplicação")}<ChevronRight className="w-4 h-4 ml-auto" />
           </Button>
 
-          <a href="/dangereux/" className="flex items-center gap-3 px-4 py-3 hover:bg-secondary/50">
+          <a href={pilotPath} className="flex items-center gap-3 px-4 py-3 hover:bg-secondary/50">
             <MapPin aria-hidden="true" className="w-5 h-5 shrink-0" />
             <span><strong>Dangereux</strong><br/><span className="text-sm text-muted-foreground">{uiText("Administração Digital do Bairro")}</span></span>
             <ChevronRight aria-hidden="true" className="w-4 h-4 ml-auto" />

@@ -1,4 +1,4 @@
-:root {
+.dg-root {
   font-family:Inter,"Segoe UI",system-ui,sans-serif;
   color:#243d36;
   background:#f6f5ed;
@@ -6,36 +6,36 @@
   -webkit-text-size-adjust:100%;
 }
 
-* {
+.dg-root, .dg-root * {
   box-sizing:border-box;
 }
 
-body {
+body.dg-standalone {
   margin:0;
 }
 
-button,input,select {
+.dg-root :is(button,input,select) {
   font:inherit;
 }
 
-button,a,input,select {
+.dg-root :is(button,a,input,select) {
   -webkit-tap-highlight-color:transparent;
 }
 
-button,a {
+.dg-root :is(button,a) {
   touch-action:manipulation;
 }
 
-button {
+:where(.dg-root) button {
   cursor:pointer;
 }
 
-a {
+:where(.dg-root) a {
   color:inherit;
   text-decoration:none;
 }
 
-button {
+:where(.dg-root) button {
   color:inherit;
 }
 
@@ -731,7 +731,7 @@ button {
   top:8px;
 }
 
-:focus-visible {
+.dg-root :focus-visible {
   outline:3px solid #af7b29;
   outline-offset:3px;
 }
@@ -933,4 +933,3 @@ button {
     width:calc(100% - 24px);
   }
 }
-

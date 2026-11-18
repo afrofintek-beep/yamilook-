@@ -19,7 +19,7 @@ export default defineConfig(({ mode }) => ({
     sourcemap: mode === "development",
     minify: "esbuild",
     rollupOptions: {
-      input: { dangereux: path.resolve(__dirname, "dangereux/index.html"), yamilook: path.resolve(__dirname, "index.html"), papos: path.resolve(__dirname, "papos-app/index.html") },
+      input: { dangereux: path.resolve(__dirname, "app/dangereux/index.html"), yamilook: path.resolve(__dirname, "index.html"), papos: path.resolve(__dirname, "papos-app/index.html") },
       output: {
         manualChunks: {
           "vendor-react": ["react", "react-dom", "react-router-dom"],
@@ -37,7 +37,7 @@ export default defineConfig(({ mode }) => ({
       injectRegister: null,
       includeAssets: ["favicon.ico", "yamilook-logo.png"],
       workbox: {
-        globIgnores: ["papos-app/**"],
+        globIgnores: ["papos-app/**", "app/dangereux/**"],
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
         navigateFallbackDenylist: [/^\/dangereux(?:\/|$)/, /^\/caminho(?:\/|$)/, /^\/post(?:\/|$)/, /^\/api(?:\/|$)/, /^\/papos-app(?:\/|$)/,/^\/~oauth/, /^\/guia/, /^\/app/, /^\/download/, /^\/store/],
         cleanupOutdatedCaches: true,
