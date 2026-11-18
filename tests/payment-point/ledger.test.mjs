@@ -15,9 +15,16 @@ await db.exec(readFileSync('supabase/migrations/20261118163926_payment_point_san
 for (const n of [1,2,3,9]) await db.query('insert into auth.users values($1);',[id(n)]);
 for (const n of [1,2,3,9]) await db.query("insert into profiles(id,country_code) values($1,'AO')",[id(n)]);
 await db.exec(readFileSync('supabase/migrations/20261118170009_payment_point_angola.sql','utf8'));
+await db.exec(readFileSync('supabase/migrations/20261118193500_payment_point_balance_rls.sql','utf8'));
 async function act(user,action,reference=null,amount=null,text=null) {
  await db.exec(`set role authenticated; set request.jwt.claim.sub='${id(user)}'`);
- try { return (await db.query('select payment_point_action($1,$2,$3,$4) result',[action,reference,amount,text])).rows[0].result; }
+ try {
+  await db.exec('begin');
+  const result = (await db.query('select payment_point_action($1,$2,$3,$4) result',[action,reference,amount,text])).rows[0].result;
+  await db.exec('set constraints all immediate');
+  await db.exec('commit');
+  return result;
+ } catch (error) { await db.exec('rollback'); throw error; }
  finally { await db.exec('reset role'); }
 }
 await test('topup retries are idempotent and purchased funds cannot be withdrawn', async()=>{
