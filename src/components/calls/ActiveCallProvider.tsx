@@ -405,7 +405,7 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
         <div className="flex h-28 w-28 items-center justify-center rounded-full bg-primary/15"><User className="h-14 w-14 text-primary" /></div>
         <p role="status" aria-live="polite" className="text-xl font-medium">{webRTCState.callStatus === 'ringing' ? uiText("A chamar…") : uiText("A ligar…")}</p>
         <p className="max-w-sm text-center text-sm text-muted-foreground">{uiText("Se for solicitado, autoriza o microfone para continuar.")}</p>
-        {starting && <Button variant="outline" onClick={minimizeSetup}>{uiText("Minimizar")}</Button>}
+        {starting && <Button onClick={minimizeSetup}>{uiText("Minimizar")}</Button>}
         <Button disabled={answering && isInCall} variant="destructive" className="mt-12 h-16 rounded-full px-6 gap-2" onClick={endCurrentCall}><PhoneOff className="h-6 w-6" />{uiText("Cancelar chamada")}</Button>
       </div>}
       <ScheduledCallNotices />
