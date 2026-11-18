@@ -22,9 +22,11 @@ interface Peer {
 
 /** Group voice (LiveKit) + persistent text chat (mokubico_messages + realtime)
  *  for a Mokubico conversa. Everyone allowed in can talk; token enforces access. */
-export function useMokubicoRoom(conversaId: string | null, roomName: string | null) {
+export function useMokubicoRoom(conversaId: string | null, roomName: string | null, visible = true) {
   const { user, profile } = useAuth();
   const roomRef = useRef<Room | null>(null);
+  const generation = useRef(0);
+  const [micStream, setMicStream] = useState<MediaStream | null>(null);
   const [connected, setConnected] = useState(false);
   const [connecting, setConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -80,12 +82,12 @@ export function useMokubicoRoom(conversaId: string | null, roomName: string | nu
 
   // --- Read receipts: mark my cursor, and track everyone's ---
   useEffect(() => {
-    if (!conversaId || !user) return;
+    if (!conversaId || !user || !visible) return;
     supabase.from('mokubico_conversa_reads').upsert(
       { conversa_id: conversaId, user_id: user.id, last_read_at: new Date().toISOString() },
       { onConflict: 'conversa_id,user_id' },
     ).then(() => { /* fire and forget */ });
-  }, [conversaId, user, messages.length]);
+  }, [conversaId, user, messages.length, visible]);
 
   useEffect(() => {
     if (!conversaId) return;
@@ -119,6 +121,8 @@ export function useMokubicoRoom(conversaId: string | null, roomName: string | nu
 
   // --- Group voice (LiveKit) ---
   const refreshPeers = useCallback((room: Room) => {
+    const mic = room.localParticipant.getTrackPublication(Track.Source.Microphone)?.audioTrack?.mediaStreamTrack;
+    setMicStream(previous => previous?.getAudioTracks()[0] === mic ? previous : mic ? new MediaStream([mic]) : null);
     const speaking = new Set(room.activeSpeakers.map((p) => p.identity));
     const all: Participant[] = [room.localParticipant, ...room.remoteParticipants.values()];
     setPeers(all.map((p) => {
@@ -147,12 +151,14 @@ export function useMokubicoRoom(conversaId: string | null, roomName: string | nu
     return { token: data.token, url: data.url };
   }, [user, profile, roomName]);
 
-  const connect = useCallback(async () => {
+  const connect = useCallback(async (enableMic = true) => {
     if (!roomName || roomRef.current || connecting) return;
+    const epoch = ++generation.current;
     setConnecting(true);
     setError(null);
     try {
       const creds = await getToken();
+      if (epoch !== generation.current) return;
       if (!creds) throw new Error(uiText("Sem credenciais para entrar."));
       const room = new Room({ adaptiveStream: true, dynacast: true });
       roomRef.current = room;
@@ -169,17 +175,20 @@ export function useMokubicoRoom(conversaId: string | null, roomName: string | nu
         .on(RoomEvent.LocalTrackUnpublished, refresh)
         .on(RoomEvent.Disconnected, () => setConnected(false));
       await room.connect(creds.url, creds.token);
-      await room.localParticipant.setMicrophoneEnabled(true);
-      setMicOn(true);
+      if (epoch !== generation.current) { await room.disconnect(); return; }
+      await room.localParticipant.setMicrophoneEnabled(enableMic);
+      if (epoch !== generation.current) { await room.disconnect(); return; }
+      setMicOn(enableMic);
       setConnected(true);
       refreshPeers(room);
     } catch (e) {
+      if (epoch !== generation.current) return;
       logger.error('Mokubico room connect failed', 'mokubico', e);
       setError(e instanceof Error ? e.message : uiText("Falha ao entrar na sala."));
       roomRef.current?.disconnect();
       roomRef.current = null;
     } finally {
-      setConnecting(false);
+      if (epoch === generation.current) setConnecting(false);
     }
   }, [roomName, connecting, getToken, refreshPeers]);
 
@@ -201,12 +210,27 @@ export function useMokubicoRoom(conversaId: string | null, roomName: string | nu
   }, [camOn, refreshPeers]);
 
   const leave = useCallback(() => {
-    roomRef.current?.disconnect();
+    generation.current++;
+    roomRef.current?.localParticipant.trackPublications.forEach(p => p.track?.stop());
+    roomRef.current?.removeAllListeners();
+    void roomRef.current?.disconnect();
     roomRef.current = null;
+    setMicStream(null);
+    setConnecting(false);
+    setCamOn(false);
     setConnected(false);
   }, []);
 
-  useEffect(() => () => { roomRef.current?.disconnect(); roomRef.current = null; }, []);
+  useEffect(() => leave, [leave]);
 
-  return { connect, leave, toggleMic, toggleCamera, sendMessage, connected, connecting, error, micOn, camOn, peers, messages, reads, avatars, selfId: user?.id ?? '' };
+  const recoverAudio = async () => {
+    const room = roomRef.current;
+    if (!room) return;
+    await room.startAudio();
+    const mic = room.localParticipant.getTrackPublication(Track.Source.Microphone)?.audioTrack;
+    if (mic && !mic.isMuted) await mic.restartTrack();
+    refreshPeers(room);
+  };
+
+  return { micStream, recoverAudio, connect, leave, toggleMic, toggleCamera, sendMessage, connected, connecting, error, micOn, camOn, peers, messages, reads, avatars, selfId: user?.id ?? '' };
 }

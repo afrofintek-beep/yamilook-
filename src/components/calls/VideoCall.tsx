@@ -46,6 +46,7 @@ interface VideoCallProps {
     is_spotlight: boolean;
     role?: string;
   }>;
+  onMinimize?: () => void;
   onEndCall: () => void;
   isGroupCall?: boolean;
   isHost?: boolean;
@@ -56,7 +57,7 @@ export function VideoCall({
   callId,
   callType,
   participants,
-  onEndCall,
+  onMinimize, onEndCall,
   isGroupCall = false,
   isHost = false,
 }: VideoCallProps) {
@@ -217,6 +218,7 @@ export function VideoCall({
       style={{ height: "var(--kosolola-height, 100dvh)" }}
     >
       <header className="order-0 shrink-0 flex items-center justify-end gap-2 px-3 pb-1 pt-[calc(env(safe-area-inset-top,0px)+0.25rem)]">
+      {onMinimize && <button className="mr-auto rounded-full px-3 py-2 text-white" onClick={onMinimize}>{uiText("Minimizar")}</button>}
       {compactChat && <span className="min-w-0 flex-1 truncate text-sm font-medium text-white">{participants.map(p => p.display_name).join(', ')}</span>}
       <span role="status" className="rounded-full bg-black/70 px-3 py-1 text-sm text-white">
         {(state.callStatus === 'connected' && state.connectionState === 'connected') ? uiText("Ligada") : state.callStatus === 'ringing' ? uiText("A chamar…") : state.lastError || uiText("A estabelecer ligação…")}

@@ -2,7 +2,7 @@ import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { scrollChatToEnd } from '@/lib/chat-scroll';
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,8 @@ import { cn } from '@/lib/utils';
 import { VideoTrack } from '@/components/live/VideoTrack';
 import { useMokubicoRoom } from '../hooks/useMokubicoRoom';
 import { useEndConversa } from '../hooks/useMokubicoConversas';
+import { useActiveCall } from '@/components/calls/ActiveCallProvider';
+import { AudioInterruption } from '@/components/calls/AudioInterruption';
 import { toast } from 'sonner';
 
 interface ConversaInfo {
@@ -24,9 +26,9 @@ interface ConversaInfo {
   media_enabled: boolean;
 }
 
-export default function MokubicoConversa() {
+export default function MokubicoConversa({ id, minimized, onPin }: { id: string; minimized: boolean; onPin: (id?: string) => void }) {
   useUiLocale();
-  const { id } = useParams<{ id: string }>();
+
   const navigate = useNavigate();
   const { user } = useAuth();
   const endMutation = useEndConversa();
@@ -38,7 +40,20 @@ export default function MokubicoConversa() {
   const stageRef = useRef<HTMLDivElement>(null);
 
   const isHost = !!conversa && conversa.host_id === user?.id;
-  const room = useMokubicoRoom(id ?? null, conversa?.livekit_room_name ?? null);
+  const room = useMokubicoRoom(id ?? null, conversa?.livekit_room_name ?? null, !minimized);
+  const directBusy = useActiveCall()?.mediaBusy;
+  const [paused, setPaused] = useState(false);
+  const [resumeMic, setResumeMic] = useState(true);
+  useEffect(() => {
+    const pause = () => {
+      if (!room.connected && !room.connecting) return;
+      setResumeMic(room.micOn);
+      setPaused(true);
+      room.leave();
+    };
+    window.addEventListener('yamilook:direct-media', pause);
+    return () => window.removeEventListener('yamilook:direct-media', pause);
+  }, [room.connected, room.connecting, room.micOn, room.leave]);
   const self = room.peers.find((p) => p.id === room.selfId);
   const others = room.peers.filter((p) => p.id !== room.selfId);
 
@@ -58,11 +73,15 @@ export default function MokubicoConversa() {
   // Join the LiveKit room only when this conversa has voice/video enabled
   // (a free Quintal is text-only → no media session at all).
   useEffect(() => {
-    if (state === 'ok' && conversa?.status === 'live' && conversa?.media_enabled) room.connect();
+    if (state === 'ok' && conversa?.status === 'live' && conversa?.media_enabled && !directBusy && !paused) room.connect(resumeMic);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state, conversa?.status, conversa?.media_enabled]);
+  }, [state, conversa?.status, conversa?.media_enabled, directBusy, paused]);
 
   useEffect(() => { scrollChatToEnd(messagesViewportRef.current, 'smooth'); }, [room.messages.length]);
+
+  useEffect(() => {
+    onPin(paused || room.connected || room.connecting ? id : undefined);
+  }, [id, paused, room.connected, room.connecting, onPin]);
 
   const send = () => { room.sendMessage(text); setText(''); };
 
@@ -71,7 +90,7 @@ export default function MokubicoConversa() {
     endingRef.current = true;
     try {
       await endMutation.mutateAsync(id);
-      room.leave();
+      onPin(undefined); room.leave();
       toast.success(uiText("Conversa terminada."));
       navigate(`/mokubico/${conversa?.space ?? ''}`);
     } catch {
@@ -81,7 +100,16 @@ export default function MokubicoConversa() {
     }
   };
 
-  const leave = () => { room.leave(); navigate(`/mokubico/${conversa?.space ?? ''}`); };
+  const leave = () => { onPin(undefined); room.leave(); navigate(`/mokubico/${conversa?.space ?? ''}`); };
+
+  if (minimized && directBusy) return null;
+  if (minimized) return <aside className="fixed right-3 top-[max(1rem,env(safe-area-inset-top))] z-[80] max-w-48 rounded-xl border bg-background p-2 shadow-lg">
+    {others[0]?.videoTrack && <VideoTrack track={others[0].videoTrack} className="h-24 w-full rounded-lg object-cover" />}
+    <button className="block p-2"
+    onClick={() => navigate(`/mokubico/conversa/${id}`)}>{conversa?.title} · {uiText("Voltar à chamada")}</button>
+    {room.connected && <Button variant="ghost" onClick={room.toggleMic}>{room.micOn ? uiText("Desligar microfone") : uiText("Ligar microfone")}</Button>}
+    <AudioInterruption stream={room.micStream} muted={!room.micOn || paused} recover={room.recoverAudio} />
+  </aside>;
 
   if (state === 'loading') {
     return (
@@ -109,9 +137,12 @@ export default function MokubicoConversa() {
 
   return (
     <div className="flex flex-col h-screen-safe overflow-hidden bg-background">
+      <AudioInterruption stream={room.micStream} muted={!room.micOn || paused} recover={room.recoverAudio} />
+      {paused && !directBusy && <Button onClick={() => setPaused(false)}>{uiText("Retomar chamada")}</Button>}
+      {directBusy && <p role="status">{uiText("Chamada em curso no KOSOLOLA")}</p>}
       {/* Header */}
       <header className="flex items-center gap-3 px-4 min-h-[calc(3.5rem+env(safe-area-inset-top,0px))] border-b border-border safe-top shrink-0">
-        <button onClick={leave} className="p-1 -ml-1"><ArrowLeft className="h-5 w-5" /></button>
+        <button aria-label={uiText("Voltar")} onClick={() => navigate(`/mokubico/${conversa?.space ?? ''}`)} className="p-1 -ml-1"><ArrowLeft className="h-5 w-5" /></button>
         <div className="flex-1 min-w-0">
           <h1 className="text-sm font-bold truncate">{conversa?.title || uiText("Conversa")}</h1>
           <p className="text-[11px] text-muted-foreground flex items-center gap-1">

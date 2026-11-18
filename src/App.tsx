@@ -282,6 +282,17 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function PersistentConversa() {
+  const { pathname } = useLocation();
+  const { user } = useAuth();
+  const visiting = pathname.match(/^\/mokubico\/conversa\/([^/]+)\/?$/)?.[1];
+  const [pinned, setPinned] = useState<string>();
+  const id = visiting || pinned;
+  if (!id || !user) return null;
+  return <ProtectedRoute><Suspense fallback={null}><MokubicoConversa key={user.id + id} id={id}
+    minimized={!visiting} onPin={setPinned} /></Suspense></ProtectedRoute>;
+}
+
 function AnimatedRoutes() {
   const location = useLocation();
   
@@ -317,7 +328,7 @@ function AnimatedRoutes() {
           <Route path="/academia/live/:sessionId" element={<ProtectedRoute><AcademiaLiveRoom /></ProtectedRoute>} />
           <Route path="/academia/mentor/:mentorId" element={<ProtectedRoute><MentorProfileScreen /></ProtectedRoute>} />
           <Route path="/academia/:sessionId" element={<ProtectedRoute><AcademiaSession /></ProtectedRoute>} />
-          <Route path="/mokubico/conversa/:id" element={<ProtectedRoute><MokubicoConversa /></ProtectedRoute>} />
+          <Route path="/mokubico/conversa/:id" element={null} />
           <Route path="/mokubico/:space" element={<ProtectedRoute><MokubicoSpace /></ProtectedRoute>} />
           <Route path="/papos" element={<ProtectedRoute><Home /></ProtectedRoute>} />
           <Route path="/perfil" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
@@ -451,6 +462,7 @@ function AppContent() {
       <AutomaticAccountBackup />
       <ActiveCallProvider>
         <AnimatedRoutes />
+        <PersistentConversa />
       </ActiveCallProvider>
       </FriendRequestAlerts>
     </BrowserRouter>

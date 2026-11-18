@@ -14,6 +14,8 @@ import { useCalls } from '@/hooks/useCalls';
 import { useToast } from '@/hooks/use-toast';
 import { callErrorCode, playCallTone, stopCallTone } from '@/lib/call-feedback';
 import { unlockCallAudio } from '@/lib/audio-context';
+import { AudioInterruption } from './AudioInterruption';
+import { CallRemoteMedia } from './CallRemoteMedia';
 import { Button } from '@/components/ui/button';
 import { logger } from '@/lib/logger';
 import { Phone, PhoneOff, Video, User } from 'lucide-react';
@@ -22,6 +24,7 @@ import { Phone, PhoneOff, Video, User } from 'lucide-react';
 const IncomingCallOverlay = lazy(() => import('./IncomingCallOverlay').then(m => ({ default: m.IncomingCallOverlay })));
 
 interface ActiveCallContextType {
+  mediaBusy?: boolean;
   isInCall: boolean;
   currentCallId: string | null;
   startCall: (contactId: string, type: 'voice' | 'video', conversationId?: string) => Promise<void>;
@@ -109,6 +112,7 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
   const [isInCall, setIsInCall] = useState(false);
   const [currentCallId, setCurrentCallId] = useState<string | null>(null);
   const [setupCallType, setSetupCallType] = useState<'voice' | 'video'>('voice');
+  const [switching, setSwitching] = useState(false);
   const [starting, setStarting] = useState(false);
   const [answering, setAnswering] = useState(false);
   const startEpoch = useRef(0);
@@ -188,6 +192,7 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
     startingRef.current = true; setStarting(true);
     unlockCallAudio(); markUserInteracted();
     try {
+      window.dispatchEvent(new Event('yamilook:direct-media'));
       const callId = await initiateCall(contactId, type, conversationId);
       if (epoch !== startEpoch.current) return;
       setCurrentCallId(callId);
@@ -232,6 +237,7 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
 
     try {
       // Answering a call requires user media; if this fails, show a clear toast.
+      window.dispatchEvent(new Event('yamilook:direct-media'));
       await answerCall(callId, callType, initiatorId);
       if (epoch !== startEpoch.current) return;
       setCurrentCallId(callId);
@@ -260,7 +266,7 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
     setIsInCall(false);
   }, [endCall]);
 
-  const handleAnswerCall = useCallback(async () => {
+  const handleAnswerCall = useCallback(async (hold = false) => {
     if (!incomingCall || answeringCallRef.current || currentCallId === incomingCall.id) return;
     const call = incomingCall;
     answeringCallRef.current = call.id;
@@ -269,7 +275,9 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
     setAnswering(true);
     unlockCallAudio(); markUserInteracted();
     try {
-      if (currentCallId && isInCall) await endAndAnswerCall(currentCallId, call.id, call.type, call.initiator_id);
+      window.dispatchEvent(new Event('yamilook:direct-media'));
+      if (hold && currentCallId && isInCall) await webRTC.holdAndAnswer(call.id, call.type, call.initiator_id);
+      else if (currentCallId && isInCall) await endAndAnswerCall(currentCallId, call.id, call.type, call.initiator_id);
       else await answerCall(call.id, call.type, call.initiator_id);
       if (epoch !== startEpoch.current) return;
       setCurrentCallId(call.id);
@@ -284,7 +292,7 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
       if (epoch === startEpoch.current) setAnswering(false);
       if (answeringCallRef.current === call.id) answeringCallRef.current = null;
     }
-  }, [incomingCall, currentCallId, isInCall, answerCall, endAndAnswerCall, markUserInteracted, setIncomingCall, navigate, toast]);
+  }, [incomingCall, currentCallId, isInCall, answerCall, endAndAnswerCall, webRTC.holdAndAnswer, markUserInteracted, setIncomingCall, navigate, toast]);
 
   const handleAddToCall = useCallback(async () => {
     if (!incomingCall || !currentCallId || !isInCall || answeringCallRef.current) return;
@@ -326,6 +334,7 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
 
   // Memoize context value to prevent unnecessary re-renders of consumers
   const contextValue = useMemo<ActiveCallContextType>(() => ({
+    mediaBusy: isInCall || starting || answering || !!webRTC.heldId,
     isInCall,
     currentCallId,
     startCall,
@@ -344,31 +353,49 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
     raiseHand,
     sendReaction,
     endCall,
-  }), [isInCall, currentCallId, startCall, joinCall, endCurrentCall, markUserInteracted, webRTCState, toggleMute, toggleVideo, toggleScreenShare, flipCamera, setVirtualBackground, setCallEffects, setAudioProcessing, raiseHand, sendReaction, endCall]);
+  }), [starting, answering, webRTC.heldId, isInCall, currentCallId, startCall, joinCall, endCurrentCall, markUserInteracted, webRTCState, toggleMute, toggleVideo, toggleScreenShare, flipCamera, setVirtualBackground, setCallEffects, setAudioProcessing, raiseHand, sendReaction, endCall]);
   const callWaiting = !!incomingCall && !!currentCallId && isInCall && incomingCall.id !== currentCallId;
 
   return (
     <ActiveCallContext.Provider value={contextValue}>
       <GroupConferenceProvider directBusy={isInCall || starting || answering}>
       {children}
+      {webRTC.heldId && <Button className="fixed bottom-24 left-3 z-[100]" disabled={answering || switching} onClick={async () => {
+        setSwitching(true);
+        try {
+          const id = await webRTC.switchToHeld();
+          if (id) { setCurrentCallId(id); setIsInCall(true); navigate(`/call/${id}`); }
+        } catch (err) { toast({ title: uiText("Não foi possível retomar a chamada"), description: formatCallError(err) }); }
+        finally { setSwitching(false); }
+      }}>{isInCall ? uiText("Alternar chamada") : uiText("Retomar chamada em espera")}</Button>}
+      {webRTCState.peerAudioInterrupted && <p role="status" className="fixed left-3 top-24 z-[90] rounded-xl bg-background p-2">{uiText("Áudio do outro participante interrompido")}</p>}
+      {webRTCState.peerOnHold && <p role="status" className="fixed left-3 top-16 z-[90] rounded-xl bg-background p-2">{uiText("Em espera")}</p>}
+      {webRTC.recoverAudio && currentCallId && <AudioInterruption key={currentCallId} report={webRTC.reportInterruption} stream={webRTCState.localStream} muted={webRTCState.isMuted} recover={webRTC.recoverAudio} />}
+      {currentCallId && isInCall && location.pathname !== `/call/${currentCallId}` && <aside className="fixed top-[max(1rem,env(safe-area-inset-top))] right-3 z-[85] max-w-48 rounded-xl border bg-background p-2 shadow-lg">
+        {Array.from(webRTCState.remoteStreams ?? [], ([peer, stream]) => <div key={peer} className="relative max-h-24 overflow-hidden"><CallRemoteMedia stream={stream} showVideo={webRTCState.callType === 'video'} /></div>)}
+        <Button onClick={() => navigate(`/call/${currentCallId}`)}>{uiText("Voltar à chamada")}</Button>
+        <Button variant="ghost" onClick={toggleMute}>{webRTCState.isMuted ? uiText("Ligar microfone") : uiText("Desligar microfone")}</Button>
+      </aside>}
+      {switching && <div role="status" className="fixed inset-0 z-[190] grid place-items-center bg-background/90">{uiText("A alternar chamada…")}</div>}
       {(starting || answering) && <div role="dialog" aria-modal="true" aria-label={uiText("A iniciar chamada")} className="fixed inset-0 z-[190] bg-background flex flex-col items-center justify-center gap-6 p-6 safe-top">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">{setupCallType === 'video' ? <Video className="h-4 w-4" /> : <Phone className="h-4 w-4" />}<span>{setupCallType === 'video' ? uiText("Videochamada") : uiText("Chamada de voz")}</span></div>
         <div className="flex h-28 w-28 items-center justify-center rounded-full bg-primary/15"><User className="h-14 w-14 text-primary" /></div>
         <p role="status" aria-live="polite" className="text-xl font-medium">{webRTCState.callStatus === 'ringing' ? uiText("A chamar…") : uiText("A ligar…")}</p>
         <p className="max-w-sm text-center text-sm text-muted-foreground">{uiText("Se for solicitado, autoriza o microfone para continuar.")}</p>
-        <Button variant="destructive" className="mt-12 h-16 rounded-full px-6 gap-2" onClick={endCurrentCall}><PhoneOff className="h-6 w-6" />{uiText("Cancelar chamada")}</Button>
+        <Button disabled={answering && isInCall} variant="destructive" className="mt-12 h-16 rounded-full px-6 gap-2" onClick={endCurrentCall}><PhoneOff className="h-6 w-6" />{uiText("Cancelar chamada")}</Button>
       </div>}
       <ScheduledCallNotices />
 
       {/* Incoming call overlay - lazy loaded */}
       {incomingCall && (
-        <IncomingCallBoundary key={incomingCall.id} onAnswer={handleAnswerCall} onDecline={handleDeclineCall} waiting={callWaiting} busy={answering} answerLabel={callWaiting ? t('calls.endAndAnswer') : undefined} waitingLabel={callWaiting ? t('calls.waitingTitle') : undefined}>
+        <IncomingCallBoundary key={incomingCall.id} onAnswer={() => void handleAnswerCall()} onDecline={handleDeclineCall} waiting={callWaiting} busy={answering} answerLabel={callWaiting ? t('calls.endAndAnswer') : undefined} waitingLabel={callWaiting ? t('calls.waitingTitle') : undefined}>
         <Suspense fallback={null}>
           <IncomingCallOverlay
             callId={incomingCall.id}
             callType={incomingCall.type}
             callerId={incomingCall.initiator_id}
-            onAnswer={handleAnswerCall}
+            onHoldAnswer={callWaiting && webRTC.canHold ? () => void handleAnswerCall(true) : undefined}
+            onAnswer={() => void handleAnswerCall()}
             onDecline={handleDeclineCall}
             onAddToCall={callWaiting ? handleAddToCall : undefined}
             waiting={callWaiting}

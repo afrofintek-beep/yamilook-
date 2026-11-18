@@ -37,6 +37,7 @@ function setupFailure(stage: string, error: unknown) {
 export function useLiveKitCall() {
   const { user, profile } = useAuth();
   const [state, setState] = useState<CallState>({ ...INITIAL_STATE });
+  const parked = useRef<{ mic: boolean; camera: boolean } | null>(null);
   const streams = useRef(new Map<string, MediaStream>());
   const roomRef = useRef<Room | null>(null);
   const sdkRef = useRef<typeof import('livekit-client')>();
@@ -61,6 +62,7 @@ export function useLiveKitCall() {
   const releaseRef = useRef<() => void>(() => {});
 
   const release = useCallback(() => {
+    parked.current = null;
     generation.current++;
     streams.current.clear();
     callRef.current = null;
@@ -132,7 +134,9 @@ export function useLiveKitCall() {
     const remote = new Map<string, MediaStream>();
     const remoteScreens = new Map<string, MediaStream>();
     room.remoteParticipants.forEach(p => {
-      remote.set(p.identity, streamFor(`remote:${p.identity}`, p));
+      const stream = streamFor(`remote:${p.identity}`, p);
+      if (parked.current) stream.getAudioTracks().forEach(track => { track.enabled = false; });
+      remote.set(p.identity, stream);
       const screen = streamFor(`screen:${p.identity}`, p, true);
       if (screen.getVideoTracks().length) remoteScreens.set(p.identity, screen);
     });
@@ -180,6 +184,12 @@ export function useLiveKitCall() {
     room.on(RoomEvent.TrackSubscribed, sync).on(RoomEvent.TrackUnsubscribed, sync)
       .on(RoomEvent.TrackMuted, sync).on(RoomEvent.TrackUnmuted, sync)
       .on(RoomEvent.LocalTrackPublished, sync).on(RoomEvent.LocalTrackUnpublished, sync)
+      .on(RoomEvent.DataReceived, (payload, peer, _kind, topic) => {
+        if (peer?.identity !== target || topic !== 'call-presence' || payload.length !== 2) return;
+        const [field, value] = payload;
+        if (field === 1) setState(s => ({ ...s, peerOnHold: value === 1 }));
+        if (field === 2) setState(s => ({ ...s, peerAudioInterrupted: value === 1 }));
+      })
       .on(RoomEvent.ParticipantConnected, sync)
       .on(RoomEvent.ParticipantDisconnected, () => {
         sync();
@@ -280,7 +290,7 @@ export function useLiveKitCall() {
     } finally { if (generation.current === epoch) busy.current = false; }
   }, [user, connect, fail, prepareMicrophone]);
 
-  const answerCall = useCallback(async (id: string, type: 'voice' | 'video', target: string) => {
+  const answerCall = useCallback(async (id: string, type: 'voice' | 'video', target: string, heldId?: string) => {
     if (!user) throw new Error(uiText("Inicia sessão."));
     if (busy.current || roomRef.current) throw new Error(uiText("Já existe uma chamada em curso."));
     busy.current = true;
@@ -288,7 +298,7 @@ export function useLiveKitCall() {
     const epoch = ++generation.current;
     try {
       setupStage.current = 'claim';
-      const { data: claimed, error: claimError } = await supabase.rpc('claim_direct_call', { p_call_id: id });
+      const { data: claimed, error: claimError } = heldId ? await supabase.rpc('claim_waiting_livekit_call', { p_call_id: id, p_held_id: heldId }) : await supabase.rpc('claim_direct_call', { p_call_id: id });
       if (generation.current !== epoch) {
         if (claimed) await supabase.rpc('finish_direct_call', { p_call_id: id, p_outcome: 'completed' });
         return;
@@ -423,7 +433,47 @@ export function useLiveKitCall() {
   const setAudioProcessing = useCallback(async (options: MediaTrackConstraints) => {
     await roomRef.current?.localParticipant.getTrackPublication(sdkRef.current!.Track.Source.Microphone)?.audioTrack?.mediaStreamTrack.applyConstraints(options);
   }, []);
+  const setHeld = async (hold: boolean) => {
+    const room = roomRef.current;
+    if (!room) throw new Error(uiText("Chamada terminada."));
+    const local = room.localParticipant;
+    if (hold) {
+      room.remoteParticipants.forEach(peer => peer.audioTrackPublications.forEach(pub => {
+        if (pub.track) pub.track.mediaStreamTrack.enabled = false;
+      }));
+      parked.current ??= { mic: local.isMicrophoneEnabled, camera: local.isCameraEnabled };
+      await local.setMicrophoneEnabled(false);
+      await local.setCameraEnabled(false);
+      if (local.isScreenShareEnabled) await local.setScreenShareEnabled(false);
+    } else if (parked.current) {
+      const saved = parked.current;
+      if (saved.mic) await local.setMicrophoneEnabled(true);
+      if (saved.camera) await local.setCameraEnabled(true);
+      parked.current = null;
+      room.remoteParticipants.forEach(peer => peer.audioTrackPublications.forEach(pub => {
+        if (pub.track) pub.track.mediaStreamTrack.enabled = true;
+      }));
+    }
+    void local.publishData(Uint8Array.of(1, Number(hold)), { reliable: true, topic: 'call-presence' }).catch(() => {});
+    refresh(room);
+  };
+
+  const recoverAudio = async () => {
+    const room = roomRef.current;
+    if (!room || parked.current) return;
+    await room.startAudio();
+    const mic = room.localParticipant.getTrackPublication(sdkRef.current!.Track.Source.Microphone)?.audioTrack;
+    if (mic && !mic.isMuted && (mic.mediaStreamTrack.muted || mic.mediaStreamTrack.readyState === 'ended')) {
+      await mic.restartTrack();
+      refresh(room);
+    }
+  };
+
   return {
+    setHeld, recoverAudio,
+    reportInterruption: (value: boolean) => {
+      void roomRef.current?.localParticipant.publishData(Uint8Array.of(2, Number(value)), { reliable: true, topic: 'call-presence' }).catch(() => {});
+    },
     state, initiateCall, answerCall, endCall, toggleMute, toggleVideo, toggleScreenShare, flipCamera,
     declineCall: async (id: string, _target: string) => {
       if (!user) return;
