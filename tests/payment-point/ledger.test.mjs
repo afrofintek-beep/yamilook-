@@ -8,11 +8,13 @@ await db.exec(`create role anon; create role authenticated;
  create schema auth;
  create function auth.uid() returns uuid language sql as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
  create table auth.users(id uuid primary key);
- create table public.profiles(id uuid primary key, display_name text);
+ create table public.profiles(id uuid primary key, display_name text, country_code text);
  create function public.has_role(uuid,text) returns boolean language sql as $$select $1='${id(9)}'::uuid$$;
  grant usage on schema auth to authenticated;`);
 await db.exec(readFileSync('supabase/migrations/20261118163926_payment_point_sandbox.sql','utf8'));
 for (const n of [1,2,3,9]) await db.query('insert into auth.users values($1);',[id(n)]);
+for (const n of [1,2,3,9]) await db.query("insert into profiles(id,country_code) values($1,'AO')",[id(n)]);
+await db.exec(readFileSync('supabase/migrations/20261118170009_payment_point_angola.sql','utf8'));
 async function act(user,action,reference=null,amount=null,text=null) {
  await db.exec(`set role authenticated; set request.jwt.claim.sub='${id(user)}'`);
  try { return (await db.query('select payment_point_action($1,$2,$3,$4) result',[action,reference,amount,text])).rows[0].result; }
@@ -68,5 +70,23 @@ await test('RLS and journal balancing protect entries',async()=>{
  await db.exec('reset role');
  assert.equal((await db.query('select journal_id from payment_point_entries group by journal_id having sum(amount)<>0')).rows.length,0);
  await assert.rejects(db.query('update payment_point_entries set amount=1'),/Immutable/);
+});
+await test('Angola metadata and server checks exclude foreign and missing profile countries',async()=>{
+ const summary=await act(1,'overview');
+ assert.equal(summary.country_code,'AO'); assert.equal(summary.currency,'AOA');
+ assert.equal(summary.wallet.country_code,'AO');
+ await db.query("update profiles set country_code='PT' where id=$1",[id(1)]);
+ await assert.rejects(act(1,'topup',id(301),100),/Angola/);
+ await assert.rejects(act(1,'pay',id(102)),/Angola/);
+ assert.equal((await act(1,'overview')).wallet.country_code,'AO');
+ await db.query('update profiles set country_code=null where id=$1',[id(3)]);
+ await assert.rejects(act(3,'merchant'),/Angola/);
+ await db.query("update profiles set country_code='AO' where id=$1",[id(1)]);
+ await db.query("update profiles set country_code='PT' where id=$1",[id(2)]);
+ await assert.rejects(act(1,'pay',id(102)),/destinatário/);
+ await db.exec(`set role authenticated; set request.jwt.claim.sub='${id(1)}'`);
+ await assert.rejects(db.query("select payment_point_private.payment_point_action('topup',null,100,null)"),/permission denied/);
+ await db.exec('reset role');
+ await assert.rejects(db.query("update payment_point_wallets set currency='EUR'"),/check constraint/);
 });
 await db.close();

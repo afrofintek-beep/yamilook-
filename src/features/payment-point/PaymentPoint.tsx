@@ -73,11 +73,11 @@ export default function PaymentPoint() {
   return <div className="min-h-screen bg-background pb-24 safe-top">
     <header className="flex items-center gap-3 border-b p-4">
       <Button variant="ghost" size="icon" aria-label="Voltar" onClick={() => navigate(id ? '/payment-point' : '/kumbu')}><ArrowLeft /></Button>
-      <h1 className="text-lg font-semibold">Payment Point</h1>
+      <h1 className="text-lg font-semibold">Payment Point · Angola</h1>
     </header>
     <main className="max-w-xl mx-auto p-4 space-y-5">
       <div role="status" className="rounded-xl border border-amber-400 bg-amber-50 p-3 text-sm text-amber-950">
-        Ambiente de testes · Os valores e os levantamentos são simulados. A activação financeira está pendente das condições acordadas com os parceiros.
+        Angola · AOA · Ambiente de testes. Os valores e os levantamentos são simulados. A activação financeira está pendente das condições acordadas com os parceiros.
       </div>
       {error && <p role="alert" className="rounded-lg border p-3 text-sm">{error}</p>}
       {!wallet && !error && <p>A carregar…</p>}

@@ -8,7 +8,7 @@ export function paymentIdFromMessage(content: string | null): string | null {
 }
 export function PaymentMessage({ id }: { id: string }) {
   return <div className="space-y-2 py-1">
-    <p className="text-sm font-medium">Pedido de pagamento · Teste</p>
+    <p className="text-sm font-medium">Pedido de pagamento · Angola · Teste</p>
     <p className="text-xs">Consulte o destinatário, o valor e o estado antes de confirmar.</p>
     <Link className="inline-flex rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground" to={`/payment-point/${id}`}>Pagar pedido</Link>
   </div>;

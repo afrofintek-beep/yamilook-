@@ -8,7 +8,7 @@ export interface Withdrawal {
   status: string; evidence?: string; created_at: string;
 }
 export interface Overview {
-  mode: 'sandbox'; admin: boolean;
+  mode: 'sandbox'; country_code: 'AO'; currency: 'AOA'; admin: boolean;
   wallet: { user_id: string; purchased: number; earned: number; reserved: number; merchant: boolean };
   orders: PaymentOrder[]; withdrawals: Withdrawal[];
   entries: { id: number; amount: number; operation: string; reference: string; created_at: string }[];

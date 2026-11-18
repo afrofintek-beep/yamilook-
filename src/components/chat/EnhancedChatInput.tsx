@@ -430,7 +430,7 @@ export function EnhancedChatInput({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-48">
-              <DropdownMenuItem disabled={disabled || sending} onSelect={() => setPaymentConversation(conversationId)}>Pedir pagamento · Teste</DropdownMenuItem>
+              <DropdownMenuItem disabled={disabled || sending} onSelect={() => setPaymentConversation(conversationId)}>Pedir pagamento · Angola · Teste</DropdownMenuItem>
               <DropdownMenuItem onClick={() => imageInputRef.current?.click()}>
                 <Image className="w-4 h-4 mr-2" />{uiText("Photo or Video")}</DropdownMenuItem>
               <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
@@ -555,7 +555,7 @@ export function EnhancedChatInput({
       )}
 
       <Dialog open={paymentConversation === conversationId} onOpenChange={open => { if (!open) setPaymentConversation(null); }}>
-        <DialogContent><DialogHeader><DialogTitle>Pedido de pagamento de teste</DialogTitle></DialogHeader>
+        <DialogContent><DialogHeader><DialogTitle>Pedido de pagamento · Angola · Teste</DialogTitle></DialogHeader>
           <RequestPayment key={conversationId} onCreated={async (_id, content) => {
             await onSend(content, 'text'); setPaymentConversation(null);
           }} />

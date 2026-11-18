@@ -28,7 +28,7 @@ export function RequestPayment({ onCreated }: { onCreated: (id: string, message:
     finally { setBusy(false); }
   }
   return <div className="space-y-3">
-    <p className="text-sm text-muted-foreground">Pedido de teste, válido por 24 horas. O destinatário confirma antes de pagar.</p>
+    <p className="text-sm text-muted-foreground">Carteira Angola · AOA. Pedido de teste, válido por 24 horas. O destinatário confirma antes de pagar.</p>
     <label className="block text-sm">Valor em kwanzas<Input inputMode="decimal" value={amount} disabled={busy} onChange={e => setAmount(e.target.value)} /></label>
     <label className="block text-sm">Produto ou serviço<Input maxLength={240} value={description} disabled={busy} onChange={e => setDescription(e.target.value)} /></label>
     {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
