@@ -19,6 +19,7 @@ export function InvitationCampaignAdmin() {
   const [config, setConfig] = useState<CampaignConfig>(initial);
   const [report, setReport] = useState<CampaignReport>();
   const [offset, setOffset] = useState(0);
+  const [promoterEmail, setPromoterEmail] = useState('');
   const [email, setEmail] = useState('');
   const [reference, setReference] = useState('');
   const [validUntil, setValidUntil] = useState('');
@@ -49,9 +50,13 @@ export function InvitationCampaignAdmin() {
     finally { setBusy(false); }
   };
   const save = (next: CampaignConfig) => run(async () => {
-    const { data, error } = await campaignClient.rpc('save_invitation_campaign', { p_id: selected, p_config: next });
+    const personal = !selected && !!promoterEmail.trim();
+    const saved = personal ? { ...next, max_per_user: 10, max_total: 10, require_confirmed_email: true } : next;
+    const { data, error } = personal
+      ? await campaignClient.rpc('create_promoter_campaign', { p_config: saved, p_email: promoterEmail.trim() })
+      : await campaignClient.rpc('save_invitation_campaign', { p_id: selected, p_config: saved });
     if (error) throw error;
-    setSelected(data); setConfig(next); setMessage(uiText("Campanha guardada."));
+    setSelected(data); setConfig(saved); setPromoterEmail(''); setMessage(uiText("Campanha guardada."));
   });
   const member = (address: string, allowed: boolean) => run(async () => {
     if (!selected || (allowed && !verified)) return;
@@ -76,19 +81,23 @@ export function InvitationCampaignAdmin() {
     <p className="text-sm text-muted-foreground">{uiText("Sem atribuição automática. Cada participante exige autorização nominal e confirmação de presença verificada. A conta deve existir antes da criação da campanha.")}</p>
     <label className="block">{uiText("Campanha a gerir")}<select className="w-full rounded-md border bg-background p-2" value={selected ?? ''} disabled={busy} onChange={e => {
         const c = campaigns.find(item => item.id === e.target.value);
-        reportRequest.current++; setEmail(''); setReference(''); setValidUntil('');
+        reportRequest.current++; setPromoterEmail(''); setEmail(''); setReference(''); setValidUntil('');
         setSelected(c?.id ?? null); setConfig(c ?? initial()); setOffset(0); setReport(undefined); setVerified(false);
       }}><option value="">{uiText("Nova campanha")}</option>{campaigns.map(c => <option key={c.id} value={c.id}>{c.name} — {campaignStateLabels[c.status]}</option>)}</select>
     </label>
     <form onSubmit={e => { e.preventDefault(); void save(config); }}>
       <fieldset disabled={busy || current?.status === 'closed'} className="space-y-4">
         <label className="block">{uiText("Nome")}<Input required minLength={3} maxLength={120} value={config.name} onChange={e => set('name', e.target.value)} /></label>
+        {!selected && <label className="block">{uiText('Email do promotor (campanha de 10 convites)')}
+          <Input type="email" value={promoterEmail} onChange={e => setPromoterEmail(e.target.value)} />
+        </label>}
         <div className="grid gap-3 sm:grid-cols-2">
           {(['starts_at', 'ends_at'] as const).map(key => <label key={key} className="block">{uiText("{{value1}} (hora local)", { value1: (key === 'starts_at' ? uiText("Início") : uiText("Fim")) ?? "" })}<Input type="datetime-local" required value={localDate(config[key])} onChange={e => { if (e.target.value) set(key, new Date(e.target.value).toISOString()); }} />
           </label>)}
-          {numeric.map(({ key, label, min, max }) => <label key={key} className="block">{label}<Input type="number" required min={min} max={max} value={config[key]} onChange={e => set(key, Number(e.target.value))} /></label>)}
+          {numeric.map(({ key, label, min, max }) => <label key={key} className="block">{label}<Input type="number" required min={min} max={max} disabled={(!!current?.promoter_id || !!promoterEmail.trim()) && (key === 'max_per_user' || key === 'max_total')}
+            value={(current?.promoter_id || promoterEmail.trim()) && (key === 'max_per_user' || key === 'max_total') ? 10 : config[key]} onChange={e => set(key, Number(e.target.value))} /></label>)}
         </div>
-        <label className="flex gap-2"><input type="checkbox" checked={config.require_confirmed_email} onChange={e => set('require_confirmed_email', e.target.checked)} />{uiText("Exigir email confirmado")}</label>
+        <label className="flex gap-2"><input type="checkbox" checked={!!current?.promoter_id || !!promoterEmail.trim() || config.require_confirmed_email} disabled={!!current?.promoter_id || !!promoterEmail.trim()} onChange={e => set('require_confirmed_email', e.target.checked)} />{uiText("Exigir email confirmado")}</label>
         <Button type="submit">{selected ? uiText("Guardar condições") : uiText("Criar rascunho")}</Button>
       </fieldset>
     </form>

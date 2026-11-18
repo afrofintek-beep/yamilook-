@@ -7,6 +7,8 @@ import { buildInviteUrl } from '@/lib/referral';
 import { buildWhatsAppInviteUrl, buildEmailInviteDraftUrl } from '@/lib/invite-delivery';
 import { useAppSurface } from '@/lib/app-surface';
 
+import { PromoterInvites } from './PromoterInvites';
+
 export function CampaignInvites() {
   useUiLocale();
   const brand = useAppSurface() === 'papos' ? 'KOSOLOLA' : 'YAMILOOK';
@@ -14,6 +16,7 @@ export function CampaignInvites() {
   const [selected, setSelected] = useState('');
   const [email, setEmail] = useState('');
   const [report, setReport] = useState<CampaignReport>();
+  const [revision, setRevision] = useState(0);
   const [offset, setOffset] = useState(0);
   const [invite, setInvite] = useState<{ code: string; expires_at: string }>();
   const [busy, setBusy] = useState(false);
@@ -37,7 +40,7 @@ export function CampaignInvites() {
       if (error) setMessage(campaignError(error)); else if (data) setReport(data);
     });
     return () => { active = false; };
-  }, [selected, offset, invite]);
+  }, [selected, offset, invite, revision]);
   const campaign = campaigns.find(c => c.id === selected);
   const issue = async () => {
     if (!campaign || !canIssueCampaign(campaign) || issuing.current) return;
@@ -73,8 +76,12 @@ export function CampaignInvites() {
     {campaign && <>
       <p>{uiText("{{value1}} de {{value2}} convites emitidos. {{value3}} restantes.", { value1: (campaign.my_issued) ?? "", value2: (campaign.max_per_user) ?? "", value3: (Math.max(0, campaign.max_per_user - campaign.my_issued)) ?? "" })}</p>
       <p className="text-sm">{uiText("Até {{value1}}.", { value1: (new Date(campaign.ends_at).toLocaleString(uiLocale())) ?? "" })}</p>
-      {!canIssueCampaign(campaign) && <p role="note">{uiText("Emissão indisponível: verifica a autorização, as condições, o período e os limites da campanha.")}</p>}
-      {!invite ? <form className="space-y-3" onSubmit={e => { e.preventDefault(); void issue(); }}>
+      {!canIssueCampaign(campaign) && (!campaign.promoter_id || campaign.my_issued < 10) && <p role="note">{uiText("Emissão indisponível: verifica a autorização, as condições, o período e os limites da campanha.")}</p>}
+      {campaign.promoter_id ? <PromoterInvites key={campaign.id} campaign={campaign} report={report} onIssued={(data, name) => {
+        setReport(data);
+        setCampaigns(previous => previous.map(c => c.id === campaign.id ? { ...c, name, my_issued: data.issued, total_issued: data.issued } : c));
+        void refresh().catch(e => setMessage(campaignError(e)));
+      }} /> : !invite ? <form className="space-y-3" onSubmit={e => { e.preventDefault(); void issue(); }}>
         <label className="block" htmlFor="campaign-recipient">{uiText("Email do convidado (opcional)")}</label>
         <Input id="campaign-recipient" type="email" maxLength={254} disabled={busy} value={email} onChange={e => setEmail(e.target.value)} />
         <p className="text-xs text-muted-foreground">{uiText("Sem email, a primeira pessoa que usar a ligação fica com o convite.")}</p>
@@ -87,7 +94,7 @@ export function CampaignInvites() {
         <Button variant="outline" asChild><a href={buildEmailInviteDraftUrl(email.trim(), invite.code, brand, invite.expires_at)}>{uiText("Preparar email")}</a></Button>
         <Button variant="ghost" onClick={() => { setInvite(undefined); setEmail(''); request.current = undefined; }}>{uiText("Novo destinatário")}</Button>
       </div>}
-      {report && <div className="space-y-2">
+      {report && !campaign.promoter_id && <div className="space-y-2">
         <p>{uiText("{{value1}} emitidos · {{value2}} utilizados · {{value3}} expirados · {{value4}} pendentes", { value1: (report.issued) ?? "", value2: (report.used) ?? "", value3: (report.expired) ?? "", value4: (report.pending) ?? "" })}</p>
         {report.invitations.map(i => <div key={i.code} className="text-sm border-b py-2 break-all">{i.recipient_email || uiText("Ligação individual")} · {{ used: 'Utilizado', expired: 'Expirado', pending: 'Pendente' }[i.state]}
           {i.state === 'pending' && <Button variant="link" onClick={() => { setEmail(i.recipient_email ?? ''); setInvite(i); }}>{uiText("Ver ligação")}</Button>}
@@ -97,6 +104,6 @@ export function CampaignInvites() {
       </div>}
     </>}
     <p role="status">{message}</p>
-    <Button variant="ghost" disabled={busy} onClick={() => void refresh().catch(e => setMessage(campaignError(e)))}>{uiText("Atualizar campanhas")}</Button>
+    <Button variant="ghost" disabled={busy} onClick={() => { setRevision(n => n + 1); void refresh().catch(e => setMessage(campaignError(e))); }}>{uiText("Atualizar campanhas")}</Button>
   </section>;
 }

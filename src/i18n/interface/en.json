@@ -3496,5 +3496,12 @@
   "Pedidos de amizade": "Friend requests",
   "Tens {{count}} pedido(s) de amizade por responder.": "You have {{count}} friend request(s) to answer.",
   "Ver pedidos": "View requests",
-  "Pedidos de amizade por e-mail": "Friend requests by email"
+  "Pedidos de amizade por e-mail": "Friend requests by email",
+  "Nome da campanha": "Campaign name",
+  "Gerar 10 convites": "Generate 10 invitations",
+  "Convite {{number}}": "Invitation {{number}}",
+  "Email do promotor (campanha de 10 convites)": "Promoter email (10-invitation campaign)",
+  "Convite para {{campaign}}": "Invitation to {{campaign}}",
+  "Recebeste um convite pessoal para te inscreveres na Yamilook.": "You have received a personal invitation to register with Yamilook.",
+  "Aceitar convite e inscrever-me": "Accept invitation and register"
 }

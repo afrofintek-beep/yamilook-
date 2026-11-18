@@ -3496,5 +3496,12 @@
   "Pedidos de amizade": "Maombi ya urafiki",
   "Tens {{count}} pedido(s) de amizade por responder.": "Una maombi {{count}} ya urafiki yanayosubiri jibu.",
   "Ver pedidos": "Angalia maombi",
-  "Pedidos de amizade por e-mail": "Maombi ya urafiki kwa barua pepe"
+  "Pedidos de amizade por e-mail": "Maombi ya urafiki kwa barua pepe",
+  "Nome da campanha": "Jina la kampeni",
+  "Gerar 10 convites": "Tengeneza mialiko 10",
+  "Convite {{number}}": "Mwaliko {{number}}",
+  "Email do promotor (campanha de 10 convites)": "Barua pepe ya mratibu (kampeni ya mialiko 10)",
+  "Convite para {{campaign}}": "Mwaliko kwa {{campaign}}",
+  "Recebeste um convite pessoal para te inscreveres na Yamilook.": "Umepokea mwaliko binafsi wa kujisajili kwenye Yamilook.",
+  "Aceitar convite e inscrever-me": "Kubali mwaliko na ujisajili"
 }

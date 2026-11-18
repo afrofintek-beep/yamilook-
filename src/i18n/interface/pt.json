@@ -3496,5 +3496,12 @@
   "Pedidos de amizade": "Pedidos de amizade",
   "Tens {{count}} pedido(s) de amizade por responder.": "Tens {{count}} pedido(s) de amizade por responder.",
   "Ver pedidos": "Ver pedidos",
-  "Pedidos de amizade por e-mail": "Pedidos de amizade por e-mail"
+  "Pedidos de amizade por e-mail": "Pedidos de amizade por e-mail",
+  "Nome da campanha": "Nome da campanha",
+  "Gerar 10 convites": "Gerar 10 convites",
+  "Convite {{number}}": "Convite {{number}}",
+  "Email do promotor (campanha de 10 convites)": "Email do promotor (campanha de 10 convites)",
+  "Convite para {{campaign}}": "Convite para {{campaign}}",
+  "Recebeste um convite pessoal para te inscreveres na Yamilook.": "Recebeste um convite pessoal para te inscreveres na Yamilook.",
+  "Aceitar convite e inscrever-me": "Aceitar convite e inscrever-me"
 }

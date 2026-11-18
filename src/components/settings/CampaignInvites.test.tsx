@@ -53,3 +53,19 @@ describe('campaign invitations', () => {
     await act(async () => resolve({ data: { code: 'A123456789ABCDEF', expires_at: '2030-01-02' }, error: null }));
   });
 });
+
+it('generates ten anonymous links under the name chosen by the promoter', async () => {
+  const invitations = Array.from({ length: 10 }, (_, index) => ({
+    code: index.toString(16).padStart(16, '0'), state: 'pending', expires_at: '2099-01-01T12:00:00Z',
+  }));
+  rpc.mockImplementation((name: string) => Promise.resolve({ error: null, data: name === 'list_invitation_campaigns'
+    ? [{ ...campaign, promoter_id: 'u1' }] : name === 'issue_promoter_invitations'
+      ? { ...report, issued: 10, pending: 10, invitations } : report }));
+  await choose();
+  fireEvent.change(await screen.findByLabelText('Nome da campanha'), { target: { value: 'A Banda da Marla' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Gerar 10 convites' }));
+  await waitFor(() => expect(screen.getAllByRole('link', { name: 'Partilhar no WhatsApp' })).toHaveLength(10));
+  expect(rpc).toHaveBeenCalledWith('issue_promoter_invitations', { p_campaign: 'c1', p_name: 'A Banda da Marla' });
+  expect(screen.getAllByLabelText('Ligação individual')).toHaveLength(10);
+  expect(screen.queryByLabelText('Email do convidado (opcional)')).toBeNull();
+});

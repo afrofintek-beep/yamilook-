@@ -1,5 +1,5 @@
 """Real PostgreSQL clients: shared links plus all existing invitation regressions."""
-from test_campaigns import Campaigns, ROOT, ADMIN, MEMBER, sql, obj, quote, signup
+from test_campaigns import Campaigns, ROOT, ADMIN, MEMBER, OTHER, issue, sql, obj, quote, signup
 import concurrent.futures
 import threading
 import unittest
@@ -11,6 +11,38 @@ class SharedLinks(Campaigns):
     def setUpClass(cls):
         super().setUpClass()
         sql(next((ROOT / 'supabase/migrations').glob('*_shared_registration_links.sql')).read_text())
+
+        sql(next((ROOT / 'supabase/migrations').glob('*_promoter_invitation_batches.sql')).read_text())
+
+    def test_promoter_batch_is_scoped_atomic_and_recoverable(self):
+        import json
+        ordinary, cfg = self.ready(max_per_user=10)
+        batch = lambda c, title: f"select issue_promoter_invitations('{c}',{quote(title)})"
+        self.assertIn('elegibilidade',sql(batch(ordinary,'Title'),MEMBER,ok=False))
+        issue(ordinary)
+        create = f"select create_promoter_campaign({quote(json.dumps(cfg))}::jsonb,'u2@example.com')"
+        self.assertIn('administrador',sql(create,OTHER,ok=False))
+        c = sql(create,ADMIN)
+        self.assertTrue(any(row['id']==c for row in obj('select list_invitation_campaigns()', MEMBER)))
+        self.assertEqual(obj(f"select campaign_report('{c}',0)", MEMBER)['issued'],0)
+        self.assertIn('promotor',sql(f"select set_campaign_member('{c}','u3@example.com',true,'checked/ref',now()+interval '1 day')",ADMIN,ok=False))
+        self.grant(c)
+        self.activate(c,{**cfg,'max_total':10,'max_per_user':10})
+        self.assertIn('hora',sql(batch(c,'A Banda'),MEMBER,ok=False))
+        self.assertEqual(obj(f"select campaign_report('{c}',0)", MEMBER)['issued'],0)
+        sql(f"update public.user_invitations set created_at=now()-interval '2 hours' where campaign_id='{ordinary}'")
+        with concurrent.futures.ThreadPoolExecutor(4) as pool:
+            reports = list(pool.map(lambda _: obj(batch(c,'A Banda'),MEMBER),range(4)))
+        codes=[row['code'] for row in reports[0]['invitations']]
+        self.assertEqual(len(set(codes)),10)
+        self.assertTrue(all(r['invitations']==reports[0]['invitations'] for r in reports))
+        self.assertEqual(obj(f"select validate_mvp_access_code('{codes[0]}')",role='anon')['campaign_name'],'A Banda')
+        signup(codes[0])
+        self.assertNotIn('campaign_name',obj(f"select validate_mvp_access_code('{codes[0]}')",role='anon'))
+        self.assertEqual(obj(batch(c,'A Banda'),MEMBER)['used'],1)
+        self.assertIn('outro nome',sql(batch(c,'Another'),MEMBER,ok=False))
+        self.assertIn('elegibilidade',sql(batch(c,'A Banda'),OTHER,ok=False))
+        self.assertEqual(obj(f"select campaign_report('{ordinary}',0)", MEMBER)['issued'],1)
 
     def shared(self, limit=21, request=None):
         return obj(f"select create_registration_link('{request or uuid.uuid4()}','LinkedIn test',{limit},168)", ADMIN)

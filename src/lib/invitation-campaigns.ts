@@ -9,7 +9,7 @@ export interface CampaignConfig {
   active_within_days: number; min_account_days: number; require_confirmed_email: boolean; invite_ttl_hours: number;
 }
 export interface InvitationCampaign extends CampaignConfig {
-  id: string; created_at: string; eligible: boolean; my_issued: number; total_issued: number;
+  id: string; promoter_id?: string | null; created_at: string; eligible: boolean; my_issued: number; total_issued: number;
 }
 export interface CampaignInvitation {
   code: string; invited_by: string; recipient_email: string | null; created_at: string;
@@ -26,6 +26,8 @@ type Rpc = {
   save_invitation_campaign: { Args: { p_id: string | null; p_config: CampaignConfig }; Returns: string };
   set_campaign_member: { Args: { p_campaign: string; p_email: string; p_allowed: boolean; p_reference: string; p_valid_until: string | null }; Returns: undefined };
   issue_campaign_invitation: { Args: { p_campaign: string; p_request_id: string; p_email: string | null }; Returns: { code: string; expires_at: string } };
+  create_promoter_campaign: { Args: { p_config: CampaignConfig; p_email: string }; Returns: string };
+  issue_promoter_invitations: { Args: { p_campaign: string; p_name: string }; Returns: CampaignReport };
   campaign_report: { Args: { p_campaign: string; p_offset: number }; Returns: CampaignReport };
 };
 export const campaignClient = supabase as unknown as SupabaseClient<{
