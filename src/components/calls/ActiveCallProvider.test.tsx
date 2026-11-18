@@ -160,3 +160,24 @@ it('retains the ongoing call when conference conversion is refused',async()=>{
   expect(screen.getByRole('status')).toHaveTextContent('active');
   expect(mocks.setIncomingCall).not.toHaveBeenCalled();expect(mocks.end).not.toHaveBeenCalled();
 });
+
+it('restores the same outgoing attempt before and after it obtains a call ID', async () => {
+  vi.stubGlobal('isSecureContext', true);
+  Object.defineProperty(navigator, 'mediaDevices', { configurable: true, value: { getUserMedia: vi.fn() } });
+  let finish!: (id: string) => void;
+  mocks.start.mockImplementation(() => new Promise<string>(resolve => { finish = resolve; }));
+  mocks.state = { callStatus: 'ringing' };
+  render(<MemoryRouter initialEntries={['/chat/example']}><ActiveCallProvider><Consumer /></ActiveCallProvider></MemoryRouter>);
+  fireEvent.click(screen.getByText('Ligar teste'));
+  fireEvent.click(screen.getByText('Minimizar'));
+  expect(screen.queryByRole('dialog', { name: 'A iniciar chamada' })).toBeNull();
+  fireEvent.click(screen.getByText('Voltar à chamada'));
+  expect(screen.getByRole('dialog', { name: 'A iniciar chamada' })).toBeInTheDocument();
+  fireEvent.click(screen.getByText('Minimizar'));
+  await act(async () => finish('same-call'));
+  expect(screen.getByText('A chamar…')).toBeInTheDocument();
+  fireEvent.click(screen.getByText('Voltar à chamada'));
+  expect(screen.queryByText('Voltar à chamada')).toBeNull();
+  expect(mocks.start).toHaveBeenCalledOnce();
+  expect(mocks.end).not.toHaveBeenCalled();
+});

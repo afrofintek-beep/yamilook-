@@ -25,9 +25,11 @@ const IncomingCallOverlay = lazy(() => import('./IncomingCallOverlay').then(m =>
 
 interface ActiveCallContextType {
   mediaBusy?: boolean;
+  returnToCall?: () => void;
+  callIndicator?: string;
   isInCall: boolean;
   currentCallId: string | null;
-  startCall: (contactId: string, type: 'voice' | 'video', conversationId?: string) => Promise<void>;
+  startCall: (contactId: string, type: 'voice' | 'video', conversationId?: string, contactName?: string) => Promise<void>;
   /**
    * Join an existing call when arriving via deep-link (/call/:id).
    * For non-initiators, this will answer the call and bootstrap WebRTC.
@@ -113,6 +115,11 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
   const [currentCallId, setCurrentCallId] = useState<string | null>(null);
   const [setupCallType, setSetupCallType] = useState<'voice' | 'video'>('voice');
   const [switching, setSwitching] = useState(false);
+  const setupHidden = useRef(false);
+  const [setupMinimized, setSetupMinimized] = useState(false);
+  const [contactLabel, setContactLabel] = useState('');
+  const minimizeSetup = () => { setupHidden.current = true; setSetupMinimized(true); };
+  const showSetup = () => { setupHidden.current = false; setSetupMinimized(false); };
   const [starting, setStarting] = useState(false);
   const [answering, setAnswering] = useState(false);
   const startEpoch = useRef(0);
@@ -164,7 +171,7 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
     if (location.pathname === `/call/${currentCallId}`) navigate('/calls', { replace: true });
   }, [answering, currentCallId, webRTCState.callId, webRTCState.callStatus, webRTCState.lastError, location.pathname, navigate, toast]);
 
-  const startCall = useCallback(async (contactId: string, type: 'voice' | 'video', conversationId?: string) => {
+  const startCall = useCallback(async (contactId: string, type: 'voice' | 'video', conversationId?: string, contactName?: string) => {
     logger.debug('Starting call', 'ActiveCallProvider', { contactId, type });
 
     // Preflight checks to avoid "nothing happens" when the browser blocks media APIs.
@@ -186,7 +193,10 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
       return;
     }
 
-    if (startingRef.current) return;
+    if (startingRef.current) { showSetup(); return; }
+    if (currentCallId && isInCall) { navigate(`/call/${currentCallId}`); return; }
+    showSetup();
+    setContactLabel(contactName || '');
     const epoch = ++startEpoch.current;
     setSetupCallType(type);
     startingRef.current = true; setStarting(true);
@@ -197,7 +207,7 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
       if (epoch !== startEpoch.current) return;
       setCurrentCallId(callId);
       setIsInCall(true);
-      navigate(`/call/${callId}`);
+      if (!setupHidden.current) navigate(`/call/${callId}`);
     } catch (err) {
       if (epoch !== startEpoch.current) return;
       const code = callErrorCode(err);
@@ -220,7 +230,7 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
     } finally {
       if (epoch === startEpoch.current) { startingRef.current = false; setStarting(false); }
     }
-  }, [initiateCall, navigate, toast, markUserInteracted]);
+  }, [initiateCall, navigate, toast, markUserInteracted, currentCallId, isInCall]);
 
   const joinCall = useCallback(async (callId: string, callType: 'voice' | 'video', initiatorId: string) => {
     // If we already bootstrapped this call, do nothing.
@@ -231,6 +241,7 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
     }
     answeringCallRef.current = callId;
     const epoch = ++startEpoch.current;
+    setContactLabel('');
     setSetupCallType(callType);
     setAnswering(true);
     unlockCallAudio(); markUserInteracted();
@@ -271,6 +282,7 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
     const call = incomingCall;
     answeringCallRef.current = call.id;
     const epoch = ++startEpoch.current;
+    setContactLabel('');
     setSetupCallType(call.type);
     setAnswering(true);
     unlockCallAudio(); markUserInteracted();
@@ -332,8 +344,17 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
     }
   }, [incomingCall, declineCall, setIncomingCall, toast]);
 
+  const returnToCall = useCallback(() => {
+    if (startingRef.current) { showSetup(); return; }
+    if (currentCallId) navigate(`/call/${currentCallId}`);
+  }, [currentCallId, navigate]);
+  const dialing = starting || webRTCState.callStatus === 'ringing' || webRTCState.callStatus === 'initiating';
+  const callIndicator = dialing
+    ? [uiText("A chamar…"), contactLabel].filter(Boolean).join(' ')
+    : uiText("Chamada em curso");
   // Memoize context value to prevent unnecessary re-renders of consumers
   const contextValue = useMemo<ActiveCallContextType>(() => ({
+    returnToCall, callIndicator: starting || currentCallId ? callIndicator : undefined,
     mediaBusy: isInCall || starting || answering || !!webRTC.heldId,
     isInCall,
     currentCallId,
@@ -353,7 +374,7 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
     raiseHand,
     sendReaction,
     endCall,
-  }), [starting, answering, webRTC.heldId, isInCall, currentCallId, startCall, joinCall, endCurrentCall, markUserInteracted, webRTCState, toggleMute, toggleVideo, toggleScreenShare, flipCamera, setVirtualBackground, setCallEffects, setAudioProcessing, raiseHand, sendReaction, endCall]);
+  }), [returnToCall, callIndicator, starting, answering, webRTC.heldId, isInCall, currentCallId, startCall, joinCall, endCurrentCall, markUserInteracted, webRTCState, toggleMute, toggleVideo, toggleScreenShare, flipCamera, setVirtualBackground, setCallEffects, setAudioProcessing, raiseHand, sendReaction, endCall]);
   const callWaiting = !!incomingCall && !!currentCallId && isInCall && incomingCall.id !== currentCallId;
 
   return (
@@ -371,17 +392,20 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
       {webRTCState.peerAudioInterrupted && <p role="status" className="fixed left-3 top-24 z-[90] rounded-xl bg-background p-2">{uiText("Áudio do outro participante interrompido")}</p>}
       {webRTCState.peerOnHold && <p role="status" className="fixed left-3 top-16 z-[90] rounded-xl bg-background p-2">{uiText("Em espera")}</p>}
       {webRTC.recoverAudio && currentCallId && <AudioInterruption key={currentCallId} report={webRTC.reportInterruption} stream={webRTCState.localStream} muted={webRTCState.isMuted} recover={webRTC.recoverAudio} />}
-      {currentCallId && isInCall && location.pathname !== `/call/${currentCallId}` && <aside className="fixed top-[max(1rem,env(safe-area-inset-top))] right-3 z-[85] max-w-48 rounded-xl border bg-background p-2 shadow-lg">
+      {((starting && setupMinimized) || (currentCallId && isInCall && location.pathname !== `/call/${currentCallId}`)) && <aside className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom,0px))] right-3 z-[150] max-w-48 rounded-xl border bg-background p-2 shadow-lg">
         {Array.from(webRTCState.remoteStreams ?? [], ([peer, stream]) => <div key={peer} className="relative max-h-24 overflow-hidden"><CallRemoteMedia stream={stream} showVideo={webRTCState.callType === 'video'} /></div>)}
-        <Button onClick={() => navigate(`/call/${currentCallId}`)}>{uiText("Voltar à chamada")}</Button>
-        <Button variant="ghost" onClick={toggleMute}>{webRTCState.isMuted ? uiText("Ligar microfone") : uiText("Desligar microfone")}</Button>
+        <p role="status" className="px-2 text-sm font-medium">{callIndicator}</p>
+        <Button onClick={returnToCall}>{uiText("Voltar à chamada")}</Button>
+        {!dialing && <Button variant="ghost" onClick={toggleMute}>{webRTCState.isMuted ? uiText("Ligar microfone") : uiText("Desligar microfone")}</Button>}
+        <Button variant="destructive" onClick={endCurrentCall}>{dialing ? uiText("Cancelar chamada") : uiText("Desligar")}</Button>
       </aside>}
       {switching && <div role="status" className="fixed inset-0 z-[190] grid place-items-center bg-background/90">{uiText("A alternar chamada…")}</div>}
-      {(starting || answering) && <div role="dialog" aria-modal="true" aria-label={uiText("A iniciar chamada")} className="fixed inset-0 z-[190] bg-background flex flex-col items-center justify-center gap-6 p-6 safe-top">
+      {((starting && !setupMinimized) || answering) && <div role="dialog" aria-modal="true" aria-label={uiText("A iniciar chamada")} className="fixed inset-0 z-[190] bg-background flex flex-col items-center justify-center gap-6 p-6 safe-top">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">{setupCallType === 'video' ? <Video className="h-4 w-4" /> : <Phone className="h-4 w-4" />}<span>{setupCallType === 'video' ? uiText("Videochamada") : uiText("Chamada de voz")}</span></div>
         <div className="flex h-28 w-28 items-center justify-center rounded-full bg-primary/15"><User className="h-14 w-14 text-primary" /></div>
         <p role="status" aria-live="polite" className="text-xl font-medium">{webRTCState.callStatus === 'ringing' ? uiText("A chamar…") : uiText("A ligar…")}</p>
         <p className="max-w-sm text-center text-sm text-muted-foreground">{uiText("Se for solicitado, autoriza o microfone para continuar.")}</p>
+        {starting && <Button variant="outline" onClick={minimizeSetup}>{uiText("Minimizar")}</Button>}
         <Button disabled={answering && isInCall} variant="destructive" className="mt-12 h-16 rounded-full px-6 gap-2" onClick={endCurrentCall}><PhoneOff className="h-6 w-6" />{uiText("Cancelar chamada")}</Button>
       </div>}
       <ScheduledCallNotices />

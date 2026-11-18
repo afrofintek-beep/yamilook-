@@ -747,7 +747,7 @@ export default function Chat() {
                 size="icon"
                 className="rounded-full"
                 aria-label={t('groupCalls.startVoice')}
-                onClick={() => isGroup && conversationId ? groupConference?.open({conversationId, name:displayName, type:'voice'}) : otherParticipant && startCall?.(otherParticipant.id, 'voice', conversationId)}
+                onClick={() => isGroup && conversationId ? groupConference?.open({conversationId, name:displayName, type:'voice'}) : otherParticipant && startCall?.(otherParticipant.id, 'voice', conversationId, displayName)}
               >
                 <Phone className="w-5 h-5" />
               </Button>
@@ -756,7 +756,7 @@ export default function Chat() {
                 size="icon"
                 className="rounded-full"
                 aria-label={t('groupCalls.startVideo')}
-                onClick={() => isGroup && conversationId ? groupConference?.open({conversationId, name:displayName, type:'video'}) : otherParticipant && startCall?.(otherParticipant.id, 'video', conversationId)}
+                onClick={() => isGroup && conversationId ? groupConference?.open({conversationId, name:displayName, type:'video'}) : otherParticipant && startCall?.(otherParticipant.id, 'video', conversationId, displayName)}
               >
                 <Video className="w-5 h-5" />
               </Button>
@@ -824,6 +824,12 @@ export default function Chat() {
             <Pin className="w-4 h-4 text-primary" />
             <span className="text-sm text-muted-foreground">{uiText("{{value1}} pinned message{{value2}}", { value1: (pinnedMessages.length) ?? "", value2: (pinnedMessages.length > 1 ? 's' : '') })}</span>
           </div>
+        )}
+        {activeCall?.callIndicator && (
+          <button type="button" onClick={activeCall.returnToCall} className="flex w-full items-center justify-between gap-2 bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
+            <span className="truncate">{activeCall.callIndicator}</span>
+            <span className="shrink-0">{uiText("Voltar à chamada")}</span>
+          </button>
         )}
       </header>
 
