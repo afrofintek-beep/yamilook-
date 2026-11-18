@@ -11,6 +11,8 @@ on:
       - 'src/lib/asset-load-error*'
       - 'src/lib/render-diagnostic*'
       - 'e2e/asset-recovery.spec.ts'
+      - 'e2e/dangereux-link.spec.ts'
+      - 'src/features/dangereux/**'
       - 'playwright.assets.config.ts'
       - '.github/workflows/kosolola-startup-checks.yml'
   workflow_dispatch:

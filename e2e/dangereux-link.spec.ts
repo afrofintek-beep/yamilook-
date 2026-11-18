@@ -44,3 +44,11 @@ for (const signedIn of [false, true]) {
     if (signedIn) expect(await page.evaluate(key => JSON.parse(localStorage.getItem(key) || '{}').refresh_token, key)).toBe('test-session');
   });
 }
+
+test('only the administrative response enables the administration panel', async ({page}) => {
+  await page.route('**/rest/v1/rpc/open_dangereux_pilot', route =>
+    route.fulfill({json:{places:[],admin:{cases:[],zones:[]}}}));
+  await page.goto('/app/dangereux/#administracao');
+  await expect(page.getByRole('heading',{name:'Cadastro do bairro'})).toBeVisible();
+  await expect(page.getByRole('button',{name:'Desactivar ligação'})).toBeVisible();
+});
