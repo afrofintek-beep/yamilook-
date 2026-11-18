@@ -48,6 +48,7 @@ export default function KumbuWallet() {
 
       <main className="max-w-lg mx-auto px-4 pt-5 space-y-4">
         <KumbuBalanceCard />
+        <Button className="w-full" variant="outline" onClick={() => navigate("/payment-point")}>Payment Point · Angola · Testes</Button>
 
         <motion.button
           whileTap={{ scale: 0.98 }}

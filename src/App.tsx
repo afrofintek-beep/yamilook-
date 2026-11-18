@@ -101,6 +101,7 @@ const AcademiaLiveRoom = lazy(() => import("./features/academia/routes/AcademiaL
 
 // Kumbu (monetização)
 const Caminho = lazy(() => import("./pages/Caminho"));
+const PaymentPoint = lazy(() => import("./features/payment-point/PaymentPoint"));
 const KumbuWallet = lazy(() => import("./features/kumbu/routes/KumbuWallet"));
 const KumbuHistory = lazy(() => import("./features/kumbu/routes/KumbuHistory"));
 const RankingPage = lazy(() => import("./features/kumbu/routes/Ranking"));
@@ -364,6 +365,8 @@ function AnimatedRoutes() {
           <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
           <Route path="/caminho" element={<Caminho />} />
           <Route path="/app/caminho" element={<Caminho />} />
+          <Route path="/payment-point" element={<ProtectedRoute><PaymentPoint /></ProtectedRoute>} />
+          <Route path="/payment-point/:id" element={<ProtectedRoute><PaymentPoint /></ProtectedRoute>} />
           <Route path="/kumbu" element={<ProtectedRoute><KumbuWallet /></ProtectedRoute>} />
           <Route path="/kumbu/history" element={<ProtectedRoute><KumbuHistory /></ProtectedRoute>} />
           <Route path="/ranking" element={<ProtectedRoute><RankingPage /></ProtectedRoute>} />

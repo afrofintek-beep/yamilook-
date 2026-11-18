@@ -1,3 +1,4 @@
+import { PaymentMessage, paymentIdFromMessage } from '@/features/payment-point/PaymentMessage';
 import { AfrolocAddressCard } from './AfrolocAddressCard';
 import { parseChatAfroloc } from '@/lib/chat-afroloc';
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
@@ -352,6 +353,8 @@ export function EnhancedMessageBubble({
           </ChatMediaLink>
         );
       default: {
+        const paymentId = message.message_type === 'text' ? paymentIdFromMessage(message.content) : null;
+        if (paymentId) return <PaymentMessage id={paymentId} />;
         const postId = message.message_type === 'text' ? sharedPostId(message.content) : null;
         if (postId) return <PostSharePreview id={postId} interactive={!selectionMode} />;
         const address = message.message_type === 'text' ? parseChatAfroloc(message.content) : null;

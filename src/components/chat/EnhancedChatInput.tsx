@@ -1,3 +1,4 @@
+import { RequestPayment } from '@/features/payment-point/RequestPayment';
 import { AfrolocAddressDialog } from './AfrolocAddressDialog';
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -78,6 +79,7 @@ export function EnhancedChatInput({
   useUiLocale();
   const { t } = useTranslation();
   const [message, setMessage] = useState('');
+  const [paymentConversation, setPaymentConversation] = useState<string | null>(null);
   const [addressConversation, setAddressConversation] = useState<string | null>(null);
   const [locationDraft, setLocationDraft] = useState<string | null>(null);
   const [locationName, setLocationName] = useState('');
@@ -89,6 +91,7 @@ export function EnhancedChatInput({
     setLocating(false);
     setLocationDraft(null);
     setAddressConversation(null);
+    setPaymentConversation(null);
     return () => { locationRequest.current += 1; };
   }, [conversationId]);
   const [sending, setSending] = useState(false);
@@ -427,6 +430,7 @@ export function EnhancedChatInput({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-48">
+              <DropdownMenuItem disabled={disabled || sending} onSelect={() => setPaymentConversation(conversationId)}>Pedir pagamento · Angola · Teste</DropdownMenuItem>
               <DropdownMenuItem onClick={() => imageInputRef.current?.click()}>
                 <Image className="w-4 h-4 mr-2" />{uiText("Photo or Video")}</DropdownMenuItem>
               <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
@@ -550,6 +554,13 @@ export function EnhancedChatInput({
         </div>
       )}
 
+      <Dialog open={paymentConversation === conversationId} onOpenChange={open => { if (!open) setPaymentConversation(null); }}>
+        <DialogContent><DialogHeader><DialogTitle>Pedido de pagamento · Angola · Teste</DialogTitle></DialogHeader>
+          <RequestPayment key={conversationId} onCreated={async (_id, content) => {
+            await onSend(content, 'text'); setPaymentConversation(null);
+          }} />
+        </DialogContent>
+      </Dialog>
       {addressConversation === conversationId && <AfrolocAddressDialog key={conversationId}
         disabled={disabled || sending}
         onClose={() => setAddressConversation(null)}
