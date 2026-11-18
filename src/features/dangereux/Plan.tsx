@@ -1,9 +1,9 @@
 import { Compass, Flag, LocateFixed } from 'lucide-react';
 import { useId } from 'react';
 import njila from '@/assets/brand/njila-wordmark.svg';
-import { entrance, home, junction, places, square, type PlaceId, type Point } from './model';
+import { entrance, home, junction, type Place, square, type PlaceId, type Point } from './model';
 
-type Props = { destination?: PlaceId | 'casa'; onSelect?: (id: PlaceId) => void };
+type Props = { places: Place[]; destination?: PlaceId | 'casa'; onSelect?: (id: PlaceId) => void };
 const asLine = (points: Point[]) => points.map(point => point.join(',')).join(' ');
 const streets = [
   'M-40 265 L520 100 L630 46', 'M-35 139 L495 -17', 'M1 345 L574 173',
@@ -15,7 +15,7 @@ const blocks = Array.from({ length: 145 }, (_, i) => {
   return { x: col * 44 - 98 + (row % 2) * 7, y: row * 48 - 102, width: 21 + (i * 13) % 17, height: 17 + (i * 7) % 19 };
 });
 
-export function Plan({ destination, onSelect }: Props) {
+export function Plan({ places, destination, onSelect }: Props) {
   const pattern = useId().replace(/:/g, '');
   const chosen = places.find(place => place.id === destination);
   const isVisit = destination === 'casa';

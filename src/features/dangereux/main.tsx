@@ -1,4 +1,4 @@
 import { createRoot } from 'react-dom/client';
-import Pilot from './Pilot';
+import Access from './Access';
 
-createRoot(document.getElementById('bairro')!).render(<Pilot />);
+createRoot(document.getElementById('bairro')!).render(<Access />);

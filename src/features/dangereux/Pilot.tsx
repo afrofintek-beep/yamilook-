@@ -2,19 +2,22 @@ import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, ArrowUpRight, BookOpen, Check, ChevronRight, Compass, Croissant, Home, Landmark, LockKeyhole, MapPin, Route, Scissors, Search, ShoppingBasket, Store, Users, Wrench, X } from 'lucide-react';
 import { Plan } from './Plan';
 import { Residence } from './Residence';
-import { cases, places, type Grant, type PlaceId, type Review } from './model';
+import { type PilotData, type Grant, type PlaceId, type Review } from './model';
+import { LinkManagement } from './LinkManagement';
 import { pilotPath } from './paths';
 import './piloto.css';
 
 const tabs = [{ id:'explorar', name:'Explorar o bairro', Icon:Compass }, { id:'morador', name:'O meu endereço', Icon:Home }, { id:'administracao', name:'Administração', Icon:Landmark }] as const;
 type Tab = typeof tabs[number]['id'];
 const icons = {padaria:Croissant,mercado:ShoppingBasket,oficina:Wrench,espaco:Users,atelie:Scissors};
-function readTab(): Tab {
-  return tabs.find(t => '#'+t.id === window.location.hash)?.id ?? 'explorar';
+function readTab(admin: boolean): Tab {
+  return tabs.find(t => (admin || t.id !== 'administracao') && '#'+t.id === window.location.hash)?.id ?? 'explorar';
 }
 
-export default function Pilot() {
-  const [tab,setTab] = useState<Tab>(readTab);
+export default function Pilot({data}: {data: PilotData}) {
+  const {places, admin} = data;
+  const cases = admin?.cases ?? [];
+  const [tab,setTab] = useState<Tab>(() => readTab(!!admin));
   const [selected,setSelected] = useState<PlaceId>();
   const [category,setCategory] = useState('Todos');
   const [query,setQuery] = useState('');
@@ -26,10 +29,10 @@ export default function Pilot() {
   const mainHeading = useRef<HTMLHeadingElement>(null);
   const activePlace = places.find(p=>p.id === selected);
   useEffect(()=>{
-    const onHash = () => {setTab(readTab()); setSelected(undefined);};
+    const onHash = () => {setTab(readTab(!!admin)); setSelected(undefined);};
     window.addEventListener('hashchange',onHash);
     return ()=>window.removeEventListener('hashchange',onHash);
-  },[]);
+  },[admin]);
   function changeTab(value: Tab) {
     if(window.location.hash !== '#'+value) window.location.hash = value;
     setTab(value); setSelected(undefined);
@@ -47,7 +50,7 @@ export default function Pilot() {
   const normalise = (s:string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
   const filtered = visiblePlaces.filter(p=>(category === 'Todos' || p.category === category) && normalise([p.name,p.info,p.category,p.zone].join(' ')).includes(normalise(query.trim())));
   const metrics = [
-    {Icon: Home, label: 'Residências registadas', value: 18},
+    {Icon: Home, label: 'Residências registadas', value: admin?.zones.reduce((total, [, count]) => total + count, 0) ?? 0},
     {Icon: Store, label: 'Negócios e equipamentos', value: places.length},
     {Icon: BookOpen, label: 'Pedidos por analisar', value: cases.filter(c => !reviews[c.id]).length},
   ];
@@ -59,7 +62,7 @@ export default function Pilot() {
       <span className="dg-project">Projecto-piloto AFROFINTEK</span>
       <a className="dg-yami" href="/"><img src="/yamilook-logo.png" alt="Yamilook"/><ArrowUpRight size={15}/></a>
     </div></header>
-    <div className="dg-nav-bg"><nav className="dg-wrap dg-nav" aria-label="Áreas do bairro">{tabs.map(({id,name,Icon})=><a key={id} href={'#'+id} aria-current={tab===id?'page':undefined} onClick={e=>{e.preventDefault();changeTab(id);}}><Icon size={17}/>{name}</a>)}</nav></div>
+    <div className="dg-nav-bg"><nav className="dg-wrap dg-nav" aria-label="Áreas do bairro">{tabs.filter(t=>admin || t.id !== 'administracao').map(({id,name,Icon})=><a key={id} href={'#'+id} aria-current={tab===id?'page':undefined} onClick={e=>{e.preventDefault();changeTab(id);}}><Icon size={17}/>{name}</a>)}</nav></div>
     <main id="dg-content" tabIndex={-1}>
       <div className={'dg-hero '+(tab==='explorar'?'':'dg-short')}><div className="dg-wrap dg-hero-in">
         <div className="dg-intro"><div className="dg-overline"><span/> Talatona <ChevronRight size={12}/> {tab==='explorar'?'Bairro digital':'Dangereux'}</div>
@@ -71,7 +74,7 @@ export default function Pilot() {
             <small className="dg-sample">Demonstração com locais e percursos fictícios.</small>
           </> : <p>{tab==='morador'?'Experimenta o cartão AFROLOC e as autorizações de visita.':'Consulta indicadores e acompanha pedidos de validação fictícios.'}</p>}
         </div>
-        {tab==='explorar' && <div className="dg-map-slot" ref={plan} tabIndex={-1} aria-label="Mapa e percurso"><Plan destination={activePlace?.point ? activePlace.id : undefined} onSelect={openRoute}/>
+        {tab==='explorar' && <div className="dg-map-slot" ref={plan} tabIndex={-1} aria-label="Mapa e percurso"><Plan places={places} destination={activePlace?.point ? activePlace.id : undefined} onSelect={openRoute}/>
         {activePlace?.point && <div className="dg-route-info" role="status"><div><strong>{activePlace.name}</strong><span>AFROLOC · {activePlace.reference}</span><p>{activePlace.directions}</p></div><button aria-label="Fechar percurso" onClick={()=>setSelected(undefined)}><X size={18}/></button></div>}</div>}
       </div></div>
       <div className="dg-wrap dg-content">
@@ -83,12 +86,12 @@ export default function Pilot() {
           </article>})}</div>
           {filtered.length===0 && <div className="dg-box"><h3>Nenhum local encontrado</h3><button className="dg-text" onClick={()=>{setCategory('Todos');setQuery('');}}>Limpar pesquisa e filtros</button></div>}
         </>}
-        {tab==='morador' && <Residence grant={grant} setGrant={setGrant} showAtelier={atelier} setShowAtelier={setAtelier}/>}
-        {tab==='administracao' && <><div className="dg-kicker"><span className="dg-rule"/> Painel de demonstração</div><h2>Cadastro do bairro</h2><p className="dg-fine">Os registos são fictícios. As decisões que experimentares duram até recarregares a página.</p>
+        {tab==='morador' && <Residence places={places} grant={grant} setGrant={setGrant} showAtelier={atelier} setShowAtelier={setAtelier}/>}
+        {admin && tab==='administracao' && <><LinkManagement/><div className="dg-kicker"><span className="dg-rule"/> Painel de demonstração</div><h2>Cadastro do bairro</h2><p className="dg-fine">Os registos são fictícios. As decisões que experimentares duram até recarregares a página.</p>
           <div className="dg-metrics">{metrics.map(({Icon,label,value})=><div key={label} className="dg-box"><Icon size={20}/><b>{value}</b><span>{label}</span></div>)}</div>
           <div className="dg-two admin"><section className="dg-box"><h3>Pedidos de validação</h3><p>Selecciona um pedido para simular a decisão do operador.</p>{cases.map(c=><div className="dg-case" key={c.id}><div><b>{c.kind} · {c.id}</b><small>{c.zone} · {reviews[c.id]||'Por analisar'}</small></div>{!reviews[c.id]&&<button className="dg-text" aria-expanded={pickedCase===c.id} onClick={()=>setPickedCase(pickedCase===c.id?'':c.id)}>Analisar <ChevronRight size={14}/></button>}
           {pickedCase===c.id && <div className="dg-caseactions">{(['Validado','Em revisão'] as const).map(status=><button key={status} className="dg-btn pale" onClick={()=>{setReviews({...reviews,[c.id]:status});setPickedCase('');}}>{status==='Validado'?<Check size={15}/>:<ArrowLeft size={15}/>} {status==='Validado'?'Validar':'Pedir revisão'}</button>)}</div>}</div>)}</section>
-          <section className="dg-box"><div className="dg-kicker">Residências</div><h3>Distribuição por zona</h3>{[['Zona central',8],['Zona nascente',6],['Zona poente',4]].map(([name,num])=><div key={name} className="dg-meter"><div>{name}<b>{num}</b></div><span><i style={{width:`${Number(num)/8*100}%`}}/></span></div>)}<p className="dg-fine">O painel apresenta totais por zona. Os nomes, as moradas e as autorizações individuais ficam privados.</p></section></div></>}
+          <section className="dg-box"><div className="dg-kicker">Residências</div><h3>Distribuição por zona</h3>{admin.zones.map(([name,num])=><div key={name} className="dg-meter"><div>{name}<b>{num}</b></div><span><i style={{width:`${Number(num)/8*100}%`}}/></span></div>)}<p className="dg-fine">O painel apresenta totais por zona. Os nomes, as moradas e as autorizações individuais ficam privados.</p></section></div></>}
       </div>
     </main>
     <footer className="dg-footer"><div className="dg-wrap"><span>AFROFINTEK <i/> Yamilook · AFROLOC · NJILA · LOCACCESS</span><a href="/"><ArrowLeft size={14}/> Voltar à Yamilook</a></div></footer>
