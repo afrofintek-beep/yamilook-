@@ -705,9 +705,9 @@ function ProfileContent() {
               </DropdownMenuItem>
               {isOwnProfile && (
                 <>
-                  {walletAccess.allowed && <DropdownMenuItem onClick={() => navigate('/kumbu')} className="rounded-lg">
+                  {walletAccess.allowed && <DropdownMenuItem onClick={() => navigate('/payment-point')} className="rounded-lg">
                     <Coins className="w-4 h-4 mr-2" />
-                    {t('kumbu.wallet', 'Carteira Kumbu')}
+                    {t('kumbu.wallet', 'Carteira')}
                   </DropdownMenuItem>}
                   <DropdownMenuItem onClick={() => navigate('/advertising')} className="rounded-lg">
                     <Megaphone className="w-4 h-4 mr-2" />
@@ -810,8 +810,8 @@ function ProfileContent() {
       {isOwnProfile && walletAccess.allowed && (
         <button
           type="button"
-          onClick={() => navigate('/kumbu')}
-          aria-label={t('kumbu.openWallet', 'Ver a minha Carteira Kumbu')}
+          onClick={() => navigate('/payment-point')}
+          aria-label={t('kumbu.openWallet', 'Ver a minha Carteira')}
           className="group w-full text-left mb-4 rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-transform active:scale-[0.99]"
         >
           <KumbuBalanceCard />

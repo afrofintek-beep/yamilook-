@@ -1,3 +1,4 @@
+import { WalletHeader, WalletNavigation } from '@/features/payment-point/WalletNavigation';
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -17,16 +18,8 @@ export default function KumbuHistory() {
   const { data: ledger, isLoading } = useKumbuHistory(dir);
 
   return (
-    <div className="min-h-screen bg-background pb-20">
-      <header className="sticky top-0 z-30 glass-nav safe-top">
-        <div className="flex items-center gap-3 px-4 py-2.5">
-          <Button variant="ghost" size="icon" className="rounded-xl h-9 w-9" onClick={() => navigate(-1)}>
-            <ArrowLeft className="h-4.5 w-4.5" />
-          </Button>
-          <h1 className="text-base font-bold tracking-tight">{uiText("Histórico")}</h1>
-        </div>
-      </header>
-
+    <div className="min-h-screen bg-background pb-28 safe-top">
+      <WalletHeader asset="kumbu" back="/kumbu" />
       <main className="max-w-lg mx-auto px-4 pt-5 space-y-4">
         <Tabs value={dir} onValueChange={(v) => setDir(v as LedgerDirection)}>
           <TabsList className="w-full bg-card border border-border/20 rounded-xl h-10">
@@ -94,6 +87,7 @@ export default function KumbuHistory() {
           })}
         </div>
       </main>
+      <WalletNavigation asset="kumbu" tab="movements" />
     </div>
   );
 }

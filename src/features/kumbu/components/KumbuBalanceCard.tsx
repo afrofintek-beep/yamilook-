@@ -1,3 +1,6 @@
+import { useHiddenBalance } from '@/features/payment-point/useHiddenBalance';
+import { Button } from '@/components/ui/button';
+import { Eye, EyeOff } from 'lucide-react';
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { motion } from 'framer-motion';
 import { Progress } from '@/components/ui/progress';
@@ -14,6 +17,7 @@ const LEVEL_COLORS: Record<string, { ring: string; text: string; bg: string; glo
 
 export default function KumbuBalanceCard() {
   useUiLocale();
+  const [hidden, setHidden] = useHiddenBalance();
   const { available, lifetime, level, progress } = useKumbuBalance();
   const { pct, target } = progress;
   const colors = LEVEL_COLORS[level] || LEVEL_COLORS.Bronze;
@@ -29,12 +33,12 @@ export default function KumbuBalanceCard() {
       <div className={`absolute inset-x-0 top-0 h-24 bg-gradient-to-b ${colors.glow} to-transparent pointer-events-none`} />
 
       {/* Header row */}
-      <div className="relative flex items-center justify-between mb-5">
+      <div className="relative flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <div className={`w-8 h-8 rounded-lg ${colors.bg} flex items-center justify-center`}>
             <Coins className={`w-4 h-4 ${colors.text}`} strokeWidth={1.8} />
           </div>
-          <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/50">
+          <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
             Kumbu
           </span>
         </div>
@@ -45,11 +49,12 @@ export default function KumbuBalanceCard() {
         </div>
       </div>
 
+      <Button variant="ghost" size="icon" className="absolute right-3 top-14" aria-label={hidden ? 'Mostrar valores' : 'Ocultar valores'} onClick={() => setHidden(!hidden)}>{hidden ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</Button>
       {/* Balance */}
-      <div className="relative mb-5">
-        <p className="text-[11px] text-muted-foreground/50 uppercase tracking-wider mb-1">{uiText("Saldo disponível")}</p>
+      <div className="relative mb-3">
+        <p className="text-[11px] text-muted-foreground uppercase tracking-wider mb-1">{uiText("Saldo disponível")}</p>
         <p className="text-4xl font-bold text-foreground tracking-tight tabular-nums leading-none">
-          {available}
+          {hidden ? '••••' : available.toLocaleString('pt-AO')} <span className="text-base font-normal">Kumbu</span>
         </p>
       </div>
 
@@ -57,19 +62,19 @@ export default function KumbuBalanceCard() {
       <div className="relative space-y-2.5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">
-            <TrendingUp className="w-3 h-3 text-muted-foreground/40" />
-            <span className="text-[11px] text-muted-foreground/50">{uiText("Lifetime")}</span>
+            <TrendingUp className="w-3 h-3 text-muted-foreground" />
+            <span className="text-[11px] text-muted-foreground">{uiText("Lifetime")}</span>
           </div>
           <span className="text-xs font-semibold text-foreground/80 tabular-nums">
-            {lifetime}
-            {target !== Infinity && (
-              <span className="text-muted-foreground/40 font-normal"> / {target}</span>
+            {hidden ? '••••' : lifetime.toLocaleString('pt-AO')}
+            {level !== 'KOTA' && target !== Infinity && (
+              <span className="text-muted-foreground font-normal"> / {target}</span>
             )}
           </span>
         </div>
-        <Progress value={pct} className="h-1.5" />
-        <p className="text-[10px] text-muted-foreground/40 text-right tabular-nums">
-          {pct}%
+        {level !== 'KOTA' && <Progress value={pct} className="h-1.5" />}
+        <p className="text-[10px] text-muted-foreground text-right tabular-nums">
+          {level === 'KOTA' ? 'Nível KOTA alcançado' : `${pct}%`}
         </p>
       </div>
     </motion.div>

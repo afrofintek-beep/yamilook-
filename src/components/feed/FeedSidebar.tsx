@@ -19,8 +19,8 @@ export function FeedSidebar({ activeStreams }: { activeStreams: ActiveStream[] }
       {/* Wallet pilot access */}
       <WalletAccessGate silent>
       <button
-        onClick={() => navigate('/kumbu')}
-        aria-label={uiText("Abrir a carteira Kumbu")}
+        onClick={() => navigate('/payment-point')}
+        aria-label={uiText("Abrir a carteira")}
         className="group relative block w-full overflow-hidden rounded-2xl bg-gradient-primary p-5 text-left text-white shadow-md transition-transform hover:scale-[1.02]"
       >
         {/* soft glow + oversized coin motif */}

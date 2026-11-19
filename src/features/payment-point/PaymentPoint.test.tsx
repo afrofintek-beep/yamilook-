@@ -16,7 +16,7 @@ vi.mock('./api', async importOriginal => ({
     withdrawals: [{ id: 'withdrawal', user_id: 'other', amount: 10000, destination: 'Conta de outro utilizador', status: 'pending' }],
   }),
 }));
-afterEach(cleanup);
+afterEach(() => { cleanup(); localStorage.clear(); });
 function renderWallet() {
   render(<MemoryRouter initialEntries={['/payment-point']}><Routes>
     <Route path="/payment-point" element={<PaymentPoint />} />
@@ -36,7 +36,7 @@ it('keeps other users withdrawal management in the management view', async () =>
   renderWallet();
   await screen.findByText('Disponível para pagar');
   expect(screen.queryByText('Conta de outro utilizador')).not.toBeInTheDocument();
-  fireEvent.click(screen.getByRole('button', { name: 'Movimentos' }));
+  fireEvent.click(screen.getByRole('link', { name: 'Movimentos' }));
   expect(screen.queryByText('Conta de outro utilizador')).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Gestão' }));
   expect(screen.getByText('Conta de outro utilizador')).toBeInTheDocument();

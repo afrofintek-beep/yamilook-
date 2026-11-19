@@ -1,4 +1,5 @@
-import { WalletAccessManager } from '@/features/payment-point/WalletAccess';
+import { WalletHeader, WalletNavigation } from '@/features/payment-point/WalletNavigation';
+import { useWalletAccess } from '@/features/payment-point/WalletAccess';
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -13,6 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 export default function KumbuWallet() {
   useUiLocale();
+  const access = useWalletAccess();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [showHelp, setShowHelp] = useState(false);
@@ -33,29 +35,15 @@ export default function KumbuWallet() {
   }, [user]);
 
   return (
-    <div className="min-h-screen bg-background pb-20">
-      {/* Header */}
-      <header className="sticky top-0 z-30 glass-nav safe-top">
-        <div className="flex items-center gap-3 px-4 py-2.5">
-          <Button variant="ghost" size="icon" className="rounded-xl h-9 w-9" onClick={() => navigate(-1)}>
-            <ArrowLeft className="h-4.5 w-4.5" />
-          </Button>
-          <h1 className="text-base font-bold flex-1 tracking-tight">{uiText("Carteira Kumbu")}</h1>
-          <Button variant="ghost" size="icon" className="rounded-xl h-9 w-9" onClick={() => navigate('/kumbu/history')}>
-            <History className="h-4.5 w-4.5" />
-          </Button>
-        </div>
-      </header>
-
-      <main className="max-w-lg mx-auto px-4 pt-5 space-y-4">
+    <div className="min-h-screen bg-background pb-28 safe-top">
+      <WalletHeader asset="kumbu" admin={access.admin} />
+      <main className="max-w-xl mx-auto px-4 pt-5 space-y-4">
         <KumbuBalanceCard />
-        <WalletAccessManager />
-        <Button className="w-full" variant="outline" onClick={() => navigate("/payment-point")}>Payment Point · Angola · Testes</Button>
 
         <motion.button
           whileTap={{ scale: 0.98 }}
           onClick={() => setBuyOpen(true)}
-          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 text-white font-semibold shadow-sm"
+          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-primary text-primary-foreground font-semibold shadow-sm"
         >
           <Coins className="h-5 w-5" />{uiText(" Comprar Kumbu")}</motion.button>
 
@@ -85,7 +73,7 @@ export default function KumbuWallet() {
           </div>
           <div className="flex-1 min-w-0">
             <div className="font-semibold text-sm text-foreground">
-              {isCreator ? uiText("Levantar Kumbu (Payout)") : uiText("Tornar-me criador")}
+              {isCreator ? uiText("Levantar Kumbu") : uiText("Tornar-me criador")}
             </div>
             <div className="text-xs text-muted-foreground">
               {isCreator
@@ -96,11 +84,10 @@ export default function KumbuWallet() {
           <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
         </motion.button>
 
-        <p className="text-[11px] text-muted-foreground/40 text-center leading-relaxed px-4 pt-2">
-          {uiText('Mokubico é convivência. Academia é crescimento. Kumbu é valor.')}
-        </p>
+
       </main>
 
+      <WalletNavigation asset="kumbu" />
       <KumbuHowToEarn open={showHelp} onOpenChange={setShowHelp} />
       <BuyKumbuSheet open={buyOpen} onOpenChange={setBuyOpen} />
     </div>
