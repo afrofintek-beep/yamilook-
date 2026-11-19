@@ -39,7 +39,7 @@ export function Farewell({source,grants,reload,disabled}:Props){
   const [preview,setPreview]=useState(false),[busy,setBusy]=useState(false),[status,setStatus]=useState('');
   async function request(action:string,extra={}){
     const {data,error}=await supabase.rpc('locaccess_farewell' as never,{p_action:action,p_data:{...source,...extra}} as never);
-    if(error)throw new Error(error.message);
+    if(error)throw new Error(error.code==='P0001'?error.message:'Não foi possível contactar o serviço de recordações. Tenta novamente.');
     return data as unknown as {batch:string;pending:Recipient[]};
   }
   useEffect(()=>{let live=true;request('list').then(r=>{if(live)setPending(r.pending)}).catch(()=>{if(live)setStatus('Não foi possível consultar as recordações pendentes.')});return()=>{live=false}},[source.id,source.code]);
@@ -53,6 +53,7 @@ export function Farewell({source,grants,reload,disabled}:Props){
   }
   const guests=batch?pending.filter(p=>p.batch===batch):grants.filter(g=>selected.includes(g.id));
   async function finish(later:boolean){
+    if(busy || !guests.length || (!later && !note.trim())) return;
     setBusy(true);setStatus('');let closed=Boolean(batch);
     try{
       let rows=pending.filter(p=>p.batch===batch);
@@ -83,8 +84,8 @@ export function Farewell({source,grants,reload,disabled}:Props){
     {open&&<fieldset disabled={busy||disabled} className="grid gap-3 rounded-xl border p-4">
       <legend>{preview?'Pré-visualização':batch?'Preparar recordação':'Encerrar partilha'}</legend>
       {!preview&&<>
-        <label>Ocasião <select value={occasion} onChange={e=>{const key=e.target.value as keyof typeof suggestions;setOccasion(key);setNote(suggestions[key])}}>{Object.keys(suggestions).map(s=><option key={s}>{s}</option>)}</select></label>
-        <label className="grid">Mensagem<textarea className="rounded border p-2" maxLength={2000} value={note} onChange={e=>setNote(e.target.value)}/></label>
+        <label className="grid gap-1">Ocasião <select className="locaccess-select bg-background text-foreground" value={occasion} onChange={e=>{const key=e.target.value as keyof typeof suggestions;setOccasion(key);setNote(suggestions[key])}}>{Object.keys(suggestions).map(s=><option key={s}>{s}</option>)}</select></label>
+        <label className="grid">Mensagem<textarea className="min-h-28 rounded border bg-background p-3 text-base text-foreground" rows={4} maxLength={2000} value={note} onChange={e=>setNote(e.target.value)}/></label>
         <details><summary>Juntar cartão ou fotografia</summary><div className="grid gap-2 py-2">
           <Button variant="outline" onClick={()=>void attach()}>Usar cartão de agradecimento</Button>
           <label>Escolher fotografia <input type="file" accept="image/*" onChange={e=>{const file=e.target.files?.[0];if(file)void attach(file)}}/></label>
@@ -93,10 +94,10 @@ export function Farewell({source,grants,reload,disabled}:Props){
         {!batch&&<fieldset><legend>Quem recebe a mensagem?</legend>{grants.map(g=><label className="block" key={g.id}><input type="checkbox" checked={selected.includes(g.id)} onChange={e=>setSelected(e.target.checked?[...selected,g.id]:selected.filter(id=>id!==g.id))}/> @{g.username}</label>)}</fieldset>}
       </>}
       {url&&<img className="max-h-56 rounded object-contain" src={url} alt="Recordação escolhida"/>}
-      {preview&&<><p className="whitespace-pre-wrap">{note}</p><p>Para {guests.map(g=>'@'+g.username).join(', ')}</p></>}
+      {preview&&<><p className="whitespace-pre-wrap">{note}</p><p>{guests.length?'Para '+guests.map(g=>'@'+g.username).join(', '):'Sem destinatários disponíveis. Volta à selecção para rever a partilha.'}</p></>}
       {!batch&&<p className="text-sm">O acesso à localização termina para todas as pessoas desta partilha.</p>}
-      {preview?<><Button onClick={()=>void finish(false)}>{batch?'Enviar recordação':'Encerrar partilha e enviar'}</Button><Button variant="outline" onClick={()=>setPreview(false)}>Editar</Button></>:<Button disabled={!guests.length||!note.trim()} onClick={()=>setPreview(true)}>Pré-visualizar</Button>}
-      {!batch&&<Button variant="outline" disabled={!selected.length} onClick={()=>void finish(true)}>Encerrar agora e enviar mais tarde</Button>}
+      {preview?<><Button disabled={!guests.length||!note.trim()} onClick={()=>void finish(false)}>{batch?'Enviar recordação':'Encerrar partilha e enviar'}</Button><Button variant="outline" onClick={()=>setPreview(false)}>Editar</Button></>:<Button disabled={!guests.length||!note.trim()} onClick={()=>setPreview(true)}>Pré-visualizar</Button>}
+      {!batch&&<Button variant="outline" disabled={!guests.length} onClick={()=>void finish(true)}>Encerrar agora e enviar mais tarde</Button>}
       <button onClick={()=>setOpen(false)}>Cancelar</button>
     </fieldset>}
     {status&&<p role="status">{status}</p>}
