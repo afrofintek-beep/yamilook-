@@ -136,6 +136,11 @@ export default function Onboarding() {
   // Registration fields
   const [displayName, setDisplayName] = useState('');
   const [username, setUsername] = useState('');
+  const [channel, setChannel] = useState<'email' | 'sms' | 'whatsapp'>('email');
+  const [telephone, setTelephone] = useState('+244');
+  const [awaitingCode, setAwaitingCode] = useState(false);
+  const [token, setToken] = useState('');
+  const phone = telephone.replace(/[\s()-]/g, '');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [accessCode, setAccessCode] = useState(() => {
@@ -282,7 +287,7 @@ export default function Onboarding() {
 
   const isPasswordValid = passwordRequirements.every(req => req.regex.test(password));
   const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const isRegisterFormValid = displayName.length >= 2 && username.length >= 3 && isEmailValid && isPasswordValid && usernameAvailable !== false;
+  const isRegisterFormValid = displayName.length >= 2 && username.length >= 3 && (channel === 'email' ? isEmailValid : /^\+[1-9]\d{7,14}$/.test(phone)) && isPasswordValid && usernameAvailable !== false;
 
   // Final registration: create account + save all onboarding data
   const handleRegister = async () => {
@@ -314,17 +319,28 @@ export default function Onboarding() {
           toast.error(t('onboardingFlow.invalidInvite'));
           return;
         }
-        const { error } = await signUp(email, password, {
+        const metadata = {
           display_name: displayName,
           username: username.toLowerCase(),
           access_code: code,
           onboarding_draft: createSignupOnboarding({
-            currentStep, displayName, username, email, inviteCode: code,
+            currentStep, displayName, username, email: channel === 'email' ? email : '', inviteCode: code,
             gender: selectedGender, birthDay, birthMonth, birthYear, country: selectedCountry,
             city: selectedCity, neighborhood: selectedNeighborhood, customNeighborhood, bio,
             residenceMethod: residencePlan.method, administrative: residencePlan.administrative,
           }),
-        });
+        };
+        if (channel !== 'email' && !awaitingCode) {
+          const { error } = await supabase.auth.signUp({
+            phone, password, options: { channel, data: metadata },
+          });
+          if (error) toast.error('Não foi possível enviar o código. Tenta novamente.');
+          else setAwaitingCode(true);
+          return;
+        }
+        const { error } = channel === 'email'
+          ? await signUp(email, password, metadata)
+          : await supabase.auth.verifyOtp({ phone, token, type: 'sms' });
 
         if (error) {
           toast.error(t('publicAuth.retry'));
@@ -1069,7 +1085,16 @@ export default function Onboarding() {
                 )}
               </div>
 
-              {/* Email */}
+              <label className="block">Como queres inscrever-te?
+                <select className="block w-full rounded-xl bg-secondary p-3" value={channel} disabled={isRegistering || awaitingCode}
+                  onChange={e => setChannel(e.target.value as typeof channel)}>
+                  <option value="email">E-mail</option><option value="whatsapp">WhatsApp</option><option value="sms">SMS</option>
+                </select>
+              </label>
+              {channel !== 'email' ? <label className="block">Número de telemóvel com indicativo
+                <Input type="tel" autoComplete="tel" value={telephone} disabled={awaitingCode || isRegistering}
+                  onChange={e => setTelephone(e.target.value)} />
+              </label> : (
               <div>
                 <label className="text-sm font-medium text-foreground mb-1.5 block">{t("auth.email")}</label>
                 <div className="relative">
@@ -1091,6 +1116,13 @@ export default function Onboarding() {
                 </div>
               </div>
 
+              )}
+              {awaitingCode && <div>
+                <label>Código recebido por {channel === 'sms' ? 'SMS' : 'WhatsApp'}
+                  <Input inputMode="numeric" autoComplete="one-time-code" value={token} onChange={e => setToken(e.target.value.replace(/\D/g, ''))} />
+                </label>
+                <Button type="button" variant="link" disabled={isRegistering} onClick={() => { setAwaitingCode(false); setToken(''); }}>Alterar número ou pedir novo código</Button>
+              </div>}
               {/* Password */}
               <div>
                 <label className="text-sm font-medium text-foreground mb-1.5 block">{t("auth.password")}</label>
@@ -1139,14 +1171,14 @@ export default function Onboarding() {
                 <ChevronLeft className="rtl:rotate-180 w-5 h-5 me-2" />{t("common.back")}</Button>
               <Button
                 onClick={handleRegister}
-                disabled={!isRegisterFormValid || !accessCode.trim() || isRegistering}
+                disabled={(awaitingCode && !token) || !isRegisterFormValid || !accessCode.trim() || isRegistering}
                 className="h-14 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-lg"
               >
                 {isRegistering ? (
                   <>
                     <Loader2 className="w-5 h-5 me-2 animate-spin" />{t("auth.creatingAccount")}</>
                 ) : (
-                  <>{t("onboardingFlow.join")}<Sparkles className="w-5 h-5 ms-2" />
+                  <>{channel === "email" ? t("onboardingFlow.join") : awaitingCode ? "Validar código" : "Receber código"}<Sparkles className="w-5 h-5 ms-2" />
                   </>
                 )}
               </Button>
