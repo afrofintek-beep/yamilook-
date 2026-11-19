@@ -1,3 +1,4 @@
+import { WalletAccessManager } from '@/features/payment-point/WalletAccess';
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -48,6 +49,7 @@ export default function KumbuWallet() {
 
       <main className="max-w-lg mx-auto px-4 pt-5 space-y-4">
         <KumbuBalanceCard />
+        <WalletAccessManager />
         <Button className="w-full" variant="outline" onClick={() => navigate("/payment-point")}>Payment Point · Angola · Testes</Button>
 
         <motion.button

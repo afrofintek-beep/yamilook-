@@ -1,3 +1,4 @@
+import { WalletAccessGate } from '@/features/payment-point/WalletAccess';
 import {FriendRequestAlerts} from '@/features/friend-requests/alerts';
 import { isPilotPath, pilotRoutes } from './features/dangereux/paths';
 import { loadingText } from '@/i18n/startup-copy';
@@ -365,13 +366,13 @@ function AnimatedRoutes() {
           <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
           <Route path="/caminho" element={<Caminho />} />
           <Route path="/app/caminho" element={<Caminho />} />
-          <Route path="/payment-point" element={<ProtectedRoute><PaymentPoint /></ProtectedRoute>} />
-          <Route path="/payment-point/:id" element={<ProtectedRoute><PaymentPoint /></ProtectedRoute>} />
-          <Route path="/kumbu" element={<ProtectedRoute><KumbuWallet /></ProtectedRoute>} />
-          <Route path="/kumbu/history" element={<ProtectedRoute><KumbuHistory /></ProtectedRoute>} />
-          <Route path="/ranking" element={<ProtectedRoute><RankingPage /></ProtectedRoute>} />
-          <Route path="/creator/apply" element={<ProtectedRoute><CreatorApply /></ProtectedRoute>} />
-          <Route path="/payouts" element={<ProtectedRoute><KumbuPayouts /></ProtectedRoute>} />
+          <Route path="/payment-point" element={<ProtectedRoute><WalletAccessGate><PaymentPoint /></WalletAccessGate></ProtectedRoute>} />
+          <Route path="/payment-point/:id" element={<ProtectedRoute><WalletAccessGate><PaymentPoint /></WalletAccessGate></ProtectedRoute>} />
+          <Route path="/kumbu" element={<ProtectedRoute><WalletAccessGate><KumbuWallet /></WalletAccessGate></ProtectedRoute>} />
+          <Route path="/kumbu/history" element={<ProtectedRoute><WalletAccessGate><KumbuHistory /></WalletAccessGate></ProtectedRoute>} />
+          <Route path="/ranking" element={<ProtectedRoute><WalletAccessGate><RankingPage /></WalletAccessGate></ProtectedRoute>} />
+          <Route path="/creator/apply" element={<ProtectedRoute><WalletAccessGate><CreatorApply /></WalletAccessGate></ProtectedRoute>} />
+          <Route path="/payouts" element={<ProtectedRoute><WalletAccessGate><KumbuPayouts /></WalletAccessGate></ProtectedRoute>} />
           <Route path="/brand-book" element={<BrandBook />} />
           <Route path="/promo" element={<PromoVideos />} />
           <Route path="/apply" element={<Apply />} />
@@ -460,7 +461,7 @@ function AppContent() {
       <OnlineStatusTracker />
       <GlobalMessageNotifier />
       <GlobalLiveInviteNotifier />
-      <KumbuEarnNotifier />
+      <WalletAccessGate silent><KumbuEarnNotifier /></WalletAccessGate>
       <ThemeSync />
       <AutomaticAccountBackup />
       <ActiveCallProvider>

@@ -1,3 +1,4 @@
+import { useWalletAccess } from '@/features/payment-point/WalletAccess';
 import ProfileInitiatives from "@/features/social-initiatives/ProfileInitiatives";
 import { socialInitiativesEnabled } from "@/features/social-initiatives/api";
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
@@ -102,6 +103,7 @@ export default function Profile() {
 }
 
 function ProfileContent() {
+  const walletAccess = useWalletAccess();
   useUiLocale();
   useEffect(() => { window.scrollTo(0, 0); }, []);
   const { userId } = useParams();
@@ -703,10 +705,10 @@ function ProfileContent() {
               </DropdownMenuItem>
               {isOwnProfile && (
                 <>
-                  <DropdownMenuItem onClick={() => navigate('/kumbu')} className="rounded-lg">
+                  {walletAccess.allowed && <DropdownMenuItem onClick={() => navigate('/kumbu')} className="rounded-lg">
                     <Coins className="w-4 h-4 mr-2" />
                     {t('kumbu.wallet', 'Carteira Kumbu')}
-                  </DropdownMenuItem>
+                  </DropdownMenuItem>}
                   <DropdownMenuItem onClick={() => navigate('/advertising')} className="rounded-lg">
                     <Megaphone className="w-4 h-4 mr-2" />
                     {t('settings.advertisingSettings', 'Publicidade')}
@@ -804,8 +806,8 @@ function ProfileContent() {
 
       {isOwnProfile && <ResidencePanel />}
 
-      {/* Kumbu wallet — own profile only (entry point to /kumbu) */}
-      {isOwnProfile && (
+      {/* Kumbu wallet — invited accounts only */}
+      {isOwnProfile && walletAccess.allowed && (
         <button
           type="button"
           onClick={() => navigate('/kumbu')}

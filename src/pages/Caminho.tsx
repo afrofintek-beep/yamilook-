@@ -1,3 +1,4 @@
+import { useWalletAccess } from '@/features/payment-point/WalletAccess';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -6,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 const GAME = 'https://caminho.yamilook.com';
 type Snapshot = { balance: number; name: string; observedAt: number };
 export default function Caminho() {
+  const walletAccess = useWalletAccess();
   const { user, loading, recoveringPassword } = useAuth();
   const frame = useRef<HTMLIFrameElement>(null);
   const [consent, setConsent] = useState<string | null>(null);
@@ -13,7 +15,7 @@ export default function Caminho() {
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
   const [error, setError] = useState('');
   const [refresh, setRefresh] = useState(0);
-  const enabled = !!user && consent === user.id && !recoveringPassword;
+  const enabled = walletAccess.allowed && !!user && consent === user.id && !recoveringPassword;
   useEffect(() => { setConsent(null); setSnapshot(null); }, [user?.id, recoveringPassword]);
   useEffect(() => {
     const ready = (event: MessageEvent) => {
@@ -60,9 +62,9 @@ export default function Caminho() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Link to="/feed" className="font-bold">YAMILOOK</Link>
         <h1 className="font-bold text-xl">O Meu Caminho · 3D</h1>
-        <Link to="/kumbu" className="underline">Abrir carteira Kumbu</Link>
+        {walletAccess.allowed && <Link to="/kumbu" className="underline">Abrir carteira Kumbu</Link>}
       </div>
-      <p className="text-sm">Autoriza a consulta do teu nome e saldo Kumbu no jogo. A associação dura apenas nesta página e podes desligá-la a qualquer momento. Não permite pagamentos nem atribui créditos por conquistas.</p>
+      {walletAccess.allowed && <><p className="text-sm">Autoriza a consulta do teu nome e saldo Kumbu no jogo. A associação dura apenas nesta página e podes desligá-la a qualquer momento. Não permite pagamentos nem atribui créditos por conquistas.</p>
       <div className="flex flex-wrap gap-3 items-center" aria-live="polite">
         {loading ? <span>A carregar a conta…</span> : recoveringPassword ? <Link to="/reset-password">Concluir recuperação da conta</Link> : !user ?
           <Link className="rounded-lg bg-primary px-4 py-2 text-primary-foreground" to="/login?next=/app/caminho">Entrar para associar Kumbu</Link> :
@@ -71,7 +73,7 @@ export default function Caminho() {
             <button className="rounded-lg border px-4 py-2" onClick={() => {setConsent(null);setSnapshot(null);}}>Desligar carteira</button></> :
           <button className="rounded-lg bg-primary px-4 py-2 text-primary-foreground" onClick={() => setConsent(user.id)}>Autorizar consulta Kumbu</button>}
         {error && enabled && <p role="alert">{error}</p>}
-      </div>
+      </div></>}
     </header>
     <iframe ref={frame} src={GAME + '/'} title="O Meu Caminho — bairro 3D"
       onLoad={() => setNonce(null)} referrerPolicy="strict-origin"

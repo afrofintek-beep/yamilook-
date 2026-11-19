@@ -3,6 +3,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, expect, it, vi } from 'vitest';
 import PaymentPoint from './PaymentPoint';
 
+vi.mock('./WalletAccess', () => ({ WalletAccessManager: () => null }));
 vi.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: { id: 'owner' } }) }));
 vi.mock('./RequestPayment', () => ({ RequestPayment: () => <p>Criar pedido</p> }));
 vi.mock('./ScanPayment', () => ({ ScanPayment: () => <p>Scanner aberto</p> }));

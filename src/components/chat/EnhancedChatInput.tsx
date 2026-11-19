@@ -1,3 +1,4 @@
+import { WalletAccessGate } from '@/features/payment-point/WalletAccess';
 import { RequestPayment } from '@/features/payment-point/RequestPayment';
 import { AfrolocAddressDialog } from './AfrolocAddressDialog';
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
@@ -430,7 +431,7 @@ export function EnhancedChatInput({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-48">
-              <DropdownMenuItem disabled={disabled || sending} onSelect={() => setPaymentConversation(conversationId)}>Pedir pagamento · Angola · Teste</DropdownMenuItem>
+              <WalletAccessGate silent><DropdownMenuItem disabled={disabled || sending} onSelect={() => setPaymentConversation(conversationId)}>Pedir pagamento · Angola · Teste</DropdownMenuItem></WalletAccessGate>
               <DropdownMenuItem onClick={() => imageInputRef.current?.click()}>
                 <Image className="w-4 h-4 mr-2" />{uiText("Photo or Video")}</DropdownMenuItem>
               <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>

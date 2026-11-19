@@ -1,3 +1,4 @@
+import { WalletAccessGate } from '@/features/payment-point/WalletAccess';
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useNavigate } from 'react-router-dom';
 import { Radio, ChevronRight, Users } from 'lucide-react';
@@ -15,7 +16,8 @@ export function FeedSidebar({ activeStreams }: { activeStreams: ActiveStream[] }
 
   return (
     <div className="sticky top-4 space-y-4">
-      {/* Kumbu — branded cover, not a balance readout */}
+      {/* Wallet pilot access */}
+      <WalletAccessGate silent>
       <button
         onClick={() => navigate('/kumbu')}
         aria-label={uiText("Abrir a carteira Kumbu")}
@@ -31,7 +33,7 @@ export function FeedSidebar({ activeStreams }: { activeStreams: ActiveStream[] }
           <div className="mt-3 inline-flex items-center gap-1 text-xs font-semibold">{uiText("Abrir a tua carteira")}<ChevronRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
           </div>
         </div>
-      </button>
+      </button></WalletAccessGate>
 
       {/* Bandas ao vivo — clickable red cover, coherent with the live branding */}
       <button

@@ -1,3 +1,4 @@
+import { WalletAccessManager } from './WalletAccess';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
@@ -151,6 +152,7 @@ export default function PaymentPoint() {
         }}>Reembolsar compra</Button>}
       </section>}
       {overview && !id && <>
+        {tab === 'admin' && overview.admin && <WalletAccessManager />}
         {tab === 'business' && <section className="space-y-2"><h2 className="font-semibold">Pedidos</h2>
           {!visibleOrders.length && <p className="text-sm text-muted-foreground">Ainda sem pedidos.</p>}
           {visibleOrders.map(item => <button key={item.id} className="w-full text-left rounded-xl border p-3" onClick={() => navigate(`/payment-point/${item.id}`)}>
