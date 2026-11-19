@@ -102,6 +102,7 @@ export default function Chat() {
     sendMessage,
     updateMessageMediaUrl,
     setTyping,
+    editMessage,
     deleteMessage,
     deleteMessageForMe,
     toggleReaction,
@@ -904,6 +905,10 @@ export default function Chat() {
                       isGroupChat={isGroup}
                       currentUserId={user?.id || ''}
                       onDeleteForMe={handleDeleteForMe}
+                      onEdit={async (id, content) => {
+                        const { error } = await editMessage(id, content);
+                        if (error) throw error;
+                      }}
                       onDelete={message.sender_id === user?.id ? handleDelete : undefined}
                       onReply={selectionMode ? undefined : setReplyTo}
                       onReact={handleReact}
