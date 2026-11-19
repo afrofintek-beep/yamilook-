@@ -141,6 +141,7 @@ export default function PaymentPoint() {
         {pendingOrders.length > 0 && <button className="w-full rounded-xl border p-3 text-left text-sm" onClick={() => selectTab('business')}>{pendingOrders.length} {pendingOrders.length === 1 ? 'pedido' : 'pedidos'} por receber <span aria-hidden="true">→</span></button>}
       </>}
       {!id && tab === 'business' && <section className="space-y-3">
+        <Button variant="outline" onClick={() => navigate('/facturacao')}>Facturação de teste</Button>
         <h2 className="text-xl font-semibold">Meu negócio</h2>
         <div className="rounded-2xl border p-4"><p className="text-sm text-muted-foreground">Pedidos por receber</p><p className="text-2xl font-semibold mt-1">{displayMoney(pendingOrders.reduce((total, item) => total + item.amount, 0))}</p></div>
         <Button className="w-full min-h-12" onClick={() => openDialog('create')}><Plus className="mr-2 h-5 w-5" />Criar cobrança</Button>
