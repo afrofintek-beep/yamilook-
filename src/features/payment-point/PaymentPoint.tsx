@@ -31,7 +31,9 @@ export default function PaymentPoint() {
     if (id) navigate(`/payment-point?tab=${next}`);
     else setSearchParams({ tab: next });
   }
-  function openDialog(next: 'create' | 'scan' | 'topup' | 'withdraw') {
+  const [activeAction, setActiveAction] = useState<'create' | 'scan' | 'topup' | 'withdraw'>('scan');
+  function openDialog(next: typeof activeAction) {
+    setActiveAction(next);
     setError('');
     setDialog(next);
   }
@@ -136,7 +138,7 @@ export default function PaymentPoint() {
             { label: 'Receber', icon: ArrowDownLeft, action: 'create' as const },
             { label: 'Carregar', icon: Plus, action: 'topup' as const },
             { label: 'Levantar', icon: ArrowUpRight, action: 'withdraw' as const },
-          ].map(action => <Button key={action.action} variant={action.action === 'scan' ? 'default' : 'outline'} className={`h-auto min-h-16 flex-col gap-1.5 px-1 py-2 text-xs sm:text-sm border-border ${action.action === 'scan' ? 'text-primary-foreground' : 'text-foreground'}`} onClick={() => openDialog(action.action)}><action.icon className="h-5 w-5" />{action.label}</Button>)}
+          ].map(action => <Button key={action.action} variant={action.action === activeAction ? 'default' : 'outline'} className={`transition-colors motion-reduce:transition-none h-auto min-h-16 flex-col gap-1.5 px-1 py-2 text-xs sm:text-sm border-border ${action.action === activeAction ? 'text-primary-foreground' : 'text-foreground'}`} onClick={() => openDialog(action.action)}><action.icon className="h-5 w-5" />{action.label}</Button>)}
         </div>
         {pendingOrders.length > 0 && <button className="w-full rounded-xl border p-3 text-left text-sm" onClick={() => selectTab('business')}>{pendingOrders.length} {pendingOrders.length === 1 ? 'pedido' : 'pedidos'} por receber <span aria-hidden="true">→</span></button>}
       </>}
