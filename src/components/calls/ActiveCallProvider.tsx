@@ -7,6 +7,7 @@ import { createContext, useContext, useState, useCallback, ReactNode, lazy, Susp
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { CallConnectionStatus } from './CallConnectionStatus';
 import type { CallState } from '@/hooks/webrtc/types';
 import { useCallTransport } from '@/hooks/useCallTransport';
 import type { BgMode, EffectsConfig } from '@/lib/virtualBackground';
@@ -26,7 +27,7 @@ const IncomingCallOverlay = lazy(() => import('./IncomingCallOverlay').then(m =>
 interface ActiveCallContextType {
   mediaBusy?: boolean;
   returnToCall?: () => void;
-  callIndicator?: string;
+  callIndicator?: ReactNode;
   isInCall: boolean;
   currentCallId: string | null;
   startCall: (contactId: string, type: 'voice' | 'video', conversationId?: string, contactName?: string) => Promise<void>;
@@ -349,9 +350,26 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
     if (currentCallId) navigate(`/call/${currentCallId}`);
   }, [currentCallId, navigate]);
   const dialing = starting || webRTCState.callStatus === 'ringing' || webRTCState.callStatus === 'initiating';
-  const callIndicator = dialing
+  const transportId = webRTCState.callId;
+  const connected = webRTCState.callStatus === 'connected' && webRTCState.connectionState === 'connected';
+  const [connectionStarts, setConnectionStarts] = useState<Record<string, number>>({});
+  useEffect(() => {
+    const now = Date.now();
+    setConnectionStarts(previous => {
+      const next = { ...previous };
+      for (const id of Object.keys(next)) {
+        if (id !== transportId && id !== webRTC.heldId) delete next[id];
+      }
+      if (transportId && connected) next[transportId] ??= now;
+      return Object.keys(previous).length === Object.keys(next).length &&
+        Object.keys(next).every(id => previous[id] === next[id]) ? previous : next;
+    });
+  }, [transportId, connected, webRTC.heldId]);
+  const since = transportId ? connectionStarts[transportId] : undefined;
+  const statusLabel = dialing
     ? [uiText("A chamar…"), contactLabel].filter(Boolean).join(' ')
-    : uiText("Chamada em curso");
+    : webRTCState.lastError || uiText("A estabelecer ligação…");
+  const callIndicator = useMemo(() => <CallConnectionStatus online={connected} since={since} label={statusLabel} />, [connected, since, statusLabel]);
   // Memoize context value to prevent unnecessary re-renders of consumers
   const contextValue = useMemo<ActiveCallContextType>(() => ({
     returnToCall, callIndicator: starting || currentCallId ? callIndicator : undefined,
@@ -394,7 +412,7 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
       {webRTC.recoverAudio && currentCallId && <AudioInterruption key={currentCallId} report={webRTC.reportInterruption} stream={webRTCState.localStream} muted={webRTCState.isMuted} recover={webRTC.recoverAudio} />}
       {((starting && setupMinimized) || (currentCallId && isInCall && location.pathname !== `/call/${currentCallId}`)) && <aside className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom,0px))] right-3 z-[150] max-w-48 rounded-xl border bg-background p-2 shadow-lg">
         {Array.from(webRTCState.remoteStreams ?? [], ([peer, stream]) => <div key={peer} className="relative max-h-24 overflow-hidden"><CallRemoteMedia stream={stream} showVideo={webRTCState.callType === 'video'} /></div>)}
-        <p role="status" className="px-2 text-sm font-medium">{callIndicator}</p>
+        <p className="px-2 text-sm font-medium">{callIndicator}</p>
         <Button onClick={returnToCall}>{uiText("Voltar à chamada")}</Button>
         {!dialing && <Button variant="ghost" onClick={toggleMute}>{webRTCState.isMuted ? uiText("Ligar microfone") : uiText("Desligar microfone")}</Button>}
         <Button variant="destructive" onClick={endCurrentCall}>{dialing ? uiText("Cancelar chamada") : uiText("Desligar")}</Button>
