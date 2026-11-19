@@ -495,13 +495,6 @@ export function EnhancedMessageBubble({
             </div>
           )}
 
-          {/* Reply preview */}
-          {message.reply_to && (
-            <div className="mb-1 w-full">
-              <ReplyPreview message={message.reply_to} compact />
-            </div>
-          )}
-
           <div className="relative">
             <div className="flex items-end gap-1">
               {isOwn && (
@@ -568,6 +561,11 @@ export function EnhancedMessageBubble({
                 {isPinned && (
                   <div className="flex items-center gap-1 text-xs opacity-70 mb-1">
                     <Pin className="w-3 h-3" />{uiText("Pinned")}</div>
+                )}
+                {message.reply_to && (
+                  <div className="mb-1 min-w-0">
+                    <ReplyPreview message={message.reply_to} compact />
+                  </div>
                 )}
                 {renderContent()}
               </div>

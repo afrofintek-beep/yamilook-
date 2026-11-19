@@ -619,6 +619,24 @@ export function useMessages(conversationId: string | null) {
           const newMessage = payload.new as Message;
           if (historyCutoffRef.current && newMessage.created_at <= historyCutoffRef.current) return;
 
+          // A live reply may quote a message outside the loaded page.
+          if (newMessage.reply_to_id && !messagesRef.current.some(row => row.id === newMessage.reply_to_id)) {
+            void supabase.from('visible_messages')
+              .select('id, content, message_type, sender_id')
+              .eq('conversation_id', conversationId)
+              .eq('id', newMessage.reply_to_id)
+              .eq('is_deleted', false)
+              .maybeSingle()
+              .then(async ({ data: original }) => {
+                if (!active || !original) return;
+                const { data: profile } = await fetchPublicProfileById(original.sender_id);
+                if (!active) return;
+                setMessages(previous => previous.map(row => row.id === newMessage.id
+                  ? { ...row, reply_to: { ...original, sender_profile: messageProfile(profile) } }
+                  : row));
+              });
+          }
+
           // For own messages, merge by id (we generate the UUID client-side for optimistic messages)
           if (newMessage.sender_id === user.id) {
             setMessages((prev) => {
@@ -1327,9 +1345,22 @@ export function useMessages(conversationId: string | null) {
     await fetchMessages(false);
   };
 
+  const visible = renderedScope === scope
+    ? unexpiredMessages.filter(message => personalRemovals.scope !== scope || !personalRemovals.ids.has(message.id))
+    : [];
+  const byId = new Map(visible.map(message => [message.id, message]));
+  const conversationMessages = visible.map(message => {
+    if (!message.reply_to_id) return message;
+    const original = byId.get(message.reply_to_id);
+    if (!original) return message;
+    if (original.is_deleted) return { ...message, reply_to: undefined };
+    const { id, content, message_type, sender_profile } = original;
+    return { ...message, reply_to: { id, content, message_type, sender_profile } };
+  });
+
   return {
     historyClearedAt, setHistoryCleared,
-    messages: renderedScope === scope ? unexpiredMessages.filter(message => personalRemovals.scope !== scope || !personalRemovals.ids.has(message.id)) : [],
+    messages: conversationMessages,
     reactions,
     starredIds,
     pinnedIds,
