@@ -6938,6 +6938,7 @@ export type Database = {
       use_group_invite: { Args: { invite_code: string }; Returns: Json }
       user_is_participant: { Args: { conv_id: string }; Returns: boolean }
       users_share_device: { Args: { a: string; b: string }; Returns: boolean }
+      reserve_registration_place: { Args: { p_code: string; p_ticket: string }; Returns: Json }
       validate_mvp_access_code: { Args: { p_code: string }; Returns: Json }
     }
     Enums: {

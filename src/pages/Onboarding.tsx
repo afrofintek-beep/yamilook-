@@ -142,6 +142,8 @@ export default function Onboarding() {
     captureReferralCode();
     return getReferralCode() || '';
   });
+  const holdKey = 'yamilook-hold-' + accessCode.trim().toUpperCase();
+  const deadline = sessionStorage.getItem(holdKey+'-until');
   const [showPassword, setShowPassword] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
@@ -300,7 +302,8 @@ export default function Onboarding() {
     if (!validResidencePlan(residencePlan)) { toast.error(t("onboardingFlow.addressRequired")); setCurrentStep(2); return; }
 
     let userId = user?.id;
-    const code = accessCode.trim().toUpperCase();
+    const ticket = deadline && sessionStorage.getItem(holdKey);
+    const code = ticket ? 'HOLD:' + ticket : accessCode.trim().toUpperCase();
     if (!isAuthenticated && !code) {
       toast.error(t("onboardingFlow.inviteHint"));
       return;
@@ -311,7 +314,7 @@ export default function Onboarding() {
         const { data: validation, error: validationError } = await supabase.rpc('validate_mvp_access_code', { p_code: code });
         const result = validation as { valid?: boolean; error?: string } | null;
         if (validationError || !result?.valid) {
-          toast.error(t('onboardingFlow.invalidInvite'));
+          toast.error(result?.error || t('onboardingFlow.invalidInvite'));
           return;
         }
         const { error } = await signUp(email, password, {
@@ -319,7 +322,7 @@ export default function Onboarding() {
           username: username.toLowerCase(),
           access_code: code,
           onboarding_draft: createSignupOnboarding({
-            currentStep, displayName, username, email, inviteCode: code,
+            currentStep, displayName, username, email, inviteCode: accessCode,
             gender: selectedGender, birthDay, birthMonth, birthYear, country: selectedCountry,
             city: selectedCity, neighborhood: selectedNeighborhood, customNeighborhood, bio,
             residenceMethod: residencePlan.method, administrative: residencePlan.administrative,
@@ -332,6 +335,8 @@ export default function Onboarding() {
           return;
         }
 
+        sessionStorage.removeItem(holdKey);
+        sessionStorage.removeItem(holdKey+'-until');
         clearReferralCode();
 
         // Wait for auth state to settle — poll for session up to 5 seconds
@@ -1174,6 +1179,9 @@ export default function Onboarding() {
 
   return (
     <div dir={i18n.dir()} className="min-h-screen flex flex-col bg-background overflow-x-hidden">
+      {deadline && !isAuthenticated && <p role="status" className="p-3 text-center">
+        A tua vaga está reservada até às {new Date(deadline).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}. Se o prazo terminar, volta a abrir o convite.
+      </p>}
       {/* Progress bar */}
       <div className="w-full h-1.5 bg-secondary/50">
         <motion.div

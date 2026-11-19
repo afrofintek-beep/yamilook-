@@ -57,7 +57,7 @@ export function CampaignHub() {
     {rows.map(({id,name,end,state,type,link,campaign}) => <article key={id} className="space-y-2 rounded-xl border p-4">
       <h3 className="font-semibold">{name}</h3><p>{uiText(type)} · {uiText(({ active:'Activa', suspended:'Suspensa', closed:'Encerrada', draft:'Rascunho' })[state] ?? state)}</p>
       <p>{uiText('Válido até {{date}}', {date:new Date(end).toLocaleString(locale)})}</p>
-      {link && <p>{uiText('Inscrições: {{used}} de {{limit}}', {used:link.uses_count,limit:link.max_uses})} · {uiText('Vagas disponíveis: {{count}}',{count:state === 'active' ? Math.max(0,link.max_uses-link.uses_count) : 0})}</p>}
+      {link && <p>{uiText('Inscrições: {{used}} de {{limit}}', {used:link.uses_count,limit:link.max_uses})} · {uiText('Vagas disponíveis: {{count}}',{count:state === 'active' ? (link.remaining ?? Math.max(0,link.max_uses-link.uses_count)) : 0})}</p>}
       <div className="flex flex-wrap items-start gap-2">
         {link && state === 'active' && <><ShareRegistrationInvite code={link.code} /><Button variant="outline" onClick={async () => {
           try { await navigator.clipboard.writeText(buildInviteUrl(link.code)); setStatus(uiText('Copiado!')); } catch { setStatus(uiText('Não foi possível copiar a ligação.')); }

@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 
 export type SharedLink = {
   id: string; code: string; name: string; max_uses: number; uses_count: number;
-  confirmed_count: number; status: 'active' | 'suspended'; expires_at: string;
+  remaining?: number; confirmed_count: number; status: 'active' | 'suspended'; expires_at: string;
 };
 
 export function SharedRegistrationLinks({ onlyId, onChanged }: { onlyId?: string; onChanged?: () => void } = {}) {
