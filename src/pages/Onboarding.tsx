@@ -136,10 +136,19 @@ export default function Onboarding() {
   // Registration fields
   const [displayName, setDisplayName] = useState('');
   const [username, setUsername] = useState('');
-  const [channel, setChannel] = useState<'email' | 'sms' | 'whatsapp'>('email');
+  const [selectedChannel, setChannel] = useState<'email' | 'sms' | 'whatsapp'>('email');
+  const portugueseSelected = /^pt(?:[-_]|$)/i.test(i18n.language ?? '');
+  const channel = portugueseSelected ? selectedChannel : 'email';
   const [telephone, setTelephone] = useState('');
   const [awaitingCode, setAwaitingCode] = useState(false);
   const [token, setToken] = useState('');
+  useEffect(() => {
+    if (!portugueseSelected) {
+      setChannel('email');
+      setAwaitingCode(false);
+      setToken('');
+    }
+  }, [portugueseSelected]);
   const nationalNumber = telephone.replace(/[\s()-]/g, '').replace(/^(?:\+244|00244)/, '');
   const phone = `+244${nationalNumber}`;
   const [email, setEmail] = useState('');
@@ -1086,12 +1095,12 @@ export default function Onboarding() {
                 )}
               </div>
 
-              <label className="block">Como queres inscrever-te?
+              {portugueseSelected && <label className="block">Como queres inscrever-te?
                 <select className="block w-full rounded-xl bg-secondary p-3" value={channel} disabled={isRegistering || awaitingCode}
                   onChange={e => setChannel(e.target.value as typeof channel)}>
                   <option value="email">E-mail</option><option value="whatsapp">WhatsApp</option><option value="sms">SMS</option>
                 </select>
-              </label>
+              </label>}
               {channel !== 'email' ? <label className="block">Telemóvel de Angola (+244)
                 <Input type="tel" placeholder="9XX XXX XXX" autoComplete="tel-national" value={telephone} disabled={awaitingCode || isRegistering}
                   onChange={e => setTelephone(e.target.value)} />
@@ -1118,7 +1127,7 @@ export default function Onboarding() {
               </div>
 
               )}
-              {awaitingCode && <div>
+              {channel !== 'email' && awaitingCode && <div>
                 <label>Código recebido por {channel === 'sms' ? 'SMS' : 'WhatsApp'}
                   <Input inputMode="numeric" autoComplete="one-time-code" value={token} onChange={e => setToken(e.target.value.replace(/\D/g, ''))} />
                 </label>
@@ -1172,7 +1181,7 @@ export default function Onboarding() {
                 <ChevronLeft className="rtl:rotate-180 w-5 h-5 me-2" />{t("common.back")}</Button>
               <Button
                 onClick={handleRegister}
-                disabled={(awaitingCode && !token) || !isRegisterFormValid || !accessCode.trim() || isRegistering}
+                disabled={(channel !== 'email' && awaitingCode && !token) || !isRegisterFormValid || !accessCode.trim() || isRegistering}
                 className="h-14 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-lg"
               >
                 {isRegistering ? (
