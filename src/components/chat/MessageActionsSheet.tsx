@@ -1,7 +1,7 @@
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Check, Copy, FileText, Highlighter, Image as ImageIcon, Pin, Reply, Star, Tag, Trash2, Video, Forward, X, Mic } from 'lucide-react';
+import { Pencil, Check, Copy, FileText, Highlighter, Image as ImageIcon, Pin, Reply, Star, Tag, Trash2, Video, Forward, X, Mic } from 'lucide-react';
 import { ResponsiveModal } from '@/components/ui/responsive-modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -62,6 +62,7 @@ interface MessageActionsSheetProps {
   isPinned: boolean;
   highlight?: { color: string; label?: string };
   onReply: () => void;
+  onEdit?: () => void;
   onCopy: () => void;
   onReact: (emoji: string) => void | Promise<void>;
   onStar: () => void | Promise<void>;
@@ -76,7 +77,7 @@ interface MessageActionsSheetProps {
 export function MessageActionsSheet({
   open, onOpenChange, messageContent, messageType = 'text', mediaUrl,
   thumbnailUrl, durationSeconds, senderName, isViewOnce = false, isOwn, isStarred, isPinned,
-  highlight, onReply, onCopy, onReact, onStar, onPin,
+  highlight, onEdit, onReply, onCopy, onReact, onStar, onPin,
   onForward, onDelete, onDeleteForMe, onHighlight, onRemoveHighlight,
 }: MessageActionsSheetProps) {
   useUiLocale();
@@ -188,6 +189,8 @@ export function MessageActionsSheet({
         <div className="grid grid-cols-2 gap-1" role="group" aria-label={uiText("Ações rápidas")}>
           <Button variant="ghost" disabled={busy} className={actionClass} onClick={() => void handleAction(onReply)}>
             <Reply className="h-4 w-4 shrink-0" />{uiText("Responder")}</Button>
+          {onEdit && <Button variant="ghost" disabled={busy} className={actionClass} onClick={() => { onOpenChange(false); onEdit(); }}>
+            <Pencil className="h-4 w-4 shrink-0" />{uiText("Editar mensagem")}</Button>}
           {previewText && !isViewOnce && (
             <Button variant="ghost" disabled={busy} className={actionClass} onClick={() => void handleAction(onCopy)}>
               <Copy className="h-4 w-4 shrink-0" />{uiText("Copiar")}</Button>
