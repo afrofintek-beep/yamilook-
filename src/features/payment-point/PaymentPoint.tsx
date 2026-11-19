@@ -112,7 +112,7 @@ export default function PaymentPoint() {
         </section>;
   }
   return <div className="min-h-screen bg-background pb-28 safe-top">
-    <WalletHeader admin={overview?.admin} back={id ? '/payment-point' : '/feed'} />
+    <WalletHeader section={id ? 'order' : tab} admin={overview?.admin} back={id ? '/payment-point' : '/feed'} />
     <main className="max-w-xl mx-auto p-4 space-y-4">
       <div role="status" className="rounded-xl border border-amber-400/40 bg-amber-400/10 px-3 py-2 text-sm text-foreground">
         Ambiente de testes · Valores simulados
@@ -144,7 +144,6 @@ export default function PaymentPoint() {
       </>}
       {!id && tab === 'business' && <section className="space-y-3">
         <Button variant="outline" onClick={() => navigate('/facturacao')}>Facturação de teste</Button>
-        <h2 className="text-xl font-semibold">Meu negócio</h2>
         <div className="rounded-2xl border p-4"><p className="text-sm text-muted-foreground">Pedidos por receber</p><p className="text-2xl font-semibold mt-1">{displayMoney(pendingOrders.reduce((total, item) => total + item.amount, 0))}</p></div>
         <Button className="w-full min-h-12" onClick={() => openDialog('create')}><Plus className="mr-2 h-5 w-5" />Criar cobrança</Button>
         <p className="text-sm text-muted-foreground">Crie um pedido com valor e motivo. Partilhe a ligação ou apresente o QR ao cliente.</p>
