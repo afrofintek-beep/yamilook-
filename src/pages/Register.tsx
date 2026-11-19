@@ -5,8 +5,11 @@ import YamilookLogo from '@/components/brand/YamilookLogo';
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { supabase } from '@/integrations/supabase/client';
 
+import { ShareRegistrationInvite } from '@/components/ShareRegistrationInvite';
+
 function InvitationEntry({ code, next }: { code: string; next: string }) {
   useUiLocale();
+  const [shared, setShared] = useState(false);
   const [title, setTitle] = useState<string | null>();
   useEffect(() => {
     let active = true;
@@ -14,7 +17,11 @@ function InvitationEntry({ code, next }: { code: string; next: string }) {
       try {
         const { data } = await supabase.rpc('validate_mvp_access_code', { p_code: code });
         const name = data && typeof data === 'object' && !Array.isArray(data) && data.valid === true && data.campaign_name;
-        if (active) setTitle(typeof name === 'string' ? name : null);
+        if (active) {
+          const collective = !!data && typeof data === 'object' && !Array.isArray(data) && data.valid === true && data.multi_use === true;
+          setShared(collective);
+          setTitle(typeof name === 'string' ? name : collective ? uiText('Convite para a Yamilook') : null);
+        }
       } catch {
         if (active) setTitle(null);
       }
@@ -29,6 +36,7 @@ function InvitationEntry({ code, next }: { code: string; next: string }) {
       <h1 className="break-words text-3xl font-semibold">{title}</h1>
       <p>{uiText('Recebeste um convite pessoal para te inscreveres na Yamilook.')}</p>
       <Button asChild><Link to={next} replace>{uiText('Aceitar convite e inscrever-me')}</Link></Button>
+      {shared && <ShareRegistrationInvite code={code} />}
     </>}
   </main>;
 }

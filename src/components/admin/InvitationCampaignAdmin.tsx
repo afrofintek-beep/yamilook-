@@ -12,11 +12,11 @@ const localDate = (value: string) => {
   return Number.isFinite(date.getTime()) ? new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16) : '';
 };
 
-export function InvitationCampaignAdmin() {
+export function InvitationCampaignAdmin({ initialCampaign, onSaved }: { initialCampaign?: InvitationCampaign; onSaved?: () => void } = {}) {
   useUiLocale();
   const [campaigns, setCampaigns] = useState<InvitationCampaign[]>([]);
-  const [selected, setSelected] = useState<string | null>(null);
-  const [config, setConfig] = useState<CampaignConfig>(initial);
+  const [selected, setSelected] = useState<string | null>(initialCampaign?.id ?? null);
+  const [config, setConfig] = useState<CampaignConfig>(initialCampaign ?? initial);
   const [report, setReport] = useState<CampaignReport>();
   const [offset, setOffset] = useState(0);
   const [promoterEmail, setPromoterEmail] = useState('');
@@ -45,7 +45,7 @@ export function InvitationCampaignAdmin() {
   const run = async (action: () => Promise<void>) => {
     if (busy) return;
     setBusy(true); setMessage('');
-    try { await action(); await refresh(); await loadReport(); }
+    try { await action(); await refresh(); onSaved?.(); await loadReport(); }
     catch (e) { setMessage(campaignError(e)); }
     finally { setBusy(false); }
   };
@@ -76,7 +76,7 @@ export function InvitationCampaignAdmin() {
     { key: 'invite_ttl_hours', label: uiText("Validade do convite em horas"), min: 1, max: 168 },
   ];
   const current = campaigns.find(c => c.id === selected);
-  return <details className="rounded-xl border p-4 space-y-4">
+  return <details open className="rounded-xl border p-4 space-y-4">
     <summary className="cursor-pointer font-semibold">{uiText("Campanhas de convites controladas")}</summary>
     <p className="text-sm text-muted-foreground">{uiText("Sem atribuição automática. Cada participante exige autorização nominal e confirmação de presença verificada. A conta deve existir antes da criação da campanha.")}</p>
     <label className="block">{uiText("Campanha a gerir")}<select className="w-full rounded-md border bg-background p-2" value={selected ?? ''} disabled={busy} onChange={e => {

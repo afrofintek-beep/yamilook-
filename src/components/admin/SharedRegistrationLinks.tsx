@@ -6,12 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-type SharedLink = {
+export type SharedLink = {
   id: string; code: string; name: string; max_uses: number; uses_count: number;
   confirmed_count: number; status: 'active' | 'suspended'; expires_at: string;
 };
 
-export function SharedRegistrationLinks() {
+export function SharedRegistrationLinks({ onlyId, onChanged }: { onlyId?: string; onChanged?: () => void } = {}) {
   const locale = useUiLocale();
   const [links, setLinks] = useState<SharedLink[]>([]);
   const [busy, setBusy] = useState(true);
@@ -24,17 +24,18 @@ export function SharedRegistrationLinks() {
       const { data, error: rpcError } = await supabase.rpc('admin_registration_links' as never,
         { p_link: id ?? null, p_status: status ?? null } as never);
       if (rpcError) throw rpcError;
+      if (id) onChanged?.();
       setLinks((data ?? []) as unknown as SharedLink[]);
     } catch { setError(true); }
     finally { setBusy(false); }
-  }, []);
+  }, [onChanged]);
   useEffect(() => { void load(); }, [load]);
   const copy = async (link: SharedLink) => {
     try { await navigator.clipboard.writeText(buildInviteUrl(link.code)); setCopied(link.id); }
     catch { setError(true); }
   };
 
-  return <Card id="convites-coletivos">
+  return <Card id={onlyId ? undefined : "convites-coletivos"}>
     <CardHeader>
       <CardTitle>{uiText('Convites coletivos')}</CardTitle>
       <CardDescription>{uiText('Uma ligação para várias pessoas, com limite de inscrições e prazo de validade.')}</CardDescription>
@@ -43,7 +44,7 @@ export function SharedRegistrationLinks() {
       <Button variant="outline" disabled={busy} onClick={() => void load()}>{uiText('Atualizar')}</Button>
       {error && <p role="alert">{uiText('Não foi possível atualizar os convites. Tenta novamente.')}</p>}
       {!busy && !error && links.length === 0 && <p>{uiText('Ainda não existem convites coletivos.')}</p>}
-      {links.map(link => {
+      {links.filter(link => !onlyId || link.id === onlyId).map(link => {
         const expired = new Date(link.expires_at).getTime() <= Date.now();
         const full = link.uses_count >= link.max_uses;
         return <section key={link.id} className="space-y-3 rounded-xl border p-4">
