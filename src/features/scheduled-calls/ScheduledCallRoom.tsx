@@ -66,7 +66,11 @@ export default function ScheduledCallRoom() {
         <p className="text-sm text-muted-foreground">{isHost?(tooEarly?uiText("Esta sala abre em {{value1}}. Podes entrar 15 minutos antes da hora marcada.", { value1: (opensAt.toLocaleString(uiLocale(),{dateStyle:'short',timeStyle:'short'})) ?? "" }):uiText("Podes abrir a sala 15 minutos antes da hora marcada.")):uiText("A entrada está disponível após o organizador iniciar a sessão, para quem tem um convite.")}</p>
         <label className="flex items-center gap-3"><input disabled={session.call_type==='voice'} type="checkbox" checked={camera} onChange={e=>setCamera(e.target.checked)} />{uiText("Entrar com câmara")}</label>
         <label className="flex items-center gap-3"><input type="checkbox" checked={microphone} onChange={e=>setMicrophone(e.target.checked)} />{uiText("Entrar com microfone")}</label>
-        <Button className="w-full" disabled={video.loading||tooEarly||(!isHost&&session.status!=='started')} onClick={()=>void video.join(isHost,session.call_type==='video'&&camera,microphone)}>{video.loading?uiText("A ligar…"):isHost?uiText("Iniciar / entrar"):uiText("Entrar na sala")}</Button>
+        <Button className="w-full" disabled={video.loading||tooEarly} onClick={()=>void video.join(isHost,session.call_type==='video'&&camera,microphone)}>{video.loading?(video.waiting||uiText("A ligar…")):isHost?uiText("Iniciar / entrar"):uiText("Entrar na sala")}</Button>
+        {video.loading && <div role="status" className="space-y-3">
+          <p>{video.waiting || uiText("A estabelecer ligação à sala…")}</p>
+          <Button variant="outline" onClick={video.leave}>{uiText("Cancelar entrada")}</Button>
+        </div>}
       </div> : <>
         {video.audioBlocked && <Button className="w-full" onClick={()=>void video.room?.startAudio()}><Volume2 className="mr-2 h-4 w-4" />{uiText("Ativar som")}</Button>}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">{video.participants.map(p=><ParticipantTile key={p.identity} participant={p} local={p===video.room?.localParticipant} />)}</div>
