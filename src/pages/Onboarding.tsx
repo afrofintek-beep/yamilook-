@@ -137,10 +137,11 @@ export default function Onboarding() {
   const [displayName, setDisplayName] = useState('');
   const [username, setUsername] = useState('');
   const [channel, setChannel] = useState<'email' | 'sms' | 'whatsapp'>('email');
-  const [telephone, setTelephone] = useState('+244');
+  const [telephone, setTelephone] = useState('');
   const [awaitingCode, setAwaitingCode] = useState(false);
   const [token, setToken] = useState('');
-  const phone = telephone.replace(/[\s()-]/g, '');
+  const nationalNumber = telephone.replace(/[\s()-]/g, '').replace(/^(?:\+244|00244)/, '');
+  const phone = `+244${nationalNumber}`;
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [accessCode, setAccessCode] = useState(() => {
@@ -287,7 +288,7 @@ export default function Onboarding() {
 
   const isPasswordValid = passwordRequirements.every(req => req.regex.test(password));
   const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const isRegisterFormValid = displayName.length >= 2 && username.length >= 3 && (channel === 'email' ? isEmailValid : /^\+[1-9]\d{7,14}$/.test(phone)) && isPasswordValid && usernameAvailable !== false;
+  const isRegisterFormValid = displayName.length >= 2 && username.length >= 3 && (channel === 'email' ? isEmailValid : /^9\d{8}$/.test(nationalNumber)) && isPasswordValid && usernameAvailable !== false;
 
   // Final registration: create account + save all onboarding data
   const handleRegister = async () => {
@@ -1091,8 +1092,8 @@ export default function Onboarding() {
                   <option value="email">E-mail</option><option value="whatsapp">WhatsApp</option><option value="sms">SMS</option>
                 </select>
               </label>
-              {channel !== 'email' ? <label className="block">Número de telemóvel com indicativo
-                <Input type="tel" autoComplete="tel" value={telephone} disabled={awaitingCode || isRegistering}
+              {channel !== 'email' ? <label className="block">Telemóvel de Angola (+244)
+                <Input type="tel" placeholder="9XX XXX XXX" autoComplete="tel-national" value={telephone} disabled={awaitingCode || isRegistering}
                   onChange={e => setTelephone(e.target.value)} />
               </label> : (
               <div>
