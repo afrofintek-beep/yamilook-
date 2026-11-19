@@ -1038,7 +1038,7 @@ export function useMessages(conversationId: string | null) {
     const createdAt = new Date(message.created_at).getTime();
     const now = Date.now();
     if (now - createdAt > 15 * 60 * 1000) {
-      return { error: new Error(uiText("Edit window expired")) };
+      return { error: new Error(uiText("O prazo de 15 minutos para editar terminou.")) };
     }
 
     // Save original content to edit history
@@ -1056,7 +1056,10 @@ export function useMessages(conversationId: string | null) {
         edited_at: new Date().toISOString(),
       })
       .eq('id', messageId)
-      .eq('sender_id', user.id);
+      .eq('sender_id', user.id)
+      .eq('message_type', 'text')
+      .eq('is_deleted', false)
+      .select('id').single();
 
     if (!error) {
       setMessages((prev) =>
