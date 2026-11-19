@@ -13,7 +13,6 @@ export function BillingIntegrations({sales}:{sales:Sale[]}) {
   const cache=useQueryClient();
   const key=['billing-integrations',user?.id];
   const [saleId,choose]=useState('');
-  const [order,setOrder]=useState('');
   const [message,setMessage]=useState('');
   const [busy,setBusy]=useState(false);
   const current=sales.find(s=>s.id===saleId);
@@ -56,12 +55,6 @@ export function BillingIntegrations({sales}:{sales:Sale[]}) {
       })}>Preparar emissão de teste</Button>
       {fiscal && <p>Pedido fiscal · {({pending:'A aguardar o motor',accepted:'Aceite em teste',rejected:'Rejeitado'} as Record<string,string>)[fiscal.state]} {fiscal.provider_document}</p>}
       <Button variant="outline" onClick={()=>run(ledger)}>Exportar lançamentos da venda</Button>
-      <form className="space-y-2" onSubmit={e=>{e.preventDefault();void run(async()=>{
-        const {error}=await supabase.rpc('billing_match_kumbu' as never,{p_sale:saleId,p_order:order.trim()} as never); if(error) throw error;setOrder('');
-      });}}>
-        <label>Referência do pedido pago na Kumbu<Input required value={order} onChange={e=>setOrder(e.target.value)}/></label>
-        <Button>Conciliar recebimento</Button>
-      </form>
       <form className="space-y-2" onSubmit={e=>{e.preventDefault();const form=e.currentTarget;const values=Object.fromEntries(new FormData(form));
         void run(async()=>{const {error}=await supabase.from('billing_tax_pilot' as never).insert({...values,nif:current.nif} as never);
           if(error) throw error;form.reset();});

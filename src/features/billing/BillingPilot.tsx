@@ -7,7 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
-type Sale = { id:string; business:string; nif:string; customer:string; description:string; total:number; billing_pilot_receipts:{amount:number}[] };
+type Sale = { id:string; business:string; nif:string; customer:string; description:string; total:number; billing_pilot_receipts:{amount:number;method:string}[] };
 const money = (value:number) => value.toLocaleString('pt-AO',{style:'currency',currency:'AOA'});
 const fields = [
   ['business','Nome fiscal do negócio'],['nif','NIF'],['customer','Cliente'],['description','Produto ou serviço'],
@@ -22,7 +22,7 @@ export default function BillingPilot(){
   const [busy,setBusy] = useState(false);
   const sales = useQuery({queryKey:key,enabled:!!user,queryFn:async()=>{
     const {data,error}=await supabase.from('billing_pilot_sales' as never)
-      .select('id,business,nif,customer,description,total,billing_pilot_receipts(amount)').order('created_at',{ascending:false});
+      .select('id,business,nif,customer,description,total,billing_pilot_receipts(amount,method)').order('created_at',{ascending:false});
     if(error) throw error;
     return data as unknown as Sale[];
   }});
@@ -66,7 +66,7 @@ export default function BillingPilot(){
     {sales.isError && <p>Não foi possível consultar as vendas.</p>}
     {sales.data?.length===0 && <p>Ainda não há vendas de teste.</p>}
     {sales.data?.map(sale=>{
-      const received=sale.billing_pilot_receipts.reduce((sum,r)=>sum+Math.round(Number(r.amount)*100),0)/100;
+      const received=sale.billing_pilot_receipts.filter(r=>r.method!=='Kumbu').reduce((sum,r)=>sum+Math.round(Number(r.amount)*100),0)/100;
       const due=Math.round((sale.total-received)*100)/100;
       return <article key={sale.id} className="space-y-2 rounded-xl border p-4">
         <h3 className="font-semibold">{sale.business} · {sale.description}</h3>
