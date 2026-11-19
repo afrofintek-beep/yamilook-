@@ -198,7 +198,7 @@ export function EnhancedChatInput({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
+    if (e.key === 'Enter' && !window.matchMedia('(pointer: coarse)').matches && !e.shiftKey && !e.nativeEvent.isComposing) {
       e.preventDefault();
       handleSend();
     }
@@ -475,9 +475,10 @@ export function EnhancedChatInput({
               value={message}
               aria-label={uiText("Mensagem")}
               onChange={handleChange}
+              enterKeyHint="enter"
               onKeyDown={handleKeyDown}
               placeholder={t('chat.typeMessage')}
-              className="min-h-[44px] max-h-[120px] py-3 pr-12 rounded-2xl resize-none bg-secondary/50 border-0 focus-visible:ring-1 focus-visible:ring-primary/50"
+              className="select-text text-base min-h-[44px] max-h-[120px] py-3 pr-12 rounded-2xl resize-none bg-secondary/50 border-0 focus-visible:ring-1 focus-visible:ring-primary/50"
               disabled={disabled || uploading}
               rows={1}
             />
