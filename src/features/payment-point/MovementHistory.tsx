@@ -49,7 +49,7 @@ export function MovementHistory({ overview, hidden, recent = false, withdrawals 
     } catch (error) { if ((error as Error).name !== 'AbortError') setNotice('Não foi possível partilhar o comprovativo.'); }
   }
   return <section className="space-y-3">
-    <div className="flex items-center justify-between"><h2 className="font-semibold">{recent ? 'Movimentos recentes' : 'Movimentos'}</h2>{recent && <Link className="py-2 text-sm text-primary" to="/payment-point?tab=movements">Ver todos</Link>}</div>
+    {recent && <div className="flex items-center justify-between"><h2 className="font-semibold">Movimentos recentes</h2><Link className="py-2 text-sm text-primary" to="/payment-point?tab=movements">Ver todos</Link></div>}
     {!recent && <><Input aria-label="Pesquisar movimentos" placeholder="Pesquisar movimentos" value={search} onChange={event => setSearch(event.target.value)} /><div className="flex gap-2 overflow-x-auto pb-1" aria-label="Filtrar movimentos">{[['all', 'Todos'], ['in', 'Entradas'], ['out', 'Saídas'], ['pending', 'Pendentes'], ['withdrawals', 'Levantamentos']].map(([key, label]) => <Button key={key} size="sm" variant={filter === key ? 'default' : 'outline'} aria-pressed={filter === key} onClick={() => setFilter(key)}>{label}</Button>)}</div></>}
     {filter === 'withdrawals' && withdrawals(false)}
     {filter === 'pending' && <div className="space-y-3">
