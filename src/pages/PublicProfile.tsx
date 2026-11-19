@@ -1,3 +1,5 @@
+import { useInstitution } from '@/features/services/useInstitution';
+import { Link } from 'react-router-dom';
 import ProfileInitiatives from "@/features/social-initiatives/ProfileInitiatives";
 import { socialInitiativesEnabled } from "@/features/social-initiatives/api";
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
@@ -32,6 +34,7 @@ export default function PublicProfile() {
   const { username } = useParams<{ username: string }>();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<PublicProfileData | null>(null);
+  const institution = useInstitution(profile?.id);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [attempt, setAttempt] = useState(0);
@@ -82,6 +85,7 @@ export default function PublicProfile() {
   return (
     <div className="min-h-screen bg-background flex flex-col items-center px-4 py-10">
       <div className="w-full max-w-md">
+        {institution && <Link className="block underline" to={`/servicos-do-bairro?instituicao=${profile.id}`}>Unidades de atendimento</Link>}
         {socialInitiativesEnabled && <ProfileInitiatives userId={profile.id} />}
         {/* Card */}
         <div className="rounded-3xl border border-border bg-card p-6 text-center shadow-sm">

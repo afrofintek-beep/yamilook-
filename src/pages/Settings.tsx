@@ -409,6 +409,10 @@ export default function Settings() {
             <Smartphone className="w-5 h-5" />{uiText("Instalar Yamilook · modo aplicação")}<ChevronRight className="w-4 h-4 ml-auto" />
           </Button>
 
+          <Button variant="ghost" className="w-full justify-start gap-3 px-4 h-14" onClick={() => navigate('/servicos-do-bairro')}>
+            <MapPin className="w-5 h-5" />{uiText("Serviços do Bairro")}<ChevronRight className="w-4 h-4 ml-auto" />
+          </Button>
+
           {isAdmin && <a href={pilotPath} className="flex items-center gap-3 px-4 py-3 hover:bg-secondary/50">
             <MapPin aria-hidden="true" className="w-5 h-5 shrink-0" />
             <span><strong>Dangereux</strong><br/><span className="text-sm text-muted-foreground">{uiText("Administração Digital do Bairro")}</span></span>
