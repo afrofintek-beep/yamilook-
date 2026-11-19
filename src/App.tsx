@@ -1,3 +1,4 @@
+import { WalletUnlock } from '@/features/payment-point/WalletUnlock';
 import { WalletAccessGate } from '@/features/payment-point/WalletAccess';
 import {FriendRequestAlerts} from '@/features/friend-requests/alerts';
 import { isPilotPath, pilotRoutes } from './features/dangereux/paths';
@@ -369,13 +370,13 @@ function AnimatedRoutes() {
           <Route path="/caminho" element={<Caminho />} />
           <Route path="/app/caminho" element={<Caminho />} />
           <Route path="/facturacao" element={<ProtectedRoute><WalletAccessGate><BillingPilot /></WalletAccessGate></ProtectedRoute>} />
-          <Route path="/payment-point" element={<ProtectedRoute><WalletAccessGate><PaymentPoint /></WalletAccessGate></ProtectedRoute>} />
-          <Route path="/payment-point/:id" element={<ProtectedRoute><WalletAccessGate><PaymentPoint /></WalletAccessGate></ProtectedRoute>} />
-          <Route path="/kumbu" element={<ProtectedRoute><WalletAccessGate><KumbuWallet /></WalletAccessGate></ProtectedRoute>} />
-          <Route path="/kumbu/history" element={<ProtectedRoute><WalletAccessGate><KumbuHistory /></WalletAccessGate></ProtectedRoute>} />
+          <Route path="/payment-point" element={<ProtectedRoute><WalletAccessGate><WalletUnlock><PaymentPoint /></WalletUnlock></WalletAccessGate></ProtectedRoute>} />
+          <Route path="/payment-point/:id" element={<ProtectedRoute><WalletAccessGate><WalletUnlock><PaymentPoint /></WalletUnlock></WalletAccessGate></ProtectedRoute>} />
+          <Route path="/kumbu" element={<ProtectedRoute><WalletAccessGate><WalletUnlock><KumbuWallet /></WalletUnlock></WalletAccessGate></ProtectedRoute>} />
+          <Route path="/kumbu/history" element={<ProtectedRoute><WalletAccessGate><WalletUnlock><KumbuHistory /></WalletUnlock></WalletAccessGate></ProtectedRoute>} />
           <Route path="/ranking" element={<ProtectedRoute><WalletAccessGate><RankingPage /></WalletAccessGate></ProtectedRoute>} />
           <Route path="/creator/apply" element={<ProtectedRoute><WalletAccessGate><CreatorApply /></WalletAccessGate></ProtectedRoute>} />
-          <Route path="/payouts" element={<ProtectedRoute><WalletAccessGate><KumbuPayouts /></WalletAccessGate></ProtectedRoute>} />
+          <Route path="/payouts" element={<ProtectedRoute><WalletAccessGate><WalletUnlock><KumbuPayouts /></WalletUnlock></WalletAccessGate></ProtectedRoute>} />
           <Route path="/brand-book" element={<BrandBook />} />
           <Route path="/promo" element={<PromoVideos />} />
           <Route path="/apply" element={<Apply />} />
