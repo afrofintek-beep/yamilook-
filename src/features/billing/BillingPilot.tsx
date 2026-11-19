@@ -1,3 +1,4 @@
+import SumbaDemoOrder from './SumbaDemoOrder';
 import { BillingIntegrations } from './BillingIntegrations';
 import { useState, type FormEvent } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -60,6 +61,7 @@ export default function BillingPilot(){
       <Button disabled={busy}>Guardar venda</Button>
     </form>
     <p role="status">{message}</p>
+    <SumbaDemoOrder key={window.location.hash} />
     <BillingIntegrations sales={sales.data ?? []} />
     <h2 className="text-xl font-semibold">Vendas e recebimentos</h2>
     {sales.isLoading && <p>A carregar vendas…</p>}
