@@ -19,7 +19,7 @@ import {
   LogOut,
   Settings,
   Megaphone,
-  Coins,
+  Wallet,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -706,8 +706,8 @@ function ProfileContent() {
               {isOwnProfile && (
                 <>
                   {walletAccess.allowed && <DropdownMenuItem onClick={() => navigate('/payment-point')} className="rounded-lg">
-                    <Coins className="w-4 h-4 mr-2" />
-                    {t('kumbu.wallet', 'Carteira')}
+                    <Wallet className="w-4 h-4 mr-2" />
+                    CARTEIRA
                   </DropdownMenuItem>}
                   <DropdownMenuItem onClick={() => navigate('/advertising')} className="rounded-lg">
                     <Megaphone className="w-4 h-4 mr-2" />
