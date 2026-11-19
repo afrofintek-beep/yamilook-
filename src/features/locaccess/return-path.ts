@@ -1,6 +1,9 @@
 import {communityReturn} from '../academia/community-links';
+export const isPaymentRequestPath = (path: string) =>
+ /^\/payment-point\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/?$/i.test(path);
 export function afrolocReturn(search:string){
  const next=new URLSearchParams(search).get('next')||'';
+ if(isPaymentRequestPath(next)) return next;
  if(next === '/app/dangereux/') return next;
  if(/^\/notifications(?:\?(?:tab=requests|request=[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}))?$/i.test(next)) return next;
  return ['/afroloc','/afroloc/cartao','/afroloc/enderecos'].includes(next)||/^\/afroloc\/acesso\/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(next)?next:communityReturn(search);

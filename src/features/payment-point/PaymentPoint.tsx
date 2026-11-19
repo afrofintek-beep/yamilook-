@@ -9,6 +9,7 @@ import { QrCode, Eye, EyeOff, ArrowDownLeft, Plus, ArrowUpRight } from 'lucide-r
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useConversations } from '@/hooks/useChat';
 import { useAuth } from '@/hooks/useAuth';
 import { paymentAction, money, parseAmount, orderLink, type Overview, type PaymentOrder } from './api';
 import { RequestPayment } from './RequestPayment';
@@ -46,6 +47,24 @@ export default function PaymentPoint() {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const actionLock = useRef(false);
+  const { createConversation } = useConversations();
+  const participantOrder = overview?.orders.find(item => item.id === order?.id);
+  const contactId = order?.own ? participantOrder?.buyer_id : order?.seller_id;
+  async function openConversation() {
+    if (!contactId || actionLock.current) return;
+    actionLock.current = true;
+    setBusy(true);
+    try {
+      const { data, error } = await createConversation([contactId]);
+      if (error || !data) throw new Error();
+      navigate(`/chat/${data.id}`);
+    } catch {
+      setError('Não foi possível abrir a conversa no Kosolola.');
+    } finally {
+      actionLock.current = false;
+      setBusy(false);
+    }
+  }
   const requestId = useRef(crypto.randomUUID());
   const refresh = useCallback(async () => {
     const summary = await paymentAction<Overview>('overview');
@@ -162,6 +181,7 @@ export default function PaymentPoint() {
           </> : <Button disabled={busy || !wallet || wallet.purchased + wallet.earned < order.amount} onClick={() => run('pay', order.id)}>Confirmar pagamento de teste</Button>}
           {!order.own && wallet && wallet.purchased + wallet.earned < order.amount && <div className="space-y-2"><p>Carregue saldo de teste para pagar este pedido.</p><Button onClick={() => openDialog('topup')}>Carregar saldo</Button></div>}
         </>}
+        {contactId && <Button variant="outline" disabled={busy} onClick={openConversation}>Conversar no Kosolola</Button>}
         {order.own && order.status === 'paid' && <Button variant="outline" disabled={busy} onClick={() => {
           if (window.confirm(`Reembolsar ${money(order.amount)} ao comprador?`)) void run('refund', order.id);
         }}>Reembolsar compra</Button>}
