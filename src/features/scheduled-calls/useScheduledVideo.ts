@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Room, RoomEvent, ConnectionState, Participant, RemoteParticipant } from 'livekit-client';
 import { supabase } from '@/integrations/supabase/client';
 
+class ScheduledEntryWait extends Error {}
 export async function requestScheduledVideo(sessionId: string, action: 'join'|'start'|'end') {
   const expired = () => new Error(uiText("A tua sessão expirou. Inicia sessão novamente."));
   const refresh = async () => {
@@ -38,9 +39,10 @@ export async function requestScheduledVideo(sessionId: string, action: 'join'|'s
       get session_closed() { return uiText("Esta sessão já foi encerrada."); },
       get room_close_failed() { return uiText("A sessão foi encerrada. Não foi possível confirmar o fecho da ligação; tenta novamente."); },
     };
+    if (reason === 'not_live') throw new ScheduledEntryWait(messages[reason]);
     throw new Error(messages[reason] || uiText("Não foi possível ligar à sala de vídeo. Tenta novamente."));
   }
-  if (data?.waiting) throw new Error(uiText("Estás na sala de espera. Aguarda a admissão do organizador e toca em Entrar novamente."));
+  if (data?.waiting) throw new ScheduledEntryWait(uiText("A aguardar admissão do organizador…"));
   if (!data || data.error) throw new Error(uiText("Não foi possível obter acesso à sala."));
   return data as {token:string;url:string;isHost:boolean};
 }
@@ -54,11 +56,13 @@ export function useScheduledVideo(sessionId: string | undefined) {
   const [participants,setParticipants] = useState<Participant[]>([]);
   const [connection,setConnection] = useState(ConnectionState.Disconnected);
   const [loading,setLoading] = useState(false);
+  const [waiting,setWaiting] = useState('');
   const [error,setError] = useState('');
   const [messages,setMessages] = useState<ScheduledChatMessage[]>([]);
   const [audioBlocked,setAudioBlocked] = useState(false);
   const leave = useCallback(() => {
     generation.current++;
+    busy.current=false; setWaiting('');
     const current=ref.current;
     ref.current=null;
     current?.disconnect();
@@ -76,7 +80,20 @@ export function useScheduledVideo(sessionId: string | undefined) {
     const active=() => run===generation.current;
     let next:Room|null=null;
     try {
-      const credentials=await requestScheduledVideo(sessionId,isHost?'start':'join');
+      let credentials: Awaited<ReturnType<typeof requestScheduledVideo>>;
+      while (true) {
+        try {
+          credentials = await requestScheduledVideo(sessionId,isHost?'start':'join');
+          break;
+        } catch (entryError) {
+          if (!active()) return;
+          if (!(entryError instanceof ScheduledEntryWait)) throw entryError;
+          setWaiting(entryError.message);
+          await new Promise(resolve => window.setTimeout(resolve, 3000));
+          if (!active()) return;
+        }
+      }
+      setWaiting('');
       if (!active()) return;
       next=new Room({adaptiveStream:true,dynacast:true,videoCaptureDefaults:{resolution:{width:640,height:360,frameRate:24}}});
       const r=next;
@@ -97,12 +114,18 @@ export function useScheduledVideo(sessionId: string | undefined) {
       await r.connect(credentials.url,credentials.token);
       if(!active()){await r.disconnect();return;}
       setRoom(r);sync();
-      // A permission refusal leaves the participant connected in listening mode.
-      try {
-        if(camera) await r.localParticipant.setCameraEnabled(true);
-        if(!active()){await r.disconnect();return;}
-        if(microphone) await r.localParticipant.setMicrophoneEnabled(true);
-      } catch { if(active())setError(uiText("Ligado sem câmara ou microfone. Autoriza o acesso nas definições do navegador e tenta ativar novamente.")); }
+      const deviceErrors: string[] = [];
+      for (const [enabled, kind] of [[camera, 'camera'], [microphone, 'microphone']] as const) {
+        if (!active()) { await r.disconnect(); return; }
+        if (!enabled) continue;
+        try {
+          if (kind === 'camera') await r.localParticipant.setCameraEnabled(true);
+          else await r.localParticipant.setMicrophoneEnabled(true);
+        } catch {
+          deviceErrors.push(kind === 'camera' ? uiText("Não foi possível ligar a câmara.") : uiText("Não foi possível ligar o microfone."));
+        }
+      }
+      if (active() && deviceErrors.length) setError(deviceErrors.join(' ') + ' ' + uiText("Verifica as permissões do navegador e tenta novamente."));
       if(!active()){await r.disconnect();return;}
       await r.startAudio().catch(()=>{});
       setAudioBlocked(!r.canPlaybackAudio);sync();
@@ -111,7 +134,7 @@ export function useScheduledVideo(sessionId: string | undefined) {
         await next?.disconnect();ref.current=null;setRoom(null);setParticipants([]);
         setError(e instanceof Error ? e.message : uiText("Não foi possível entrar. Confirma a convite e a ligação à internet."));
       }
-    } finally {busy.current=false;if(active())setLoading(false);}
+    } finally {if(active()){busy.current=false;setLoading(false);setWaiting('');}}
   };
   const toggle = async (kind:'camera'|'microphone') => {
     const r=ref.current;if(!r)return;
@@ -128,5 +151,5 @@ export function useScheduledVideo(sessionId: string | undefined) {
       setMessages(items=>[...items,{id:crypto.randomUUID(),name:'Tu',text:message}].slice(-100));return true;
     }catch{setError(uiText("Não foi possível enviar a mensagem."));return false;}
   };
-  return {room,participants,connection,loading,error,messages,audioBlocked,join,leave,toggle,send};
+  return {room,participants,connection,loading,waiting,error,messages,audioBlocked,join,leave,toggle,send};
 }
