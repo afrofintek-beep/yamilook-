@@ -42,6 +42,7 @@ import { ViewOnceMediaBubble } from './ViewOnceMedia';
 import { ReplyPreview } from './ReplyPreview';
 import { parseFormattedText } from './MessageFormatting';
 import { MessageHighlightPicker, HighlightBadge, getHighlightClass } from './MessageHighlight';
+import { ResponsiveModal } from '@/components/ui/responsive-modal';
 import { MessageActionsSheet } from './MessageActionsSheet';
 import { cn } from '@/lib/utils';
 import { mediaCaption } from '@/lib/chat-media';
@@ -95,6 +96,7 @@ interface EnhancedMessageBubbleProps {
   showAvatar?: boolean;
   isGroupChat?: boolean;
   currentUserId: string;
+  onEdit?: (id: string, content: string) => Promise<void>;
   onDelete?: (id: string) => Promise<void>;
   onDeleteForMe?: (id: string) => Promise<void>;
   onReply?: (message: BubbleMessage) => void;
@@ -124,6 +126,7 @@ export function EnhancedMessageBubble({
   showAvatar = true,
   isGroupChat = false,
   currentUserId,
+  onEdit,
   onDelete,
   onDeleteForMe,
   onReply,
@@ -147,6 +150,25 @@ export function EnhancedMessageBubble({
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const [showMediaPreview, setShowMediaPreview] = useState(false);
   const [showActionsSheet, setShowActionsSheet] = useState(false);
+
+  const [editDraft, setEditDraft] = useState<string | null>(null);
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [editError, setEditError] = useState('');
+  const canEdit = isOwn && onEdit && message.message_type === 'text' && !message.is_deleted;
+  const openEditor = () => { setEditError(''); setEditDraft(message.content ?? ''); };
+  const saveEdit = async () => {
+    if (!canEdit || !editDraft?.trim() || savingEdit) return;
+    setSavingEdit(true);
+    setEditError('');
+    try {
+      await onEdit(message.id, editDraft.trim());
+      setEditDraft(null);
+    } catch (error) {
+      setEditError(error instanceof Error ? error.message : uiText("Não foi possível guardar a alteração."));
+    } finally {
+      setSavingEdit(false);
+    }
+  };
 
   // Long press handling
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -499,6 +521,7 @@ export function EnhancedMessageBubble({
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
+                      {canEdit && <DropdownMenuItem onClick={openEditor}><Edit2 className="w-4 h-4 mr-2" />{uiText("Editar mensagem")}</DropdownMenuItem>}
                       <DropdownMenuItem onClick={() => onReply?.(message)}>
                         <Reply className="w-4 h-4 mr-2" />{uiText("Reply")}</DropdownMenuItem>
                       <DropdownMenuItem onClick={handleCopy}>
@@ -655,6 +678,7 @@ export function EnhancedMessageBubble({
         isPinned={isPinned}
         highlight={highlight}
         onReply={() => onReply?.(message)}
+        onEdit={canEdit ? openEditor : undefined}
         onCopy={handleCopy}
         onReact={(emoji) => handleReaction(emoji)}
         onStar={() => onStar?.(message.id)}
@@ -664,6 +688,18 @@ export function EnhancedMessageBubble({
         onHighlight={onHighlight}
         onRemoveHighlight={onRemoveHighlight}
       />
+
+      {editDraft !== null && <ResponsiveModal open onOpenChange={open => { if (!open && !savingEdit) setEditDraft(null); }} srTitle={uiText("Editar mensagem")}>
+        <label className="block font-medium">{uiText("Editar mensagem")}
+          <textarea autoFocus rows={4} disabled={savingEdit} value={editDraft} onChange={event => setEditDraft(event.target.value)}
+            className="mt-2 w-full select-text rounded-xl border bg-background p-3 text-base" />
+        </label>
+        {editError && <p role="alert" className="text-sm text-destructive">{editError}</p>}
+        <div className="mt-3 flex justify-end gap-2">
+          <button disabled={savingEdit} onClick={() => setEditDraft(null)} className="rounded-xl px-4 py-2">{uiText("Cancelar")}</button>
+          <button disabled={savingEdit || !editDraft.trim() || editDraft.trim() === message.content} onClick={saveEdit} className="rounded-xl bg-primary px-4 py-2 text-primary-foreground disabled:opacity-50">{uiText("Guardar alteração")}</button>
+        </div>
+      </ResponsiveModal>}
 
       {/* Media preview modal */}
       {(message.message_type === 'image' || message.message_type === 'video') && message.media_url && (
