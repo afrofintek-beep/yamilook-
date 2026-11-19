@@ -17,6 +17,18 @@ for(const query of ['@guest','Ataide','ATAÍDE','antonio']){const people=await a
 ok((await action('search',{query:'owner'})).length===0,'exclude self');ok((await action('search',{query:'a'})).length===0,'minimum two characters');ok((await action('search',{query:'%_'})).length===0,'wildcards are literal');
 const source={id:'residence',code:'AO-TEST-0'};await login(0);let policy=await action('owner',source);ok(policy.enabled===false&&policy.grants.length===0,'closed by default');const handle=policy.handle;await assert.rejects(()=>action('grant',{...source,username:'guest',recipient_id:ids[2],radius:0,hours:24}));checks++;
 ok((await db.query('select public.locaccess_reference_protected($1) as blocked',[source.code])).rows[0].blocked,'legacy public lookup blocked');
+await db.exec('create table public.messages(id uuid primary key,sender_id uuid)');
+await db.exec(fs.readFileSync('supabase/migrations/20261119034500_locaccess_farewells.sql','utf8'));
+const farewell=async(a,d)=>(await db.query('select public.locaccess_farewell($1,$2) as result',[a,JSON.stringify({...source,...d})])).rows[0].result;
+for(const username of ['guest','other'])policy=await action('grant',{...source,username,radius:0,hours:24});
+const grantIds=policy.grants.map(g=>g.id);
+await assert.rejects(()=>farewell('close',{grants:grantIds.slice(1),selected:grantIds}));
+const closed=await farewell('close',{grants:grantIds,selected:[policy.grants.find(g=>g.username==='guest').id]});
+ok(closed.pending.length===1&&closed.pending[0].id===ids[1],'only selected recipient retained');
+ok((await action('owner',source)).grants.length===0,'closing revokes access for all guests');
+ok((await farewell('list',{})).pending[0].message===closed.pending[0].message,'deferred delivery uses stable message ID');
+await db.query('insert into messages values($1,$2)',[closed.pending[0].message,ids[0]]);
+ok((await farewell('list',{})).pending.length===0,'completed delivery no longer pending');
 await login(1);ok((await action('visit',{handle})).status==='denied','ungranted denied');
 for(const radius of [100,250,500]){
  await login(0);policy=await action('grant',{...source,username:'guest',radius,hours:24});ok(policy.grants[0].radius===radius,'radius stored');

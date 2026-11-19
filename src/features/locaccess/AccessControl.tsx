@@ -2,6 +2,7 @@ import {uiText as t,useUiLocale} from '@/i18n/ui-copy';
 import {useEffect,useRef,useState} from 'react';
 import {PersonSearch,type AccessPerson} from './PersonSearch';
 import {Button} from '@/components/ui/button';
+import {Farewell} from './Farewell';
 import {ShieldCheck} from 'lucide-react';
 import './access-control.css';
 import {accessLink,locaccess,validHandle,type Policy} from './api';
@@ -15,7 +16,7 @@ export function useAccessControl(id:string|undefined,code:string|undefined){
  },[id,code,key,retry]);
  const policy=snapshot?.key===key?snapshot.policy:null;
  const change=async(action:string,data:Record<string,unknown>={})=>{if(busy||!id||!code)return;setBusy(true);setError('');try{const policy=await locaccess(action,{id,code,...data});if(current.current===key)setSnapshot({key,policy})}catch(e){if(current.current===key)setError((e as Error).message);throw e}finally{if(current.current===key)setBusy(false)}};
- return {policy,url:policy?accessLink(policy.handle):'',busy,error,change,retry:()=>setRetry(n=>n+1)};
+ return {source:id&&code?{id,code}:null,policy,url:policy?accessLink(policy.handle):'',busy,error,change,retry:()=>setRetry(n=>n+1)};
 }
 export function AccessControl({control}:{control:ReturnType<typeof useAccessControl>}){
  const locale=useUiLocale();
@@ -60,7 +61,8 @@ export function AccessControl({control}:{control:ReturnType<typeof useAccessCont
    </form>
   {outcome&&<p role={outcome.failed?'alert':'status'}>{t(outcome.failed?'Acessos autorizados: {{count}}. Não foi possível concluir. As pessoas restantes continuam seleccionadas.':'Acessos autorizados: {{count}}.',{count:outcome.count})}</p>}
   {grants.map(g=><div key={g.id} className="flex flex-wrap items-center justify-between gap-2 border-t pt-3"><div className="text-sm"><strong>@{g.username.replace(/^@+/,'')}</strong><p>{t('{{mode}} · até {{date}}',{mode:g.radius?t('{{distance}} metros',{distance:g.radius}):t('Imediato'),date:new Date(g.expiresAt).toLocaleString(locale==='pt-banda'?'pt-AO':locale,{timeZone:'Africa/Luanda'})})}</p></div><Button variant="outline" disabled={locked} onClick={()=>void control.change('revoke',{grant_id:g.id}).catch(()=>{})}>{t("Fechar acesso")}</Button></div>)}
-  {grants.length>0&&<Button variant="link" className="locaccess-close" disabled={locked} onClick={()=>void control.change('close').catch(()=>{})}>{t("Fechar todos os acessos")}</Button>}
+  {control.policy&&control.source&&<Farewell key={control.policy.handle} source={control.source} grants={grants} reload={control.retry} disabled={locked}/>}
+  {grants.length>0&&<Button variant="link" className="locaccess-close" disabled={locked} onClick={()=>void control.change('close').catch(()=>{})}>{t("Encerrar sem mensagem")}</Button>}
   <p className="locaccess-note">{t("O acesso à tua morada respeita as autorizações, a distância e a validade que definires. A proximidade indicada não comprova presença física. Ao fechar o acesso, novas consultas são bloqueadas e a localização é ocultada em até 20 segundos. Esta acção não elimina informações já consultadas ou partilhadas.")}</p>
  </section>;
 }
