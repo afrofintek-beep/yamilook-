@@ -19,7 +19,7 @@ export default function KumbuHistory() {
 
   return (
     <div className="min-h-screen bg-background pb-28 safe-top">
-      <WalletHeader asset="kumbu" back="/kumbu" />
+      <WalletHeader section="movements" asset="kumbu" back="/kumbu" />
       <main className="max-w-lg mx-auto px-4 pt-5 space-y-4">
         <Tabs value={dir} onValueChange={(v) => setDir(v as LedgerDirection)}>
           <TabsList className="w-full bg-card border border-border/20 rounded-xl h-10">
@@ -80,7 +80,7 @@ export default function KumbuHistory() {
                     isCredit ? 'text-emerald-500' : 'text-destructive/80'
                   }`}
                 >
-                  {isCredit ? '+' : ''}{entry.amount}
+                  {isCredit ? '+' : ''}{entry.amount} Kumbu
                 </span>
               </motion.div>
             );
