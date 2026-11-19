@@ -130,8 +130,31 @@ export function RegisterForm() {
         toast.error(validationError ? 'Não foi possível validar o convite. Tenta novamente.' : result?.error || 'Código de convite inválido ou já utilizado.');
         return;
       }
-      // Use supabase directly to get the user object for code consumption
-      const { data: authData, error } = await supabase.auth.signUp({
+      const { data: policy, error: policyError } = await supabase.rpc(
+        'invitation_confirmation_policy' as never, { p_code: values.accessCode.trim().toUpperCase() } as never);
+      if (policyError) throw policyError;
+      let authData;
+      let error;
+      if (policy === 'admin_waiver') {
+        const { data, error: registrationError } = await supabase.functions.invoke('register-known-contact', {
+          body: { code: values.accessCode, email: values.email, password: values.password },
+        });
+        if (registrationError || !data?.ok) {
+          toast.error(data?.error || 'Não foi possível concluir o registo. Se já criaste a conta, utiliza Entrar.');
+          return;
+        }
+        const login = await supabase.auth.signInWithPassword({
+          email: values.email.trim().toLowerCase(), password: values.password,
+        });
+        if (login.error) {
+          toast.success('Conta criada com entrada autorizada pela administração. Utiliza Entrar para continuar.');
+          navigate('/login');
+          return;
+        }
+        authData = login.data;
+        error = login.error;
+      } else {
+      const registration = await supabase.auth.signUp({
         email: values.email.trim().toLowerCase(),
         password: values.password,
         options: {
@@ -141,6 +164,10 @@ export function RegisterForm() {
           },
         },
       });
+      authData = registration.data;
+      error = registration.error;
+
+      }
 
       if (error) {
         toast.error(error.message.includes('MVP_ONLY')

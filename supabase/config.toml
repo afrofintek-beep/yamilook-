@@ -69,3 +69,6 @@ verify_jwt = false
 [functions.friend-request-mail]
 # Database scheduler token is authenticated inside the function.
 verify_jwt = false
+
+[functions.register-known-contact]
+verify_jwt = false
