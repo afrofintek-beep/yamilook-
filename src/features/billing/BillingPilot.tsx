@@ -1,3 +1,4 @@
+import { BillingIntegrations } from './BillingIntegrations';
 import { useState, type FormEvent } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
@@ -59,6 +60,7 @@ export default function BillingPilot(){
       <Button disabled={busy}>Guardar venda</Button>
     </form>
     <p role="status">{message}</p>
+    <BillingIntegrations sales={sales.data ?? []} />
     <h2 className="text-xl font-semibold">Vendas e recebimentos</h2>
     {sales.isLoading && <p>A carregar vendas…</p>}
     {sales.isError && <p>Não foi possível consultar as vendas.</p>}
