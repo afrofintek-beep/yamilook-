@@ -8,6 +8,7 @@ const googleKey = import.meta.env.VITE_GOOGLE_MAPS_EMBED_API_KEY?.trim();
 export function AccessMap({point,approximate=false}:{point:MapPoint;approximate?:boolean}){
  const locale=useUiLocale();
  const [provider, setProvider] = useState<Provider>('osm');
+ const [googleSatellite, setGoogleSatellite] = useState(false);
  const activeProvider = approximate && provider === 'google' ? 'osm' : provider;
  const host=useRef<HTMLDivElement>(null);const [error,setError]=useState('');
  useEffect(()=>{if(activeProvider === 'google' || !host.current)return;setError('');
@@ -35,10 +36,21 @@ export function AccessMap({point,approximate=false}:{point:MapPoint;approximate?
     {googleKey && !approximate && <option value="google">Google Maps</option>}
    </select>
   </label>
+  <div role="group" aria-label={t('Mapa')} className="mb-2 flex gap-1">
+   {(['osm', 'esri'] as const).map(view => {
+    const satellite = view === 'esri';
+    const selected = activeProvider === 'google' ? googleSatellite === satellite : activeProvider === view;
+    return <button key={view} type="button" aria-pressed={selected}
+     className="min-h-11 rounded-md border px-4 aria-pressed:bg-primary aria-pressed:text-primary-foreground"
+     onClick={() => activeProvider === 'google' ? setGoogleSatellite(satellite) : setProvider(view)}>
+     {t(satellite ? 'Satélite' : 'Mapa')}
+    </button>;
+   })}
+  </div>
   {activeProvider === 'google' ? (
    <iframe title={title} style={mapStyle} className="rounded-xl border" referrerPolicy="strict-origin"
     src={'https://www.google.com/maps/embed/v1/place?' + new URLSearchParams({
-     key:googleKey, q:point.lat + ',' + point.lon, zoom:'18'
+     key:googleKey, q:point.lat + ',' + point.lon, zoom:'18', maptype:googleSatellite ? 'satellite' : 'roadmap'
     })} />
   ) : (
    <div ref={host} role="region" aria-label={title}
