@@ -1,4 +1,8 @@
-import { WalletAccessGate } from '@/features/payment-point/WalletAccess';
+import { useWalletAccess } from '@/features/payment-point/WalletAccess';
+import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { RequestPayment } from '@/features/payment-point/RequestPayment';
 import { AfrolocAddressDialog } from './AfrolocAddressDialog';
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
@@ -78,6 +82,21 @@ export function EnhancedChatInput({
   conversationId,
 }: EnhancedChatInputProps) {
   useUiLocale();
+  const navigate = useNavigate();
+  const access = useWalletAccess();
+  const { user } = useAuth();
+  const [requestForm, setRequestForm] = useState(false);
+  const eligibility = useQuery({
+    queryKey: ['wallet-chat-access', user?.id, conversationId],
+    enabled: access.allowed && !!conversationId,
+    refetchInterval: 30000,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('wallet_chat_allowed' as never, { p_conversation: conversationId } as never);
+      if (error) throw error;
+      return data === true;
+    },
+  });
+  const walletVisible = access.allowed && !eligibility.isError && eligibility.data === true;
   const { t } = useTranslation();
   const [message, setMessage] = useState('');
   const [paymentConversation, setPaymentConversation] = useState<string | null>(null);
@@ -431,7 +450,7 @@ export function EnhancedChatInput({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-48">
-              <WalletAccessGate silent><DropdownMenuItem disabled={disabled || sending} onSelect={() => setPaymentConversation(conversationId)}>Pedir pagamento · Angola · Teste</DropdownMenuItem></WalletAccessGate>
+              {walletVisible && <DropdownMenuItem disabled={disabled || sending} onSelect={() => { setRequestForm(false); setPaymentConversation(conversationId); }}>CARTEIRA</DropdownMenuItem>}
               <DropdownMenuItem onClick={() => imageInputRef.current?.click()}>
                 <Image className="w-4 h-4 mr-2" />{uiText("Photo or Video")}</DropdownMenuItem>
               <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
@@ -556,11 +575,14 @@ export function EnhancedChatInput({
         </div>
       )}
 
-      <Dialog open={paymentConversation === conversationId} onOpenChange={open => { if (!open) setPaymentConversation(null); }}>
-        <DialogContent><DialogHeader><DialogTitle>Pedido de pagamento · Angola · Teste</DialogTitle></DialogHeader>
-          <RequestPayment key={conversationId} onCreated={async (_id, content) => {
+      <Dialog open={walletVisible && paymentConversation === conversationId} onOpenChange={open => { if (!open) setPaymentConversation(null); }}>
+        <DialogContent><DialogHeader><DialogTitle>{requestForm ? 'Pedir MASSA · Teste' : 'CARTEIRA'}</DialogTitle></DialogHeader>
+          {!requestForm ? <div className="grid gap-2">
+            <Button onClick={() => setRequestForm(true)}>Pedir MASSA · Teste</Button>
+            <Button variant="outline" onClick={() => navigate('/payment-point')}>Abrir CARTEIRA</Button>
+          </div> : <RequestPayment key={conversationId} onCreated={async (_id, content) => {
             await onSend(content, 'text'); setPaymentConversation(null);
-          }} />
+          }} />}
         </DialogContent>
       </Dialog>
       {addressConversation === conversationId && <AfrolocAddressDialog key={conversationId}
