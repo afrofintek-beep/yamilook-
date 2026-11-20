@@ -13,12 +13,16 @@ export interface Overview {
   orders: PaymentOrder[]; withdrawals: Withdrawal[];
   entries: { id: number; amount: number; operation: string; reference: string; created_at: string }[];
 }
+export class PaymentRejected extends Error {}
 export async function paymentAction<T = { id: string }>(action: string, id?: string, amount?: number, text?: string): Promise<T> {
   const { supabase } = await import('@/integrations/supabase/client');
   const { data, error } = await supabase.rpc('payment_point_action' as never, {
     p_action: action, p_id: id ?? null, p_amount: amount ?? null, p_text: text ?? null,
   } as never);
-  if (error) throw new Error(error.message);
+  if (error) {
+    if (/^[0-9A-Z]{5}$/.test(error.code || '')) throw new PaymentRejected(error.message);
+    throw new Error(error.message);
+  }
   return data as T;
 }
 export function parseAmount(value: string): number {

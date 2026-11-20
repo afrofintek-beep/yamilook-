@@ -1,3 +1,5 @@
+import { PaymentRejected } from './api';
+import { TransferSecurity } from './TransferSecurity';
 import { WalletHeader, WalletNavigation } from './WalletNavigation';
 import { useHiddenBalance } from './useHiddenBalance';
 import { MovementHistory } from './MovementHistory';
@@ -40,11 +42,13 @@ export default function PaymentPoint() {
   const { user } = useAuth();
   const [overview, setOverview] = useState<Overview>();
   const [order, setOrder] = useState<PaymentOrder>();
-  const [dialog, setDialog] = useState<'create' | 'scan' | 'topup' | 'withdraw' | 'info' | null>(null);
+  const [dialog, setDialog] = useState<'create' | 'scan' | 'topup' | 'withdraw' | 'info' | 'security' | null>(null);
   const [amount, setAmount] = useState('');
   const [destination, setDestination] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [uncertain, setUncertain] = useState(false);
+  const pendingKey = 'wallet-pending:' + user?.id;
   const actionLock = useRef(false);
   const requestId = useRef(crypto.randomUUID());
   const refresh = useCallback(async () => {
@@ -59,24 +63,60 @@ export default function PaymentPoint() {
       try {
         const summary = await paymentAction<Overview>('overview');
         const selected = id ? await paymentAction<PaymentOrder>('view', id) : undefined;
-        if (active) { setOverview(summary); setOrder(selected); setError(''); }
+        if (active) {
+          const saved = sessionStorage.getItem(pendingKey);
+          if (saved) {
+            const { reference, action } = JSON.parse(saved);
+            const operation = action === 'pay' ? 'payment' : action === 'withdraw' ? 'reserve' : 'refund';
+            if (summary.entries.some(item => item.reference === reference && item.operation === operation)
+                || (action === 'withdraw' && summary.withdrawals.some(item => item.id === reference))) {
+              sessionStorage.removeItem(pendingKey);
+              setUncertain(false);
+            } else setUncertain(true);
+          } else setUncertain(false);
+          setOverview(summary); setOrder(selected); setError(''); }
       } catch (e) { if (active) setError((e as Error).message); }
     };
     void load(); const timer = setInterval(load, 10000);
     return () => { active = false; clearInterval(timer); };
-  }, [id]);
+  }, [id,pendingKey]);
   async function run(action: string, reference?: string, cents?: number, text?: string) {
     if (actionLock.current) return;
     actionLock.current = true; setBusy(true); setError('');
+    let submitted = false;
     try {
+      if (action === 'pay' || action === 'withdraw' || action === 'refund') {
+        const destination = action === 'withdraw' ? text?.trim() : action === 'refund' ? order?.buyer_id : order?.seller_id;
+        const amount = action === 'withdraw' ? cents : order?.amount;
+        if (!reference || !destination || !amount) throw new Error('Confirme o destino e o valor da operação.');
+        const { authorizeDebit } = await import('./authorize');
+        const saved = sessionStorage.getItem(pendingKey);
+        const operation = JSON.stringify({action,reference,cents,text});
+        if (saved && operation !== saved) throw new Error('Consulte primeiro o resultado da operação anterior.');
+        await authorizeDebit({action, id:reference, amount, destination, currency:'AOA'});
+        sessionStorage.setItem(pendingKey,operation);
+        submitted = true;
+      }
       await paymentAction(action, reference, cents, text);
+      if (submitted) { sessionStorage.removeItem(pendingKey); setUncertain(false); }
+      submitted = false;
       requestId.current = crypto.randomUUID(); setDialog(null); setAmount(''); setDestination('');
       await refresh();
-    } catch (e) { setError((e as Error).message); }
+    } catch (e) {
+      if (submitted && !(e instanceof PaymentRejected)) setUncertain(true);
+      else {
+        if (submitted) {sessionStorage.removeItem(pendingKey); setUncertain(false);}
+        setError((e as Error).message);
+      }
+    }
     finally { actionLock.current = false; setBusy(false); }
   }
   function submitAmount(action: string) {
-    try { void run(action, requestId.current, parseAmount(amount), destination); }
+    try {
+      const cents = parseAmount(amount);
+      if (action === 'withdraw' && !window.confirm('Levantar '+money(cents)+' para '+destination.trim()+'? Comissão de teste '+money(0)+'.')) return;
+      void run(action, requestId.current, cents, destination);
+    }
     catch (e) { setError((e as Error).message); }
   }
   async function share() {
@@ -112,11 +152,25 @@ export default function PaymentPoint() {
         </section>;
   }
   return <div className="min-h-screen bg-background pb-28 safe-top">
-    <WalletHeader section={id ? 'order' : tab} admin={overview?.admin} back={id ? '/payment-point' : '/feed'} />
+    <WalletHeader security={() => setDialog('security')} section={id ? 'order' : tab} admin={overview?.admin} back={id ? '/payment-point' : '/feed'} />
     <main className="max-w-xl mx-auto p-4 space-y-4">
       <div role="status" className="rounded-xl border border-amber-400/40 bg-amber-400/10 px-3 py-2 text-sm text-foreground">
         Ambiente de testes · Valores simulados
       </div>
+      {uncertain && <div role="status" className="rounded-lg border p-3">
+        <p>A confirmar a operação. A carteira consulta o estado automaticamente.</p>
+        <Button disabled={busy} variant="outline" onClick={()=>{
+          const saved = sessionStorage.getItem(pendingKey);
+          if (!saved) return;
+          const pending = JSON.parse(saved);
+          if (pending.action !== 'withdraw' && order?.id !== pending.reference) {
+            navigate('/payment-point/'+pending.reference); return;
+          }
+          if (window.confirm(pending.action === 'withdraw' ? 'Confirmar levantamento de '+money(pending.cents)+' para '+pending.text+'?' : 'Confirmar novamente a operação de '+money(order!.amount)+' com a referência original?')) {
+            void run(pending.action,pending.reference,pending.cents,pending.text);
+          }
+        }}>Rever operação pendente</Button>
+      </div>}
       {error && <p role="alert" className="rounded-lg border p-3 text-sm">{error}</p>}
       {!wallet && !error && <p>A carregar…</p>}
       {wallet && !id && tab === 'wallet' && <>
@@ -140,17 +194,18 @@ export default function PaymentPoint() {
             { label: 'Levantar', icon: ArrowUpRight, action: 'withdraw' as const },
           ].map(action => <Button key={action.action} variant={action.action === activeAction ? 'default' : 'outline'} className={`transition-colors motion-reduce:transition-none h-auto min-h-16 flex-col gap-1.5 px-1 py-2 text-xs sm:text-sm border-border ${action.action === activeAction ? 'text-primary-foreground' : 'text-foreground'}`} onClick={() => openDialog(action.action)}><action.icon className="h-5 w-5" />{action.label}</Button>)}
         </div>
-        {pendingOrders.length > 0 && <button className="w-full rounded-xl border p-3 text-left text-sm" onClick={() => selectTab('business')}>{pendingOrders.length} {pendingOrders.length === 1 ? 'pedido' : 'pedidos'} por receber <span aria-hidden="true">→</span></button>}
+        {pendingOrders.length > 0 && <button className="w-full rounded-xl border p-3 text-left text-sm" onClick={() => selectTab('business')}>Cobranças que criei ({pendingOrders.length}) <span aria-hidden="true">→</span></button>}
       </>}
       {!id && tab === 'business' && <section className="space-y-3">
         <Button variant="outline" onClick={() => navigate('/facturacao')}>Facturação de teste</Button>
-        <div className="rounded-2xl border p-4"><p className="text-sm text-muted-foreground">Pedidos por receber</p><p className="text-2xl font-semibold mt-1">{displayMoney(pendingOrders.reduce((total, item) => total + item.amount, 0))}</p></div>
+        <div className="rounded-2xl border p-4"><p className="text-sm text-muted-foreground">Total das minhas cobranças pendentes</p><p className="text-2xl font-semibold mt-1">{displayMoney(pendingOrders.reduce((total, item) => total + item.amount, 0))}</p></div>
         <Button className="w-full min-h-12" onClick={() => openDialog('create')}><Plus className="mr-2 h-5 w-5" />Criar cobrança</Button>
         <p className="text-sm text-muted-foreground">Crie um pedido com valor e motivo. Partilhe a ligação ou apresente o QR ao cliente.</p>
       </section>}
       {order && <section className="rounded-2xl border p-4 space-y-3">
         <h2 className="font-semibold">Pedido de pagamento</h2>
-        <p>Recebe {order.seller_name || 'Utilizador Yamilook'}</p>
+        <p>Recebe {order.seller_name || 'Utilizador Yamilook'} · carteira …{order.seller_id.slice(-6)}</p>
+        <p className="text-sm">Comissão de teste {money(0)} · Total {money(order.amount)}</p>
         <p className="text-2xl font-semibold">{money(order.amount)}</p><p>{order.description}</p>
         <p>{labels[order.status]} · teste</p>
         <p className="text-xs text-muted-foreground">Válido até {new Date(order.expires_at).toLocaleString('pt-AO')}</p>
@@ -159,7 +214,7 @@ export default function PaymentPoint() {
             <div className="bg-white p-4 rounded-lg w-fit"><QRCodeSVG value={orderLink(order.id)} size={200} /></div>
             <Button onClick={share}>Partilhar pedido</Button>
             <Button variant="outline" disabled={busy} onClick={() => run('cancel', order.id)}>Cancelar pedido</Button>
-          </> : <Button disabled={busy || !wallet || wallet.purchased + wallet.earned < order.amount} onClick={() => run('pay', order.id)}>Confirmar pagamento de teste</Button>}
+          </> : <Button disabled={busy || !wallet || wallet.purchased + wallet.earned < order.amount} onClick={() => run('pay', order.id)}>Pagar {money(order.amount)} a {order.seller_name || order.seller_id}</Button>}
           {!order.own && wallet && wallet.purchased + wallet.earned < order.amount && <div className="space-y-2"><p>Carregue saldo de teste para pagar este pedido.</p><Button onClick={() => openDialog('topup')}>Carregar saldo</Button></div>}
         </>}
         {order.own && order.status === 'paid' && <Button variant="outline" disabled={busy} onClick={() => {
@@ -182,8 +237,9 @@ export default function PaymentPoint() {
     <WalletNavigation tab={id ? '' : tab} />
     <Dialog open={!!dialog} onOpenChange={open => { if (!open && !busy) { setDialog(null); setError(''); } }}>
       <DialogContent className="max-h-[85dvh] overflow-y-auto"><DialogHeader><DialogTitle>
-        {dialog === 'info' ? 'Sobre o saldo' : dialog === 'create' ? 'Receber pagamento de teste' : dialog === 'scan' ? 'Ler QR' : dialog === 'topup' ? 'Carregar saldo de teste' : 'Pedir levantamento de teste'}
+        {dialog === 'security' ? 'Segurança das transferências' : dialog === 'info' ? 'Sobre o saldo' : dialog === 'create' ? 'Receber pagamento de teste' : dialog === 'scan' ? 'Ler QR' : dialog === 'topup' ? 'Carregar saldo de teste' : 'Pedir levantamento de teste'}
       </DialogTitle></DialogHeader>
+      {dialog === 'security' && <TransferSecurity />}
       {dialog === 'info' && <div className="space-y-3 text-sm">
         <p><strong>Disponível para pagar</strong> reúne os carregamentos e os ganhos recebidos.</p>
         <p><strong>Para levantar</strong> indica os ganhos elegíveis para levantamento neste piloto.</p>

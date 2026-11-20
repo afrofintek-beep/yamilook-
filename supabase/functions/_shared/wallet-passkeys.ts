@@ -6,7 +6,7 @@ import {
   type WebAuthnCredential,
 } from 'npm:@simplewebauthn/server@13.2.2';
 
-const walletOrigin = 'https://yamilook.com';
+const walletOrigin = ['https://yamilook.com', 'https://www.yamilook.com'];
 const relyingParty = 'yamilook.com';
 
 // The caller loads the challenge and holder's active credential from server storage.
