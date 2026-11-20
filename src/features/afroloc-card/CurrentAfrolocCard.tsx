@@ -160,6 +160,7 @@ function CardScreen({userId,requested}:{userId:string;requested?:string}){
     {address.temporary&&<p className="mt-3 text-sm text-muted-foreground">{t('Um endereço temporário não altera a tua residência principal.')}</p>}
    </details>
   </>:!busy&&!warning?<section className="rounded-xl border p-4 space-y-4"><p>{requested?t('O cartão deste endereço não está disponível. Volta ao mapa e actualiza os teus endereços.'):t('Ainda não tens um endereço AFROLOC associado ou activo.')}</p><Button asChild><Link to="/profile">{t('Criar ou associar o meu endereço AFROLOC')}</Link></Button></section>:null}
+  <Button asChild variant="outline"><Link to="/afroloc/comunidade">{t('Endereços da comunidade e atribuições')}</Link></Button>
   <details className="rounded-xl border p-4"><summary className="cursor-pointer font-medium">{t('Outros endereços')}</summary>
    <div className="mt-4 space-y-3">
     {addresses.filter(a=>a.id!==address?.id).map(a=><button type="button" className="block w-full rounded-lg border p-3 text-start" key={a.id} onClick={()=>{setSelected(a.id);window.scrollTo({top:0,behavior:'smooth'})}}><span className="block font-medium">{a.temporary?a.label:t('Residência principal')}</span><span className="block break-all text-xs text-muted-foreground">{a.code}</span></button>)}

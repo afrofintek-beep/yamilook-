@@ -32,6 +32,7 @@ const DangereuxPilot = lazy(() => import('./features/dangereux/Access'));
 const pilotRoutesElements = pilotRoutes.map(path => <Route key={path} path={path} element={<DangereuxPilot />} />);
 const AccessVisit = lazy(() => import("./features/locaccess/AccessVisit"));
 const CurrentAfrolocCard = lazy(() => import("./features/afroloc-card/CurrentAfrolocCard"));
+const AfrolocRegistry = lazy(() => import("./features/afroloc-experience/AfrolocRegistry"));
 const AfrolocExperience = lazy(() => import("./features/afroloc-experience/AfrolocExperience"));
 const Home = lazy(() => import("./pages/Home"));
 const Login = lazy(() => import("./pages/Login"));
@@ -358,6 +359,7 @@ function AnimatedRoutes() {
           <Route path="/afroloc/acesso/:handle" element={<ProtectedRoute><AccessVisit /></ProtectedRoute>} />
           <Route path="/afroloc/cartao" element={<ProtectedRoute><CurrentAfrolocCard /></ProtectedRoute>} />
           <Route path="/afroloc" element={<ProtectedRoute><CurrentAfrolocCard /></ProtectedRoute>} />
+          <Route path="/afroloc/comunidade" element={<ProtectedRoute><AfrolocRegistry /></ProtectedRoute>} />
           <Route path="/afroloc/enderecos" element={<ProtectedRoute><AfrolocExperience /></ProtectedRoute>} />
           <Route path="/admin/afroloc-certifications" element={<ProtectedRoute><AdminAfrolocCertifications /></ProtectedRoute>} />
           <Route path="/admin/payouts" element={<ProtectedRoute><AdminPayoutsPage /></ProtectedRoute>} />

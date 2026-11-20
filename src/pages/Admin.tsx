@@ -464,6 +464,7 @@ export default function Admin() {
             {[
               { label: uiText("Candidaturas de criador"), icon: FileCheck, to: '/admin/applications' },
               { label: uiText("Monetização"), icon: Coins, to: '/admin/monetization' },
+              { label: uiText("Endereços da comunidade"), icon: Award, to: '/afroloc/comunidade' },
               { label: uiText("Certificações AFROLOC"), icon: Award, to: '/admin/afroloc-certifications' },
               { label: uiText("Pagamentos (payouts)"), icon: Wallet, to: '/admin/payouts' },
             ].map((item) => (
