@@ -44,17 +44,17 @@ export function AfricanReactionPicker({
       transition={{ duration: 0.15 }}
       className={cn(
         "absolute z-50",
-        position === 'top' ? "bottom-full mb-2" : "top-full mt-2",
+        position === 'top' ? "bottom-full pb-2" : "top-full pt-2",
         "left-0"
       )}
-      onMouseLeave={() => {
-        setHoveredReaction(null);
-        onClose?.();
-      }}
+      onMouseLeave={() => setHoveredReaction(null)}
       role="menu"
       aria-label={uiText("Choose a reaction")}
     >
-      <div className="bg-card border border-border rounded-2xl shadow-brand-md p-2 flex flex-col gap-1">
+      <div className={cn(
+        "bg-card border border-border rounded-2xl shadow-brand-md p-2 flex w-max gap-1",
+        position === 'top' ? "flex-col-reverse" : "flex-col"
+      )}>
         {/* Reaction buttons */}
         <div className="flex gap-1">
           {AFRICAN_REACTIONS.map((reaction) => (
