@@ -12,6 +12,61 @@ async function call<T>(fn:string, args:Record<string,unknown>):Promise<T> {
   if (error) throw new Error(error.message);
   return data as T;
 }
+type Candidate = {id:string; username:string; display_name:string|null};
+
+function AssignHolder({address,refresh}:{address:Row;refresh:()=>Promise<boolean>}) {
+  const [query,setQuery]=useState('');
+  const [open,setOpen]=useState(false);
+  const [selected,setSelected]=useState<Candidate|null>(null);
+  const [choices,setChoices]=useState<Candidate[]>([]);
+  const [loading,setLoading]=useState(false);
+  const [saving,setSaving]=useState(false);
+  const [notice,setNotice]=useState('');
+  useEffect(()=>{
+    if (!open) return;
+    let active=true;
+    const timer=setTimeout(async ()=>{
+      const term=query.trim().replace(/^@/,'');
+      // Quote the PostgREST filter value so punctuation stays inside the search term.
+      const pattern=JSON.stringify('%'+term.replace(/[%_]/g,c=>'\\'+c)+'%');
+      let request=supabase.from('profiles').select('id,username,display_name').ilike('country_code','AO').not('username','is',null);
+      if (term) request=request.or('username.ilike.'+pattern+',display_name.ilike.'+pattern);
+      const {data,error}=await request.order('username').limit(12);
+      if (!active) return;
+      setLoading(false);
+      setChoices((data??[]).flatMap(p=>p.username?[{...p,username:p.username}]:[]));
+      if(error) setNotice('Não foi possível carregar os utilizadores. Volta a pesquisar.');
+    },180);
+    return ()=>{active=false;clearTimeout(timer)};
+  },[query,open]);
+  function search(value:string) {
+    setQuery(value);setSelected(null);setChoices([]);setNotice('');setLoading(true);setOpen(true);
+  }
+  async function assign() {
+    if (!selected||saving) return;
+    setSaving(true);
+    try {
+      await call('afroloc_registry',{action:'assign',data:{id:address.id,username:selected.username}});
+      setNotice('Endereço atribuído a @'+selected.username+' · A aguardar aceitação.');
+      setSelected(null);setQuery('');
+      await refresh();
+    } catch(e) {setNotice(e instanceof Error?e.message:'Tenta novamente.')}
+    finally {setSaving(false)}
+  }
+  return <div className="space-y-2">
+    <label>Escolher titular<Input value={query} placeholder="Pesquisar nome ou @utilizador" disabled={saving}
+      onFocus={()=>{if (!selected&&!open) search(query)}} onChange={e=>search(e.target.value)} /></label>
+    {open&&<div className="rounded-lg border p-2">
+      {loading?<p>A pesquisar…</p>:choices.length===0?<p>Nenhum utilizador encontrado.</p>:choices.map(person=><button type="button" key={person.id}
+        className="block w-full min-h-11 rounded px-2 text-left" onClick={()=>{setSelected(person);setQuery('@'+person.username);setOpen(false);setNotice('Titular seleccionado. Confirma a atribuição abaixo.')}}>
+        {person.display_name} <span>@{person.username}</span>
+      </button>)}
+      <button type="button" className="underline" onClick={()=>setOpen(false)}>Fechar pesquisa</button>
+    </div>}
+    <Button type="button" disabled={!selected||saving} onClick={()=>void assign()}>{saving?'A atribuir…':selected?'Atribuir a @'+selected.username:'Atribuir endereço'}</Button>
+    <p role="status" className="text-sm">{notice}</p>
+  </div>;
+}
 export default function AfrolocRegistry() {
   const [rows,setRows]=useState<Row[]>([]);
   const [admin,setAdmin]=useState(false);
@@ -76,9 +131,7 @@ export default function AfrolocRegistry() {
       <strong>{r.label}</strong><p>{r.code}</p><p>{r.public?'Público':'Privado'} · {r.status==='approved'?'Verificação aprovada':'A aguardar verificação'}</p>
       {(admin||r.mine)&&<p>{r.recipient&&'@'+r.recipient+' · '}{r.accepted?'Atribuição aceite':r.pending?'A aguardar aceitação':'Sem titular atribuído'}</p>}
       {r.mine&&r.pending&&<Button disabled={busy} onClick={()=>void submit('accept',{id:r.id})}>Aceitar endereço</Button>}
-      {admin&&!r.accepted&&<form className="flex gap-2" onSubmit={e=>{e.preventDefault();void submit('assign',{id:r.id,username:new FormData(e.currentTarget).get('username')})}}>
-        <Input name="username" aria-label="Nome de utilizador do titular" placeholder="@utilizador" required/><Button disabled={busy}>Atribuir</Button>
-      </form>}
+      {admin&&!r.accepted&&<AssignHolder address={r} refresh={refresh}/>}
     </article>)}
   </main>;
 }
