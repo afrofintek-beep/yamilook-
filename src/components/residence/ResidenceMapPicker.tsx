@@ -6,9 +6,9 @@ import { Button } from '@/components/ui/button';
 import { uiText as t, useUiLocale } from '@/i18n/ui-copy';
 
 type Point = {lat:number;lng:number};
-interface Props {point?:Point; onChange:(point:Point)=>void; disabled?:boolean}
+interface Props {place?:boolean; point?:Point; onChange:(point:Point)=>void; disabled?:boolean}
 /** A declared home point, never the current device location. No point is selected by default. */
-export default function ResidenceMapPicker({point,onChange,disabled=false}:Props) {
+export default function ResidenceMapPicker({point,onChange,disabled=false,place=false}:Props) {
  const locale=useUiLocale();
  const container=useRef<HTMLDivElement>(null),map=useRef<L.Map|null>(null),marker=useRef<L.Marker|null>(null);
  const callbacks=useRef({onChange,disabled});callbacks.current={onChange,disabled};
@@ -33,7 +33,7 @@ export default function ResidenceMapPicker({point,onChange,disabled=false}:Props
   const icon=L.divIcon({className:'',html:'<span style="display:block;width:24px;height:24px;background:#d2aa2e;border:3px solid #fff;border-radius:50%;box-shadow:0 1px 6px #0009"></span>',iconSize:[24,24],iconAnchor:[12,12]});
   select.current=p=>{
    if(callbacks.current.disabled||!tilesReady.current||m.getZoom()<17)return;
-   if(p.lat< -18.1||p.lat> -4.3||p.lng<11.3||p.lng>24.1){setError(t('Selecciona uma residência em Angola.'));return;}
+   if(p.lat< -18.1||p.lat> -4.3||p.lng<11.3||p.lng>24.1){setError(t(place?'Selecciona um local em Angola.':'Selecciona uma residência em Angola.'));return;}
    callbacks.current.onChange({lat:p.lat,lng:p.lng});
   };
   m.on('click',(e:L.LeafletMouseEvent)=>select.current(e.latlng));
@@ -42,17 +42,17 @@ export default function ResidenceMapPicker({point,onChange,disabled=false}:Props
   if(initial.current)marker.current.addTo(m);
   const resize=new ResizeObserver(()=>m.invalidateSize());resize.observe(container.current);
   return()=>{resize.disconnect();m.remove();map.current=null;marker.current=null;};
- },[locale]);
+ },[locale,place]);
  useEffect(()=>{if(!map.current||!marker.current)return;if(point)marker.current.setLatLng(point).addTo(map.current);else marker.current.remove();},[point,locale]);
  return <div className="space-y-2">
-  <p className="text-sm">{t('Arrasta o mapa até à tua casa, aproxima e toca no edifício. Podes alternar entre mapa e satélite.')}</p>
+  <p className="text-sm">{t(place?'Aproxima o mapa e toca no local que pretendes cadastrar.':'Arrasta o mapa até à tua casa, aproxima e toca no edifício. Podes alternar entre mapa e satélite.')}</p>
   <div className="relative isolate overflow-hidden rounded-xl border">
-   <div ref={container} role="region" aria-label={t('Seleccionar residência no mapa')} style={{height:320,width:'100%'}}/>
+   <div ref={container} role="region" aria-label={t(place?'Seleccionar local no mapa NJILA':'Seleccionar residência no mapa')} style={{height:320,width:'100%'}}/>
    <span aria-hidden="true" className="pointer-events-none absolute left-1/2 top-1/2 z-[500] -translate-x-1/2 -translate-y-1/2 text-2xl font-bold text-black" style={{textShadow:'0 0 3px white'}}>+</span>
    {disabled&&<div className="absolute inset-0 z-[1000] bg-background/40"/>}
   </div>
-  <Button type="button" variant="outline" className="w-full h-auto whitespace-normal" disabled={disabled||zoom<17||!loaded} onClick={()=>{if(map.current)select.current(map.current.getCenter());}}>{t('Marcar a casa no centro do mapa')}</Button>
-  <p role="status" className="text-xs text-muted-foreground">{t(zoom<17?'Aproxima o mapa até veres a casa para marcar o ponto.':point?'Ponto seleccionado. Confirma abaixo que é a tua residência.':'Toca na tua casa para seleccionar o ponto.')}</p>
+  <Button type="button" variant="outline" className="w-full h-auto whitespace-normal" disabled={disabled||zoom<17||!loaded} onClick={()=>{if(map.current)select.current(map.current.getCenter());}}>{t(place?'Marcar o local no centro do mapa':'Marcar a casa no centro do mapa')}</Button>
+  <p role="status" className="text-xs text-muted-foreground">{place?t(zoom<17?'Aproxima o mapa para marcar o ponto.':point?'Ponto seleccionado.':'Toca no local para marcar o ponto.'):t(zoom<17?'Aproxima o mapa até veres a casa para marcar o ponto.':point?'Ponto seleccionado. Confirma abaixo que é a tua residência.':'Toca na tua casa para seleccionar o ponto.')}</p>
   {error&&<p role="alert" className="text-xs text-destructive">{error}</p>}
  </div>;
 }
