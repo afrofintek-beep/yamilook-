@@ -20,6 +20,39 @@ const labels: Record<string, string> = {
   topup: 'Carregamento de teste', payment: 'Pagamento', refund: 'Reembolso', reserve: 'Reserva para levantamento',
   withdrawal_completed: 'Levantamento de teste', withdrawal_rejected: 'Reserva devolvida', withdrawal_cancel_withdrawal: 'Reserva devolvida',
 };
+
+const feeReferences = [
+  { name: 'Angola · BFA Multicaixa', rate: '1,00', terms: 'TPA físico ou virtual. Tecto de 12.000 Kz.', url: 'https://www.bfa.ao/media/7597/contrato-de-adesao-ao-tpa.pdf' },
+  { name: 'Angola · BFA conta simplificada', rate: '0,40', terms: 'Condição específica da conta simplificada.', url: 'https://www.bfa.ao/media/7597/contrato-de-adesao-ao-tpa.pdf' },
+  { name: 'Quénia · M-PESA Business Till', rate: '0,50', terms: 'Máximo de 0,50% e 200 KSh por cobrança.', url: 'https://www.safaricom.co.ke/images/Downloads/the-mpesa-business-till-tariff.pdf' },
+  { name: 'Gana · Paystack', rate: '1,95', terms: 'Processamento local por cartão, mobile money ou transferência.', url: 'https://support.paystack.com/en/articles/2130306' },
+];
+
+function CommissionBenchmark() {
+  const [sale, setSale] = useState('10000');
+  const [rate, setRate] = useState('1,00');
+  const normalized = rate.trim().replace(',', '.');
+  const basisPoints = Math.round(Number(normalized) * 100);
+  let gross = 0;
+  try { gross = parseAmount(sale); } catch { /* Field feedback below. */ }
+  const validRate = /^\d{1,3}(\.\d{1,2})?$/.test(normalized) && basisPoints <= 10000;
+  const fee = Math.round(gross * basisPoints / 10000);
+  return <section className="rounded-xl border p-4 space-y-3">
+    <h2 className="font-semibold">Simular comissão MASSA</h2>
+    <p className="text-sm">Compare percentagens sobre vendas em kwanzas. A simulação exclui impostos, tectos e custos da AppyPay. Não altera cobranças.</p>
+    <label className="block">Venda em Kz<Input inputMode="decimal" value={sale} onChange={e => setSale(e.target.value)} /></label>
+    <label className="block">Comissão do comerciante (%)<Input inputMode="decimal" value={rate} onChange={e => setRate(e.target.value)} /></label>
+    <div aria-live="polite">{!gross ? 'Introduza uma venda entre 0,01 e 1.000.000 Kz.' : !validRate ? 'Introduza uma percentagem entre 0 e 100, com até duas casas decimais.' :
+      <><p>Comissão bruta · {money(fee)}</p><p>Comerciante recebe · {money(gross - fee)}</p></>}</div>
+    <h3 className="font-medium">Referências de mercado</h3>
+    {feeReferences.map(item => <div key={item.name} className="border-t pt-2 text-sm">
+      <p>{item.name} · {item.rate}%</p><p>{item.terms}</p>
+      <a className="underline" href={item.url} target="_blank" rel="noreferrer">Consultar tarifário</a>
+      <Button variant="ghost" onClick={() => setRate(item.rate)}>Simular {item.rate}%</Button>
+    </div>)}
+  </section>;
+}
+
 export default function PaymentPoint() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -167,6 +200,7 @@ export default function PaymentPoint() {
         }}>Reembolsar compra</Button>}
       </section>}
       {overview && !id && <>
+        {tab === 'admin' && overview.admin && <CommissionBenchmark />}
         {tab === 'admin' && overview.admin && <WalletAccessManager />}
         {tab === 'business' && <section className="space-y-2"><h2 className="font-semibold">Pedidos</h2>
           {!visibleOrders.length && <p className="text-sm text-muted-foreground">Ainda sem pedidos.</p>}
