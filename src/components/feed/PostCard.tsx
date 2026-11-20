@@ -87,6 +87,17 @@ export const PostCard = memo(function PostCard({ mediaPriority = false, post, on
   const longPressTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isLongPressRef = useRef(false);
 
+  const reactionCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const cancelReactionClose = useCallback(() => {
+    if (reactionCloseTimer.current !== null) {
+      clearTimeout(reactionCloseTimer.current);
+      reactionCloseTimer.current = null;
+    }
+  }, []);
+
+  useEffect(() => cancelReactionClose, [cancelReactionClose]);
+
   // Optimistic local state
   const [localLiked, setLocalLiked] = useState(post.is_liked);
   const [localReaction, setLocalReaction] = useState<string | null>(
@@ -382,8 +393,16 @@ export const PostCard = memo(function PostCard({ mediaPriority = false, post, on
           {/* Reaction button with African reactions */}
           <div
             className="relative"
-            onMouseEnter={() => setShowReactions(true)}
-            onMouseLeave={() => setShowReactions(false)}
+            onPointerEnter={(event) => {
+              cancelReactionClose();
+              if (event.pointerType === 'mouse') setShowReactions(true);
+            }}
+            onPointerLeave={(event) => {
+              if (event.pointerType !== 'mouse') return;
+              cancelReactionClose();
+              // Allow diagonal travel from the small trigger to the wider picker.
+              reactionCloseTimer.current = setTimeout(() => setShowReactions(false), 300);
+            }}
           >
             <Button
               variant="ghost"
