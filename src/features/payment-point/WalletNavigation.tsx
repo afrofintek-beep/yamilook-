@@ -2,14 +2,15 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ShieldCheck, Wallet, List, Store } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-export function WalletHeader({ section = 'wallet', asset = 'kwanzas', admin = false, back = '/feed' }: { section?: string; asset?: 'kwanzas' | 'kumbu'; admin?: boolean; back?: string }) {
+export function WalletHeader({ section = 'wallet', asset = 'kwanzas', admin = false, security, back = '/feed' }: { section?: string; asset?: 'kwanzas' | 'kumbu'; admin?: boolean; security?: () => void; back?: string }) {
   const navigate = useNavigate();
   return <header className="sticky top-0 z-20 border-b bg-background/95 backdrop-blur">
     <div className="mx-auto flex max-w-xl items-center gap-2 px-3 py-2">
       <Button variant="ghost" className="min-h-11 gap-1 px-2" onClick={() => navigate(back)}><ArrowLeft className="h-5 w-5" />Voltar</Button>
       <h1 className="flex-1 text-lg font-semibold">{section === 'business' ? 'MEU NEGÓCIO' : section === 'movements' ? 'MOVIMENTOS' : 'CARTEIRA'}</h1>
       <span className="text-xs text-muted-foreground">{asset === 'kwanzas' ? 'Angola · Kz' : 'Kumbu'}</span>
-      {admin && <Button variant="ghost" size="icon" aria-label="Gestão" onClick={() => navigate('/payment-point?tab=admin')}><ShieldCheck className="h-5 w-5" /></Button>}
+      {security && <Button variant="ghost" size="icon" aria-label="Segurança das transferências" onClick={security}><ShieldCheck className="h-5 w-5" /></Button>}
+      {admin && <Button variant="ghost" aria-label="Gestão" onClick={() => navigate('/payment-point?tab=admin')}>Gestão</Button>}
     </div>
     {section === 'wallet' && <nav aria-label="Saldos da carteira" className="mx-auto grid max-w-xl grid-cols-2 gap-1 px-4 pb-2">
       {[{ key: 'kwanzas', label: 'MASSA', to: '/payment-point' }, { key: 'kumbu', label: 'KUMBU', to: '/kumbu' }].map(item => <Link key={item.key} to={item.to} aria-current={item.key === asset ? 'page' : undefined} className={`rounded-lg py-2 text-center text-sm font-medium ${item.key === asset ? 'bg-primary/15 text-primary' : 'text-foreground hover:bg-muted'}`}>{item.label}</Link>)}
