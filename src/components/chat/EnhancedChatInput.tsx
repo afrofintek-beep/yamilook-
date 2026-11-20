@@ -599,7 +599,7 @@ export function EnhancedChatInput({
           <label className="space-y-1 text-sm">{uiText("Referência ou encontro")}<Input value={locationReference} maxLength={250} onChange={e => setLocationReference(e.target.value)} placeholder={uiText("Ex.: Portão azul · hoje às 14h00")} /></label>
           <label className="space-y-1 text-sm">{uiText("Código AFROLOC existente (opcional)")}<Input value={afrolocCode} maxLength={100} onChange={e => setAfrolocCode(e.target.value)} /></label>
           <p className="text-xs text-muted-foreground">{uiText("O código é fornecido por ti e não é verificado neste envio. As coordenadas não certificam um endereço.")}</p>
-          <a className="text-sm underline" href="https://www.afroloc.ao" target="_blank" rel="noopener noreferrer">{uiText("Abrir AFROLOC para consultar ou registar endereço")}</a>
+          <a className="text-sm underline" href="/afroloc/enderecos" target="_blank" rel="noopener noreferrer">{uiText("Abrir AFROLOC para consultar ou registar endereço")}</a>
           <Button disabled={disabled || sending} onClick={() => {
             const details = [locationName.trim(), locationReference.trim(), afrolocCode.trim() ? uiText("AFROLOC (não verificado): {{value1}}", { value1: (afrolocCode.trim()) ?? "" }) : '', locationDraft].filter(Boolean).join('\n');
             setMessage(current => current ? `${current}\n${details}` : details);
