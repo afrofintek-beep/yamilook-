@@ -98,7 +98,7 @@ export default function AfrolocRegistry() {
     finally {setBusy(false)}
   }
   const communes=catalog.filter(d=>d.parent_code===municipality);
-  return <main className="mx-auto max-w-xl space-y-4 p-4">
+  return <main className="mx-auto max-w-xl space-y-4 p-4 [&_select]:bg-white [&_select]:text-gray-900 [&_select]:[color-scheme:light] [&_option]:bg-white [&_option]:text-gray-900">
     <Link to="/afroloc">Voltar ao meu cartão AFROLOC</Link>
     <h1 className="text-xl font-bold">Endereços da comunidade</h1>
     <p role="status">{message}</p>
