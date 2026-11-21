@@ -56,6 +56,7 @@ const Discover = lazy(() => import("./pages/Discover"));
 const DevTools = lazy(() => import("./pages/DevTools"));
 const Admin = lazy(() => import("./pages/Admin"));
 const Moderation = lazy(() => import("./pages/Moderation"));
+const PublicBusiness = lazy(() => import("./pages/PublicBusiness"));
 const MyBusiness = lazy(() => import("./pages/MyBusiness"));
 const Advertising = lazy(() => import("./pages/Advertising"));
 const Notifications = lazy(() => import("./pages/Notifications"));
@@ -367,6 +368,7 @@ function AnimatedRoutes() {
           <Route path="/admin/mentors" element={<ProtectedRoute><AdminMentors /></ProtectedRoute>} />
           <Route path="/admin/billing" element={<ProtectedRoute><AdminBilling /></ProtectedRoute>} />
           <Route path="/moderation" element={<ProtectedRoute><Moderation /></ProtectedRoute>} />
+          <Route path="/negocio/:handle" element={<PublicBusiness />} />
           <Route path="/meus-negocios" element={<ProtectedRoute><MyBusiness /></ProtectedRoute>} />
           <Route path="/advertising" element={<ProtectedRoute><Advertising /></ProtectedRoute>} />
           <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />

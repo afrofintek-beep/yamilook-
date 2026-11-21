@@ -18,7 +18,12 @@ export default function MyBusiness() {
       <h1 className="text-2xl font-semibold">{t('entry.myBusinesses')}</h1>
       {advertising.loading ? <p role="status">…</p> : (
         <>
-          {profile && <h2 className="font-semibold">{profile.business_name}</h2>}
+          {profile && <div>
+            {profile.logo_url && <img src={profile.logo_url} alt="" className="size-16 rounded-xl object-contain" />}
+            <h2 className="font-semibold">{profile.business_name}</h2>
+            {profile.handle && <Link className="text-primary underline" to={`/negocio/${profile.handle}`}>@{profile.handle}</Link>}
+            {profile.handle && <p className="text-sm">{t('business.mention', 'Menção')} · @negocio/{profile.handle}</p>}
+          </div>}
           <Button onClick={() => setEditing(true)}>{t(profile ? 'entry.manageBusiness' : 'entry.business')}</Button>
           {editing && <BusinessProfileEditor advertising={advertising} open onOpenChange={setEditing} />}
         </>
