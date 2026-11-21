@@ -29,6 +29,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
+const ScreeningTab = lazy(() => import('@/components/moderation/ScreeningTab'));
 const StrikesTab = lazy(() => import('@/components/moderation/StrikesTab'));
 const AppealsTab = lazy(() => import('@/components/moderation/AppealsTab'));
 const IssueStrikeSheet = lazy(() => import('@/components/moderation/IssueStrikeSheet'));
@@ -321,7 +322,8 @@ export default function Moderation() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="w-full">
+          <TabsList className="w-full flex-wrap h-auto">
+            <TabsTrigger value="screening">Revisão automática</TabsTrigger>
             <TabsTrigger value="reports" className="flex-1 gap-1">
               <Flag className="w-4 h-4" />{uiText("Denúncias")}</TabsTrigger>
             <TabsTrigger value="strikes" className="flex-1 gap-1">
@@ -332,6 +334,7 @@ export default function Moderation() {
               <History className="w-4 h-4" />{uiText("Log")}</TabsTrigger>
           </TabsList>
 
+          <TabsContent value="screening"><Suspense fallback={<Loader2 />}><ScreeningTab /></Suspense></TabsContent>
           {/* Reports Tab */}
           <TabsContent value="reports" className="mt-4 space-y-3">
             {/* Filter */}

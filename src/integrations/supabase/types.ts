@@ -4032,6 +4032,12 @@ export type Database = {
           },
         ]
       }
+      post_screenings: {
+        Row: { post_id: string; revision: string; created_at: string; text_status: string; media_status: string; media_results: Json; decision: string | null; reviewer: string | null; reviewed_at: string | null }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
       posts: {
         Row: {
           banda_id: string | null
@@ -6482,6 +6488,9 @@ export type Database = {
       }
     }
     Functions: {
+      screening_media: { Args: { p_revision: string }; Returns: string[] }
+      review_post_screening: { Args: { p_revision: string; p_decision: string }; Returns: undefined }
+      record_media_screening: { Args: { p_revision: string; p_results: Json }; Returns: undefined }
       complete_muxi_onboarding: { Args: { p_content: string; p_privacy: string }; Returns: undefined }
       respond_friend_request: { Args: { p_request_id: string; p_accept: boolean }; Returns: undefined }
       group_conference_action: {
