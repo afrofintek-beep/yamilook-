@@ -130,6 +130,13 @@ export default function Settings() {
   const { t, i18n } = useTranslation();
   const { user, profile, signOut, updateProfile } = useAuth();
   const { settings, updateSettings } = useSettings();
+  const savedLanguage = settings?.language;
+  React.useEffect(() => {
+    if (savedLanguage && i18n.language !== savedLanguage) {
+      void changeAppLanguage(savedLanguage).catch(error => console.error('Language preference could not be applied', error));
+    }
+  }, [savedLanguage, i18n]);
+
   const { toast } = useToast();
   const { businessProfile } = useAdvertising();
   const { notify, playNotificationSound, triggerVibration } = useMessageNotification();
@@ -453,18 +460,18 @@ export default function Settings() {
           <SettingItem
             icon={Globe}
             label={t('settings.language')}
-            description={languages.find(l => l.code === (settings?.language || i18n.language))?.nativeName || uiText("Português")}
+            description={languages.find(l => l.code === (i18n.language))?.nativeName || uiText("Português")}
             delay={0.14}
             rightElement={
               <Select
-                value={settings?.language || i18n.language || 'pt'}
+                value={i18n.language || 'pt'}
                 onValueChange={handleLanguageChange}
               >
                 <SelectTrigger className="w-20 h-8 rounded-lg border-border bg-card px-2 text-sm [&>svg]:hidden">
                   <div className="flex items-center gap-1">
-                    <span className="text-sm">{getLanguageFlag(settings?.language || i18n.language || 'pt')}</span>
+                    <span className="text-sm">{getLanguageFlag(i18n.language || 'pt')}</span>
                     <span className="text-xs font-semibold">
-                      {(settings?.language || i18n.language || 'pt').toUpperCase()}
+                      {(i18n.language || 'pt').toUpperCase()}
                     </span>
                   </div>
                 </SelectTrigger>
@@ -490,7 +497,7 @@ export default function Settings() {
                             <span className="text-xs text-muted-foreground">{lang.name}</span>
                           )}
                         </div>
-                        {(settings?.language || i18n.language) === lang.code && (
+                        {(i18n.language) === lang.code && (
                           <Check className="w-4 h-4 text-primary ml-auto" />
                         )}
                       </div>
