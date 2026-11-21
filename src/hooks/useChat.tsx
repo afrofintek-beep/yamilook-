@@ -276,19 +276,48 @@ export function useConversations() {
   }, [userId, setConversations, setLoading]);
 
   useEffect(() => {
-    fetchConversations();
+    let active = true;
+    let fetching = false;
+    let pending = false;
+    const refresh = async () => {
+      if (!active) return;
+      if (fetching) {
+        pending = true;
+        return;
+      }
+      fetching = true;
+      try {
+        do {
+          pending = false;
+          await fetchConversations();
+        } while (active && pending);
+      } finally {
+        fetching = false;
+      }
+    };
+    const resume = () => {
+      if (document.visibilityState === 'visible') void refresh();
+    };
+    void refresh();
 
     if (userId) {
+      window.addEventListener('pageshow', resume);
+      window.addEventListener('online', resume);
+      document.addEventListener('visibilitychange', resume);
       channelRef.current = supabase
         .channel(`conversations-updates-${instanceIdRef.current}`)
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'conversation_participants', filter: `user_id=eq.${userId}` }, () => { void fetchConversations(); })
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => {
-          fetchConversations();
-        })
-        .subscribe();
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'conversation_participants', filter: `user_id=eq.${userId}` }, refresh)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, refresh)
+        .subscribe(status => {
+          if (status === 'SUBSCRIBED') void refresh();
+        });
     }
 
     return () => {
+      active = false;
+      window.removeEventListener('pageshow', resume);
+      window.removeEventListener('online', resume);
+      document.removeEventListener('visibilitychange', resume);
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
       }
