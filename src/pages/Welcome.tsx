@@ -14,13 +14,13 @@ export default function Welcome() {
   businessSearch.set('next', '/meus-negocios?abrir=1');
   const business = new URLSearchParams(search).get('next') === '/meus-negocios?abrir=1';
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center bg-background px-5 py-6 gap-3">
-      <YamilookLogo size="lg" showTagline={false} animate={false} />
+    <main className="min-h-screen flex flex-col items-center justify-start sm:justify-center bg-background px-3 pt-2 pb-6 sm:px-5 sm:py-6 gap-3">
+      <YamilookLogo size="md" showTagline={false} animate={false} />
       <h1 className="text-2xl font-semibold text-center">{isPortuguese ? t('welcome.title') : t('entry.title')} 👋🏾</h1>
       <p className="text-muted-foreground text-center">{isPortuguese ? t('welcome.subtitle') : t('entry.subtitle')}</p>
       <WelcomeCarousel />
       <EntryLanguageSelector />
-      <div className="w-full max-w-sm space-y-3">
+      <div className="w-full max-w-md space-y-3">
         <h2 className="text-center text-lg font-semibold">{t(business ? 'entry.business' : 'entry.start')}</h2>
         {business ? (
           <Button asChild size="lg" className="w-full min-h-14"><Link to={`/register${search}`}>{t('entry.createAccount')}</Link></Button>
@@ -34,7 +34,7 @@ export default function Welcome() {
             </Link>
           </>
         )}
-        <Button asChild variant="outline" size="lg" className="w-full min-h-14"><Link to={`/login${search}`}>{t('entry.login')}</Link></Button>
+        <Button asChild variant="outline" size="lg" className="w-full min-h-14"><Link to={`/login${search}`}>{isPortuguese ? 'Já tenho conta · ' : ''}{t('entry.login')}</Link></Button>
       </div>
       <nav className="flex flex-wrap justify-center gap-4 text-xs text-muted-foreground">
         <Link to="/terms" className="underline">{t('entry.terms')}</Link>
