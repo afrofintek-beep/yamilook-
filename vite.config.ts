@@ -37,7 +37,7 @@ export default defineConfig(({ mode }) => ({
       injectRegister: null,
       includeAssets: ["favicon.ico", "yamilook-logo.png"],
       workbox: {
-        globIgnores: ["papos-app/**", "app/dangereux/**"],
+        globIgnores: ["papos-app/**", "app/dangereux/**", "assets/group1-shard*.js", "assets/scan-media-*.js", "assets/model.min-*.js"],
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
         navigateFallbackDenylist: [/^\/dangereux(?:\/|$)/, /^\/caminho(?:\/|$)/, /^\/post(?:\/|$)/, /^\/api(?:\/|$)/, /^\/papos-app(?:\/|$)/,/^\/~oauth/, /^\/guia/, /^\/app/, /^\/download/, /^\/store/],
         cleanupOutdatedCaches: true,
