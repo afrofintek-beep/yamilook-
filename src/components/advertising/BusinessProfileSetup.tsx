@@ -357,6 +357,22 @@ export function BusinessProfileSetup({ open, onOpenChange, onComplete }: Busines
         </div>
       </div>
 
+      <section className="space-y-2 rounded-xl border p-4">
+        <h4 className="font-semibold">{uiText("Documentação da empresa")}</h4>
+        <ul className="space-y-1 text-sm">
+          {[uiText("NIF"), uiText("Alvará"), uiText("Outros documentos")].map((label) => (
+            <li key={label} className="flex items-center justify-between gap-2">
+              <span>{label}</span>
+              <span className="text-xs text-muted-foreground">{uiText("Em breve")}</span>
+            </li>
+          ))}
+        </ul>
+        <details className="text-sm">
+          <summary className="cursor-pointer py-2 font-medium">{uiText("Saber mais")}</summary>
+          <p>{uiText("A verificação documental estará disponível numa fase futura. Podes criar o perfil do teu negócio sem apresentar documentos.")}</p>
+        </details>
+      </section>
+
       <div className="flex gap-3">
         <Button variant="outline" onClick={() => setStep(2)} className="flex-1">{uiText("Voltar")}</Button>
         <Button
