@@ -56,6 +56,7 @@ const Discover = lazy(() => import("./pages/Discover"));
 const DevTools = lazy(() => import("./pages/DevTools"));
 const Admin = lazy(() => import("./pages/Admin"));
 const Moderation = lazy(() => import("./pages/Moderation"));
+const MyBusiness = lazy(() => import("./pages/MyBusiness"));
 const Advertising = lazy(() => import("./pages/Advertising"));
 const Notifications = lazy(() => import("./pages/Notifications"));
 const BrandBook = lazy(() => import("./pages/BrandBook"));
@@ -239,7 +240,7 @@ function ProtectedRoute({ children, skipOnboardingCheck }: { children: React.Rea
   }
   
   if (!user) {
-    return <Navigate to={(protectedLocation.pathname.startsWith("/afroloc") || protectedLocation.pathname==="/notifications") ? `/login?next=${encodeURIComponent(protectedLocation.pathname+protectedLocation.search)}` : "/welcome"} replace />;
+    return <Navigate to={(protectedLocation.pathname.startsWith("/afroloc") || (protectedLocation.pathname==="/notifications" || protectedLocation.pathname==="/meus-negocios")) ? `/login?next=${encodeURIComponent(protectedLocation.pathname+protectedLocation.search)}` : "/welcome"} replace />;
   }
 
   // Do not expose protected content while the profile is still being fetched.
@@ -265,7 +266,7 @@ function ProtectedRoute({ children, skipOnboardingCheck }: { children: React.Rea
 
   // Redirect to onboarding if not completed (except on the onboarding page itself)
   if (!skipOnboardingCheck && profile && !profile.onboarding_completed) {
-    return <Navigate to={(protectedLocation.pathname.startsWith("/afroloc/acesso/") || protectedLocation.pathname==="/notifications") ? `/onboarding?next=${encodeURIComponent(protectedLocation.pathname+protectedLocation.search)}` : "/onboarding"} replace />;
+    return <Navigate to={(protectedLocation.pathname.startsWith("/afroloc/acesso/") || (protectedLocation.pathname==="/notifications" || protectedLocation.pathname==="/meus-negocios")) ? `/onboarding?next=${encodeURIComponent(protectedLocation.pathname+protectedLocation.search)}` : "/onboarding"} replace />;
   }
   
   return <>{children}</>;
@@ -366,6 +367,7 @@ function AnimatedRoutes() {
           <Route path="/admin/mentors" element={<ProtectedRoute><AdminMentors /></ProtectedRoute>} />
           <Route path="/admin/billing" element={<ProtectedRoute><AdminBilling /></ProtectedRoute>} />
           <Route path="/moderation" element={<ProtectedRoute><Moderation /></ProtectedRoute>} />
+          <Route path="/meus-negocios" element={<ProtectedRoute><MyBusiness /></ProtectedRoute>} />
           <Route path="/advertising" element={<ProtectedRoute><Advertising /></ProtectedRoute>} />
           <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
           <Route path="/caminho" element={<Caminho />} />

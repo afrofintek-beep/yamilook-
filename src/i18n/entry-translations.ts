@@ -1,6 +1,13 @@
 // Public entry menus for the ten rollout languages. Human linguistic review remains recommended.
 export const entryTranslations: Record<string, Record<string, string>> = {
   "en": {
+    "start": "How would you like to start on Yamilook?",
+    "personal": "Create my personal profile",
+    "personalHint": "Join the community and see what’s happening in my neighbourhood.",
+    "business": "Create my business page",
+    "businessHint": "Introduce my business, products or services.",
+    "myBusinesses": "My businesses",
+    "manageBusiness": "Manage",
     "chooseLanguage": "Choose your language",
     "title": "Welcome to YAMILOOK",
     "subtitle": "Your community, across Africa.",
@@ -11,6 +18,13 @@ export const entryTranslations: Record<string, Record<string, string>> = {
     "privacy": "Privacy Policy"
   },
   "fr": {
+    "start": "Comment souhaitez-vous commencer sur Yamilook ?",
+    "personal": "Créer mon profil personnel",
+    "personalHint": "Rejoindre la communauté et découvrir la vie de mon quartier.",
+    "business": "Créer ma page professionnelle",
+    "businessHint": "Présenter mon entreprise, mes produits ou mes services.",
+    "myBusinesses": "Mes activités",
+    "manageBusiness": "Gérer",
     "chooseLanguage": "Choisissez votre langue",
     "title": "Bienvenue sur YAMILOOK",
     "subtitle": "Votre communauté, à travers l’Afrique.",
@@ -21,6 +35,13 @@ export const entryTranslations: Record<string, Record<string, string>> = {
     "privacy": "Politique de confidentialité"
   },
   "pt": {
+    "start": "Como quer começar na Yamilook?",
+    "personal": "Criar o meu perfil pessoal",
+    "personalHint": "Quero fazer parte da comunidade e descobrir o que acontece no meu bairro.",
+    "business": "Criar a página do meu negócio",
+    "businessHint": "Quero dar a conhecer a minha empresa, o que vendo ou os serviços que presto.",
+    "myBusinesses": "Meus negócios",
+    "manageBusiness": "Gerir",
     "chooseLanguage": "Escolha a sua língua",
     "title": "Bem-vindo à YAMILOOK",
     "subtitle": "A sua comunidade, em toda a África.",
@@ -31,6 +52,13 @@ export const entryTranslations: Record<string, Record<string, string>> = {
     "privacy": "Política de Privacidade"
   },
   "ar": {
+    "start": "كيف تريد أن تبدأ على ياميلوك؟",
+    "personal": "إنشاء ملفي الشخصي",
+    "personalHint": "الانضمام إلى المجتمع ومعرفة ما يحدث في حيّي.",
+    "business": "إنشاء صفحة لنشاطي التجاري",
+    "businessHint": "التعريف بمشروعي ومنتجاتي أو خدماتي.",
+    "myBusinesses": "أعمالي",
+    "manageBusiness": "إدارة",
     "chooseLanguage": "اختر لغتك",
     "title": "مرحبًا بك في YAMILOOK",
     "subtitle": "مجتمعك في جميع أنحاء أفريقيا.",
@@ -41,6 +69,13 @@ export const entryTranslations: Record<string, Record<string, string>> = {
     "privacy": "سياسة الخصوصية"
   },
   "am": {
+    "start": "በያሚሉክ እንዴት መጀመር ይፈልጋሉ?",
+    "personal": "የግል መገለጫዬን መፍጠር",
+    "personalHint": "ማኅበረሰቡን መቀላቀልና የሰፈሬን ዜና ማወቅ።",
+    "business": "የንግዴን ገጽ መፍጠር",
+    "businessHint": "ንግዴን፣ ምርቶቼንና አገልግሎቶቼን ማስተዋወቅ።",
+    "myBusinesses": "ንግዶቼ",
+    "manageBusiness": "አስተዳድር",
     "chooseLanguage": "ቋንቋዎን ይምረጡ",
     "title": "እንኳን ወደ YAMILOOK በደህና መጡ",
     "subtitle": "በመላው አፍሪካ ያለው ማህበረሰብዎ።",
@@ -51,6 +86,13 @@ export const entryTranslations: Record<string, Record<string, string>> = {
     "privacy": "የግላዊነት ፖሊሲ"
   },
   "sw": {
+    "start": "Unataka kuanzaje kwenye Yamilook?",
+    "personal": "Unda wasifu wangu binafsi",
+    "personalHint": "Jiunge na jamii na ujue kinachoendelea mtaani.",
+    "business": "Unda ukurasa wa biashara yangu",
+    "businessHint": "Tambulisha biashara, bidhaa au huduma zangu.",
+    "myBusinesses": "Biashara zangu",
+    "manageBusiness": "Simamia",
     "chooseLanguage": "Chagua lugha yako",
     "title": "Karibu YAMILOOK",
     "subtitle": "Jumuiya yako, kote Afrika.",
@@ -61,6 +103,13 @@ export const entryTranslations: Record<string, Record<string, string>> = {
     "privacy": "Sera ya Faragha"
   },
   "ln": {
+    "start": "Olingi kobanda ndenge nini na Yamilook?",
+    "personal": "Kosala profil na ngai",
+    "personalHint": "Kokɔta na lisangá mpe koyeba makambo ya kartye.",
+    "business": "Kosala lokasa ya mombongo na ngai",
+    "businessHint": "Kolakisa mombongo, biloko to misala na ngai.",
+    "myBusinesses": "Mimbongo na ngai",
+    "manageBusiness": "Kokamba",
     "chooseLanguage": "Poná lokótá na yo",
     "title": "Boyei malamu na YAMILOOK",
     "subtitle": "Lisangá na yo, na Afrika mobimba.",
@@ -71,6 +120,13 @@ export const entryTranslations: Record<string, Record<string, string>> = {
     "privacy": "Mibeko ya kobombama"
   },
   "yo": {
+    "start": "Báwo ni o ṣe fẹ́ bẹ̀rẹ̀ lórí Yamilook?",
+    "personal": "Ṣẹ̀dá àkọọ́lẹ̀ ara mi",
+    "personalHint": "Darapọ̀ mọ́ àwùjọ kí n sì mọ ohun tó ń ṣẹlẹ̀ ní àdúgbò mi.",
+    "business": "Ṣẹ̀dá ojú ìwé fún iṣẹ́ mi",
+    "businessHint": "Ṣàfihàn iṣẹ́ mi, ọjà mi tàbí ìpèsè mi.",
+    "myBusinesses": "Àwọn iṣẹ́ mi",
+    "manageBusiness": "Ṣàkóso",
     "chooseLanguage": "Yan èdè rẹ",
     "title": "Káàbọ̀ sí YAMILOOK",
     "subtitle": "Àwùjọ rẹ, jákèjádò Áfíríkà.",
@@ -81,6 +137,13 @@ export const entryTranslations: Record<string, Record<string, string>> = {
     "privacy": "Ilana Asiri"
   },
   "sn": {
+    "start": "Unoda kutanga sei paYamilook?",
+    "personal": "Gadzira nhoroondo yangu",
+    "personalHint": "Batana nevemunharaunda uone zviri kuitika.",
+    "business": "Gadzira peji rebhizinesi rangu",
+    "businessHint": "Ratidza bhizinesi rangu, zvandinotengesa kana mabasa andinoita.",
+    "myBusinesses": "Mabhizinesi angu",
+    "manageBusiness": "Tungamirira",
     "chooseLanguage": "Sarudza mutauro wako",
     "title": "Mauya kuYAMILOOK",
     "subtitle": "Nharaunda yako, muAfrica yose.",
@@ -91,6 +154,13 @@ export const entryTranslations: Record<string, Record<string, string>> = {
     "privacy": "Mutemo weZvakavanzika"
   },
   "zu": {
+    "start": "Ufuna ukuqala kanjani ku-Yamilook?",
+    "personal": "Dala iphrofayela yami",
+    "personalHint": "Joyina umphakathi uthole okwenzeka endaweni yami.",
+    "business": "Dala ikhasi lebhizinisi lami",
+    "businessHint": "Yethula ibhizinisi lami, imikhiqizo noma izinsiza zami.",
+    "myBusinesses": "Amabhizinisi ami",
+    "manageBusiness": "Phatha",
     "chooseLanguage": "Khetha ulimi lwakho",
     "title": "Siyakwamukela ku-YAMILOOK",
     "subtitle": "Umphakathi wakho, kuyo yonke i-Afrika.",
@@ -100,4 +170,10 @@ export const entryTranslations: Record<string, Record<string, string>> = {
     "terms": "Imigomo Yesevisi",
     "privacy": "Inqubomgomo Yobumfihlo"
   }
+};
+
+entryTranslations["pt-banda"] = {
+  ...entryTranslations.pt,
+  start: "Como queres começar na Yamilook?",
+  personalHint: "Quero fazer parte da comunidade e descobrir o que acontece na minha banda.",
 };

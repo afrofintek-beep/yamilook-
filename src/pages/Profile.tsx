@@ -19,6 +19,7 @@ import {
   LogOut,
   Settings,
   Megaphone,
+  Store,
   Wallet,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -709,6 +710,9 @@ function ProfileContent() {
                     <Wallet className="w-4 h-4 mr-2" />
                     CARTEIRA
                   </DropdownMenuItem>}
+                  <DropdownMenuItem onClick={() => navigate('/meus-negocios')} className="rounded-lg">
+                    <Store className="w-4 h-4 mr-2" />{t('entry.myBusinesses')}
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate('/advertising')} className="rounded-lg">
                     <Megaphone className="w-4 h-4 mr-2" />
                     {t('settings.advertisingSettings', 'Publicidade')}

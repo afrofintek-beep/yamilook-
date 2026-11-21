@@ -33,10 +33,15 @@ const businessCategories = [
   { value: 'other', get label() { return uiText("Outro"); } },
 ];
 
-export function BusinessProfileSetup({ open, onOpenChange, onComplete }: BusinessProfileSetupProps) {
+export function BusinessProfileSetup(props: BusinessProfileSetupProps) {
+  const advertising = useAdvertising();
+  return <BusinessProfileEditor {...props} advertising={advertising} />;
+}
+
+export function BusinessProfileEditor({ open, onOpenChange, onComplete, advertising }: BusinessProfileSetupProps & { advertising: ReturnType<typeof useAdvertising> }) {
   useUiLocale();
   const { t } = useTranslation();
-  const { createBusinessProfile, updateBusinessProfile, businessProfile, locationMarkets, loading } = useAdvertising();
+  const { createBusinessProfile, updateBusinessProfile, businessProfile, locationMarkets, loading } = advertising;
 
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
