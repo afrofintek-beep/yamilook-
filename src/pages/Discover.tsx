@@ -38,6 +38,19 @@ export default function Discover() {
   const { locationMarkets } = useAdvertising();
   
   const [searchQuery, setSearchQuery] = useState('');
+  const [businesses, setBusinesses] = useState<{ business_name: string; handle: string | null }[]>([]);
+  useEffect(() => {
+    let active = true;
+    const prefix = searchQuery.trim().replace(/^@/, '').toLowerCase();
+    setBusinesses([]);
+    if (!/^[a-z0-9_]{1,30}$/.test(prefix)) return;
+    const timer = setTimeout(async () => {
+      const { data } = await supabase.from('business_profiles').select('business_name,handle')
+        .eq('is_active', true).like('handle', prefix.replaceAll('_', '\\_') + '%').order('handle').limit(8);
+      if (active) setBusinesses(data || []);
+    }, 200);
+    return () => { active = false; clearTimeout(timer); };
+  }, [searchQuery]);
   const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
   const [topicPosts, setTopicPosts] = useState<PostWithUser[]>([]);
   const [loadingTopicPosts, setLoadingTopicPosts] = useState(false);
@@ -256,6 +269,8 @@ export default function Discover() {
 
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         {notificationPostError && <p role="alert" className="p-4 text-sm text-muted-foreground">{notificationPostError}</p>}
+        {businesses.map(business => <Button key={business.handle} variant="ghost" className="flex w-full justify-start"
+          onClick={() => navigate(`/negocio/${business.handle}`)}>{business.business_name} · @{business.handle}</Button>)}
         {/* Local Businesses Section */}
         {!selectedTopic && !searchQuery && (
           <LocalBusinessSection 

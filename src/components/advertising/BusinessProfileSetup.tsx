@@ -11,6 +11,10 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Building2, MapPin, Phone, Mail, Globe, Loader2, CheckCircle2, Sparkles } from 'lucide-react';
 import { useAdvertising, BusinessProfile, LocationMarket } from '@/hooks/useAdvertising';
 import { useTranslation } from 'react-i18next';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { preparePostImage, isHeicImage } from '@/lib/post-image';
+import { toast } from 'sonner';
 import { snapToGrid } from '@/lib/geo-privacy';
 
 interface BusinessProfileSetupProps {
@@ -48,6 +52,20 @@ export function BusinessProfileEditor({ open, onOpenChange, onComplete, advertis
   const [detectingLocation, setDetectingLocation] = useState(false);
 
   // Form state
+  const { user } = useAuth();
+  const [handle, setHandle] = useState('');
+  const [afroloc, setAfroloc] = useState('');
+  const [area, setArea] = useState('');
+  const [photo, setPhoto] = useState<File | null>(null);
+  const [preview, setPreview] = useState('');
+  useEffect(() => {
+    if (!photo) { setPreview(''); return; }
+    const url = URL.createObjectURL(photo);
+    setPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [photo]);
+  useEffect(() => { if (!open) setPhoto(null); }, [open]);
+  const validHandle = !handle || /^[a-z0-9_]{3,30}$/.test(handle);
   const [businessName, setBusinessName] = useState('');
   const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
@@ -63,6 +81,9 @@ export function BusinessProfileEditor({ open, onOpenChange, onComplete, advertis
   useEffect(() => {
     if (businessProfile) {
       setBusinessName(businessProfile.business_name);
+      setHandle(businessProfile.handle || '');
+      setAfroloc(businessProfile.afroloc_code || '');
+      setArea(businessProfile.service_area || '');
       setCategory(businessProfile.business_category || '');
       setDescription(businessProfile.description || '');
       setPhone(businessProfile.phone || '');
@@ -138,32 +159,53 @@ export function BusinessProfileEditor({ open, onOpenChange, onComplete, advertis
 
     setIsSubmitting(true);
 
-    const profileData = {
-      business_name: businessName,
-      business_category: category || null,
-      description: description || null,
-      phone: phone || null,
-      email: email || null,
-      website: website || null,
-      address: address || null,
-      city: selectedMarket?.city || null,
-      neighborhood: selectedMarket?.neighborhood || null,
-      latitude,
-      longitude,
-    };
+    let path: string | undefined;
+    try {
+      let logo = businessProfile?.logo_url ?? null;
+      if (photo && user) {
+        const image = await preparePostImage(photo);
+        const filePath = `${user.id}/business-${crypto.randomUUID()}.${image.type.split('/')[1]}`;
+        const bucket = supabase.storage.from('avatars');
+        const { error } = await bucket.upload(filePath, image);
+        if (error) throw error;
+        path = filePath;
+        logo = bucket.getPublicUrl(filePath).data.publicUrl;
+      }
+      const profileData = {
+        logo_url: logo,
+        handle: handle || null,
+        afroloc_code: afroloc.trim() || null,
+        service_area: area.trim() || null,
+        business_name: businessName,
+        business_category: category || null,
+        description: description || null,
+        phone: phone || null,
+        email: email || null,
+        website: website || null,
+        address: address || null,
+        city: selectedMarket?.city || null,
+        neighborhood: selectedMarket?.neighborhood || null,
+        latitude,
+        longitude,
+      };
 
-    let result;
-    if (businessProfile) {
-      result = await updateBusinessProfile(profileData);
-    } else {
-      result = await createBusinessProfile(profileData);
-    }
+      let result;
+      if (businessProfile) {
+        result = await updateBusinessProfile(profileData);
+      } else {
+        result = await createBusinessProfile(profileData);
+      }
 
-    setIsSubmitting(false);
-
-    if (result) {
-      onComplete?.(result);
-      onOpenChange(false);
+      if (!result && path) await supabase.storage.from("avatars").remove([path]);
+      if (result) {
+        onComplete?.(result);
+        setPhoto(null);
+        onOpenChange(false);
+      }
+    } catch {
+      toast.error(uiText("Não foi possível guardar. Verifique a imagem e a ligação."));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -175,9 +217,20 @@ export function BusinessProfileEditor({ open, onOpenChange, onComplete, advertis
       className="space-y-6"
     >
       <div className="text-center mb-8">
-        <div className="w-20 h-20 bg-gradient-to-br from-primary/20 to-primary/5 rounded-2xl flex items-center justify-center mx-auto mb-4">
-          <Building2 className="w-10 h-10 text-primary" />
-        </div>
+        <label className="inline-flex cursor-pointer flex-col items-center gap-2 mb-4">
+          {preview || businessProfile?.logo_url
+            ? <img src={preview || businessProfile?.logo_url || ''} alt="" className="size-20 rounded-2xl object-contain" />
+            : <Building2 className="size-16 text-primary" />}
+          {uiText("Escolher logótipo ou fotografia")}
+          <input type="file" accept="image/jpeg,image/png,image/webp,.heic,.heif" className="max-w-full text-sm" onChange={event => {
+            const file = event.target.files?.[0];
+            if (!file) return;
+            if (file.size > 12 * 1024 * 1024 || (!isHeicImage(file) && !['image/jpeg','image/png','image/webp'].includes(file.type))) {
+              toast.error(uiText("Escolha uma imagem até 12 MB.")); return;
+            }
+            setPhoto(file);
+          }} />
+        </label>
         <h3 className="text-lg font-semibold">{uiText("Informações do Negócio")}</h3>
         <p className="text-sm text-muted-foreground mt-1">{uiText("Diga-nos mais sobre o seu negócio")}</p>
       </div>
@@ -193,6 +246,11 @@ export function BusinessProfileEditor({ open, onOpenChange, onComplete, advertis
           />
         </div>
 
+        <div className="space-y-2">
+          <Label htmlFor="businessHandle">{uiText("Identificador público (@)")}</Label>
+          <Input id="businessHandle" value={handle} placeholder="@meunegocio" autoCapitalize="none" onChange={e => setHandle(e.target.value.replace(/^@/, '').toLowerCase())} />
+          {!validHandle && <p role="alert">{uiText("Use 3 a 30 letras sem acentos, números ou sublinhados.")}</p>}
+        </div>
         <div className="space-y-2">
           <Label htmlFor="category">{uiText("Categoria")}</Label>
           <Select value={category} onValueChange={setCategory}>
@@ -210,7 +268,7 @@ export function BusinessProfileEditor({ open, onOpenChange, onComplete, advertis
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="description">{uiText("Descrição")}</Label>
+          <Label htmlFor="description">{uiText("O que faz o seu negócio?")}</Label>
           <Textarea
             id="description"
             placeholder={uiText("Descreva o seu negócio em poucas palavras...")}
@@ -223,7 +281,7 @@ export function BusinessProfileEditor({ open, onOpenChange, onComplete, advertis
 
       <Button
         onClick={() => setStep(2)}
-        disabled={!businessName.trim()}
+        disabled={!businessName.trim() || !validHandle}
         className="w-full"
       >{uiText("Continuar")}</Button>
     </motion.div>
@@ -285,6 +343,10 @@ export function BusinessProfileEditor({ open, onOpenChange, onComplete, advertis
         </div>
 
         <div className="space-y-2">
+          <Label htmlFor="afrolocCode">{uiText("Código público da AFROLOC do estabelecimento (opcional)")}</Label>
+          <Input id="afrolocCode" value={afroloc} onChange={e => setAfroloc(e.target.value)} />
+          <Label htmlFor="serviceArea">{uiText("Zona de atendimento (opcional)")}</Label>
+          <Input id="serviceArea" value={area} onChange={e => setArea(e.target.value)} />
           <Label htmlFor="address">{uiText("Endereço (opcional)")}</Label>
           <Input
             id="address"
@@ -414,7 +476,7 @@ export function BusinessProfileEditor({ open, onOpenChange, onComplete, advertis
         <SheetHeader className="mb-4 shrink-0">
           <SheetTitle className="flex items-center gap-2">
             <Building2 className="w-5 h-5 text-primary" />
-            {businessProfile ? uiText("Editar Perfil de Negócio") : uiText("Criar Perfil de Negócio")}
+            {businessProfile ? uiText("Editar perfil de {{name}}", { name: businessProfile.business_name }) : uiText("Criar Perfil de Negócio")}
           </SheetTitle>
         </SheetHeader>
 

@@ -9,6 +9,9 @@ export interface BusinessProfile {
   id: string;
   user_id: string;
   business_name: string;
+  handle: string | null;
+  afroloc_code: string | null;
+  service_area: string | null;
   business_category: string | null;
   description: string | null;
   logo_url: string | null;
@@ -142,6 +145,9 @@ export function useAdvertising() {
         business_category: profile.business_category,
         description: profile.description,
         logo_url: profile.logo_url,
+        handle: profile.handle,
+        afroloc_code: profile.afroloc_code,
+        service_area: profile.service_area,
         phone: profile.phone,
         email: profile.email,
         website: profile.website,
@@ -158,7 +164,7 @@ export function useAdvertising() {
 
     if (error) {
       console.error('Error creating business profile:', error);
-      toast.error(uiText("Erro ao criar perfil de negócio"));
+      toast.error(error.code === "23505" ? uiText("O identificador ou o perfil já existe. Verifique os dados.") : uiText("Erro ao criar perfil de negócio"));
       return null;
     }
 
@@ -191,7 +197,7 @@ export function useAdvertising() {
 
     if (error) {
       console.error('Error updating business profile:', error);
-      toast.error(uiText("Erro ao atualizar perfil"));
+      toast.error(error.code === "23505" ? uiText("O identificador ou o perfil já existe. Verifique os dados.") : uiText("Erro ao atualizar perfil"));
       return null;
     }
 
