@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Building2, MapPin, Phone, Mail, Globe, Loader2, CheckCircle2, Sparkles } from 'lucide-react';
+import { Camera, Building2, MapPin, Phone, Mail, Globe, Loader2, CheckCircle2, Sparkles } from 'lucide-react';
 import { useAdvertising, BusinessProfile, LocationMarket } from '@/hooks/useAdvertising';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
@@ -216,13 +216,13 @@ export function BusinessProfileEditor({ open, onOpenChange, onComplete, advertis
       exit={{ opacity: 0, x: -20 }}
       className="space-y-6"
     >
-      <div className="text-center mb-8">
-        <label className="inline-flex cursor-pointer flex-col items-center gap-2 mb-4">
+      <div className="rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/10 via-card to-card p-4 text-center">
+        <label className="relative mb-4 flex w-full cursor-pointer flex-wrap items-center justify-center gap-3 rounded-2xl focus-within:ring-2 focus-within:ring-ring">
           {preview || businessProfile?.logo_url
-            ? <img src={preview || businessProfile?.logo_url || ''} alt="" className="size-20 rounded-2xl object-contain" />
+            ? <img src={preview || businessProfile?.logo_url || ''} alt="" className="h-24 w-36 max-w-full rounded-xl border bg-background object-contain" />
             : <Building2 className="size-16 text-primary" />}
-          {uiText("Escolher logótipo ou fotografia")}
-          <input type="file" accept="image/jpeg,image/png,image/webp,.heic,.heif" className="max-w-full text-sm" onChange={event => {
+          <span className="inline-flex min-h-11 items-center gap-2 rounded-full border bg-background px-4 text-sm font-medium"><Camera aria-hidden="true" className="size-4 text-primary" />{preview || businessProfile?.logo_url ? uiText("Alterar fotografia") : uiText("Escolher logótipo ou fotografia")}</span>
+          <input type="file" accept="image/jpeg,image/png,image/webp,.heic,.heif" className="sr-only" onChange={event => {
             const file = event.target.files?.[0];
             if (!file) return;
             if (file.size > 12 * 1024 * 1024 || (!isHeicImage(file) && !['image/jpeg','image/png','image/webp'].includes(file.type))) {
@@ -472,9 +472,9 @@ export function BusinessProfileEditor({ open, onOpenChange, onComplete, advertis
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-[90vh] rounded-t-3xl flex flex-col">
-        <SheetHeader className="mb-4 shrink-0">
-          <SheetTitle className="flex items-center gap-2">
+      <SheetContent side="bottom" className="mx-auto flex h-[90dvh] w-full max-w-lg flex-col rounded-t-3xl px-4 pt-5 sm:px-6">
+        <SheetHeader className="mb-1 shrink-0 pr-9">
+          <SheetTitle className="flex items-center gap-2 break-words text-left">
             <Building2 className="w-5 h-5 text-primary" />
             {businessProfile ? uiText("Editar perfil de {{name}}", { name: businessProfile.business_name }) : uiText("Criar Perfil de Negócio")}
           </SheetTitle>
@@ -492,8 +492,8 @@ export function BusinessProfileEditor({ open, onOpenChange, onComplete, advertis
           ))}
         </div>
 
-        <ScrollArea className="flex-1 -mx-6 px-6">
-          <div className="pb-8">
+        <ScrollArea className="min-h-0 min-w-0 flex-1">
+          <div className="px-1 pb-[max(2rem,env(safe-area-inset-bottom))]">
             <AnimatePresence mode="wait">
               {step === 1 && renderStep1()}
               {step === 2 && renderStep2()}
