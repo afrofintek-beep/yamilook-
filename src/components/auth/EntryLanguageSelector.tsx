@@ -25,7 +25,7 @@ export function EntryLanguageSelector() {
     finally { setBusy(false); }
   }
   return (
-    <div className="w-full max-w-sm my-4 px-4" aria-busy={busy}>
+    <div className="w-full max-w-md my-3 px-2" aria-busy={busy}>
       <label htmlFor={id} className="block text-sm font-medium mb-2">🌐 {t('entry.chooseLanguage')}</label>
       <select id={id} value={isPortuguese ? 'pt' : language}
         disabled={busy} onChange={event => void choose(event.target.value)}
@@ -42,14 +42,14 @@ export function EntryLanguageSelector() {
           <div className="grid grid-cols-2 gap-2 rounded-2xl bg-secondary/50 p-1">
             {[
               { code: 'pt', label: uiText("Formal"), description: uiText("Claro, cuidado e familiar.") },
-              { code: 'pt-banda', label: uiText("Urbano"), description: uiText("Linguagem popular angolana.") },
+              { code: 'pt-banda', label: uiText("Urbano"), description: uiText("Directo, com expressões do dia-a-dia.") },
             ].map(tone => (
               <label key={tone.code} className={cn("relative flex flex-col items-center gap-1 rounded-xl py-3 px-2 text-center cursor-pointer focus-within:ring-2 focus-within:ring-ring", language === tone.code ? "bg-background shadow-md" : "hover:bg-background/50")}>
                 <input type="radio" name={`${id}-tone`} value={tone.code}
                   className="sr-only" aria-label={tone.label} checked={language === tone.code} onChange={() => void choose(tone.code)} />
                 <span className="text-2xl" aria-hidden="true">🇦🇴</span>
                 <span className="text-sm font-semibold leading-tight">{tone.label}</span>
-                {language === tone.code && <span className="text-xs text-muted-foreground leading-relaxed">{tone.description}</span>}
+                <span className="text-xs text-muted-foreground leading-relaxed">{tone.description}</span>
               </label>
             ))}
           </div>
