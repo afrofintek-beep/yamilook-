@@ -10,6 +10,9 @@ export default function Welcome() {
   const { t, i18n } = useTranslation();
   const isPortuguese = ['pt', 'pt-banda'].includes(normalizeAppLanguage(i18n.language));
   const { search } = useLocation();
+  const businessSearch = new URLSearchParams(search);
+  businessSearch.set('next', '/meus-negocios?abrir=1');
+  const business = new URLSearchParams(search).get('next') === '/meus-negocios?abrir=1';
   return (
     <main className="min-h-screen flex flex-col items-center justify-center bg-background px-5 py-6 gap-3">
       <YamilookLogo size="lg" showTagline={false} animate={false} />
@@ -18,7 +21,19 @@ export default function Welcome() {
       <WelcomeCarousel />
       <EntryLanguageSelector />
       <div className="w-full max-w-sm space-y-3">
-        <Button asChild size="lg" className="w-full min-h-14"><Link to={`/onboarding${search}`}>{t('entry.createAccount')}</Link></Button>
+        <h2 className="text-center text-lg font-semibold">{t(business ? 'entry.business' : 'entry.start')}</h2>
+        {business ? (
+          <Button asChild size="lg" className="w-full min-h-14"><Link to={`/register${search}`}>{t('entry.createAccount')}</Link></Button>
+        ) : (
+          <>
+            <Link className="block rounded-xl bg-primary px-4 py-3 text-primary-foreground" to={`/register${search}`}>
+              <strong className="block">{t('entry.personal')}</strong><span className="text-sm">{t('entry.personalHint')}</span>
+            </Link>
+            <Link className="block rounded-xl border px-4 py-3" to={`/welcome?${businessSearch}`}>
+              <strong className="block">{t('entry.business')}</strong><span className="text-sm">{t('entry.businessHint')}</span>
+            </Link>
+          </>
+        )}
         <Button asChild variant="outline" size="lg" className="w-full min-h-14"><Link to={`/login${search}`}>{t('entry.login')}</Link></Button>
       </div>
       <nav className="flex flex-wrap justify-center gap-4 text-xs text-muted-foreground">

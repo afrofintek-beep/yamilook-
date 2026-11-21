@@ -306,7 +306,7 @@ export function LoginForm() {
             </div>
           </div>
 
-          <Link to={returnToCommunity ? `/register?next=${encodeURIComponent(returnToCommunity)}` : "/register"}>
+          <Link to={`/register${loginSearch}`}>
             <motion.div
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}

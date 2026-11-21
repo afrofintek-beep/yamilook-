@@ -90,7 +90,8 @@ const tourSlides = [
 export default function Onboarding() {
   const { user, profile, loading: authLoading, updateProfile, signUp, refreshProfile } = useAuth();
   const navigate = useNavigate();
-  const returnToCommunity = afrolocReturn(useLocation().search);
+  const { search } = useLocation();
+  const returnToCommunity = afrolocReturn(search);
   const { t, i18n } = useTranslation();
 
   const imageLanguage = i18n.resolvedLanguage || i18n.language;
@@ -353,7 +354,7 @@ export default function Onboarding() {
         if (!session?.user) {
           toast.success(t("onboardingFlow.confirmEmail"));
           setIsRegistering(false);
-          navigate('/login');
+          navigate(`/login${search}`);
           return;
         }
 
@@ -1163,7 +1164,7 @@ export default function Onboarding() {
             </p>
 
             <p className="text-center text-sm text-muted-foreground mt-4">{t("auth.haveAccount")}{' '}
-              <Link to="/login" className="text-primary font-medium hover:underline">{t("auth.login")}</Link>
+              <Link to={`/login${search}`} className="text-primary font-medium hover:underline">{t("auth.login")}</Link>
             </p>
           </motion.div>
         );
@@ -1204,7 +1205,7 @@ export default function Onboarding() {
           size="icon"
           className="self-start ms-3 rounded-full"
           aria-label={t('common.back')}
-          onClick={() => currentStep === 0 ? navigate('/welcome') : prevStep()}
+          onClick={() => currentStep === 0 ? navigate(`/welcome${search}`) : prevStep()}
         >
           <ChevronLeft className="rtl:rotate-180 w-5 h-5" />
         </Button>
