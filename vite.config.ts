@@ -39,7 +39,7 @@ export default defineConfig(({ mode }) => ({
       workbox: {
         globIgnores: ["papos-app/**", "app/dangereux/**"],
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
-        navigateFallbackDenylist: [/^\/dangereux(?:\/|$)/, /^\/caminho(?:\/|$)/, /^\/post(?:\/|$)/, /^\/api(?:\/|$)/, /^\/papos-app(?:\/|$)/,/^\/~oauth/, /^\/guia/, /^\/app/, /^\/download/, /^\/store/],
+        navigateFallbackDenylist: [/^\/retomar(?:[/?]|$)/, /^\/dangereux(?:\/|$)/, /^\/caminho(?:\/|$)/, /^\/post(?:\/|$)/, /^\/api(?:\/|$)/, /^\/papos-app(?:\/|$)/,/^\/~oauth/, /^\/guia/, /^\/app/, /^\/download/, /^\/store/],
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
