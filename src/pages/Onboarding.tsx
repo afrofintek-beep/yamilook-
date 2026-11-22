@@ -170,6 +170,7 @@ export default function Onboarding() {
       ? recoverSignupOnboarding(user.user_metadata?.onboarding_draft, user.email) : null;
     const draft = localDraft && (!remoteDraft || localDraft.savedAt >= remoteDraft.savedAt) ? localDraft : remoteDraft;
     const birthday = profile?.birthday?.split('-');
+    const useDraftBirthday = draft && (draft.birthDay && draft.birthMonth && draft.birthYear || !birthday);
     setCurrentStep(user ? resumeOnboardingStep(draft, profile) : draft?.currentStep ?? 0);
     setDisplayName(draft?.displayName ?? profile?.display_name ?? '');
     setUsername(draft?.username ?? profile?.username?.trim() ?? '');
@@ -177,12 +178,12 @@ export default function Onboarding() {
     setPassword('');
     setAccessCode(draft?.inviteCode || invite);
     setSelectedGender(draft?.gender ?? profile?.gender ?? null);
-    setBirthDay(draft?.birthDay ?? birthday?.[2] ?? '');
-    setBirthMonth(draft?.birthMonth ?? birthday?.[1] ?? '');
-    setBirthYear(draft?.birthYear ?? birthday?.[0] ?? '');
+    setBirthDay(useDraftBirthday ? draft.birthDay : birthday?.[2] ?? '');
+    setBirthMonth(useDraftBirthday ? draft.birthMonth : birthday?.[1] ?? '');
+    setBirthYear(useDraftBirthday ? draft.birthYear : birthday?.[0] ?? '');
     setSelectedCountry(draft?.country ?? profile?.country_code ?? 'AO');
-    setSelectedCity(draft?.city ?? profile?.city ?? '');
-    setSelectedNeighborhood(draft?.neighborhood ?? profile?.neighborhood ?? '');
+    setSelectedCity(draft?.city || profile?.city || '');
+    setSelectedNeighborhood(draft?.neighborhood || profile?.neighborhood || '');
     setCustomNeighborhood(draft?.customNeighborhood ?? '');
     setBio(draft?.bio ?? profile?.bio ?? '');
     setUsernameAvailable(null);
@@ -249,7 +250,13 @@ export default function Onboarding() {
 
   const nextStep = () => {
     if (currentStep < steps.length - 1) {
-      setCurrentStep(currentStep + 1);
+      if (isAuthenticated && currentStep === 2) {
+        setCurrentStep(7);
+      } else if (isAuthenticated && currentStep === 0 && birthDay && birthMonth && birthYear) {
+        setCurrentStep(2);
+      } else {
+        setCurrentStep(currentStep + 1);
+      }
     }
   };
 
