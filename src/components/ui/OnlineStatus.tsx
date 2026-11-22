@@ -1,3 +1,5 @@
+import { uiLocale, uiText, useUiLocale } from '@/i18n/ui-copy';
+import { formatDistanceToNow } from '@/i18n/ui-date';
 import { isRecentlyOnline } from '@/lib/online-presence';
 import { usePresenceClock } from '@/hooks/usePresenceClock';
 import { cn } from '@/lib/utils';
@@ -22,6 +24,7 @@ export function OnlineStatus({
   showOnlineStatus = true,
   showLastSeen = true,
 }: OnlineStatusProps) {
+  useUiLocale();
   const now = usePresenceClock();
   const effectiveOnline = isRecentlyOnline(isOnline, lastSeen, now);
   // If user has disabled showing online status, don't render anything
@@ -39,9 +42,9 @@ export function OnlineStatus({
 
   // Determine title based on privacy settings
   const getTitle = () => {
-    if (effectiveOnline) return 'Online';
-    if (!showLastSeen) return 'Offline';
-    return lastSeen ? `Visto ${formatLastSeen(lastSeen)}` : 'Offline';
+    if (effectiveOnline) return uiText('Online');
+    if (!showLastSeen) return uiText('Offline');
+    return lastSeen ? uiText('Visto {{value1}}', { value1: formatLastSeen(lastSeen) }) : uiText('Offline');
   };
 
   return (
@@ -59,19 +62,17 @@ export function OnlineStatus({
 }
 
 export function formatLastSeen(lastSeen: string | null, respectPrivacy: boolean = true): string {
-  if (!lastSeen) return 'Offline';
+  if (!lastSeen) return uiText('Offline');
   
   const date = new Date(lastSeen);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffMins = Math.floor(diffMs / (1000 * 60));
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-  if (diffMins < 1) return 'agora mesmo';
-  if (diffMins < 60) return `há ${diffMins} min`;
-  if (diffHours < 24) return `há ${diffHours}h`;
-  if (diffDays < 7) return `há ${diffDays} dias`;
-  
-  return date.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' });
+  const locale = uiLocale();
+  if (!Number.isFinite(diffMs)) return '';
+  if (diffMins < 1) return uiText('agora');
+  if (diffDays < 7) return formatDistanceToNow(date, { addSuffix: true });
+  return date.toLocaleDateString(locale, { day: 'numeric', month: 'short' });
 }

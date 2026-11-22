@@ -28,7 +28,7 @@ export function VoiceMessagePlayer({ url, duration, isOwn }: VoiceMessagePlayerP
   const { resolvedUrl, error: resolutionError, onError: resolveError } = useResolvedMediaUrl(url || '');
 
   // Uploading = no url or empty placeholder (waiting for upload to finish)
-  const isUploading = !url || url === '';
+  const isUploading = !!isOwn && !url;
   // Playable = blob: (local) or http(s) (final)
   const isPlayable = !!resolvedUrl && (resolvedUrl.startsWith('http') || resolvedUrl.startsWith('blob:'));
 
@@ -96,11 +96,11 @@ export function VoiceMessagePlayer({ url, duration, isOwn }: VoiceMessagePlayerP
 
   // Timer for wait indicator
   useEffect(() => {
-    if (!isUploading && !isLoading) return;
+    if (!isUploading) return;
 
     const t = window.setInterval(() => setWaitSeconds((s) => s + 1), 1000);
     return () => window.clearInterval(t);
-  }, [isUploading, isLoading]);
+  }, [isUploading]);
 
   const togglePlay = async () => {
     if (!audioRef.current || error || !isPlayable) return;
@@ -164,7 +164,7 @@ export function VoiceMessagePlayer({ url, duration, isOwn }: VoiceMessagePlayerP
   }
 
   // Error state
-  if (error || resolutionError) {
+  if (!url || error || resolutionError) {
     return (
       <div className="flex items-center gap-3 min-w-[200px] opacity-60">
         <div
