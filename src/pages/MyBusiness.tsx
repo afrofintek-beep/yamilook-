@@ -25,7 +25,7 @@ export default function MyBusiness() {
             {profile.handle && <p className="text-sm">{t('business.mention', 'Menção')} · @negocio/{profile.handle}</p>}
           </div>}
           <Button onClick={() => setEditing(true)}>{t(profile ? 'entry.manageBusiness' : 'entry.business')}</Button>
-          {editing && <BusinessProfileEditor advertising={advertising} open onOpenChange={setEditing} />}
+          {editing && <BusinessProfileEditor fromBusinessEntry={params.get('abrir') === '1'} advertising={advertising} open onOpenChange={setEditing} />}
         </>
       )}
     </main>

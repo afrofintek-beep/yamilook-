@@ -17,7 +17,10 @@ import { preparePostImage, isHeicImage } from '@/lib/post-image';
 import { toast } from 'sonner';
 import { snapToGrid } from '@/lib/geo-privacy';
 
+import { businessCopy, initialScene, readEntry, clearEntry } from '@/lib/business-entry';
+
 interface BusinessProfileSetupProps {
+  fromBusinessEntry?: boolean;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onComplete?: (profile: BusinessProfile) => void;
@@ -42,9 +45,14 @@ export function BusinessProfileSetup(props: BusinessProfileSetupProps) {
   return <BusinessProfileEditor {...props} advertising={advertising} />;
 }
 
-export function BusinessProfileEditor({ open, onOpenChange, onComplete, advertising }: BusinessProfileSetupProps & { advertising: ReturnType<typeof useAdvertising> }) {
+export function BusinessProfileEditor({ open, onOpenChange, onComplete, advertising, fromBusinessEntry }: BusinessProfileSetupProps & { advertising: ReturnType<typeof useAdvertising> }) {
   useUiLocale();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const labels = businessCopy(i18n.language);
+  const [draft] = useState(() => fromBusinessEntry && !advertising.businessProfile ? readEntry() : undefined);
+  const [year, setYear] = useState('');
+  const [modes, setModes] = useState<string[]>([]);
+  const validYear = !year || (/^[0-9]{4}$/.test(year) && Number(year) > 0 && Number(year) <= new Date().getFullYear());
   const { createBusinessProfile, updateBusinessProfile, businessProfile, locationMarkets, loading } = advertising;
 
   const [step, setStep] = useState(1);
@@ -65,10 +73,10 @@ export function BusinessProfileEditor({ open, onOpenChange, onComplete, advertis
     return () => URL.revokeObjectURL(url);
   }, [photo]);
   useEffect(() => { if (!open) setPhoto(null); }, [open]);
-  const validHandle = !handle || /^[a-z0-9_]{3,30}$/.test(handle);
-  const [businessName, setBusinessName] = useState('');
+  const validHandle = (!handle && !!businessProfile) || /^[a-z0-9_]{3,30}$/.test(handle);
+  const [businessName, setBusinessName] = useState(draft?.name || '');
   const [category, setCategory] = useState('');
-  const [description, setDescription] = useState('');
+  const [description, setDescription] = useState(draft?.activity || '');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [website, setWebsite] = useState('');
@@ -80,6 +88,8 @@ export function BusinessProfileEditor({ open, onOpenChange, onComplete, advertis
   // Load existing profile data
   useEffect(() => {
     if (businessProfile) {
+      setYear(String(businessProfile.start_year ?? ''));
+      setModes(businessProfile.service_modes ?? []);
       setBusinessName(businessProfile.business_name);
       setHandle(businessProfile.handle || '');
       setAfroloc(businessProfile.afroloc_code || '');
@@ -149,7 +159,7 @@ export function BusinessProfileEditor({ open, onOpenChange, onComplete, advertis
 
   // Auto-detect on mount
   useEffect(() => {
-    if (open && !selectedMarket && locationMarkets.length > 0) {
+    if (open && businessProfile && !selectedMarket && locationMarkets.length > 0) {
       detectLocation();
     }
   }, [open, locationMarkets]);
@@ -172,6 +182,8 @@ export function BusinessProfileEditor({ open, onOpenChange, onComplete, advertis
         logo = bucket.getPublicUrl(filePath).data.publicUrl;
       }
       const profileData = {
+        start_year: year ? Number(year) : null,
+        service_modes: modes,
         logo_url: logo,
         handle: handle || null,
         afroloc_code: afroloc.trim() || null,
@@ -198,6 +210,7 @@ export function BusinessProfileEditor({ open, onOpenChange, onComplete, advertis
 
       if (!result && path) await supabase.storage.from("avatars").remove([path]);
       if (result) {
+        if (fromBusinessEntry) clearEntry();
         onComplete?.(result);
         setPhoto(null);
         onOpenChange(false);
@@ -217,25 +230,13 @@ export function BusinessProfileEditor({ open, onOpenChange, onComplete, advertis
       className="space-y-6"
     >
       <div className="rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/10 via-card to-card p-4 text-center">
-        <label className="relative mb-4 flex w-full cursor-pointer flex-wrap items-center justify-center gap-3 rounded-2xl focus-within:ring-2 focus-within:ring-ring">
-          {preview || businessProfile?.logo_url
-            ? <img src={preview || businessProfile?.logo_url || ''} alt="" className="h-24 w-36 max-w-full rounded-xl border bg-background object-contain" />
-            : <Building2 className="size-16 text-primary" />}
-          <span className="inline-flex min-h-11 items-center gap-2 rounded-full border bg-background px-4 text-sm font-medium"><Camera aria-hidden="true" className="size-4 text-primary" />{preview || businessProfile?.logo_url ? uiText("Alterar fotografia") : uiText("Escolher logótipo ou fotografia")}</span>
-          <input type="file" accept="image/jpeg,image/png,image/webp,.heic,.heif" className="sr-only" onChange={event => {
-            const file = event.target.files?.[0];
-            if (!file) return;
-            if (file.size > 12 * 1024 * 1024 || (!isHeicImage(file) && !['image/jpeg','image/png','image/webp'].includes(file.type))) {
-              toast.error(uiText("Escolha uma imagem até 12 MB.")); return;
-            }
-            setPhoto(file);
-          }} />
-        </label>
+        <img src={`/business-scenes/${draft?.scene || initialScene(i18n.language)}.webp`} alt="" className="mb-4 w-full rounded-xl object-cover" />
         <h3 className="text-lg font-semibold">{uiText("Informações do Negócio")}</h3>
         <p className="text-sm text-muted-foreground mt-1">{uiText("Diga-nos mais sobre o seu negócio")}</p>
       </div>
 
       <div className="space-y-4">
+        <label className="block">{labels.year}<Input type="text" inputMode="numeric" maxLength={4} aria-invalid={!validYear} value={year} onChange={e => setYear(e.target.value)} /></label>
         <div className="space-y-2">
           <Label htmlFor="businessName">{uiText("Nome do negócio *")}</Label>
           <Input
@@ -281,7 +282,7 @@ export function BusinessProfileEditor({ open, onOpenChange, onComplete, advertis
 
       <Button
         onClick={() => setStep(2)}
-        disabled={!businessName.trim() || !validHandle}
+        disabled={!businessName.trim() || !validHandle || !validYear}
         className="w-full"
       >{uiText("Continuar")}</Button>
     </motion.div>
@@ -294,6 +295,12 @@ export function BusinessProfileEditor({ open, onOpenChange, onComplete, advertis
       exit={{ opacity: 0, x: -20 }}
       className="space-y-6"
     >
+      <img className="w-full rounded-xl object-cover" alt="" src={`/business-scenes/${({beauty:'kinshasa',technology:'accra',restaurant:'addis'} as Record<string,string>)[category] || draft?.scene || initialScene(i18n.language)}.webp`} />
+      <div className="flex flex-wrap gap-3">
+        {(['shop','home','delivery','online'] as const).map(mode => <label key={mode} className="flex items-center gap-2 rounded-lg border p-2">
+          <input type="checkbox" checked={modes.includes(mode)} onChange={e => setModes(e.target.checked ? [...modes,mode] : modes.filter(item => item !== mode))} />{labels[mode]}
+        </label>)}
+      </div>
       <div className="text-center mb-8">
         <div className="w-20 h-20 bg-gradient-to-br from-primary/20 to-primary/5 rounded-2xl flex items-center justify-center mx-auto mb-4">
           <MapPin className="w-10 h-10 text-primary" />
@@ -371,6 +378,20 @@ export function BusinessProfileEditor({ open, onOpenChange, onComplete, advertis
       exit={{ opacity: 0, x: -20 }}
       className="space-y-6"
     >
+        <label className="relative mb-4 flex w-full cursor-pointer flex-wrap items-center justify-center gap-3 rounded-2xl focus-within:ring-2 focus-within:ring-ring">
+          {preview || businessProfile?.logo_url
+            ? <img src={preview || businessProfile?.logo_url || ''} alt="" className="h-24 w-36 max-w-full rounded-xl border bg-background object-contain" />
+            : <Camera className="size-10 text-primary" />}
+          <span className="inline-flex min-h-11 items-center gap-2 rounded-full border bg-background px-4 text-sm font-medium"><Camera aria-hidden="true" className="size-4 text-primary" />{preview || businessProfile?.logo_url ? uiText("Alterar fotografia") : uiText("Escolher logótipo ou fotografia")}</span>
+          <input type="file" accept="image/jpeg,image/png,image/webp,.heic,.heif" className="sr-only" onChange={event => {
+            const file = event.target.files?.[0];
+            if (!file) return;
+            if (file.size > 12 * 1024 * 1024 || (!isHeicImage(file) && !['image/jpeg','image/png','image/webp'].includes(file.type))) {
+              toast.error(uiText("Escolha uma imagem até 12 MB.")); return;
+            }
+            setPhoto(file);
+          }} />
+        </label>
       <div className="text-center mb-8">
         <div className="w-20 h-20 bg-gradient-to-br from-primary/20 to-primary/5 rounded-2xl flex items-center justify-center mx-auto mb-4">
           <Phone className="w-10 h-10 text-primary" />
@@ -442,20 +463,7 @@ export function BusinessProfileEditor({ open, onOpenChange, onComplete, advertis
 
       <div className="flex gap-3">
         <Button variant="outline" onClick={() => setStep(2)} className="flex-1">{uiText("Voltar")}</Button>
-        <Button
-          onClick={handleSubmit}
-          disabled={isSubmitting}
-          className="flex-1"
-        >
-          {isSubmitting ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <>
-              <CheckCircle2 className="w-4 h-4 mr-2" />
-              {businessProfile ? uiText("Guardar") : uiText("Criar Perfil")}
-            </>
-          )}
-        </Button>
+        <Button onClick={() => setStep(4)} className="flex-1">{labels.review}</Button>
       </div>
 
       {!businessProfile && (
@@ -482,7 +490,7 @@ export function BusinessProfileEditor({ open, onOpenChange, onComplete, advertis
 
         {/* Progress indicator */}
         <div className="flex gap-2 mb-4 shrink-0">
-          {[1, 2, 3].map((s) => (
+          {[1, 2, 3, 4].map((s) => (
             <div
               key={s}
               className={`h-1 flex-1 rounded-full transition-colors ${
@@ -498,6 +506,15 @@ export function BusinessProfileEditor({ open, onOpenChange, onComplete, advertis
               {step === 1 && renderStep1()}
               {step === 2 && renderStep2()}
               {step === 3 && renderStep3()}
+              {step === 4 && <section className="space-y-4 rounded-2xl border p-4">
+                {(preview || businessProfile?.logo_url) && <img src={preview || businessProfile?.logo_url || ''} className="w-full rounded-xl object-contain" alt="" />}
+                <h2 className="text-xl font-semibold">{businessName}</h2>
+                {handle && <p>@{handle}</p>}<p>{description}</p><p>{area}</p>
+                {afroloc && <p>AFROLOC · {afroloc}</p>}
+                <p>{modes.map(mode => labels[mode as 'shop'|'home'|'delivery'|'online']).join(' · ')}</p>
+                <div className="flex gap-3"><Button variant="outline" disabled={isSubmitting} onClick={() => setStep(3)}>{uiText("Voltar")}</Button>
+                <Button disabled={isSubmitting} onClick={handleSubmit}>{businessProfile ? uiText("Guardar") : labels.publish}</Button></div>
+              </section>}
             </AnimatePresence>
           </div>
         </ScrollArea>

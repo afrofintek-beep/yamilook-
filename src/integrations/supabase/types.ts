@@ -815,6 +815,8 @@ export type Database = {
           business_name: string
           handle: string | null
           afroloc_code: string | null
+          start_year: number | null
+          service_modes: string[]
           service_area: string | null
           city: string | null
           cover_image_url: string | null
@@ -841,6 +843,8 @@ export type Database = {
           business_name: string
           handle?: string | null
           afroloc_code?: string | null
+          start_year?: number | null
+          service_modes?: string[]
           service_area?: string | null
           city?: string | null
           cover_image_url?: string | null
@@ -867,6 +871,8 @@ export type Database = {
           business_name?: string
           handle?: string | null
           afroloc_code?: string | null
+          start_year?: number | null
+          service_modes?: string[]
           service_area?: string | null
           city?: string | null
           cover_image_url?: string | null
