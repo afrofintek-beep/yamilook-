@@ -43,7 +43,7 @@ export function AfricanReactionPicker({
       exit={{ opacity: 0, y: position === 'top' ? 4 : -4 }}
       transition={{ duration: 0.15 }}
       className={cn(
-        "absolute z-50",
+        "select-none [-webkit-user-select:none] [-webkit-touch-callout:none] absolute z-50",
         position === 'top' ? "bottom-full pb-2" : "top-full pt-2",
         "left-0"
       )}
