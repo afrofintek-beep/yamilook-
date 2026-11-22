@@ -407,7 +407,7 @@ export const PostCard = memo(function PostCard({ mediaPriority = false, post, on
             <Button
               variant="ghost"
               size="sm"
-              className="gap-2 px-2 min-h-11 min-w-11"
+              className="select-none [-webkit-user-select:none] [-webkit-touch-callout:none] gap-2 px-2 min-h-11 min-w-11"
               aria-pressed={!!localLiked}
               aria-label={t('feed.react', 'Reagir')}
               onTouchStart={handleTouchStart}
