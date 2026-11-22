@@ -1,4 +1,5 @@
 import type { Advertisement } from '@/hooks/useAdvertising';
+import { safeMediaUrl } from './safe-media-url';
 
 export interface AdAction {
   kind: 'url' | 'whatsapp' | 'none';
@@ -10,7 +11,10 @@ export interface AdAction {
 function normUrl(u?: string | null): string | null {
   const t = (u ?? '').trim();
   if (!t) return null;
-  return /^https?:\/\//i.test(t) ? t : `https://${t}`;
+  const hasScheme = /^[a-z][a-z\d+.-]*:/i.test(t);
+  // A domain with a port is still a bare address, not a URI scheme.
+  const domainWithPort = /^[^/:\s]+\.[^/:\s]+:\d+(?:[/?#]|$)/.test(t);
+  return safeMediaUrl(hasScheme && !domainWithPort ? t : `https://${t}`) ?? null;
 }
 
 /** Angolan phone → international digits for wa.me (local 9xxxxxxxx → 244…). */

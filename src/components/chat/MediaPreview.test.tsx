@@ -43,6 +43,29 @@ it('does not expose the private reference as a network URL when authorization fa
   expect(container.querySelector('img')).not.toHaveAttribute('src');
 });
 
+it('rejects an unsupported URL returned from an attachment signing response', async () => {
+  createSignedUrl.mockResolvedValue({ data: { signedUrl: 'javascript:void(0)' }, error: null });
+  const { result } = renderHook(() => useResolvedMediaUrl('chat-attachment://c/u/id/file.pdf'));
+  await waitFor(() => expect(result.current.error).toBe(true));
+  expect(result.current.resolvedUrl).toBeUndefined();
+});
+
+it('immediately removes a previous URL when a message changes to an unsafe reference', () => {
+  const { result, rerender } = renderHook(({ source }) => useResolvedMediaUrl(source), { initialProps: { source: url } });
+  expect(result.current.resolvedUrl).toBe(url);
+  rerender({ source: 'data:text/html,<p>untrusted</p>' });
+  expect(result.current.resolvedUrl).toBeUndefined();
+  expect(result.current.error).toBe(true);
+  expect(createSignedUrl).not.toHaveBeenCalled();
+});
+
+it('keeps an optimistic locally recorded voice blob usable', () => {
+  const local = `blob:${window.location.origin}/19fa8eb1-64d1-47b2-8df4-2f45dbade7f0`;
+  const { result } = renderHook(() => useResolvedMediaUrl(local));
+  expect(result.current.resolvedUrl).toBe(local);
+  expect(createSignedUrl).not.toHaveBeenCalled();
+});
+
 describe('Papos video presentation', () => {
   it('uses a saved cover without loading the original video or signing a public URL', () => {
     const { container } = render(<MediaThumbnail url={url} type="video" posterUrl="https://example.com/poster.jpg" durationSeconds={17} />);

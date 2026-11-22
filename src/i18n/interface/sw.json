@@ -3503,5 +3503,9 @@
   "Email do promotor (campanha de 10 convites)": "Barua pepe ya mratibu (kampeni ya mialiko 10)",
   "Convite para {{campaign}}": "Mwaliko kwa {{campaign}}",
   "Recebeste um convite pessoal para te inscreveres na Yamilook.": "Umepokea mwaliko binafsi wa kujisajili kwenye Yamilook.",
-  "Aceitar convite e inscrever-me": "Kubali mwaliko na ujisajili"
+  "Aceitar convite e inscrever-me": "Kubali mwaliko na ujisajili",
+  "Este tipo de ficheiro não é permitido. Escolhe uma fotografia, vídeo, áudio ou documento compatível.": "Aina hii ya faili hairuhusiwi. Chagua picha, video, sauti au hati inayotumika.",
+  "O nome do ficheiro não é válido. Altera o nome e tenta novamente.": "Jina la faili si sahihi. Badilisha jina na ujaribu tena.",
+  "O formato do ficheiro não corresponde ao nome. Escolhe o ficheiro original.": "Umbizo la faili halilingani na jina lake. Chagua faili asili.",
+  "Não foi possível verificar o ficheiro. Seleciona-o novamente.": "Faili haikuweza kukaguliwa. Ichague tena."
 }

@@ -3503,5 +3503,9 @@
   "Email do promotor (campanha de 10 convites)": "Email ya mobongisi (kampanye ya mabiangi 10)",
   "Convite para {{campaign}}": "Libyangi na {{campaign}}",
   "Recebeste um convite pessoal para te inscreveres na Yamilook.": "Ozwi libyangi mpo na komikomisa na Yamilook.",
-  "Aceitar convite e inscrever-me": "Kondima libyangi mpe komikomisa"
+  "Aceitar convite e inscrever-me": "Kondima libyangi mpe komikomisa",
+  "Este tipo de ficheiro não é permitido. Escolhe uma fotografia, vídeo, áudio ou documento compatível.": "Lolenge oyo ya fisyé epesami nzela te. Poná fɔtɔ, video, mongongo to mokanda oyo esimbami.",
+  "O nome do ficheiro não é válido. Altera o nome e tenta novamente.": "Nkombo ya fisyé ezali malamu te. Bongolá nkombo mpe meká lisusu.",
+  "O formato do ficheiro não corresponde ao nome. Escolhe o ficheiro original.": "Lolenge ya fisyé ekokani te na nkombo na yango. Poná fisyé ya ebandeli.",
+  "Não foi possível verificar o ficheiro. Seleciona-o novamente.": "Tokoki te kotala fisyé. Poná yango lisusu."
 }

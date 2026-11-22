@@ -12,8 +12,9 @@ export function ChatMediaLink({ href = '', children, ...props }: AnchorHTMLAttri
     const timer = window.setInterval(retry, 240000);
     return () => window.clearInterval(timer);
   }, [href, retry]);
-  return <a {...props} href={resolvedUrl} aria-disabled={!resolvedUrl || error} onClick={event => {
-    if (!resolvedUrl || error) event.preventDefault();
+  const rel = Array.from(new Set([...(props.rel?.split(/\s+/).filter(Boolean) || []), 'noopener', 'noreferrer'])).join(' ');
+  return <a {...props} rel={rel} href={error ? undefined : resolvedUrl} aria-disabled={!resolvedUrl || error} onClick={event => {
+    if (!resolvedUrl || error) { event.preventDefault(); return; }
     props.onClick?.(event);
   }}>{error ? uiText("Ficheiro indisponível") : children}</a>;
 }

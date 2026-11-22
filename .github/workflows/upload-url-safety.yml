@@ -1,0 +1,66 @@
+name: Upload and URL safety
+on:
+  pull_request:
+    paths:
+      - 'src/lib/upload-safety*'
+      - 'src/lib/safe-media-url*'
+      - 'src/lib/ad-action*'
+      - 'src/lib/private-chat-media*'
+      - 'src/lib/post-upload*'
+      - 'src/hooks/useMediaUpload*'
+      - 'src/components/chat/**'
+      - 'src/components/advertising/AdPreviewDialog*'
+      - 'src/components/ritmos/CreateRitmoSheet.tsx'
+      - 'src/i18n/interface/**'
+      - 'tests/security/**'
+      - 'index.html'
+      - 'papos-app/index.html'
+      - 'vercel.json'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/upload-url-safety.yml'
+permissions:
+  contents: read
+jobs:
+  safety-regressions:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      VITE_SUPABASE_URL: https://example.supabase.co
+      VITE_SUPABASE_PUBLISHABLE_KEY: synthetic-security-test-key
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Critical dependency gate
+        # Existing lower-severity findings are documented in the review.
+        # This is dependency advisory matching, not an antivirus scan.
+        run: npm audit --omit=dev --ignore-scripts --audit-level=critical
+      - name: Upload and URL regressions
+        run: >-
+          npm test -- --maxWorkers=2
+          src/lib/upload-safety.test.ts
+          src/lib/safe-media-url.test.ts
+          src/lib/ad-action.test.ts
+          src/lib/private-chat-media.test.ts
+          src/lib/post-upload.test.ts
+          src/lib/chat-media.test.ts
+          src/hooks/useMediaUpload.test.tsx
+          src/components/chat/EnhancedChatInput.upload-security.test.tsx
+          src/components/chat/PrivateMediaElements.test.tsx
+          src/components/chat/MediaPreview.test.tsx
+          src/components/chat/EnhancedMessageBubble.test.tsx
+          src/components/advertising/AdPreviewDialog.test.tsx
+          src/test/yamilook-startup.test.ts
+          src/features/papos/startup-recovery.test.ts
+      - name: Browser isolation
+        run: |
+          npx playwright install --with-deps chromium
+          node --test tests/security/browser-isolation.test.mjs
+      - run: npx tsc --noEmit -p tsconfig.app.json
+      - run: npm run build

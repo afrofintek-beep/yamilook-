@@ -3503,5 +3503,9 @@
   "Email do promotor (campanha de 10 convites)": "Email do promotor (campanha de 10 convites)",
   "Convite para {{campaign}}": "Convite para {{campaign}}",
   "Recebeste um convite pessoal para te inscreveres na Yamilook.": "Recebeste um convite pessoal para te inscreveres na Yamilook.",
-  "Aceitar convite e inscrever-me": "Aceitar convite e inscrever-me"
+  "Aceitar convite e inscrever-me": "Aceitar convite e inscrever-me",
+  "Este tipo de ficheiro não é permitido. Escolhe uma fotografia, vídeo, áudio ou documento compatível.": "Este tipo de ficheiro não é permitido. Escolhe uma fotografia, vídeo, áudio ou documento compatível.",
+  "O nome do ficheiro não é válido. Altera o nome e tenta novamente.": "O nome do ficheiro não é válido. Altera o nome e tenta novamente.",
+  "O formato do ficheiro não corresponde ao nome. Escolhe o ficheiro original.": "O formato do ficheiro não corresponde ao nome. Escolhe o ficheiro original.",
+  "Não foi possível verificar o ficheiro. Seleciona-o novamente.": "Não foi possível verificar o ficheiro. Seleciona-o novamente."
 }

@@ -32,8 +32,23 @@ describe('Papos video uploads', () => {
     const { result } = renderHook(useMediaUpload);
     let saved: Awaited<ReturnType<typeof result.current.uploadMedia>>;
     await act(async () => { saved = await result.current.uploadMedia(new File(['clip'], 'clip.mov'), 'video', { videoPoster: true }); });
-    expect(saved!.url).toContain('clip.mov');
+    expect(saved!.url).toMatch(/\/[0-9a-f-]{36}\.mov$/);
+    expect(saved!.name).toBe('clip.mov');
     expect(saved!.thumbnailUrl).toBeUndefined();
+    expect(result.current.uploading).toBe(false);
+  });
+
+  it.each([
+    ['photo.svg', 'image/svg+xml', '<svg></svg>'],
+    ['clip.mov', 'video/quicktime', '<html></html>'],
+    ['invoice.exe.pdf', 'application/pdf', 'fixture'],
+  ])('blocks %s before upload or video decoding', async (name, type, body) => {
+    const { result } = renderHook(useMediaUpload);
+    await act(async () => {
+      await expect(result.current.uploadMedia(new File([body], name, { type }), 'video', { videoPoster: true })).rejects.toThrow(/permitido/);
+    });
+    expect(upload).not.toHaveBeenCalled();
+    expect(createVideoPoster).not.toHaveBeenCalled();
     expect(result.current.uploading).toBe(false);
   });
 });

@@ -4,6 +4,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { chatMediaContentType, chatMediaType, createVideoPoster } from '@/lib/chat-media';
+import { assertUploadAllowed, uploadObjectFilename, UploadAdmissionError } from '@/lib/upload-safety';
 
 export function useVoiceRecorder(conversationId?: string) {
   const { user } = useAuth();
@@ -283,10 +284,11 @@ export function useMediaUpload() {
     setUploading(true);
     setProgress(0);
 
-    const fileName = `${user.id}/${Date.now()}_${file.name}`;
     const bucket = 'media';
 
     try {
+      await assertUploadAllowed(file, file.name, chatMediaContentType(file));
+      const fileName = `${user.id}/${uploadObjectFilename(file.name)}`;
       const posterPromise = options.videoPoster && chatMediaType(file) === 'video'
         ? createVideoPoster(file).catch(() => null) : Promise.resolve(null);
       if (options.conversationId) {
@@ -346,6 +348,7 @@ export function useMediaUpload() {
         durationSeconds: poster?.durationSeconds,
       };
     } catch (err) {
+      if (err instanceof UploadAdmissionError) throw err;
       console.error('Upload error:', err);
       return null;
     } finally {

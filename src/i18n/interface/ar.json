@@ -3503,5 +3503,9 @@
   "Email do promotor (campanha de 10 convites)": "البريد الإلكتروني لمنظّم الحملة (10 دعوات)",
   "Convite para {{campaign}}": "دعوة إلى {{campaign}}",
   "Recebeste um convite pessoal para te inscreveres na Yamilook.": "تلقيت دعوة شخصية للتسجيل في Yamilook.",
-  "Aceitar convite e inscrever-me": "قبول الدعوة والتسجيل"
+  "Aceitar convite e inscrever-me": "قبول الدعوة والتسجيل",
+  "Este tipo de ficheiro não é permitido. Escolhe uma fotografia, vídeo, áudio ou documento compatível.": "هذا النوع من الملفات غير مسموح به. اختر صورة أو فيديو أو ملفاً صوتياً أو مستنداً متوافقاً.",
+  "O nome do ficheiro não é válido. Altera o nome e tenta novamente.": "اسم الملف غير صالح. غيّر اسمه وحاول مرة أخرى.",
+  "O formato do ficheiro não corresponde ao nome. Escolhe o ficheiro original.": "صيغة الملف لا تتطابق مع اسمه. اختر الملف الأصلي.",
+  "Não foi possível verificar o ficheiro. Seleciona-o novamente.": "تعذّر فحص الملف. اختره مرة أخرى."
 }
