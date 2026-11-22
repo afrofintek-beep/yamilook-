@@ -42,7 +42,10 @@ export default function PaymentPoint() {
   const { user } = useAuth();
   const [overview, setOverview] = useState<Overview>();
   const [order, setOrder] = useState<PaymentOrder>();
-  const [dialog, setDialog] = useState<'create' | 'scan' | 'topup' | 'withdraw' | 'info' | 'security' | null>(null);
+  const [dialog, setDialog] = useState<'create' | 'scan' | 'topup' | 'withdraw' | 'info' | 'security' | null>(() => {
+    const action = searchParams.get('action');
+    return !id && (action === 'scan' || action === 'create') ? action : null;
+  });
   const [amount, setAmount] = useState('');
   const [destination, setDestination] = useState('');
   const [error, setError] = useState('');
