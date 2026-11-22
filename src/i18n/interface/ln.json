@@ -3504,5 +3504,9 @@
   "Email do promotor (campanha de 10 convites)": "Email ya mobongisi (kampanye ya mabiangi 10)",
   "Convite para {{campaign}}": "Libyangi na {{campaign}}",
   "Recebeste um convite pessoal para te inscreveres na Yamilook.": "Ozwi libyangi mpo na komikomisa na Yamilook.",
-  "Aceitar convite e inscrever-me": "Kondima libyangi mpe komikomisa"
+  "Aceitar convite e inscrever-me": "Kondima libyangi mpe komikomisa",
+  "Aplica-se apenas às mensagens enviadas depois de guardar. O prazo conta a partir do envio; as mensagens anteriores mantêm-se. A opção mínima é 24 horas.": "Etali kaka ba messages oyo okotinda nsima ya kobomba. Ntango ebandaka kotangama ntango message etindami. Ba messages ya liboso ekotikala. Ntango ya mokuse ezali ngonga 24.",
+  "Disappearing messages enabled": "Ba messages oyo elimwaka efungwami",
+  "Disappearing messages disabled": "Ba messages oyo elimwaka ekangami",
+  "A duração não foi confirmada. Tenta novamente.": "Tokoki kondimisa ntango te. Meka lisusu."
 }
