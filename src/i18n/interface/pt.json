@@ -3504,5 +3504,9 @@
   "Email do promotor (campanha de 10 convites)": "Email do promotor (campanha de 10 convites)",
   "Convite para {{campaign}}": "Convite para {{campaign}}",
   "Recebeste um convite pessoal para te inscreveres na Yamilook.": "Recebeste um convite pessoal para te inscreveres na Yamilook.",
-  "Aceitar convite e inscrever-me": "Aceitar convite e inscrever-me"
+  "Aceitar convite e inscrever-me": "Aceitar convite e inscrever-me",
+  "Aplica-se apenas às mensagens enviadas depois de guardar. O prazo conta a partir do envio; as mensagens anteriores mantêm-se. A opção mínima é 24 horas.": "Aplica-se apenas às mensagens enviadas depois de guardar. O prazo conta a partir do envio; as mensagens anteriores mantêm-se. A opção mínima é 24 horas.",
+  "Disappearing messages enabled": "Mensagens temporárias activadas",
+  "Disappearing messages disabled": "Mensagens temporárias desactivadas",
+  "A duração não foi confirmada. Tenta novamente.": "Não foi possível confirmar a duração. Tenta novamente."
 }

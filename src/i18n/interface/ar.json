@@ -3504,5 +3504,9 @@
   "Email do promotor (campanha de 10 convites)": "البريد الإلكتروني لمنظّم الحملة (10 دعوات)",
   "Convite para {{campaign}}": "دعوة إلى {{campaign}}",
   "Recebeste um convite pessoal para te inscreveres na Yamilook.": "تلقيت دعوة شخصية للتسجيل في Yamilook.",
-  "Aceitar convite e inscrever-me": "قبول الدعوة والتسجيل"
+  "Aceitar convite e inscrever-me": "قبول الدعوة والتسجيل",
+  "Aplica-se apenas às mensagens enviadas depois de guardar. O prazo conta a partir do envio; as mensagens anteriores mantêm-se. A opção mínima é 24 horas.": "ينطبق فقط على الرسائل المرسلة بعد الحفظ. تبدأ المدة عند إرسال كل رسالة. تبقى الرسائل السابقة. الحد الأدنى للمدة هو 24 ساعة.",
+  "Disappearing messages enabled": "تم تفعيل الرسائل المؤقتة",
+  "Disappearing messages disabled": "تم إيقاف الرسائل المؤقتة",
+  "A duração não foi confirmada. Tenta novamente.": "تعذر تأكيد المدة. حاول مرة أخرى."
 }

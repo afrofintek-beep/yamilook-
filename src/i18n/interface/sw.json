@@ -3504,5 +3504,9 @@
   "Email do promotor (campanha de 10 convites)": "Barua pepe ya mratibu (kampeni ya mialiko 10)",
   "Convite para {{campaign}}": "Mwaliko kwa {{campaign}}",
   "Recebeste um convite pessoal para te inscreveres na Yamilook.": "Umepokea mwaliko binafsi wa kujisajili kwenye Yamilook.",
-  "Aceitar convite e inscrever-me": "Kubali mwaliko na ujisajili"
+  "Aceitar convite e inscrever-me": "Kubali mwaliko na ujisajili",
+  "Aplica-se apenas às mensagens enviadas depois de guardar. O prazo conta a partir do envio; as mensagens anteriores mantêm-se. A opção mínima é 24 horas.": "Inatumika tu kwa ujumbe unaotumwa baada ya kuhifadhi. Muda huanza kuhesabiwa ujumbe unapotumwa. Ujumbe wa awali unabaki. Muda wa chini ni saa 24.",
+  "Disappearing messages enabled": "Ujumbe unaopotea umewashwa",
+  "Disappearing messages disabled": "Ujumbe unaopotea umezimwa",
+  "A duração não foi confirmada. Tenta novamente.": "Imeshindikana kuthibitisha muda. Jaribu tena."
 }

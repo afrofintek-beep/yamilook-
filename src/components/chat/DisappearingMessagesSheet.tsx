@@ -75,9 +75,9 @@ export function DisappearingMessagesSheet({
       .single();
 
     if (error || !data || data.disappearing_messages_duration !== selectedDuration) {
-      toast({ title: uiText("Não foi possível guardar"), description: error?.message || 'A duração não foi confirmada. Tenta novamente.', variant: 'destructive' });
+      toast({ title: uiText("Não foi possível guardar"), description: uiText("A duração não foi confirmada. Tenta novamente."), variant: 'destructive' });
     } else {
-      toast({ title: selectedDuration ? 'Disappearing messages enabled' : 'Disappearing messages disabled' });
+      toast({ title: uiText(selectedDuration ? "Disappearing messages enabled" : "Disappearing messages disabled") });
       onOpenChange(false);
     }
 
@@ -130,7 +130,7 @@ export function DisappearingMessagesSheet({
           </div>
         </div>
 
-      <div className="flex gap-3 mt-6">
+      <div className="sticky bottom-0 z-10 flex gap-3 mt-6 bg-background py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
         <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>{uiText("Cancel")}</Button>
         <Button
           className="flex-1 bg-gradient-primary text-white"
@@ -145,14 +145,14 @@ export function DisappearingMessagesSheet({
     <span className="flex items-center gap-2">
       <Timer className="w-5 h-5 text-primary" />{uiText("Disappearing Messages")}</span>
   );
-  const description = 'Aplica-se apenas às mensagens enviadas depois de guardar. O prazo conta a partir do envio; as mensagens anteriores mantêm-se. A opção mínima é 24 horas.';
+  const description = uiText("Aplica-se apenas às mensagens enviadas depois de guardar. O prazo conta a partir do envio; as mensagens anteriores mantêm-se. A opção mínima é 24 horas.");
 
   // WhatsApp/Instagram pattern: compact centered dialog on desktop, bottom sheet
   // on mobile.
   if (isMobile) {
     return (
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="bottom" className="h-auto max-h-[88vh] overflow-y-auto rounded-t-3xl">
+        <SheetContent side="bottom" className="h-auto max-h-[88dvh] overflow-y-auto overscroll-contain rounded-t-3xl">
           <SheetHeader className="mb-6">
             <SheetTitle>{title}</SheetTitle>
             <SheetDescription>{description}</SheetDescription>
@@ -165,7 +165,7 @@ export function DisappearingMessagesSheet({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[90dvh] overflow-y-auto overscroll-contain">
         <DialogHeader className="mb-2">
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
