@@ -1,12 +1,15 @@
+import { useAppSurface } from '@/lib/app-surface';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ShieldCheck, Wallet, List, Store } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export function WalletHeader({ section = 'wallet', asset = 'kwanzas', admin = false, security, back = '/feed' }: { section?: string; asset?: 'kwanzas' | 'kumbu'; admin?: boolean; security?: () => void; back?: string }) {
   const navigate = useNavigate();
+  const surface = useAppSurface();
+  const destination = surface === 'papos' && back === '/feed' ? '/papos' : back;
   return <header className="sticky top-0 z-20 border-b bg-background/95 backdrop-blur">
     <div className="mx-auto flex max-w-xl items-center gap-2 px-3 py-2">
-      <Button variant="ghost" className="min-h-11 gap-1 px-2" onClick={() => navigate(back)}><ArrowLeft className="h-5 w-5" />Voltar</Button>
+      <Button variant="ghost" className="min-h-11 gap-1 px-2" onClick={() => navigate(destination)}><ArrowLeft className="h-5 w-5" />Voltar</Button>
       <h1 className="flex-1 text-lg font-semibold">{section === 'business' ? 'MEU NEGÓCIO' : section === 'movements' ? 'MOVIMENTOS' : 'CARTEIRA'}</h1>
       <span className="text-xs text-muted-foreground">{asset === 'kwanzas' ? 'Angola · Kz' : 'Kumbu'}</span>
       {security && <Button variant="ghost" size="icon" aria-label="Segurança das transferências" onClick={security}><ShieldCheck className="h-5 w-5" /></Button>}

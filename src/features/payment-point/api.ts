@@ -33,11 +33,11 @@ export function parseAmount(value: string): number {
   return amount;
 }
 export const money = (value: number) => new Intl.NumberFormat('pt-AO', { style: 'currency', currency: 'AOA' }).format(value / 100);
-export const orderLink = (id: string) => `${window.location.origin}/payment-point/${id}`;
+export const orderLink = (id: string) => `${window.location.origin}${window.location.pathname.startsWith("/papos-app/") ? "/papos-app" : ""}/payment-point/${id}`;
 export function parseOrderLink(value: string): string {
   const url = new URL(value);
   if (url.origin !== window.location.origin) throw new Error('Este QR não pertence à Yamilook.');
-  const match = url.pathname.match(/^\/payment-point\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\/?$/i);
+  const match = url.pathname.match(/^\/(?:papos-app\/)?payment-point\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\/?$/i);
   if (!match) throw new Error('QR de pagamento inválido.');
   return match[1];
 }

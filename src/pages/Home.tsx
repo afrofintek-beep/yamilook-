@@ -234,6 +234,7 @@ export default function Home() {
           <div className="flex items-center gap-1">
             {!selectionMode && (
               <>
+                {surface === 'papos' && <Button variant="outline" size="sm" onClick={() => navigate('/payment-point')}>{uiText("Carteira")}</Button>}
                 <Button variant="ghost" size="icon" className="rounded-xl h-9 w-9" onClick={() => setSearchOpen(true)}>
                   <Search className="w-4.5 h-4.5" />
                 </Button>
