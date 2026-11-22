@@ -3,7 +3,7 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import CallPushSettings from './CallPushSettings';
 const { check, enable, disable, auth } = vi.hoisted(() => ({ check: vi.fn(), enable: vi.fn(), disable: vi.fn(), auth: { user: { id: 'u' } as { id: string } | null } }));
 vi.mock('@/hooks/useAuth', () => ({ useAuth: () => auth }));
-vi.mock('@/lib/call-push', () => ({ callPushStatus: check, enableCallPush: enable, disableCallPush: disable }));
+vi.mock('@/lib/call-push', () => ({ paymentPushPreference: async () => false, callPushStatus: check, enableCallPush: enable, disableCallPush: disable }));
 const ready = { supported: true, message: null, enabled: false, publicKey: 'AQID', permission: 'default' };
 beforeEach(() => { vi.resetAllMocks(); auth.user = { id: 'u' }; check.mockResolvedValue(ready); enable.mockResolvedValue(undefined); });
 afterEach(cleanup);

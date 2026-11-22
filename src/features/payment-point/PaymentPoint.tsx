@@ -1,3 +1,4 @@
+import { useMessageNotification } from '@/hooks/useMessageNotification';
 import { PaymentRejected } from './api';
 import { TransferSecurity } from './TransferSecurity';
 import { WalletHeader, WalletNavigation } from './WalletNavigation';
@@ -42,6 +43,20 @@ export default function PaymentPoint() {
   const { user } = useAuth();
   const [overview, setOverview] = useState<Overview>();
   const [order, setOrder] = useState<PaymentOrder>();
+  const { notifyMessage } = useMessageNotification();
+  const pendingSellerOrder = useRef<string>();
+  useEffect(() => {
+    if (!order?.own || order.id !== id) return;
+    if (order.status === 'pending') pendingSellerOrder.current = order.id;
+    if (order.status === 'paid' && pendingSellerOrder.current === order.id) {
+      pendingSellerOrder.current = undefined;
+      const key = 'massa-receipt:' + order.id;
+      if (!sessionStorage.getItem(key)) {
+        sessionStorage.setItem(key, '1');
+        notifyMessage();
+      }
+    }
+  }, [order, id, notifyMessage]);
   const [dialog, setDialog] = useState<'create' | 'scan' | 'topup' | 'withdraw' | 'info' | 'security' | null>(() => {
     const action = searchParams.get('action');
     return !id && (action === 'scan' || action === 'create') ? action : null;
@@ -210,14 +225,18 @@ export default function PaymentPoint() {
         <p>Recebe {order.seller_name || 'Utilizador Yamilook'} · carteira …{order.seller_id.slice(-6)}</p>
         <p className="text-sm">Comissão de teste {money(0)} · Total {money(order.amount)}</p>
         <p className="text-2xl font-semibold">{money(order.amount)}</p><p>{order.description}</p>
-        <p>{labels[order.status]} · teste</p>
+        <p role="status">{order.status === 'paid'
+          ? (order.own ? 'Pagamento simulado recebido' : 'Pagamento simulado concluído') + ' · ' + money(order.amount)
+          : order.status === 'pending' && order.own
+            ? (Date.parse(order.expires_at) > Date.now() ? 'A aguardar pagamento' : 'Pedido expirado')
+            : labels[order.status] + ' · teste'}</p>
         <p className="text-xs text-muted-foreground">Válido até {new Date(order.expires_at).toLocaleString('pt-AO')}</p>
         {order.status === 'pending' && new Date(order.expires_at) > new Date() && <>
           {order.own ? <>
             <div className="bg-white p-4 rounded-lg w-fit"><QRCodeSVG value={orderLink(order.id)} size={200} /></div>
             <Button onClick={share}>Partilhar pedido</Button>
             <Button variant="outline" disabled={busy} onClick={() => run('cancel', order.id)}>Cancelar pedido</Button>
-          </> : <Button disabled={busy || !wallet || wallet.purchased + wallet.earned < order.amount} onClick={() => run('pay', order.id)}>Pagar {money(order.amount)} a {order.seller_name || order.seller_id}</Button>}
+          </> : <Button disabled={busy || !wallet || wallet.purchased + wallet.earned < order.amount} onClick={() => run('pay', order.id)}>Simular pagamento de {money(order.amount)} a {order.seller_name || order.seller_id}</Button>}
           {!order.own && wallet && wallet.purchased + wallet.earned < order.amount && <div className="space-y-2"><p>Carregue saldo de teste para pagar este pedido.</p><Button onClick={() => openDialog('topup')}>Carregar saldo</Button></div>}
         </>}
         {order.own && order.status === 'paid' && <Button variant="outline" disabled={busy} onClick={() => {

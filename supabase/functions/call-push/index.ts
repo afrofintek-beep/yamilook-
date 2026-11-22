@@ -43,6 +43,25 @@ Deno.serve(async req => {
       if (error) throw error;
       return reply({ ok: true });
     }
+    if (body.action === 'payment-preference') {
+      if (!allowedEndpoint(body.endpoint)) return reply({ error: 'endpoint' }, 400);
+      const query = typeof body.enabled === 'boolean'
+        ? db.from('call_push_subscriptions').update({ payment_alert_owner: body.enabled ? user.id : null })
+        : db.from('call_push_subscriptions');
+      const { data, error } = await query.select('payment_alert_owner').eq('user_id', user.id).eq('endpoint', body.endpoint).single();
+      if (error) throw error;
+      return reply({ enabled: data.payment_alert_owner === user.id });
+    }
+    if (body.action === 'payment-request') {
+      if (!UUID.test(body.orderId) || !UUID.test(body.conversationId)) return reply({ error: 'request' }, 400);
+      const { data, error } = await db.rpc('claim_payment_request_push', { p_order: body.orderId, p_conversation: body.conversationId, p_sender: user.id });
+      if (error) throw error;
+      await Promise.all((data ?? []).filter(s => allowedEndpoint(s.endpoint)).map(s =>
+        webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
+          JSON.stringify({ type: 'payment-request', conversationId: body.conversationId, orderId: body.orderId }),
+          { TTL: 300, timeout: 8000, vapidDetails: { subject: subject!, publicKey: publicKey!, privateKey: privateKey! } })));
+      return reply({ ok: true });
+    }
     if (body.action !== 'send' || typeof body.callId !== 'string' || !UUID.test(body.callId)) return reply({ error: 'request' }, 400);
     const { data: call, error: callError } = await db.from('calls').select('id,status,initiator_id,created_at').eq('id', body.callId).maybeSingle();
     if (callError) throw callError;

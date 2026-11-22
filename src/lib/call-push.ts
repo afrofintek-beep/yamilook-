@@ -98,3 +98,15 @@ export async function notifyIncomingCall(callId: string) {
   catch { console.warn('Alerta push indisponível; a chamada continua na aplicação.'); }
 }
 
+
+export async function notifyPaymentRequest(orderId: string, conversationId: string) {
+  try { await api({ action: 'payment-request', orderId, conversationId }); }
+  catch { console.warn('Aviso de pagamento indisponível.'); }
+}
+
+export async function paymentPushPreference(enabled?: boolean): Promise<boolean> {
+  const subscription = await (await registration()).pushManager.getSubscription();
+  if (!subscription) return false;
+  const result = await api({ action: 'payment-preference', endpoint: subscription.endpoint, enabled });
+  return result.enabled === true;
+}

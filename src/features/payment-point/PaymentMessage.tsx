@@ -7,10 +7,11 @@ export function paymentIdFromMessage(content: string | null): string | null {
   const link = content.split('\n').at(-1)?.replace(/^Pagar pedido: /, '');
   try { return link ? parseOrderLink(link) : null; } catch { return null; }
 }
-export function PaymentMessage({ id }: { id: string }) {
+export function PaymentMessage({ id, content }: { id: string; content: string }) {
+  const lines = content.split('\n');
   return <WalletAccessGate silent><div className="space-y-2 py-1">
     <p className="text-sm font-medium">Pedido de pagamento · Angola · Teste</p>
-    <p className="text-xs">Consulte o destinatário, o valor e o estado antes de confirmar.</p>
+    <p className="text-xs">{lines.slice(1, -2).join(' ')} · {lines.at(-2)}</p>
     <Link className="inline-flex rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground" to={`/payment-point/${id}`}>Ver pedido</Link>
   </div></WalletAccessGate>;
 }

@@ -376,7 +376,7 @@ export function EnhancedMessageBubble({
         );
       default: {
         const paymentId = message.message_type === 'text' ? paymentIdFromMessage(message.content) : null;
-        if (paymentId) return <PaymentMessage id={paymentId} />;
+        if (paymentId) return <PaymentMessage id={paymentId} content={message.content!} />;
         const postId = message.message_type === 'text' ? sharedPostId(message.content) : null;
         if (postId) return <PostSharePreview id={postId} interactive={!selectionMode} />;
         const address = message.message_type === 'text' ? parseChatAfroloc(message.content) : null;
