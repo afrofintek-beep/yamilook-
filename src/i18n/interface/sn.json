@@ -3504,5 +3504,9 @@
   "Email do promotor (campanha de 10 convites)": "Imeyili yemurongi (mushandirapamwe wekokero 10)",
   "Convite para {{campaign}}": "Kokero ku{{campaign}}",
   "Recebeste um convite pessoal para te inscreveres na Yamilook.": "Wagamuchira kokero yako pachako yekunyoresa paYamilook.",
-  "Aceitar convite e inscrever-me": "Gamuchira kokero unyorese"
+  "Aceitar convite e inscrever-me": "Gamuchira kokero unyorese",
+  "Aplica-se apenas às mensagens enviadas depois de guardar. O prazo conta a partir do envio; as mensagens anteriores mantêm-se. A opção mínima é 24 horas.": "Izvi zvinoshanda chete pamameseji anotumirwa mushure mekuchengetedza. Nguva inotanga kuverengwa panotumirwa meseji. Mameseji ekare anoramba aripo. Nguva pfupi zvikuru maawa 24.",
+  "Disappearing messages enabled": "Mameseji anonyangarika abatidzwa",
+  "Disappearing messages disabled": "Mameseji anonyangarika adzimwa",
+  "A duração não foi confirmada. Tenta novamente.": "Hatina kukwanisa kusimbisa nguva. Edza zvakare."
 }
