@@ -1,3 +1,5 @@
+import { useReceiveLabels } from '@/features/payment-point/receive-labels';
+import { ReceiveOptions } from './ReceiveOptions';
 import { useMessageNotification } from '@/hooks/useMessageNotification';
 import { PaymentRejected } from './api';
 import { TransferSecurity } from './TransferSecurity';
@@ -25,6 +27,7 @@ const labels: Record<string, string> = {
 };
 export default function PaymentPoint() {
   const { id } = useParams();
+  const copy = useReceiveLabels();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const requestedTab = searchParams.get('tab') || 'wallet';
@@ -207,7 +210,7 @@ export default function PaymentPoint() {
         <div className="grid grid-cols-4 gap-2">
           {[
             { label: 'Pagar', icon: QrCode, action: 'scan' as const },
-            { label: 'Receber', icon: ArrowDownLeft, action: 'create' as const },
+            { label: copy.receive, icon: ArrowDownLeft, action: 'create' as const },
             { label: 'Carregar', icon: Plus, action: 'topup' as const },
             { label: 'Levantar', icon: ArrowUpRight, action: 'withdraw' as const },
           ].map(action => <Button key={action.action} variant={action.action === activeAction ? 'default' : 'outline'} className={`transition-colors motion-reduce:transition-none h-auto min-h-16 flex-col gap-1.5 px-1 py-2 text-xs sm:text-sm border-border ${action.action === activeAction ? 'text-primary-foreground' : 'text-foreground'}`} onClick={() => openDialog(action.action)}><action.icon className="h-5 w-5" />{action.label}</Button>)}
@@ -221,20 +224,20 @@ export default function PaymentPoint() {
         <p className="text-sm text-muted-foreground">Crie um pedido com valor e motivo. Partilhe a ligação ou apresente o QR ao cliente.</p>
       </section>}
       {order && <section className="rounded-2xl border p-4 space-y-3">
-        <h2 className="font-semibold">Pedido de pagamento</h2>
+        <h2 className="font-semibold">{copy.testRequest}</h2>
         <p>Recebe {order.seller_name || 'Utilizador Yamilook'} · carteira …{order.seller_id.slice(-6)}</p>
         <p className="text-sm">Comissão de teste {money(0)} · Total {money(order.amount)}</p>
         <p className="text-2xl font-semibold">{money(order.amount)}</p><p>{order.description}</p>
         <p role="status">{order.status === 'paid'
-          ? (order.own ? 'Pagamento simulado recebido' : 'Pagamento simulado concluído') + ' · ' + money(order.amount)
+          ? (order.own ? copy.received : 'Pagamento simulado concluído') + ' · ' + money(order.amount)
           : order.status === 'pending' && order.own
-            ? (Date.parse(order.expires_at) > Date.now() ? 'A aguardar pagamento' : 'Pedido expirado')
+            ? (Date.parse(order.expires_at) > Date.now() ? copy.awaiting : 'Pedido expirado')
             : labels[order.status] + ' · teste'}</p>
         <p className="text-xs text-muted-foreground">Válido até {new Date(order.expires_at).toLocaleString('pt-AO')}</p>
         {order.status === 'pending' && new Date(order.expires_at) > new Date() && <>
           {order.own ? <>
             <div className="bg-white p-4 rounded-lg w-fit"><QRCodeSVG value={orderLink(order.id)} size={200} /></div>
-            <Button onClick={share}>Partilhar pedido</Button>
+            <Button onClick={share}>{copy.share}</Button>
             <Button variant="outline" disabled={busy} onClick={() => run('cancel', order.id)}>Cancelar pedido</Button>
           </> : <Button disabled={busy || !wallet || wallet.purchased + wallet.earned < order.amount} onClick={() => run('pay', order.id)}>Simular pagamento de {money(order.amount)} a {order.seller_name || order.seller_id}</Button>}
           {!order.own && wallet && wallet.purchased + wallet.earned < order.amount && <div className="space-y-2"><p>Carregue saldo de teste para pagar este pedido.</p><Button onClick={() => openDialog('topup')}>Carregar saldo</Button></div>}
@@ -259,7 +262,7 @@ export default function PaymentPoint() {
     <WalletNavigation tab={id ? '' : tab} />
     <Dialog open={!!dialog} onOpenChange={open => { if (!open && !busy) { setDialog(null); setError(''); } }}>
       <DialogContent className="max-h-[85dvh] overflow-y-auto"><DialogHeader><DialogTitle>
-        {dialog === 'security' ? 'Segurança das transferências' : dialog === 'info' ? 'Sobre o saldo' : dialog === 'create' ? 'Receber pagamento de teste' : dialog === 'scan' ? 'Ler QR' : dialog === 'topup' ? 'Carregar saldo de teste' : 'Pedir levantamento de teste'}
+        {dialog === 'security' ? 'Segurança das transferências' : dialog === 'info' ? 'Sobre o saldo' : dialog === 'create' ? (tab === 'business' ? copy.request : copy.how) : dialog === 'scan' ? 'Ler QR' : dialog === 'topup' ? 'Carregar saldo de teste' : 'Pedir levantamento de teste'}
       </DialogTitle></DialogHeader>
       {dialog === 'security' && <TransferSecurity />}
       {dialog === 'info' && <div className="space-y-3 text-sm">
@@ -268,7 +271,8 @@ export default function PaymentPoint() {
         <p><strong>Reservado</strong> corresponde a pedidos de levantamento em curso.</p>
         <p>Os valores em kwanzas deste ambiente são simulados. Os Kumbu têm saldo e regras próprios.</p>
       </div>}
-      {dialog === 'create' && <RequestPayment onCreated={async newId => { setDialog(null); navigate(`/payment-point/${newId}`); }} />}
+      {dialog === 'create' && tab !== 'business' && <ReceiveOptions onCreated={async newId => { setDialog(null); navigate(`/payment-point/${newId}`); }} />}
+      {dialog === 'create' && tab === 'business' && <RequestPayment business onCreated={async newId => { setDialog(null); navigate(`/payment-point/${newId}`); }} />}
       {dialog === 'scan' && <ScanPayment onScan={newId => { setDialog(null); navigate(`/payment-point/${newId}`); }} />}
       {(dialog === 'topup' || dialog === 'withdraw') && <div className="space-y-3">
         <p className="text-sm text-muted-foreground">Esta operação utiliza valores simulados.</p>

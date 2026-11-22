@@ -1,7 +1,8 @@
+import { useReceiveLabels } from '@/features/payment-point/receive-labels';
 import { notifyPaymentRequest } from '@/lib/call-push';
 import { useWalletAccess } from '@/features/payment-point/WalletAccess';
 import { useQuery } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { RequestPayment } from '@/features/payment-point/RequestPayment';
@@ -52,6 +53,7 @@ import { useVoiceRecorder, useMediaUpload } from '@/hooks/useMediaUpload';
 import { chatMediaType } from '@/lib/chat-media';
 
 interface EnhancedChatInputProps {
+  recipientName?: string;
   onSend: (content: string, type?: string, mediaUrl?: string, replyToId?: string, duration?: number, isViewOnce?: boolean, thumbnailUrl?: string) => Promise<{ messageId?: string }>;
   onUpdateMediaUrl?: (messageId: string, newMediaUrl: string) => Promise<void>;
   onTyping: () => void;
@@ -80,9 +82,12 @@ export function EnhancedChatInput({
   onCancelReply,
   disabled,
   focusInput,
+  recipientName,
   conversationId,
 }: EnhancedChatInputProps) {
   useUiLocale();
+  const copy = useReceiveLabels();
+  const [params, setParams] = useSearchParams();
   const navigate = useNavigate();
   const access = useWalletAccess();
   const { user } = useAuth();
@@ -115,6 +120,14 @@ export function EnhancedChatInput({
     setPaymentConversation(null);
     return () => { locationRequest.current += 1; };
   }, [conversationId]);
+  useEffect(() => {
+    if (params.get('requestPayment') !== '1') return;
+    setPaymentConversation(conversationId);
+    setRequestForm(true);
+    const next = new URLSearchParams(params);
+    next.delete('requestPayment');
+    setParams(next, { replace: true });
+  }, [params, setParams, conversationId]);
   const [sending, setSending] = useState(false);
   const sendingRef = useRef(false);
   const [sendError, setSendError] = useState('');
@@ -576,12 +589,12 @@ export function EnhancedChatInput({
         </div>
       )}
 
-      <Dialog open={walletVisible && paymentConversation === conversationId} onOpenChange={open => { if (!open) setPaymentConversation(null); }}>
-        <DialogContent><DialogHeader><DialogTitle>{requestForm ? 'Pedir MASSA · Teste' : 'CARTEIRA'}</DialogTitle></DialogHeader>
-          {!requestForm ? <div className="grid gap-2">
-            <Button onClick={() => setRequestForm(true)}>Pedir MASSA · Teste</Button>
+      <Dialog open={paymentConversation === conversationId} onOpenChange={open => { if (!open) setPaymentConversation(null); }}>
+        <DialogContent><DialogHeader><DialogTitle>{requestForm ? (recipientName ? copy.recipient.replace('{name}', () => recipientName) : copy.ask) : uiText('Carteira')}</DialogTitle></DialogHeader>
+          {!walletVisible ? <p role="status">{access.loading || (access.allowed && eligibility.isPending) ? copy.loading : copy.error}</p> : !requestForm ? <div className="grid gap-2">
+            <Button onClick={() => setRequestForm(true)}>{copy.ask}</Button>
             <Button variant="outline" onClick={() => navigate('/payment-point')}>Abrir CARTEIRA</Button>
-          </div> : <RequestPayment key={conversationId} onCreated={async (orderId, content) => {
+          </div> : <RequestPayment chat key={conversationId} onCreated={async (orderId, content) => {
             const { messageId } = await onSend(content, 'text');
             if (!messageId) throw new Error('Não foi possível enviar o pedido à conversa. Tente novamente.');
             void notifyPaymentRequest(orderId, conversationId);
