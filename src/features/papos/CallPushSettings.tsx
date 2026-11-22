@@ -3,7 +3,7 @@ import i18n from '@/i18n';
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { callPushStatus, disableCallPush, enableCallPush } from '@/lib/call-push';
+import { paymentPushPreference, callPushStatus, disableCallPush, enableCallPush } from '@/lib/call-push';
 export default function CallPushSettings() {
   useTranslation();
   const { user } = useAuth();
@@ -24,6 +24,13 @@ export default function CallPushSettings() {
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; if (generation.current === current) generation.current++; };
   }, [user?.id, attempt]);
+  const [paymentEnabled, setPaymentEnabled] = useState(false);
+  useEffect(() => {
+    let active = true;
+    setPaymentEnabled(false);
+    if (status?.enabled) paymentPushPreference().then(value => { if (active) setPaymentEnabled(value); }).catch(() => {});
+    return () => { active = false; };
+  }, [status, user?.id]);
   const change = async () => {
     if (!user || !status || busy || loading) return;
     const current = generation.current;
@@ -48,6 +55,13 @@ export default function CallPushSettings() {
       {loading ? i18n.t('settingsScreen.text20') : busy ? i18n.t('settingsScreen.text21') : status?.enabled ? i18n.t('settingsScreen.text22') : i18n.t('settingsScreen.text23')}
     </Button>
     {user && !loading && (error || (status?.supported && (!status.publicKey || status.permission === 'denied'))) && <Button variant="outline" disabled={busy} onClick={() => setAttempt(value => value + 1)}>{i18n.t('settingsScreen.text24')}</Button>}
+    {status?.enabled && <label className="flex gap-2 items-center"><input type="checkbox" checked={paymentEnabled} disabled={busy} onChange={async event => {
+      const enabled = event.target.checked;
+      setBusy(true);
+      try { setPaymentEnabled(await paymentPushPreference(enabled)); }
+      catch { setError('Não foi possível guardar a preferência.'); }
+      finally { setBusy(false); }
+    }} />Avisar neste dispositivo quando receber um pedido de pagamento</label>}
     {status?.enabled && <p role="status" className="text-sm">{i18n.t('settingsScreen.text25')}</p>}
     {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
     <p className="text-xs text-muted-foreground">{i18n.t('settingsScreen.text26')}</p>

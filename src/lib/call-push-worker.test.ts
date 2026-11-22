@@ -30,3 +30,14 @@ it('focuses an existing app without replacing an active call',async()=>{
   s.handlers.notificationclick({notification:{close:vi.fn()},waitUntil:(p:Promise<void>)=>job=p});await job;
   expect(app.focus).toHaveBeenCalled();expect(app.postMessage).toHaveBeenCalledWith({type:'kosolola:incoming-call'});expect(s.openWindow).not.toHaveBeenCalled();
 });
+it('keeps payment details private and skips the focused conversation', async () => {
+  const path = 'https://kosolola.com/papos-app/chat/' + callId;
+  for (const focused of [true, false]) {
+    const worker = setup([{ focused, url: path }]);
+    let job!: Promise<void>;
+    worker.handlers.push({data:{json:()=>({type:'payment-request', conversationId:callId, orderId:callId})},waitUntil:(p:Promise<void>)=>job=p});
+    await job;
+    expect(worker.showNotification).toHaveBeenCalledTimes(focused ? 0 : 1);
+    if (!focused) expect(worker.showNotification.mock.calls[0][1].body).toBe('Tem um pedido de pagamento na Kosolola.');
+  }
+});

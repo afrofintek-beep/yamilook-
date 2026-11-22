@@ -1,3 +1,4 @@
+import { notifyPaymentRequest } from '@/lib/call-push';
 import { useWalletAccess } from '@/features/payment-point/WalletAccess';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
@@ -580,8 +581,11 @@ export function EnhancedChatInput({
           {!requestForm ? <div className="grid gap-2">
             <Button onClick={() => setRequestForm(true)}>Pedir MASSA · Teste</Button>
             <Button variant="outline" onClick={() => navigate('/payment-point')}>Abrir CARTEIRA</Button>
-          </div> : <RequestPayment key={conversationId} onCreated={async (_id, content) => {
-            await onSend(content, 'text'); setPaymentConversation(null);
+          </div> : <RequestPayment key={conversationId} onCreated={async (orderId, content) => {
+            const { messageId } = await onSend(content, 'text');
+            if (!messageId) throw new Error('Não foi possível enviar o pedido à conversa. Tente novamente.');
+            void notifyPaymentRequest(orderId, conversationId);
+            setPaymentConversation(null);
           }} />}
         </DialogContent>
       </Dialog>
