@@ -1,3 +1,4 @@
+import { useReceiveLabels } from '@/features/payment-point/receive-labels';
 import { uiLocale, uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useGroupConference } from '@/features/group-calls/GroupConferenceProvider';
 import { isRecentlyOnline } from '@/lib/online-presence';
@@ -70,6 +71,7 @@ import { mediaCaption } from '@/lib/chat-media';
 
 export default function Chat() {
   useUiLocale();
+  const copy = useReceiveLabels();
   const navigate = useNavigate();
   const isKosolola = useAppSurface() === 'papos';
   const { t } = useTranslation();
@@ -770,7 +772,7 @@ export default function Chat() {
                 <DropdownMenuContent align="end" className="w-56">
                   {isKosolola && <>
                     <DropdownMenuItem onClick={() => navigate('/payment-point?action=scan')}>{uiText("Pagar")}</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate('/payment-point?action=create')}>{uiText("Pedir pagamento")}</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate(`/chat/${conversationId}?requestPayment=1`)}>{copy.ask}</DropdownMenuItem>
                   </>}
                   <DropdownMenuItem onClick={() => setSearchOpen(true)}>
                     <Search className="w-4 h-4 mr-2" />
@@ -940,6 +942,7 @@ export default function Chat() {
 
       {/* Input */}
       <EnhancedChatInput
+        recipientName={displayName}
         onSend={handleSend}
         onUpdateMediaUrl={handleUpdateMediaUrl}
         onTyping={() => setTyping(currentUserProfile?.show_typing_indicators ?? true)}
