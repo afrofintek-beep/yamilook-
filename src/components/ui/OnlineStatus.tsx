@@ -1,4 +1,5 @@
 import { uiLocale, uiText, useUiLocale } from '@/i18n/ui-copy';
+import { formatDistanceToNow } from '@/i18n/ui-date';
 import { isRecentlyOnline } from '@/lib/online-presence';
 import { usePresenceClock } from '@/hooks/usePresenceClock';
 import { cn } from '@/lib/utils';
@@ -67,15 +68,11 @@ export function formatLastSeen(lastSeen: string | null, respectPrivacy: boolean 
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffMins = Math.floor(diffMs / (1000 * 60));
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
   const locale = uiLocale();
   if (!Number.isFinite(diffMs)) return '';
-  const relative = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' });
-  if (diffMins < 1) return relative.format(0, 'second');
-  if (diffMins < 60) return relative.format(-diffMins, 'minute');
-  if (diffHours < 24) return relative.format(-diffHours, 'hour');
-  if (diffDays < 7) return relative.format(-diffDays, 'day');
+  if (diffMins < 1) return uiText('agora');
+  if (diffDays < 7) return formatDistanceToNow(date, { addSuffix: true });
   return date.toLocaleDateString(locale, { day: 'numeric', month: 'short' });
 }
