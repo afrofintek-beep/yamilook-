@@ -224,14 +224,14 @@ export default function PaymentPoint() {
         <p className="text-sm text-muted-foreground">Crie um pedido com valor e motivo. Partilhe a ligação ou apresente o QR ao cliente.</p>
       </section>}
       {order && <section className="rounded-2xl border p-4 space-y-3">
-        <h2 className="font-semibold">Pedido de pagamento</h2>
+        <h2 className="font-semibold">{copy.testRequest}</h2>
         <p>Recebe {order.seller_name || 'Utilizador Yamilook'} · carteira …{order.seller_id.slice(-6)}</p>
         <p className="text-sm">Comissão de teste {money(0)} · Total {money(order.amount)}</p>
         <p className="text-2xl font-semibold">{money(order.amount)}</p><p>{order.description}</p>
         <p role="status">{order.status === 'paid'
-          ? (order.own ? 'Pagamento simulado recebido' : 'Pagamento simulado concluído') + ' · ' + money(order.amount)
+          ? (order.own ? copy.received : 'Pagamento simulado concluído') + ' · ' + money(order.amount)
           : order.status === 'pending' && order.own
-            ? (Date.parse(order.expires_at) > Date.now() ? 'A aguardar pagamento' : 'Pedido expirado')
+            ? (Date.parse(order.expires_at) > Date.now() ? copy.awaiting : 'Pedido expirado')
             : labels[order.status] + ' · teste'}</p>
         <p className="text-xs text-muted-foreground">Válido até {new Date(order.expires_at).toLocaleString('pt-AO')}</p>
         {order.status === 'pending' && new Date(order.expires_at) > new Date() && <>
