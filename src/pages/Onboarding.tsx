@@ -2,6 +2,7 @@ import { createSignupOnboarding, recoverSignupOnboarding, resumeOnboardingStep }
 import { legalLabel } from '@/i18n/legal-labels';
 import { onboardingImage } from '@/components/auth/onboarding-images';
 import { EntryLanguageSelector } from '@/components/auth/EntryLanguageSelector';
+import { businessCopy } from '@/lib/business-entry';
 import {afrolocReturn} from '@/features/locaccess/return-path';
 import { ResidenceForm } from '@/components/residence/ResidenceForm';
 import { submitResidence, validResidencePlan, type ResidencePlan } from '@/lib/residence';
@@ -1180,6 +1181,7 @@ export default function Onboarding() {
 
   return (
     <div dir={i18n.dir()} className="min-h-screen flex flex-col bg-background overflow-x-hidden">
+      {returnToCommunity === '/meus-negocios?abrir=1' && <h1 className="text-center font-semibold py-2">{businessCopy(i18n.language).owner}</h1>}
       {deadline && !isAuthenticated && <p role="status" className="p-3 text-center">
         A tua vaga está reservada até às {new Date(deadline).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}. Se o prazo terminar, volta a abrir o convite.
       </p>}
