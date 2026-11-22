@@ -1,3 +1,4 @@
+import { MobileMoneyPreview } from './MobileMoneyPreview';
 import { PaymentRejected } from './api';
 import { TransferSecurity } from './TransferSecurity';
 import { WalletHeader, WalletNavigation } from './WalletNavigation';
@@ -210,6 +211,7 @@ export default function PaymentPoint() {
         <p>{labels[order.status]} · teste</p>
         <p className="text-xs text-muted-foreground">Válido até {new Date(order.expires_at).toLocaleString('pt-AO')}</p>
         {order.status === 'pending' && new Date(order.expires_at) > new Date() && <>
+          <MobileMoneyPreview key={order.id} total={money(order.amount)} reference={order.id} />
           {order.own ? <>
             <div className="bg-white p-4 rounded-lg w-fit"><QRCodeSVG value={orderLink(order.id)} size={200} /></div>
             <Button onClick={share}>Partilhar pedido</Button>
