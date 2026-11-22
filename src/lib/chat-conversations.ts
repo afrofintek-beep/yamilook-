@@ -8,13 +8,13 @@ interface ConversationSummary {
   updated_at: string;
   is_pinned?: boolean | null;
   participants?: { user_id: string }[];
-  last_message?: { created_at: string };
+  last_message?: { created_at: string; latest_reaction?: { created_at: string } | null };
 }
 
 export function orderConversations<T extends ConversationSummary>(conversations: T[], userId: string): T[] {
   const sorted = [...conversations].sort((a, b) =>
     Number(!!b.is_pinned) - Number(!!a.is_pinned) ||
-    new Date(b.last_message?.created_at || b.updated_at).getTime() - new Date(a.last_message?.created_at || a.updated_at).getTime());
+    new Date(b.last_message?.latest_reaction?.created_at || b.last_message?.created_at || b.updated_at).getTime() - new Date(a.last_message?.latest_reaction?.created_at || a.last_message?.created_at || a.updated_at).getTime());
   const seen = new Set<string>();
   return sorted.filter(conversation => {
     if (conversation.type !== 'direct') return true;
