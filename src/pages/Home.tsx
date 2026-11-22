@@ -1,3 +1,8 @@
+import { Fragment } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Wallet } from 'lucide-react';
+import { useWalletAccess } from '@/features/payment-point/WalletAccess';
+import { paymentAction, type Overview } from '@/features/payment-point/api';
 import {useFriendRequestAlerts} from '@/features/friend-requests/alerts';
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import PaposBrand from '@/features/papos/PaposBrand';
@@ -48,6 +53,43 @@ export default function Home() {
   const [forwardOpen, setForwardOpen] = useState(false);
   const [messageToForward, setMessageToForward] = useState<Conversation['last_message'] | null>(null);
   const [selectionMode, setSelectionMode] = useState(false);
+  const access = useWalletAccess();
+  const showWallet = surface === 'papos' && access.allowed && !!user;
+  const massaActivity = useQuery({
+    queryKey: ['inbox-massa-activity', user?.id],
+    enabled: showWallet,
+    refetchInterval: 30000,
+    queryFn: async () => {
+      const overview = await paymentAction<Overview>('overview');
+      return overview.entries.reduce((latest, entry) => Math.max(latest, Date.parse(entry.created_at)), 0);
+    },
+  });
+  const kumbuActivity = useQuery({
+    queryKey: ['inbox-kumbu-activity', user?.id],
+    enabled: showWallet,
+    refetchInterval: 30000,
+    queryFn: async () => {
+      const { data, error } = await supabase.from('kumbu_ledger').select('created_at')
+        .eq('user_id', user!.id).order('created_at', { ascending: false }).limit(1).maybeSingle();
+      if (error) throw error;
+      return data ? Date.parse(data.created_at) : 0;
+    },
+  });
+  const kumbuTime = kumbuActivity.data || 0;
+  const massaTime = massaActivity.data || 0;
+  const walletTime = Math.max(kumbuTime, massaTime);
+  const walletIndex = conversations.findIndex(item => walletTime > Math.max(
+    Date.parse(item.last_message?.created_at || '') || 0, Date.parse(item.last_call_at || '') || 0));
+  const walletRow = showWallet && walletTime > 0 && !selectionMode ? (
+    <button className="flex w-full items-center gap-3 px-4 py-3 text-left" onClick={() =>
+      navigate(kumbuTime > massaTime ? '/kumbu/history' : '/payment-point?tab=movements')}>
+      <Wallet aria-hidden="true" className="h-10 w-10 rounded-full bg-primary/10 p-2 text-primary" />
+      <span className="flex-1"><strong>{uiText("Carteira")}</strong><span className="block text-sm text-muted-foreground">
+        {uiText("Movimento")} · {kumbuTime > massaTime ? 'Kumbu' : 'MASSA'}</span></span>
+      <time className="text-xs text-muted-foreground">{new Date(walletTime).toLocaleString(undefined, {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'})}</time>
+    </button>
+  ) : null;
+
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState<'chat' | 'status' | 'calls'>('chat');
   const { toast } = useToast();
@@ -305,7 +347,7 @@ export default function Home() {
           >
             {loading ? (
               <ConversationsSkeleton count={6} />
-            ) : conversations.length === 0 ? (
+            ) : conversations.length === 0 && !walletRow ? (
               <div className="flex flex-col items-center justify-center h-full text-center px-8 py-20">
                 <div className="w-16 h-16 rounded-2xl bg-card border border-border/30 flex items-center justify-center mb-4">
                   <MessageCircle className="w-7 h-7 text-muted-foreground/30" />
@@ -318,7 +360,9 @@ export default function Home() {
               </div>
             ) : (
               <div className={`divide-y divide-border/30 min-w-0 ${selectionMode && selectedIds.size > 0 ? 'pb-20' : ''}`}>
-                {conversations.map((conversation) => (
+                {conversations.map((conversation, index) => (
+                  <Fragment key={conversation.id}>
+                  {index === walletIndex && walletRow}
                   <SwipeableConversationItem
                     key={conversation.id}
                     conversation={conversation}
@@ -337,7 +381,9 @@ export default function Home() {
                     onCopy={() => handleCopy(conversation)}
                     onForward={() => handleForward(conversation)}
                   />
+                  </Fragment>
                 ))}
+                {walletIndex === -1 && walletRow}
               </div>
             )}
           </motion.div>

@@ -6,13 +6,16 @@ interface ConversationSummary {
   id: string;
   type: string;
   updated_at: string;
+  last_call_at?: string;
   is_pinned?: boolean | null;
   participants?: { user_id: string }[];
   last_message?: { created_at: string };
 }
 
 export function orderConversations<T extends ConversationSummary>(conversations: T[], userId: string): T[] {
+  const activity = (item: T) => Math.max(Date.parse(item.last_message?.created_at || "") || 0, Date.parse(item.last_call_at || "") || 0);
   const sorted = [...conversations].sort((a, b) =>
+    activity(b) - activity(a) ||
     Number(!!b.is_pinned) - Number(!!a.is_pinned) ||
     new Date(b.last_message?.created_at || b.updated_at).getTime() - new Date(a.last_message?.created_at || a.updated_at).getTime());
   const seen = new Set<string>();

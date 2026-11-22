@@ -98,6 +98,7 @@ export interface Conversation {
       show_last_seen?: boolean | null;
     };
   }[];
+  last_call_at?: string;
   last_message?: Message;
   unread_count?: number;
   // is_pinned/is_muted live on the current user's conversation_participants row
@@ -188,7 +189,9 @@ export function useConversations() {
     };
   }, [userId, presenceIdsKey, setConversations]);
 
+  const inboxRevision = useRef(0);
   const fetchConversations = useCallback(async () => {
+    const revision = ++inboxRevision.current;
     if (!userId) { setConversations([]); setLoading(false); return; }
 
     try {
@@ -258,8 +261,28 @@ export function useConversations() {
         mutedByConv.set(p.conversation_id, p.is_muted ?? false);
       });
 
+      const latestByConversation = new Map<string, string>();
+      const latestByContact = new Map<string, string>();
+      for (let offset = 0; ; offset += 500) {
+        const { data, error } = await supabase.from('call_participants')
+          .select('call_id, calls(conversation_id, caller_id, callee_id, initiator_id, is_group_call, created_at)')
+          .eq('user_id', userId).order('call_id').range(offset, offset + 499);
+        if (revision !== inboxRevision.current) return;
+        if (error || !data) break;
+        for (const { calls: call } of data) {
+          if (!call?.created_at) continue;
+          const caller = call.caller_id || call.initiator_id;
+          const peer = caller === userId ? call.callee_id : caller;
+          const key = call.conversation_id || (!call.is_group_call && peer);
+          if (!key) continue;
+          const index = call.conversation_id ? latestByConversation : latestByContact;
+          if (Date.parse(call.created_at) > (Date.parse(index.get(key) || '') || 0)) index.set(key, call.created_at);
+        }
+        if (data.length < 500) break;
+      }
       const enrichedConversations = conversationsData.map(conv => ({
         ...conv,
+        last_call_at: [latestByConversation.get(conv.id), conv.type === "direct" ? latestByContact.get(participantsByConv.get(conv.id)?.find(p => p.user_id !== userId)?.user_id || "") : undefined].filter(Boolean).sort().pop(),
         participants: participantsByConv.get(conv.id) || [],
         last_message: (summaries.get(conv.id)?.last_message as unknown as Message | null) ?? undefined,
         unread_count: Number(summaries.get(conv.id)?.unread_count ?? 0),
@@ -285,10 +308,17 @@ export function useConversations() {
         .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => {
           fetchConversations();
         })
-        .subscribe();
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'call_participants', filter: `user_id=eq.${userId}` }, () => { void fetchConversations(); })
+        .subscribe(status => { if (status === "SUBSCRIBED") void fetchConversations(); });
     }
 
+    const resume = () => { if (!document.hidden) void fetchConversations(); };
+    window.addEventListener("online", resume);
+    document.addEventListener("visibilitychange", resume);
     return () => {
+      ++inboxRevision.current;
+      window.removeEventListener("online", resume);
+      document.removeEventListener("visibilitychange", resume);
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
       }
