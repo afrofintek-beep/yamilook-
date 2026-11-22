@@ -31,6 +31,7 @@ interface ConversationItemProps {
       message_type: string;
       sender_id: string;
       created_at: string;
+      latest_reaction?: { created_at: string; user_id: string } | null;
       is_deleted?: boolean;
     };
     unread_count?: number;
@@ -91,6 +92,13 @@ export function ConversationItem({
       return { text: 'Sem mensagens', icon: null, isEmpty: true };
     }
     
+    const reaction = conversation.last_message.latest_reaction;
+    if (reaction) {
+      const text = reaction.user_id === currentUserId
+        ? t('chat.inboxOwnReaction', { defaultValue: 'Reagiste a uma mensagem' })
+        : t('chat.inboxReaction', { defaultValue: 'Reagiu a uma mensagem' });
+      return { text, icon: null, isEmpty: false };
+    }
     if (conversation.last_message.is_deleted) return { text: 'Mensagem eliminada', icon: null, isEmpty: true };
     const isOwnMessage = conversation.last_message.sender_id === currentUserId;
     const prefix = isOwnMessage ? 'Tu: ' : '';
@@ -171,7 +179,7 @@ export function ConversationItem({
                   : 'text-muted-foreground/60'
               }`}
             >
-              {formatMessageTime(conversation.last_message.created_at)}
+              {formatMessageTime(conversation.last_message.latest_reaction?.created_at ?? conversation.last_message.created_at)}
             </span>
           )}
         </div>
