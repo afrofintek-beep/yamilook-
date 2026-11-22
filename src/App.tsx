@@ -417,6 +417,7 @@ function AnimatedRoutes() {
           <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
           <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
           <Route path="/welcome" element={<PublicRoute><Welcome /></PublicRoute>} />
+          <Route path="/app/retomar" element={<PublicRoute><ResumeRegistration /></PublicRoute>} />
           <Route path="/retomar" element={<PublicRoute><ResumeRegistration /></PublicRoute>} />
           <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
           <Route path="/reset-password" element={<ResetPassword />} />

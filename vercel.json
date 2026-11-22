@@ -66,6 +66,8 @@
     }
   ],
   "headers": [
+    { "source": "/retomar", "headers": [{ "key": "Cache-Control", "value": "no-store, max-age=0" }] },
+    { "source": "/app/retomar", "headers": [{ "key": "Cache-Control", "value": "no-store, max-age=0" }] },
     {
       "source": "/favicon.ico",
       "headers": [
