@@ -768,6 +768,10 @@ export default function Chat() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
+                  {isKosolola && <>
+                    <DropdownMenuItem onClick={() => navigate('/payment-point?action=scan')}>{uiText("Pagar")}</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/payment-point?action=create')}>{uiText("Pedir pagamento")}</DropdownMenuItem>
+                  </>}
                   <DropdownMenuItem onClick={() => setSearchOpen(true)}>
                     <Search className="w-4 h-4 mr-2" />
                     {t('common.search')}
