@@ -302,7 +302,7 @@ begin
 end;
 $$;
 
--- Durable, authenticated delivery inbox. The callback must perform a trusted
+-- Durable delivery inbox for untrusted hints. The callback must perform a trusted
 -- GET before invoking confirm(); a callback status alone never grants credit.
 create function public.massa_gateway_event(
   p_event_hash text, p_merchant text, p_charge_id text default null,

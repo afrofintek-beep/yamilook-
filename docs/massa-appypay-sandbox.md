@@ -34,6 +34,8 @@ As novas funções utilizam variáveis próprias. Não reutilizam automaticament
 
 O token endpoint e o gateway estão fixados em constantes de sandbox. Não existe opção para mudar este adaptador para os hosts de produção. Redireccionamentos HTTP são recusados. As credenciais continuam a exigir confirmação de validade e pertença ao comerciante, mesmo com os hosts correctos.
 
+Num projecto Supabase gerido, `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` são injectadas pela plataforma. Não criar nem substituir variáveis do prefixo reservado `SUPABASE_` no gestor de secrets; configurar ali apenas as variáveis personalizadas `MASSA_APPYPAY_*`.
+
 No frontend de testes, `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY` apontam para esse mesmo projecto isolado. Estes são os parâmetros públicos normais do Supabase; nenhuma variável `MASSA_APPYPAY_*` é colocada no build do browser. O painel só aparece quando a resposta autenticada de capacidades habilita os métodos de sandbox.
 
 ### Endpoints da aplicação
@@ -118,13 +120,25 @@ O workflow `MASSA AppyPay sandbox boundary` executa estas verificações com Nod
 
 ### Verificação local em 22 de Novembro de 2026
 
-- 64 testes Node passaram: 58 do novo adaptador/handlers/SQL/integração e seis de regressão do ledger existente.
+- 72 testes Node passaram: 58 do novo adaptador/handlers/SQL/integração, oito da cadeia real da carteira no ensaio isolado e seis de regressão do ledger existente.
 - 20 testes Vitest passaram na funcionalidade da carteira.
 - TypeScript da aplicação e dos módulos independentes do backend, ESLint dos ficheiros afectados e `git diff --check` passaram.
 - A aplicação compilou com sucesso. Mantêm-se os avisos existentes do build sobre imports mistos de traduções e tamanho de bundles.
-- A verificação integral com Deno ficou bloqueada pela impossibilidade de obter a dependência externa pela rede deste ambiente. Os módulos de negócio foram verificados separadamente com TypeScript e executados pelos testes Node.
-- PGlite executa os RPCs e transacções reais, mas é uma engine de sessão única. Ainda é necessário verificar concorrência multissessão num PostgreSQL de testes.
+- A verificação integral de tipos com Deno local ficou bloqueada pela impossibilidade de obter a dependência externa pela rede deste ambiente. Os módulos de negócio foram verificados separadamente com TypeScript e executados pelos testes Node. A compilação e execução das três funções foram posteriormente verificadas no runtime Supabase isolado, com a integração desligada.
+- PGlite executa os RPCs e transacções reais, mas é uma engine de sessão única. A verificação multissessão foi feita adicionalmente no PostgreSQL do projecto isolado: duas preparações sobrepostas produziram uma única tentativa; duas confirmações que começaram com estado pendente produziram um journal, duas entradas equilibradas e um único crédito. Os PIDs, intervalos e resultados estão em [concurrency-evidence.json](../tests/massa-appypay/fixtures/concurrency-evidence.json).
 - Nenhum destes testes executou OAuth, cobranças, mocks ou callbacks na AppyPay real. A aceitação do contrato pelo sandbox ainda está por validar.
+
+O [workflow específico da integração](https://github.com/afrofintek-beep/yamilook-/actions/runs/45022597104) passou no commit `ccb8fc789e52af00aac0c9ea3fa89c3cacd50338`. O check global [Mobile controls](https://github.com/afrofintek-beep/yamilook-/actions/runs/45022597042) tem uma falha na partilha do cartão AFROLOC: o fixture não fornece um handle LOCACCESS válido. O [run do commit base exacto](https://github.com/afrofintek-beep/yamilook-/actions/runs/44997929481) apresenta a mesma falha; os ficheiros envolvidos não foram alterados por esta integração.
+
+### Ambiente isolado preparado
+
+Branch Supabase: `massa-appypay-sandbox-20261122`, referência `kvnbqqektpkeouyepyor`. As funções `massa-appypay`, `massa-appypay-webhook` e `massa-appypay-reconcile` foram publicadas nesse destino e mantidas desligadas. A consulta HTTP de capacidades devolveu `enabled: false`, `environment: sandbox`, `methods: []`; webhook e reconciliação devolveram `integration_disabled`. Nenhuma credencial AppyPay foi configurada ou utilizada.
+
+O bootstrap automático da branch falhou antes da cadeia MASSA: a migration `20261022133534_single_use_invitations.sql` referencia `public.profiles`, ausente no histórico remoto. Esta limitação já está registada em [migration-history/README.md](./migration-history/README.md). Uma branch criada a partir desse histórico não equivale a uma cópia funcional da Yamilook. A reconstrução completa exige um baseline de schema revisto, com grants, políticas, triggers e funções, sem copiar dados de utilizadores ou segredos.
+
+Para verificar o backend financeiro, foi instalado nesse destino um [pacote limitado de ensaio MASSA](../tests/massa-appypay/fixtures/README.md): dependências com proveniência verificada e as dez migrations reais da carteira, preservando papéis, acesso ao piloto e autorização dos débitos. O lote de assertions PostgreSQL terminou em rollback. A prova separada de concorrência usou apenas contas e identificadores sintéticos, sem contactar o fornecedor. O verificador Edge temporário foi substituído por uma resposta inerte após o ensaio. A limpeza SQL foi concluída e verificada: helper, contexto, administrador e acessos temporários removidos; duas identidades fictícias sem credenciais preservadas para a integridade do ledger. Este pacote não comprova signup, chat, aplicação completa ou equivalência à base de produção; a branch de ensaio não deve ser fundida no projecto de produção.
+
+O conector disponível permite publicar funções e executar SQL, mas não disponibiliza a escrita de secrets; a CLI não tem sessão de gestão autenticada. A configuração das variáveis personalizadas necessita de uma sessão autorizada no [Dashboard do ambiente de teste](https://supabase.com/dashboard/project/kvnbqqektpkeouyepyor/functions/secrets) ou acesso Management API limitado à escrita de secrets desse projecto. As credenciais de Julho já constam da correspondência e não devem ser reproduzidas no chat, nos logs ou no repositório.
 
 Casos necessários antes da activação do piloto:
 

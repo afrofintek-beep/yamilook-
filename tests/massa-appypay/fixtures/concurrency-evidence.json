@@ -1,0 +1,68 @@
+{
+  "environment": "isolated_supabase_database_test",
+  "project_ref": "kvnbqqektpkeouyepyor",
+  "provider_contacted": false,
+  "prepare": [
+    {
+      "id": "8079344d-888d-4da1-88ec-f2c3925b072a",
+      "phase": "prepare",
+      "state": "pending",
+      "submit": false,
+      "started_at": "2026-11-22T13:09:39.281578+00:00",
+      "backend_pid": 11182,
+      "finished_at": "2026-11-22T13:09:43.277036+00:00",
+      "initial_state": null,
+      "rpc_returned_at": "2026-11-22T13:09:41.273572+00:00",
+      "holds_wallet_lock": true
+    },
+    {
+      "id": "8079344d-888d-4da1-88ec-f2c3925b072a",
+      "phase": "prepare",
+      "state": "pending",
+      "submit": true,
+      "started_at": "2026-11-22T13:09:39.254314+00:00",
+      "backend_pid": 11181,
+      "finished_at": "2026-11-22T13:09:41.270821+00:00",
+      "initial_state": null,
+      "rpc_returned_at": "2026-11-22T13:09:39.26424+00:00",
+      "holds_wallet_lock": true
+    }
+  ],
+  "confirm": [
+    {
+      "id": "8079344d-888d-4da1-88ec-f2c3925b072a",
+      "phase": "confirm",
+      "state": "confirmed",
+      "submit": null,
+      "started_at": "2026-11-22T13:09:43.599238+00:00",
+      "backend_pid": 11181,
+      "finished_at": "2026-11-22T13:09:45.611004+00:00",
+      "initial_state": "pending",
+      "rpc_returned_at": "2026-11-22T13:09:43.608923+00:00",
+      "holds_wallet_lock": true
+    },
+    {
+      "id": "8079344d-888d-4da1-88ec-f2c3925b072a",
+      "phase": "confirm",
+      "state": "confirmed",
+      "submit": null,
+      "started_at": "2026-11-22T13:09:43.62204+00:00",
+      "backend_pid": 11182,
+      "finished_at": "2026-11-22T13:09:47.618878+00:00",
+      "initial_state": "pending",
+      "rpc_returned_at": "2026-11-22T13:09:45.617197+00:00",
+      "holds_wallet_lock": true
+    }
+  ],
+  "prepare_overlap": true,
+  "confirm_overlap": true,
+  "ledger": {
+    "ledger_sum": 0,
+    "seller_delta": 4321,
+    "attempt_count": 1,
+    "confirm_calls": 2,
+    "journal_count": 1,
+    "prepare_calls": 2,
+    "ledger_entries": 2
+  }
+}
