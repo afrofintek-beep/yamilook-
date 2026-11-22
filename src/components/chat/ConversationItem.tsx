@@ -26,6 +26,7 @@ interface ConversationItemProps {
         show_online_status?: boolean | null;
       };
     }[];
+    last_call_at?: string;
     last_message?: {
       content: string | null;
       message_type: string;
@@ -86,7 +87,10 @@ export function ConversationItem({
     .toUpperCase()
     .slice(0, 2);
 
+  const callIsLatest = !!conversation.last_call_at && Date.parse(conversation.last_call_at) > (Date.parse(conversation.last_message?.created_at || '') || 0);
+  const activityTime = callIsLatest ? conversation.last_call_at : conversation.last_message?.created_at;
   const getLastMessagePreview = () => {
+    if (callIsLatest) return { text: 'Chamada', icon: null, isEmpty: false };
     if (!conversation.last_message) {
       return { text: 'Sem mensagens', icon: null, isEmpty: true };
     }
@@ -163,7 +167,7 @@ export function ConversationItem({
               <Pin className="h-3 w-3 text-muted-foreground/40 shrink-0 rotate-45" />
             )}
           </div>
-          {conversation.last_message && (
+          {activityTime && (
             <span
               className={`text-[11px] flex-shrink-0 tabular-nums ${
                 hasUnread
@@ -171,7 +175,7 @@ export function ConversationItem({
                   : 'text-muted-foreground/60'
               }`}
             >
-              {formatMessageTime(conversation.last_message.created_at)}
+              {formatMessageTime(activityTime)}
             </span>
           )}
         </div>
