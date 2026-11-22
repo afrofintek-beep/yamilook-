@@ -381,7 +381,16 @@
     "codeHint": "Kóòdù náà ń dá àdírẹ́sì mọ̀. A ó ṣàyẹ̀wò ẹ̀tọ́ láti lò ó kí a tó fún ní ẹ̀rí.",
     "confirmLaterHint": "O lè parí ìforúkọsílẹ̀ kí o sì kópa. Jẹ́rìí àdírẹ́sì nígbà míì ní Púrófáìlì → Jẹ́rìí Banda mi.",
     "residenceNotice": "Wíwà níbẹ̀ báyìí kì í jẹ́ ẹ̀rí ibùgbé. Àwọn àǹfààní agbègbè nílò Banda tí a jẹ́rìí; ìrìnàjò kò yí Banda rẹ padà fúnra rẹ̀.",
-    "confirmBanda": "Jẹ́rìí Banda kí o tẹ̀síwájú"
+    "confirmBanda": "Jẹ́rìí Banda kí o tẹ̀síwájú",
+    "setupRequired": "Ṣàfikún fọ́tò púrófáìlì kí o sì ṣe àtẹ̀jáde ìfiránṣẹ́ àkọ́kọ́ rẹ lórí Muxi láti parí ìṣètò.",
+    "firstPost": "Àtẹ̀jáde àkọ́kọ́ lórí Muxi",
+    "firstPostHint": "Ṣàfihàn ara rẹ tàbí kí àwùjọ.",
+    "postAudience": "Ta ló lè rí àtẹ̀jáde yìí?",
+    "audienceContacts": "Àwọn olùbásọ̀rọ̀",
+    "audienceEveryone": "Gbogbo ènìyàn",
+    "audienceMe": "Èmi nìkan",
+    "publishAndFinish": "Ṣe àtẹ̀jáde kí o sì parí",
+    "photoFormat": "Fọ́tò JPG, PNG tàbí WebP, tí kò ju 5 MB lọ."
   },
   "calls": {
     "addToCall": "Fi kún ìpè",

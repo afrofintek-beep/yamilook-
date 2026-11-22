@@ -800,7 +800,16 @@
     "codeHint": "Code eyebisaka adresse. Lotómo ya kosalela yango ekotalelama liboso ya certificat.",
     "confirmLaterHint": "Okoki kosilisa komikomisa mpe kosangana. Ndímá adresse na nsima na Profil → Ndima Banda na ngai.",
     "residenceNotice": "Kozala awa sikoyo endimisi kofanda te. Matomba ya etuka esengi Banda endimami; mobembo ebongolaka Banda na yo yango moko te.",
-    "confirmBanda": "Ndímá Banda mpe koba"
+    "confirmBanda": "Ndímá Banda mpe koba",
+    "setupRequired": "Bakisá foto ya profil mpe tyá nsango na yo ya liboso na Muxi mpo na kosilisa bobongisi.",
+    "firstPost": "Nsango ya liboso na Muxi",
+    "firstPostHint": "Lobá nani ozali to pesá mbote na lisangá.",
+    "postAudience": "Nani akoki komona nsango oyo?",
+    "audienceContacts": "Bakontakte",
+    "audienceEveryone": "Bato nyonso",
+    "audienceMe": "Ngai kaka",
+    "publishAndFinish": "Tyá nsango mpe silisá",
+    "photoFormat": "Foto ya JPG, PNG to WebP, oyo eleki 5 MB te."
   },
   "groupCalls": {
     "conferenceLabel": "Lisolo ya etuluku",
