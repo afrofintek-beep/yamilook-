@@ -122,7 +122,7 @@ export default function Calls() {
     if (isToday(date)) {
       return format(date, 'h:mm a');
     } else if (isYesterday(date)) {
-      return 'Yesterday';
+      return t('chat.yesterday');
     }
     return format(date, 'MMM d');
   };
@@ -161,9 +161,9 @@ export default function Calls() {
     }
 
     const dateKey = isToday(new Date(date))
-      ? 'Today'
+      ? t('chat.today')
       : isYesterday(new Date(date))
-        ? 'Yesterday'
+        ? t('chat.yesterday')
         : format(new Date(date), 'MMMM d, yyyy');
 
     if (!groups[dateKey]) {
@@ -332,7 +332,7 @@ export default function Calls() {
                               {getCallIcon(call, user?.id || '')}
                               <span>{call.type === 'video' ? t('calls.videoCall') : t('calls.voiceCall')}</span>
                               <span>•</span>
-                              <span>{call.end_reason === 'no_answer' ? uiText("Sem resposta") : call.end_reason === 'cancelled' ? uiText("Cancelada") : call.status === 'declined' ? uiText("Recusada") : formatDuration(call.duration_seconds)}</span>
+                              <span>{call.end_reason === 'no_answer' ? uiText("Sem resposta") : call.end_reason === 'cancelled' ? uiText("Cancelada") : call.status === 'declined' ? t('calls.declined') : formatDuration(call.duration_seconds)}</span>
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
