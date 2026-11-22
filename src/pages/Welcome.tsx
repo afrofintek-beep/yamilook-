@@ -1,3 +1,4 @@
+import { ResumeLink } from '@/pages/ResumeRegistration';
 import { WelcomeCarousel } from '@/components/auth/WelcomeCarousel';
 import { normalizeAppLanguage } from '@/i18n/afroloc-languages';
 import { Link, useLocation } from 'react-router-dom';
@@ -35,6 +36,7 @@ export default function Welcome() {
           </>
         )}
         <Button asChild variant="outline" size="lg" className="w-full min-h-14"><Link to={`/login${search}`}>{isPortuguese ? 'Já tenho conta · ' : ''}{t('entry.login')}</Link></Button>
+        <ResumeLink />
       </div>
       <nav className="flex flex-wrap justify-center gap-4 text-xs text-muted-foreground">
         <Link to="/terms" className="underline">{t('entry.terms')}</Link>

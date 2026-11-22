@@ -37,6 +37,7 @@ const AfrolocExperience = lazy(() => import("./features/afroloc-experience/Afrol
 const Home = lazy(() => import("./pages/Home"));
 const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
+const ResumeRegistration = lazy(() => import("./pages/ResumeRegistration"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
@@ -416,6 +417,7 @@ function AnimatedRoutes() {
           <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
           <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
           <Route path="/welcome" element={<PublicRoute><Welcome /></PublicRoute>} />
+          <Route path="/retomar" element={<PublicRoute><ResumeRegistration /></PublicRoute>} />
           <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
           <Route path="/reset-password" element={<ResetPassword />} />
           {/* Open to everyone (authed or not) — ecosystem deep-link target */}

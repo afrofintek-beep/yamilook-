@@ -1,3 +1,4 @@
+import { ResumeLink } from '@/pages/ResumeRegistration';
 import { useTranslation } from 'react-i18next';
 import { AuthLayout } from '@/components/auth/AuthLayout';
 import { LoginForm } from '@/components/auth/LoginForm';
@@ -14,6 +15,7 @@ export default function Login() {
       backTo="/welcome"
     >
       <LoginForm />
+      <ResumeLink />
     </AuthLayout>
   );
 }
