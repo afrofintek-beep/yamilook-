@@ -3504,5 +3504,9 @@
   "Email do promotor (campanha de 10 convites)": "የአዘጋጁ ኢሜይል (የ10 ግብዣዎች ዘመቻ)",
   "Convite para {{campaign}}": "ወደ {{campaign}} የቀረበ ግብዣ",
   "Recebeste um convite pessoal para te inscreveres na Yamilook.": "በ Yamilook ለመመዝገብ የግል ግብዣ ደርሶዎታል።",
-  "Aceitar convite e inscrever-me": "ግብዣውን ተቀብዬ ልመዝገብ"
+  "Aceitar convite e inscrever-me": "ግብዣውን ተቀብዬ ልመዝገብ",
+  "Aplica-se apenas às mensagens enviadas depois de guardar. O prazo conta a partir do envio; as mensagens anteriores mantêm-se. A opção mínima é 24 horas.": "ካስቀመጡ በኋላ ለሚላኩ መልዕክቶች ብቻ ይሠራል። ጊዜው መልዕክቱ ከተላከበት ጊዜ ጀምሮ ይቆጠራል። የቀድሞ መልዕክቶች ይቀራሉ። ዝቅተኛው ጊዜ 24 ሰዓት ነው።",
+  "Disappearing messages enabled": "የሚጠፉ መልዕክቶች ነቅተዋል",
+  "Disappearing messages disabled": "የሚጠፉ መልዕክቶች ቦዝነዋል",
+  "A duração não foi confirmada. Tenta novamente.": "የጊዜ ቆይታውን ማረጋገጥ አልተቻለም። እንደገና ይሞክሩ።"
 }
