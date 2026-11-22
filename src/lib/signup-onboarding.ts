@@ -36,11 +36,11 @@ type SavedProfile = {
 export function resumeOnboardingStep(draft: OnboardingDraft | null, profile?: SavedProfile | null): number {
   if (profile?.onboarding_completed) return 7; // Existing redirect remains authoritative.
   if (!(draft?.gender ?? profile?.gender)) return 0;
-  if (!(draft ? draft.birthDay && draft.birthMonth && draft.birthYear : profile?.birthday)) return 1;
-  if (!(draft?.city ?? profile?.city) || !(draft?.neighborhood ?? profile?.neighborhood) ||
+  if (!((draft?.birthDay && draft.birthMonth && draft.birthYear) || profile?.birthday)) return 1;
+  if (!(draft?.city || profile?.city) || !(draft?.neighborhood || profile?.neighborhood) ||
       (draft?.neighborhood === '__other__' && !draft.customNeighborhood.trim())) return 2;
   // Home GPS and existing-card access are deliberately not persisted. Reconfirm
   // only that step, retaining all other answers and the original address choice.
   if (draft?.residenceMethod === 'map' || draft?.residenceMethod === 'home' || draft?.residenceMethod === 'existing') return 2;
-  return draft?.currentStep ?? 2;
+  return draft?.residenceMethod === 'later' || draft?.residenceMethod === 'away' ? 7 : 2;
 }
