@@ -18,6 +18,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { paymentAction, money, parseAmount, orderLink, type Overview, type PaymentOrder } from './api';
 import { RequestPayment } from './RequestPayment';
 import { ScanPayment } from './ScanPayment';
+import { AppyPaySandbox } from './AppyPaySandbox';
+import { useAppyPayLabels } from './appypay-labels';
+import type { AppyPayAttempt } from './appypay-api';
 
 const labels: Record<string, string> = {
   pending: 'Pendente', processing: 'Em processamento', completed: 'Concluído', rejected: 'Rejeitado',
@@ -28,6 +31,7 @@ const labels: Record<string, string> = {
 export default function PaymentPoint() {
   const { id } = useParams();
   const copy = useReceiveLabels();
+  const appyCopy = useAppyPayLabels();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const requestedTab = searchParams.get('tab') || 'wallet';
@@ -46,12 +50,15 @@ export default function PaymentPoint() {
   const { user } = useAuth();
   const [overview, setOverview] = useState<Overview>();
   const [order, setOrder] = useState<PaymentOrder>();
+  const [externalOrderBlocked, setExternalOrderBlocked] = useState(false);
+  const [externalTopupBlocked, setExternalTopupBlocked] = useState(false);
+  const [externalAttempt, setExternalAttempt] = useState<AppyPayAttempt | null>(null);
   const { notifyMessage } = useMessageNotification();
   const pendingSellerOrder = useRef<string>();
   useEffect(() => {
     if (!order?.own || order.id !== id) return;
     if (order.status === 'pending') pendingSellerOrder.current = order.id;
-    if (order.status === 'paid' && pendingSellerOrder.current === order.id) {
+    if (['paid', 'confirmed'].includes(order.status) && pendingSellerOrder.current === order.id) {
       pendingSellerOrder.current = undefined;
       const key = 'massa-receipt:' + order.id;
       if (!sessionStorage.getItem(key)) {
@@ -102,6 +109,9 @@ export default function PaymentPoint() {
     return () => { active = false; clearInterval(timer); };
   }, [id,pendingKey]);
   async function run(action: string, reference?: string, cents?: number, text?: string) {
+    if ((action === 'pay' || action === 'cancel') && externalOrderBlocked) return;
+    if (action === 'topup' && externalTopupBlocked) return;
+    if (action === 'refund' && (order?.payment_provider === 'appypay' || externalAttempt?.state === 'confirmed')) return;
     if (actionLock.current) return;
     actionLock.current = true; setBusy(true); setError('');
     let submitted = false;
@@ -153,6 +163,10 @@ export default function PaymentPoint() {
   const ownOrders = overview?.orders.filter(item => item.seller_id === user?.id) || [];
   const pendingOrders = ownOrders.filter(item => item.status === 'pending' && new Date(item.expires_at) > new Date());
   const visibleOrders = tab === 'business' ? ownOrders : overview?.orders || [];
+  const parsedTopupAmount = (() => { try { return parseAmount(amount); } catch { return undefined; } })();
+  const externalOrderConfirmed = order?.status === 'confirmed'
+    || (order?.payment_provider === 'appypay' && order?.status === 'paid')
+    || (externalAttempt?.order_id === order?.id && externalAttempt?.state === 'confirmed');
   function renderWithdrawals(pendingOnly: boolean) {
     if (!overview) return null;
     return <section className="space-y-2"><h2 className="font-semibold">{tab === 'admin' ? 'Gerir levantamentos' : pendingOnly ? 'Levantamentos em curso' : 'Meus levantamentos'}</h2>
@@ -228,21 +242,24 @@ export default function PaymentPoint() {
         <p>Recebe {order.seller_name || 'Utilizador Yamilook'} · carteira …{order.seller_id.slice(-6)}</p>
         <p className="text-sm">Comissão de teste {money(0)} · Total {money(order.amount)}</p>
         <p className="text-2xl font-semibold">{money(order.amount)}</p><p>{order.description}</p>
-        <p role="status">{order.status === 'paid'
+        <p role="status">{externalOrderConfirmed ? appyCopy.states.confirmed + ' · ' + money(order.amount) : order.status === 'paid'
           ? (order.own ? copy.received : 'Pagamento simulado concluído') + ' · ' + money(order.amount)
           : order.status === 'pending' && order.own
             ? (Date.parse(order.expires_at) > Date.now() ? copy.awaiting : 'Pedido expirado')
             : labels[order.status] + ' · teste'}</p>
         <p className="text-xs text-muted-foreground">Válido até {new Date(order.expires_at).toLocaleString('pt-AO')}</p>
+        {user && <AppyPaySandbox key={`${user.id}:${order.id}`} userId={user.id} orderId={order.id} amountMinor={order.amount}
+          readOnly={!!order.own} canCreate={!busy && !uncertain && order.status === 'pending' && Date.parse(order.expires_at) > Date.now()}
+          onConfirmed={refresh} onBlockedChange={setExternalOrderBlocked} onAttempt={setExternalAttempt} />}
         {order.status === 'pending' && new Date(order.expires_at) > new Date() && <>
           {order.own ? <>
             <div className="bg-white p-4 rounded-lg w-fit"><QRCodeSVG value={orderLink(order.id)} size={200} /></div>
             <Button onClick={share}>{copy.share}</Button>
-            <Button variant="outline" disabled={busy} onClick={() => run('cancel', order.id)}>Cancelar pedido</Button>
-          </> : <Button disabled={busy || !wallet || wallet.purchased + wallet.earned < order.amount} onClick={() => run('pay', order.id)}>Simular pagamento de {money(order.amount)} a {order.seller_name || order.seller_id}</Button>}
+            <Button variant="outline" disabled={busy || externalOrderBlocked} onClick={() => run('cancel', order.id)}>Cancelar pedido</Button>
+          </> : <Button disabled={busy || externalOrderBlocked || !wallet || wallet.purchased + wallet.earned < order.amount} onClick={() => run('pay', order.id)}>Simular pagamento de {money(order.amount)} a {order.seller_name || order.seller_id}</Button>}
           {!order.own && wallet && wallet.purchased + wallet.earned < order.amount && <div className="space-y-2"><p>Carregue saldo de teste para pagar este pedido.</p><Button onClick={() => openDialog('topup')}>Carregar saldo</Button></div>}
         </>}
-        {order.own && order.status === 'paid' && <Button variant="outline" disabled={busy} onClick={() => {
+        {order.own && order.status === 'paid' && order.payment_provider !== 'appypay' && !externalOrderConfirmed && <Button variant="outline" disabled={busy} onClick={() => {
           if (window.confirm(`Reembolsar ${money(order.amount)} ao comprador?`)) void run('refund', order.id);
         }}>Reembolsar compra</Button>}
       </section>}
@@ -252,7 +269,7 @@ export default function PaymentPoint() {
           {!visibleOrders.length && <p className="text-sm text-muted-foreground">Ainda sem pedidos.</p>}
           {visibleOrders.map(item => <button key={item.id} className="w-full text-left rounded-xl border p-3" onClick={() => navigate(`/payment-point/${item.id}`)}>
             <span className="block font-medium">{item.description} · {displayMoney(item.amount)}</span>
-            <span className="text-sm text-muted-foreground">{item.seller_id === user?.id ? 'A receber' : 'Compra'} · {labels[item.status]}</span>
+            <span className="text-sm text-muted-foreground">{item.seller_id === user?.id ? 'A receber' : 'Compra'} · {item.status === 'confirmed' ? appyCopy.states.confirmed : labels[item.status]}</span>
           </button>)}
         </section>}
         {tab === 'admin' && overview.admin && renderWithdrawals(false)}
@@ -275,12 +292,20 @@ export default function PaymentPoint() {
       {dialog === 'create' && tab === 'business' && <RequestPayment business onCreated={async newId => { setDialog(null); navigate(`/payment-point/${newId}`); }} />}
       {dialog === 'scan' && <ScanPayment onScan={newId => { setDialog(null); navigate(`/payment-point/${newId}`); }} />}
       {(dialog === 'topup' || dialog === 'withdraw') && <div className="space-y-3">
-        <p className="text-sm text-muted-foreground">Esta operação utiliza valores simulados.</p>
+        {dialog === 'withdraw' && <p className="text-sm text-muted-foreground">Esta operação utiliza valores simulados.</p>}
         {dialog === 'withdraw' && <p className="text-sm">Disponível para levantamento: {money(wallet?.earned || 0)}. Apenas os ganhos recebidos são elegíveis neste piloto.</p>}
-        <label className="block text-sm">Valor em kwanzas<Input value={amount} inputMode="decimal" disabled={busy} onChange={e => { setAmount(e.target.value); requestId.current = crypto.randomUUID(); }} /></label>
+        <label className="block text-sm">Valor em kwanzas<Input value={amount} inputMode="decimal" disabled={busy || (dialog === 'topup' && externalTopupBlocked)} onChange={e => { setAmount(e.target.value); requestId.current = crypto.randomUUID(); }} /></label>
         {dialog === 'withdraw' && <label className="block text-sm">Destino de teste<Input placeholder="Ex. Conta de teste Maria" value={destination} disabled={busy} maxLength={120} onChange={e => { setDestination(e.target.value); requestId.current = crypto.randomUUID(); }} /></label>}
         {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-        <Button disabled={busy || (dialog === 'withdraw' && !wallet?.earned)} onClick={() => submitAmount(dialog === 'topup' ? 'topup' : 'withdraw')}>{busy ? 'A processar…' : 'Confirmar teste'}</Button>
+        {dialog === 'topup' ? <>
+          <div className="rounded-xl border p-3 space-y-2">
+            <h3 className="text-sm font-semibold">{appyCopy.localTitle}</h3>
+            <p className="text-sm text-muted-foreground">{appyCopy.localNote}</p>
+            <Button variant="outline" disabled={busy || externalTopupBlocked} onClick={() => submitAmount('topup')}>{busy ? appyCopy.states.submitting : appyCopy.localAction}</Button>
+          </div>
+          {user && <AppyPaySandbox key={`${user.id}:topup`} userId={user.id} amountMinor={parsedTopupAmount} canCreate={!busy}
+            onConfirmed={refresh} onBlockedChange={setExternalTopupBlocked} />}
+        </> : <Button disabled={busy || !wallet?.earned} onClick={() => submitAmount('withdraw')}>{busy ? 'A processar…' : 'Confirmar teste'}</Button>}
       </div>}
       </DialogContent>
     </Dialog>
