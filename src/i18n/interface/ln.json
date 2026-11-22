@@ -1,4 +1,5 @@
 {
+  "Pagar": "Futá",
   "Erro ao carregar a página": "Libunga na botiami ya lokasa",
   "Não foi possível apresentar esta página. Tenta novamente ou recarrega a aplicação.": "Lokasa oyo ekoki kolakisa te. Meka lisusu to charger lisusu application.",
   "Tentar novamente": "Komeka lisusu",
@@ -439,7 +440,7 @@
   "Conversa arquivada": "Masolo ya archive",
   "selecionada": "eponami",
   "selecionadas": "eponami",
-  "Visto {{value1}}": "Visa ya {{value1}}",
+  "Visto {{value1}}": "Amonanaki {{value1}}",
   "Media, files & links": "Ba médias, ba fichiers & ba liens",
   "Scheduled messages": "Ba messages oyo esalemi na programme",
   "Mensagens com estrela": "Ba messages oyo ezali na minzoto",
