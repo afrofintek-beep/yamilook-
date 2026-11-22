@@ -21,7 +21,11 @@ const labels = {
     "product": "Produto ou serviço",
     "request": "Pedido de pagamento",
     "recipient": "A quem pedir: {name}",
-    "creating": "A criar…"
+    "creating": "A criar…",
+    "testRequest": "Pedido de pagamento · Teste",
+    "view": "Ver pedido",
+    "awaiting": "A aguardar pagamento",
+    "received": "Pagamento simulado recebido"
   },
   "en": {
     "receive": "Receive",
@@ -43,7 +47,11 @@ const labels = {
     "product": "Product or service",
     "request": "Payment request",
     "recipient": "Request from: {name}",
-    "creating": "Creating…"
+    "creating": "Creating…",
+    "testRequest": "Payment request · Test",
+    "view": "View request",
+    "awaiting": "Awaiting payment",
+    "received": "Simulated payment received"
   },
   "fr": {
     "receive": "Recevoir",
@@ -65,7 +73,11 @@ const labels = {
     "product": "Produit ou service",
     "request": "Demande de paiement",
     "recipient": "Demander à : {name}",
-    "creating": "Création…"
+    "creating": "Création…",
+    "testRequest": "Demande de paiement · Test",
+    "view": "Voir la demande",
+    "awaiting": "En attente de paiement",
+    "received": "Paiement simulé reçu"
   },
   "ar": {
     "receive": "استلام",
@@ -87,7 +99,11 @@ const labels = {
     "product": "المنتج أو الخدمة",
     "request": "طلب دفع",
     "recipient": "طلب من: {name}",
-    "creating": "جارٍ الإنشاء…"
+    "creating": "جارٍ الإنشاء…",
+    "testRequest": "طلب دفع · اختبار",
+    "view": "عرض الطلب",
+    "awaiting": "في انتظار الدفع",
+    "received": "تم استلام الدفعة التجريبية"
   },
   "am": {
     "receive": "መቀበል",
@@ -109,7 +125,11 @@ const labels = {
     "product": "ምርት ወይም አገልግሎት",
     "request": "የክፍያ ጥያቄ",
     "recipient": "ክፍያ የሚጠየቀው ከ፡ {name}",
-    "creating": "በመፍጠር ላይ…"
+    "creating": "በመፍጠር ላይ…",
+    "testRequest": "የክፍያ ጥያቄ · ሙከራ",
+    "view": "ጥያቄውን ይመልከቱ",
+    "awaiting": "ክፍያ በመጠበቅ ላይ",
+    "received": "የሙከራ ክፍያ ደርሷል"
   },
   "sw": {
     "receive": "Pokea",
@@ -131,7 +151,11 @@ const labels = {
     "product": "Bidhaa au huduma",
     "request": "Ombi la malipo",
     "recipient": "Omba kutoka kwa {name}",
-    "creating": "Inaunda…"
+    "creating": "Inaunda…",
+    "testRequest": "Ombi la malipo · Jaribio",
+    "view": "Angalia ombi",
+    "awaiting": "Inasubiri malipo",
+    "received": "Malipo ya majaribio yamepokelewa"
   },
   "ln": {
     "receive": "Kozwa",
@@ -153,7 +177,11 @@ const labels = {
     "product": "Eloko to mosala",
     "request": "Bosɛngi ya mbongo",
     "recipient": "Sɛngá {name}",
-    "creating": "Ezali kosala…"
+    "creating": "Ezali kosala…",
+    "testRequest": "Bosɛngi ya mbongo · Momekano",
+    "view": "Talá bosɛngi",
+    "awaiting": "Ezali kozela kofuta",
+    "received": "Mbongo ya momekano ezwami"
   },
   "yo": {
     "receive": "Gbà owó",
@@ -175,7 +203,11 @@ const labels = {
     "product": "Ọjà tàbí iṣẹ́",
     "request": "Ìbéèrè ìsanwó",
     "recipient": "Béèrè lọ́wọ́ {name}",
-    "creating": "Ó ń ṣẹ̀dá…"
+    "creating": "Ó ń ṣẹ̀dá…",
+    "testRequest": "Ìbéèrè ìsanwó · Ìdánwò",
+    "view": "Wo ìbéèrè",
+    "awaiting": "Ń dúró de ìsanwó",
+    "received": "A ti gba owó ìdánwò"
   },
   "sn": {
     "receive": "Gamuchira",
@@ -197,7 +229,11 @@ const labels = {
     "product": "Chigadzirwa kana sevhisi",
     "request": "Chikumbiro chekubhadharwa",
     "recipient": "Kumbira kuna {name}",
-    "creating": "Zviri kugadzirwa…"
+    "creating": "Zviri kugadzirwa…",
+    "testRequest": "Chikumbiro chekubhadharwa · Muedzo",
+    "view": "Ona chikumbiro",
+    "awaiting": "Kumirira mubhadharo",
+    "received": "Mari yekuyedza yagamuchirwa"
   },
   "zu": {
     "receive": "Yamukela",
@@ -219,7 +255,11 @@ const labels = {
     "product": "Umkhiqizo noma isevisi",
     "request": "Isicelo senkokhelo",
     "recipient": "Cela ku-{name}",
-    "creating": "Iyacubungula…"
+    "creating": "Iyacubungula…",
+    "testRequest": "Isicelo senkokhelo · Ukuhlola",
+    "view": "Buka isicelo",
+    "awaiting": "Kulindwe inkokhelo",
+    "received": "Inkokhelo yokuhlola yamukelwe"
   }
 };
 
