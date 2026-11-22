@@ -165,12 +165,12 @@ export function ActiveCallProvider({ children }: ActiveCallProviderProps) {
     }
     if ((webRTCState.callStatus === 'ended' && webRTCState.lastError) || webRTCState.callStatus === 'declined') {
       playCallTone(webRTCState.callStatus === 'declined' ? 'declined' : 'ended');
-      toast({ title: webRTCState.callStatus === 'declined' ? 'Chamada recusada.' : webRTCState.lastError || 'Chamada terminada.' });
+      toast({ title: webRTCState.callStatus === 'declined' ? t('calls.declined') : webRTCState.lastError || 'Chamada terminada.' });
     }
     setIsInCall(false);
     setCurrentCallId(null);
     if (location.pathname === `/call/${currentCallId}`) navigate('/calls', { replace: true });
-  }, [answering, currentCallId, webRTCState.callId, webRTCState.callStatus, webRTCState.lastError, location.pathname, navigate, toast]);
+  }, [answering, currentCallId, webRTCState.callId, webRTCState.callStatus, webRTCState.lastError, location.pathname, navigate, toast, t]);
 
   const startCall = useCallback(async (contactId: string, type: 'voice' | 'video', conversationId?: string, contactName?: string) => {
     logger.debug('Starting call', 'ActiveCallProvider', { contactId, type });
