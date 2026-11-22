@@ -1,6 +1,7 @@
 import { uiText } from '@/i18n/ui-copy';
 import { supabase } from '@/integrations/supabase/client';
 import { chatMediaContentType } from './chat-media';
+import { assertUploadAllowed } from './upload-safety';
 import { Upload } from 'tus-js-client';
 
 export function postUploadEndpoint(projectUrl: string): string {
@@ -10,9 +11,12 @@ export function postUploadEndpoint(projectUrl: string): string {
 }
 
 /** Retry interrupted chunks, report actual bytes, and never leave the composer waiting forever. */
-export function uploadPostFile(file: File, path: string, options: { signal?: AbortSignal; onProgress?: (percent: number) => void } = {}): Promise<void> {
+export async function uploadPostFile(file: File, path: string, options: { signal?: AbortSignal; onProgress?: (percent: number) => void } = {}): Promise<void> {
   options.signal?.throwIfAborted();
   if (!file.size) return Promise.reject(new Error(uiText("O ficheiro está vazio. Seleciona-o novamente.")));
+  await assertUploadAllowed(file, file.name, chatMediaContentType(file));
+  // The user may cancel while the small local header is being read.
+  options.signal?.throwIfAborted();
   const endpoint = postUploadEndpoint(import.meta.env.VITE_SUPABASE_URL);
   return new Promise((resolve, reject) => {
     let upload: Upload | undefined;

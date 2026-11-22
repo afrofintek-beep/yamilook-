@@ -51,6 +51,7 @@ import { ScheduleMessageSheet } from './ScheduleMessageSheet';
 import { ViewOnceToggle } from './ViewOnceMedia';
 import { useVoiceRecorder, useMediaUpload } from '@/hooks/useMediaUpload';
 import { chatMediaType } from '@/lib/chat-media';
+import { UploadAdmissionError } from '@/lib/upload-safety';
 
 interface EnhancedChatInputProps {
   recipientName?: string;
@@ -312,8 +313,8 @@ export function EnhancedChatInput({
       if (!sent.messageId) throw new Error(uiText("Delivery not confirmed"));
       onCancelReply?.();
       setViewOnceEnabled(false);
-    } catch {
-      setSendError('Ficheiro não enviado. Seleciona-o novamente para tentar de novo.');
+    } catch (error) {
+      setSendError(error instanceof UploadAdmissionError ? error.message : 'Ficheiro não enviado. Seleciona-o novamente para tentar de novo.');
     } finally {
       sendingRef.current = false;
       setSending(false);

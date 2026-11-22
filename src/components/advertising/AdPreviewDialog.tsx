@@ -36,6 +36,7 @@ import {
   ArrowLeft
 } from 'lucide-react';
 import { Advertisement, BusinessProfile, useAdvertising } from '@/hooks/useAdvertising';
+import { resolveAdAction } from '@/lib/ad-action';
 import { toast } from 'sonner';
 
 interface AdPreviewDialogProps {
@@ -405,13 +406,9 @@ export function AdPreviewDialog({
                             size="sm"
                             variant="outline"
                             onClick={() => {
-                              if (ad.cta_url) {
-                                window.open(ad.cta_url, '_blank', 'noopener,noreferrer');
-                              } else if (business?.website) {
-                                window.open(business.website, '_blank', 'noopener,noreferrer');
-                              } else if (business?.phone) {
-                                window.open(`tel:${business.phone}`, '_self');
-                              }
+                              const action = resolveAdAction({ ...ad, business });
+                              if (action.href) window.open(action.href, '_blank', 'noopener,noreferrer');
+                              else toast.info(uiText("Este anúncio ainda não tem link nem contacto."));
                             }}
                           >
                             {ad.call_to_action}

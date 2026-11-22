@@ -2,6 +2,8 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
+    <!-- Baseline isolation; script policy needs a separate complete origin/hash inventory. -->
+    <meta http-equiv="Content-Security-Policy" content="base-uri 'self'; object-src 'none'" />
     <!-- Apply the saved theme before first paint (default dark) to avoid a flash -->
     <script>
       (function () {

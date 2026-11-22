@@ -68,3 +68,10 @@ it('renders the AFROLOC destination in a text message and respects selection mod
   fireEvent.click(screen.getByText('Loja'));
   expect(onToggleSelect).toHaveBeenCalledOnce();
 });
+
+it.each(['gif', 'sticker'])('does not expose an active document URL in a %s message', message_type => {
+  const { container } = mount({ message: { ...message, message_type, media_url: 'data:image/svg+xml,<svg/>', content: null } });
+  const image = container.querySelector('img');
+  expect(image).toBeInTheDocument();
+  expect(image).not.toHaveAttribute('src');
+});

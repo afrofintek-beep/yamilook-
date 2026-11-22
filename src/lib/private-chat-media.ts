@@ -1,5 +1,6 @@
 import { uiText } from '@/i18n/ui-copy';
 import { supabase } from '@/integrations/supabase/client';
+import { assertUploadAllowed } from '@/lib/upload-safety';
 export const PRIVATE_CHAT_PREFIX = 'chat-attachment://';
 export function privateChatPath(reference: string): string | null {
   if (!reference.startsWith(PRIVATE_CHAT_PREFIX)) return null;
@@ -8,6 +9,7 @@ export function privateChatPath(reference: string): string | null {
 }
 export async function uploadPrivateChatFile(conversationId: string, file: Blob, filename: string, contentType: string): Promise<string> {
   if (file.size > 100 * 1024 * 1024) throw new Error(uiText("O limite por ficheiro é 100 MB"));
+  await assertUploadAllowed(file, filename, contentType);
   const { data, error } = await supabase.rpc('reserve_chat_attachment', { p_conversation_id: conversationId, p_filename: filename });
   const reservation = data as { path?: string; reference?: string } | null;
   if (error || !reservation?.path || !reservation.reference) throw new Error(uiText("Não foi possível autorizar o anexo"));

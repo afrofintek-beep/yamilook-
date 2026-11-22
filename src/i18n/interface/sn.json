@@ -3503,5 +3503,9 @@
   "Email do promotor (campanha de 10 convites)": "Imeyili yemurongi (mushandirapamwe wekokero 10)",
   "Convite para {{campaign}}": "Kokero ku{{campaign}}",
   "Recebeste um convite pessoal para te inscreveres na Yamilook.": "Wagamuchira kokero yako pachako yekunyoresa paYamilook.",
-  "Aceitar convite e inscrever-me": "Gamuchira kokero unyorese"
+  "Aceitar convite e inscrever-me": "Gamuchira kokero unyorese",
+  "Este tipo de ficheiro não é permitido. Escolhe uma fotografia, vídeo, áudio ou documento compatível.": "Rudzi urwu rwefaira harubvumidzwi. Sarudza mufananidzo, vhidhiyo, odhiyo kana gwaro rinotsigirwa.",
+  "O nome do ficheiro não é válido. Altera o nome e tenta novamente.": "Zita refaira harina kururama. Chinja zita woriedza zvakare.",
+  "O formato do ficheiro não corresponde ao nome. Escolhe o ficheiro original.": "Mafomati efaira haaenderani nezita raro. Sarudza faira rekutanga.",
+  "Não foi possível verificar o ficheiro. Seleciona-o novamente.": "Faira harina kukwanisa kuongororwa. Risarudze zvakare."
 }

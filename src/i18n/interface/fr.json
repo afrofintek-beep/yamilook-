@@ -3503,5 +3503,9 @@
   "Email do promotor (campanha de 10 convites)": "E-mail du promoteur (campagne de 10 invitations)",
   "Convite para {{campaign}}": "Invitation à {{campaign}}",
   "Recebeste um convite pessoal para te inscreveres na Yamilook.": "Tu as reçu une invitation personnelle à t’inscrire sur Yamilook.",
-  "Aceitar convite e inscrever-me": "Accepter l’invitation et m’inscrire"
+  "Aceitar convite e inscrever-me": "Accepter l’invitation et m’inscrire",
+  "Este tipo de ficheiro não é permitido. Escolhe uma fotografia, vídeo, áudio ou documento compatível.": "Ce type de fichier n’est pas autorisé. Choisis une photo, une vidéo, un fichier audio ou un document compatible.",
+  "O nome do ficheiro não é válido. Altera o nome e tenta novamente.": "Le nom du fichier n’est pas valide. Renomme-le et réessaie.",
+  "O formato do ficheiro não corresponde ao nome. Escolhe o ficheiro original.": "Le format du fichier ne correspond pas à son nom. Choisis le fichier original.",
+  "Não foi possível verificar o ficheiro. Seleciona-o novamente.": "Impossible de vérifier le fichier. Sélectionne-le à nouveau."
 }

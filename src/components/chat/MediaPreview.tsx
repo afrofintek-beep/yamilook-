@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { videoThumbnailSource } from '@/lib/chat-media';
 import { legacyChatVoicePath } from '@/lib/legacy-chat-voice';
+import { safeMediaUrl } from '@/lib/safe-media-url';
 
 function parseStoragePublicUrl(rawUrl: string): { bucket: string; path: string } | null {
   try {
@@ -28,11 +29,19 @@ function getFilenameFromUrl(rawUrl: string) {
 export function useResolvedMediaUrl(url: string) {
   const legacyVoicePath = legacyChatVoicePath(url, import.meta.env.VITE_SUPABASE_URL);
   const needsAuthorization = !!privateChatPath(url) || !!legacyVoicePath;
+  const publicUrl = safeMediaUrl(url, window.location.origin);
+  const blocked = !!url && !needsAuthorization && !publicUrl;
   const authorize = useCallback(async () => {
-    if (!legacyVoicePath) return signPrivateChatMedia(url);
-    const { data, error } = await supabase.storage.from('voice-messages').createSignedUrl(legacyVoicePath, 300);
-    if (error || !data?.signedUrl) throw new Error(uiText("Sem acesso ao anexo"));
-    return data.signedUrl;
+    let signed: string;
+    if (!legacyVoicePath) signed = await signPrivateChatMedia(url);
+    else {
+      const { data, error } = await supabase.storage.from('voice-messages').createSignedUrl(legacyVoicePath, 300);
+      if (error || !data?.signedUrl) throw new Error(uiText("Sem acesso ao anexo"));
+      signed = data.signedUrl;
+    }
+    const safe = safeMediaUrl(signed);
+    if (!safe) throw new Error(uiText("Sem acesso ao anexo"));
+    return safe;
   }, [url, legacyVoicePath]);
   const [override, setOverride] = useState<{ source: string; url: string } | null>(null);
   const [error, setError] = useState(false);
@@ -45,7 +54,7 @@ export function useResolvedMediaUrl(url: string) {
     invalidatePending();
     attemptedRef.current = null;
     setOverride(null);
-    setError(false);
+    setError(blocked);
     if (needsAuthorization) {
       const generation = generationRef.current;
       void authorize().then(signed => {
@@ -53,9 +62,10 @@ export function useResolvedMediaUrl(url: string) {
       }).catch(() => { if (generation === generationRef.current) setError(true); });
     }
     return invalidatePending;
-  }, [url, retryId, invalidatePending, needsAuthorization, authorize]);
+  }, [url, retryId, invalidatePending, needsAuthorization, authorize, blocked]);
 
   const onError = useCallback(async () => {
+    if (blocked) { setError(true); return; }
     if (needsAuthorization) {
       if (attemptedRef.current === url) { setError(true); return; }
       attemptedRef.current = url;
@@ -73,13 +83,14 @@ export function useResolvedMediaUrl(url: string) {
     try {
       const { data, error: signingError } = await supabase.storage.from(parsed.bucket).createSignedUrl(parsed.path, 3600);
       if (generation !== generationRef.current) return;
-      if (signingError || !data?.signedUrl) { setError(true); return; }
-      setOverride({ source: url, url: data.signedUrl });
+      const signed = data?.signedUrl ? safeMediaUrl(data.signedUrl) : undefined;
+      if (signingError || !signed) { setError(true); return; }
+      setOverride({ source: url, url: signed });
       setError(false);
     } catch {
       if (generation === generationRef.current) setError(true);
     }
-  }, [url, needsAuthorization, authorize]);
+  }, [url, needsAuthorization, authorize, blocked]);
 
   const retry = () => {
     invalidatePending();
@@ -89,7 +100,7 @@ export function useResolvedMediaUrl(url: string) {
     setRetryId(value => value + 1);
   };
 
-  return { resolvedUrl: override?.source === url ? override.url : needsAuthorization ? undefined : url, error, onError, retry, retryId };
+  return { resolvedUrl: blocked ? undefined : override?.source === url ? override.url : needsAuthorization ? undefined : publicUrl, error: blocked || error, onError, retry, retryId };
 }
 
 interface MediaPreviewProps {

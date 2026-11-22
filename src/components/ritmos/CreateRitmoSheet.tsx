@@ -32,6 +32,7 @@ import {
 } from '@/components/ui/select';
 import { useAuth } from '@/hooks/useAuth';
 import { useMediaUpload } from '@/hooks/useMediaUpload';
+import { UploadAdmissionError } from '@/lib/upload-safety';
 import { useRitmos } from '@/hooks/useRitmos';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -269,7 +270,7 @@ export function CreateRitmoSheet({ open, onOpenChange }: CreateRitmoSheetProps) 
       handleClose();
     } catch (error) {
       console.error('Error creating ritmo:', error);
-      toast.error(uiText("Falha ao publicar Ritmo"), { id: 'upload-ritmo' });
+      toast.error(error instanceof UploadAdmissionError ? error.message : uiText("Falha ao publicar Ritmo"), { id: 'upload-ritmo' });
     } finally {
       setIsSubmitting(false);
     }

@@ -20,3 +20,11 @@ it('signs for five minutes and propagates a denial',async()=>{
 it('does not interpret remote URLs or traversal as private object paths',()=>{
  expect(privateChatPath('https://evil.example/chat-attachment://c/u/f')).toBeNull();expect(privateChatPath('chat-attachment://c/../f')).toBeNull();expect(privateChatPath('chat-attachment://c/u/f?token=x')).toBeNull();
 });
+it.each([
+ ['invoice.exe.pdf','application/pdf','ordinary fixture'],
+ ['photo.jpg','image/jpeg','<!DOCTYPE html><html></html>'],
+ ['photo\u202ejpg.exe','application/octet-stream','ordinary fixture'],
+])('rejects %s before reserving or uploading an attachment',async(name,type,content)=>{
+ await expect(uploadPrivateChatFile('conversation',new Blob([content]),name,type)).rejects.toThrow();
+ expect(rpc).not.toHaveBeenCalled();expect(upload).not.toHaveBeenCalled();
+});

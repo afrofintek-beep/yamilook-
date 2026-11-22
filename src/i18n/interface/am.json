@@ -3503,5 +3503,9 @@
   "Email do promotor (campanha de 10 convites)": "የአዘጋጁ ኢሜይል (የ10 ግብዣዎች ዘመቻ)",
   "Convite para {{campaign}}": "ወደ {{campaign}} የቀረበ ግብዣ",
   "Recebeste um convite pessoal para te inscreveres na Yamilook.": "በ Yamilook ለመመዝገብ የግል ግብዣ ደርሶዎታል።",
-  "Aceitar convite e inscrever-me": "ግብዣውን ተቀብዬ ልመዝገብ"
+  "Aceitar convite e inscrever-me": "ግብዣውን ተቀብዬ ልመዝገብ",
+  "Este tipo de ficheiro não é permitido. Escolhe uma fotografia, vídeo, áudio ou documento compatível.": "ይህ የፋይል ዓይነት አይፈቀድም። የሚደገፍ ፎቶ፣ ቪዲዮ፣ የድምፅ ፋይል ወይም ሰነድ ይምረጡ።",
+  "O nome do ficheiro não é válido. Altera o nome e tenta novamente.": "የፋይሉ ስም ትክክል አይደለም። ስሙን ቀይረው እንደገና ይሞክሩ።",
+  "O formato do ficheiro não corresponde ao nome. Escolhe o ficheiro original.": "የፋይሉ ቅርጸት ከስሙ ጋር አይዛመድም። ዋናውን ፋይል ይምረጡ።",
+  "Não foi possível verificar o ficheiro. Seleciona-o novamente.": "ፋይሉን ማረጋገጥ አልተቻለም። እንደገና ይምረጡት።"
 }

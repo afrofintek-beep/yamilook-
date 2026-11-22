@@ -4,7 +4,7 @@ import { parseChatAfroloc } from '@/lib/chat-afroloc';
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import PostSharePreview from '@/components/sharing/PostSharePreview';
 import { sharedPostId } from '../../../shared/share-destinations.mjs';
-import { ChatMediaLink } from './PrivateMediaElements';
+import { ChatMediaImage, ChatMediaLink } from './PrivateMediaElements';
 import { LocationCard } from './LocationCard';
 import { parseChatLocation } from '@/lib/chat-location';
 import { useState, useRef, useCallback } from 'react';
@@ -349,7 +349,7 @@ export function EnhancedMessageBubble({
         );
       case 'sticker':
         return (
-          <img
+          <ChatMediaImage
             src={message.media_url || ''}
             alt={uiText("Sticker")}
             className="w-32 h-32 object-contain"
@@ -357,7 +357,7 @@ export function EnhancedMessageBubble({
         );
       case 'gif':
         return (
-          <img
+          <ChatMediaImage
             src={message.media_url || ''}
             alt="GIF"
             className="max-w-[200px] rounded-lg"

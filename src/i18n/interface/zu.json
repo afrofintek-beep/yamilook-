@@ -3503,5 +3503,9 @@
   "Email do promotor (campanha de 10 convites)": "I-imeyili yomgqugquzeli (umkhankaso wezimemo eziyi-10)",
   "Convite para {{campaign}}": "Isimemo sokujoyina i-{{campaign}}",
   "Recebeste um convite pessoal para te inscreveres na Yamilook.": "Uthole isimemo sakho sokubhalisa ku-Yamilook.",
-  "Aceitar convite e inscrever-me": "Yamukela isimemo bese ubhalisa"
+  "Aceitar convite e inscrever-me": "Yamukela isimemo bese ubhalisa",
+  "Este tipo de ficheiro não é permitido. Escolhe uma fotografia, vídeo, áudio ou documento compatível.": "Lolu hlobo lwefayela aluvunyelwe. Khetha isithombe, ividiyo, ifayela lomsindo noma idokhumenti esekelwayo.",
+  "O nome do ficheiro não é válido. Altera o nome e tenta novamente.": "Igama lefayela alivumelekile. Shintsha igama bese uzama futhi.",
+  "O formato do ficheiro não corresponde ao nome. Escolhe o ficheiro original.": "Ifomethi yefayela ayihambisani negama lalo. Khetha ifayela lokuqala.",
+  "Não foi possível verificar o ficheiro. Seleciona-o novamente.": "Ifayela alikwazanga ukuhlolwa. Likhethe futhi."
 }
