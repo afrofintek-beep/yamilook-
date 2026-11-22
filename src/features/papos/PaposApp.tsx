@@ -1,3 +1,4 @@
+import { WalletAccessGate } from '@/features/payment-point/WalletAccess';
 import { uiText, uiLocale, useUiLocale } from '@/i18n/ui-copy';
 import { refreshCallPush } from '@/lib/call-push';
 import { deferCallUpdate } from '@/lib/call-update-guard';
@@ -20,6 +21,13 @@ import PaposLogin from './PaposLogin';
 import PaposInstall from './PaposInstall';
 import PaposConversations from './PaposConversations';
 import { usePaposViewport } from './usePaposViewport';
+const BillingPilot = lazy(() => import("@/features/billing/BillingPilot"));
+const PaymentPoint = lazy(() => import("@/features/payment-point/PaymentPoint"));
+const KumbuWallet = lazy(() => import("@/features/kumbu/routes/KumbuWallet"));
+const KumbuHistory = lazy(() => import("@/features/kumbu/routes/KumbuHistory"));
+const RankingPage = lazy(() => import("@/features/kumbu/routes/Ranking"));
+const CreatorApply = lazy(() => import("@/features/kumbu/routes/CreatorApply"));
+const KumbuPayouts = lazy(() => import("@/features/kumbu/routes/Payouts"));
 const Chat = lazy(() => import('@/pages/Chat'));
 const SharePostToKosolola = lazy(() => import('@/features/sharing/SharePostToKosolola'));
 const Contacts = lazy(() => import('@/pages/Contacts'));
@@ -82,6 +90,14 @@ function PaposRuntime() {
       <Route path="/chat/:conversationId" element={<Chat />} />
       </Route>
       <Route path="/share/post/:postId" element={<SharePostToKosolola />} />
+      <Route path="/facturacao" element={<WalletAccessGate><BillingPilot /></WalletAccessGate>} />
+      <Route path="/payment-point" element={<WalletAccessGate><PaymentPoint /></WalletAccessGate>} />
+      <Route path="/payment-point/:id" element={<WalletAccessGate><PaymentPoint /></WalletAccessGate>} />
+      <Route path="/kumbu" element={<WalletAccessGate><KumbuWallet /></WalletAccessGate>} />
+      <Route path="/kumbu/history" element={<WalletAccessGate><KumbuHistory /></WalletAccessGate>} />
+      <Route path="/ranking" element={<WalletAccessGate><RankingPage /></WalletAccessGate>} />
+      <Route path="/creator/apply" element={<WalletAccessGate><CreatorApply /></WalletAccessGate>} />
+      <Route path="/payouts" element={<WalletAccessGate><KumbuPayouts /></WalletAccessGate>} />
       <Route path="/contacts" element={<Contacts />} />
       <Route path="/calls" element={<div className="h-screen-safe overflow-y-auto pb-[calc(5rem+env(safe-area-inset-bottom,0px))]"><Calls /><BottomNav /></div>} />
       <Route path="/scheduled-call/:sessionId" element={<ScheduledCallRoom />} />
