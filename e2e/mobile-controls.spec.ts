@@ -89,6 +89,24 @@ test('KOSOLOLA fields avoid automatic focus zoom', async ({ page }) => {
   await expect(page.locator('meta[name="viewport"]')).not.toHaveAttribute('content', /user-scalable=no|maximum-scale=1/);
 });
 
+test('KOSOLOLA inbox fits direct call buttons and opens the contact profile', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await mockAccount(page);
+  await page.goto('/papos-app/papos');
+  const voice = page.getByRole('button', { name: `Chamada de voz · ${name}` });
+  const video = page.getByRole('button', { name: `Videochamada · ${name}` });
+  for (const button of [voice, video]) {
+    await expect(button).toBeVisible();
+    const box = (await button.boundingBox())!;
+    expect(box.width).toBeGreaterThanOrEqual(44);
+    expect(box.x + box.width).toBeLessThanOrEqual(320);
+    await button.click({ trial: true });
+  }
+  await page.getByRole('button', { name: `Ver perfil de ${name}` }).click();
+  await expect(page).toHaveURL(`/papos-app/profile/${peer}`);
+  await expect(page.getByRole('heading', { name })).toBeVisible();
+});
+
 for (const base of ['', '/papos-app']) {
   for (const [width,height,insets] of [
     [320,568,[0,0,0,0]], [375,667,[0,0,0,0]],
