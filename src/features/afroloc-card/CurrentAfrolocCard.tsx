@@ -1,7 +1,8 @@
+import {prepareJourneyCompass} from '../locaccess/useJourneyCompass';
 import {usePostalCard} from './usePostalCard';
 import {POSTAL_LABELS,POSTAL_EXAMPLE_NOTE,POSTAL_LINKED_NOTE} from './postal';
 import {useEffect,useRef,useState} from 'react';
-import {Link,useLocation} from 'react-router-dom';
+import {Link,useLocation,useNavigate} from 'react-router-dom';
 import {useAuth} from '@/hooks/useAuth';
 import {supabase} from '@/integrations/supabase/client';
 import {uiText as t,useUiLocale} from '@/i18n/ui-copy';
@@ -24,6 +25,7 @@ export default function CurrentAfrolocCard(){
  return user?<CardScreen key={user.id+':'+location.key} userId={user.id} requested={requested}/>:null;
 }
 function CardScreen({userId,requested}:{userId:string;requested?:string}){
+ const navigate=useNavigate();
  const locale=useUiLocale(),svg=useRef<SVGSVGElement>(null);
  const [snapshot,setSnapshot]=useState<{profile:CardProfile;admin:AdministrativeAddress|null;saved:SavedAddress[];at:number}|null>(null);
  const [revision,setRevision]=useState(0),[busy,setBusy]=useState(true),[fresh,setFresh]=useState(false),[warning,setWarning]=useState(''),[feedback,setFeedback]=useState('');
@@ -130,7 +132,7 @@ function CardScreen({userId,requested}:{userId:string;requested?:string}){
     <Button className="h-12 gap-2" aria-label={t('Partilhar cartão')} disabled={!ready} onClick={()=>void share()}><Share2 className="h-4 w-4"/>{t('Partilhar')}</Button>
     <Button variant="outline" className="h-12 gap-2" disabled={!access.url} onClick={()=>{if(access.url)window.location.assign(access.url)}}><MapPin className="h-4 w-4"/>{t('Ver no mapa')}</Button>
    </div>
-   <Button className="w-full h-12" variant="outline" disabled={!access.url} onClick={()=>{if(access.url)window.location.assign(access.url+'#njila')}}>{t('Abrir na NJILA')}</Button>
+   <Button className="w-full h-12" variant="outline" disabled={!access.url} onClick={()=>{if(!access.url)return;const target=new URL(access.url,window.location.href);target.hash='njila';prepareJourneyCompass();if(target.origin===window.location.origin)navigate(target.pathname+target.search+target.hash);else window.location.assign(target.href)}}>{t('Abrir na NJILA')}</Button>
    <p className="text-xs text-muted-foreground">{t("Ao partilhar ou imprimir, o cartão oculta o código da morada e usa um QR protegido. Uma captura deste ecrã pode revelar o código.")}</p>
    {postal.busy?<p role="status" className="text-xs text-muted-foreground">{t('A consultar a Cx. Postal na AFROLOC…')}</p>:postal.error?<p role="status" className="text-xs text-muted-foreground">{t('Não foi possível consultar a Cx. Postal. Usa Actualizar cartão para tentar novamente.')}</p>:postal.value?.status==='unavailable'?<p className="text-xs text-muted-foreground">{t('Cx. Postal: sem referência disponível para este endereço na AFROLOC.')}</p>:null}
    <AccessControl key={address.id+address.code} control={access}/>
