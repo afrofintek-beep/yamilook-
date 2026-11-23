@@ -1,10 +1,10 @@
 {
-"Activar bússola": "Fungola boussole",
-"Bússola activa": "Boussole ezali kosala",
-"Abrir na NJILA": "Fungola na NJILA",
-"Voltar ao endereço": "Zonga na adresi",
-"A área indicada é aproximada. A morada exacta depende da proximidade autorizada.": "Esika oyo emonisami ezali ya pene. Adresi ya sikisiki ekomonana na ntaka oyo epesami ndingisa.",
-"Não foi possível verificar o acesso. Tenta novamente.": "Tokoki te kotala ndingisa ya kokɔta. Meka lisusu.",
+  "Activar bússola": "Fungola boussole",
+  "Bússola activa": "Boussole ezali kosala",
+  "Abrir na NJILA": "Fungola na NJILA",
+  "Voltar ao endereço": "Zonga na adresi",
+  "A área indicada é aproximada. A morada exacta depende da proximidade autorizada.": "Esika oyo emonisami ezali ya pene. Adresi ya sikisiki ekomonana na ntaka oyo epesami ndingisa.",
+  "Não foi possível verificar o acesso. Tenta novamente.": "Tokoki te kotala ndingisa ya kokɔta. Meka lisusu.",
   "* Exemplo ilustrativo do potencial da caixa postal AFROLOC. Não corresponde a uma caixa atribuída, não permite receber correspondência ou encomendas e não constitui atribuição postal oficial.": "* Ndakisa oyo ezali kolakisa makoki ya boîte postale ya AFROLOC. Ezali boîte oyo epesami te, ekoki koyamba mikanda to biloko te mpe ezali bokaboli ya poste ya Leta te.",
   "* Referência associada na AFROLOC. A apresentação na Yamilook é ilustrativa: não activa recepção de correspondência ou encomendas nem comprova atribuição oficial pelos Correios de Angola.": "* Referansi ekangisami na AFROLOC. Ndenge emonisami na Yamilook ezali kaka ndakisa: epesi nzela ya koyamba mikanda to biloko te mpe endimisi te ete Correios de Angola epesi yango na ndenge ya Leta.",
   "1 hora": "ngonga moko",
@@ -254,5 +254,7 @@
   "Retirar {{name}} da selecção": "Longola {{name}} na bato oyo oponi",
   "Autorizar pessoas seleccionadas ({{count}})": "Pesa ndingisa na bato oyo oponi ({{count}})",
   "Acessos autorizados: {{count}}. Não foi possível concluir. As pessoas restantes continuam seleccionadas.": "Ndingisa epesami: {{count}}. Tokoki te kosilisa. Bato oyo batikali bazali kaka na bato oyo oponi.",
-  "Acessos autorizados: {{count}}.": "Ndingisa epesami: {{count}}."
+  "Acessos autorizados: {{count}}.": "Ndingisa epesami: {{count}}.",
+  "Ecrã inteiro": "Ekrá mobimba",
+  "Reduzir mapa": "Kitisá karte"
 }
