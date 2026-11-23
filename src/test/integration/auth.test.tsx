@@ -49,7 +49,7 @@ describe('Authentication Flow', () => {
     it('renders login form with all fields', () => {
       renderWithAuth(<LoginForm />);
 
-      expect(screen.getByPlaceholderText('nome@yamilook.com')).toBeInTheDocument();
+      expect(screen.getByLabelText(/e-mail ou nome de utilizador/i)).toBeInTheDocument();
       expect(screen.getByPlaceholderText('••••••••')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /entrar no yamilook/i })).toBeInTheDocument();
     });
@@ -61,28 +61,28 @@ describe('Authentication Flow', () => {
       fireEvent.click(submitButton);
 
       await waitFor(() => {
-        expect(screen.getByText(/introduz um email válido/i)).toBeInTheDocument();
+        expect(screen.getByText(/indica o teu e-mail ou nome de utilizador/i)).toBeInTheDocument();
       });
     });
 
     it('shows validation error for invalid email', async () => {
       renderWithAuth(<LoginForm />);
 
-      const emailInput = screen.getByPlaceholderText('nome@yamilook.com');
+      const emailInput = screen.getByLabelText(/e-mail ou nome de utilizador/i);
       fireEvent.change(emailInput, { target: { value: 'invalid-email' } });
 
       const submitButton = screen.getByRole('button', { name: /entrar no yamilook/i });
       fireEvent.click(submitButton);
 
       await waitFor(() => {
-        expect(screen.getByText(/introduz um email válido/i)).toBeInTheDocument();
+        expect(screen.getByText(/indica o teu e-mail ou nome de utilizador/i)).toBeInTheDocument();
       });
     });
 
     it('shows validation error for short password', async () => {
       renderWithAuth(<LoginForm />);
 
-      const emailInput = screen.getByPlaceholderText('nome@yamilook.com');
+      const emailInput = screen.getByLabelText(/e-mail ou nome de utilizador/i);
       const passwordInput = screen.getByPlaceholderText('••••••••');
 
       fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
@@ -123,7 +123,7 @@ describe('Authentication Flow', () => {
 
       renderWithAuth(<LoginForm />);
 
-      const emailInput = screen.getByPlaceholderText('nome@yamilook.com');
+      const emailInput = screen.getByLabelText(/e-mail ou nome de utilizador/i);
       const passwordInput = screen.getByPlaceholderText('••••••••');
 
       fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
@@ -146,7 +146,7 @@ describe('Authentication Flow', () => {
         mockSupabaseClient.auth.signInWithPassword.mockResolvedValueOnce({ data: { session: mockSession, user: mockSession.user }, error: null });
         renderWithAuth(<LoginForm />);
         expect(document.querySelector('a[href^="/register?next="]')).toHaveAttribute('href', '/register?next=' + encodeURIComponent(target));
-        fireEvent.change(screen.getByPlaceholderText('nome@yamilook.com'), { target: { value: 'test@example.com' } });
+        fireEvent.change(screen.getByLabelText(/e-mail ou nome de utilizador/i), { target: { value: 'test@example.com' } });
         fireEvent.change(screen.getByPlaceholderText('••••••••'), { target: { value: 'password123' } });
         fireEvent.click(screen.getByRole('button', { name: /entrar no yamilook/i }));
         await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith(target));
@@ -163,7 +163,7 @@ describe('Authentication Flow', () => {
 
       renderWithAuth(<LoginForm />);
 
-      const emailInput = screen.getByPlaceholderText('nome@yamilook.com');
+      const emailInput = screen.getByLabelText(/e-mail ou nome de utilizador/i);
       const passwordInput = screen.getByPlaceholderText('••••••••');
 
       fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
@@ -184,7 +184,7 @@ describe('Authentication Flow', () => {
 
       renderWithAuth(<LoginForm />);
 
-      const emailInput = screen.getByPlaceholderText('nome@yamilook.com');
+      const emailInput = screen.getByLabelText(/e-mail ou nome de utilizador/i);
       const passwordInput = screen.getByPlaceholderText('••••••••');
 
       fireEvent.change(emailInput, { target: { value: 'test@example.com' } });

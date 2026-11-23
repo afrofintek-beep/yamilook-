@@ -6,12 +6,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { supabase } from '@/integrations/supabase/client';
 import { buildInviteUrl } from '@/lib/referral';
 import { buildFounderInviteMessage, type FounderInviteLanguage } from '@/lib/founder-invite';
+import { trustedCopy } from '@/features/trusted-invites/copy';
 
 type IssueResult = { code?: string };
 
-export function FounderInviteAssistant() {
-  useUiLocale();
-  const [knownContact, setKnownContact] = useState(false);
+export function FounderInviteAssistant({ onOpenTrusted }: { onOpenTrusted?: () => void } = {}) {
+  const locale = useUiLocale();
+  const trusted = trustedCopy(locale);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [profession, setProfession] = useState('');
@@ -39,7 +40,7 @@ export function FounderInviteAssistant() {
     try {
       // The existing RPC verifies invitation permissions on the server.
       // Never generate a code on the client or bypass its single-use/email binding.
-      const { data, error } = await supabase.rpc('issue_individual_invitation' as never, { p_email: address, p_policy: knownContact ? 'admin_waiver' : 'email' } as never);
+      const { data, error } = await supabase.rpc('issue_individual_invitation' as never, { p_email: address, p_policy: 'email' } as never);
       if (error) throw error;
       const code = (data as IssueResult | null)?.code;
       if (!code) throw new Error('Não foi possível gerar o convite.');
@@ -58,15 +59,10 @@ export function FounderInviteAssistant() {
       <CardDescription>{uiText("Founding Circle — prepara uma mensagem pessoal, revê-a e partilha-a manualmente. A ligação individual exige o email de registo do convidado.")}</CardDescription>
     </CardHeader>
     <CardContent className="space-y-4">
-      <label className="block space-y-1 text-sm font-medium">Tipo de convite
-        <select className="flex h-10 w-full rounded-md border bg-background px-3" disabled={busy || !!link}
-          value={knownContact ? 'known' : 'normal'} onChange={event => setKnownContact(event.target.value === 'known')}>
-          <option value="normal">Normal — confirmar email</option>
-          <option value="known">Pessoa conhecida — entrada autorizada pela administração</option>
-        </select>
-      </label>
-      <p className="text-xs text-muted-foreground">Se já existir um convite individual pendente para este email, a escolha actualiza esse convite e renova a validade por sete dias.</p>
-      {knownContact && <p className="text-sm text-muted-foreground">Autoriza a entrada sem confirmação inicial do email. Convite individual, associado ao email e válido por sete dias. Partilha pessoalmente com o destinatário.</p>}
+      <div className="space-y-2 rounded-lg border bg-secondary/30 p-3">
+        <p className="text-sm text-muted-foreground">{trusted.ordinaryHint}</p>
+        {onOpenTrusted && <Button type="button" variant="outline" disabled={busy} onClick={onOpenTrusted}>{trusted.openTrusted}</Button>}
+      </div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <label className="space-y-1 text-sm font-medium">{uiText("Nome do convidado")}<Input value={name} maxLength={100} onChange={e => change(() => setName(e.target.value))} placeholder={uiText("Primeiro nome")} />
         </label>

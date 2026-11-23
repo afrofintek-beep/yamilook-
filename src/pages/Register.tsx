@@ -79,7 +79,10 @@ function InvitationEntry({ code, next }: { code: string; next: string }) {
 }
 
 export default function Register() {
-  const { search } = useLocation();
+  const { search, hash } = useLocation();
+  if (new URLSearchParams(hash.replace(/^#/, '')).has('trusted')) {
+    return <Navigate to={'/convite-confianca' + search + hash} replace />;
+  }
   const code = new URLSearchParams(search).get('ref') ?? '';
   const next = `/onboarding${search}`;
   const business = new URLSearchParams(search).get('next') === '/meus-negocios?abrir=1';

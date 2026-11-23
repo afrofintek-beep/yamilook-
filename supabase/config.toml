@@ -73,6 +73,10 @@ verify_jwt = false
 [functions.register-known-contact]
 verify_jwt = false
 
+# Public bearer invitations/login/recovery; admin actions validate getUser and live session/role.
+[functions.trusted-invitations]
+verify_jwt = false
+
 # Registration email templates. See the localized callback in ResumeRegistration.tsx.
 [auth.email.template.magic_link]
 subject = '''

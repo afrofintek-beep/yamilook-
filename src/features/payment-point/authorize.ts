@@ -41,7 +41,7 @@ export async function authorizeDebit(operation: Operation) {
     const registration = await begin('register',null,relyingParty);
     const response = await startRegistration({optionsJSON:{
       challenge:registration.challenge, rp:{id:relyingParty,name:'Carteira KOSOLOLA'},
-      user:{id:btoa(data.user.id),name:data.user.email || data.user.id,displayName:'Titular da carteira'},
+      user:{id:btoa(data.user.id),name:data.user.user_metadata?.username || data.user.email || data.user.id,displayName:data.user.user_metadata?.display_name || 'Titular da carteira'},
       pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],
       authenticatorSelection:{userVerification:'required'},timeout:90000,attestation:'none'
     }});

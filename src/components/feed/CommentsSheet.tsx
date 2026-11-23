@@ -35,7 +35,7 @@ interface CommentsSheetProps {
 
 export function CommentsSheet({ open, onOpenChange, post }: CommentsSheetProps) {
   useUiLocale();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const viewport = useKeyboardViewport(open);
   const { getComments, addComment, deleteComment, toggleCommentReaction } = usePosts({ autoLoad: false });
 
@@ -82,9 +82,9 @@ export function CommentsSheet({ open, onOpenChange, post }: CommentsSheetProps) 
       created_at: new Date().toISOString(),
       user: {
         id: user.id,
-        display_name: user.email?.split('@')[0] || 'You',
-        avatar_url: null,
-        username: user.email?.split('@')[0] || '',
+        display_name: profile?.display_name || user.user_metadata?.display_name || uiText('Tu'),
+        avatar_url: profile?.avatar_url || null,
+        username: profile?.username || user.user_metadata?.username || '',
       },
       replies: [],
       reactions: {},

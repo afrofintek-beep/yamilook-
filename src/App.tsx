@@ -37,6 +37,7 @@ const AfrolocExperience = lazy(() => import("./features/afroloc-experience/Afrol
 const Home = lazy(() => import("./pages/Home"));
 const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
+const TrustedInviteRegistration = lazy(() => import("./features/trusted-invites/TrustedInviteRegistration"));
 const ResumeRegistration = lazy(() => import("./pages/ResumeRegistration"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
@@ -416,6 +417,8 @@ function AnimatedRoutes() {
           </Route>
           <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
           <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
+          {/* Keep the recovery code visible after a trusted account establishes its session. */}
+          <Route path="/convite-confianca" element={<TrustedInviteRegistration />} />
           <Route path="/welcome" element={<PublicRoute><Welcome /></PublicRoute>} />
           <Route path="/app/retomar" element={<PublicRoute><ResumeRegistration /></PublicRoute>} />
           <Route path="/retomar" element={<PublicRoute><ResumeRegistration /></PublicRoute>} />

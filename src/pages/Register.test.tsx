@@ -11,6 +11,16 @@ it('sends invitation registration into the unified wizard without losing the cod
   await waitFor(() => expect(screen.getByText('/onboarding?ref=ABC12345')).toBeInTheDocument());
 });
 
+it('routes a trusted invitation to its activation screen without exposing the token in the query', async () => {
+  const token = 'ab'.repeat(32);
+  function TrustedDestination() { const location = useLocation(); return <p>{location.pathname}{location.search}{location.hash}</p>; }
+  render(<MemoryRouter initialEntries={['/register?lang=fr#trusted=' + token]}><Routes>
+    <Route path="/register" element={<Register />} />
+    <Route path="/convite-confianca" element={<TrustedDestination />} />
+  </Routes></MemoryRouter>);
+  expect(await screen.findByText('/convite-confianca?lang=fr#trusted=' + token)).toBeInTheDocument();
+});
+
 const { rpc } = vi.hoisted(() => ({ rpc: vi.fn() }));
 vi.mock('@/integrations/supabase/client', () => ({ supabase: { rpc } }));
 it('uses the verified campaign title and preserves the single-use code on acceptance', async () => {
