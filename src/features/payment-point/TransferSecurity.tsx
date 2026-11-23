@@ -30,6 +30,7 @@ export async function preferences(blocked?:boolean, transfer?:number, daily?:num
 }
 export function TransferSecurity({onChange}:{onChange?:(value:Preferences)=>void}) {
   const [confirmSession,setConfirmSession] = useState(false);
+  const [pendingToggle,setPendingToggle] = useState(true);
   const [prefs,setPrefs] = useState<Preferences>();
   const [transfer,setTransfer] = useState('');
   const [daily,setDaily] = useState('');
@@ -50,15 +51,17 @@ export function TransferSecurity({onChange}:{onChange?:(value:Preferences)=>void
     } catch(e) {
       const error = (e as Error).message;
       setMessage(error);
-      if (error.includes('segundo factor')) setConfirmSession(true);
+      if (error.includes('segundo factor')) { setPendingToggle(toggle); setConfirmSession(true); }
     }
     finally {setBusy(false);}
   }
+  if (confirmSession) return <WalletSessionConfirmation inline
+    onClose={() => { setConfirmSession(false); setMessage(''); }}
+    onConfirmed={() => { setConfirmSession(false); void save(pendingToggle); }} />;
   return <section className="space-y-3">
-    {confirmSession && <WalletSessionConfirmation onClose={() => { setConfirmSession(false); setMessage('Após confirmar a sessão, volta a seleccionar a opção pretendida.'); }} />}
     {prefs && <>
       <p>Saídas de dinheiro {prefs.blocked ? 'bloqueadas' : 'activas'}.</p>
-      <Button disabled={busy} onClick={()=>save(true)}>{prefs.blocked ? 'Desbloquear' : 'Bloquear'} saídas de dinheiro</Button>
+      <Button disabled={busy} onClick={()=>{ if (prefs.blocked) { setPendingToggle(true); setConfirmSession(true); } else void save(true); }}>{prefs.blocked ? 'Desbloquear' : 'Bloquear'} saídas de dinheiro</Button>
       <label className="block">Limite por operação (Kz)<Input inputMode="decimal" value={transfer} onBlur={()=>setTransfer(formatOnBlur(transfer))} onChange={e=>setTransfer(e.target.value)}/></label>
       <label className="block">Limite diário (Kz)<Input inputMode="decimal" value={daily} onBlur={()=>setDaily(formatOnBlur(daily))} onChange={e=>setDaily(e.target.value)}/></label>
       <Button disabled={busy} onClick={()=>save(false)}>Guardar limites</Button>
