@@ -25,11 +25,14 @@ async function fixture() {
     create table auth.users(id uuid primary key default gen_random_uuid(),email text unique,phone text unique,
       raw_user_meta_data jsonb default '{}',raw_app_meta_data jsonb default '{}',
       email_confirmed_at timestamptz,phone_confirmed_at timestamptz,
-      encrypted_password varchar,recovery_token varchar,recovery_sent_at timestamptz,
+      encrypted_password varchar,confirmation_token varchar,confirmation_sent_at timestamptz,recovery_token varchar,recovery_sent_at timestamptz,
+      email_change_token_current varchar,email_change_token_new varchar,email_change_sent_at timestamptz,
+      phone_change_token varchar,phone_change_sent_at timestamptz,
       reauthentication_token varchar,reauthentication_sent_at timestamptz,updated_at timestamptz,
       deleted_at timestamptz,banned_until timestamptz,is_anonymous boolean default false);
     create table auth.sessions(id uuid primary key default gen_random_uuid(),user_id uuid references auth.users(id) on delete cascade);
     create table auth.refresh_tokens(id bigint generated always as identity,user_id varchar,session_id uuid references auth.sessions(id) on delete cascade);
+    create table auth.one_time_tokens(id uuid primary key default gen_random_uuid(),user_id uuid references auth.users(id) on delete cascade,token_hash text);
     create table profiles(id uuid primary key references auth.users(id),email text,display_name text not null,username text not null unique,referral_code text unique,referred_by uuid,onboarding_completed boolean default false,account_status text default 'active');
     create unique index profiles_username_normalized_key on profiles(lower(btrim(username)));
     create table user_settings(user_id uuid);
@@ -76,6 +79,8 @@ async function fixture() {
     create trigger on_auth_user_created after insert on auth.users for each row execute function handle_new_user();
   `);
   await db.exec(await readFile(new URL('../supabase/migrations/20261123225604_trusted_invitations.sql', import.meta.url),'utf8'));
+  await db.exec(await readFile(new URL('../supabase/migrations/20261123230817_trusted_profile_username_guard.sql', import.meta.url),'utf8'));
+  await db.exec(await readFile(new URL('../supabase/migrations/20261123230432_trusted_auth_reservation.sql', import.meta.url),'utf8'));
   let counter = 0;
   const sent = [];
   const attributes = [];
@@ -88,10 +93,32 @@ async function fixture() {
     async getUser(jwt) { return jwt===JWT ? {id:OWNER,is_anonymous:false} : null; },
     async createUser(a) {
       attributes.push(a);
-      const id=crypto.randomUUID();
-      await db.query(`insert into auth.users(id,email,phone,raw_user_meta_data,raw_app_meta_data,email_confirmed_at,phone_confirmed_at,encrypted_password)
-        values($1,$2,$3,$4,$5,$6,$7,$8)`,[id,a.email,a.phone?.replace(/^\+/,'')||null,a.user_metadata,a.app_metadata,
-        a.email_confirm?new Date():null,a.phone_confirm?new Date():null,await hashPassword(a.password)]);
+      const id=a.id||crypto.randomUUID();
+      const providers=['email',...(a.phone?['phone']:[])];
+      const appMetadata={provider:providers[0],providers};
+      const userMetadata={...(a.user_metadata||{})};
+      const passwordHash=await hashPassword(a.password);
+      // Match GoTrue v2.198.0: custom ID is present on INSERT; app metadata
+      // initially has providers only and both confirmation dates are NULL.
+      // Custom app metadata and confirmations happen afterwards, in the same
+      // transaction. Confirm also rewrites user metadata from its Go object.
+      await db.transaction(async tx=>{
+        await tx.query(`insert into auth.users(id,email,phone,raw_user_meta_data,raw_app_meta_data,email_confirmed_at,phone_confirmed_at,encrypted_password)
+          values($1,$2,$3,$4,$5,null,null,$6)`,[id,a.email,a.phone?.replace(/^\+/,'')||null,userMetadata,appMetadata,passwordHash]);
+        if(a.app_metadata!==undefined && a.app_metadata!==null) {
+          await tx.query('update auth.users set raw_app_meta_data=$1 where id=$2',[{...appMetadata,...a.app_metadata},id]);
+        }
+        if(a.email_confirm) {
+          await tx.query("update auth.users set confirmation_token='',email_confirmed_at=now() where id=$1",[id]);
+          userMetadata.email_verified=true;
+          await tx.query('update auth.users set raw_user_meta_data=$1 where id=$2',[userMetadata,id]);
+          await tx.query('delete from auth.one_time_tokens where user_id=$1',[id]);
+        }
+        if(a.phone_confirm) {
+          await tx.query("update auth.users set confirmation_token='',phone_confirmed_at=now() where id=$1",[id]);
+          await tx.query('delete from auth.one_time_tokens where user_id=$1',[id]);
+        }
+      });
       return {id};
     },
     async signIn(identifier,password) {
@@ -101,7 +128,8 @@ async function fixture() {
       const sid=crypto.randomUUID();
       await db.query('insert into auth.sessions(id,user_id) values($1,$2)',[sid,u.id]);
       await db.query('insert into auth.refresh_tokens(user_id,session_id) values($1,$2)',[u.id,sid]);
-      return {access_token:`synthetic-access-${++counter}`,refresh_token:`synthetic-refresh-${counter}`,user:{id:u.id,email:u.email},session_id:sid};
+      return {access_token:`synthetic-access-${++counter}`,refresh_token:`synthetic-refresh-${counter}`,
+        user:{id:u.id,email:u.email,app_metadata:u.raw_app_meta_data,user_metadata:u.raw_user_meta_data},session_id:sid};
     },
     hashPassword,
     async sendSms(phone,otp) { sent.push({phone,otp});return true; },
@@ -126,7 +154,7 @@ test('trusted direct invitations: strict admin issuance, non-consuming preview, 
   try {
     assert.equal((await f.call('status')).status,401);
     const status=await f.call('status',{},true);assert.equal(status.body.sms_ready,false,JSON.stringify(status));
-    const inv=await f.issue();
+    const inv=await f.issue({language:'fr'});
     assert.match(inv.token,/^[a-f0-9]{64}$/); assert.ok(inv.link.endsWith(`#trusted=${inv.token}`));
     for(let n=0;n<2;n++) assert.equal((await f.call('preview',{token:inv.token})).body.invitation.status,'pending');
     const row=(await f.db.query('select * from private.trusted_invitations')).rows[0];
@@ -138,15 +166,26 @@ test('trusted direct invitations: strict admin issuance, non-consuming preview, 
     assert.equal(activated.status,200,JSON.stringify(activated));
     assert.equal(activated.body.account_created,true);assert.match(activated.body.recovery_code,/^[a-f0-9]{64}$/);
     const id=activated.body.session.user.id;
+    assert.equal(f.attributes[0].id,id);
+    assert.equal(Object.hasOwn(f.attributes[0],'app_metadata'),false);
     const user=(await f.db.query('select * from auth.users where id=$1',[id])).rows[0];
     assert.match(user.email,/^[a-f0-9]{32}@trusted-login\.yamilook\.invalid$/);
     assert.equal(user.raw_app_meta_data.trusted_account,true);
     assert.equal(user.raw_app_meta_data.contact_email_verified,false);
     assert.equal(user.raw_app_meta_data.trusted_claim_hash,undefined);
     assert.equal(user.raw_app_meta_data.trusted_recovery_hash,undefined);
+    assert.equal(activated.body.session.user.app_metadata.trusted_account,true);
+    assert.equal(user.raw_user_meta_data.registration_email_language,'fr');
+    assert.equal(user.raw_user_meta_data.ref,undefined); // GoTrue Confirm rewrites from its original model.
+    assert.equal(user.raw_user_meta_data.email_verified,true); // Internal identifier only.
+    const reservation=(await f.db.query('select activation_claim_hash,activation_recovery_hash from private.trusted_invitations where id=$1',[inv.invitation.id])).rows[0];
+    for(const secret of [reservation.activation_claim_hash,reservation.activation_recovery_hash]) {
+      assert.ok(!JSON.stringify({app:user.raw_app_meta_data,user:user.raw_user_meta_data}).includes(secret));
+    }
     assert.ok(!JSON.stringify(user).includes(activated.body.recovery_code));
     const profile=(await f.db.query('select * from profiles where id=$1',[id])).rows[0];
     assert.equal(profile.email,null);assert.equal(profile.onboarding_completed,false);
+    assert.equal(profile.referred_by,OWNER);
     assert.equal(profile.username,'trusted_person');
     assert.equal((await f.call('login',{username:'trusted_person',password:PASS})).status,200);
     const wrong=await f.call('login',{username:'trusted_person',password:'WrongPassword123!'});
@@ -157,6 +196,43 @@ test('trusted direct invitations: strict admin issuance, non-consuming preview, 
     const list=(await f.call('list',{},true)).body.invitations;
     assert.equal(list[0].status,'used');assert.ok(!JSON.stringify(list).includes(inv.token));assert.ok(!JSON.stringify(list).includes(row.token_hash));
     assert.equal((await f.call('revoke',{id:inv.invitation.id},true)).body.error.code,'already_used');
+  } finally {await f.close();}
+});
+
+test('native Auth reservations bind UUID, internal alias and username; forged metadata and expired claims cannot consume an invitation',async()=>{
+  const f=await fixture();
+  try {
+    await assert.rejects(f.defaults.createUser({id:crypto.randomUUID(),email:'f'.repeat(32)+'@trusted-login.yamilook.invalid',
+      password:PASS,email_confirm:true,user_metadata:{username:'forged_person',display_name:'Forged',access_code:'ABCD1234',
+        trusted_signup_version:1,trusted_claim_hash:'a'.repeat(64),trusted_recovery_hash:'b'.repeat(64)},
+      app_metadata:{trusted_signup_version:1,trusted_claim_hash:'a'.repeat(64),trusted_recovery_hash:'b'.repeat(64)}}),/TRUSTED_INVITE_INVALID/);
+    assert.equal((await f.db.query('select count(*)::int n from private.trusted_accounts')).rows[0].n,0);
+
+    const mutations=[
+      ['uuid',async a=>({...a,id:crypto.randomUUID()})],
+      ['alias',async a=>({...a,email:'e'.repeat(32)+'@trusted-login.yamilook.invalid'})],
+      ['real_email',async a=>({...a,email:'not-a-verified-mailbox@example.com'})],
+      ['username',async a=>({...a,user_metadata:{...a.user_metadata,username:'unbound_person'}})],
+      ['expired',async a=>{await f.db.query("update private.trusted_invitations set activation_expires_at=now()-interval '1 second' where activation_user_id=$1",[a.id]);return a;}],
+    ];
+    for(const [label,mutate] of mutations) {
+      const inv=await f.issue();
+      f.ports.createUser=async a=>f.defaults.createUser(await mutate(a));
+      const rejected=await f.activate(inv.token,`reserved_${label}`);
+      assert.equal(rejected.status,503,`${label}: ${JSON.stringify(rejected)}`);
+      const pending=(await f.db.query('select used_at,activation_claim_hash,activation_user_id,activation_identifier,activation_recovery_hash from private.trusted_invitations where id=$1',[inv.invitation.id])).rows[0];
+      assert.deepEqual(pending,{used_at:null,activation_claim_hash:null,activation_user_id:null,activation_identifier:null,activation_recovery_hash:null});
+      f.ports.createUser=f.defaults.createUser;
+      const accepted=await f.activate(inv.token,`reserved_${label}`);
+      assert.equal(accepted.status,200,`${label}: ${JSON.stringify(accepted)}`);
+      await assert.rejects(f.defaults.createUser(f.attributes.at(-1)),/TRUSTED_INVITE_INVALID/);
+    }
+
+    const inv=await f.issue();
+    const existing=await f.ports.rpc('prepare_activation',{token_hash:await sha256(inv.token),username:'unused_name',
+      user_id:OWNER,identifier:'d'.repeat(32)+'@trusted-login.yamilook.invalid',recovery_hash:'c'.repeat(64),claim_hash:'b'.repeat(64)});
+    assert.equal(existing.error.code,'invalid_request');
+    assert.equal((await f.db.query('select used_at from private.trusted_invitations where id=$1',[inv.invitation.id])).rows[0].used_at,null);
   } finally {await f.close();}
 });
 
@@ -198,12 +274,52 @@ test('trusted signup cannot be forged in public metadata; revocation, expiry, ad
   } finally {await f.close();}
 });
 
+test('trusted profile username updates preserve login and reject unrepresentable identifiers without restricting legacy accounts',async()=>{
+  const f=await fixture();
+  try {
+    const inv=await f.issue(),created=await f.activate(inv.token,'trusted_rename');
+    assert.equal(created.status,200,JSON.stringify(created));
+    const uid=created.body.session.user.id;
+    const permissions=(await f.db.query(`select
+      has_function_privilege('anon','private.trusted_profile_username_guard()','EXECUTE') anon_execute,
+      has_function_privilege('authenticated','private.trusted_profile_username_guard()','EXECUTE') authenticated_execute`)).rows[0];
+    assert.deepEqual(permissions,{anon_execute:false,authenticated_execute:false});
+    // Exercise the trigger with a browser role that cannot read private accounts.
+    await f.db.exec('grant select(id,username),update(username) on public.profiles to authenticated;set role authenticated');
+    for(const invalid of ['nome.apelido','nome apelido','@nome','_nome','ab','n'.repeat(21),'nomé',null]) {
+      await assert.rejects(f.db.query('update public.profiles set username=$1 where id=$2',[invalid,uid]),
+        error=>error.code==='23514' && error.message==='TRUSTED_USERNAME_INVALID');
+    }
+    assert.equal((await f.db.query('select username from public.profiles where id=$1',[uid])).rows[0].username,'trusted_rename');
+    await f.db.exec('reset role');
+    assert.equal((await f.call('login',{username:'trusted_rename',password:PASS})).status,200);
+
+    await f.db.exec('set role authenticated');
+    await f.db.query('update public.profiles set username=$1 where id=$2',['  Allowed_Name  ',uid]);
+    assert.equal((await f.db.query('select username from public.profiles where id=$1',[uid])).rows[0].username,'  Allowed_Name  ');
+    for(const legacyName of ['nome.apelido','nome apelido']) {
+      await f.db.query('update public.profiles set username=$1 where id=$2',[legacyName,OTHER]);
+      assert.equal((await f.db.query('select username from public.profiles where id=$1',[OTHER])).rows[0].username,legacyName);
+    }
+    await f.db.exec('reset role');
+    assert.equal((await f.call('login',{username:'allowed_name',password:PASS})).status,200);
+    const recovered=await f.call('recover',{username:'allowed_name',recovery_code:created.body.recovery_code,new_password:'RenamedTrustedPass123!'});
+    assert.equal(recovered.status,200,JSON.stringify(recovered));
+  } finally {await f.close();}
+});
+
 test('trusted recovery rotates one-time code, native bcrypt password and all sessions atomically; current username is authoritative',async()=>{
   const f=await fixture();
   try {
     const inv=await f.issue(),created=await f.activate(inv.token,'recover_person');
     assert.equal(created.status,200,JSON.stringify(created));
     const uid=created.body.session.user.id,originalCode=created.body.recovery_code;
+    await f.db.query(`update auth.users set confirmation_token='pending-confirm',confirmation_sent_at=now(),
+      recovery_token='pending-recovery',recovery_sent_at=now(),email_change_token_current='pending-current',
+      email_change_token_new='pending-new',email_change_sent_at=now(),phone_change_token='pending-phone',
+      phone_change_sent_at=now(),reauthentication_token='pending-reauth',reauthentication_sent_at=now() where id=$1`,[uid]);
+    await f.db.query("insert into auth.one_time_tokens(user_id,token_hash) values($1,'pending-trusted'),($2,'unrelated-owner')",[uid,OWNER]);
+    const identityBefore=(await f.db.query('select email,phone from auth.users where id=$1',[uid])).rows[0];
     await f.call('login',{username:'recover_person',password:PASS});
     const sessionsBefore=(await f.db.query('select count(*)::int n from auth.sessions where user_id=$1',[uid])).rows[0].n;
     assert.equal(sessionsBefore,2);
@@ -217,6 +333,15 @@ test('trusted recovery rotates one-time code, native bcrypt password and all ses
     assert.equal(recovered.status,200,JSON.stringify(recovered));assert.notEqual(recovered.body.recovery_code,originalCode);
     assert.equal(recovered.body.session,undefined);
     const row=(await f.db.query('select * from auth.users where id=$1',[uid])).rows[0];
+    assert.deepEqual({email:row.email,phone:row.phone},identityBefore);
+    for(const column of ['confirmation_token','recovery_token','email_change_token_current','email_change_token_new','phone_change_token','reauthentication_token']) {
+      assert.equal(row[column],'',column);
+    }
+    for(const column of ['confirmation_sent_at','recovery_sent_at','email_change_sent_at','phone_change_sent_at','reauthentication_sent_at']) {
+      assert.equal(row[column],null,column);
+    }
+    assert.equal((await f.db.query('select count(*)::int n from auth.one_time_tokens where user_id=$1',[uid])).rows[0].n,0);
+    assert.equal((await f.db.query('select count(*)::int n from auth.one_time_tokens where user_id=$1',[OWNER])).rows[0].n,1);
     assert.equal(await compare('NewTrustedPass123!',row.encrypted_password),true);
     assert.equal(await compare(PASS,row.encrypted_password),false);
     assert.equal((await f.db.query('select count(*)::int n from auth.sessions where user_id=$1',[uid])).rows[0].n,0);
@@ -263,6 +388,18 @@ test('phone invitations remain configuration-gated; bound SMS OTP expires, limit
     await f.call('request_otp',{token:expired.token});
     await f.db.query("update private.trusted_invitations set otp_expires_at=now()-interval '1 second' where id=$1",[expired.invitation.id]);
     assert.equal((await f.activate(expired.token,'phone_expired',{otp:f.sent.at(-1).otp})).body.error.code,'invalid_otp');
+    const replaced=await f.issue({mode:'phone',phone:'+244923000004'});
+    await f.call('request_otp',{token:replaced.token});
+    const priorOtp=f.sent.at(-1).otp;
+    f.ports.createUser=async a=>{
+      await f.db.query("update private.trusted_invitations set otp_sent_at=now()-interval '2 minutes' where id=$1",[replaced.invitation.id]);
+      assert.equal((await f.call('request_otp',{token:replaced.token})).status,200);
+      return f.defaults.createUser(a);
+    };
+    assert.equal((await f.activate(replaced.token,'phone_replaced',{otp:priorOtp})).status,503);
+    assert.equal((await f.db.query('select used_at from private.trusted_invitations where id=$1',[replaced.invitation.id])).rows[0].used_at,null);
+    f.ports.createUser=f.defaults.createUser;
+    assert.equal((await f.activate(replaced.token,'phone_replaced',{otp:f.sent.at(-1).otp})).status,200);
   } finally {await f.close();}
 });
 

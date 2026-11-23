@@ -206,25 +206,31 @@ export function createHandler(ports: Ports) {
         if (!/^\d{6}$/.test(text(input.otp)) || !context.otp_id) return fail('invalid_otp');
         digest = await otpDigest(ports.otpPepper,tokenHash,context.otp_id,text(input.otp));
       }
-      const claimHash = await sha256(randomSecret());
-      const prepared = await ports.rpc('prepare_activation', { token_hash:tokenHash, username,
-        claim_hash:claimHash, otp_id:context.otp_id || null, otp_hash:digest });
-      if (!prepared.ok) return resultFailure(prepared);
+      const userId = crypto.randomUUID();
       const identifier = `${crypto.randomUUID().replace(/-/g,'')}@trusted-login.yamilook.invalid`;
       const recoveryCode = randomSecret(), recoveryHash = await sha256(recoveryCode);
+      const claimHash = await sha256(randomSecret());
+      const prepared = await ports.rpc('prepare_activation', { token_hash:tokenHash, username,
+        user_id:userId, identifier, recovery_hash:recoveryHash,
+        claim_hash:claimHash, otp_id:context.otp_id || null, otp_hash:digest });
+      if (!prepared.ok) return resultFailure(prepared);
       let created: {id:string}|null = null;
       try {
-        created = await ports.createUser({ email:identifier, password:input.password, email_confirm:true,
+        // GoTrue inserts before applying custom app_metadata or confirmation
+        // flags. The trigger consumes the private UUID/alias reservation and
+        // writes permanent provenance; omitting app_metadata preserves it.
+        created = await ports.createUser({ id:userId, email:identifier, password:input.password, email_confirm:true,
           ...(prepared.mode==='phone' ? {phone:prepared.phone,phone_confirm:true} : {}),
-          user_metadata:{username,display_name:displayName,terms_accepted_at:new Date().toISOString()},
-          app_metadata:{trusted_signup_version:1,trusted_claim_hash:claimHash,trusted_recovery_hash:recoveryHash} });
+          user_metadata:{username,display_name:displayName,terms_accepted_at:new Date().toISOString(),
+            registration_email_language:prepared.language} });
       } catch { /* Reconcile a possible committed Auth request before retrying. */ }
+      if (created?.id !== userId) created = null;
       if (!created) {
-        const committed = await ports.rpc('activation_result', { claim_hash:claimHash,recovery_hash:recoveryHash,identifier });
-        if (committed.ok && committed.user_id) created = {id:committed.user_id};
+        const committed = await ports.rpc('activation_result', { user_id:userId,claim_hash:claimHash,recovery_hash:recoveryHash,identifier });
+        if (committed.ok && committed.user_id === userId) created = {id:userId};
       }
       if (!created) {
-        await ports.rpc('release_activation', {token_hash:tokenHash,claim_hash:claimHash});
+        await ports.rpc('release_activation', {token_hash:tokenHash,user_id:userId,identifier,recovery_hash:recoveryHash,claim_hash:claimHash});
         return fail('unavailable',503);
       }
       let session = null;

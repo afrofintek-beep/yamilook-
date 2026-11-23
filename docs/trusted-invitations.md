@@ -51,7 +51,29 @@ deletion and ban state. Issuance, previews, cancellation, activation and recover
 use the `trusted-invitations` Edge Function; the underlying public RPC is callable
 only by the service role and delegates to private functions. Private tables have
 RLS enabled and no browser grants. Invitation consumption and account provenance
-commit inside the Auth user creation transaction, using server-owned metadata.
+commit inside the Auth user creation transaction, using a private reservation.
+
+Before calling native Auth, the service generates a new UUID, an internal alias
+and a recovery code. A service-only RPC reserves that UUID, alias, username and
+recovery-code hash for at most two minutes. Phone mode also binds the verified
+OTP challenge ID. The `BEFORE INSERT` trigger locks the reservation, rechecks
+expiry, revocation, administrator eligibility and phone proof, and consumes the
+invitation only for the exact reserved identity. It then writes permanent
+provenance and confirms the internal login identifier. The bearer token and
+recovery code never enter Auth metadata; their hashes remain private.
+
+This order follows [GoTrue v2.198.0 adminUserCreate](https://github.com/supabase/auth/blob/v2.198.0/internal/api/admin.go),
+which inserts the user before applying custom app metadata and confirmation
+flags. The Edge Function therefore supplies the reserved UUID and omits custom
+`app_metadata`, preserving the permanent metadata written by the trigger.
+The selected language is included in user metadata because native confirmation
+rewrites that metadata from its original user model.
+
+Trusted accounts must retain a username that login and recovery can represent:
+3–20 letters, digits or underscores, beginning with a letter or digit. The
+database applies this rule when a trusted account changes its username and
+uses the normalized current value for subsequent access. Ordinary accounts
+retain their existing username rules.
 
 ## SMS mode
 
@@ -76,7 +98,10 @@ separately authorised test recipient.
 Only accounts created by this new flow can use the recovery-code operation.
 A single database transaction verifies and rotates the recovery hash, installs
 a native-compatible bcrypt password hash, revokes Auth sessions/refresh tokens,
-and emits the existing session-revocation events. Other account types are not
+clears pending confirmation, recovery, contact-change and reauthentication
+tokens, deletes Auth one-time tokens, and emits the existing session-revocation
+events. These token resets follow [GoTrue v2.198.0 UpdatePassword](https://github.com/supabase/auth/blob/v2.198.0/internal/models/user.go).
+Other account types are not
 eligible. Existing access JWTs retain Supabase's normal expiry semantics; the
 application's existing session check and revocation listener close their sessions.
 
@@ -85,7 +110,8 @@ stored in local storage, logs, public profiles or user-editable metadata.
 
 ## Release and verification
 
-Apply the new trusted-invitations migration and deploy the Edge Function before
+Apply the trusted-invitations, username-guard and Auth-reservation migrations
+and deploy the matching Edge Function before
 publishing the frontend. The function uses its own authentication and therefore
 has gateway `verify_jwt=false`; this is necessary for invitation recipients and
 does not make administrative operations public. Build and run the focused
@@ -93,8 +119,10 @@ invitation/login/recovery tests and the SQL/handler tests before release.
 
 Verify administrative denial without a valid session, unavailable/expired/used
 invitation responses, the status of the published version, and the actual
-`sms_ready` capability. Synthetic local tests cover the complete activation and
-recovery lifecycle. A live end-to-end test that creates a user requires an
+`sms_ready` capability. Synthetic local tests cover the activation and recovery
+lifecycle with the native INSERT-before-confirmation order, UUID/alias binding,
+metadata rewrites, single use, OTP challenge replacement and session/token
+revocation. A live end-to-end test that creates a user requires an
 authorised invitation from a signed-in administrator; do not query personal
 administrator records or reuse someone else's session to arrange that test.
 

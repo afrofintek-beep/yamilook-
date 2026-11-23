@@ -26,6 +26,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -39,6 +40,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
 import { BandaChangeSheet } from './BandaChangeSheet';
+import { trustedCopy } from '@/features/trusted-invites/copy';
 
 type PhotosVisibility = 'everyone' | 'friends' | 'nobody';
 
@@ -88,8 +90,13 @@ const profileSchema = z.object({
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
 export function ProfileEditSheet({ open, onOpenChange, profile, onUpdate }: ProfileEditSheetProps) {
-  useUiLocale();
+  const locale = useUiLocale();
   const { user, updateProfile, refreshProfile, profile: authProfile } = useAuth();
+  const trustedAccount = user?.app_metadata?.trusted_account === true;
+  const usernameHint = trustedCopy(locale).usernameHint;
+  const schema = trustedAccount ? profileSchema.extend({
+    username: z.string().trim().toLowerCase().regex(/^[a-z0-9][a-z0-9_]{2,19}$/, usernameHint),
+  }) : profileSchema;
   const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const [bandaOpen, setBandaOpen] = useState(false);
@@ -106,7 +113,7 @@ export function ProfileEditSheet({ open, onOpenChange, profile, onUpdate }: Prof
   });
 
   const form = useForm<ProfileFormValues>({
-    resolver: zodResolver(profileSchema),
+    resolver: zodResolver(schema),
     defaultValues: {
       display_name: profile.display_name,
       username: profile.username,
@@ -328,6 +335,7 @@ export function ProfileEditSheet({ open, onOpenChange, profile, onUpdate }: Prof
                         className="h-12 rounded-xl bg-secondary/50 border-0"
                       />
                     </FormControl>
+                    {trustedAccount && <FormDescription>{usernameHint}</FormDescription>}
                     <FormMessage />
                   </FormItem>
                 )}
