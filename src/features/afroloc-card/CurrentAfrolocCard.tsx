@@ -11,6 +11,7 @@ import {ArrowLeft,MoreHorizontal,Share2,MapPin,Download,Printer,RefreshCw,Copy} 
 import {DropdownMenu,DropdownMenuTrigger,DropdownMenuContent,DropdownMenuItem} from '@/components/ui/dropdown-menu';
 import {Button} from '@/components/ui/button';
 import {AccessControl,useAccessControl} from '../locaccess/AccessControl';
+import {ReceivedAccessQr} from '../locaccess/ReceivedAccessQr';
 import {cardPhoto} from './photo';
 import {CardPreview} from './CardPreview';
 import {cardAddresses,selectCardAddress,cardText,divisionName,type CardProfile,type SavedAddress,type CardLine} from './model';
@@ -132,6 +133,7 @@ function CardScreen({userId,requested}:{userId:string;requested?:string}){
     </DropdownMenuContent>
    </DropdownMenu>
   </header>
+  <ReceivedAccessQr/>
   {busy&&<p role="status" className="text-sm text-muted-foreground">{t('A actualizar o cartão…')}</p>}
   {warning&&<p role="alert" className="text-sm">{t(warning)}</p>}
   {!fresh&&!busy&&snapshot&&!warning&&<p role="alert" className="text-sm">{t('Não foi possível actualizar o cartão. Verifica a ligação e tenta novamente.')}</p>}
