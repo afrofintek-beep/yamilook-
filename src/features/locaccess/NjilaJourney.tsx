@@ -1,6 +1,7 @@
 import {useEffect, useRef, useState} from 'react';
 import {locaccess, validHandle} from './api';
 import {uiLocale, uiText as t} from '@/i18n/ui-copy';
+import {useJourneyCompass} from './useJourneyCompass';
 
 const NJILA = 'https://www.njilamaps.com';
 type Point = {lat:number; lon:number};
@@ -10,12 +11,18 @@ type Visit = {status:'ready'|'proximity'|'denied'; point?:Point; area?:Point; ex
 /** The signed-in parent renews every lease through LOCACCESS. Credentials never cross the frame. */
 export function NjilaJourney({handle}:{handle:string}) {
   const frame = useRef<HTMLIFrameElement>(null);
+  const channel = useRef<string|null>(null);
+  const compass=useJourneyCompass(reading=>{
+    if(channel.current)frame.current?.contentWindow?.postMessage({type:'locaccess-heading',audience:channel.current,...reading},NJILA);
+  });
+  const stopCompass=compass.stop;
   const [message, setMessage] = useState('A verificar a autorização…');
   useEffect(() => {
     let active=true, busy=false, generation=0, audience:string|null=null, fix:Fix|null=null;
     let lease:ReturnType<typeof setTimeout>|undefined;
     const post=(value:Record<string,unknown>)=>frame.current?.contentWindow?.postMessage(value,NJILA);
     const clear=()=>{
+      stopCompass();
       generation++;
       if(lease)clearTimeout(lease);
       post({type:'locaccess-clear',audience});
@@ -45,7 +52,7 @@ export function NjilaJourney({handle}:{handle:string}) {
       if(event.origin!==NJILA||event.source!==frame.current?.contentWindow)return;
       const data=event.data;
       if(data?.type==='locaccess-ready'&&typeof data.audience==='string'&&/^[a-f0-9-]{36}$/.test(data.audience)){
-        if(audience!==data.audience){clear();fix=null;audience=data.audience;}
+        if(audience!==data.audience){clear();fix=null;audience=data.audience;channel.current=audience;}
         void refresh();
       }
       if(data?.type==='locaccess-position'&&data.audience===audience){
@@ -64,11 +71,12 @@ export function NjilaJourney({handle}:{handle:string}) {
     document.addEventListener('visibilitychange',visibility);
     const timer=setInterval(()=>void refresh(),5000);
     return()=>{active=false;clear();clearInterval(timer);window.removeEventListener('message',receive);window.removeEventListener('offline',pause);window.removeEventListener('pagehide',pause);window.removeEventListener('online',refresh);document.removeEventListener('visibilitychange',visibility);};
-  },[handle]);
+  },[handle,stopCompass]);
   return <section className="space-y-3">
+    <button type="button" className="sticky top-0 z-50 rounded-xl border bg-background px-4 py-3 font-semibold" onClick={()=>void compass.request()}>{t(compass.active?'Bússola activa':'Activar bússola')}</button>
     <p role="status">{t(message)}</p>
     <iframe ref={frame} title="NJILA" src={NJILA+'/?from=yamilook&purpose=locaccess&embedded=1&lang='+encodeURIComponent(uiLocale())}
       className="w-full rounded-xl border" style={{height:'80dvh',minHeight:500}} referrerPolicy="origin"
-      sandbox="allow-scripts allow-same-origin" allow="geolocation; camera; accelerometer; gyroscope"/>
+      sandbox="allow-scripts allow-same-origin" allow="geolocation; camera; accelerometer; gyroscope; magnetometer"/>
   </section>;
 }
