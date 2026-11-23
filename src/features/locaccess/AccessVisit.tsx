@@ -1,3 +1,4 @@
+import {prepareJourneyCompass} from '../locaccess/useJourneyCompass';
 import {uiText as t,useUiLocale} from '@/i18n/ui-copy';
 import {NjilaJourney} from './NjilaJourney';
 import {useEffect,useState} from 'react';import {Link,useParams} from 'react-router-dom';
@@ -6,7 +7,7 @@ type Result={status:'ready'|'proximity'|'denied';point?:MapPoint;area?:MapPoint;
 type Fix=MapPoint&{accuracy:number;timestamp:number};
 export default function AccessVisit(){
  const [journey,setJourney]=useState(window.location.hash==='#njila');
- return journey?<JourneyVisit onBack={()=>setJourney(false)}/>:<LocationVisit onJourney={()=>setJourney(true)}/>;
+ return journey?<JourneyVisit onBack={()=>setJourney(false)}/>:<LocationVisit onJourney={()=>{prepareJourneyCompass();setJourney(true)}}/>;
 }
 function JourneyVisit({onBack}:{onBack:()=>void}){
  useUiLocale();
