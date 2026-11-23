@@ -75,7 +75,7 @@ async function fixture() {
     end $$;
     create trigger on_auth_user_created after insert on auth.users for each row execute function handle_new_user();
   `);
-  await db.exec(await readFile(new URL('../supabase/migrations/20261123223335_trusted_invitations.sql', import.meta.url),'utf8'));
+  await db.exec(await readFile(new URL('../supabase/migrations/20261123225604_trusted_invitations.sql', import.meta.url),'utf8'));
   let counter = 0;
   const sent = [];
   const attributes = [];
