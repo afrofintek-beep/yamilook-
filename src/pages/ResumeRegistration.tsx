@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { getYamilookPublicUrl } from '@/lib/public-site';
+import { registrationEmailLanguage } from '@/lib/registration-email';
 
 const copy: Record<string, [string, string, string]> = {
   pt: ['Retomar a minha inscrição', 'Introduza o email usado na inscrição.', 'Se este email estiver associado a uma conta, receberá uma ligação de acesso.'],
@@ -21,14 +22,14 @@ const copy: Record<string, [string, string, string]> = {
 };
 function useResumeCopy() {
   const { i18n } = useTranslation();
-  return copy[i18n.language.split('-')[0]] ?? copy.pt;
+  return copy[registrationEmailLanguage(i18n.language)];
 }
 export function ResumeLink() {
   const [label] = useResumeCopy();
   return <Link className="block py-3 text-center underline" to="/retomar">{label}</Link>;
 }
 export default function ResumeRegistration() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [title, hint, confirmation] = useResumeCopy();
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
@@ -37,9 +38,10 @@ export default function ResumeRegistration() {
     if (status === 'sending') return;
     setStatus('sending');
     try {
+      const lang = registrationEmailLanguage(i18n.language);
       const { error } = await supabase.auth.signInWithOtp({
         email: email.trim(),
-        options: { shouldCreateUser: false, emailRedirectTo: getYamilookPublicUrl('/') },
+        options: { shouldCreateUser: false, emailRedirectTo: getYamilookPublicUrl(`/?lang=${lang}`) },
       });
       const accountUnknown = error?.code === 'user_not_found' || error?.code === 'otp_disabled' || error?.code === 'signup_disabled';
       setStatus(error && !accountUnknown ? 'error' : 'sent');
