@@ -1,10 +1,16 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { verifyWalletRegistration, verifyWalletUnlock } from '../_shared/wallet-passkeys.ts';
 
-const origins = ['https://yamilook.com', 'https://www.yamilook.com'];
+const sites: Record<string, string> = {
+  'https://yamilook.com': 'yamilook.com',
+  'https://www.yamilook.com': 'yamilook.com',
+  'https://kosolola.com': 'kosolola.com',
+  'https://www.kosolola.com': 'kosolola.com',
+};
 Deno.serve(async request => {
   const origin = request.headers.get('Origin') || '';
-  if (!origins.includes(origin)) return new Response(null, {status: 403});
+  const relyingParty = sites[origin];
+  if (!relyingParty) return new Response(null, {status: 403});
   const headers = {'Access-Control-Allow-Origin': origin, 'Access-Control-Allow-Headers': 'authorization, apikey, content-type, x-client-info', 'Content-Type': 'application/json', 'Vary': 'Origin'};
   if (request.method === 'OPTIONS') return new Response(null, {headers});
   try {
@@ -20,17 +26,17 @@ Deno.serve(async request => {
     let key = null;
     let counter: number;
     if (state.purpose === 'register') {
-      const check = await verifyWalletRegistration(response,challenge);
+      const check = await verifyWalletRegistration(response,challenge,origin,relyingParty);
       if (!check.verified || !check.registrationInfo || check.registrationInfo.credential.id !== response.id) throw Error();
       key = btoa(String.fromCharCode(...check.registrationInfo.credential.publicKey));
       counter = check.registrationInfo.credential.counter;
     } else {
       if (state.purpose !== 'authorize' || !state.key) throw Error();
-      const check = await verifyWalletUnlock(response,challenge,{id:response.id,publicKey:Uint8Array.from(atob(state.key), c=>c.charCodeAt(0)),counter:state.counter});
+      const check = await verifyWalletUnlock(response,challenge,{id:response.id,publicKey:Uint8Array.from(atob(state.key), c=>c.charCodeAt(0)),counter:state.counter},origin,relyingParty);
       if (!check.verified) throw Error();
       counter = check.authenticationInfo.newCounter;
     }
-    const result = await admin.rpc('wallet_verifier_finish',{...args,p_operation:state.operation,p_purpose:state.purpose,p_key:key,p_counter:counter});
+    const result = await admin.rpc('wallet_verifier_finish',{...args,p_operation:state.operation,p_purpose:state.purpose,p_key:key,p_counter:counter,p_relying_party:relyingParty});
     if (result.error) throw Error();
     return Response.json({verified:true},{headers});
   } catch {
