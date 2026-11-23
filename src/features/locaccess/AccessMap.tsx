@@ -53,10 +53,10 @@ export function AccessMap({point,approximate=false}:{point:MapPoint;approximate?
    <div ref={host} role="region" aria-label={title}
     className="isolate overflow-hidden rounded-xl border" style={mapStyle} />
   )}
-   <button type="button" aria-label={t('Satélite')} aria-pressed={satellite} title={t(satellite?'Mapa':'Satélite')}
-    className="absolute left-1/2 top-3 z-10 h-11 w-11 -translate-x-1/2 rounded-full border-2 border-emerald-900 bg-white text-2xl text-emerald-900 shadow aria-pressed:bg-emerald-900 aria-pressed:text-white"
+   <button type="button" title={t(satellite?'Mapa':'Satélite')}
+    className="absolute left-1/2 top-3 z-10 inline-flex min-h-11 items-center gap-1 px-2.5 -translate-x-1/2 rounded-full border-2 border-emerald-900 bg-white text-xs font-semibold text-emerald-900 shadow "
     onClick={()=>setSatellite(value=>!value)}>
-    <span aria-hidden="true">•</span>
+    <span aria-hidden="true">•</span>{t(satellite?'Mapa':'Satélite')}
    </button>
   </div>
   {activeProvider !== 'google' && error && <p role="status" className="text-sm">{t(error)}</p>}
