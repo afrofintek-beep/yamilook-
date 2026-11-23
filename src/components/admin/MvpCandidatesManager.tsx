@@ -41,6 +41,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 interface Candidate {
+  business_invitation_drafts?: { name: string }[];
   id: string;
   full_name: string;
   email: string;
@@ -90,7 +91,7 @@ export function MvpCandidatesManager() {
     setLoadError(false);
     const { data, error } = await supabase
       .from("mvp_candidates")
-      .select("*")
+      .select("*, business_invitation_drafts(name)")
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -362,6 +363,7 @@ Equipa Yamilook 🇦🇴`;
                             </div>
                           </div>
 
+                          {candidate.business_invitation_drafts?.map(draft => <p key={draft.name}>{draft.name}</p>)}
                           {candidate.motivation && (
                             <div className="bg-secondary/50 rounded-lg p-3">
                               <p className="text-xs font-medium mb-1 flex items-center gap-1">
@@ -498,7 +500,7 @@ Equipa Yamilook 🇦🇴`;
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{uiText("🎉 Candidato aprovado!")}</DialogTitle>
-            <DialogDescription>{uiText("{{value1}} foi aprovado. Envia-lhe o código abaixo.", { value1: (approvedDialog.name) ?? "" })}</DialogDescription>
+            <DialogDescription>{uiText("{{value1}} foi aprovado. O convite será enviado automaticamente.", { value1: (approvedDialog.name) ?? "" })}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 text-center">
@@ -523,7 +525,7 @@ Equipa Yamilook 🇦🇴`;
               >
                 <Mail className="w-4 h-4" />{uiText("Copiar email")}</Button>
             </div>
-            <p className="text-xs text-muted-foreground text-center">{uiText("Envia este código para ")}<strong>{approvedDialog.email}</strong>
+            <p className="text-xs text-muted-foreground text-center">{uiText("Destinatário: ")}<strong>{approvedDialog.email}</strong>
             </p>
           </div>
         </DialogContent>

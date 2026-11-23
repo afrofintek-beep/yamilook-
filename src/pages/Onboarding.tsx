@@ -2,6 +2,7 @@ import { createSignupOnboarding, recoverSignupOnboarding, resumeOnboardingStep }
 import { legalLabel } from '@/i18n/legal-labels';
 import { onboardingImage } from '@/components/auth/onboarding-images';
 import { EntryLanguageSelector } from '@/components/auth/EntryLanguageSelector';
+import { businessDates } from '@/lib/business-dates';
 import { businessCopy } from '@/lib/business-entry';
 import {afrolocReturn} from '@/features/locaccess/return-path';
 import { ResidenceForm } from '@/components/residence/ResidenceForm';
@@ -95,6 +96,9 @@ export default function Onboarding() {
   const returnToCommunity = afrolocReturn(search);
   const { t, i18n } = useTranslation();
 
+  const businessEntry = new URLSearchParams(search);
+  businessEntry.set('next', '/meus-negocios?abrir=1');
+  const registeringOwner = returnToCommunity === '/meus-negocios?abrir=1';
   const imageLanguage = i18n.resolvedLanguage || i18n.language;
 
   // Track whether the user just completed onboarding in this session
@@ -177,7 +181,7 @@ export default function Onboarding() {
     setUsername(draft?.username ?? profile?.username?.trim() ?? '');
     setEmail(user?.email ?? draft?.email ?? '');
     setPassword('');
-    setAccessCode(draft?.inviteCode || invite);
+    setAccessCode(new URLSearchParams(search).get('ref') || draft?.inviteCode || invite);
     setSelectedGender(draft?.gender ?? profile?.gender ?? null);
     setBirthDay(useDraftBirthday ? draft.birthDay : birthday?.[2] ?? '');
     setBirthMonth(useDraftBirthday ? draft.birthMonth : birthday?.[1] ?? '');
@@ -567,8 +571,8 @@ export default function Onboarding() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
-              <h2 className="text-2xl font-bold mb-2 text-foreground">{t("onboardingFlow.birthday")}</h2>
-              <p className="text-muted-foreground mb-6 max-w-sm mx-auto text-sm">{t("onboardingFlow.birthdayHint")}</p>
+              <h2 className="text-2xl font-bold mb-2 text-foreground">{registeringOwner ? businessDates(i18n.language).ownerBirthday : t("onboardingFlow.birthday")}</h2>
+              {!registeringOwner && <p className="text-muted-foreground mb-6 max-w-sm mx-auto text-sm">{t("onboardingFlow.birthdayHint")}</p>}
             </motion.div>
 
             <div className="flex gap-2 max-w-xs mx-auto mb-6">
@@ -1188,7 +1192,10 @@ export default function Onboarding() {
 
   return (
     <div dir={i18n.dir()} className="min-h-screen flex flex-col bg-background overflow-x-hidden">
-      {returnToCommunity === '/meus-negocios?abrir=1' && <h1 className="text-center font-semibold py-2">{businessCopy(i18n.language).owner}</h1>}
+      {!isAuthenticated && currentStep === 0 && !returnToCommunity && (
+        <Link className="py-2 text-center text-sm text-primary underline" to={`/welcome?${businessEntry}`}>{t('entry.business')}</Link>
+      )}
+      {registeringOwner && <h1 className="text-center font-semibold py-2">{businessCopy(i18n.language).owner}</h1>}
       {deadline && !isAuthenticated && <p role="status" className="p-3 text-center">
         A tua vaga está reservada até às {new Date(deadline).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}. Se o prazo terminar, volta a abrir o convite.
       </p>}

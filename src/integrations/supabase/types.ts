@@ -815,6 +815,7 @@ export type Database = {
           business_name: string
           handle: string | null
           afroloc_code: string | null
+          activity_planned: boolean
           start_year: number | null
           service_modes: string[]
           service_area: string | null
@@ -843,6 +844,7 @@ export type Database = {
           business_name: string
           handle?: string | null
           afroloc_code?: string | null
+          activity_planned?: boolean
           start_year?: number | null
           service_modes?: string[]
           service_area?: string | null
@@ -871,6 +873,7 @@ export type Database = {
           business_name?: string
           handle?: string | null
           afroloc_code?: string | null
+          activity_planned?: boolean
           start_year?: number | null
           service_modes?: string[]
           service_area?: string | null
@@ -3192,6 +3195,12 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      business_invitation_drafts: {
+        Row: { id: string; candidate_id: string; name: string; activity: string; scene: string; start_year: number | null; planned: boolean; language: string; created_at: string }
+        Insert: never
+        Update: never
+        Relationships: [{ foreignKeyName: "business_invitation_drafts_candidate_id_fkey"; columns: ["candidate_id"]; isOneToOne: false; referencedRelation: "mvp_candidates"; referencedColumns: ["id"] }]
       }
       mvp_candidates: {
         Row: {
@@ -6488,6 +6497,14 @@ export type Database = {
       }
     }
     Functions: {
+      request_business_invitation: {
+        Args: { p_owner: string; p_email: string; p_name: string; p_activity: string; p_scene: string; p_year: number | null; p_planned: boolean; p_language: string }
+        Returns: undefined
+      }
+      my_business_invitation_drafts: {
+        Args: Record<never, never>
+        Returns: { name: string; activity: string; scene: string; start_year: number | null; planned: boolean }[]
+      }
       complete_muxi_onboarding: { Args: { p_content: string; p_privacy: string }; Returns: undefined }
       respond_friend_request: { Args: { p_request_id: string; p_accept: boolean }; Returns: undefined }
       group_conference_action: {

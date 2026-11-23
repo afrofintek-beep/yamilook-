@@ -27,10 +27,10 @@ const key = 'yl-business-entry-v1';
 export function readEntry() {
   try {
     const data = JSON.parse(sessionStorage.getItem(key) ?? '{}');
-    return { name: String(data.name ?? ''), activity: String(data.activity ?? ''), scene: scenes.find(([,id]) => id === data.scene)?.[1] };
-  } catch { return { name: '', activity: '', scene: undefined }; }
+    return { year: typeof data.year === 'string' ? data.year : '', planned: data.planned === true, name: String(data.name ?? ''), activity: String(data.activity ?? ''), scene: scenes.find(([,id]) => id === data.scene)?.[1] };
+  } catch { return { name: '', activity: '', year: '', planned: false, scene: undefined }; }
 }
-export function saveEntry(name: string, activity: string, scene: string) {
-  try { sessionStorage.setItem(key, JSON.stringify({name,activity,scene})); } catch { /* Browser storage may be unavailable. */ }
+export function saveEntry(name: string, activity: string, scene: string, year: string, planned: boolean) {
+  try { sessionStorage.setItem(key, JSON.stringify({name,activity,scene,year,planned})); } catch { /* Browser storage may be unavailable. */ }
 }
 export function clearEntry() { try { sessionStorage.removeItem(key); } catch { /* Storage unavailable. */ } }

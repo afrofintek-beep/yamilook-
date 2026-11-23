@@ -11,7 +11,7 @@ const KEY = 'yamilook_ref';
 export function captureReferralCode(): void {
   try {
     const ref = new URLSearchParams(window.location.search).get('ref');
-    if (ref && /^[a-zA-Z0-9]{4,16}$/.test(ref)) {
+    if (ref && /^(?:[a-zA-Z0-9]{4,16}|[A-Z0-9]{4}-[A-Z0-9]{4})$/i.test(ref)) {
       localStorage.setItem(KEY, ref.toUpperCase());
     }
   } catch {

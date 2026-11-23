@@ -37,15 +37,22 @@ export function invitationEmail(email: string, code: string, languageInput?: unk
   };
 }
 
-export function candidateInvitationEmail(name: string, code: string, languageInput?: unknown) {
+export function candidateInvitationEmail(name: string, code: string, languageInput?: unknown, business = false) {
   const language = invitationLanguage(languageInput);
   const t = (source: string, values?: Record<string, string>) => invitationText(language, source, values);
+  const link = new URL('https://www.yamilook.com/register');
+  link.searchParams.set('lang', language);
+  link.searchParams.set('ref', code);
+  if (business) {
+    link.searchParams.set('next', '/meus-negocios?abrir=1');
+  }
   return {
+    html: `<html lang="${language}" dir="${language === 'ar' ? 'rtl' : 'ltr'}"><p>${escapeHtml(t('Olá {{name}},', {name}))}</p><p>${escapeHtml(t('A tua candidatura ao MVP da YAMILOOK foi aprovada!'))}</p><p><a href="${escapeHtml(link.href)}">${escapeHtml(t('Aceitar convite'))}</a></p></html>`,
     subject: t('A tua candidatura à YAMILOOK foi aprovada'),
     text: [
       t('Olá {{name}},', { name }),
       t('A tua candidatura ao MVP da YAMILOOK foi aprovada!'),
-      t('Cria a tua conta em {{url}} e insere o código {{code}}.', { url: 'https://www.yamilook.com/register?lang=' + language, code }),
+      t('Aceitar convite') + ': ' + link.href,
       t('Este código é de utilização única.'),
       t('Bem-vindo(a)!'),
       t('Equipa YAMILOOK'),

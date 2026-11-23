@@ -4,14 +4,16 @@ import { supabase } from '@/integrations/supabase/client';
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import type { BusinessProfile } from '@/hooks/useAdvertising';
 
+import { businessDates } from '@/lib/business-dates';
 import { businessCopy } from '@/lib/business-entry';
 import { useTranslation } from 'react-i18next';
 
-type Card = Pick<BusinessProfile, 'business_name' | 'handle' | 'description' | 'logo_url' | 'afroloc_code' | 'service_area' | 'service_modes'>;
+type Card = Pick<BusinessProfile, 'business_name' | 'handle' | 'description' | 'logo_url' | 'afroloc_code' | 'service_area' | 'service_modes' | 'start_year' | 'created_at'>;
 
 export default function PublicBusiness() {
   useUiLocale();
   const { i18n } = useTranslation();
+  const dates = businessDates(i18n.language);
   const labels = businessCopy(i18n.language);
   const { handle } = useParams();
   const [card, setCard] = useState<Card | null>(null);
@@ -20,7 +22,7 @@ export default function PublicBusiness() {
     let active = true;
     setCard(null);
     setStatus('…');
-    supabase.from('business_profiles').select('business_name,handle,description,logo_url,afroloc_code,service_area,service_modes')
+    supabase.from('business_profiles').select('business_name,handle,description,logo_url,afroloc_code,service_area,service_modes,start_year,created_at')
       .eq('handle', (handle || '').replace(/^@/, '').toLowerCase()).eq('is_active', true).maybeSingle()
       .then(({data,error}) => {
         if (!active) return;
@@ -34,6 +36,8 @@ export default function PublicBusiness() {
       {card.logo_url && <img src={card.logo_url} alt="" className="size-24 rounded-xl object-contain" />}
       <h1 className="text-2xl font-semibold">{card.business_name}</h1>
       <p>@{card.handle}</p><p>{card.description}</p>
+      {card.start_year && <p>{dates.operatingSince} {card.start_year}</p>}
+      <p>{dates.memberSince} {new Date(card.created_at).getUTCFullYear()}</p>
       <p>{card.service_modes?.map(mode => labels[mode as 'shop'|'home'|'delivery'|'online']).join(' · ')}</p>
       {card.afroloc_code && <p>AFROLOC · {card.afroloc_code}</p>}
       {card.service_area && <p>{uiText('Zona de atendimento')} · {card.service_area}</p>}

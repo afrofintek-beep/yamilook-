@@ -1,3 +1,7 @@
+import { BusinessInviteRequest } from '@/components/advertising/BusinessInviteRequest';
+import { businessInvitationCopy } from '@/lib/business-invitation-copy';
+import { BusinessStartField } from '@/components/advertising/BusinessStartField';
+import { validStartYear } from '@/lib/business-dates';
 import { ResumeLink } from '@/pages/ResumeRegistration';
 import { WelcomeCarousel } from '@/components/auth/WelcomeCarousel';
 import { normalizeAppLanguage } from '@/i18n/afroloc-languages';
@@ -9,6 +13,7 @@ import { EntryLanguageSelector } from '@/components/auth/EntryLanguageSelector';
 
 import { useState } from 'react';
 import { businessCopy, initialScene, readEntry, saveEntry, scenes } from '@/lib/business-entry';
+import { accessCodeSchema } from '@/lib/invitation-registration';
 import { Input } from '@/components/ui/input';
 
 export default function Welcome() {
@@ -21,9 +26,14 @@ export default function Welcome() {
   const [draft, setDraft] = useState(readEntry);
   const scene = draft.scene || initialScene(i18n.language);
   const labels = businessCopy(i18n.language);
-  function update(name: string, activity: string, selected: string) {
-    setDraft({ name, activity, scene: selected });
-    saveEntry(name, activity, selected);
+  const [codeInput, setCodeInput] = useState(businessSearch.get('ref') ?? '');
+  let invite = codeInput.trim();
+  try { invite = new URL(invite).searchParams.get('ref') ?? ''; } catch { /* A plain code is also valid. */ }
+  const registerParams = new URLSearchParams(businessSearch);
+  registerParams.set('ref', invite.toUpperCase());
+  function update(name: string, activity: string, selected: string, year = draft.year, planned = draft.planned) {
+    setDraft({ name, activity, scene: selected, year, planned });
+    saveEntry(name, activity, selected, year, planned);
   }
   return (
     <main dir={i18n.dir()} className="min-h-screen flex flex-col items-center justify-start sm:justify-center bg-background px-3 pt-2 pb-6 sm:px-5 sm:py-6 gap-3">
@@ -45,8 +55,13 @@ export default function Welcome() {
           <>
             <label className="block">{labels.name}<Input maxLength={160} value={draft.name} onChange={e => update(e.target.value, draft.activity, scene)} /></label>
             <label className="block">{labels.activity}<Input maxLength={240} value={draft.activity} onChange={e => update(draft.name, e.target.value, scene)} /></label>
+            <BusinessStartField year={draft.year} planned={draft.planned} onChange={(year, planned) => update(draft.name, draft.activity, scene, year, planned)} />
             <p className="text-sm text-muted-foreground">{labels.owner}</p>
-            <Button asChild size="lg" className="w-full min-h-14"><Link to={`/register${search}`}>{t('entry.createAccount')}</Link></Button>
+            <label className="block">{t('onboardingFlow.invite')}<Input value={codeInput} onChange={e => setCodeInput(e.target.value)} autoCapitalize="characters" /></label>
+            {(draft.planned || validStartYear(draft.year)) && accessCodeSchema.safeParse(invite).success
+              ? <Button asChild size="lg" className="w-full min-h-14"><Link to={`/register?${registerParams}`}>{businessInvitationCopy(i18n.language).haveInvite}</Link></Button>
+              : <Button disabled size="lg" className="w-full min-h-14">{businessInvitationCopy(i18n.language).haveInvite}</Button>}
+            <BusinessInviteRequest draft={draft} scene={scene} ready={!!draft.name.trim() && (draft.planned || validStartYear(draft.year))} />
           </>
         ) : (
           <>
