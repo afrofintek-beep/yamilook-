@@ -13,6 +13,11 @@ describe('localized invitation emails', () => {
     expect(candidate.text).toContain('António da Silva');
     expect(candidate.text).toContain('AB12CD34');
     expect(candidate.text).toContain('https://www.yamilook.com/register?lang=' + language);
+    const business = candidateInvitationEmail('Ana', 'ABCD-1234', language, true);
+    const link = new URL(business.text.match(/https:\/\/[^\s]+/)![0]);
+    expect(link.searchParams.get('ref')).toBe('ABCD-1234');
+    expect(link.searchParams.get('next')).toBe('/meus-negocios?abrir=1');
+    expect(business.html).toContain('href=');
     expect(candidate.subject).not.toBe('');
     expect(candidate.text).not.toContain('{{');
   });

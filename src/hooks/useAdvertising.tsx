@@ -11,6 +11,7 @@ export interface BusinessProfile {
   business_name: string;
   handle: string | null;
   afroloc_code: string | null;
+  activity_planned?: boolean;
   start_year?: number | null;
   service_modes?: string[];
   service_area: string | null;
@@ -149,6 +150,7 @@ export function useAdvertising() {
         logo_url: profile.logo_url,
         handle: profile.handle,
         afroloc_code: profile.afroloc_code,
+        activity_planned: profile.activity_planned,
         start_year: profile.start_year,
         service_modes: profile.service_modes,
         service_area: profile.service_area,

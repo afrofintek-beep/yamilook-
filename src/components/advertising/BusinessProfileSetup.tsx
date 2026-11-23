@@ -1,3 +1,5 @@
+import { BusinessStartField } from '@/components/advertising/BusinessStartField';
+import { validStartYear } from '@/lib/business-dates';
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -20,6 +22,7 @@ import { snapToGrid } from '@/lib/geo-privacy';
 import { businessCopy, initialScene, readEntry, clearEntry } from '@/lib/business-entry';
 
 interface BusinessProfileSetupProps {
+  recoveredDraft?: ReturnType<typeof readEntry>;
   fromBusinessEntry?: boolean;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -45,14 +48,15 @@ export function BusinessProfileSetup(props: BusinessProfileSetupProps) {
   return <BusinessProfileEditor {...props} advertising={advertising} />;
 }
 
-export function BusinessProfileEditor({ open, onOpenChange, onComplete, advertising, fromBusinessEntry }: BusinessProfileSetupProps & { advertising: ReturnType<typeof useAdvertising> }) {
+export function BusinessProfileEditor({ open, onOpenChange, onComplete, advertising, fromBusinessEntry, recoveredDraft }: BusinessProfileSetupProps & { advertising: ReturnType<typeof useAdvertising> }) {
   useUiLocale();
   const { t, i18n } = useTranslation();
   const labels = businessCopy(i18n.language);
-  const [draft] = useState(() => fromBusinessEntry && !advertising.businessProfile ? readEntry() : undefined);
-  const [year, setYear] = useState('');
+  const [draft] = useState(() => fromBusinessEntry && !advertising.businessProfile ? recoveredDraft ?? readEntry() : undefined);
+  const [year, setYear] = useState(draft?.year ?? '');
+  const [planned, setPlanned] = useState(draft?.planned ?? false);
   const [modes, setModes] = useState<string[]>([]);
-  const validYear = !year || (/^[0-9]{4}$/.test(year) && Number(year) > 0 && Number(year) <= new Date().getFullYear());
+  const validYear = planned || validStartYear(year) || (!!advertising.businessProfile && !year && !advertising.businessProfile.start_year && !advertising.businessProfile.activity_planned);
   const { createBusinessProfile, updateBusinessProfile, businessProfile, locationMarkets, loading } = advertising;
 
   const [step, setStep] = useState(1);
@@ -88,6 +92,7 @@ export function BusinessProfileEditor({ open, onOpenChange, onComplete, advertis
   // Load existing profile data
   useEffect(() => {
     if (businessProfile) {
+      setPlanned(businessProfile.activity_planned ?? false);
       setYear(String(businessProfile.start_year ?? ''));
       setModes(businessProfile.service_modes ?? []);
       setBusinessName(businessProfile.business_name);
@@ -165,7 +170,7 @@ export function BusinessProfileEditor({ open, onOpenChange, onComplete, advertis
   }, [open, locationMarkets]);
 
   const handleSubmit = async () => {
-    if (!businessName.trim()) return;
+    if (!businessName.trim() || !validYear) return;
 
     setIsSubmitting(true);
 
@@ -182,6 +187,7 @@ export function BusinessProfileEditor({ open, onOpenChange, onComplete, advertis
         logo = bucket.getPublicUrl(filePath).data.publicUrl;
       }
       const profileData = {
+        activity_planned: planned,
         start_year: year ? Number(year) : null,
         service_modes: modes,
         logo_url: logo,
@@ -236,7 +242,7 @@ export function BusinessProfileEditor({ open, onOpenChange, onComplete, advertis
       </div>
 
       <div className="space-y-4">
-        <label className="block">{labels.year}<Input type="text" inputMode="numeric" maxLength={4} aria-invalid={!validYear} value={year} onChange={e => setYear(e.target.value)} /></label>
+        <BusinessStartField year={year} planned={planned} onChange={(value, pending) => { setYear(value); setPlanned(pending); }} />
         <div className="space-y-2">
           <Label htmlFor="businessName">{uiText("Nome do negócio *")}</Label>
           <Input
