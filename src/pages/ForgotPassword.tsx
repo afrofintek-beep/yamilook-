@@ -13,15 +13,20 @@ import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { TrustedAccountRecovery } from '@/features/trusted-invites/TrustedAccountRecovery';
+import { trustedAccountCopy } from '@/features/trusted-invites/account-copy';
 
 type ForgotPasswordFormData = { email: string };
 
 export default function ForgotPassword() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const accountCopy = trustedAccountCopy(i18n.language || 'pt');
   const forgotPasswordSchema = z.object({ email: z.string().email(t('publicAuth.validEmail')) });
   const [isLoading, setIsLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [sentEmail, setSentEmail] = useState('');
+  const [recoveryMethod, setRecoveryMethod] = useState('email');
 
   const form = useForm<ForgotPasswordFormData>({
     resolver: zodResolver(forgotPasswordSchema),
@@ -107,8 +112,15 @@ export default function ForgotPassword() {
   return (
     <AuthLayout
       title={t('auth.resetPassword')}
-      subtitle={t('auth.resetPasswordSubtitle')}
+      subtitle={recoveryMethod === 'email' ? t('auth.resetPasswordSubtitle') : undefined}
     >
+      <Tabs value={recoveryMethod} onValueChange={setRecoveryMethod} className="space-y-5">
+        <TabsList className="grid w-full grid-cols-2 h-auto">
+          <TabsTrigger value="email" className="whitespace-normal">{accountCopy.emailMethod}</TabsTrigger>
+          <TabsTrigger value="recovery-code" className="whitespace-normal">{accountCopy.codeMethod}</TabsTrigger>
+        </TabsList>
+        <TabsContent value="recovery-code"><TrustedAccountRecovery /></TabsContent>
+        <TabsContent value="email">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <motion.div
@@ -169,6 +181,8 @@ export default function ForgotPassword() {
           </motion.div>
         </form>
       </Form>
+        </TabsContent>
+      </Tabs>
     </AuthLayout>
   );
 }

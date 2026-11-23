@@ -970,7 +970,7 @@ export default function Onboarding() {
           return (
             <div className="space-y-5 px-4 max-w-sm mx-auto">
               <h2 className="text-2xl font-bold">{t("onboardingFlow.finish")}</h2>
-              <p>{t('onboardingFlow.name')}: {profile?.display_name || user?.email}</p>
+              <p>{t('onboardingFlow.name')}: {profile?.display_name || user?.user_metadata?.display_name || profile?.username}</p>
               <p>{t("onboardingFlow.setupRequired")}</p>
               <label className="block space-y-2">
                 <span>{t('onboardingFlow.photo')}</span>

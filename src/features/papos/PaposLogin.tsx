@@ -8,10 +8,13 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import PaposBrand from './PaposBrand';
+import { trustedAccountCopy } from '@/features/trusted-invites/account-copy';
+import { isValidLoginIdentifier } from '@/lib/trusted-account-login';
 export default function PaposLogin() {
   useUiLocale();
   const { t, i18n } = useTranslation();
   const language = (i18n.language || 'pt').split('-')[0];
+  const accountCopy = trustedAccountCopy(language);
   const copyLanguage = language in loginCopy ? language as keyof typeof loginCopy : 'en';
   const copy = loginCopy[copyLanguage];
   const { user, loading, signIn } = useAuth();
@@ -22,10 +25,12 @@ export default function PaposLogin() {
   const destination = from?.startsWith('/') && !from.startsWith('//') ? from : '/papos';
   if (user && !loading) return <Navigate to={destination} replace />;
   const submit = async (event: React.FormEvent) => {
-    event.preventDefault(); if (busy) return; setBusy(true); setError('');
+    event.preventDefault(); if (busy) return;
+    if (!isValidLoginIdentifier(email)) { setError(accountCopy.invalidIdentifier); return; }
+    setBusy(true); setError('');
     try {
       const result = await signIn(email.trim(), password);
-      if (result.error) { setError(language === 'pt' ? uiText("Não foi possível entrar. Verifica os teus dados e tenta novamente.") : t('auth.invalidCredentials')); return; }
+      if (result.error) { setError(result.error.code === 'rate_limited' || result.error.status === 429 ? accountCopy.rateLimited : accountCopy.invalidCredentials); return; }
       navigate(destination, { replace: true });
     } catch { setError(copy.networkError); }
     finally { setBusy(false); }
@@ -34,7 +39,7 @@ export default function PaposLogin() {
     <div className="w-full max-w-sm space-y-6"><PaposLanguageSelector /><PaposBrand /><h1 lang={copyLanguage} className="text-3xl font-bold">{copy.title}</h1>
       {(location.state as { signedOut?: boolean } | null)?.signedOut && <p role="status" className="text-sm text-muted-foreground">{copy.signedOut}</p>}
       <p lang={copyLanguage} className="text-muted-foreground">{copy.description}</p>
-      <form onSubmit={submit} className="space-y-4"><div><label htmlFor="papos-email" className="text-sm">{t('auth.email')}</label><Input id="papos-email" autoComplete="username" type="email" required value={email} onChange={e => setEmail(e.target.value)} disabled={busy} /></div>
+      <form onSubmit={submit} className="space-y-4"><div><label htmlFor="papos-email" className="text-sm">{accountCopy.identifier}</label><Input id="papos-email" autoComplete="username" autoCapitalize="none" spellCheck={false} type="text" required placeholder={accountCopy.identifierHint} value={email} onChange={e => setEmail(e.target.value)} disabled={busy} /></div>
         <div><label htmlFor="papos-password" className="text-sm">{t('auth.password')}</label><Input id="papos-password" autoComplete="current-password" type="password" required value={password} onChange={e => setPassword(e.target.value)} disabled={busy} /></div>
         {error && <p role="alert" className="text-sm text-destructive">{error}</p>}<Button type="submit" disabled={busy || loading} className="w-full">{busy ? t('auth.signingIn') : language === 'pt' ? uiText("Entrar na KOSOLOLA") : `${t('auth.login')} · KOSOLOLA`}</Button>
       </form><a href={`https://www.yamilook.com/forgot-password?lang=${encodeURIComponent(language)}`} className="text-primary text-sm block">{language === 'pt' ? uiText("Recuperar palavra-passe") : t('auth.forgotPassword')}</a>

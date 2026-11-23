@@ -14,14 +14,26 @@ on:
       - "src/lib/public-site.test.ts"
       - "src/hooks/useAuth.tsx"
       - "src/pages/ForgotPassword.tsx"
+      - "src/pages/Register*"
+      - "src/components/admin/TrustedInvitesPanel*"
+      - "src/components/admin/CampaignHub*"
+      - "src/components/admin/FounderInviteAssistant.tsx"
+      - "src/components/auth/LoginForm*"
+      - "src/features/papos/PaposLogin.tsx"
+      - "src/features/trusted-invites/**"
+      - "src/lib/trusted-account-login*"
       - "src/test/integration/auth.test.tsx"
+      - "src/test/integration/auth-hook.test.tsx"
       - "supabase/functions/send-user-invitation/**"
+      - "supabase/functions/trusted-invitations/**"
       - "supabase/config.toml"
       - "src/components/settings/InviteSheet.tsx"
       - "src/components/settings/InviteSheet.test.tsx"
       - "src/components/settings/ContactInviteActions*"
       - "supabase/migrations/*_shareable_contact_invitations.sql"
       - "scripts/test-contact-invitations.mjs"
+      - "supabase/migrations/*_trusted_invitations.sql"
+      - "scripts/test-trusted-invitations.mjs"
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/invitation-registration-tests.yml"
@@ -39,6 +51,8 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm install --no-audit --no-fund
+      - run: npm ci --no-audit --no-fund
       - run: npm test -- src/lib/public-site.test.ts src/lib/invitation-registration.test.ts src/lib/referral.test.ts src/lib/invite-delivery.test.ts src/components/settings/InviteSheet.test.tsx src/components/settings/ContactInviteActions.test.tsx src/test/integration/auth.test.tsx --reporter=dot
       - run: node --test scripts/test-contact-invitations.mjs
+      - run: npm test -- src/lib/trusted-account-login.test.ts src/features/trusted-invites src/components/admin/TrustedInvitesPanel.test.tsx src/components/admin/CampaignHub.test.tsx src/components/auth/LoginForm.trusted.test.tsx src/pages/Register.test.tsx src/test/integration/auth-hook.test.tsx --reporter=dot
+      - run: node --test scripts/test-trusted-invitations.mjs
