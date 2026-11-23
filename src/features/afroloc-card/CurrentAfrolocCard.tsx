@@ -103,6 +103,19 @@ function CardScreen({userId,requested}:{userId:string;requested?:string}){
  const text=address?cardText(name,t('ACESSO PROTEGIDO'),protectedLines,notice)+'\n'+access.url:'';
  const share=async()=>{if(!ready||!image||!unexpired())return;setSharing(true);setFeedback('');try{const result=await shareCard(image.blob,text);if(result!=='cancelled')setFeedback(result==='downloaded'?'Imagem guardada. Podes anexá-la à tua mensagem.':'Cartão partilhado.');}catch{setFeedback('Não foi possível partilhar. Usa Guardar imagem ou Copiar dados.');}finally{setSharing(false)}};
  const print=()=>{if(!ready||!image)return;const w=window.open('','_blank');if(!w){setFeedback('Permita abrir a janela de impressão.');return;}const img=w.document.createElement('img'),u=URL.createObjectURL(image.blob);img.style.cssText='width:100%;max-width:180mm;display:block;margin:auto';img.onload=()=>{w.focus();w.print();URL.revokeObjectURL(u)};img.src=u;w.document.title=t('Cartão AFROLOC');w.document.body.replaceChildren(img);};
+ const codeInput=useRef<HTMLInputElement>(null);
+ const copyCode=async()=>{
+  if(!address)return;
+  codeInput.current?.focus();
+  codeInput.current?.select();
+  try{
+   await navigator.clipboard.writeText(address.code);
+   setFeedback('Dados copiados.');
+  }catch{
+   codeInput.current?.focus();
+   codeInput.current?.select();
+  }
+ };
  const copy=()=>{if(!access.url||access.busy||!fresh||busy||postal.busy||sharing||!unexpired())return;void (navigator.clipboard?.writeText(text)??Promise.reject(new Error('clipboard'))).then(()=>setFeedback('Dados copiados.')).catch(()=>setFeedback('Não foi possível partilhar. Usa Guardar imagem ou Copiar dados.'));};
  const type=address?.temporary?t('Endereço temporário'):t('Residência principal');
  const cardTitle=excluded['Tipo de endereço']?'':type;
@@ -124,6 +137,17 @@ function CardScreen({userId,requested}:{userId:string;requested?:string}){
   {!fresh&&!busy&&snapshot&&!warning&&<p role="alert" className="text-sm">{t('Não foi possível actualizar o cartão. Verifica a ligação e tenta novamente.')}</p>}
   {(addresses.length>1||(!address&&addresses.length>0))?<label className="block space-y-1 text-sm"><span className="text-muted-foreground">{t('Endereço')}</span><select className="w-full min-w-0 rounded-lg border bg-background p-3 text-sm" value={address?.id||''} onChange={e=>setSelected(e.target.value)}>{!address&&<option value="" disabled>{t('Endereço')}</option>}{addresses.map(a=><option key={a.id} value={a.id}>{a.temporary?a.label:t('Residência principal')} · {a.code}</option>)}</select></label>:address?<p className="text-sm font-medium">{type}</p>:null}
   {address&&profile?<>
+   <div className="space-y-2 rounded-xl border p-3">
+    <label className="block text-sm font-medium" htmlFor="afroloc-copy-code">{t('Código AFROLOC')}</label>
+    <div className="flex items-center gap-2">
+     <input id="afroloc-copy-code" ref={codeInput} readOnly dir="ltr" value={address.code}
+      className="min-w-0 flex-1 rounded-lg border bg-background p-3 font-mono text-sm"
+      onFocus={event=>event.currentTarget.select()}/>
+     <Button type="button" variant="outline" className="min-h-11 gap-2" onClick={()=>void copyCode()}>
+      <Copy className="h-4 w-4" aria-hidden="true"/>{t('Copiar')}
+     </Button>
+    </div>
+   </div>
    <section aria-label={t('Cartão AFROLOC')} className="overflow-hidden rounded-2xl border shadow-sm">
     <CardPreview link={access.url||null} name={name} code={excluded.code?t('ACESSO PROTEGIDO'):address.code} lines={compactLines} photo={photoData} notice={notice} rtl={locale==='ar'} title={cardTitle} qrLabel={t('Abrir localização')} />
    </section>
