@@ -1,3 +1,4 @@
+import { useBusinessRegistrationAccess } from '@/hooks/useBusinessRegistrationAccess';
 import { createSignupOnboarding, recoverSignupOnboarding, resumeOnboardingStep } from '@/lib/signup-onboarding';
 import { legalLabel } from '@/i18n/legal-labels';
 import { onboardingImage } from '@/components/auth/onboarding-images';
@@ -96,9 +97,8 @@ export default function Onboarding() {
   const returnToCommunity = afrolocReturn(search);
   const { t, i18n } = useTranslation();
 
-  const businessEntry = new URLSearchParams(search);
-  businessEntry.set('next', '/meus-negocios?abrir=1');
-  const registeringOwner = returnToCommunity === '/meus-negocios?abrir=1';
+  const access = useBusinessRegistrationAccess(returnToCommunity === '/meus-negocios?abrir=1');
+  const registeringOwner = access.data && returnToCommunity === '/meus-negocios?abrir=1';
   const imageLanguage = i18n.resolvedLanguage || i18n.language;
 
   // Track whether the user just completed onboarding in this session
@@ -1192,9 +1192,6 @@ export default function Onboarding() {
 
   return (
     <div dir={i18n.dir()} className="min-h-screen flex flex-col bg-background overflow-x-hidden">
-      {!isAuthenticated && currentStep === 0 && !returnToCommunity && (
-        <Link className="py-2 text-center text-sm text-primary underline" to={`/welcome?${businessEntry}`}>{t('entry.business')}</Link>
-      )}
       {registeringOwner && <h1 className="text-center font-semibold py-2">{businessCopy(i18n.language).owner}</h1>}
       {deadline && !isAuthenticated && <p role="status" className="p-3 text-center">
         A tua vaga está reservada até às {new Date(deadline).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}. Se o prazo terminar, volta a abrir o convite.

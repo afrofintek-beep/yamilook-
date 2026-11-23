@@ -6497,6 +6497,7 @@ export type Database = {
       }
     }
     Functions: {
+      has_business_registration_access: { Args: Record<PropertyKey, never>; Returns: boolean }
       request_business_invitation: {
         Args: { p_owner: string; p_email: string; p_name: string; p_activity: string; p_scene: string; p_year: number | null; p_planned: boolean; p_language: string }
         Returns: undefined

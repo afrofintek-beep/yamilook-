@@ -1,3 +1,4 @@
+import { useBusinessRegistrationAccess } from '@/hooks/useBusinessRegistrationAccess';
 import { BusinessInviteRequest } from '@/components/advertising/BusinessInviteRequest';
 import { businessInvitationCopy } from '@/lib/business-invitation-copy';
 import { BusinessStartField } from '@/components/advertising/BusinessStartField';
@@ -22,7 +23,8 @@ export default function Welcome() {
   const { search } = useLocation();
   const businessSearch = new URLSearchParams(search);
   businessSearch.set('next', '/meus-negocios?abrir=1');
-  const business = new URLSearchParams(search).get('next') === '/meus-negocios?abrir=1';
+  const access = useBusinessRegistrationAccess();
+  const business = access.data && new URLSearchParams(search).get('next') === '/meus-negocios?abrir=1';
   const [draft, setDraft] = useState(readEntry);
   const scene = draft.scene || initialScene(i18n.language);
   const labels = businessCopy(i18n.language);
@@ -68,9 +70,9 @@ export default function Welcome() {
             <Link className="block rounded-xl bg-primary px-4 py-3 text-primary-foreground" to={`/register${search}`}>
               <strong className="block">{t('entry.personal')}</strong><span className="text-sm">{t('entry.personalHint')}</span>
             </Link>
-            <Link className="block rounded-xl border px-4 py-3" to={`/welcome?${businessSearch}`}>
+            {access.data && <Link className="block rounded-xl border px-4 py-3" to={`/welcome?${businessSearch}`}>
               <strong className="block">{t('entry.business')}</strong><span className="text-sm">{t('entry.businessHint')}</span>
-            </Link>
+            </Link>}
           </>
         )}
         <Button asChild variant="outline" size="lg" className="w-full min-h-14"><Link to={`/login${search}`}>{isPortuguese ? 'Já tenho conta · ' : ''}{t('entry.login')}</Link></Button>

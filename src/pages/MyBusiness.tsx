@@ -1,3 +1,5 @@
+import { useBusinessRegistrationAccess } from '@/hooks/useBusinessRegistrationAccess';
+import { Navigate } from 'react-router-dom';
 import { BusinessDraftRecovery } from '@/components/advertising/BusinessDraftRecovery';
 import { useAuth } from '@/hooks/useAuth';
 import { useState } from 'react';
@@ -8,6 +10,13 @@ import { Button } from '@/components/ui/button';
 import { useAdvertising } from '@/hooks/useAdvertising';
 
 export default function MyBusiness() {
+  const access = useBusinessRegistrationAccess();
+  if (access.isLoading) return <p role="status">…</p>;
+  if (!access.data) return <Navigate to="/profile" replace />;
+  return <MyBusinessContent />;
+}
+
+function MyBusinessContent() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const advertising = useAdvertising();
