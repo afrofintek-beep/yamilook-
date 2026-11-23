@@ -1,9 +1,19 @@
 import {uiText as t,useUiLocale} from '@/i18n/ui-copy';
+import {NjilaJourney} from './NjilaJourney';
 import {useEffect,useState} from 'react';import {Link,useParams} from 'react-router-dom';
 import {Button} from '@/components/ui/button';import {locaccess,validHandle} from './api';import {AccessMap,type MapPoint} from './AccessMap';
 type Result={status:'ready'|'proximity'|'denied';point?:MapPoint;area?:MapPoint;radius?:number;expiresAt?:string;owner?:boolean};
 type Fix=MapPoint&{accuracy:number;timestamp:number};
 export default function AccessVisit(){
+ const [journey,setJourney]=useState(window.location.hash==='#njila');
+ return journey?<JourneyVisit onBack={()=>setJourney(false)}/>:<LocationVisit onJourney={()=>setJourney(true)}/>;
+}
+function JourneyVisit({onBack}:{onBack:()=>void}){
+ useUiLocale();
+ const {handle=''}=useParams();
+ return <main className="mx-auto max-w-3xl space-y-3 p-3"><Button variant="outline" onClick={onBack}>{t('Voltar ao endereço')}</Button><h1 className="text-xl font-semibold">NJILA · AFROLOC</h1><NjilaJourney key={handle} handle={handle}/></main>;
+}
+function LocationVisit({onJourney}:{onJourney:()=>void}){
  useUiLocale();
  const {handle=''}=useParams();const [tracking,setTracking]=useState(false),[result,setResult]=useState<Result|null>(null),[message,setMessage]=useState('A verificar a autorização…');
  const [retry,setRetry]=useState(0);
@@ -33,6 +43,7 @@ export default function AccessVisit(){
    </Button>
   </header>
   <h1 className="text-xl font-semibold">{t("Localização AFROLOC")}</h1><p className="text-sm text-muted-foreground">{t("LOCACCESS · Consulta experimental protegida")}</p><p role="status">{t(message,{distance:result?.radius||0})}</p>
+  {(result?.status==='ready'||result?.status==='proximity')&&<Button onClick={onJourney}>{t('Abrir na NJILA')}</Button>}
   {result?.status==='ready'&&result.point?<AccessMap point={result.point}/>:result?.status==='proximity'&&result.area?<AccessMap point={result.area} approximate/>:null}
   {result?.status==='proximity'&&<Button disabled={tracking} onClick={()=>{if(navigator.geolocation)setTracking(true);else setMessage('Este dispositivo não disponibiliza a localização.')}}>{t(tracking?'A verificar proximidade…':'Activar localização e verificar proximidade')}</Button>}
   <Button variant="outline" onClick={()=>setRetry(n=>n+1)}>{t("Verificar novamente")}</Button>
