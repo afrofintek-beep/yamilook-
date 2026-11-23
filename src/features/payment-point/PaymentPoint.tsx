@@ -3,7 +3,7 @@ import { ReceiveOptions } from './ReceiveOptions';
 import { useMessageNotification } from '@/hooks/useMessageNotification';
 import { PaymentRejected } from './api';
 import { WalletSessionConfirmation } from './WalletSessionConfirmation';
-import { TransferSecurity } from './TransferSecurity';
+import { TransferSecurity, preferences } from './TransferSecurity';
 import { WalletHeader, WalletNavigation } from './WalletNavigation';
 import { useHiddenBalance } from './useHiddenBalance';
 import { MovementHistory } from './MovementHistory';
@@ -45,6 +45,7 @@ export default function PaymentPoint() {
     setDialog(next);
   }
   const { user } = useAuth();
+  const [outgoingBlocked, setOutgoingBlocked] = useState<boolean | null>(null);
   const [overview, setOverview] = useState<Overview>();
   const [order, setOrder] = useState<PaymentOrder>();
   const { notifyMessage } = useMessageNotification();
@@ -81,10 +82,12 @@ export default function PaymentPoint() {
   }, [id]);
   useEffect(() => {
     let active = true;
-    setOrder(undefined); setError('');
+    setOrder(undefined); setError(''); setOutgoingBlocked(null);
     const load = async () => {
       try {
-        const summary = await paymentAction<Overview>('overview');
+        const [summary, security] = await Promise.all([
+          paymentAction<Overview>('overview'), preferences(),
+        ]);
         const selected = id ? await paymentAction<PaymentOrder>('view', id) : undefined;
         if (active) {
           const saved = sessionStorage.getItem(pendingKey);
@@ -97,6 +100,7 @@ export default function PaymentPoint() {
               setUncertain(false);
             } else setUncertain(true);
           } else setUncertain(false);
+          setOutgoingBlocked(security.blocked);
           setOverview(summary); setOrder(selected); setError(''); }
       } catch (e) { if (active) setError((e as Error).message); }
     };
@@ -109,6 +113,9 @@ export default function PaymentPoint() {
     let submitted = false;
     try {
       if (action === 'pay' || action === 'withdraw' || action === 'refund') {
+        const security = await preferences();
+        setOutgoingBlocked(security.blocked);
+        if (security.blocked) throw new Error('As saídas de dinheiro estão bloqueadas');
         const destination = action === 'withdraw' ? text?.trim() : action === 'refund' ? order?.buyer_id : order?.seller_id;
         const amount = action === 'withdraw' ? cents : order?.amount;
         if (!reference || !destination || !amount) throw new Error('Confirme o destino e o valor da operação.');
@@ -158,6 +165,11 @@ export default function PaymentPoint() {
       else { await navigator.clipboard.writeText(url); setError('Ligação copiada.'); }
     } catch (e) { if ((e as Error).name !== 'AbortError') setError('Não foi possível partilhar a ligação.'); }
   }
+  const debitUnavailable = outgoingBlocked !== false;
+  const securityNotice = outgoingBlocked === true && <div role="status" className="rounded-lg border p-3 space-y-2">
+    <p>As saídas de dinheiro estão bloqueadas.</p>
+    <Button variant="outline" onClick={() => { setError(''); setDialog('security'); }}>Abrir segurança</Button>
+  </div>;
   const wallet = overview?.wallet;
   const displayMoney = (value: number) => hidden ? '•••• Kz' : money(value);
   const ownOrders = overview?.orders.filter(item => item.seller_id === user?.id) || [];
@@ -188,9 +200,10 @@ export default function PaymentPoint() {
       <div role="status" className="rounded-xl border border-amber-400/40 bg-amber-400/10 px-3 py-2 text-sm text-foreground">
         Ambiente de testes · Valores simulados
       </div>
+      {securityNotice}
       {uncertain && <div role="status" className="rounded-lg border p-3">
         <p>A confirmar a operação. A carteira consulta o estado automaticamente.</p>
-        <Button disabled={busy} variant="outline" onClick={()=>{
+        <Button disabled={busy || debitUnavailable} variant="outline" onClick={()=>{
           const saved = sessionStorage.getItem(pendingKey);
           if (!saved) return;
           const pending = JSON.parse(saved);
@@ -250,10 +263,10 @@ export default function PaymentPoint() {
             <div className="bg-white p-4 rounded-lg w-fit"><QRCodeSVG value={orderLink(order.id)} size={200} /></div>
             <Button onClick={share}>{copy.share}</Button>
             <Button variant="outline" disabled={busy} onClick={() => run('cancel', order.id)}>Cancelar pedido</Button>
-          </> : <Button disabled={busy || !wallet || wallet.purchased + wallet.earned < order.amount} onClick={() => run('pay', order.id)}>Confirmar simulação</Button>}
+          </> : <Button disabled={busy || debitUnavailable || !wallet || wallet.purchased + wallet.earned < order.amount} onClick={() => run('pay', order.id)}>Confirmar simulação</Button>}
           {!order.own && wallet && wallet.purchased + wallet.earned < order.amount && <div className="space-y-2"><p>Carregue saldo de teste para pagar este pedido.</p><Button onClick={() => openDialog('topup')}>Carregar saldo</Button></div>}
         </>}
-        {order.own && order.status === 'paid' && <Button variant="outline" disabled={busy} onClick={() => {
+        {order.own && order.status === 'paid' && <Button variant="outline" disabled={busy || debitUnavailable} onClick={() => {
           if (window.confirm(`Reembolsar ${money(order.amount)} ao comprador?`)) void run('refund', order.id);
         }}>Reembolsar compra</Button>}
       </section>}
@@ -276,7 +289,7 @@ export default function PaymentPoint() {
       <DialogContent className="max-h-[85dvh] overflow-y-auto"><DialogHeader><DialogTitle>
         {dialog === 'security' ? 'Segurança das transferências' : dialog === 'info' ? 'Sobre o saldo' : dialog === 'create' ? (tab === 'business' ? copy.request : copy.how) : dialog === 'scan' ? 'Ler QR' : dialog === 'topup' ? 'Carregar saldo de teste' : 'Pedir levantamento de teste'}
       </DialogTitle></DialogHeader>
-      {dialog === 'security' && <TransferSecurity />}
+      {dialog === 'security' && <TransferSecurity onChange={value => { setOutgoingBlocked(value.blocked); setError(''); }} />}
       {dialog === 'info' && <div className="space-y-3 text-sm">
         <p><strong>Disponível para pagar</strong> reúne os carregamentos e os ganhos recebidos.</p>
         <p><strong>Para levantar</strong> indica os ganhos elegíveis para levantamento neste piloto.</p>
@@ -287,12 +300,13 @@ export default function PaymentPoint() {
       {dialog === 'create' && tab === 'business' && <RequestPayment business onCreated={async newId => { setDialog(null); navigate(`/payment-point/${newId}`); }} />}
       {dialog === 'scan' && <ScanPayment onScan={newId => { setDialog(null); navigate(`/payment-point/${newId}`); }} />}
       {(dialog === 'topup' || dialog === 'withdraw') && <div className="space-y-3">
+        {dialog === 'withdraw' && securityNotice}
         <p className="text-sm text-muted-foreground">Esta operação utiliza valores simulados.</p>
         {dialog === 'withdraw' && <p className="text-sm">Disponível para levantamento: {money(wallet?.earned || 0)}. Apenas os ganhos recebidos são elegíveis neste piloto.</p>}
         <label className="block text-sm">Valor em kwanzas<Input value={amount} inputMode="decimal" disabled={busy} onChange={e => { setAmount(e.target.value); requestId.current = crypto.randomUUID(); }} /></label>
         {dialog === 'withdraw' && <label className="block text-sm">Destino de teste<Input placeholder="Ex. Conta de teste Maria" value={destination} disabled={busy} maxLength={120} onChange={e => { setDestination(e.target.value); requestId.current = crypto.randomUUID(); }} /></label>}
         {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-        <Button disabled={busy || (dialog === 'withdraw' && !wallet?.earned)} onClick={() => submitAmount(dialog === 'topup' ? 'topup' : 'withdraw')}>{busy ? 'A processar…' : 'Confirmar teste'}</Button>
+        <Button disabled={busy || (dialog === 'withdraw' && (debitUnavailable || !wallet?.earned))} onClick={() => submitAmount(dialog === 'topup' ? 'topup' : 'withdraw')}>{busy ? 'A processar…' : 'Confirmar teste'}</Button>
       </div>}
       </DialogContent>
     </Dialog>
