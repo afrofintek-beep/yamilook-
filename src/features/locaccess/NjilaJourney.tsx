@@ -11,6 +11,20 @@ type Visit = {status:'ready'|'proximity'|'denied'; point?:Point; area?:Point; ex
 /** The signed-in parent renews every lease through LOCACCESS. Credentials never cross the frame. */
 export function NjilaJourney({handle}:{handle:string}) {
   const frame = useRef<HTMLIFrameElement>(null);
+  const [expanded, setExpanded] = useState(false);
+  useEffect(() => {
+    if (!expanded) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setExpanded(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [expanded]);
   const channel = useRef<string|null>(null);
   const compass=useJourneyCompass(reading=>{
     if(channel.current)frame.current?.contentWindow?.postMessage({type:'locaccess-heading',audience:channel.current,...reading},NJILA);
@@ -72,11 +86,21 @@ export function NjilaJourney({handle}:{handle:string}) {
     const timer=setInterval(()=>void refresh(),5000);
     return()=>{active=false;clear();clearInterval(timer);window.removeEventListener('message',receive);window.removeEventListener('offline',pause);window.removeEventListener('pagehide',pause);window.removeEventListener('online',refresh);document.removeEventListener('visibilitychange',visibility);};
   },[handle,stopCompass]);
-  return <section className="space-y-3">
-    <button type="button" className="sticky top-0 z-50 rounded-xl border bg-background px-4 py-3 font-semibold" onClick={()=>void compass.request()}>{t(compass.active?'Bússola activa':'Activar bússola')}</button>
-    <p role="status">{t(message)}</p>
+  return <section className={expanded
+    ? 'fixed inset-0 z-[9999] flex min-h-0 flex-col gap-2 bg-background p-2'
+    : 'flex min-w-0 flex-col gap-2'}
+    style={expanded ? {paddingTop:'max(.5rem, env(safe-area-inset-top))', paddingBottom:'max(.5rem, env(safe-area-inset-bottom))'} : undefined}>
+    <div className="flex flex-wrap items-center gap-2">
+      <button type="button" aria-pressed={expanded}
+        onClick={()=>setExpanded(value=>!value)}
+        className="min-h-11 rounded-xl bg-foreground px-4 py-2 font-semibold text-background">
+        {t(expanded?'Reduzir mapa':'Ecrã inteiro')}
+      </button>
+    <button type="button" className="min-h-11 rounded-xl border bg-background px-4 py-3 font-semibold" onClick={()=>void compass.request()}>{t(compass.active?'Bússola activa':'Activar bússola')}</button>
+    </div>
+    <p role="status" className="text-sm font-medium leading-snug">{t(message)}</p>
     <iframe ref={frame} title="NJILA" src={NJILA+'/?from=yamilook&purpose=locaccess&embedded=1&lang='+encodeURIComponent(uiLocale())}
-      className="w-full rounded-xl border" style={{height:'80dvh',minHeight:500}} referrerPolicy="origin"
+      className={expanded ? 'min-h-0 w-full flex-1 border-0' : 'w-full rounded-xl border'} style={expanded ? undefined : {height:'80dvh'}} referrerPolicy="origin"
       sandbox="allow-scripts allow-same-origin" allow="geolocation; camera; accelerometer; gyroscope; magnetometer"/>
   </section>;
 }
