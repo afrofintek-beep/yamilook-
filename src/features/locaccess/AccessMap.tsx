@@ -24,6 +24,7 @@ export function AccessMap({point,approximate=false}:{point:MapPoint;approximate?
   const resize=new ResizeObserver(()=>map.invalidateSize());resize.observe(host.current);
   return()=>{resize.disconnect();map.remove()};
  },[point.lat,point.lon,approximate,locale,activeProvider]);
+ const satellite = activeProvider === 'google' ? googleSatellite : activeProvider === 'esri';
  const title = t(approximate ? 'Área aproximada' : 'Localização AFROLOC');
  const mapStyle = {height:'min(60dvh, 480px)', minHeight:300, width:'100%'};
  return <>
@@ -36,17 +37,7 @@ export function AccessMap({point,approximate=false}:{point:MapPoint;approximate?
     {googleKey && !approximate && <option value="google">Google Maps</option>}
    </select>
   </label>
-  <div role="group" aria-label={t('Mapa')} className="mb-2 flex gap-1">
-   {(['osm', 'esri'] as const).map(view => {
-    const satellite = view === 'esri';
-    const selected = activeProvider === 'google' ? googleSatellite === satellite : activeProvider === view;
-    return <button key={view} type="button" aria-pressed={selected}
-     className="min-h-11 rounded-md border px-4 aria-pressed:bg-primary aria-pressed:text-primary-foreground"
-     onClick={() => activeProvider === 'google' ? setGoogleSatellite(satellite) : setProvider(view)}>
-     {t(satellite ? 'Satélite' : 'Mapa')}
-    </button>;
-   })}
-  </div>
+  <div className="relative isolate">
   {activeProvider === 'google' ? (
    <iframe title={title} style={mapStyle} className="rounded-xl border" referrerPolicy="strict-origin"
     src={'https://www.google.com/maps/embed/v1/place?' + new URLSearchParams({
@@ -56,6 +47,12 @@ export function AccessMap({point,approximate=false}:{point:MapPoint;approximate?
    <div ref={host} role="region" aria-label={title}
     className="isolate overflow-hidden rounded-xl border" style={mapStyle} />
   )}
+   <button type="button" aria-label={t('Satélite')} aria-pressed={satellite} title={t(satellite?'Mapa':'Satélite')}
+    className="absolute left-1/2 top-3 z-10 h-11 w-11 -translate-x-1/2 rounded-full border-2 border-emerald-900 bg-white text-2xl text-emerald-900 shadow aria-pressed:bg-emerald-900 aria-pressed:text-white"
+    onClick={()=>activeProvider==='google'?setGoogleSatellite(!satellite):setProvider(satellite?'osm':'esri')}>
+    <span aria-hidden="true">•</span>
+   </button>
+  </div>
   {activeProvider !== 'google' && error && <p role="status" className="text-sm">{t(error)}</p>}
  </>;
 }
