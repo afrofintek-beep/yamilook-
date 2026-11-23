@@ -224,10 +224,11 @@ export default function PaymentPoint() {
         <p className="text-sm text-muted-foreground">Crie um pedido com valor e motivo. Partilhe a ligação ou apresente o QR ao cliente.</p>
       </section>}
       {order && <section className="rounded-2xl border p-4 space-y-3">
-        <h2 className="font-semibold">{copy.testRequest}</h2>
+        <h2 className="font-semibold">{order.status === 'paid' ? 'Comprovativo de pagamento simulado' : copy.testRequest}</h2>
+        {order.status === 'paid' && <p className="break-all text-xs">Referência: {order.id}</p>}
         <p>Recebe {order.seller_name || 'Utilizador Yamilook'} · carteira …{order.seller_id.slice(-6)}</p>
         <p className="text-sm">Comissão de teste {money(0)} · Total {money(order.amount)}</p>
-        <p className="text-2xl font-semibold">{money(order.amount)}</p><p>{order.description}</p>
+        <p className="text-2xl font-semibold">{money(order.amount)}</p><p className="break-words">Motivo: {order.description}</p>
         <p role="status">{order.status === 'paid'
           ? (order.own ? copy.received : 'Pagamento simulado concluído') + ' · ' + money(order.amount)
           : order.status === 'pending' && order.own
@@ -239,7 +240,7 @@ export default function PaymentPoint() {
             <div className="bg-white p-4 rounded-lg w-fit"><QRCodeSVG value={orderLink(order.id)} size={200} /></div>
             <Button onClick={share}>{copy.share}</Button>
             <Button variant="outline" disabled={busy} onClick={() => run('cancel', order.id)}>Cancelar pedido</Button>
-          </> : <Button disabled={busy || !wallet || wallet.purchased + wallet.earned < order.amount} onClick={() => run('pay', order.id)}>Simular pagamento de {money(order.amount)} a {order.seller_name || order.seller_id}</Button>}
+          </> : <Button disabled={busy || !wallet || wallet.purchased + wallet.earned < order.amount} onClick={() => run('pay', order.id)}>Confirmar simulação</Button>}
           {!order.own && wallet && wallet.purchased + wallet.earned < order.amount && <div className="space-y-2"><p>Carregue saldo de teste para pagar este pedido.</p><Button onClick={() => openDialog('topup')}>Carregar saldo</Button></div>}
         </>}
         {order.own && order.status === 'paid' && <Button variant="outline" disabled={busy} onClick={() => {
