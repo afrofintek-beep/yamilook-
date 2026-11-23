@@ -3,8 +3,13 @@ import { supabase } from '@/integrations/supabase/client';
 
 type Operation = {action: string; id: string; amount: number; destination: string; currency: 'AOA'};
 
+export class WalletSessionVerificationRequired extends Error {}
+
 async function begin(purpose: string, operation: Operation | null) {
   const {data,error} = await supabase.rpc('wallet_begin' as never,{p_purpose:purpose,p_operation:operation} as never);
+  if (purpose === 'register' && error?.message.includes('confirme a sessão com o segundo factor')) {
+    throw new WalletSessionVerificationRequired(error.message);
+  }
   if (error) throw new Error(error.message);
   return data as {challenge:string; credentials:string[]};
 }

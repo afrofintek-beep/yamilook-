@@ -2,6 +2,7 @@ import { useReceiveLabels } from '@/features/payment-point/receive-labels';
 import { ReceiveOptions } from './ReceiveOptions';
 import { useMessageNotification } from '@/hooks/useMessageNotification';
 import { PaymentRejected } from './api';
+import { WalletSessionConfirmation } from './WalletSessionConfirmation';
 import { TransferSecurity } from './TransferSecurity';
 import { WalletHeader, WalletNavigation } from './WalletNavigation';
 import { useHiddenBalance } from './useHiddenBalance';
@@ -67,6 +68,7 @@ export default function PaymentPoint() {
   const [amount, setAmount] = useState('');
   const [destination, setDestination] = useState('');
   const [error, setError] = useState('');
+  const [confirmSession, setConfirmSession] = useState(false);
   const [busy, setBusy] = useState(false);
   const [uncertain, setUncertain] = useState(false);
   const pendingKey = 'wallet-pending:' + user?.id;
@@ -110,11 +112,19 @@ export default function PaymentPoint() {
         const destination = action === 'withdraw' ? text?.trim() : action === 'refund' ? order?.buyer_id : order?.seller_id;
         const amount = action === 'withdraw' ? cents : order?.amount;
         if (!reference || !destination || !amount) throw new Error('Confirme o destino e o valor da operação.');
-        const { authorizeDebit } = await import('./authorize');
+        const { authorizeDebit, WalletSessionVerificationRequired } = await import('./authorize');
         const saved = sessionStorage.getItem(pendingKey);
         const operation = JSON.stringify({action,reference,cents,text});
         if (saved && operation !== saved) throw new Error('Consulte primeiro o resultado da operação anterior.');
-        await authorizeDebit({action, id:reference, amount, destination, currency:'AOA'});
+        try {
+          await authorizeDebit({action, id:reference, amount, destination, currency:'AOA'});
+        } catch (error) {
+          if (error instanceof WalletSessionVerificationRequired) {
+            setConfirmSession(true);
+            return;
+          }
+          throw error;
+        }
         sessionStorage.setItem(pendingKey,operation);
         submitted = true;
       }
@@ -260,6 +270,7 @@ export default function PaymentPoint() {
         {(tab === 'wallet' || tab === 'movements') && <MovementHistory overview={overview} hidden={hidden} recent={tab === 'wallet'} withdrawals={renderWithdrawals} />}
       </>}
     </main>
+    {confirmSession && <WalletSessionConfirmation onClose={() => setConfirmSession(false)} />}
     <WalletNavigation tab={id ? '' : tab} />
     <Dialog open={!!dialog} onOpenChange={open => { if (!open && !busy) { setDialog(null); setError(''); } }}>
       <DialogContent className="max-h-[85dvh] overflow-y-auto"><DialogHeader><DialogTitle>
