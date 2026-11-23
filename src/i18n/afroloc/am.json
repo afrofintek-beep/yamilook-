@@ -1,10 +1,10 @@
 {
-"Activar bússola": "ኮምፓስን አብራ",
-"Bússola activa": "ኮምፓስ ንቁ ነው",
-"Abrir na NJILA": "በNJILA ክፈት",
-"Voltar ao endereço": "ወደ አድራሻው ተመለስ",
-"A área indicada é aproximada. A morada exacta depende da proximidade autorizada.": "የሚታየው አካባቢ ግምታዊ ነው። ትክክለኛው አድራሻ በተፈቀደው የቅርበት ርቀት ላይ ይመሰረታል።",
-"Não foi possível verificar o acesso. Tenta novamente.": "መዳረሻውን ማረጋገጥ አልተቻለም። እንደገና ሞክር።",
+  "Activar bússola": "ኮምፓስን አብራ",
+  "Bússola activa": "ኮምፓስ ንቁ ነው",
+  "Abrir na NJILA": "በNJILA ክፈት",
+  "Voltar ao endereço": "ወደ አድራሻው ተመለስ",
+  "A área indicada é aproximada. A morada exacta depende da proximidade autorizada.": "የሚታየው አካባቢ ግምታዊ ነው። ትክክለኛው አድራሻ በተፈቀደው የቅርበት ርቀት ላይ ይመሰረታል።",
+  "Não foi possível verificar o acesso. Tenta novamente.": "መዳረሻውን ማረጋገጥ አልተቻለም። እንደገና ሞክር።",
   "* Exemplo ilustrativo do potencial da caixa postal AFROLOC. Não corresponde a uma caixa atribuída, não permite receber correspondência ou encomendas e não constitui atribuição postal oficial.": "* የAFROLOC የፖስታ ሳጥን አቅምን የሚያሳይ ምሳሌ። የተመደበ ሳጥን አይደለም፣ ደብዳቤ ወይም እሽግ መቀበል አይችልም፣ ኦፊሴላዊ የፖስታ ምደባም አይደለም።",
   "* Referência associada na AFROLOC. A apresentação na Yamilook é ilustrativa: não activa recepção de correspondência ou encomendas nem comprova atribuição oficial pelos Correios de Angola.": "* በAFROLOC የተያያዘ ማጣቀሻ። በYamilook የሚታየው ለማሳያ ብቻ ነው፤ ደብዳቤ ወይም እሽግ መቀበልን አያስጀምርም፣ በCorreios de Angola ኦፊሴላዊ ምደባ መሰጠቱንም አያረጋግጥም።",
   "1 hora": "1 ሰዓት",
@@ -254,5 +254,7 @@
   "Retirar {{name}} da selecção": "{{name}}ን ከምርጫው አስወግድ",
   "Autorizar pessoas seleccionadas ({{count}})": "ለተመረጡ ሰዎች ፍቀድ ({{count}})",
   "Acessos autorizados: {{count}}. Não foi possível concluir. As pessoas restantes continuam seleccionadas.": "ፈቃድ የተሰጣቸው፦ {{count}}። ማጠናቀቅ አልተቻለም። የቀሩት ሰዎች እንደተመረጡ ይቆያሉ።",
-  "Acessos autorizados: {{count}}.": "ፈቃድ የተሰጣቸው፦ {{count}}።"
+  "Acessos autorizados: {{count}}.": "ፈቃድ የተሰጣቸው፦ {{count}}።",
+  "Ecrã inteiro": "ሙሉ ማያ ገጽ",
+  "Reduzir mapa": "ካርታውን አሳንስ"
 }
