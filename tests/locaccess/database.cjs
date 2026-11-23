@@ -19,7 +19,7 @@ const source={id:'residence',code:'AO-TEST-0'};await login(0);let policy=await a
 ok((await db.query('select public.locaccess_reference_protected($1) as blocked',[source.code])).rows[0].blocked,'legacy public lookup blocked');
 await db.exec('create table public.messages(id uuid primary key,sender_id uuid)');
 await db.exec(fs.readFileSync('supabase/migrations/20261119034500_locaccess_farewells.sql','utf8'));
-await db.exec(fs.readFileSync('supabase/migrations/20261123062541_locaccess_google_maps_entry.sql','utf8'));
+await db.exec(fs.readFileSync('supabase/migrations/20261123063333_locaccess_google_maps_entry.sql','utf8'));
 const farewell=async(a,d)=>(await db.query('select public.locaccess_farewell($1,$2) as result',[a,JSON.stringify({...source,...d})])).rows[0].result;
 for(const username of ['guest','other'])policy=await action('grant',{...source,username,radius:0,hours:24});
 const grantIds=policy.grants.map(g=>g.id);
