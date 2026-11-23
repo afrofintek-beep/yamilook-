@@ -242,7 +242,7 @@ function ProtectedRoute({ children, skipOnboardingCheck }: { children: React.Rea
   }
   
   if (!user) {
-    return <Navigate to={(protectedLocation.pathname.startsWith("/afroloc") || (protectedLocation.pathname==="/notifications" || protectedLocation.pathname==="/meus-negocios")) ? `/login?next=${encodeURIComponent(protectedLocation.pathname+protectedLocation.search)}` : "/welcome"} replace />;
+    return <Navigate to={(protectedLocation.pathname.startsWith("/afroloc") || (protectedLocation.pathname==="/notifications" || protectedLocation.pathname==="/meus-negocios")) ? `/login?next=${encodeURIComponent(protectedLocation.pathname+protectedLocation.search+(protectedLocation.hash==='#njila'?'#njila':''))}` : "/welcome"} replace />;
   }
 
   // Do not expose protected content while the profile is still being fetched.
@@ -268,7 +268,7 @@ function ProtectedRoute({ children, skipOnboardingCheck }: { children: React.Rea
 
   // Redirect to onboarding if not completed (except on the onboarding page itself)
   if (!skipOnboardingCheck && profile && !profile.onboarding_completed) {
-    return <Navigate to={(protectedLocation.pathname.startsWith("/afroloc/acesso/") || (protectedLocation.pathname==="/notifications" || protectedLocation.pathname==="/meus-negocios")) ? `/onboarding?next=${encodeURIComponent(protectedLocation.pathname+protectedLocation.search)}` : "/onboarding"} replace />;
+    return <Navigate to={(protectedLocation.pathname.startsWith("/afroloc/acesso/") || (protectedLocation.pathname==="/notifications" || protectedLocation.pathname==="/meus-negocios")) ? `/onboarding?next=${encodeURIComponent(protectedLocation.pathname+protectedLocation.search+(protectedLocation.hash==='#njila'?'#njila':''))}` : "/onboarding"} replace />;
   }
   
   return <>{children}</>;

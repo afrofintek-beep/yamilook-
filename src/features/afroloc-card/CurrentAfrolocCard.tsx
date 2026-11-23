@@ -130,6 +130,7 @@ function CardScreen({userId,requested}:{userId:string;requested?:string}){
     <Button className="h-12 gap-2" aria-label={t('Partilhar cartão')} disabled={!ready} onClick={()=>void share()}><Share2 className="h-4 w-4"/>{t('Partilhar')}</Button>
     <Button variant="outline" className="h-12 gap-2" disabled={!access.url} onClick={()=>{if(access.url)window.location.assign(access.url)}}><MapPin className="h-4 w-4"/>{t('Ver no mapa')}</Button>
    </div>
+   <Button className="w-full h-12" variant="outline" disabled={!access.url} onClick={()=>{if(access.url)window.location.assign(access.url+'#njila')}}>{t('Abrir na NJILA')}</Button>
    <p className="text-xs text-muted-foreground">{t("Ao partilhar ou imprimir, o cartão oculta o código da morada e usa um QR protegido. Uma captura deste ecrã pode revelar o código.")}</p>
    {postal.busy?<p role="status" className="text-xs text-muted-foreground">{t('A consultar a Cx. Postal na AFROLOC…')}</p>:postal.error?<p role="status" className="text-xs text-muted-foreground">{t('Não foi possível consultar a Cx. Postal. Usa Actualizar cartão para tentar novamente.')}</p>:postal.value?.status==='unavailable'?<p className="text-xs text-muted-foreground">{t('Cx. Postal: sem referência disponível para este endereço na AFROLOC.')}</p>:null}
    <AccessControl key={address.id+address.code} control={access}/>

@@ -4,6 +4,7 @@ import {readCardReference} from '@/shared/afroloc-card/protocol';
 const route='/afroloc/acesso/00000000-0000-4000-8000-000000000001';
 it('retains only a valid internal recipient destination through sign in',()=>{
  expect(afrolocReturn('?next='+encodeURIComponent(route))).toBe(route);
+ expect(afrolocReturn('?next='+encodeURIComponent(route+'#njila'))).toBe(route+'#njila');
  for(const v of ['https://evil.invalid'+route,'//evil.invalid'+route,route+'?next=evil',route+'#x',route+'/other','/afroloc/acesso/bad'])expect(afrolocReturn('?next='+encodeURIComponent(v))).toBeNull();
 });
 it('keeps the access opaque when scanning and rejects modified links',()=>{

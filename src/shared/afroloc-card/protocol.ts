@@ -22,7 +22,7 @@ export function readCardReference(raw:string):CardReference|null {
    if(u.port||u.username||u.password)return null;
    const afro=['app.afroloc.ao','afroloc.ao','www.afroloc.ao'].includes(u.hostname);
    const njila=['www.njilamaps.com','njilamaps.com'].includes(u.hostname);
-   if(['yamilook.com','www.yamilook.com'].includes(u.hostname)&&/^\/afroloc\/acesso\/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(u.pathname)&&hasOnlyLanguageHint(u)&&!u.hash)return {kind:'access',url:u.href};
+   if(['yamilook.com','www.yamilook.com'].includes(u.hostname)&&/^\/afroloc\/acesso\/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(u.pathname)&&hasOnlyLanguageHint(u)&&(!u.hash||u.hash==='#njila'))return {kind:'access',url:u.href};
    if(!afro&&!njila)return null;
    if(u.pathname==='/experiencia/'&&u.hostname==='app.afroloc.ao'&&!u.search){
     const hash=new URLSearchParams(u.hash.slice(1));
@@ -36,6 +36,7 @@ export function readCardReference(raw:string):CardReference|null {
    }else if(afro&&/^\/a\/[^/]+\/?$/.test(u.pathname)&&!u.search){
     value=decodeURIComponent(u.pathname.split('/')[2]);
    }else{
+    if(njila&&u.searchParams.getAll('navigate').length===1&&u.searchParams.get('navigate')==='1')u.searchParams.delete('navigate');
     const keys=[...u.searchParams.keys()];
     if(keys.length!==1||!['code','afroloc',...(njila?['to']:[])].includes(keys[0]))return null;
     if(njila&&u.pathname!=='/')return null;
