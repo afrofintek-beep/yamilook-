@@ -2,7 +2,6 @@ alter table wallet_security.credentials
   add column relying_party text not null default 'yamilook.com'
   check (relying_party in ('yamilook.com','kosolola.com'));
 
-drop function public.wallet_begin(text,jsonb);
 create function public.wallet_begin(p_purpose text,p_operation jsonb,p_relying_party text)
 returns jsonb language plpgsql security definer set search_path='' as $$
 declare holder uuid := auth.uid(); sid uuid := (auth.jwt()->>'session_id')::uuid; ids jsonb; challenge_value text := replace(gen_random_uuid()::text,'-','') || replace(gen_random_uuid()::text,'-','');
@@ -20,7 +19,6 @@ begin
   return jsonb_build_object('challenge',challenge_value,'credentials',ids);
 end $$;
 
-drop function public.wallet_verifier_finish(uuid,uuid,text,text,jsonb,text,text,bigint);
 create function public.wallet_verifier_finish(p_holder uuid,p_session uuid,p_challenge text,p_purpose text,p_operation jsonb,p_id text,p_key text,p_counter bigint,p_relying_party text)
 returns void language plpgsql security definer set search_path='' as $$
 begin
