@@ -1,6 +1,7 @@
 import { uiLocale, uiText, useUiLocale } from '@/i18n/ui-copy';
 import {afrolocReturn} from '@/features/locaccess/return-path';
 import { getYamilookPublicUrl } from '@/lib/public-site';
+import { registrationEmailLanguage } from '@/lib/registration-email';
 import { captureReferralCode, getReferralCode, clearReferralCode } from '@/lib/referral';
 import { buildInvitationSignupMetadata, createRegisterSchema, hasInviteCodeInSearch, accessCodeSchema, type RegisterFormValues } from '@/lib/invitation-registration';
 import { useState, useEffect, useRef, useMemo } from 'react';
@@ -29,7 +30,7 @@ import { triggerCelebrationConfetti } from '@/lib/confetti';
 
 export function RegisterForm() {
   useUiLocale();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [isInvitationSignup] = useState(() => hasInviteCodeInSearch(window.location.search));
   const registerSchema = useMemo(() => createRegisterSchema(isInvitationSignup), [isInvitationSignup, uiLocale()]);
   const [showPassword, setShowPassword] = useState(false);
@@ -122,6 +123,7 @@ export function RegisterForm() {
       return;
     }
 
+    const emailLanguage = registrationEmailLanguage(i18n.language);
     setIsLoading(true);
     try {
       const { data: validation, error: validationError } = await supabase.rpc('validate_mvp_access_code', { p_code: values.accessCode.trim().toUpperCase() });
@@ -161,6 +163,7 @@ export function RegisterForm() {
           emailRedirectTo: getYamilookPublicUrl(`/onboarding${communitySearch}`),
           data: {
             ...buildInvitationSignupMetadata(isInvitationSignup, values.accessCode, values.displayName, values.username),
+            registration_email_language: emailLanguage,
           },
         },
       });

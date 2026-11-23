@@ -1,0 +1,143 @@
+{{- $language := "" -}}
+{{- if eq $.RedirectTo (printf "%s/?lang=pt" $.SiteURL) (printf "%s?lang=pt" $.SiteURL) "https://www.yamilook.com/?lang=pt" "https://yamilook.com/?lang=pt" -}}{{- $language = "pt" -}}
+{{- else if eq $.RedirectTo (printf "%s/?lang=en" $.SiteURL) (printf "%s?lang=en" $.SiteURL) "https://www.yamilook.com/?lang=en" "https://yamilook.com/?lang=en" -}}{{- $language = "en" -}}
+{{- else if eq $.RedirectTo (printf "%s/?lang=fr" $.SiteURL) (printf "%s?lang=fr" $.SiteURL) "https://www.yamilook.com/?lang=fr" "https://yamilook.com/?lang=fr" -}}{{- $language = "fr" -}}
+{{- else if eq $.RedirectTo (printf "%s/?lang=ar" $.SiteURL) (printf "%s?lang=ar" $.SiteURL) "https://www.yamilook.com/?lang=ar" "https://yamilook.com/?lang=ar" -}}{{- $language = "ar" -}}
+{{- else if eq $.RedirectTo (printf "%s/?lang=am" $.SiteURL) (printf "%s?lang=am" $.SiteURL) "https://www.yamilook.com/?lang=am" "https://yamilook.com/?lang=am" -}}{{- $language = "am" -}}
+{{- else if eq $.RedirectTo (printf "%s/?lang=sw" $.SiteURL) (printf "%s?lang=sw" $.SiteURL) "https://www.yamilook.com/?lang=sw" "https://yamilook.com/?lang=sw" -}}{{- $language = "sw" -}}
+{{- else if eq $.RedirectTo (printf "%s/?lang=ln" $.SiteURL) (printf "%s?lang=ln" $.SiteURL) "https://www.yamilook.com/?lang=ln" "https://yamilook.com/?lang=ln" -}}{{- $language = "ln" -}}
+{{- else if eq $.RedirectTo (printf "%s/?lang=yo" $.SiteURL) (printf "%s?lang=yo" $.SiteURL) "https://www.yamilook.com/?lang=yo" "https://yamilook.com/?lang=yo" -}}{{- $language = "yo" -}}
+{{- else if eq $.RedirectTo (printf "%s/?lang=sn" $.SiteURL) (printf "%s?lang=sn" $.SiteURL) "https://www.yamilook.com/?lang=sn" "https://yamilook.com/?lang=sn" -}}{{- $language = "sn" -}}
+{{- else if eq $.RedirectTo (printf "%s/?lang=zu" $.SiteURL) (printf "%s?lang=zu" $.SiteURL) "https://www.yamilook.com/?lang=zu" "https://yamilook.com/?lang=zu" -}}{{- $language = "zu" -}}
+{{- end -}}
+{{- $registrationLanguage := "" -}}
+{{- with .Data -}}{{- $registrationLanguage = printf "%s" (index . "registration_email_language") -}}{{- end -}}
+{{- if eq $language "pt" -}}
+<div lang="pt">
+  <h2>Retome a sua inscrição na Yamilook</h2>
+  <p>Use a ligação abaixo para retomar a sua inscrição. A ligação expira em breve e só pode ser usada uma vez.</p>
+  <p><a href="{{ .ConfirmationURL }}">Retomar a minha inscrição</a></p>
+</div>
+{{- else if eq $language "en" -}}
+<div lang="en">
+  <h2>Resume your Yamilook registration</h2>
+  <p>Use the link below to resume your registration. It expires shortly and can only be used once.</p>
+  <p><a href="{{ .ConfirmationURL }}">Resume my registration</a></p>
+</div>
+{{- else if eq $language "fr" -}}
+<div lang="fr">
+  <h2>Reprenez votre inscription sur Yamilook</h2>
+  <p>Utilisez le lien ci-dessous pour reprendre votre inscription. Il expire bientôt et ne peut être utilisé qu’une fois.</p>
+  <p><a href="{{ .ConfirmationURL }}">Reprendre mon inscription</a></p>
+</div>
+{{- else if eq $language "ar" -}}
+<div lang="ar" dir="rtl">
+  <h2>تابع تسجيلك في Yamilook</h2>
+  <p>استخدم الرابط أدناه لمتابعة تسجيلك. تنتهي صلاحيته قريبًا ولا يمكن استخدامه سوى مرة واحدة.</p>
+  <p><a href="{{ .ConfirmationURL }}">متابعة تسجيلي</a></p>
+</div>
+{{- else if eq $language "am" -}}
+<div lang="am">
+  <h2>በYamilook ምዝገባዎን ይቀጥሉ</h2>
+  <p>ምዝገባዎን ለመቀጠል ከታች ያለውን አገናኝ ይጠቀሙ። አገናኙ በቅርቡ ጊዜው ያበቃል፣ አንድ ጊዜ ብቻ መጠቀም ይቻላል።</p>
+  <p><a href="{{ .ConfirmationURL }}">ምዝገባዬን ልቀጥል</a></p>
+</div>
+{{- else if eq $language "sw" -}}
+<div lang="sw">
+  <h2>Endelea na usajili wako wa Yamilook</h2>
+  <p>Tumia kiungo kilicho hapa chini kuendelea na usajili wako. Kiungo kitaisha muda wake hivi karibuni na kinaweza kutumiwa mara moja tu.</p>
+  <p><a href="{{ .ConfirmationURL }}">Endelea na usajili wangu</a></p>
+</div>
+{{- else if eq $language "ln" -}}
+<div lang="ln">
+  <h2>Kobá komikomisa na Yamilook</h2>
+  <p>Salelá lien oyo ezali awa na nse mpo na kokoba komikomisa. Ekosila kala mingi te mpe ekoki kosalelama kaka mbala moko.</p>
+  <p><a href="{{ .ConfirmationURL }}">Kokoba komikomisa na ngai</a></p>
+</div>
+{{- else if eq $language "yo" -}}
+<div lang="yo">
+  <h2>Tẹ̀síwájú pẹ̀lú ìforúkọsílẹ̀ rẹ lórí Yamilook</h2>
+  <p>Lo ìjápọ̀ tó wà nísàlẹ̀ láti tẹ̀síwájú pẹ̀lú ìforúkọsílẹ̀ rẹ. Ìjápọ̀ náà yóò parí láìpẹ́, o sì lè lò ó lẹ́ẹ̀kan ṣoṣo.</p>
+  <p><a href="{{ .ConfirmationURL }}">Tẹ̀síwájú pẹ̀lú ìforúkọsílẹ̀ mi</a></p>
+</div>
+{{- else if eq $language "sn" -}}
+<div lang="sn">
+  <h2>Enderera mberi nekunyoresa kwako paYamilook</h2>
+  <p>Shandisa chinongedzo chiri pazasi kuti uenderere mberi nekunyoresa. Chinongedzo ichi chichapera munguva pfupi uye chinogona kushandiswa kamwe chete.</p>
+  <p><a href="{{ .ConfirmationURL }}">Enderera mberi nekunyoresa kwangu</a></p>
+</div>
+{{- else if eq $language "zu" -}}
+<div lang="zu">
+  <h2>Qhubeka nokubhalisa kwakho ku-Yamilook</h2>
+  <p>Sebenzisa isixhumanisi esingezansi ukuze uqhubeke nokubhalisa. Sizophelelwa yisikhathi maduze futhi singasetshenziswa kanye kuphela.</p>
+  <p><a href="{{ .ConfirmationURL }}">Qhubeka nokubhalisa kwami</a></p>
+</div>
+{{- else -}}
+{{- if eq $registrationLanguage "pt" -}}
+<div lang="pt">
+  <h2>Confirme o seu email na Yamilook</h2>
+  <p>Use a ligação abaixo para confirmar o seu endereço de email e concluir a inscrição.</p>
+  <p><a href="{{ .ConfirmationURL }}">Confirmar o email</a></p>
+</div>
+{{- else if eq $registrationLanguage "en" -}}
+<div lang="en">
+  <h2>Confirm your Yamilook email</h2>
+  <p>Use the link below to confirm your email address and finish registering.</p>
+  <p><a href="{{ .ConfirmationURL }}">Confirm my email</a></p>
+</div>
+{{- else if eq $registrationLanguage "fr" -}}
+<div lang="fr">
+  <h2>Confirmez votre adresse e-mail sur Yamilook</h2>
+  <p>Utilisez le lien ci-dessous pour confirmer votre adresse e-mail et terminer votre inscription.</p>
+  <p><a href="{{ .ConfirmationURL }}">Confirmer mon adresse e-mail</a></p>
+</div>
+{{- else if eq $registrationLanguage "ar" -}}
+<div lang="ar" dir="rtl">
+  <h2>أكّد بريدك الإلكتروني في Yamilook</h2>
+  <p>استخدم الرابط أدناه لتأكيد عنوان بريدك الإلكتروني وإكمال تسجيلك.</p>
+  <p><a href="{{ .ConfirmationURL }}">تأكيد بريدي الإلكتروني</a></p>
+</div>
+{{- else if eq $registrationLanguage "am" -}}
+<div lang="am">
+  <h2>የYamilook ኢሜይልዎን ያረጋግጡ</h2>
+  <p>ኢሜይልዎን ለማረጋገጥና ምዝገባዎን ለማጠናቀቅ ከታች ያለውን አገናኝ ይጠቀሙ።</p>
+  <p><a href="{{ .ConfirmationURL }}">ኢሜይሌን ላረጋግጥ</a></p>
+</div>
+{{- else if eq $registrationLanguage "sw" -}}
+<div lang="sw">
+  <h2>Thibitisha barua pepe yako ya Yamilook</h2>
+  <p>Tumia kiungo kilicho hapa chini kuthibitisha anwani yako ya barua pepe na kukamilisha usajili wako.</p>
+  <p><a href="{{ .ConfirmationURL }}">Thibitisha barua pepe yangu</a></p>
+</div>
+{{- else if eq $registrationLanguage "ln" -}}
+<div lang="ln">
+  <h2>Ndimisá adresi ya email na yo na Yamilook</h2>
+  <p>Salelá lien oyo ezali awa na nse mpo na kondimisa adresi ya email na yo mpe kosilisa komikomisa.</p>
+  <p><a href="{{ .ConfirmationURL }}">Kondimisa email na ngai</a></p>
+</div>
+{{- else if eq $registrationLanguage "yo" -}}
+<div lang="yo">
+  <h2>Jẹ́rìí àdírẹ́sì ímeèlì rẹ lórí Yamilook</h2>
+  <p>Lo ìjápọ̀ tó wà nísàlẹ̀ láti jẹ́rìí àdírẹ́sì ímeèlì rẹ kí o sì parí ìforúkọsílẹ̀ rẹ.</p>
+  <p><a href="{{ .ConfirmationURL }}">Jẹ́rìí ímeèlì mi</a></p>
+</div>
+{{- else if eq $registrationLanguage "sn" -}}
+<div lang="sn">
+  <h2>Simbisa email yako paYamilook</h2>
+  <p>Shandisa chinongedzo chiri pazasi kusimbisa email yako uye kupedzisa kunyoresa.</p>
+  <p><a href="{{ .ConfirmationURL }}">Simbisa email yangu</a></p>
+</div>
+{{- else if eq $registrationLanguage "zu" -}}
+<div lang="zu">
+  <h2>Qinisekisa i-imeyili yakho ku-Yamilook</h2>
+  <p>Sebenzisa isixhumanisi esingezansi ukuze uqinisekise ikheli lakho le-imeyili futhi uqede ukubhalisa.</p>
+  <p><a href="{{ .ConfirmationURL }}">Qinisekisa i-imeyili yami</a></p>
+</div>
+{{- else -}}
+<div lang="en">
+  <h2>Confirm your email address</h2>
+  <p>Use the link below to confirm your email address and finish signing up.</p>
+  <p><a href="{{ .ConfirmationURL }}">Confirm email address</a></p>
+</div>
+{{- end -}}
+{{- end -}}
