@@ -1,10 +1,10 @@
 {
-"Activar bússola": "Batidza kambasi",
-"Bússola activa": "Kambasi iri kushanda",
-"Abrir na NJILA": "Vhura muNJILA",
-"Voltar ao endereço": "Dzokera kukero",
-"A área indicada é aproximada. A morada exacta depende da proximidade autorizada.": "Nzvimbo inoratidzwa ndeyekufungidzira. Kero chaiyo inoenderana nedaro rekuswedera rakabvumidzwa.",
-"Não foi possível verificar o acesso. Tenta novamente.": "Hatina kukwanisa kuongorora mvumo yekupinda. Edza zvakare.",
+  "Activar bússola": "Batidza kambasi",
+  "Bússola activa": "Kambasi iri kushanda",
+  "Abrir na NJILA": "Vhura muNJILA",
+  "Voltar ao endereço": "Dzokera kukero",
+  "A área indicada é aproximada. A morada exacta depende da proximidade autorizada.": "Nzvimbo inoratidzwa ndeyekufungidzira. Kero chaiyo inoenderana nedaro rekuswedera rakabvumidzwa.",
+  "Não foi possível verificar o acesso. Tenta novamente.": "Hatina kukwanisa kuongorora mvumo yekupinda. Edza zvakare.",
   "* Exemplo ilustrativo do potencial da caixa postal AFROLOC. Não corresponde a uma caixa atribuída, não permite receber correspondência ou encomendas e não constitui atribuição postal oficial.": "* Muenzaniso unoratidza zvinogona kuitwa nebhokisi retsamba reAFROLOC. Harisi bhokisi rakapihwa munhu, harigamuchiri tsamba kana mapasuru uye harisi kugoverwa kweposvo zviri pamutemo.",
   "* Referência associada na AFROLOC. A apresentação na Yamilook é ilustrativa: não activa recepção de correspondência ou encomendas nem comprova atribuição oficial pelos Correios de Angola.": "* Referensi yakabatanidzwa muAFROLOC. Kuratidzwa kwayo muYamilook muenzaniso chete: hakutangi kugamuchirwa kwetsamba kana mapasuru uye hakuratidzi kugoverwa zviri pamutemo neCorreios de Angola.",
   "1 hora": "1 awa",
@@ -254,5 +254,7 @@
   "Retirar {{name}} da selecção": "Bvisa {{name}} pavanhu vakasarudzwa",
   "Autorizar pessoas seleccionadas ({{count}})": "Bvumira vanhu vakasarudzwa ({{count}})",
   "Acessos autorizados: {{count}}. Não foi possível concluir. As pessoas restantes continuam seleccionadas.": "Mvumo dzapihwa: {{count}}. Hazvina kukwanisika kupedza. Vanhu vasara vachiri vakasarudzwa.",
-  "Acessos autorizados: {{count}}.": "Mvumo dzapihwa: {{count}}."
+  "Acessos autorizados: {{count}}.": "Mvumo dzapihwa: {{count}}.",
+  "Ecrã inteiro": "Sikirini yose",
+  "Reduzir mapa": "Deredza mepu"
 }
