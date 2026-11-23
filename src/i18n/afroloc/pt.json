@@ -1,10 +1,10 @@
 {
-"Activar bússola": "Activar bússola",
-"Bússola activa": "Bússola activa",
-"Abrir na NJILA": "Abrir na NJILA",
-"Voltar ao endereço": "Voltar ao endereço",
-"A área indicada é aproximada. A morada exacta depende da proximidade autorizada.": "A área indicada é aproximada. A morada exacta depende da proximidade autorizada.",
-"Não foi possível verificar o acesso. Tenta novamente.": "Não foi possível verificar o acesso. Tenta novamente.",
+  "Activar bússola": "Activar bússola",
+  "Bússola activa": "Bússola activa",
+  "Abrir na NJILA": "Abrir na NJILA",
+  "Voltar ao endereço": "Voltar ao endereço",
+  "A área indicada é aproximada. A morada exacta depende da proximidade autorizada.": "A área indicada é aproximada. A morada exacta depende da proximidade autorizada.",
+  "Não foi possível verificar o acesso. Tenta novamente.": "Não foi possível verificar o acesso. Tenta novamente.",
   "* Exemplo ilustrativo do potencial da caixa postal AFROLOC. Não corresponde a uma caixa atribuída, não permite receber correspondência ou encomendas e não constitui atribuição postal oficial.": "* Exemplo ilustrativo do potencial da caixa postal AFROLOC. Não corresponde a uma caixa atribuída, não permite receber correspondência ou encomendas e não constitui atribuição postal oficial.",
   "* Referência associada na AFROLOC. A apresentação na Yamilook é ilustrativa: não activa recepção de correspondência ou encomendas nem comprova atribuição oficial pelos Correios de Angola.": "* Referência associada na AFROLOC. A apresentação na Yamilook é ilustrativa: não activa recepção de correspondência ou encomendas nem comprova atribuição oficial pelos Correios de Angola.",
   "1 hora": "1 hora",
@@ -254,5 +254,7 @@
   "Retirar {{name}} da selecção": "Retirar {{name}} da selecção",
   "Autorizar pessoas seleccionadas ({{count}})": "Autorizar pessoas seleccionadas ({{count}})",
   "Acessos autorizados: {{count}}. Não foi possível concluir. As pessoas restantes continuam seleccionadas.": "Acessos autorizados: {{count}}. Não foi possível concluir. As pessoas restantes continuam seleccionadas.",
-  "Acessos autorizados: {{count}}.": "Acessos autorizados: {{count}}."
+  "Acessos autorizados: {{count}}.": "Acessos autorizados: {{count}}.",
+  "Ecrã inteiro": "Ecrã inteiro",
+  "Reduzir mapa": "Reduzir mapa"
 }
