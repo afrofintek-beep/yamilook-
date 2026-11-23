@@ -256,5 +256,13 @@
   "Acessos autorizados: {{count}}. Não foi possível concluir. As pessoas restantes continuam seleccionadas.": "Àwọn àṣẹ tí a fún: {{count}}. A kò lè parí. Àwọn tó kù ṣì wà nínú àṣàyàn.",
   "Acessos autorizados: {{count}}.": "Àwọn àṣẹ tí a fún: {{count}}.",
   "Ecrã inteiro": "Gbogbo ojú iboju",
-  "Reduzir mapa": "Dín àwòrán ilẹ̀ kù"
+  "Reduzir mapa": "Dín àwòrán ilẹ̀ kù",
+  "Formas de lá chegar": "Bí a ṣe lè débẹ̀",
+  "Usa o Google Maps até à entrada pública. Para chegar à morada, continua na NJILA.": "Lo Google Maps dé ẹnu-ọ̀nà gbogbogbò. Tẹ̀síwájú ní NJILA láti dé àdírẹ́sì náà.",
+  "O percurso no Google Maps já não está disponível. Verifica o acesso.": "Ọ̀nà Google Maps kò sí mọ́. Ṣàyẹ̀wò ìyọ̀nda rẹ.",
+  "Entrada pública no Google Maps": "Ẹnu-ọ̀nà gbogbogbò lórí Google Maps",
+  "Coordenadas da portaria ou entrada pública": "Àwọn nọ́mbà ipò ẹnubodè tàbí ẹnu-ọ̀nà gbogbogbò",
+  "Opcional. Introduz apenas um ponto público que autorizas enviar ao Google Maps.": "Àṣàyàn ni. Tẹ ibi gbogbogbò tí o gbà láti pín pẹ̀lú Google Maps nìkan.",
+  "Indica coordenadas válidas para a entrada pública.": "Tẹ àwọn nọ́mbà ipò tó pé fún ẹnu-ọ̀nà gbogbogbò.",
+  "Escolhe uma entrada pública diferente da morada.": "Yan ẹnu-ọ̀nà gbogbogbò tí ó yàtọ̀ sí àdírẹ́sì náà."
 }

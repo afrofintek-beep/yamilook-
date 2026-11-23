@@ -256,5 +256,13 @@
   "Acessos autorizados: {{count}}. Não foi possível concluir. As pessoas restantes continuam seleccionadas.": "Ruhusa zilizotolewa: {{count}}. Imeshindikana kumaliza. Watu waliobaki bado wamechaguliwa.",
   "Acessos autorizados: {{count}}.": "Ruhusa zilizotolewa: {{count}}.",
   "Ecrã inteiro": "Skrini nzima",
-  "Reduzir mapa": "Punguza ramani"
+  "Reduzir mapa": "Punguza ramani",
+  "Formas de lá chegar": "Jinsi ya kufika",
+  "Usa o Google Maps até à entrada pública. Para chegar à morada, continua na NJILA.": "Tumia Google Maps kufika kwenye lango la umma. Endelea kwa kutumia NJILA hadi kwenye anwani.",
+  "O percurso no Google Maps já não está disponível. Verifica o acesso.": "Njia kwenye Google Maps haipatikani tena. Thibitisha ruhusa yako ya kufikia.",
+  "Entrada pública no Google Maps": "Lango la umma kwenye Google Maps",
+  "Coordenadas da portaria ou entrada pública": "Kuratibu za lango au kiingilio cha umma",
+  "Opcional. Introduz apenas um ponto público que autorizas enviar ao Google Maps.": "Si lazima. Weka tu eneo la umma ambalo unaruhusu kushirikiwa na Google Maps.",
+  "Indica coordenadas válidas para a entrada pública.": "Weka kuratibu sahihi za kiingilio cha umma.",
+  "Escolhe uma entrada pública diferente da morada.": "Chagua kiingilio cha umma tofauti na anwani."
 }

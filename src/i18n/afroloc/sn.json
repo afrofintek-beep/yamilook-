@@ -256,5 +256,13 @@
   "Acessos autorizados: {{count}}. Não foi possível concluir. As pessoas restantes continuam seleccionadas.": "Mvumo dzapihwa: {{count}}. Hazvina kukwanisika kupedza. Vanhu vasara vachiri vakasarudzwa.",
   "Acessos autorizados: {{count}}.": "Mvumo dzapihwa: {{count}}.",
   "Ecrã inteiro": "Sikirini yose",
-  "Reduzir mapa": "Deredza mepu"
+  "Reduzir mapa": "Deredza mepu",
+  "Formas de lá chegar": "Nzira dzekusvika ikoko",
+  "Usa o Google Maps até à entrada pública. Para chegar à morada, continua na NJILA.": "Shandisa Google Maps kusvika pamusuwo weveruzhinji. Enderera neNJILA kusvika pakero.",
+  "O percurso no Google Maps já não está disponível. Verifica o acesso.": "Nzira yeGoogle Maps haichawanikwi. Tarisa mvumo yako.",
+  "Entrada pública no Google Maps": "Musuwo weveruzhinji paGoogle Maps",
+  "Coordenadas da portaria ou entrada pública": "Makodhineti egedhi kana emusuwo weveruzhinji",
+  "Opcional. Introduz apenas um ponto público que autorizas enviar ao Google Maps.": "Hazvimanikidzwi. Isa chete nzvimbo yeruzhinji yaunobvumira kugovera neGoogle Maps.",
+  "Indica coordenadas válidas para a entrada pública.": "Isa makodhineti akarurama emusuwo weveruzhinji.",
+  "Escolhe uma entrada pública diferente da morada.": "Sarudza musuwo weveruzhinji wakasiyana nekero."
 }

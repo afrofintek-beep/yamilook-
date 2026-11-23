@@ -256,5 +256,13 @@
   "Acessos autorizados: {{count}}. Não foi possível concluir. As pessoas restantes continuam seleccionadas.": "ፈቃድ የተሰጣቸው፦ {{count}}። ማጠናቀቅ አልተቻለም። የቀሩት ሰዎች እንደተመረጡ ይቆያሉ።",
   "Acessos autorizados: {{count}}.": "ፈቃድ የተሰጣቸው፦ {{count}}።",
   "Ecrã inteiro": "ሙሉ ማያ ገጽ",
-  "Reduzir mapa": "ካርታውን አሳንስ"
+  "Reduzir mapa": "ካርታውን አሳንስ",
+  "Formas de lá chegar": "የመድረሻ አማራጮች",
+  "Usa o Google Maps até à entrada pública. Para chegar à morada, continua na NJILA.": "ወደ ሕዝባዊ መግቢያው ለመድረስ Google Maps ይጠቀሙ። ወደ አድራሻው ለመድረስ በNJILA ይቀጥሉ።",
+  "O percurso no Google Maps já não está disponível. Verifica o acesso.": "የGoogle Maps መንገድ ከአሁን በኋላ አይገኝም። የመዳረሻ ፈቃድዎን ያረጋግጡ።",
+  "Entrada pública no Google Maps": "ሕዝባዊ መግቢያ በGoogle Maps",
+  "Coordenadas da portaria ou entrada pública": "የበር ወይም የሕዝባዊ መግቢያ መጋጠሚያዎች",
+  "Opcional. Introduz apenas um ponto público que autorizas enviar ao Google Maps.": "አማራጭ። ከGoogle Maps ጋር ለማጋራት የፈቀዱትን ሕዝባዊ ቦታ ብቻ ያስገቡ።",
+  "Indica coordenadas válidas para a entrada pública.": "ለሕዝባዊ መግቢያው ትክክለኛ መጋጠሚያዎችን ያስገቡ።",
+  "Escolhe uma entrada pública diferente da morada.": "ከአድራሻው የተለየ ሕዝባዊ መግቢያ ይምረጡ።"
 }

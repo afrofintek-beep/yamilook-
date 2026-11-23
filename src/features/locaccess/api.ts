@@ -1,6 +1,6 @@
 import {uiLocale} from '@/i18n/ui-copy';
 import {supabase} from '@/integrations/supabase/client';
-export type Grant={id:string;username:string;radius:0|100|250|500;expiresAt:string};
+export type Grant={id:string;username:string;radius:0|100|250|500;expiresAt:string;hasExternalRoute?:boolean};
 export type Policy={handle:string;enabled:boolean;grants:Grant[]};
 export const validHandle=(value:unknown):value is string=>typeof value==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(value);
 export const accessLink=(handle:string)=>validHandle(handle)?'https://www.yamilook.com/afroloc/acesso/'+handle+'?lang='+encodeURIComponent(uiLocale()):'';

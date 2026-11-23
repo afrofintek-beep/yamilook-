@@ -256,5 +256,13 @@
   "Acessos autorizados: {{count}}. Não foi possível concluir. As pessoas restantes continuam seleccionadas.": "تم منح الوصول: {{count}}. تعذّر إكمال العملية. يظل الأشخاص المتبقون محددين.",
   "Acessos autorizados: {{count}}.": "تم منح الوصول: {{count}}.",
   "Ecrã inteiro": "ملء الشاشة",
-  "Reduzir mapa": "تصغير الخريطة"
+  "Reduzir mapa": "تصغير الخريطة",
+  "Formas de lá chegar": "طرق الوصول",
+  "Usa o Google Maps até à entrada pública. Para chegar à morada, continua na NJILA.": "استخدم خرائط Google للوصول إلى المدخل العام، ثم تابع عبر NJILA للوصول إلى العنوان.",
+  "O percurso no Google Maps já não está disponível. Verifica o acesso.": "المسار في خرائط Google لم يعد متاحًا. تحقق من إذن الوصول.",
+  "Entrada pública no Google Maps": "المدخل العام على خرائط Google",
+  "Coordenadas da portaria ou entrada pública": "إحداثيات البوابة أو المدخل العام",
+  "Opcional. Introduz apenas um ponto público que autorizas enviar ao Google Maps.": "اختياري. أدخل فقط موقعًا عامًا تسمح بمشاركته مع خرائط Google.",
+  "Indica coordenadas válidas para a entrada pública.": "أدخل إحداثيات صالحة للمدخل العام.",
+  "Escolhe uma entrada pública diferente da morada.": "اختر مدخلًا عامًا مختلفًا عن العنوان."
 }
