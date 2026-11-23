@@ -20,14 +20,14 @@ function formatOnBlur(value: string) {
   }
 }
 
-type Preferences = { blocked:boolean; per_transfer:number; per_day:number; keys:string[] };
-async function preferences(blocked?:boolean, transfer?:number, daily?:number) {
+export type Preferences = { blocked:boolean; per_transfer:number; per_day:number; keys:string[] };
+export async function preferences(blocked?:boolean, transfer?:number, daily?:number) {
   const {supabase} = await import('@/integrations/supabase/client');
   const {data,error} = await supabase.rpc('wallet_preferences' as never,{p_blocked:blocked,p_transfer:transfer,p_daily:daily} as never);
   if (error) throw new Error(error.message);
   return data as Preferences;
 }
-export function TransferSecurity() {
+export function TransferSecurity({onChange}:{onChange?:(value:Preferences)=>void}) {
   const [prefs,setPrefs] = useState<Preferences>();
   const [transfer,setTransfer] = useState('');
   const [daily,setDaily] = useState('');
@@ -41,7 +41,9 @@ export function TransferSecurity() {
     if (!prefs) return;
     setBusy(true);
     try {
-      show(toggle ? await preferences(!prefs.blocked) : await preferences(undefined,parseLimit(transfer),parseLimit(daily)));
+      const updated = toggle ? await preferences(!prefs.blocked) : await preferences(undefined,parseLimit(transfer),parseLimit(daily));
+      show(updated);
+      onChange?.(updated);
       setMessage('Definições guardadas.');
     } catch(e) {setMessage((e as Error).message);}
     finally {setBusy(false);}
