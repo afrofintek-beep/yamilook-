@@ -1,3 +1,4 @@
+import { WalletSessionConfirmation } from './WalletSessionConfirmation';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,6 +29,7 @@ export async function preferences(blocked?:boolean, transfer?:number, daily?:num
   return data as Preferences;
 }
 export function TransferSecurity({onChange}:{onChange?:(value:Preferences)=>void}) {
+  const [confirmSession,setConfirmSession] = useState(false);
   const [prefs,setPrefs] = useState<Preferences>();
   const [transfer,setTransfer] = useState('');
   const [daily,setDaily] = useState('');
@@ -45,10 +47,15 @@ export function TransferSecurity({onChange}:{onChange?:(value:Preferences)=>void
       show(updated);
       onChange?.(updated);
       setMessage('Definições guardadas.');
-    } catch(e) {setMessage((e as Error).message);}
+    } catch(e) {
+      const error = (e as Error).message;
+      setMessage(error);
+      if (error.includes('segundo factor')) setConfirmSession(true);
+    }
     finally {setBusy(false);}
   }
   return <section className="space-y-3">
+    {confirmSession && <WalletSessionConfirmation onClose={() => { setConfirmSession(false); setMessage('Após confirmar a sessão, volta a seleccionar a opção pretendida.'); }} />}
     {prefs && <>
       <p>Saídas de dinheiro {prefs.blocked ? 'bloqueadas' : 'activas'}.</p>
       <Button disabled={busy} onClick={()=>save(true)}>{prefs.blocked ? 'Desbloquear' : 'Bloquear'} saídas de dinheiro</Button>
