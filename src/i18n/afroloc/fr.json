@@ -1,10 +1,10 @@
 {
-"Activar bússola": "Activer la boussole",
-"Bússola activa": "Boussole active",
-"Abrir na NJILA": "Ouvrir dans NJILA",
-"Voltar ao endereço": "Retour à l’adresse",
-"A área indicada é aproximada. A morada exacta depende da proximidade autorizada.": "La zone indiquée est approximative. L’adresse exacte dépend de la proximité autorisée.",
-"Não foi possível verificar o acesso. Tenta novamente.": "Impossible de vérifier l’accès. Réessaie.",
+  "Activar bússola": "Activer la boussole",
+  "Bússola activa": "Boussole active",
+  "Abrir na NJILA": "Ouvrir dans NJILA",
+  "Voltar ao endereço": "Retour à l’adresse",
+  "A área indicada é aproximada. A morada exacta depende da proximidade autorizada.": "La zone indiquée est approximative. L’adresse exacte dépend de la proximité autorisée.",
+  "Não foi possível verificar o acesso. Tenta novamente.": "Impossible de vérifier l’accès. Réessaie.",
   "* Exemplo ilustrativo do potencial da caixa postal AFROLOC. Não corresponde a uma caixa atribuída, não permite receber correspondência ou encomendas e não constitui atribuição postal oficial.": "* Exemple illustrant le potentiel de la boîte postale AFROLOC. Il ne s’agit pas d’une boîte attribuée, elle ne permet pas de recevoir du courrier ou des colis et ne constitue pas une attribution postale officielle.",
   "* Referência associada na AFROLOC. A apresentação na Yamilook é ilustrativa: não activa recepção de correspondência ou encomendas nem comprova atribuição oficial pelos Correios de Angola.": "* Référence associée dans AFROLOC. Sa présentation dans Yamilook est illustrative : elle n’active pas la réception de courrier ou de colis et ne prouve pas une attribution officielle par Correios de Angola.",
   "1 hora": "1 heure",
@@ -254,5 +254,7 @@
   "Retirar {{name}} da selecção": "Retirer {{name}} de la sélection",
   "Autorizar pessoas seleccionadas ({{count}})": "Autoriser les personnes sélectionnées ({{count}})",
   "Acessos autorizados: {{count}}. Não foi possível concluir. As pessoas restantes continuam seleccionadas.": "Accès autorisés : {{count}}. Impossible de terminer. Les autres personnes restent sélectionnées.",
-  "Acessos autorizados: {{count}}.": "Accès autorisés : {{count}}."
+  "Acessos autorizados: {{count}}.": "Accès autorisés : {{count}}.",
+  "Ecrã inteiro": "Plein écran",
+  "Reduzir mapa": "Réduire la carte"
 }
