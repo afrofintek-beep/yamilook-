@@ -256,5 +256,13 @@
   "Acessos autorizados: {{count}}. Não foi possível concluir. As pessoas restantes continuam seleccionadas.": "Ndingisa epesami: {{count}}. Tokoki te kosilisa. Bato oyo batikali bazali kaka na bato oyo oponi.",
   "Acessos autorizados: {{count}}.": "Ndingisa epesami: {{count}}.",
   "Ecrã inteiro": "Ekrá mobimba",
-  "Reduzir mapa": "Kitisá karte"
+  "Reduzir mapa": "Kitisá karte",
+  "Formas de lá chegar": "Ndenge ya kokóma",
+  "Usa o Google Maps até à entrada pública. Para chegar à morada, continua na NJILA.": "Salelá Google Maps tii na ekotelo ya bato nyonso. Kobá na NJILA mpo na kokóma na adresi.",
+  "O percurso no Google Maps já não está disponível. Verifica o acesso.": "Nzela na Google Maps ezali lisusu te. Talá soki ozali naino na ndingisa.",
+  "Entrada pública no Google Maps": "Ekotelo ya bato nyonso na Google Maps",
+  "Coordenadas da portaria ou entrada pública": "Kordinɛ ya porte to ya ekotelo ya bato nyonso",
+  "Opcional. Introduz apenas um ponto público que autorizas enviar ao Google Maps.": "Ezali ya kopona. Kɔtisá bobele esika ya bato nyonso oyo ondimi kokabola na Google Maps.",
+  "Indica coordenadas válidas para a entrada pública.": "Kɔtisá kordinɛ ya solo ya ekotelo ya bato nyonso.",
+  "Escolhe uma entrada pública diferente da morada.": "Poná ekotelo ya bato nyonso oyo ekeseni na adresi."
 }

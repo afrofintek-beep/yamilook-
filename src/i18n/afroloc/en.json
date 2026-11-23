@@ -256,5 +256,13 @@
   "Acessos autorizados: {{count}}. Não foi possível concluir. As pessoas restantes continuam seleccionadas.": "Access granted: {{count}}. Could not finish. The remaining people are still selected.",
   "Acessos autorizados: {{count}}.": "Access granted: {{count}}.",
   "Ecrã inteiro": "Full screen",
-  "Reduzir mapa": "Reduce map"
+  "Reduzir mapa": "Reduce map",
+  "Formas de lá chegar": "Ways to get there",
+  "Usa o Google Maps até à entrada pública. Para chegar à morada, continua na NJILA.": "Use Google Maps to reach the public entrance. Continue in NJILA to reach the address.",
+  "O percurso no Google Maps já não está disponível. Verifica o acesso.": "The Google Maps route is no longer available. Check your access.",
+  "Entrada pública no Google Maps": "Public entrance on Google Maps",
+  "Coordenadas da portaria ou entrada pública": "Coordinates of the gate or public entrance",
+  "Opcional. Introduz apenas um ponto público que autorizas enviar ao Google Maps.": "Optional. Enter only a public point you authorize sharing with Google Maps.",
+  "Indica coordenadas válidas para a entrada pública.": "Enter valid coordinates for the public entrance.",
+  "Escolhe uma entrada pública diferente da morada.": "Choose a public entrance separate from the address."
 }

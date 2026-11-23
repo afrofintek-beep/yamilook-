@@ -19,6 +19,7 @@ const source={id:'residence',code:'AO-TEST-0'};await login(0);let policy=await a
 ok((await db.query('select public.locaccess_reference_protected($1) as blocked',[source.code])).rows[0].blocked,'legacy public lookup blocked');
 await db.exec('create table public.messages(id uuid primary key,sender_id uuid)');
 await db.exec(fs.readFileSync('supabase/migrations/20261119034500_locaccess_farewells.sql','utf8'));
+await db.exec(fs.readFileSync('supabase/migrations/20261123062541_locaccess_google_maps_entry.sql','utf8'));
 const farewell=async(a,d)=>(await db.query('select public.locaccess_farewell($1,$2) as result',[a,JSON.stringify({...source,...d})])).rows[0].result;
 for(const username of ['guest','other'])policy=await action('grant',{...source,username,radius:0,hours:24});
 const grantIds=policy.grants.map(g=>g.id);
@@ -38,6 +39,28 @@ for(const radius of [100,250,500]){
  for(const p of [{...position,lat:-8.8},{...position,accuracy:100},{...position,timestamp:Date.now()-30000},{...position,timestamp:Date.now()+60000}])ok((await action('visit',{handle,position:p})).status==='proximity','invalid location withheld');
 }
 await login(2);ok((await action('visit',{handle})).status==='denied','forwarded link not sufficient');
+const entry={lat:-8.901,lon:13.201};
+const visitingGrant={...source,username:'guest',radius:250,hours:24};
+await login(0);
+await assert.rejects(()=>action('grant',{...visitingGrant,google_entry:{lat:-8.9,lon:13.2}}),/diferente da morada/);checks++;
+await assert.rejects(()=>action('grant',{...visitingGrant,google_entry:{lat:100,lon:13.2}}),/coordenadas válidas/);checks++;
+policy=await action('grant',{...visitingGrant,google_entry:entry});
+ok(policy.grants[0].hasExternalRoute,'owner can see that a grant includes an entrance');
+ok((await action('external_route',{handle})).status==='denied','the owner view cannot retrieve a guest route');
+await login(1);
+const proximity=await action('visit',{handle});
+ok(proximity.status==='proximity'&&proximity.hasExternalRoute&&!proximity.point&&!proximity.entryPoint,'visit flags the route without disclosing the entrance or residence');
+const external=await action('external_route',{handle});
+ok(external.status==='ready'&&Object.keys(external).sort().join(',')==='entryPoint,expiresAt,status','external route returns only entrance and lease');
+assert.deepEqual(external.entryPoint,entry);checks++;
+await login(2);ok((await action('external_route',{handle})).status==='denied','forwarded route denied');
+await db.query("update locaccess_private.grants set expires_at=now()-interval '1 second' where handle=$1 and recipient_id=$2",[handle,ids[1]]);
+await login(1);ok((await action('external_route',{handle})).status==='denied','expired route denied');
+await login(0);policy=await action('grant',{...visitingGrant,google_entry:entry});
+await action('revoke',{...source,grant_id:policy.grants[0].id});
+await login(1);ok((await action('external_route',{handle})).status==='denied','revoked route denied');
+await login(0);await action('grant',{...visitingGrant,google_entry:entry});await action('grant',visitingGrant);
+await login(1);ok((await action('external_route',{handle})).status==='denied','re-authorizing without a Google Maps entrance removes the previous route');
 await login(0);policy=await action('grant',{...source,username:'guest',radius:0,hours:1});await login(1);ok((await action('visit',{handle})).status==='ready','immediate still authenticated');
 await login(0);await action('revoke',{...source,grant_id:policy.grants[0].id});await login(1);ok((await action('visit',{handle})).status==='denied','revoked');
 await login(0);await action('grant',{...source,username:'guest',radius:0,hours:24});await action('grant',{...source,username:'other',radius:0,hours:24});await action('close',source);

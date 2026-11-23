@@ -256,5 +256,13 @@
   "Acessos autorizados: {{count}}. Não foi possível concluir. As pessoas restantes continuam seleccionadas.": "Izimvume ezinikeziwe: {{count}}. Akuqedwanga. Abantu abasele basakhethiwe.",
   "Acessos autorizados: {{count}}.": "Izimvume ezinikeziwe: {{count}}.",
   "Ecrã inteiro": "Isikrini esigcwele",
-  "Reduzir mapa": "Nciphisa imephu"
+  "Reduzir mapa": "Nciphisa imephu",
+  "Formas de lá chegar": "Izindlela zokufika",
+  "Usa o Google Maps até à entrada pública. Para chegar à morada, continua na NJILA.": "Sebenzisa i-Google Maps uze ufike emnyango womphakathi. Qhubeka nge-NJILA ukuze ufike ekhelini.",
+  "O percurso no Google Maps já não está disponível. Verifica o acesso.": "Umzila we-Google Maps awusatholakali. Hlola imvume yakho yokufinyelela.",
+  "Entrada pública no Google Maps": "Umnyango womphakathi ku-Google Maps",
+  "Coordenadas da portaria ou entrada pública": "Izixhumanisi zesango noma zomnyango womphakathi",
+  "Opcional. Introduz apenas um ponto público que autorizas enviar ao Google Maps.": "Ongakukhetha. Faka kuphela indawo yomphakathi ovumela ukuthi yabelwane ne-Google Maps.",
+  "Indica coordenadas válidas para a entrada pública.": "Faka izixhumanisi ezivumelekile zomnyango womphakathi.",
+  "Escolhe uma entrada pública diferente da morada.": "Khetha umnyango womphakathi ohlukile ekhelini."
 }

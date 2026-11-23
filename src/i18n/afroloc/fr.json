@@ -256,5 +256,13 @@
   "Acessos autorizados: {{count}}. Não foi possível concluir. As pessoas restantes continuam seleccionadas.": "Accès autorisés : {{count}}. Impossible de terminer. Les autres personnes restent sélectionnées.",
   "Acessos autorizados: {{count}}.": "Accès autorisés : {{count}}.",
   "Ecrã inteiro": "Plein écran",
-  "Reduzir mapa": "Réduire la carte"
+  "Reduzir mapa": "Réduire la carte",
+  "Formas de lá chegar": "Comment s’y rendre",
+  "Usa o Google Maps até à entrada pública. Para chegar à morada, continua na NJILA.": "Utilisez Google Maps jusqu’à l’entrée publique. Poursuivez dans NJILA pour atteindre l’adresse.",
+  "O percurso no Google Maps já não está disponível. Verifica o acesso.": "L’itinéraire Google Maps n’est plus disponible. Vérifiez votre accès.",
+  "Entrada pública no Google Maps": "Entrée publique sur Google Maps",
+  "Coordenadas da portaria ou entrada pública": "Coordonnées du portail ou de l’entrée publique",
+  "Opcional. Introduz apenas um ponto público que autorizas enviar ao Google Maps.": "Facultatif. Indiquez uniquement un point public que vous autorisez à partager avec Google Maps.",
+  "Indica coordenadas válidas para a entrada pública.": "Indiquez des coordonnées valides pour l’entrée publique.",
+  "Escolhe uma entrada pública diferente da morada.": "Choisissez une entrée publique distincte de l’adresse."
 }
