@@ -21,11 +21,13 @@ it('issues a direct 72 hour invitation and shows the same private URL in the lin
   fireEvent.click(screen.getByRole('button', { name: 'Criar convite de confiança' }));
   const link = await screen.findByLabelText('Link individual');
   expect(invoke).toHaveBeenCalledWith('trusted-invitations', { body: { action: 'issue', mode: 'direct', recipient_name: 'Pessoa Convidada', language: 'pt', expires_hours: 72 } });
-  expect(link).toHaveValue(`https://www.yamilook.com/register?lang=pt#trusted=${token}`);
+  expect(link).toHaveValue(`https://www.yamilook.com/convite-confianca?lang=pt#trusted=${token}`);
   expect(screen.getByTitle('Convites de confiança').closest('svg')).toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Enviar por email' })).not.toBeInTheDocument();
   const whatsapp = new URL(screen.getByRole('link', { name: 'Partilhar pelo WhatsApp' }).getAttribute('href')!);
-  expect(whatsapp.searchParams.get('text')).toContain((link as HTMLInputElement).value);
+  const message = whatsapp.searchParams.get('text') ?? '';
+  expect(message).toContain((link as HTMLInputElement).value);
+  expect(message.split('\n')).toContain(token);
 });
 
 it('does not offer an SMS promise when the backend has no SMS provider', async () => {

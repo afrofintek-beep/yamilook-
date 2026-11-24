@@ -5,6 +5,7 @@ import { onboardingImage } from '@/components/auth/onboarding-images';
 import { EntryLanguageSelector } from '@/components/auth/EntryLanguageSelector';
 import { businessDates } from '@/lib/business-dates';
 import { businessCopy } from '@/lib/business-entry';
+import { trustedCopy } from '@/features/trusted-invites/copy';
 import {afrolocReturn} from '@/features/locaccess/return-path';
 import { ResidenceForm } from '@/components/residence/ResidenceForm';
 import { submitResidence, validResidencePlan, type ResidencePlan } from '@/lib/residence';
@@ -1029,6 +1030,7 @@ export default function Onboarding() {
                   aria-describedby="onboarding-invite-help"
                 />
                 <p id="onboarding-invite-help" className="text-xs text-muted-foreground mt-2">{t("onboardingFlow.inviteHint")}</p>
+                {!accessCode && <Link to="/convite-confianca" className="mt-2 inline-block text-sm text-primary underline">{trustedCopy(imageLanguage).useTrusted}</Link>}
               </div>
               {/* Display Name */}
               <div>

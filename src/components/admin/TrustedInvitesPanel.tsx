@@ -85,7 +85,7 @@ export function TrustedInvitesPanel() {
     finally { setRevoking(null); }
   };
   const link = issued ? buildTrustedInviteUrl(issued.token, issued.invitation.language) : '';
-  const shareText = issued ? trustedInviteMessage(issued.invitation.recipient_name, link, issued.invitation.language, issued.invitation.mode) : '';
+  const shareText = issued ? trustedInviteMessage(issued.invitation.recipient_name, link, issued.invitation.language, issued.invitation.mode, issued.token) : '';
   const formatDate = (value: string) => new Date(value).toLocaleString(locale === 'pt-banda' ? 'pt-AO' : locale, { dateStyle: 'medium', timeStyle: 'short' });
 
   return <Card id="convites-confianca" className="min-w-0 overflow-hidden">
