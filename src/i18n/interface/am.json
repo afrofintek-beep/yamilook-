@@ -3516,5 +3516,10 @@
   "Destacar o meu vídeo": "የእኔን ቪዲዮ አጉላ",
   "A falar": "እየተናገረ ነው",
   "Áudio ao vivo": "የቀጥታ ድምፅ",
-  "Sem ligação": "ግንኙነት የለም"
+  "Sem ligação": "ግንኙነት የለም",
+  "Permitir continuidade breve sem rede na NJILA": "በNJILA ያለ ኢንተርኔት ለአጭር ጊዜ መቀጠልን ፍቀድ",
+  "Se a ligação falhar, a pessoa pode usar a localização já autorizada só até ao fim da consulta actual (no máximo 20 segundos). Não renova o acesso nem permite guardar a morada para outra sessão.": "ግንኙነቱ ከተቋረጠ፣ ሰውየው አስቀድሞ ፈቃድ ያገኘበትን ቦታ የአሁኑ የማየት ጊዜ እስኪያበቃ ድረስ ብቻ መጠቀም ይችላል (ቢበዛ 20 ሰከንድ)። ይህ የመዳረሻ ፈቃዱን አያድስም፣ አድራሻውንም ለሌላ ክፍለ ጊዜ ማስቀመጥ አያስችልም።",
+  "Continuidade breve sem rede permitida": "ያለ ኢንተርኔት ለአጭር ጊዜ መቀጠል ተፈቅዷል",
+  "Sem rede. O acesso mantém-se apenas até ao fim da autorização actual; não será renovado.": "ኢንተርኔት የለም። መዳረሻው የአሁኑ ፈቃድ እስኪያበቃ ድረስ ብቻ ይቆያል፤ አይታደስም።",
+  "A autorização terminou. Liga-te à Internet para verificar novamente o acesso.": "የፈቃዱ ጊዜ አልቋል። መዳረሻውን እንደገና ለማረጋገጥ ከኢንተርኔት ጋር ይገናኙ።"
 }

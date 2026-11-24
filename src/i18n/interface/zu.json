@@ -3516,5 +3516,10 @@
   "Destacar o meu vídeo": "Gqamisa ividiyo yami",
   "A falar": "Uyakhuluma",
   "Áudio ao vivo": "Umsindo obukhoma",
-  "Sem ligação": "Akuxhunyiwe"
+  "Sem ligação": "Akuxhunyiwe",
+  "Permitir continuidade breve sem rede na NJILA": "Vumela ukuqhubeka isikhashana ku-NJILA ngaphandle kwe-inthanethi",
+  "Se a ligação falhar, a pessoa pode usar a localização já autorizada só até ao fim da consulta actual (no máximo 20 segundos). Não renova o acesso nem permite guardar a morada para outra sessão.": "Uma uxhumano lunqamuka, umuntu angasebenzisa indawo asevele evunyelwe ukuyibona kuze kuphele isikhathi samanje sokuyibuka kuphela (kungadluli imizuzwana engama-20). Lokhu akuvuseleli imvume yokufinyelela futhi akuvumeli ukugcina ikheli ukuze lisetshenziswe kwenye iseshini.",
+  "Continuidade breve sem rede permitida": "Ukuqhubeka isikhashana ngaphandle kwe-inthanethi kuvunyelwe",
+  "Sem rede. O acesso mantém-se apenas até ao fim da autorização actual; não será renovado.": "Ayikho i-inthanethi. Ukufinyelela kuhlala kuvunyelwe kuze kuphele imvume yamanje kuphela; ngeke ivuselelwe.",
+  "A autorização terminou. Liga-te à Internet para verificar novamente o acesso.": "Imvume isiphelile. Xhuma ku-inthanethi ukuze uhlole ukufinyelela kabusha."
 }

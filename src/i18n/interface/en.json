@@ -3516,5 +3516,10 @@
   "Destacar o meu vídeo": "Spotlight my video",
   "A falar": "Speaking",
   "Áudio ao vivo": "Live audio",
-  "Sem ligação": "Disconnected"
+  "Sem ligação": "Disconnected",
+  "Permitir continuidade breve sem rede na NJILA": "Allow brief offline use in NJILA",
+  "Se a ligação falhar, a pessoa pode usar a localização já autorizada só até ao fim da consulta actual (no máximo 20 segundos). Não renova o acesso nem permite guardar a morada para outra sessão.": "If the connection fails, the person can use the already authorised location only until the current viewing period ends (up to 20 seconds). This does not renew access or allow the address to be saved for another session.",
+  "Continuidade breve sem rede permitida": "Brief offline use allowed",
+  "Sem rede. O acesso mantém-se apenas até ao fim da autorização actual; não será renovado.": "Offline. Access lasts only until the current authorisation ends; it will not be renewed.",
+  "A autorização terminou. Liga-te à Internet para verificar novamente o acesso.": "Authorisation has expired. Connect to the internet to check access again."
 }

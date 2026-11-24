@@ -4,7 +4,8 @@ import {NjilaJourney} from './NjilaJourney';
 import {useEffect,useRef,useState} from 'react';import {Link,useParams} from 'react-router-dom';
 import {Button} from '@/components/ui/button';import {locaccess,validHandle} from './api';import {AccessMap,type MapPoint} from './AccessMap';
 import {googleEntryUrl,openGoogleEntry,type ExternalRoute} from './google-entry';
-type Result={status:'ready'|'proximity'|'denied';point?:MapPoint;area?:MapPoint;radius?:number;expiresAt?:string;owner?:boolean;hasExternalRoute?:boolean};
+import {readVisitLease,visitDeadline,type AccessVisitResult} from './visit-lease';
+type Result=AccessVisitResult;
 type Fix=MapPoint&{accuracy:number;timestamp:number};
 export default function AccessVisit(){
  const {handle=''}=useParams();
@@ -43,24 +44,31 @@ function LocationVisit({onJourney}:{onJourney:()=>void}){
    routeRequest.current=null;
   }
  };
- useEffect(()=>{let active=true,busy=false,epoch=0,fix:Fix|null=null,watch:number|undefined,expiry:ReturnType<typeof setTimeout>|undefined;
-  const clear=()=>{epoch++;if(expiry)clearTimeout(expiry);setResult(null)};
-  const refresh=async()=>{if(!validHandle(handle)){setMessage('Ligação de acesso inválida.');return}if(busy||document.hidden||!navigator.onLine)return;busy=true;const generation=epoch;
-   try{const data=await locaccess<Result>('visit',{handle,...(fix?{position:fix}:{})});if(!active||epoch!==generation||document.hidden||!navigator.onLine)return;
-    if(expiry)clearTimeout(expiry);
-    if(data.status==='ready'){
-     const until=Date.parse(data.expiresAt||'');if(!data.point||!Number.isFinite(data.point.lat)||!Number.isFinite(data.point.lon)||!Number.isFinite(until)||until<=Date.now()||until>Date.now()+25000)throw new Error('A autorização expirou. Tenta novamente.');
-     setResult(data);setMessage(data.owner?'A tua morada. O acesso de terceiros depende das tuas autorizações.':'Acesso autorizado.');expiry=setTimeout(()=>{clear();setMessage('A renovar a autorização…')},until-Date.now());
-    }else if(data.status==='proximity'){setResult(data);setMessage('A morada exacta só aparece a {{distance}} metros. A área indicada é aproximada.')}
-    else{clear();setMessage('Este acesso está fechado, expirou ou não foi autorizado para a tua conta.')}
-   }catch(e){if(active&&epoch===generation){clear();setMessage((e as Error).message)}}finally{busy=false}
+ useEffect(()=>{let active=true,connected=navigator.onLine,epoch=0,fix:Fix|null=null,watch:number|undefined,expiry:ReturnType<typeof setTimeout>|undefined;
+  setResult(null);setMessage('A verificar a autorização…');
+  let pending:symbol|null=null,lastDeadline:{expiresAt:number;deadline:number}|undefined;
+  const clear=()=>{epoch++;pending=null;if(expiry!==undefined)clearTimeout(expiry);expiry=undefined;setResult(null)};
+  const refresh=async()=>{if(!validHandle(handle)){setMessage('Ligação de acesso inválida.');return}if(!active||pending||document.hidden||!connected||!navigator.onLine)return;
+   const request=Symbol();pending=request;const generation=++epoch,startedAt=performance.now(),startedWall=Date.now();
+   try{const data=await locaccess<Result>('visit',{handle,...(fix?{position:fix}:{})});if(!active||epoch!==generation||document.hidden||!connected||!navigator.onLine)return;
+    if(data?.status==='ready'||data?.status==='proximity'){
+     const issued=readVisitLease(data);if(!issued)throw new Error('A autorização expirou. Tenta novamente.');
+     const deadline=visitDeadline(issued,startedAt,startedWall,lastDeadline);if(deadline<=performance.now())throw new Error('A autorização expirou. Tenta novamente.');
+     lastDeadline={expiresAt:issued.expiresAt,deadline};
+     if(expiry!==undefined)clearTimeout(expiry);
+     setResult(data);setMessage(data.status==='proximity'?'A morada exacta só aparece a {{distance}} metros. A área indicada é aproximada.':data.owner?'A tua morada. O acesso de terceiros depende das tuas autorizações.':'Acesso autorizado.');
+     expiry=setTimeout(()=>{clear();setMessage('A renovar a autorização…')},deadline-performance.now());
+    }else{clear();setMessage('Este acesso está fechado, expirou ou não foi autorizado para a tua conta.')}
+   }catch(e){if(active&&epoch===generation){clear();setMessage((e as Error).message)}}finally{if(pending===request)pending=null}
   };
   const pause=()=>{clear();fix=null;setMessage('Consulta pausada. Volta a verificar o acesso.')};
+  const offline=()=>{connected=false;pause()};
+  const online=()=>{connected=navigator.onLine;void refresh()};
   const visibility=()=>{pause();if(!document.hidden)void refresh()};
   if(tracking&&navigator.geolocation)watch=navigator.geolocation.watchPosition(p=>{fix={lat:p.coords.latitude,lon:p.coords.longitude,accuracy:p.coords.accuracy,timestamp:p.timestamp};void refresh()},()=>{pause();setTracking(false);setMessage('Permite a localização no Safari ou Chrome e volta a tentar.')},{enableHighAccuracy:true,maximumAge:0,timeout:15000});
   void refresh();const timer=setInterval(()=>void refresh(),5000);
-  window.addEventListener('offline',pause);window.addEventListener('online',refresh);window.addEventListener('pagehide',pause);document.addEventListener('visibilitychange',visibility);
-  return()=>{active=false;epoch++;if(expiry)clearTimeout(expiry);if(watch!==undefined)navigator.geolocation.clearWatch(watch);clearInterval(timer);window.removeEventListener('offline',pause);window.removeEventListener('online',refresh);window.removeEventListener('pagehide',pause);document.removeEventListener('visibilitychange',visibility)};
+  window.addEventListener('offline',offline);window.addEventListener('online',online);window.addEventListener('pagehide',pause);document.addEventListener('visibilitychange',visibility);
+  return()=>{active=false;epoch++;if(expiry!==undefined)clearTimeout(expiry);if(watch!==undefined)navigator.geolocation.clearWatch(watch);clearInterval(timer);window.removeEventListener('offline',offline);window.removeEventListener('online',online);window.removeEventListener('pagehide',pause);document.removeEventListener('visibilitychange',visibility)};
  },[handle,tracking,retry]);
  return <main className="mx-auto max-w-2xl space-y-4 px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
   <header className="sticky top-0 z-50 -mx-4 border-b bg-background px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))]">

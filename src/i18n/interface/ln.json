@@ -3516,5 +3516,10 @@
   "Destacar o meu vídeo": "Lakisa video na ngai liboso",
   "A falar": "Azali koloba",
   "Áudio ao vivo": "Mongongo na mbala moko",
-  "Sem ligação": "Boyokani ezali te"
+  "Sem ligação": "Boyokani ezali te",
+  "Permitir continuidade breve sem rede na NJILA": "Pesá nzela ya kokoba kosalela NJILA mwa ntango moke ata soki internet ezali te",
+  "Se a ligação falhar, a pessoa pode usar a localização já autorizada só até ao fim da consulta actual (no máximo 20 segundos). Não renova o acesso nem permite guardar a morada para outra sessão.": "Soki internet ekatani, moto akoki kosalela esika oyo azwi ndingisa ya kotala kaka tii na nsuka ya kotala ya sikoyo (koleka te segonde 20). Yango ebakisaka ntango ya ndingisa te mpe epesaka nzela te ya kobomba adresi mpo na session mosusu.",
+  "Continuidade breve sem rede permitida": "Kokoba mwa ntango moke ata soki internet ezali te epesami nzela",
+  "Sem rede. O acesso mantém-se apenas até ao fim da autorização actual; não será renovado.": "Internet ezali te. Okoki kokɔta kaka tii ndingisa ya sikoyo ekosila; ntango na yango ekobakisama te.",
+  "A autorização terminou. Liga-te à Internet para verificar novamente o acesso.": "Ndingisa esili. Sangisá lisusu aparɛyi na internet mpo na kotala soki ozali na ndingisa ya kokɔta."
 }

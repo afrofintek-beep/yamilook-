@@ -1,0 +1,54 @@
+name: LOCACCESS continuity
+
+on:
+  pull_request:
+    paths:
+      - 'src/features/locaccess/**'
+      - 'src/integrations/supabase/**'
+      - 'src/i18n/interface/**'
+      - 'tests/locaccess/**'
+      - 'supabase/migrations/**'
+      - 'package*.json'
+      - 'tsconfig*.json'
+      - 'vitest.config.ts'
+      - 'src/test/setup.ts'
+      - '.github/workflows/locaccess-continuity.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'src/features/locaccess/**'
+      - 'src/integrations/supabase/**'
+      - 'src/i18n/interface/**'
+      - 'tests/locaccess/**'
+      - 'supabase/migrations/**'
+      - 'package*.json'
+      - 'tsconfig*.json'
+      - 'vitest.config.ts'
+      - 'src/test/setup.ts'
+      - '.github/workflows/locaccess-continuity.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: locaccess-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Database permissions and expiry
+        run: node tests/locaccess/database.cjs
+      - name: Recipient and owner flows
+        run: npx vitest run src/features/locaccess
+      - name: Typecheck
+        run: npx tsc --noEmit -p tsconfig.app.json

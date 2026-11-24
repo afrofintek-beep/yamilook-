@@ -2,11 +2,11 @@ import {useEffect, useRef, useState} from 'react';
 import {locaccess, validHandle} from './api';
 import {uiLocale, uiText as t} from '@/i18n/ui-copy';
 import {journeyCompassPermission,useJourneyCompass} from './useJourneyCompass';
+import {readVisitLease,visitDeadline,type AccessVisitResult} from './visit-lease';
 
 const NJILA = 'https://www.njilamaps.com';
 type Point = {lat:number; lon:number};
 type Fix = Point & {accuracy:number; timestamp:number};
-type Visit = {status:'ready'|'proximity'|'denied'; point?:Point; area?:Point; expiresAt?:string; radius?:number};
 
 /** The signed-in parent renews every lease through LOCACCESS. Credentials never cross the frame. */
 export function NjilaJourney({handle}:{handle:string}) {
@@ -34,43 +34,75 @@ export function NjilaJourney({handle}:{handle:string}) {
   const permission=useRef(journeyCompassPermission());
   const [message, setMessage] = useState('A verificar a autorização…');
   useEffect(() => {
-    let active=true, busy=false, generation=0, audience:string|null=null, fix:Fix|null=null;
+    let active=true, connected=navigator.onLine, generation=0, connectionGeneration=0;
+    let audience:string|null=null, fix:Fix|null=null, pending: symbol|null=null;
+    let held:{expiresAt:number;deadline:number;offlineContinuation:'permitted'|'forbidden'}|undefined;
+    // Keep only the deadline after clearing, so replaying the same expiry cannot revive it.
+    let lastDeadline:{expiresAt:number;deadline:number}|undefined;
     let lease:ReturnType<typeof setTimeout>|undefined;
-    const post=(value:Record<string,unknown>)=>frame.current?.contentWindow?.postMessage(value,NJILA);
+    const target=frame.current?.contentWindow;
+    const post=(value:Record<string,unknown>)=>{
+      try{target?.postMessage(value,NJILA);}
+      catch{/* A destroyed iframe has already discarded its session; local cleanup must still finish. */}
+    };
     const clear=()=>{
       stopCompass();
       generation++;
-      if(lease)clearTimeout(lease);
+      pending=null;
+      held=undefined;
+      fix=null;
+      channel.current=null;
+      if(lease!==undefined)clearTimeout(lease);
       lease=undefined;
       post({type:'locaccess-clear',audience});
     };
+    const unexpired=()=>held!==undefined&&performance.now()<held.deadline&&Date.now()<held.expiresAt;
+    const mayContinueOffline=()=>unexpired()&&held?.offlineContinuation==='permitted';
+    const expire=()=>{clear();setMessage('A autorização terminou. Liga-te à Internet para verificar novamente o acesso.');};
     const refresh=async()=>{
-      if(!active||busy||!audience||!validHandle(handle)||document.hidden||!navigator.onLine)return;
-      busy=true;
-      const revision=generation;
+      if(!active||pending||!audience||!validHandle(handle)||document.hidden||!connected||!navigator.onLine)return;
+      const request=Symbol();
+      pending=request;
+      const revision=++generation, connection=connectionGeneration, startedAt=performance.now(),startedWall=Date.now();
       try {
-        const result=await locaccess<Visit>('visit',{handle,...(fix?{position:fix}:{})});
-        if(!active||revision!==generation||document.hidden||!navigator.onLine)return;
-        const point=result.status==='ready'?result.point:result.status==='proximity'?result.area:null;
-        if(!point||!Number.isFinite(point.lat)||!Number.isFinite(point.lon)) {
+        const result=await locaccess<AccessVisitResult>('visit',{handle,...(fix?{position:fix}:{})});
+        if(!active||revision!==generation)return;
+        // A denial is authoritative even if connectivity disappeared while the request was in flight.
+        if(result?.status!=='ready'&&result?.status!=='proximity') {
           clear();setMessage('Este acesso está fechado, expirou ou não foi autorizado para a tua conta.');return;
         }
-        const expiry=result.status==='ready'?Date.parse(result.expiresAt||''):Date.now()+15000;
-        if(!Number.isFinite(expiry)||expiry<=Date.now()||expiry>Date.now()+25000)throw new Error('expired');
-        if(!lease)void startCompass(permission.current);
-        if(lease)clearTimeout(lease);
-        post({type:'locaccess-lease',audience,point,precision:result.status==='ready'?'exact':'area',radius:result.radius,expiresAt:new Date(expiry).toISOString()});
-        lease=setTimeout(clear,expiry-Date.now());
+        if((!connected||!navigator.onLine)&&result.offlineContinuation!=='permitted'){
+          clear();return;
+        }
+        // A late positive response must not grant, renew or increase precision after going offline.
+        if(document.hidden||!connected||!navigator.onLine||connection!==connectionGeneration)return;
+        const issued=readVisitLease(result);
+        if(!issued)throw new Error('expired');
+        const deadline=visitDeadline(issued,startedAt,startedWall,lastDeadline);
+        if(deadline<=performance.now()){expire();return;}
+        if(!held)void startCompass(permission.current);
+        if(lease!==undefined)clearTimeout(lease);
+        held={expiresAt:issued.expiresAt,deadline,offlineContinuation:issued.offlineContinuation};
+        lastDeadline={expiresAt:issued.expiresAt,deadline};
+        channel.current=audience;
+        post({type:'locaccess-lease',audience,point:issued.point,precision:issued.precision,radius:result.radius,
+          expiresAt:new Date(issued.expiresAt).toISOString(),offlineContinuation:issued.offlineContinuation});
+        lease=setTimeout(expire,deadline-performance.now());
         setMessage(result.status==='ready'?'Acesso autorizado.':'A área indicada é aproximada. A morada exacta depende da proximidade autorizada.');
-      } catch {
-        if(active&&revision===generation){clear();setMessage('Não foi possível verificar o acesso. Tenta novamente.');}
-      } finally {busy=false;}
+      } catch(error) {
+        if(active&&revision===generation){
+          const serverError=typeof error==='object'&&error!==null&&'code' in error&&Boolean(error.code);
+          if(!serverError&&(!connected||!navigator.onLine)&&mayContinueOffline()){
+            setMessage('Sem rede. O acesso mantém-se apenas até ao fim da autorização actual; não será renovado.');
+          }else{clear();setMessage('Não foi possível verificar o acesso. Tenta novamente.');}
+        }
+      } finally {if(pending===request)pending=null;}
     };
     const receive=(event:MessageEvent)=>{
-      if(event.origin!==NJILA||event.source!==frame.current?.contentWindow)return;
+      if(event.origin!==NJILA||event.source!==target)return;
       const data=event.data;
       if(data?.type==='locaccess-ready'&&typeof data.audience==='string'&&/^[a-f0-9-]{36}$/.test(data.audience)){
-        if(audience!==data.audience){clear();fix=null;audience=data.audience;channel.current=audience;}
+        if(audience!==data.audience){clear();audience=data.audience;}
         void refresh();
       }
       if(data?.type==='locaccess-position'&&data.audience===audience){
@@ -80,15 +112,24 @@ export function NjilaJourney({handle}:{handle:string}) {
         }
       }
     };
-    const pause=()=>{clear();fix=null;};
+    const pause=()=>{clear();};
+    const offline=()=>{
+      connected=false;
+      connectionGeneration++;
+      pending=null;
+      fix=null;
+      if(mayContinueOffline())setMessage('Sem rede. O acesso mantém-se apenas até ao fim da autorização actual; não será renovado.');
+      else clear();
+    };
+    const online=()=>{connected=navigator.onLine;connectionGeneration++;void refresh();};
     const visibility=()=>{pause();if(!document.hidden)void refresh();};
     window.addEventListener('message',receive);
-    window.addEventListener('offline',pause);
+    window.addEventListener('offline',offline);
     window.addEventListener('pagehide',pause);
-    window.addEventListener('online',refresh);
+    window.addEventListener('online',online);
     document.addEventListener('visibilitychange',visibility);
-    const timer=setInterval(()=>void refresh(),5000);
-    return()=>{active=false;clear();clearInterval(timer);window.removeEventListener('message',receive);window.removeEventListener('offline',pause);window.removeEventListener('pagehide',pause);window.removeEventListener('online',refresh);document.removeEventListener('visibilitychange',visibility);};
+    const timer=setInterval(()=>{if(held&&!unexpired())expire();void refresh();},5000);
+    return()=>{active=false;clear();clearInterval(timer);window.removeEventListener('message',receive);window.removeEventListener('offline',offline);window.removeEventListener('pagehide',pause);window.removeEventListener('online',online);document.removeEventListener('visibilitychange',visibility);};
   },[handle,stopCompass,startCompass]);
   return <section className={expanded
     ? 'fixed inset-0 z-[9999] flex min-h-0 flex-col gap-2 bg-background p-2'
