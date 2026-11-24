@@ -31,7 +31,7 @@ const securitySnapshot=async()=>({
 });
 const legacyGrants=await grantsSnapshot(),legacySecurity=await securitySnapshot();
 ok(legacyGrants.length===2,'migration fixture contains two legacy grants');
-await db.exec(fs.readFileSync('supabase/migrations/20261124164906_locaccess_offline_continuation.sql','utf8'));
+await db.exec(fs.readFileSync('supabase/migrations/20261124170500_locaccess_offline_continuation.sql','utf8'));
 assert.deepEqual(await grantsSnapshot(),legacyGrants,'migration preserves legacy expiry, revocation, radius and entrance');checks++;
 assert.deepEqual(await securitySnapshot(),legacySecurity,'migration preserves RLS, ACLs, invoker wrapper and definer search path');checks++;
 ok((await db.query('select offline_continuation from locaccess_private.grants')).rows.every(g=>g.offline_continuation===false),'legacy grants backfill to online-only');
