@@ -18,14 +18,19 @@ import { ArchivedChatsSheet } from '@/components/settings/ArchivedChatsSheet';
 import { BlockedUsersSheet } from '@/components/settings/BlockedUsersSheet';
 import PaposBrand from './PaposBrand';
 import { ConnectedDevices } from '@/components/settings/ConnectedDevices';
+import { PhoneAccess } from '@/features/phone-access/PhoneAccess';
+import { isKosololaPhonePilotEnabled, normalizeAngolaMobile } from '@/features/phone-access/api';
 import { BackupManager } from '@/components/settings/BackupManager';
 export default function PaposSettings() {
-  const { t } = useTranslation();
+  const { t, i18n: locale } = useTranslation();
+  const portuguese = locale.language.startsWith('pt');
   const { isAdmin } = useAdmin();
   const queryClient = useQueryClient();
   const [inviteOpen, setInviteOpen] = useState(false);
   const [logoutError, setLogoutError] = useState('');
-  const { profile, updateProfile, signOut } = useAuth(); const { toast } = useToast(); const navigate = useNavigate();
+  const { user, profile, updateProfile, signOut } = useAuth(); const { toast } = useToast(); const navigate = useNavigate();
+  const confirmedPhone = user?.phone && user.phone_confirmed_at ? user.phone : null;
+  const confirmedAngolaPhone = confirmedPhone && normalizeAngolaMobile('+' + confirmedPhone.replace(/^\+/, ''));
   const [archived, setArchived] = useState(false); const [blocked, setBlocked] = useState(false); const [busy, setBusy] = useState(false);
   const privacy = [ ['show_online_status', t('settings.showOnlineStatus')], ['show_last_seen', t('settings.showLastSeen')], ['show_read_receipts', t('settings.readReceipts')], ['show_typing_indicators', t('kosolola.typing')] ] as const;
   const leave = async () => {
@@ -52,6 +57,15 @@ export default function PaposSettings() {
       <Button asChild variant="outline" className="w-full"><Link to="/profile">{profile?.display_name || t('kosolola.myProfile')}</Link></Button>
       <Button variant="outline" className="w-full" onClick={() => setInviteOpen(true)}>{t('settings.inviteFriends', { defaultValue: i18n.t('settingsScreen.text0') })}</Button>
       <PaposLanguageSelector />
+      {isKosololaPhonePilotEnabled() && (
+        confirmedPhone
+          ? <p className="rounded-xl border p-4 text-sm" lang={portuguese ? 'pt' : 'en'}>
+              {confirmedAngolaPhone
+                ? (portuguese ? 'Telefone confirmado para entrada por SMS.' : 'Phone confirmed for SMS sign-in.')
+                : (portuguese ? 'O piloto de entrada por SMS está disponível para números de Angola.' : 'SMS sign-in is available for Angolan numbers during the pilot.')}
+            </p>
+          : <PhoneAccess mode="link" surface="kosolola" />
+      )}
       <AuthorizedAfrolocLink />
       <CallRingtoneSettings />
       <CallPushSettings />
