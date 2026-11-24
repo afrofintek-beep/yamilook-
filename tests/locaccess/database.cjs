@@ -22,6 +22,22 @@ await db.exec(fs.readFileSync('supabase/migrations/20261119034500_locaccess_fare
 await db.exec(fs.readFileSync('supabase/migrations/20261123063333_locaccess_google_maps_entry.sql','utf8'));
 const farewell=async(a,d)=>(await db.query('select public.locaccess_farewell($1,$2) as result',[a,JSON.stringify({...source,...d})])).rows[0].result;
 for(const username of ['guest','other'])policy=await action('grant',{...source,username,radius:0,hours:24});
+// Apply the new migration to actual legacy grants, not an empty schema.
+const grantsSnapshot=async()=> (await db.query("select to_jsonb(g)-'offline_continuation' as value from locaccess_private.grants g order by id")).rows;
+const securitySnapshot=async()=>({
+ tables:(await db.query("select c.relname,c.relrowsecurity,c.relforcerowsecurity,c.relacl::text from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='locaccess_private' and c.relkind='r' order by c.relname")).rows,
+ functions:(await db.query("select n.nspname,p.proname,p.prosecdef,p.proconfig,p.proacl::text from pg_proc p join pg_namespace n on n.oid=p.pronamespace where (n.nspname='locaccess_private' and p.proname in ('action','position')) or (n.nspname='public' and p.proname in ('locaccess_action','locaccess_reference_protected')) order by n.nspname,p.proname")).rows,
+ policies:(await db.query("select schemaname,tablename,policyname,roles,cmd,qual,with_check from pg_policies where schemaname='locaccess_private' order by tablename,policyname")).rows
+});
+const legacyGrants=await grantsSnapshot(),legacySecurity=await securitySnapshot();
+ok(legacyGrants.length===2,'migration fixture contains two legacy grants');
+await db.exec(fs.readFileSync('supabase/migrations/20261124170500_locaccess_offline_continuation.sql','utf8'));
+assert.deepEqual(await grantsSnapshot(),legacyGrants,'migration preserves legacy expiry, revocation, radius and entrance');checks++;
+assert.deepEqual(await securitySnapshot(),legacySecurity,'migration preserves RLS, ACLs, invoker wrapper and definer search path');checks++;
+ok((await db.query('select offline_continuation from locaccess_private.grants')).rows.every(g=>g.offline_continuation===false),'legacy grants backfill to online-only');
+const column=(await db.query("select is_nullable,column_default from information_schema.columns where table_schema='locaccess_private' and table_name='grants' and column_name='offline_continuation'")).rows[0];
+ok(column.is_nullable==='NO'&&column.column_default==='false','new grant column is non-null and defaults false');
+policy=await action('owner',source);ok(policy.grants.every(g=>g.offlineContinuation===false),'owner sees legacy consent as false');
 const grantIds=policy.grants.map(g=>g.id);
 await assert.rejects(()=>farewell('close',{grants:grantIds.slice(1),selected:grantIds}));
 const closed=await farewell('close',{grants:grantIds,selected:[policy.grants.find(g=>g.username==='guest').id]});
@@ -61,6 +77,94 @@ await action('revoke',{...source,grant_id:policy.grants[0].id});
 await login(1);ok((await action('external_route',{handle})).status==='denied','revoked route denied');
 await login(0);await action('grant',{...visitingGrant,google_entry:entry});await action('grant',visitingGrant);
 await login(1);ok((await action('external_route',{handle})).status==='denied','re-authorizing without a Google Maps entrance removes the previous route');
+
+// Consent is owned by the grant issuer and is strict JSON boolean data.
+const offlineGrant={...source,username:'guest',radius:0,hours:24};
+const storedGrant=async()=> (await db.query('select * from locaccess_private.grants where handle=$1 and recipient_id=$2',[handle,ids[1]])).rows[0];
+await login(0);policy=await action('grant',{...offlineGrant,offline_continuation:true});
+ok(policy.grants.find(g=>g.username==='guest').offlineContinuation===true,'owner can explicitly enable offline continuation');
+ok((await storedGrant()).offline_continuation===true,'boolean true persists on the recipient grant');
+const validOptIn=await storedGrant();
+for(const invalid of ['true','false',1,0,null,{},[]]){
+ await assert.rejects(()=>action('grant',{...offlineGrant,offline_continuation:invalid}),/Pedido inválido/);checks++;
+ assert.deepEqual(await storedGrant(),validOptIn,'invalid consent cannot mutate or renew the grant');checks++;
+}
+await login(1);
+ok((await action('visit',{handle,offline_continuation:false,offlineContinuation:'forbidden'})).offlineContinuation==='permitted','recipient cannot remove owner consent by changing visit data');
+await assert.rejects(()=>action('grant',{...offlineGrant,owner_id:ids[0],offline_continuation:true}),/Endereço indisponível/);checks++;
+assert.deepEqual(await storedGrant(),validOptIn,'recipient cannot grant itself owner consent');checks++;
+await login(0);
+ok((await action('visit',{handle,offline_continuation:true})).offlineContinuation==='forbidden','owner viewing does not auto-create offline consent');
+policy=await action('grant',{...offlineGrant,offline_continuation:false});
+ok(policy.grants.find(g=>g.username==='guest').offlineContinuation===false,'owner can explicitly disable continuation');
+await login(1);
+ok((await action('visit',{handle,offline_continuation:true,offlineContinuation:'permitted'})).offlineContinuation==='forbidden','visitor-supplied fields cannot enable offline continuation');
+ok((await storedGrant()).offline_continuation===false,'visiting cannot mutate stored consent');
+await login(0);await action('grant',{...offlineGrant,offline_continuation:true});policy=await action('grant',offlineGrant);
+ok(policy.grants.find(g=>g.username==='guest').offlineContinuation===false,'regrant with consent omitted resets a former opt-in');
+await login(1);ok((await action('visit',{handle})).offlineContinuation==='forbidden','omitted regrant is online-only for recipient');
+
+// Expiry is authoritative for both states and is the minimum of response, grant
+// and source lifetimes. Transaction now() makes the assertions deterministic.
+const experience={id:'20000000-0000-4000-8000-000000000001',code:'AO-SYNTHETIC-OFFLINE'};
+await db.query("insert into afroloc_experience_addresses(id,owner_id,code,status,expires_at,latitude,longitude) values($1,$2,$3,'approved',now()+interval '1 hour',-8.9,13.2)",[experience.id,ids[0],experience.code]);
+await login(0);
+let experiencePolicy=await action('grant',{...experience,username:'guest',radius:250,hours:24,offline_continuation:true});
+const experienceHandle=experiencePolicy.handle;
+const sourceDeadline=(await db.query('select expires_at from afroloc_experience_addresses where id=$1',[experience.id])).rows[0].expires_at;
+ok(Date.parse(experiencePolicy.grants[0].expiresAt)===new Date(sourceDeadline).getTime(),'grant expiry cannot exceed source lifetime');
+for(const scenario of [{name:'response cap',grant:120,source:120,expected:20},{name:'grant expiry',grant:5,source:120,expected:5},{name:'source expiry',grant:120,source:7,expected:7}]){
+ await db.exec('begin');
+ try{
+  await db.query("update afroloc_experience_addresses set expires_at=now()+make_interval(secs=>$2) where id=$1",[experience.id,scenario.source]);
+  await db.query("update locaccess_private.grants set expires_at=now()+make_interval(secs=>$2) where handle=$1",[experienceHandle,scenario.grant]);
+  const serverNow=Number((await db.query('select extract(epoch from now())*1000 as ms')).rows[0].ms);
+  await login(1);
+  for(const hasPosition of [false,true]){
+   const request={handle:experienceHandle,offline_continuation:false,expiresAt:'2099-01-01T00:00:00Z'};
+   if(hasPosition)request.position={lat:-8.9,lon:13.2,accuracy:5,timestamp:Date.now()};
+   const result=await action('visit',request);
+   ok(result.status===(hasPosition?'ready':'proximity'),`${scenario.name}: expected proximity or ready state`);
+   ok(result.offlineContinuation==='permitted',`${scenario.name}: stored consent alone determines mode`);
+   ok(Math.abs(Date.parse(result.expiresAt)-(serverNow+scenario.expected*1000))<2,`${scenario.name}: authoritative minimum expiry in both states`);
+   if(!hasPosition)ok(!result.point&&!result.entryPoint&&!result.code,`${scenario.name}: proximity withholds private location`);
+  }
+ }finally{await db.exec('rollback');}
+}
+await login(0);await action('grant',{...experience,username:'guest',radius:250,hours:24,offline_continuation:false});
+await login(1);
+const onlineProximity=await action('visit',{handle:experienceHandle,offlineContinuation:'permitted'});
+ok(onlineProximity.status==='proximity'&&onlineProximity.offlineContinuation==='forbidden'&&Number.isFinite(Date.parse(onlineProximity.expiresAt)),'online-only proximity still carries server expiry');
+const enableExperience=async()=>{await login(0);return action('grant',{...experience,username:'guest',radius:0,hours:24,offline_continuation:true});};
+const assertDenied=async(message)=>{await login(1);assert.deepEqual(await action('visit',{handle:experienceHandle,offline_continuation:true}),{status:'denied'},message);checks++;};
+experiencePolicy=await enableExperience();
+await action('revoke',{...experience,grant_id:experiencePolicy.grants[0].id});await assertDenied('revocation overrides offline opt-in without leaking expiry or point');
+await enableExperience();await action('close',experience);await assertDenied('closed address cannot be reopened by offline opt-in');
+await enableExperience();await db.query("update locaccess_private.grants set expires_at=now()-interval '1 second' where handle=$1",[experienceHandle]);await assertDenied('expired grant denies even with stored consent');
+await enableExperience();await db.query("update afroloc_experience_addresses set expires_at=now()-interval '1 second' where id=$1",[experience.id]);await assertDenied('expired source denies even with stored consent');
+await db.query("update afroloc_experience_addresses set expires_at=now()+interval '1 hour' where id=$1",[experience.id]);
+await enableExperience();await login(1);
+for(const invalidSession of [sessions[0],'10000000-0000-4000-8000-000000000099']){
+ await db.query("select set_config('test.sid',$1,false)",[invalidSession]);
+ await assert.rejects(()=>action('visit',{handle:experienceHandle}),error=>error.code==='42501'&&error.message==='Volte a entrar na Yamilook.');checks++;
+}
+await login(1);
+await db.query('update auth.users set is_anonymous=true where id=$1',[ids[1]]);
+await assert.rejects(()=>action('visit',{handle:experienceHandle}),error=>error.code==='42501');checks++;
+await db.query('update auth.users set is_anonymous=false where id=$1',[ids[1]]);
+await db.query("update profiles set account_status='suspended' where id=$1",[ids[1]]);
+await assert.rejects(()=>action('visit',{handle:experienceHandle}),error=>error.code==='42501');checks++;
+await db.query("update profiles set account_status='active' where id=$1",[ids[1]]);
+await db.exec('set role authenticated');
+try{await assert.rejects(()=>db.query('update locaccess_private.grants set offline_continuation=true where handle=$1',[experienceHandle]),error=>error.code==='42501');checks++;}
+finally{await db.exec('reset role');}
+ok(!(await db.query("select has_column_privilege('authenticated','locaccess_private.grants','offline_continuation','update') as allowed")).rows[0].allowed,'authenticated cannot directly update new consent column');
+ok((await db.query("select relrowsecurity from pg_class where oid in ('locaccess_private.addresses'::regclass,'locaccess_private.grants'::regclass)")).rows.every(row=>row.relrowsecurity),'RLS remains enabled on both private tables');
+await db.exec('set role anon');
+try{await assert.rejects(()=>db.query('select public.locaccess_action($1,$2)',['visit',JSON.stringify({handle:experienceHandle})]),error=>error.code==='42501');checks++;}
+finally{await db.exec('reset role');}
+ok(!(await db.query("select has_function_privilege('authenticated','locaccess_private.position(uuid,text,text)','execute') as allowed")).rows[0].allowed,'private position helper remains inaccessible');
+
 await login(0);policy=await action('grant',{...source,username:'guest',radius:0,hours:1});await login(1);ok((await action('visit',{handle})).status==='ready','immediate still authenticated');
 await login(0);await action('revoke',{...source,grant_id:policy.grants[0].id});await login(1);ok((await action('visit',{handle})).status==='denied','revoked');
 await login(0);await action('grant',{...source,username:'guest',radius:0,hours:24});await action('grant',{...source,username:'other',radius:0,hours:24});await action('close',source);

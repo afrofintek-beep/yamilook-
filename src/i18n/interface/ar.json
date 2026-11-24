@@ -3516,5 +3516,10 @@
   "Destacar o meu vídeo": "إبراز الفيديو الخاص بي",
   "A falar": "يتحدث الآن",
   "Áudio ao vivo": "صوت مباشر",
-  "Sem ligação": "غير متصل"
+  "Sem ligação": "غير متصل",
+  "Permitir continuidade breve sem rede na NJILA": "السماح بمواصلة الاستخدام دون اتصال لفترة قصيرة في NJILA",
+  "Se a ligação falhar, a pessoa pode usar a localização já autorizada só até ao fim da consulta actual (no máximo 20 segundos). Não renova o acesso nem permite guardar a morada para outra sessão.": "إذا انقطع الاتصال، يمكن للشخص استخدام الموقع الذي سُمح له بالوصول إليه مسبقًا فقط حتى نهاية العرض الحالي (بحد أقصى 20 ثانية). لا يُجدَّد الإذن بالوصول، ولا يُسمح بحفظ العنوان لجلسة أخرى.",
+  "Continuidade breve sem rede permitida": "يُسمح بالاستخدام دون اتصال لفترة قصيرة",
+  "Sem rede. O acesso mantém-se apenas até ao fim da autorização actual; não será renovado.": "لا يوجد اتصال بالإنترنت. يظل الوصول متاحًا فقط حتى انتهاء الإذن الحالي، ولن يتم تجديده.",
+  "A autorização terminou. Liga-te à Internet para verificar novamente o acesso.": "انتهت صلاحية الإذن. اتصل بالإنترنت للتحقق من الوصول مجددًا."
 }

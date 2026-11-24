@@ -3516,5 +3516,10 @@
   "Destacar o meu vídeo": "Ṣe àfihàn fídíò mi",
   "A falar": "Ń sọ̀rọ̀",
   "Áudio ao vivo": "Ohùn lójú ẹsẹ̀",
-  "Sem ligação": "Kò sí ìsopọ̀"
+  "Sem ligação": "Kò sí ìsopọ̀",
+  "Permitir continuidade breve sem rede na NJILA": "Gba ìtẹ̀síwájú fún ìgbà díẹ̀ láìsí ayélujára nínú NJILA láàyè",
+  "Se a ligação falhar, a pessoa pode usar a localização já autorizada só até ao fim da consulta actual (no máximo 20 segundos). Não renova o acesso nem permite guardar a morada para outra sessão.": "Tí ìsopọ̀ bá já, ẹni náà lè lo ibi tí a ti fún un ní àṣẹ láti rí títí àkókò wíwo lọ́wọ́lọ́wọ́ yóò fi parí nìkan (kò ju ìṣẹ́jú-àáyá 20 lọ). Èyí kò tún àṣẹ ìwọlé ṣe, kò sì gba fífi àdírẹ́sì pamọ́ fún ìgbà lílo mìíràn láàyè.",
+  "Continuidade breve sem rede permitida": "Ìtẹ̀síwájú fún ìgbà díẹ̀ láìsí ayélujára wà láàyè",
+  "Sem rede. O acesso mantém-se apenas até ao fim da autorização actual; não será renovado.": "Kò sí ayélujára. Ìwọlé yóò wà títí àṣẹ lọ́wọ́lọ́wọ́ yóò fi parí nìkan; a kò ní tún un ṣe.",
+  "A autorização terminou. Liga-te à Internet para verificar novamente o acesso.": "Àṣẹ ti parí. Sopọ̀ mọ́ ayélujára láti ṣàyẹ̀wò ìwọlé lẹ́ẹ̀kan sí i."
 }

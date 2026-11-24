@@ -3516,5 +3516,10 @@
   "Destacar o meu vídeo": "Angazia video yangu",
   "A falar": "Anazungumza",
   "Áudio ao vivo": "Sauti ya moja kwa moja",
-  "Sem ligação": "Hakuna muunganisho"
+  "Sem ligação": "Hakuna muunganisho",
+  "Permitir continuidade breve sem rede na NJILA": "Ruhusu kuendelea kutumia NJILA kwa muda mfupi bila intaneti",
+  "Se a ligação falhar, a pessoa pode usar a localização já autorizada só até ao fim da consulta actual (no máximo 20 segundos). Não renova o acesso nem permite guardar a morada para outra sessão.": "Muunganisho ukikatika, mtu anaweza kutumia eneo ambalo tayari amepewa ruhusa ya kulifikia hadi mwisho wa kipindi cha sasa cha kuliona tu (si zaidi ya sekunde 20). Hii haiongezi muda wa ruhusa wala hairuhusu kuhifadhi anwani kwa kipindi kingine.",
+  "Continuidade breve sem rede permitida": "Kuendelea kwa muda mfupi bila intaneti kumeruhusiwa",
+  "Sem rede. O acesso mantém-se apenas até ao fim da autorização actual; não será renovado.": "Hakuna intaneti. Ufikiaji unaendelea tu hadi ruhusa ya sasa iishe; ruhusa haitafanywa upya.",
+  "A autorização terminou. Liga-te à Internet para verificar novamente o acesso.": "Ruhusa imeisha. Unganisha kwenye intaneti ili kuthibitisha ufikiaji tena."
 }

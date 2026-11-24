@@ -3516,5 +3516,10 @@
   "Destacar o meu vídeo": "Mettre ma vidéo en avant",
   "A falar": "En train de parler",
   "Áudio ao vivo": "Audio en direct",
-  "Sem ligação": "Déconnecté"
+  "Sem ligação": "Déconnecté",
+  "Permitir continuidade breve sem rede na NJILA": "Autoriser une brève utilisation hors ligne dans NJILA",
+  "Se a ligação falhar, a pessoa pode usar a localização já autorizada só até ao fim da consulta actual (no máximo 20 segundos). Não renova o acesso nem permite guardar a morada para outra sessão.": "Si la connexion est interrompue, la personne peut utiliser la localisation déjà autorisée uniquement jusqu’à la fin de la consultation en cours (20 secondes au maximum). Cela ne renouvelle pas l’accès et ne permet pas d’enregistrer l’adresse pour une autre session.",
+  "Continuidade breve sem rede permitida": "Brève utilisation hors ligne autorisée",
+  "Sem rede. O acesso mantém-se apenas até ao fim da autorização actual; não será renovado.": "Hors ligne. L’accès reste valable uniquement jusqu’à la fin de l’autorisation en cours ; il ne sera pas renouvelé.",
+  "A autorização terminou. Liga-te à Internet para verificar novamente o acesso.": "L’autorisation a expiré. Connectez-vous à Internet pour vérifier de nouveau l’accès."
 }

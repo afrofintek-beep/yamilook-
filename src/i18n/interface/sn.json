@@ -3516,5 +3516,10 @@
   "Destacar o meu vídeo": "Ratidza vhidhiyo yangu zvakanyanya",
   "A falar": "Ari kutaura",
   "Áudio ao vivo": "Ruzha rwepamoyo",
-  "Sem ligação": "Hapana kubatana"
+  "Sem ligação": "Hapana kubatana",
+  "Permitir continuidade breve sem rede na NJILA": "Bvumira kuramba uchishandisa NJILA kwenguva pfupi pasina internet",
+  "Se a ligação falhar, a pessoa pode usar a localização já autorizada só até ao fim da consulta actual (no máximo 20 segundos). Não renova o acesso nem permite guardar a morada para outra sessão.": "Kana kubatana kwadambuka, munhu anogona kushandisa nzvimbo yaakatobvumirwa kuona chete kusvikira nguva yazvino yekuiona yapera (isingapfuuri masekonzi 20). Izvi hazviwedzeri nguva yemvumo yekupinda uye hazvibvumiri kuchengetedza kero kuti ishandiswe mune imwe nguva yekushandisa.",
+  "Continuidade breve sem rede permitida": "Kuramba uchishandisa kwenguva pfupi pasina internet kwabvumirwa",
+  "Sem rede. O acesso mantém-se apenas até ao fim da autorização actual; não será renovado.": "Hapana internet. Unogona kupinda chete kusvikira mvumo iripo yapera; nguva yemvumo haizowedzerwi.",
+  "A autorização terminou. Liga-te à Internet para verificar novamente o acesso.": "Mvumo yapera. Batanidza mudziyo painternet kuti uongorore mvumo yekupinda zvakare."
 }
