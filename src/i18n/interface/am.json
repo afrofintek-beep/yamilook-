@@ -3508,5 +3508,13 @@
   "Aplica-se apenas às mensagens enviadas depois de guardar. O prazo conta a partir do envio; as mensagens anteriores mantêm-se. A opção mínima é 24 horas.": "ካስቀመጡ በኋላ ለሚላኩ መልዕክቶች ብቻ ይሠራል። ጊዜው መልዕክቱ ከተላከበት ጊዜ ጀምሮ ይቆጠራል። የቀድሞ መልዕክቶች ይቀራሉ። ዝቅተኛው ጊዜ 24 ሰዓት ነው።",
   "Disappearing messages enabled": "የሚጠፉ መልዕክቶች ነቅተዋል",
   "Disappearing messages disabled": "የሚጠፉ መልዕክቶች ቦዝነዋል",
-  "A duração não foi confirmada. Tenta novamente.": "የጊዜ ቆይታውን ማረጋገጥ አልተቻለም። እንደገና ይሞክሩ።"
+  "A duração não foi confirmada. Tenta novamente.": "የጊዜ ቆይታውን ማረጋገጥ አልተቻለም። እንደገና ይሞክሩ።",
+  "Maximizar vídeo": "ቪዲዮውን አሳድግ",
+  "Voltar à conversa": "ወደ ውይይቱ ተመለስ",
+  "Seguir quem fala": "ተናጋሪውን ተከተል",
+  "Destacar {{name}}": "{{name}} ን አጉላ",
+  "Destacar o meu vídeo": "የእኔን ቪዲዮ አጉላ",
+  "A falar": "እየተናገረ ነው",
+  "Áudio ao vivo": "የቀጥታ ድምፅ",
+  "Sem ligação": "ግንኙነት የለም"
 }

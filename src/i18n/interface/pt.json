@@ -3508,5 +3508,13 @@
   "Aplica-se apenas às mensagens enviadas depois de guardar. O prazo conta a partir do envio; as mensagens anteriores mantêm-se. A opção mínima é 24 horas.": "Aplica-se apenas às mensagens enviadas depois de guardar. O prazo conta a partir do envio; as mensagens anteriores mantêm-se. A opção mínima é 24 horas.",
   "Disappearing messages enabled": "Mensagens temporárias activadas",
   "Disappearing messages disabled": "Mensagens temporárias desactivadas",
-  "A duração não foi confirmada. Tenta novamente.": "Não foi possível confirmar a duração. Tenta novamente."
+  "A duração não foi confirmada. Tenta novamente.": "Não foi possível confirmar a duração. Tenta novamente.",
+  "Maximizar vídeo": "Maximizar vídeo",
+  "Voltar à conversa": "Voltar à conversa",
+  "Seguir quem fala": "Seguir quem fala",
+  "Destacar {{name}}": "Destacar {{name}}",
+  "Destacar o meu vídeo": "Destacar o meu vídeo",
+  "A falar": "A falar",
+  "Áudio ao vivo": "Áudio ao vivo",
+  "Sem ligação": "Sem ligação"
 }

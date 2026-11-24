@@ -3508,5 +3508,13 @@
   "Aplica-se apenas às mensagens enviadas depois de guardar. O prazo conta a partir do envio; as mensagens anteriores mantêm-se. A opção mínima é 24 horas.": "Applies only to messages sent after saving. The timer starts when each message is sent. Earlier messages are kept. The minimum duration is 24 hours.",
   "Disappearing messages enabled": "Disappearing messages enabled",
   "Disappearing messages disabled": "Disappearing messages disabled",
-  "A duração não foi confirmada. Tenta novamente.": "Could not confirm the duration. Try again."
+  "A duração não foi confirmada. Tenta novamente.": "Could not confirm the duration. Try again.",
+  "Maximizar vídeo": "Maximise video",
+  "Voltar à conversa": "Back to conversation",
+  "Seguir quem fala": "Follow the speaker",
+  "Destacar {{name}}": "Spotlight {{name}}",
+  "Destacar o meu vídeo": "Spotlight my video",
+  "A falar": "Speaking",
+  "Áudio ao vivo": "Live audio",
+  "Sem ligação": "Disconnected"
 }

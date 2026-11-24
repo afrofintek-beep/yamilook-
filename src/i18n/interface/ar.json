@@ -3508,5 +3508,13 @@
   "Aplica-se apenas às mensagens enviadas depois de guardar. O prazo conta a partir do envio; as mensagens anteriores mantêm-se. A opção mínima é 24 horas.": "ينطبق فقط على الرسائل المرسلة بعد الحفظ. تبدأ المدة عند إرسال كل رسالة. تبقى الرسائل السابقة. الحد الأدنى للمدة هو 24 ساعة.",
   "Disappearing messages enabled": "تم تفعيل الرسائل المؤقتة",
   "Disappearing messages disabled": "تم إيقاف الرسائل المؤقتة",
-  "A duração não foi confirmada. Tenta novamente.": "تعذر تأكيد المدة. حاول مرة أخرى."
+  "A duração não foi confirmada. Tenta novamente.": "تعذر تأكيد المدة. حاول مرة أخرى.",
+  "Maximizar vídeo": "تكبير الفيديو",
+  "Voltar à conversa": "العودة إلى المحادثة",
+  "Seguir quem fala": "متابعة المتحدث",
+  "Destacar {{name}}": "إبراز {{name}}",
+  "Destacar o meu vídeo": "إبراز الفيديو الخاص بي",
+  "A falar": "يتحدث الآن",
+  "Áudio ao vivo": "صوت مباشر",
+  "Sem ligação": "غير متصل"
 }

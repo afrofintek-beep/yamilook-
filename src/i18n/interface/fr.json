@@ -3508,5 +3508,13 @@
   "Aplica-se apenas às mensagens enviadas depois de guardar. O prazo conta a partir do envio; as mensagens anteriores mantêm-se. A opção mínima é 24 horas.": "S’applique uniquement aux messages envoyés après l’enregistrement. Le délai commence à l’envoi de chaque message. Les messages précédents sont conservés. La durée minimale est de 24 heures.",
   "Disappearing messages enabled": "Messages éphémères activés",
   "Disappearing messages disabled": "Messages éphémères désactivés",
-  "A duração não foi confirmada. Tenta novamente.": "Impossible de confirmer la durée. Réessayez."
+  "A duração não foi confirmada. Tenta novamente.": "Impossible de confirmer la durée. Réessayez.",
+  "Maximizar vídeo": "Agrandir la vidéo",
+  "Voltar à conversa": "Revenir à la conversation",
+  "Seguir quem fala": "Suivre la personne qui parle",
+  "Destacar {{name}}": "Mettre {{name}} en avant",
+  "Destacar o meu vídeo": "Mettre ma vidéo en avant",
+  "A falar": "En train de parler",
+  "Áudio ao vivo": "Audio en direct",
+  "Sem ligação": "Déconnecté"
 }

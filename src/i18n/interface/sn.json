@@ -3508,5 +3508,13 @@
   "Aplica-se apenas às mensagens enviadas depois de guardar. O prazo conta a partir do envio; as mensagens anteriores mantêm-se. A opção mínima é 24 horas.": "Izvi zvinoshanda chete pamameseji anotumirwa mushure mekuchengetedza. Nguva inotanga kuverengwa panotumirwa meseji. Mameseji ekare anoramba aripo. Nguva pfupi zvikuru maawa 24.",
   "Disappearing messages enabled": "Mameseji anonyangarika abatidzwa",
   "Disappearing messages disabled": "Mameseji anonyangarika adzimwa",
-  "A duração não foi confirmada. Tenta novamente.": "Hatina kukwanisa kusimbisa nguva. Edza zvakare."
+  "A duração não foi confirmada. Tenta novamente.": "Hatina kukwanisa kusimbisa nguva. Edza zvakare.",
+  "Maximizar vídeo": "Kurisa vhidhiyo",
+  "Voltar à conversa": "Dzokera kuhurukuro",
+  "Seguir quem fala": "Tevera ari kutaura",
+  "Destacar {{name}}": "Ratidza {{name}} zvakanyanya",
+  "Destacar o meu vídeo": "Ratidza vhidhiyo yangu zvakanyanya",
+  "A falar": "Ari kutaura",
+  "Áudio ao vivo": "Ruzha rwepamoyo",
+  "Sem ligação": "Hapana kubatana"
 }

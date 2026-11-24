@@ -13,7 +13,7 @@ export interface ConversaMessage {
   createdAt: string;
 }
 
-interface Peer {
+export interface MokubicoPeer {
   id: string;
   name: string;
   speaking: boolean;
@@ -32,7 +32,7 @@ export function useMokubicoRoom(conversaId: string | null, roomName: string | nu
   const [error, setError] = useState<string | null>(null);
   const [micOn, setMicOn] = useState(true);
   const [camOn, setCamOn] = useState(false);
-  const [peers, setPeers] = useState<Peer[]>([]);
+  const [peers, setPeers] = useState<MokubicoPeer[]>([]);
   const [messages, setMessages] = useState<ConversaMessage[]>([]);
   // Each member's read cursor (userId → last_read_at ISO) for ✓/✓✓ receipts.
   const [reads, setReads] = useState<Record<string, string>>({});
