@@ -3508,5 +3508,13 @@
   "Aplica-se apenas às mensagens enviadas depois de guardar. O prazo conta a partir do envio; as mensagens anteriores mantêm-se. A opção mínima é 24 horas.": "Inatumika tu kwa ujumbe unaotumwa baada ya kuhifadhi. Muda huanza kuhesabiwa ujumbe unapotumwa. Ujumbe wa awali unabaki. Muda wa chini ni saa 24.",
   "Disappearing messages enabled": "Ujumbe unaopotea umewashwa",
   "Disappearing messages disabled": "Ujumbe unaopotea umezimwa",
-  "A duração não foi confirmada. Tenta novamente.": "Imeshindikana kuthibitisha muda. Jaribu tena."
+  "A duração não foi confirmada. Tenta novamente.": "Imeshindikana kuthibitisha muda. Jaribu tena.",
+  "Maximizar vídeo": "Panua video",
+  "Voltar à conversa": "Rudi kwenye mazungumzo",
+  "Seguir quem fala": "Mfuate anayezungumza",
+  "Destacar {{name}}": "Angazia {{name}}",
+  "Destacar o meu vídeo": "Angazia video yangu",
+  "A falar": "Anazungumza",
+  "Áudio ao vivo": "Sauti ya moja kwa moja",
+  "Sem ligação": "Hakuna muunganisho"
 }

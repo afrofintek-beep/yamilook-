@@ -3508,5 +3508,13 @@
   "Aplica-se apenas às mensagens enviadas depois de guardar. O prazo conta a partir do envio; as mensagens anteriores mantêm-se. A opção mínima é 24 horas.": "Kusebenza kuphela emilayezweni ethunyelwa ngemva kokulondoloza. Isikhathi siqala ukubalwa lapho umlayezo uthunyelwa. Imilayezo yangaphambilini iyagcinwa. Isikhathi esincane amahora angu-24.",
   "Disappearing messages enabled": "Imilayezo enyamalalayo ivuliwe",
   "Disappearing messages disabled": "Imilayezo enyamalalayo ivaliwe",
-  "A duração não foi confirmada. Tenta novamente.": "Asikwazanga ukuqinisekisa isikhathi. Zama futhi."
+  "A duração não foi confirmada. Tenta novamente.": "Asikwazanga ukuqinisekisa isikhathi. Zama futhi.",
+  "Maximizar vídeo": "Khulisa ividiyo",
+  "Voltar à conversa": "Buyela engxoxweni",
+  "Seguir quem fala": "Landela okhulumayo",
+  "Destacar {{name}}": "Gqamisa u-{{name}}",
+  "Destacar o meu vídeo": "Gqamisa ividiyo yami",
+  "A falar": "Uyakhuluma",
+  "Áudio ao vivo": "Umsindo obukhoma",
+  "Sem ligação": "Akuxhunyiwe"
 }

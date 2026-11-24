@@ -3508,5 +3508,13 @@
   "Aplica-se apenas às mensagens enviadas depois de guardar. O prazo conta a partir do envio; as mensagens anteriores mantêm-se. A opção mínima é 24 horas.": "Èyí kan àwọn ìfiránṣẹ́ tí a bá fi ránṣẹ́ lẹ́yìn tí a bá fi ètò pamọ́ nìkan. Àkókò bẹ̀rẹ̀ nígbà tí a fi ìfiránṣẹ́ ránṣẹ́. Àwọn ìfiránṣẹ́ àtijọ́ yóò wà. Àkókò tó kéré jù ni wákàtí 24.",
   "Disappearing messages enabled": "Àwọn ìfiránṣẹ́ tó ń parẹ́ ti ṣiṣẹ́",
   "Disappearing messages disabled": "Àwọn ìfiránṣẹ́ tó ń parẹ́ ti dáwọ́ dúró",
-  "A duração não foi confirmada. Tenta novamente.": "A kò lè jẹ́rìí àkókò náà. Gbìyànjú lẹ́ẹ̀kan sí i."
+  "A duração não foi confirmada. Tenta novamente.": "A kò lè jẹ́rìí àkókò náà. Gbìyànjú lẹ́ẹ̀kan sí i.",
+  "Maximizar vídeo": "Mú fídíò tóbi",
+  "Voltar à conversa": "Padà sí ìjíròrò",
+  "Seguir quem fala": "Tẹ̀lé ẹni tó ń sọ̀rọ̀",
+  "Destacar {{name}}": "Ṣe àfihàn {{name}}",
+  "Destacar o meu vídeo": "Ṣe àfihàn fídíò mi",
+  "A falar": "Ń sọ̀rọ̀",
+  "Áudio ao vivo": "Ohùn lójú ẹsẹ̀",
+  "Sem ligação": "Kò sí ìsopọ̀"
 }
