@@ -2,11 +2,20 @@ import { supabase } from '@/integrations/supabase/client';
 
 export const phoneAccessEnabled = import.meta.env.VITE_PHONE_ACCESS_ENABLED === 'true';
 
+export function isKosololaPhonePilotEnabled() {
+  return import.meta.env.VITE_KOSOLOLA_PHONE_PILOT_ENABLED === 'true';
+}
+
 export function normalizePhone(value: string): string | null {
   const compact = value.trim().replace(/[\s().-]/g, '');
   const international = /^9\d{8}$/.test(compact) ? `+244${compact}`
     : compact.startsWith('00') ? `+${compact.slice(2)}` : compact;
   return /^\+[1-9]\d{7,14}$/.test(international) ? international : null;
+}
+
+export function normalizeAngolaMobile(value: string): string | null {
+  const phone = normalizePhone(value);
+  return phone && /^\+2449\d{8}$/.test(phone) ? phone : null;
 }
 
 export async function requestPhoneCode(phone: string, mode: 'login' | 'link') {
