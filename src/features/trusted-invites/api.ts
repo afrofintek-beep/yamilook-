@@ -1,6 +1,8 @@
 import { supabase } from '@/integrations/supabase/client';
 import { getYamilookPublicUrl } from '@/lib/public-site';
 
+const TRUSTED_INVITE_TOKEN_PATTERN = /^[a-zA-Z0-9_-]{32,256}$/;
+
 export type TrustedInviteMode = 'direct' | 'phone';
 export type TrustedInviteLanguage = 'pt' | 'en' | 'fr';
 export type TrustedInvitation = {
@@ -57,12 +59,24 @@ export function trustedInviteLanguage(language: string): TrustedInviteLanguage {
 
 export function readTrustedInvitationToken(hash: string): string | null {
   const token = new URLSearchParams(hash.replace(/^#/, '')).get('trusted')?.trim() || '';
-  return /^[a-zA-Z0-9_-]{32,256}$/.test(token) ? token : null;
+  return TRUSTED_INVITE_TOKEN_PATTERN.test(token) ? token : null;
+}
+
+export function readTrustedInvitationInput(input: string): string | null {
+  const value = input.trim();
+  if (TRUSTED_INVITE_TOKEN_PATTERN.test(value)) return value;
+  try {
+    const url = new URL(value);
+    if (url.protocol !== 'https:' || !/^\/(?:convite-confianca|register)\/?$/.test(url.pathname)) return null;
+    return readTrustedInvitationToken(url.hash);
+  } catch {
+    return null;
+  }
 }
 
 export function buildTrustedInviteUrl(token: string, language: TrustedInviteLanguage): string {
-  if (!/^[a-zA-Z0-9_-]{32,256}$/.test(token)) throw new Error('invalid_invitation_token');
-  const url = new URL(getYamilookPublicUrl('/register'));
+  if (!TRUSTED_INVITE_TOKEN_PATTERN.test(token)) throw new Error('invalid_invitation_token');
+  const url = new URL(getYamilookPublicUrl('/convite-confianca'));
   url.searchParams.set('lang', language);
   url.hash = new URLSearchParams({ trusted: token }).toString();
   return url.toString();

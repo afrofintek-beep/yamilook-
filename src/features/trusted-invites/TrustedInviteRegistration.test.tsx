@@ -13,8 +13,8 @@ const token = 'ab'.repeat(32);
 const recovery = '12'.repeat(32);
 const invitation = { recipient_name: 'Pessoa Convidada', inviter_name: 'António', mode: 'direct', language: 'pt', expires_at: '2099-01-01T12:00:00Z', status: 'pending' };
 function Destination() { const location = useLocation(); return <p>{location.pathname}{location.search}</p>; }
-function show() {
-  return render(<MemoryRouter initialEntries={[`/convite-confianca?lang=pt#trusted=${token}`]}><Routes>
+function show(url = `/convite-confianca?lang=pt#trusted=${token}`) {
+  return render(<MemoryRouter initialEntries={[url]}><Routes>
     <Route path="/convite-confianca" element={<TrustedInviteRegistration />} /><Route path="/onboarding" element={<Destination />} /><Route path="/login" element={<Destination />} />
   </Routes></MemoryRouter>);
 }
@@ -38,6 +38,25 @@ it('only previews on opening and never asks for or confirms an email', async () 
   expect(invoke).toHaveBeenCalledWith('trusted-invitations', { body: { action: 'preview', token } });
   expect(screen.queryByLabelText(/e-?mail/i)).not.toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Activar a minha conta' })).toBeDisabled();
+});
+
+it.each([
+  ['shared code', token],
+  ['complete old link', `https://www.yamilook.com/register?lang=pt#trusted=${token}`],
+  ['complete new link', `https://www.yamilook.com/convite-confianca?lang=pt#trusted=${token}`],
+])('recovers with the %s when a shared link arrives without its fragment', async (_method, input) => {
+  show('/convite-confianca?lang=pt');
+  expect(invoke).not.toHaveBeenCalled();
+  const field = screen.getByLabelText('Código ou link do convite');
+  const submit = screen.getByRole('button', { name: 'Verificar convite' });
+  fireEvent.change(field, { target: { value: 'https://www.yamilook.com/convite-confianca?lang=pt' } });
+  fireEvent.click(submit);
+  expect(invoke).not.toHaveBeenCalled();
+  fireEvent.change(field, { target: { value: input } });
+  fireEvent.click(submit);
+  await screen.findByRole('heading', { name: 'O seu acesso foi pré-aprovado' });
+  expect(invoke).toHaveBeenCalledExactlyOnceWith('trusted-invitations', { body: { action: 'preview', token } });
+  expect(screen.queryByLabelText(/e-?mail/i)).not.toBeInTheDocument();
 });
 
 it('keeps the recovery code visible after session creation until it has been saved', async () => {

@@ -9,7 +9,7 @@ describe('trusted invitation transport', () => {
   it('keeps the bearer out of the URL query and retains the invitation language', () => {
     const url = new URL(buildTrustedInviteUrl(token, 'fr'));
     expect(url.origin).toBe('https://www.yamilook.com');
-    expect(url.pathname).toBe('/register');
+    expect(url.pathname).toBe('/convite-confianca');
     expect(url.search).toBe('?lang=fr');
     expect(readTrustedInvitationToken(url.hash)).toBe(token);
     expect(() => buildTrustedInviteUrl('guessable', 'pt')).toThrow();

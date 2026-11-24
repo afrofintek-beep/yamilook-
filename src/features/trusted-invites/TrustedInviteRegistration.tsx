@@ -11,7 +11,7 @@ import { changeAppLanguage } from '@/i18n';
 import { afrolocReturn } from '@/features/locaccess/return-path';
 import { isTrustedPasswordValid } from '@/lib/trusted-account-login';
 import {
-  invitationState, readTrustedInvitationToken, trustedInvitationRequest, trustedInviteLanguage,
+  invitationState, readTrustedInvitationInput, readTrustedInvitationToken, trustedInvitationRequest, trustedInviteLanguage,
   type TrustedActivation, type TrustedInvitationPreview,
 } from './api';
 import { trustedCopy, trustedErrorMessage } from './copy';
@@ -173,11 +173,10 @@ export default function TrustedInviteRegistration() {
       <h1 className="text-2xl font-semibold">{copy.title}</h1><p className="text-sm text-muted-foreground">{copy.invalidToken}</p>
       <form className="space-y-3" onSubmit={event => {
         event.preventDefault();
-        const candidate = enteredToken.trim();
-        const value = readTrustedInvitationToken('#trusted=' + encodeURIComponent(candidate));
-        if (value) { setToken(value); setMessage(''); } else setMessage(copy.invalidToken);
+        const value = readTrustedInvitationInput(enteredToken);
+        if (value) { setToken(value); setEnteredToken(''); setMessage(''); } else setMessage(copy.invalidToken);
       }}>
-        <label className="block text-sm font-medium" htmlFor={id + '-token'}>{copy.code}<Input id={id + '-token'} value={enteredToken} onChange={event => setEnteredToken(event.target.value)} autoCapitalize="none" autoComplete="off" spellCheck={false} maxLength={256} className="mt-1 font-mono text-base" /></label>
+        <label className="block text-sm font-medium" htmlFor={id + '-token'}>{copy.codeOrLink}<Input id={id + '-token'} value={enteredToken} onChange={event => setEnteredToken(event.target.value)} autoCapitalize="none" autoComplete="off" autoCorrect="off" spellCheck={false} maxLength={512} className="mt-1 font-mono text-base" /></label>
         <Button type="submit" disabled={!enteredToken.trim()} className="w-full">{copy.checkCode}</Button>
       </form><p role="status" className="text-sm">{message}</p>
     </section> : checking ? <p role="status" className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />{copy.loading}</p> : previewError || !preview ? <section className="space-y-4"><h1 className="text-2xl font-semibold">{copy.title}</h1><p role="alert">{trustedErrorMessage(previewError, locale)}</p><Button type="button" variant="outline" onClick={() => setLoadVersion(value => value + 1)}>{copy.retry}</Button><p><Link to="/login" className="text-primary underline">{copy.signIn}</Link></p></section> : <>
