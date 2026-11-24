@@ -19,6 +19,7 @@ on:
       - "src/components/admin/CampaignHub*"
       - "src/components/admin/FounderInviteAssistant.tsx"
       - "src/components/auth/LoginForm*"
+      - "src/components/profile/ProfileEditSheet*"
       - "src/features/papos/PaposLogin.tsx"
       - "src/features/trusted-invites/**"
       - "src/lib/trusted-account-login*"
@@ -33,6 +34,8 @@ on:
       - "supabase/migrations/*_shareable_contact_invitations.sql"
       - "scripts/test-contact-invitations.mjs"
       - "supabase/migrations/*_trusted_invitations.sql"
+      - "supabase/migrations/*_trusted_profile_username_guard.sql"
+      - "supabase/migrations/*_trusted_auth_reservation.sql"
       - "scripts/test-trusted-invitations.mjs"
       - "package.json"
       - "package-lock.json"
@@ -54,5 +57,5 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - run: npm test -- src/lib/public-site.test.ts src/lib/invitation-registration.test.ts src/lib/referral.test.ts src/lib/invite-delivery.test.ts src/components/settings/InviteSheet.test.tsx src/components/settings/ContactInviteActions.test.tsx src/test/integration/auth.test.tsx --reporter=dot
       - run: node --test scripts/test-contact-invitations.mjs
-      - run: npm test -- src/lib/trusted-account-login.test.ts src/features/trusted-invites src/components/admin/TrustedInvitesPanel.test.tsx src/components/admin/CampaignHub.test.tsx src/components/auth/LoginForm.trusted.test.tsx src/pages/Register.test.tsx src/test/integration/auth-hook.test.tsx --reporter=dot
+      - run: npm test -- src/lib/trusted-account-login.test.ts src/features/trusted-invites src/components/admin/TrustedInvitesPanel.test.tsx src/components/admin/CampaignHub.test.tsx src/components/auth/LoginForm.trusted.test.tsx src/components/profile/ProfileEditSheet.test.tsx src/pages/Register.test.tsx src/test/integration/auth-hook.test.tsx --reporter=dot
       - run: node --test scripts/test-trusted-invitations.mjs
