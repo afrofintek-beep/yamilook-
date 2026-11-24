@@ -2,6 +2,7 @@
 export interface PaymentOrder {
   id: string; seller_id: string; buyer_id?: string; seller_name?: string;
   amount: number; description: string; status: string; expires_at: string; own?: boolean;
+  payment_provider?: string | null;
 }
 export interface Withdrawal {
   id: string; user_id: string; amount: number; destination: string;

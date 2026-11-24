@@ -1,0 +1,78 @@
+{
+  "target_project": "kvnbqqektpkeouyepyor",
+  "source_commit": "ccb8fc789e52af00aac0c9ea3fa89c3cacd50338",
+  "dependencies": [
+    {
+      "path": "supabase/migrations/20260110013758_08af1c74-443f-4992-a6aa-489a71519a77.sql",
+      "source_sha256": "f891186a38236608a45b1629e8f51ff6c9c7058b8dff427ca83dc1574fa50b17",
+      "start_marker": "CREATE TYPE public.account_status",
+      "end_marker": "\n-- =============================================\n-- PROFILE PHOTOS",
+      "extract_sha256": "0f454bdfa6b4db57335b46dccf5da7e19c4d04e7eebf4434559130f8f4b5d26a"
+    },
+    {
+      "path": "supabase/migrations/20260205031858_8a568fee-2606-4177-87e5-6a0f59dfd0d9.sql",
+      "source_sha256": "f1d40259b0e230ae61e68de174342dc80edb3f7503e18daa05b4be9a57a9dfa0",
+      "start_marker": null,
+      "end_marker": null,
+      "extract_sha256": "33f925f4197830caa753c09b42a5877e2ed5091e14452fec99838117290bba0e",
+      "strip_trailing_whitespace": true
+    },
+    {
+      "path": "supabase/migrations/20260110230052_45eeb5a2-0eca-4745-8f24-631876f34014.sql",
+      "source_sha256": "b350ae72f5c3fea47c19792cef6008954f4524665793ec1b9a387bc6d772f4b3",
+      "start_marker": null,
+      "end_marker": "-- Add admin role to first test user",
+      "extract_sha256": "04013b0e433d1909e5fc715e039591dfe631b051d29f1b81bf610d8409420f0c"
+    },
+    {
+      "path": "supabase/migrations/20260710290000_kumbu_purchases.sql",
+      "source_sha256": "eed5215b6c4a74597c6b3c09ae91e16437aa5a8e4c129a96af8d752dfbcce61d",
+      "start_marker": "create table if not exists public.kumbu_purchases",
+      "end_marker": "-- Credita o Kumbu comprado.",
+      "extract_sha256": "7737277c486b82288a31eff0361b97b230388484582800c1e996ef8e6a5f5c11"
+    }
+  ],
+  "wallet_migrations": [
+    {
+      "path": "supabase/migrations/20261118163926_payment_point_sandbox.sql",
+      "source_sha256": "f3ecead70e880468f8a42d456f2b234768fe316537c58acf1f2a231c2a08b1cb"
+    },
+    {
+      "path": "supabase/migrations/20261118164605_payment_point_function_hardening.sql",
+      "source_sha256": "33c952f20856ae41d91a30c42046b8241dbb6ee40c1c89eada829987de39579e"
+    },
+    {
+      "path": "supabase/migrations/20261118170009_payment_point_angola.sql",
+      "source_sha256": "d0bf68ef1c846600a97bbb289cff72aa69360f69811d00c69976716bb7d65649"
+    },
+    {
+      "path": "supabase/migrations/20261118193500_payment_point_balance_rls.sql",
+      "source_sha256": "502b01fd55a06bf540ac08b345c279c12cf400e0f7c2112aaa5064fb2b031ed2"
+    },
+    {
+      "path": "supabase/migrations/20261119011000_wallet_private_pilot.sql",
+      "source_sha256": "c9c027e2964a86e652ec4b52a8f5d2bac4ba048dd2c553cdf068fab86f223e51"
+    },
+    {
+      "path": "supabase/migrations/20261119011500_wallet_pilot_recipient.sql",
+      "source_sha256": "73d082c79d125b19dca2e261792a1f95550404c24fa2528dbbf69434c27a08a5"
+    },
+    {
+      "path": "supabase/migrations/20261119020500_wallet_movement_summary.sql",
+      "source_sha256": "9dcb90f3141b7c1a387d5b26ed54f837aed2d7c4678a172ef296e457dcb1a2b9"
+    },
+    {
+      "path": "supabase/migrations/20261119040000_wallet_passkey_state.sql",
+      "source_sha256": "72b432e7e88264c0b772b14dd5627acb989762483130701cf6a219fe7d803053"
+    },
+    {
+      "path": "supabase/migrations/20261119235000_wallet_debit_authorization.sql",
+      "source_sha256": "9696fec54ee498de882650a0e05df2a961dba312056492f17d1c2bfac81dea12"
+    },
+    {
+      "path": "supabase/migrations/20261122120553_massa_appypay_sandbox.sql",
+      "source_sha256": "11f54218be231ee03b570b8dc48e9ca7fa0e1cd5b17d6e1de47fa117ca0a7e10",
+      "source_note": "Based on ccb8fc789e52af00aac0c9ea3fa89c3cacd50338 plus a comment-only clarification that the webhook inbox contains untrusted hints."
+    }
+  ]
+}

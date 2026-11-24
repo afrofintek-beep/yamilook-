@@ -12,8 +12,9 @@ it('keeps an invalid challenge open and returns to the wallet after verification
   mfa.challengeAndVerify.mockResolvedValueOnce({ error: {} }).mockResolvedValueOnce({ error: null });
   const close = vi.fn();
   render(<WalletSessionConfirmation onClose={close} />);
+  const input = await screen.findByLabelText('Código de 6 dígitos');
   for (const code of ['111111', '222222']) {
-    fireEvent.change(screen.getByLabelText('Código de 6 dígitos'), { target: { value: code } });
+    fireEvent.change(input, { target: { value: code } });
     fireEvent.click(screen.getByRole('button', { name: 'Confirmar sessão' }));
     if (code === '111111') expect(await screen.findByRole('alert')).toBeVisible();
   }

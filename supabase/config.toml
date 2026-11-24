@@ -181,3 +181,15 @@ Confirm your email address
 {{- end -}}
 '''
 content_path = "./supabase/templates/confirmation.html"
+
+# Disabled without explicit sandbox configuration. User auth is verified in code.
+[functions.massa-appypay]
+verify_jwt = false
+
+# Callback is an untrusted hint; only an authenticated provider GET can confirm.
+[functions.massa-appypay-webhook]
+verify_jwt = false
+
+# Requires the dedicated server-side reconciliation token.
+[functions.massa-appypay-reconcile]
+verify_jwt = false
