@@ -134,6 +134,36 @@ test('expiration needs explicit provider evidence and an unambiguous timezone', 
   assert.equal(withDate('not-a-date').dueAt, null);
 });
 
+test('authenticated AppyPay detail uses the latest event for the same charge and method', async () => {
+  const event = (id, code, successful, source = 'REF') => ({
+    id, transactionId: uuid(20), type: 'Charge', responseStatus: { code, successful, source },
+  });
+  const accepted = event(10, 101, true);
+  const paid = event(11, 100, true);
+  const detail = {
+    id: uuid(20), merchantTransactionId: attempt().merchant_ref, type: 'Charge', operation: 'ONE_TIME_PAYMENT',
+    amount: 123.45, currency: 'AOA', status: 'Success', paymentMethod: 'REF',
+    reference: { referenceNumber: '123456789', entity: '00348', dueDate: '2026-12-31T23:59:59' },
+    transactionEvents: [paid, accepted],
+  };
+  const sandbox = new SandboxAppyPay(config(), async url => url === SANDBOX_TOKEN
+    ? tokenResponse() : response({ payment: detail }));
+  const charge = await sandbox.get(detail.id);
+  assert.equal(charge.state, 'confirmed');
+  assert.equal(charge.reference, '123456789');
+  assert.equal(charge.dueAt, null);
+  verifyCharge(charge, attempt({ method: 'REF', phone: null }), detail.id, config().merchant);
+
+  const state = patch => normalizeCharge({ payment: { ...detail, ...patch } }).state;
+  assert.equal(state({ status: 'Pending', transactionEvents: [accepted] }), 'pending');
+  assert.equal(state({ transactionEvents: [accepted] }), 'review');
+  assert.equal(state({ status: 'Pending' }), 'review');
+  assert.equal(state({ transactionEvents: [{ ...paid, transactionId: uuid(21) }] }), 'review');
+  assert.equal(state({ transactionEvents: [event(12, 100, true, 'GPO')] }), 'review');
+  assert.equal(state({ transactionEvents: [paid, event(12, 216, false)] }), 'review');
+  assert.equal(state({ status: 'Failed', paymentMethod: 'GPO', transactionEvents: [event(12, 216, false, 'GPO')] }), 'failed');
+});
+
 test('financial evidence must match every stored identity, currency, channel and amount', () => {
   const a = attempt({ provider_charge_id: uuid(20) });
   const good = normalizeCharge(chargePayload());

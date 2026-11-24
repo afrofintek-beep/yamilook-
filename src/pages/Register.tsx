@@ -79,8 +79,12 @@ function InvitationEntry({ code, next }: { code: string; next: string }) {
 }
 
 export default function Register() {
-  const { search } = useLocation();
+  const { search, hash } = useLocation();
+  if (new URLSearchParams(hash.replace(/^#/, '')).has('trusted')) {
+    return <Navigate to={'/convite-confianca' + search + hash} replace />;
+  }
   const code = new URLSearchParams(search).get('ref') ?? '';
   const next = `/onboarding${search}`;
-  return /^[\da-f]{16}$/i.test(code) ? <InvitationEntry key={code} code={code} next={next} /> : <Navigate to={next} replace />;
+  const business = new URLSearchParams(search).get('next') === '/meus-negocios?abrir=1';
+  return (business && /^[a-z0-9]{4,16}$/i.test(code)) || /^(?:[\da-f]{16}|[a-z0-9]{4}-[a-z0-9]{4})$/i.test(code) ? <InvitationEntry key={code} code={code} next={next} /> : <Navigate to={next} replace />;
 }

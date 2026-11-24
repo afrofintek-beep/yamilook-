@@ -1,14 +1,15 @@
 import { isRecentlyOnline } from '@/lib/online-presence';
 import { usePresenceClock } from '@/hooks/usePresenceClock';
+import { uiText } from '@/i18n/ui-copy';
 import { isToday, isYesterday } from 'date-fns';
 import { formatDistanceToNow, format } from '@/i18n/ui-date';
 import { pt } from 'date-fns/locale';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Users, Image, Mic, Pin, Film, FileText } from 'lucide-react';
+import { Users, Image, Mic, Pin, Film, FileText, Phone, Video } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-interface ConversationItemProps {
+export interface ConversationItemProps {
   conversation: {
     id: string;
     type: string;
@@ -31,6 +32,7 @@ interface ConversationItemProps {
       message_type: string;
       sender_id: string;
       created_at: string;
+      latest_reaction?: { created_at: string; user_id: string } | null;
       is_deleted?: boolean;
     };
     unread_count?: number;
@@ -38,6 +40,8 @@ interface ConversationItemProps {
   };
   currentUserId: string;
   onClick: () => void;
+  onOpenProfile?: (userId: string) => void;
+  onStartCall?: (userId: string, type: 'voice' | 'video', conversationId: string, displayName: string) => void;
   isActive?: boolean;
 }
 
@@ -64,6 +68,8 @@ export function ConversationItem({
   conversation,
   currentUserId,
   onClick,
+  onOpenProfile,
+  onStartCall,
   isActive,
 }: ConversationItemProps) {
   const { t } = useTranslation();
@@ -72,6 +78,7 @@ export function ConversationItem({
   )?.profile;
 
   const isGroup = conversation.type === 'group';
+  const contactId = currentUserId && conversation.type === 'direct' ? otherParticipant?.id : undefined;
   const displayName = isGroup
     ? conversation.name || 'Group Chat'
     : otherParticipant?.display_name || 'Unknown';
@@ -91,6 +98,13 @@ export function ConversationItem({
       return { text: 'Sem mensagens', icon: null, isEmpty: true };
     }
     
+    const reaction = conversation.last_message.latest_reaction;
+    if (reaction) {
+      const text = reaction.user_id === currentUserId
+        ? t('chat.inboxOwnReaction', { defaultValue: 'Reagiste a uma mensagem' })
+        : t('chat.inboxReaction', { defaultValue: 'Reagiu a uma mensagem' });
+      return { text, icon: null, isEmpty: false };
+    }
     if (conversation.last_message.is_deleted) return { text: 'Mensagem eliminada', icon: null, isEmpty: true };
     const isOwnMessage = conversation.last_message.sender_id === currentUserId;
     const prefix = isOwnMessage ? 'Tu: ' : '';
@@ -116,88 +130,113 @@ export function ConversationItem({
   const hasUnread = (conversation.unread_count || 0) > 0;
   const isPinned = conversation.is_pinned;
 
-  return (
-    <button
-      onClick={onClick}
-      className={`w-full min-w-0 max-w-full overflow-hidden flex items-center gap-3.5 px-4 py-3 transition-all duration-150 text-left group ${
-        isActive
-          ? 'bg-primary/5'
-          : hasUnread
-            ? 'bg-card hover:bg-card/80'
-            : 'hover:bg-card/60'
-      }`}
-    >
-      {/* Avatar with online indicator */}
-      <div className="relative flex-shrink-0">
-        <Avatar className={`w-12 h-12 transition-all ${hasUnread ? 'ring-2 ring-primary/30' : ''}`}>
-          <AvatarImage src={avatarUrl || ''} className="object-cover" />
-          <AvatarFallback
-            className={`text-sm font-semibold ${
-              isGroup 
-                ? 'bg-secondary text-foreground' 
-                : 'bg-secondary text-foreground'
-            }`}
-          >
-            {isGroup ? <Users className="w-5 h-5 text-muted-foreground" /> : initials}
-          </AvatarFallback>
-        </Avatar>
-        {isOnline && (
-          <span aria-hidden="true" className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-success rounded-full border-[2.5px] border-background" />
-        )}
-      </div>
+  const avatar = (
+    <div className="relative shrink-0">
+      <Avatar className={`w-12 h-12 transition-all ${hasUnread ? 'ring-2 ring-primary/30' : ''}`}>
+        <AvatarImage src={avatarUrl || ''} className="object-cover" />
+        <AvatarFallback className="text-sm font-semibold bg-secondary text-foreground">
+          {isGroup ? <Users className="w-5 h-5 text-muted-foreground" /> : initials}
+        </AvatarFallback>
+      </Avatar>
+      {isOnline && (
+        <span aria-hidden="true" className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-success rounded-full border-[2.5px] border-background" />
+      )}
+    </div>
+  );
+  const profileAction = contactId && onOpenProfile;
 
-      {/* Content */}
-      <div className="flex-1 min-w-0">
-        {/* Top row: Name + Time */}
-        <div className="flex items-center justify-between gap-2 mb-0.5">
-          <div className="flex items-center gap-1.5 min-w-0 flex-1">
-            <span className={`text-[13px] truncate ${hasUnread ? 'font-bold text-foreground' : 'font-medium text-foreground/90'}`}>
-              {displayName}
-            </span>
-            {isOnline && (
-              <span className="shrink-0 rounded-full bg-success/10 px-1.5 py-0.5 text-[11px] font-semibold text-success">
-                {t('chat.online')}
+  return (
+    <div className={`flex w-full min-w-0 max-w-full items-center transition-colors ${
+      isActive ? 'bg-primary/5' : hasUnread ? 'bg-card hover:bg-card/80' : 'hover:bg-card/60'
+    }`}>
+      {contactId && profileAction && (
+        <button
+          type="button"
+          className="shrink-0 py-3 pl-4 pr-3.5"
+          aria-label={uiText("Ver perfil de {{value1}}", { value1: displayName })}
+          onClick={() => profileAction(contactId)}
+        >
+          {avatar}
+        </button>
+      )}
+      <button
+        type="button"
+        onClick={onClick}
+        className={`flex min-h-[72px] min-w-0 flex-1 items-center gap-3.5 py-3 pr-4 text-left ${profileAction ? '' : 'pl-4'}`}
+      >
+        {!profileAction && avatar}
+        <div className="flex-1 min-w-0">
+          {/* Top row: Name + Time */}
+          <div className="flex items-center justify-between gap-2 mb-0.5">
+            <div className="flex items-center gap-1.5 min-w-0 flex-1">
+              <span className={`text-[13px] truncate ${hasUnread ? 'font-bold text-foreground' : 'font-medium text-foreground/90'}`}>
+                {displayName}
+              </span>
+              {isOnline && (
+                <span className={`shrink-0 rounded-full bg-success/10 px-1.5 py-0.5 text-[11px] font-semibold text-success ${profileAction ? 'sr-only sm:not-sr-only' : ''}`}>
+                  {t('chat.online')}
+                </span>
+              )}
+              {isPinned && (
+                <Pin className="h-3 w-3 text-muted-foreground/40 shrink-0 rotate-45" />
+              )}
+            </div>
+            {conversation.last_message && (
+              <span
+                className={`text-[11px] flex-shrink-0 tabular-nums ${
+                  hasUnread
+                    ? 'text-primary font-semibold'
+                    : 'text-muted-foreground/60'
+                }`}
+              >
+                {formatMessageTime(conversation.last_message.latest_reaction?.created_at ?? conversation.last_message.created_at)}
               </span>
             )}
-            {isPinned && (
-              <Pin className="h-3 w-3 text-muted-foreground/40 shrink-0 rotate-45" />
+          </div>
+
+          {/* Bottom row: Message preview + Badge */}
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center flex-1 min-w-0">
+              {messagePreview.icon}
+              <p className={`text-[12px] truncate leading-relaxed ${
+                messagePreview.isEmpty
+                  ? 'italic text-muted-foreground/40'
+                  : hasUnread
+                    ? 'text-foreground/70 font-medium'
+                    : 'text-muted-foreground/60'
+              }`}>
+                {messagePreview.text}
+              </p>
+            </div>
+
+            {hasUnread && (
+              <Badge className="min-w-[20px] h-5 px-1.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center border-0">
+                {conversation.unread_count! > 99 ? '99+' : conversation.unread_count}
+              </Badge>
             )}
           </div>
-          {conversation.last_message && (
-            <span
-              className={`text-[11px] flex-shrink-0 tabular-nums ${
-                hasUnread
-                  ? 'text-primary font-semibold'
-                  : 'text-muted-foreground/60'
-              }`}
-            >
-              {formatMessageTime(conversation.last_message.created_at)}
-            </span>
-          )}
         </div>
-        
-        {/* Bottom row: Message preview + Badge */}
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center flex-1 min-w-0">
-            {messagePreview.icon}
-            <p className={`text-[12px] truncate leading-relaxed ${
-              messagePreview.isEmpty 
-                ? 'italic text-muted-foreground/40' 
-                : hasUnread 
-                  ? 'text-foreground/70 font-medium' 
-                  : 'text-muted-foreground/60'
-            }`}>
-              {messagePreview.text}
-            </p>
-          </div>
-          
-          {hasUnread && (
-            <Badge className="min-w-[20px] h-5 px-1.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center border-0">
-              {conversation.unread_count! > 99 ? '99+' : conversation.unread_count}
-            </Badge>
-          )}
+      </button>
+      {contactId && onStartCall && (
+        <div className="flex shrink-0 pr-2">
+          <button
+            type="button"
+            className="flex h-11 w-11 items-center justify-center rounded-full text-primary hover:bg-primary/10"
+            aria-label={`${uiText("Chamada de voz")} · ${displayName}`}
+            onClick={() => onStartCall(contactId, 'voice', conversation.id, displayName)}
+          >
+            <Phone className="h-[18px] w-[18px]" aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            className="flex h-11 w-11 items-center justify-center rounded-full text-primary hover:bg-primary/10"
+            aria-label={`${uiText("Videochamada")} · ${displayName}`}
+            onClick={() => onStartCall(contactId, 'video', conversation.id, displayName)}
+          >
+            <Video className="h-[18px] w-[18px]" aria-hidden="true" />
+          </button>
         </div>
-      </div>
-    </button>
+      )}
+    </div>
   );
 }

@@ -6,7 +6,7 @@ Este módulo liga a carteira MASSA ao ambiente de testes da AppyPay para cobran�
 
 - Utilizar apenas uma instalação de testes com autenticação, base de dados e segredos próprios.
 - Manter as chaves, tokens, identificadores comerciais e credenciais de serviço exclusivamente no servidor. Nenhum segredo AppyPay pode usar o prefixo `VITE_`, aparecer num URL, resposta ao browser ou log.
-- GPO e REF requerem aplicações/chaves activas no comerciante de sandbox. A existência de exemplos no email de Julho de 2026 não prova que as credenciais continuem válidas.
+- GPO e REF requerem aplicações/chaves activas no comerciante de sandbox. As credenciais de Julho passaram nos ensaios directos do gateway em 24 de Novembro de 2026.
 - UNITEL Money e SWEG ficam fora deste adaptador até haver confirmação dos contratos técnicos e comerciais descritos abaixo.
 - O crédito de sandbox não representa saldo monetário disponível para levantamento. A activação de produção requer uma integração e aprovação próprias.
 
@@ -86,13 +86,13 @@ Não se deve usar um UUID completo no campo de 15 caracteres nem gerar uma nova 
 
 GPO utiliza `paymentInfo.phoneNumber`. A documentação actual lista números de testes com nove dígitos (`900000000` a `900000003`); o email inicial apresenta o prefixo `244`. A implementação aceita exclusivamente os quatro números de nove dígitos. Se o sandbox provisionado exigir o prefixo, a alteração deve ser validada de forma coerente no frontend, adaptador e base de dados. Números reais são recusados.
 
-REF segue o exemplo provisionado ao comerciante em Julho: criação com geração automática, sem inventar `referenceNumber`, `dueDate` ou `options`. A documentação pública posterior apresenta um `paymentInfo` com referência/vencimento definidos pelo comerciante. O esquema efectivamente habilitado, a geração automática ou pelo comerciante e o fuso horário de `dueDate` carecem de confirmação. Se o gateway rejeitar o pedido, não há fallback automático para outro formato. A entidade e o número mostrados ao utilizador devem resultar de uma resposta validada da cobrança. Datas sem fuso explícito não são usadas para inferir expiração.
+Para a aplicação REF provisionada, o sandbox confirmou a criação com referência automática, sem `paymentInfo`, em 24 de Novembro de 2026. A API devolveu HTTP 202 e código 101 com o número da referência e a entidade. A documentação pública descreve também o formato em que o comerciante fornece a referência. Se o gateway rejeitar um pedido, não há repetição automática com outro formato. A entidade e o número mostrados ao utilizador devem resultar de uma resposta validada da cobrança. Datas sem fuso explícito não são usadas para inferir expiração.
 
 ### Aceitação não é liquidação
 
 A documentação de criação apresenta um exemplo com HTTP 200, `successful: true`, `status: "Success"` e código `101`, cuja mensagem indica apenas aceitação para processamento. O exemplo de pagamento confirmado apresenta código `100`.
 
-Por isso, o estado da interface, HTTP 200, `successful` ou a palavra `Success` isoladamente não permitem creditar uma carteira. A confirmação depende de uma consulta autenticada ao gateway e da correspondência da charge, `merchantTransactionId`, comerciante/ambiente, canal, valor e moeda com o registo interno. Campos contraditórios ou incompletos mantêm a operação por resolver.
+Por isso, o estado da interface, HTTP 200, `successful` ou a palavra `Success` isoladamente não permitem creditar uma carteira. A confirmação depende de uma consulta autenticada ao gateway e da correspondência da charge, `merchantTransactionId`, comerciante/ambiente, canal, valor e moeda com o registo interno. A consulta de detalhe devolve o objecto `payment` com o estado e `transactionEvents` com o código do fornecedor. O adaptador exige que o estado `Success` coincida com o código 100 de um evento da mesma cobrança e do mesmo método. Campos contraditórios ou incompletos mantêm a operação por resolver.
 
 ### Webhooks e reconciliação
 
@@ -126,7 +126,7 @@ O workflow `MASSA AppyPay sandbox boundary` executa estas verificações com Nod
 - A aplicação compilou com sucesso. Mantêm-se os avisos existentes do build sobre imports mistos de traduções e tamanho de bundles.
 - A verificação integral de tipos com Deno local ficou bloqueada pela impossibilidade de obter a dependência externa pela rede deste ambiente. Os módulos de negócio foram verificados separadamente com TypeScript e executados pelos testes Node. A compilação e execução das três funções foram posteriormente verificadas no runtime Supabase isolado, com a integração desligada.
 - PGlite executa os RPCs e transacções reais, mas é uma engine de sessão única. A verificação multissessão foi feita adicionalmente no PostgreSQL do projecto isolado: duas preparações sobrepostas produziram uma única tentativa; duas confirmações que começaram com estado pendente produziram um journal, duas entradas equilibradas e um único crédito. Os PIDs, intervalos e resultados estão em [concurrency-evidence.json](../tests/massa-appypay/fixtures/concurrency-evidence.json).
-- Nenhum destes testes executou OAuth, cobranças, mocks ou callbacks na AppyPay real. A aceitação do contrato pelo sandbox ainda está por validar.
+- Nenhum destes testes executou OAuth, cobranças, mocks ou callbacks na AppyPay real. Os ensaios directos de 24 de Novembro confirmaram OAuth, GPO, REF e a consulta das cobranças no gateway de sandbox. A validação ponta a ponta pelo frontend de ensaio e a entrega de callbacks à função Supabase continuam pendentes.
 
 O [workflow específico da integração](https://github.com/afrofintek-beep/yamilook-/actions/runs/45022597104) passou no commit `ccb8fc789e52af00aac0c9ea3fa89c3cacd50338`. O check global [Mobile controls](https://github.com/afrofintek-beep/yamilook-/actions/runs/45022597042) tem uma falha na partilha do cartão AFROLOC: o fixture não fornece um handle LOCACCESS válido. O [run do commit base exacto](https://github.com/afrofintek-beep/yamilook-/actions/runs/44997929481) apresenta a mesma falha; os ficheiros envolvidos não foram alterados por esta integração.
 

@@ -748,7 +748,7 @@ export default function Settings() {
                 <AlertDialogAction
                   onClick={() => {
                     const body = encodeURIComponent(
-                      `Peço a eliminação permanente da minha conta Yamilook.\n\nUser ID: ${user?.id ?? ''}\nEmail: ${user?.email ?? ''}`,
+                      `Peço a eliminação permanente da minha conta Yamilook.\n\nUser ID: ${user?.id ?? ''}\nUtilizador: ${profile?.username ?? ''}\nEmail: ${profile?.email ?? ''}`,
                     );
                     window.location.href =
                       `mailto:contacto@afrofintek.com?subject=Pedido%20de%20elimina%C3%A7%C3%A3o%20de%20conta&body=${body}`;

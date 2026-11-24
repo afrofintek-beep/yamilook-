@@ -87,6 +87,51 @@ describe('Papos touch and selection', () => {
   });
 });
 
+describe('KOSOLOLA conversation shortcuts', () => {
+  const directConversation = {
+    ...conversation,
+    type: 'direct',
+    participants: [
+      { user_id: 'me' },
+      { user_id: 'contact', profile: {
+        id: 'contact', display_name: 'Marta', username: 'marta',
+        avatar_url: null, is_online: false, last_seen: null,
+      } },
+    ],
+  };
+
+  it('opens the profile, starts both kinds of call and keeps the conversation tap independent', () => {
+    const onOpenProfile = vi.fn(), onStartCall = vi.fn(), onOpen = vi.fn();
+    render(<SwipeableConversationItem conversation={directConversation} currentUserId="me"
+      onClick={onOpen} onOpenProfile={onOpenProfile} onStartCall={onStartCall} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Ver perfil de Marta' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Chamada de voz · Marta' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Videochamada · Marta' }));
+    expect(onOpenProfile).toHaveBeenCalledExactlyOnceWith('contact');
+    expect(onStartCall.mock.calls).toEqual([
+      ['contact', 'voice', 'chat', 'Marta'],
+      ['contact', 'video', 'chat', 'Marta'],
+    ]);
+    expect(onOpen).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('button', { name: /Marta Sem mensagens/ }));
+    expect(onOpen).toHaveBeenCalledOnce();
+  });
+
+  it.each([
+    ['group conversations', { ...directConversation, type: 'group' }, false],
+    ['selection mode', directConversation, true],
+    ['missing profiles', { ...directConversation, participants: [{ user_id: 'contact' }] }, false],
+  ] as const)('hides personal shortcuts for %s', (_, row, isSelectionMode) => {
+    render(<SwipeableConversationItem conversation={{ ...row, participants: [...row.participants] }}
+      currentUserId="me" onClick={vi.fn()} onOpenProfile={vi.fn()} onStartCall={vi.fn()}
+      isSelectionMode={isSelectionMode} />);
+
+    expect(screen.queryByRole('button', { name: /Ver perfil|Chamada de voz|Videochamada/ })).not.toBeInTheDocument();
+  });
+});
+
 describe('Papos attachment previews', () => {
   it.each([['video', 'Vídeo'], ['file', 'Documento'], ['voice', 'Mensagem de voz']])('labels a %s instead of showing a raw filename', (type, label) => {
     render(<ConversationItem conversation={{ ...conversation, last_message: {

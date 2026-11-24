@@ -22,3 +22,18 @@ it('only requests device location after the recipient chooses to activate it',as
  await act(async()=>fireEvent.click(screen.getByRole('button',{name:'Activar localização e verificar proximidade'})));expect(watch).toHaveBeenCalledOnce();
  await act(async()=>window.dispatchEvent(new Event('offline')));expect(screen.queryByText('Área aproximada')).toBeNull();cleanup();expect(clear).toHaveBeenCalledWith(1);
 });
+it('checks authorization again before opening Google Maps',async()=>{
+ api.call.mockResolvedValueOnce({status:'proximity',radius:250,area:{lat:-8.9,lon:13.2},hasExternalRoute:true})
+  .mockResolvedValueOnce({status:'denied'});
+ const navigate=vi.spyOn(HTMLAnchorElement.prototype,'click').mockImplementation(()=>{});
+ try {
+  await show();
+  fireEvent.click(screen.getByText('Formas de lá chegar'));
+  await act(async()=>fireEvent.click(screen.getByRole('button',{name:'Google Maps'})));
+  expect(api.call).toHaveBeenLastCalledWith('external_route',{handle:'test'});
+  expect(navigate).not.toHaveBeenCalled();
+  expect(screen.getByRole('alert')).toHaveTextContent('O percurso no Google Maps já não está disponível');
+ } finally {
+  navigate.mockRestore();
+ }
+});

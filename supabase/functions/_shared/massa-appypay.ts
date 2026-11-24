@@ -89,12 +89,29 @@ export interface Charge {
 }
 const shortString = (v: unknown, length = 120): string | null => typeof v === 'string' && v.length > 0 && v.length <= length ? v : null;
 
+function latestChargeStatus(payment: Record<string, unknown>): Record<string, unknown> {
+  if (payment.type !== 'Charge' || payment.operation !== 'ONE_TIME_PAYMENT' || !Array.isArray(payment.transactionEvents)) return {};
+  let latestId = 0;
+  let responseStatus: Record<string, unknown> = {};
+  for (const value of payment.transactionEvents) {
+    const event = object(value);
+    if (event.type !== 'Charge' || event.transactionId !== payment.id ||
+        typeof event.id !== 'number' || !Number.isSafeInteger(event.id) || event.id <= latestId) continue;
+    latestId = event.id;
+    responseStatus = object(event.responseStatus);
+  }
+  return responseStatus.source === payment.paymentMethod ? responseStatus : {};
+}
+
 export function normalizeCharge(value: unknown): Charge {
-  const data = object(value), rs = object(data.responseStatus);
+  const envelope = object(value);
+  const isDetail = Object.hasOwn(envelope, 'payment');
+  const data = isDetail ? object(envelope.payment) : envelope;
+  const rs = isDetail ? latestChargeStatus(data) : object(data.responseStatus);
   const code = (typeof rs.code === 'number' || typeof rs.code === 'string') && /^\d{1,6}$/.test(String(rs.code)) ? Number(rs.code) : null;
-  const status = String(rs.status ?? '').toLowerCase();
+  const status = String((isDetail ? data.status : rs.status) ?? '').toLowerCase();
   let state: Charge['state'] = 'review';
-  if (code === 101) state = 'pending';
+  if (code === 101 && (!isDetail || (rs.successful === true && status === 'pending'))) state = 'pending';
   else if (code === 100 && rs.successful === true && status === 'success') state = 'confirmed';
   else if (code !== null && code !== 100 && rs.successful === false) {
     if (['failed', 'failure', 'rejected', 'declined', 'cancelled', 'canceled'].includes(status)) state = 'failed';
@@ -106,7 +123,7 @@ export function normalizeCharge(value: unknown): Charge {
   const rawDue = shortString(reference.dueDate, 50);
   const dueAt = rawDue && /(?:Z|[+-]\d{2}:\d{2})$/.test(rawDue) && Number.isFinite(Date.parse(rawDue)) ? new Date(rawDue).toISOString() : null;
   return { id: isUuid(data.id) ? data.id : null, merchantRef: isMerchantRef(data.merchantTransactionId) ? data.merchantTransactionId : null,
-    amountMinor, currency: shortString(data.currency, 3), method: shortString(rs.source, 12), state, code,
+    amountMinor, currency: shortString(data.currency, 3), method: shortString(isDetail ? data.paymentMethod : rs.source, 12), state, code,
     reference: shortString(reference.referenceNumber, 30), entity: shortString(reference.entity, 15), dueAt };
 }
 

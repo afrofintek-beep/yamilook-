@@ -1,4 +1,10 @@
 {
+  "Activar bússola": "Batidza kambasi",
+  "Bússola activa": "Kambasi iri kushanda",
+  "Abrir na NJILA": "Vhura muNJILA",
+  "Voltar ao endereço": "Dzokera kukero",
+  "A área indicada é aproximada. A morada exacta depende da proximidade autorizada.": "Nzvimbo inoratidzwa ndeyekufungidzira. Kero chaiyo inoenderana nedaro rekuswedera rakabvumidzwa.",
+  "Não foi possível verificar o acesso. Tenta novamente.": "Hatina kukwanisa kuongorora mvumo yekupinda. Edza zvakare.",
   "* Exemplo ilustrativo do potencial da caixa postal AFROLOC. Não corresponde a uma caixa atribuída, não permite receber correspondência ou encomendas e não constitui atribuição postal oficial.": "* Muenzaniso unoratidza zvinogona kuitwa nebhokisi retsamba reAFROLOC. Harisi bhokisi rakapihwa munhu, harigamuchiri tsamba kana mapasuru uye harisi kugoverwa kweposvo zviri pamutemo.",
   "* Referência associada na AFROLOC. A apresentação na Yamilook é ilustrativa: não activa recepção de correspondência ou encomendas nem comprova atribuição oficial pelos Correios de Angola.": "* Referensi yakabatanidzwa muAFROLOC. Kuratidzwa kwayo muYamilook muenzaniso chete: hakutangi kugamuchirwa kwetsamba kana mapasuru uye hakuratidzi kugoverwa zviri pamutemo neCorreios de Angola.",
   "1 hora": "1 awa",
@@ -248,5 +254,15 @@
   "Retirar {{name}} da selecção": "Bvisa {{name}} pavanhu vakasarudzwa",
   "Autorizar pessoas seleccionadas ({{count}})": "Bvumira vanhu vakasarudzwa ({{count}})",
   "Acessos autorizados: {{count}}. Não foi possível concluir. As pessoas restantes continuam seleccionadas.": "Mvumo dzapihwa: {{count}}. Hazvina kukwanisika kupedza. Vanhu vasara vachiri vakasarudzwa.",
-  "Acessos autorizados: {{count}}.": "Mvumo dzapihwa: {{count}}."
+  "Acessos autorizados: {{count}}.": "Mvumo dzapihwa: {{count}}.",
+  "Ecrã inteiro": "Sikirini yose",
+  "Reduzir mapa": "Deredza mepu",
+  "Formas de lá chegar": "Nzira dzekusvika ikoko",
+  "Usa o Google Maps até à entrada pública. Para chegar à morada, continua na NJILA.": "Shandisa Google Maps kusvika pamusuwo weveruzhinji. Enderera neNJILA kusvika pakero.",
+  "O percurso no Google Maps já não está disponível. Verifica o acesso.": "Nzira yeGoogle Maps haichawanikwi. Tarisa mvumo yako.",
+  "Entrada pública no Google Maps": "Musuwo weveruzhinji paGoogle Maps",
+  "Coordenadas da portaria ou entrada pública": "Makodhineti egedhi kana emusuwo weveruzhinji",
+  "Opcional. Introduz apenas um ponto público que autorizas enviar ao Google Maps.": "Hazvimanikidzwi. Isa chete nzvimbo yeruzhinji yaunobvumira kugovera neGoogle Maps.",
+  "Indica coordenadas válidas para a entrada pública.": "Isa makodhineti akarurama emusuwo weveruzhinji.",
+  "Escolhe uma entrada pública diferente da morada.": "Sarudza musuwo weveruzhinji wakasiyana nekero."
 }

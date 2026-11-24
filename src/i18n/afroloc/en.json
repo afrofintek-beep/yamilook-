@@ -1,4 +1,10 @@
 {
+  "Activar bússola": "Enable compass",
+  "Bússola activa": "Compass active",
+  "Abrir na NJILA": "Open in NJILA",
+  "Voltar ao endereço": "Back to address",
+  "A área indicada é aproximada. A morada exacta depende da proximidade autorizada.": "The area shown is approximate. The exact address depends on the authorised proximity.",
+  "Não foi possível verificar o acesso. Tenta novamente.": "Access could not be verified. Try again.",
   "* Exemplo ilustrativo do potencial da caixa postal AFROLOC. Não corresponde a uma caixa atribuída, não permite receber correspondência ou encomendas e não constitui atribuição postal oficial.": "* Illustrative example of the potential of the AFROLOC P.O. Box. It is not an assigned box, cannot receive mail or parcels and does not constitute an official postal allocation.",
   "* Referência associada na AFROLOC. A apresentação na Yamilook é ilustrativa: não activa recepção de correspondência ou encomendas nem comprova atribuição oficial pelos Correios de Angola.": "* Reference linked in AFROLOC. Its display in Yamilook is illustrative: it does not enable receipt of mail or parcels or confirm an official allocation by Correios de Angola.",
   "1 hora": "1 hour",
@@ -248,5 +254,15 @@
   "Retirar {{name}} da selecção": "Remove {{name}} from selection",
   "Autorizar pessoas seleccionadas ({{count}})": "Authorize selected people ({{count}})",
   "Acessos autorizados: {{count}}. Não foi possível concluir. As pessoas restantes continuam seleccionadas.": "Access granted: {{count}}. Could not finish. The remaining people are still selected.",
-  "Acessos autorizados: {{count}}.": "Access granted: {{count}}."
+  "Acessos autorizados: {{count}}.": "Access granted: {{count}}.",
+  "Ecrã inteiro": "Full screen",
+  "Reduzir mapa": "Reduce map",
+  "Formas de lá chegar": "Ways to get there",
+  "Usa o Google Maps até à entrada pública. Para chegar à morada, continua na NJILA.": "Use Google Maps to reach the public entrance. Continue in NJILA to reach the address.",
+  "O percurso no Google Maps já não está disponível. Verifica o acesso.": "The Google Maps route is no longer available. Check your access.",
+  "Entrada pública no Google Maps": "Public entrance on Google Maps",
+  "Coordenadas da portaria ou entrada pública": "Coordinates of the gate or public entrance",
+  "Opcional. Introduz apenas um ponto público que autorizas enviar ao Google Maps.": "Optional. Enter only a public point you authorize sharing with Google Maps.",
+  "Indica coordenadas válidas para a entrada pública.": "Enter valid coordinates for the public entrance.",
+  "Escolhe uma entrada pública diferente da morada.": "Choose a public entrance separate from the address."
 }

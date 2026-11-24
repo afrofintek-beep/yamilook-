@@ -73,6 +73,115 @@ verify_jwt = false
 [functions.register-known-contact]
 verify_jwt = false
 
+# Public bearer invitations/login/recovery; admin actions validate getUser and live session/role.
+[functions.trusted-invitations]
+verify_jwt = false
+
+# Registration email templates. See the localized callback in ResumeRegistration.tsx.
+[auth.email.template.magic_link]
+subject = '''
+{{- $language := "" -}}
+{{- if eq $.RedirectTo (printf "%s/?lang=pt" $.SiteURL) (printf "%s?lang=pt" $.SiteURL) "https://www.yamilook.com/?lang=pt" "https://yamilook.com/?lang=pt" -}}{{- $language = "pt" -}}
+{{- else if eq $.RedirectTo (printf "%s/?lang=en" $.SiteURL) (printf "%s?lang=en" $.SiteURL) "https://www.yamilook.com/?lang=en" "https://yamilook.com/?lang=en" -}}{{- $language = "en" -}}
+{{- else if eq $.RedirectTo (printf "%s/?lang=fr" $.SiteURL) (printf "%s?lang=fr" $.SiteURL) "https://www.yamilook.com/?lang=fr" "https://yamilook.com/?lang=fr" -}}{{- $language = "fr" -}}
+{{- else if eq $.RedirectTo (printf "%s/?lang=ar" $.SiteURL) (printf "%s?lang=ar" $.SiteURL) "https://www.yamilook.com/?lang=ar" "https://yamilook.com/?lang=ar" -}}{{- $language = "ar" -}}
+{{- else if eq $.RedirectTo (printf "%s/?lang=am" $.SiteURL) (printf "%s?lang=am" $.SiteURL) "https://www.yamilook.com/?lang=am" "https://yamilook.com/?lang=am" -}}{{- $language = "am" -}}
+{{- else if eq $.RedirectTo (printf "%s/?lang=sw" $.SiteURL) (printf "%s?lang=sw" $.SiteURL) "https://www.yamilook.com/?lang=sw" "https://yamilook.com/?lang=sw" -}}{{- $language = "sw" -}}
+{{- else if eq $.RedirectTo (printf "%s/?lang=ln" $.SiteURL) (printf "%s?lang=ln" $.SiteURL) "https://www.yamilook.com/?lang=ln" "https://yamilook.com/?lang=ln" -}}{{- $language = "ln" -}}
+{{- else if eq $.RedirectTo (printf "%s/?lang=yo" $.SiteURL) (printf "%s?lang=yo" $.SiteURL) "https://www.yamilook.com/?lang=yo" "https://yamilook.com/?lang=yo" -}}{{- $language = "yo" -}}
+{{- else if eq $.RedirectTo (printf "%s/?lang=sn" $.SiteURL) (printf "%s?lang=sn" $.SiteURL) "https://www.yamilook.com/?lang=sn" "https://yamilook.com/?lang=sn" -}}{{- $language = "sn" -}}
+{{- else if eq $.RedirectTo (printf "%s/?lang=zu" $.SiteURL) (printf "%s?lang=zu" $.SiteURL) "https://www.yamilook.com/?lang=zu" "https://yamilook.com/?lang=zu" -}}{{- $language = "zu" -}}
+{{- end -}}
+{{- if eq $language "pt" -}}
+Retome a sua inscrição na Yamilook
+{{- else if eq $language "en" -}}
+Resume your Yamilook registration
+{{- else if eq $language "fr" -}}
+Reprenez votre inscription sur Yamilook
+{{- else if eq $language "ar" -}}
+تابع تسجيلك في Yamilook
+{{- else if eq $language "am" -}}
+በYamilook ምዝገባዎን ይቀጥሉ
+{{- else if eq $language "sw" -}}
+Endelea na usajili wako wa Yamilook
+{{- else if eq $language "ln" -}}
+Kobá komikomisa na Yamilook
+{{- else if eq $language "yo" -}}
+Tẹ̀síwájú pẹ̀lú ìforúkọsílẹ̀ rẹ lórí Yamilook
+{{- else if eq $language "sn" -}}
+Enderera mberi nekunyoresa kwako paYamilook
+{{- else if eq $language "zu" -}}
+Qhubeka nokubhalisa kwakho ku-Yamilook
+{{- else -}}
+Your sign-in link
+{{- end -}}
+'''
+content_path = "./supabase/templates/magic-link.html"
+
+[auth.email.template.confirmation]
+subject = '''
+{{- $language := "" -}}
+{{- if eq $.RedirectTo (printf "%s/?lang=pt" $.SiteURL) (printf "%s?lang=pt" $.SiteURL) "https://www.yamilook.com/?lang=pt" "https://yamilook.com/?lang=pt" -}}{{- $language = "pt" -}}
+{{- else if eq $.RedirectTo (printf "%s/?lang=en" $.SiteURL) (printf "%s?lang=en" $.SiteURL) "https://www.yamilook.com/?lang=en" "https://yamilook.com/?lang=en" -}}{{- $language = "en" -}}
+{{- else if eq $.RedirectTo (printf "%s/?lang=fr" $.SiteURL) (printf "%s?lang=fr" $.SiteURL) "https://www.yamilook.com/?lang=fr" "https://yamilook.com/?lang=fr" -}}{{- $language = "fr" -}}
+{{- else if eq $.RedirectTo (printf "%s/?lang=ar" $.SiteURL) (printf "%s?lang=ar" $.SiteURL) "https://www.yamilook.com/?lang=ar" "https://yamilook.com/?lang=ar" -}}{{- $language = "ar" -}}
+{{- else if eq $.RedirectTo (printf "%s/?lang=am" $.SiteURL) (printf "%s?lang=am" $.SiteURL) "https://www.yamilook.com/?lang=am" "https://yamilook.com/?lang=am" -}}{{- $language = "am" -}}
+{{- else if eq $.RedirectTo (printf "%s/?lang=sw" $.SiteURL) (printf "%s?lang=sw" $.SiteURL) "https://www.yamilook.com/?lang=sw" "https://yamilook.com/?lang=sw" -}}{{- $language = "sw" -}}
+{{- else if eq $.RedirectTo (printf "%s/?lang=ln" $.SiteURL) (printf "%s?lang=ln" $.SiteURL) "https://www.yamilook.com/?lang=ln" "https://yamilook.com/?lang=ln" -}}{{- $language = "ln" -}}
+{{- else if eq $.RedirectTo (printf "%s/?lang=yo" $.SiteURL) (printf "%s?lang=yo" $.SiteURL) "https://www.yamilook.com/?lang=yo" "https://yamilook.com/?lang=yo" -}}{{- $language = "yo" -}}
+{{- else if eq $.RedirectTo (printf "%s/?lang=sn" $.SiteURL) (printf "%s?lang=sn" $.SiteURL) "https://www.yamilook.com/?lang=sn" "https://yamilook.com/?lang=sn" -}}{{- $language = "sn" -}}
+{{- else if eq $.RedirectTo (printf "%s/?lang=zu" $.SiteURL) (printf "%s?lang=zu" $.SiteURL) "https://www.yamilook.com/?lang=zu" "https://yamilook.com/?lang=zu" -}}{{- $language = "zu" -}}
+{{- end -}}
+{{- $registrationLanguage := "" -}}
+{{- with .Data -}}{{- $registrationLanguage = printf "%s" (index . "registration_email_language") -}}{{- end -}}
+{{- if eq $language "pt" -}}
+Retome a sua inscrição na Yamilook
+{{- else if eq $language "en" -}}
+Resume your Yamilook registration
+{{- else if eq $language "fr" -}}
+Reprenez votre inscription sur Yamilook
+{{- else if eq $language "ar" -}}
+تابع تسجيلك في Yamilook
+{{- else if eq $language "am" -}}
+በYamilook ምዝገባዎን ይቀጥሉ
+{{- else if eq $language "sw" -}}
+Endelea na usajili wako wa Yamilook
+{{- else if eq $language "ln" -}}
+Kobá komikomisa na Yamilook
+{{- else if eq $language "yo" -}}
+Tẹ̀síwájú pẹ̀lú ìforúkọsílẹ̀ rẹ lórí Yamilook
+{{- else if eq $language "sn" -}}
+Enderera mberi nekunyoresa kwako paYamilook
+{{- else if eq $language "zu" -}}
+Qhubeka nokubhalisa kwakho ku-Yamilook
+{{- else -}}
+{{- if eq $registrationLanguage "pt" -}}
+Confirme o seu email na Yamilook
+{{- else if eq $registrationLanguage "en" -}}
+Confirm your Yamilook email
+{{- else if eq $registrationLanguage "fr" -}}
+Confirmez votre adresse e-mail sur Yamilook
+{{- else if eq $registrationLanguage "ar" -}}
+أكّد بريدك الإلكتروني في Yamilook
+{{- else if eq $registrationLanguage "am" -}}
+የYamilook ኢሜይልዎን ያረጋግጡ
+{{- else if eq $registrationLanguage "sw" -}}
+Thibitisha barua pepe yako ya Yamilook
+{{- else if eq $registrationLanguage "ln" -}}
+Ndimisá adresi ya email na yo na Yamilook
+{{- else if eq $registrationLanguage "yo" -}}
+Jẹ́rìí àdírẹ́sì ímeèlì rẹ lórí Yamilook
+{{- else if eq $registrationLanguage "sn" -}}
+Simbisa email yako paYamilook
+{{- else if eq $registrationLanguage "zu" -}}
+Qinisekisa i-imeyili yakho ku-Yamilook
+{{- else -}}
+Confirm your email address
+{{- end -}}
+{{- end -}}
+'''
+content_path = "./supabase/templates/confirmation.html"
+
 # Disabled without explicit sandbox configuration. User auth is verified in code.
 [functions.massa-appypay]
 verify_jwt = false

@@ -5,6 +5,10 @@ import PaymentPoint from './PaymentPoint';
 
 vi.mock('@/hooks/useMessageNotification', () => ({ useMessageNotification: () => ({ notifyMessage: vi.fn() }) }));
 vi.mock('./WalletAccess', () => ({ WalletAccessManager: () => null }));
+vi.mock('./TransferSecurity', () => ({
+  TransferSecurity: () => null,
+  preferences: vi.fn().mockResolvedValue({ blocked: false }),
+}));
 vi.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: { id: 'owner' } }) }));
 vi.mock('./RequestPayment', () => ({ RequestPayment: () => <p>Criar pedido</p> }));
 vi.mock('./ScanPayment', () => ({ ScanPayment: () => <p>Scanner aberto</p> }));

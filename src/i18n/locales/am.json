@@ -800,7 +800,16 @@
     "codeHint": "ኮዱ አድራሻውን ይለያል። ከማረጋገጫ በፊት የመጠቀም መብቱ ይመረመራል።",
     "confirmLaterHint": "ምዝገባውን ጨርሰው መሳተፍ ይችላሉ። አድራሻዎን በኋላ በመገለጫ → Bandaዬን አረጋግጥ ያረጋግጡ።",
     "residenceNotice": "አሁን በቦታው መገኘት መኖሪያን አያረጋግጥም። የአካባቢ ጥቅሞች የተረጋገጠ Banda ያስፈልጋቸዋል፤ ጉዞ Bandaዎን በራሱ አይቀይርም።",
-    "confirmBanda": "Bandaን አረጋግጥና ቀጥል"
+    "confirmBanda": "Bandaን አረጋግጥና ቀጥል",
+    "setupRequired": "ማዋቀሩን ለማጠናቀቅ የመገለጫ ፎቶ ያክሉና የመጀመሪያ ልጥፍዎን በMuxi ላይ ይለጥፉ።",
+    "firstPost": "በMuxi ላይ የመጀመሪያ ልጥፍ",
+    "firstPostHint": "ራስዎን ያስተዋውቁ ወይም ለማህበረሰቡ ሰላም ይበሉ።",
+    "postAudience": "ይህን ልጥፍ ማን ማየት ይችላል?",
+    "audienceContacts": "እውቂያዎች",
+    "audienceEveryone": "ሁሉም",
+    "audienceMe": "እኔ ብቻ",
+    "publishAndFinish": "ለጥፍና አጠናቅቅ",
+    "photoFormat": "JPG፣ PNG ወይም WebP ፎቶ፣ እስከ 5 MB።"
   },
   "groupCalls": {
     "conferenceLabel": "ስብሰባ",

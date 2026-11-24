@@ -1,7 +1,11 @@
+import { useBusinessRegistrationAccess } from '@/hooks/useBusinessRegistrationAccess';
 import { createSignupOnboarding, recoverSignupOnboarding, resumeOnboardingStep } from '@/lib/signup-onboarding';
 import { legalLabel } from '@/i18n/legal-labels';
 import { onboardingImage } from '@/components/auth/onboarding-images';
 import { EntryLanguageSelector } from '@/components/auth/EntryLanguageSelector';
+import { businessDates } from '@/lib/business-dates';
+import { businessCopy } from '@/lib/business-entry';
+import { trustedCopy } from '@/features/trusted-invites/copy';
 import {afrolocReturn} from '@/features/locaccess/return-path';
 import { ResidenceForm } from '@/components/residence/ResidenceForm';
 import { submitResidence, validResidencePlan, type ResidencePlan } from '@/lib/residence';
@@ -94,6 +98,8 @@ export default function Onboarding() {
   const returnToCommunity = afrolocReturn(search);
   const { t, i18n } = useTranslation();
 
+  const access = useBusinessRegistrationAccess(returnToCommunity === '/meus-negocios?abrir=1');
+  const registeringOwner = access.data && returnToCommunity === '/meus-negocios?abrir=1';
   const imageLanguage = i18n.resolvedLanguage || i18n.language;
 
   // Track whether the user just completed onboarding in this session
@@ -170,19 +176,20 @@ export default function Onboarding() {
       ? recoverSignupOnboarding(user.user_metadata?.onboarding_draft, user.email) : null;
     const draft = localDraft && (!remoteDraft || localDraft.savedAt >= remoteDraft.savedAt) ? localDraft : remoteDraft;
     const birthday = profile?.birthday?.split('-');
+    const useDraftBirthday = draft && (draft.birthDay && draft.birthMonth && draft.birthYear || !birthday);
     setCurrentStep(user ? resumeOnboardingStep(draft, profile) : draft?.currentStep ?? 0);
     setDisplayName(draft?.displayName ?? profile?.display_name ?? '');
     setUsername(draft?.username ?? profile?.username?.trim() ?? '');
     setEmail(user?.email ?? draft?.email ?? '');
     setPassword('');
-    setAccessCode(draft?.inviteCode || invite);
+    setAccessCode(new URLSearchParams(search).get('ref') || draft?.inviteCode || invite);
     setSelectedGender(draft?.gender ?? profile?.gender ?? null);
-    setBirthDay(draft?.birthDay ?? birthday?.[2] ?? '');
-    setBirthMonth(draft?.birthMonth ?? birthday?.[1] ?? '');
-    setBirthYear(draft?.birthYear ?? birthday?.[0] ?? '');
+    setBirthDay(useDraftBirthday ? draft.birthDay : birthday?.[2] ?? '');
+    setBirthMonth(useDraftBirthday ? draft.birthMonth : birthday?.[1] ?? '');
+    setBirthYear(useDraftBirthday ? draft.birthYear : birthday?.[0] ?? '');
     setSelectedCountry(draft?.country ?? profile?.country_code ?? 'AO');
-    setSelectedCity(draft?.city ?? profile?.city ?? '');
-    setSelectedNeighborhood(draft?.neighborhood ?? profile?.neighborhood ?? '');
+    setSelectedCity(draft?.city || profile?.city || '');
+    setSelectedNeighborhood(draft?.neighborhood || profile?.neighborhood || '');
     setCustomNeighborhood(draft?.customNeighborhood ?? '');
     setBio(draft?.bio ?? profile?.bio ?? '');
     setUsernameAvailable(null);
@@ -249,7 +256,13 @@ export default function Onboarding() {
 
   const nextStep = () => {
     if (currentStep < steps.length - 1) {
-      setCurrentStep(currentStep + 1);
+      if (isAuthenticated && currentStep === 2) {
+        setCurrentStep(7);
+      } else if (isAuthenticated && currentStep === 0 && birthDay && birthMonth && birthYear) {
+        setCurrentStep(2);
+      } else {
+        setCurrentStep(currentStep + 1);
+      }
     }
   };
 
@@ -559,8 +572,8 @@ export default function Onboarding() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
-              <h2 className="text-2xl font-bold mb-2 text-foreground">{t("onboardingFlow.birthday")}</h2>
-              <p className="text-muted-foreground mb-6 max-w-sm mx-auto text-sm">{t("onboardingFlow.birthdayHint")}</p>
+              <h2 className="text-2xl font-bold mb-2 text-foreground">{registeringOwner ? businessDates(i18n.language).ownerBirthday : t("onboardingFlow.birthday")}</h2>
+              {!registeringOwner && <p className="text-muted-foreground mb-6 max-w-sm mx-auto text-sm">{t("onboardingFlow.birthdayHint")}</p>}
             </motion.div>
 
             <div className="flex gap-2 max-w-xs mx-auto mb-6">
@@ -958,7 +971,7 @@ export default function Onboarding() {
           return (
             <div className="space-y-5 px-4 max-w-sm mx-auto">
               <h2 className="text-2xl font-bold">{t("onboardingFlow.finish")}</h2>
-              <p>{t('onboardingFlow.name')}: {profile?.display_name || user?.email}</p>
+              <p>{t('onboardingFlow.name')}: {profile?.display_name || user?.user_metadata?.display_name || profile?.username}</p>
               <p>{t("onboardingFlow.setupRequired")}</p>
               <label className="block space-y-2">
                 <span>{t('onboardingFlow.photo')}</span>
@@ -1017,6 +1030,7 @@ export default function Onboarding() {
                   aria-describedby="onboarding-invite-help"
                 />
                 <p id="onboarding-invite-help" className="text-xs text-muted-foreground mt-2">{t("onboardingFlow.inviteHint")}</p>
+                {!accessCode && <Link to="/convite-confianca" className="mt-2 inline-block text-sm text-primary underline">{trustedCopy(imageLanguage).useTrusted}</Link>}
               </div>
               {/* Display Name */}
               <div>
@@ -1180,6 +1194,7 @@ export default function Onboarding() {
 
   return (
     <div dir={i18n.dir()} className="min-h-screen flex flex-col bg-background overflow-x-hidden">
+      {registeringOwner && <h1 className="text-center font-semibold py-2">{businessCopy(i18n.language).owner}</h1>}
       {deadline && !isAuthenticated && <p role="status" className="p-3 text-center">
         A tua vaga está reservada até às {new Date(deadline).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}. Se o prazo terminar, volta a abrir o convite.
       </p>}

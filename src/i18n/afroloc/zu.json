@@ -1,4 +1,10 @@
 {
+  "Activar bússola": "Vula ikhampasi",
+  "Bússola activa": "Ikhampasi iyasebenza",
+  "Abrir na NJILA": "Vula ku-NJILA",
+  "Voltar ao endereço": "Buyela ekhelini",
+  "A área indicada é aproximada. A morada exacta depende da proximidade autorizada.": "Indawo ebonisiwe iyisilinganiso. Ikheli eliqondile lincike ebangeni lokusondela elivunyelwe.",
+  "Não foi possível verificar o acesso. Tenta novamente.": "Ayikwazanga ukuqinisekisa ukufinyelela. Zama futhi.",
   "* Exemplo ilustrativo do potencial da caixa postal AFROLOC. Não corresponde a uma caixa atribuída, não permite receber correspondência ou encomendas e não constitui atribuição postal oficial.": "* Isibonelo esibonisa amandla ebhokisi leposi le-AFROLOC. Akulona ibhokisi elabelwe umuntu, alikwazi ukwamukela izincwadi noma amaphasela futhi akusona isabelo seposi esisemthethweni.",
   "* Referência associada na AFROLOC. A apresentação na Yamilook é ilustrativa: não activa recepção de correspondência ou encomendas nem comprova atribuição oficial pelos Correios de Angola.": "* Isikhombo esixhunywe ku-AFROLOC. Ukuboniswa kwaso ku-Yamilook kuyisibonelo: akuvuli ukwamukelwa kwezincwadi noma amaphasela futhi akuqinisekisi isabelo esisemthethweni se-Correios de Angola.",
   "1 hora": "ihora elingu-1",
@@ -248,5 +254,15 @@
   "Retirar {{name}} da selecção": "Susa u-{{name}} kwabakhethiwe",
   "Autorizar pessoas seleccionadas ({{count}})": "Gunyaza abantu abakhethiwe ({{count}})",
   "Acessos autorizados: {{count}}. Não foi possível concluir. As pessoas restantes continuam seleccionadas.": "Izimvume ezinikeziwe: {{count}}. Akuqedwanga. Abantu abasele basakhethiwe.",
-  "Acessos autorizados: {{count}}.": "Izimvume ezinikeziwe: {{count}}."
+  "Acessos autorizados: {{count}}.": "Izimvume ezinikeziwe: {{count}}.",
+  "Ecrã inteiro": "Isikrini esigcwele",
+  "Reduzir mapa": "Nciphisa imephu",
+  "Formas de lá chegar": "Izindlela zokufika",
+  "Usa o Google Maps até à entrada pública. Para chegar à morada, continua na NJILA.": "Sebenzisa i-Google Maps uze ufike emnyango womphakathi. Qhubeka nge-NJILA ukuze ufike ekhelini.",
+  "O percurso no Google Maps já não está disponível. Verifica o acesso.": "Umzila we-Google Maps awusatholakali. Hlola imvume yakho yokufinyelela.",
+  "Entrada pública no Google Maps": "Umnyango womphakathi ku-Google Maps",
+  "Coordenadas da portaria ou entrada pública": "Izixhumanisi zesango noma zomnyango womphakathi",
+  "Opcional. Introduz apenas um ponto público que autorizas enviar ao Google Maps.": "Ongakukhetha. Faka kuphela indawo yomphakathi ovumela ukuthi yabelwane ne-Google Maps.",
+  "Indica coordenadas válidas para a entrada pública.": "Faka izixhumanisi ezivumelekile zomnyango womphakathi.",
+  "Escolhe uma entrada pública diferente da morada.": "Khetha umnyango womphakathi ohlukile ekhelini."
 }

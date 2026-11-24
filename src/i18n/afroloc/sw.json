@@ -1,4 +1,10 @@
 {
+  "Activar bússola": "Washa dira",
+  "Bússola activa": "Dira imewashwa",
+  "Abrir na NJILA": "Fungua kwenye NJILA",
+  "Voltar ao endereço": "Rudi kwenye anwani",
+  "A área indicada é aproximada. A morada exacta depende da proximidade autorizada.": "Eneo lililoonyeshwa ni la kukadiria. Anwani kamili inategemea umbali wa ukaribu ulioruhusiwa.",
+  "Não foi possível verificar o acesso. Tenta novamente.": "Ufikiaji haukuweza kuthibitishwa. Jaribu tena.",
   "* Exemplo ilustrativo do potencial da caixa postal AFROLOC. Não corresponde a uma caixa atribuída, não permite receber correspondência ou encomendas e não constitui atribuição postal oficial.": "* Mfano unaoonyesha uwezo wa sanduku la posta la AFROLOC. Si sanduku lililogawiwa, haliwezi kupokea barua au vifurushi na si ugawaji rasmi wa posta.",
   "* Referência associada na AFROLOC. A apresentação na Yamilook é ilustrativa: não activa recepção de correspondência ou encomendas nem comprova atribuição oficial pelos Correios de Angola.": "* Rejeleo lililounganishwa katika AFROLOC. Kuonyeshwa kwake katika Yamilook ni kwa mfano tu: hakuwezeshi kupokea barua au vifurushi wala kuthibitisha ugawaji rasmi wa Correios de Angola.",
   "1 hora": "Saa 1",
@@ -248,5 +254,15 @@
   "Retirar {{name}} da selecção": "Ondoa {{name}} kwenye chaguo",
   "Autorizar pessoas seleccionadas ({{count}})": "Ruhusu watu waliochaguliwa ({{count}})",
   "Acessos autorizados: {{count}}. Não foi possível concluir. As pessoas restantes continuam seleccionadas.": "Ruhusa zilizotolewa: {{count}}. Imeshindikana kumaliza. Watu waliobaki bado wamechaguliwa.",
-  "Acessos autorizados: {{count}}.": "Ruhusa zilizotolewa: {{count}}."
+  "Acessos autorizados: {{count}}.": "Ruhusa zilizotolewa: {{count}}.",
+  "Ecrã inteiro": "Skrini nzima",
+  "Reduzir mapa": "Punguza ramani",
+  "Formas de lá chegar": "Jinsi ya kufika",
+  "Usa o Google Maps até à entrada pública. Para chegar à morada, continua na NJILA.": "Tumia Google Maps kufika kwenye lango la umma. Endelea kwa kutumia NJILA hadi kwenye anwani.",
+  "O percurso no Google Maps já não está disponível. Verifica o acesso.": "Njia kwenye Google Maps haipatikani tena. Thibitisha ruhusa yako ya kufikia.",
+  "Entrada pública no Google Maps": "Lango la umma kwenye Google Maps",
+  "Coordenadas da portaria ou entrada pública": "Kuratibu za lango au kiingilio cha umma",
+  "Opcional. Introduz apenas um ponto público que autorizas enviar ao Google Maps.": "Si lazima. Weka tu eneo la umma ambalo unaruhusu kushirikiwa na Google Maps.",
+  "Indica coordenadas válidas para a entrada pública.": "Weka kuratibu sahihi za kiingilio cha umma.",
+  "Escolhe uma entrada pública diferente da morada.": "Chagua kiingilio cha umma tofauti na anwani."
 }

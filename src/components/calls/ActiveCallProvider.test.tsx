@@ -89,7 +89,7 @@ it('plays rejection feedback once when the recipient declines', async () => {
   mocks.state = { callStatus: 'declined', callId: null, lastError: 'Chamada recusada.' };
   rerender(view());
   expect(mocks.tone).toHaveBeenCalledWith('declined');
-  expect(mocks.toast).toHaveBeenCalledWith({ title: 'Chamada recusada.' });
+  expect(mocks.toast).toHaveBeenCalledWith({ title: 'Recusada' });
   rerender(view());
   expect(mocks.tone.mock.calls.filter(([tone]) => tone === 'declined')).toHaveLength(1);
   vi.unstubAllGlobals();

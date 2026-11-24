@@ -800,7 +800,16 @@
     "codeHint": "يحدد الرمز العنوان. سيُتحقق من حق استخدامه قبل إصدار الشهادة.",
     "confirmLaterHint": "يمكنك إكمال التسجيل والمشاركة. أكد العنوان لاحقًا في الملف الشخصي ← التحقق من Banda الخاصة بي.",
     "residenceNotice": "وجودك الحالي لا يثبت الإقامة. تتطلب المزايا الإقليمية Banda موثّقة؛ ولا يغيّر السفر Banda الخاصة بك تلقائيًا.",
-    "confirmBanda": "تأكيد Banda والمتابعة"
+    "confirmBanda": "تأكيد Banda والمتابعة",
+    "setupRequired": "أضف صورة للملف الشخصي وانشر أول منشور لك على Muxi لإكمال الإعداد.",
+    "firstPost": "أول منشور على Muxi",
+    "firstPostHint": "عرّف بنفسك أو ألقِ التحية على المجتمع.",
+    "postAudience": "من يمكنه رؤية هذا المنشور؟",
+    "audienceContacts": "جهات الاتصال",
+    "audienceEveryone": "الجميع",
+    "audienceMe": "أنا فقط",
+    "publishAndFinish": "نشر وإكمال",
+    "photoFormat": "صورة بصيغة JPG أو PNG أو WebP، بحجم لا يتجاوز 5 MB."
   },
   "groupCalls": {
     "conferenceLabel": "مؤتمر",

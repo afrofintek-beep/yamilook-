@@ -23,6 +23,8 @@ import { toast } from 'sonner';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { SocialLoginButtons } from './SocialLoginButtons';
 import { triggerSuccessConfetti } from '@/lib/confetti';
+import { isValidLoginIdentifier } from '@/lib/trusted-account-login';
+import { trustedAccountCopy } from '@/features/trusted-invites/account-copy';
 
 type LoginFormValues = { email: string; password: string };
 
@@ -34,10 +36,11 @@ const DEV_TEST_ACCOUNTS = [
 ];
 
 export function LoginForm() {
-  useUiLocale();
+  const locale = useUiLocale();
   const { t } = useTranslation();
+  const accountCopy = trustedAccountCopy(locale);
   const loginSchema = z.object({
-    email: z.string().email(t('publicAuth.validEmail')),
+    email: z.string().trim().refine(isValidLoginIdentifier, accountCopy.invalidIdentifier),
     password: z.string().min(6, t('publicAuth.passwordMin', { count: 6 })),
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -63,9 +66,7 @@ export function LoginForm() {
     setShowDevAccounts(false);
   };
 
-  const isEmailValid = (email: string) => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  };
+  const isEmailValid = isValidLoginIdentifier;
 
   const isPasswordValid = (password: string) => {
     return password.length >= 6;
@@ -77,8 +78,10 @@ export function LoginForm() {
       const { error } = await signIn(values.email, values.password);
       if (error) {
         // Handle specific error messages
-        if (error.message.includes('Invalid login credentials')) {
-          toast.error(t('auth.invalidCredentials') || 'Email ou palavra-passe incorretos');
+        if (error.code === 'rate_limited' || error.status === 429) {
+          toast.error(accountCopy.rateLimited);
+        } else if (error.message.includes('Invalid login credentials')) {
+          toast.error(accountCopy.invalidCredentials);
         } else if (error.message.includes('Email not confirmed')) {
           toast.error(t('publicAuth.retry'));
         } else {
@@ -90,7 +93,6 @@ export function LoginForm() {
         navigate(returnToCommunity || '/feed');
       }
     } catch (error) {
-      console.error('Login error:', error);
       toast.error(t('publicAuth.retry'));
     } finally {
       setIsLoading(false);
@@ -122,15 +124,18 @@ export function LoginForm() {
             name="email"
             render={({ field, fieldState }) => (
               <FormItem>
-                <FormLabel>{t('auth.email')}</FormLabel>
+                <FormLabel>{accountCopy.identifier}</FormLabel>
                   <div className={fieldState.error ? "animate-shake" : ""}>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                       <FormControl>
                         <Input
                           {...field}
-                          type="email"
-                          placeholder="nome@yamilook.com"
+                          type="text"
+                          autoComplete="username"
+                          autoCapitalize="none"
+                          spellCheck={false}
+                          placeholder={accountCopy.identifierHint}
                           className={`pl-10 pr-10 h-12 rounded-xl bg-secondary/50 border-0 focus:ring-2 focus:ring-primary ${fieldState.error ? 'ring-2 ring-destructive' : ''} ${!fieldState.error && field.value && isEmailValid(field.value) ? 'ring-2 ring-green-500' : ''}`}
                           disabled={isLoading}
                         />

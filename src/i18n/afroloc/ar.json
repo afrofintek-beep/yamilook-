@@ -1,4 +1,10 @@
 {
+  "Activar bússola": "تفعيل البوصلة",
+  "Bússola activa": "البوصلة مفعّلة",
+  "Abrir na NJILA": "فتح في NJILA",
+  "Voltar ao endereço": "العودة إلى العنوان",
+  "A área indicada é aproximada. A morada exacta depende da proximidade autorizada.": "المنطقة المعروضة تقريبية. يعتمد العنوان الدقيق على نطاق القرب المسموح به.",
+  "Não foi possível verificar o acesso. Tenta novamente.": "تعذّر التحقق من الوصول. حاول مجددًا.",
   "* Exemplo ilustrativo do potencial da caixa postal AFROLOC. Não corresponde a uma caixa atribuída, não permite receber correspondência ou encomendas e não constitui atribuição postal oficial.": "* مثال توضيحي لإمكانات صندوق البريد AFROLOC. لا يمثل صندوقاً مخصصاً، ولا يتيح استلام المراسلات أو الطرود، ولا يُعد تخصيصاً بريدياً رسمياً.",
   "* Referência associada na AFROLOC. A apresentação na Yamilook é ilustrativa: não activa recepção de correspondência ou encomendas nem comprova atribuição oficial pelos Correios de Angola.": "* مرجع مرتبط في AFROLOC. عرضه في Yamilook توضيحي: لا يفعّل استلام المراسلات أو الطرود ولا يثبت تخصيصاً رسمياً من Correios de Angola.",
   "1 hora": "ساعة واحدة",
@@ -248,5 +254,15 @@
   "Retirar {{name}} da selecção": "إزالة {{name}} من الاختيار",
   "Autorizar pessoas seleccionadas ({{count}})": "السماح للأشخاص المحددين ({{count}})",
   "Acessos autorizados: {{count}}. Não foi possível concluir. As pessoas restantes continuam seleccionadas.": "تم منح الوصول: {{count}}. تعذّر إكمال العملية. يظل الأشخاص المتبقون محددين.",
-  "Acessos autorizados: {{count}}.": "تم منح الوصول: {{count}}."
+  "Acessos autorizados: {{count}}.": "تم منح الوصول: {{count}}.",
+  "Ecrã inteiro": "ملء الشاشة",
+  "Reduzir mapa": "تصغير الخريطة",
+  "Formas de lá chegar": "طرق الوصول",
+  "Usa o Google Maps até à entrada pública. Para chegar à morada, continua na NJILA.": "استخدم خرائط Google للوصول إلى المدخل العام، ثم تابع عبر NJILA للوصول إلى العنوان.",
+  "O percurso no Google Maps já não está disponível. Verifica o acesso.": "المسار في خرائط Google لم يعد متاحًا. تحقق من إذن الوصول.",
+  "Entrada pública no Google Maps": "المدخل العام على خرائط Google",
+  "Coordenadas da portaria ou entrada pública": "إحداثيات البوابة أو المدخل العام",
+  "Opcional. Introduz apenas um ponto público que autorizas enviar ao Google Maps.": "اختياري. أدخل فقط موقعًا عامًا تسمح بمشاركته مع خرائط Google.",
+  "Indica coordenadas válidas para a entrada pública.": "أدخل إحداثيات صالحة للمدخل العام.",
+  "Escolhe uma entrada pública diferente da morada.": "اختر مدخلًا عامًا مختلفًا عن العنوان."
 }

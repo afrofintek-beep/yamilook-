@@ -35,7 +35,7 @@ it('signs out locally, clears cached data and displays branded sign-in confirmat
   expect(auth.signOut).toHaveBeenCalledExactlyOnceWith('local');
   expect(client.getQueryData(['private'])).toBeUndefined();
   expect(screen.queryByText('Nome privado')).not.toBeInTheDocument();
-  expect(screen.getByLabelText('Email')).toHaveValue('');
+  expect(screen.getByLabelText('E-mail ou nome de utilizador')).toHaveValue('');
   expect(screen.getByLabelText('Palavra-passe')).toHaveValue('');
   fireEvent.click(screen.getByRole('button',{name:'Voltar no histórico'}));
   await waitFor(()=>expect(screen.getByRole('button',{name:'Entrar na KOSOLOLA'})).toBeInTheDocument());

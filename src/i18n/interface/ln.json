@@ -1,4 +1,5 @@
 {
+  "Pagar": "Futá",
   "Erro ao carregar a página": "Libunga na botiami ya lokasa",
   "Não foi possível apresentar esta página. Tenta novamente ou recarrega a aplicação.": "Lokasa oyo ekoki kolakisa te. Meka lisusu to charger lisusu application.",
   "Tentar novamente": "Komeka lisusu",
@@ -439,7 +440,7 @@
   "Conversa arquivada": "Masolo ya archive",
   "selecionada": "eponami",
   "selecionadas": "eponami",
-  "Visto {{value1}}": "Visa ya {{value1}}",
+  "Visto {{value1}}": "Amonanaki {{value1}}",
   "Media, files & links": "Ba médias, ba fichiers & ba liens",
   "Scheduled messages": "Ba messages oyo esalemi na programme",
   "Mensagens com estrela": "Ba messages oyo ezali na minzoto",
@@ -3503,5 +3504,17 @@
   "Email do promotor (campanha de 10 convites)": "Email ya mobongisi (kampanye ya mabiangi 10)",
   "Convite para {{campaign}}": "Libyangi na {{campaign}}",
   "Recebeste um convite pessoal para te inscreveres na Yamilook.": "Ozwi libyangi mpo na komikomisa na Yamilook.",
-  "Aceitar convite e inscrever-me": "Kondima libyangi mpe komikomisa"
+  "Aceitar convite e inscrever-me": "Kondima libyangi mpe komikomisa",
+  "Aplica-se apenas às mensagens enviadas depois de guardar. O prazo conta a partir do envio; as mensagens anteriores mantêm-se. A opção mínima é 24 horas.": "Etali kaka ba messages oyo okotinda nsima ya kobomba. Ntango ebandaka kotangama ntango message etindami. Ba messages ya liboso ekotikala. Ntango ya mokuse ezali ngonga 24.",
+  "Disappearing messages enabled": "Ba messages oyo elimwaka efungwami",
+  "Disappearing messages disabled": "Ba messages oyo elimwaka ekangami",
+  "A duração não foi confirmada. Tenta novamente.": "Tokoki kondimisa ntango te. Meka lisusu.",
+  "Maximizar vídeo": "Kómisa video monene",
+  "Voltar à conversa": "Zonga na lisolo",
+  "Seguir quem fala": "Landa moto oyo azali koloba",
+  "Destacar {{name}}": "Lakisa {{name}} liboso",
+  "Destacar o meu vídeo": "Lakisa video na ngai liboso",
+  "A falar": "Azali koloba",
+  "Áudio ao vivo": "Mongongo na mbala moko",
+  "Sem ligação": "Boyokani ezali te"
 }

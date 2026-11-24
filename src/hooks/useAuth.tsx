@@ -4,6 +4,9 @@ import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { recoverySession } from '@/lib/recovery-session';
 import { clearListCache } from '@/lib/list-cache';
 import { getYamilookPublicUrl } from '@/lib/public-site';
+import i18n from '@/i18n';
+import { registrationEmailLanguage } from '@/lib/registration-email';
+import { signInWithIdentifier } from '@/lib/trusted-account-login';
 import { clearLegacyPrivateCache } from '@/lib/private-cache';
 import { useState, useEffect, createContext, useContext, ReactNode, useRef, useCallback } from 'react';
 import { User, Session, AuthError, Provider } from '@supabase/supabase-js';
@@ -59,7 +62,7 @@ interface AuthContextType {
   profileError: boolean;
   recoveringPassword: boolean;
   signUp: (email: string, password: string, metadata?: { display_name?: string; username?: string; ref?: string; access_code?: string; onboarding_draft?: SignupOnboarding }) => Promise<{ error: AuthError | null }>;
-  signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
+  signIn: (identifier: string, password: string) => Promise<{ error: AuthError | null }>;
   signInWithSocial: (provider: SocialProvider) => Promise<{ error: AuthError | null }>;
   signOut: (scope?: 'global' | 'local') => Promise<void>;
   updateProfile: (updates: TablesUpdate<'profiles'>) => Promise<{ error: Error | null }>;
@@ -390,21 +393,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       options: {
         emailRedirectTo: getYamilookPublicUrl(afrolocReturn(window.location.search)
           ? `/onboarding?next=${encodeURIComponent(afrolocReturn(window.location.search)!)}` : '/onboarding'),
-        data: metadata,
+        data: { ...metadata, registration_email_language: registrationEmailLanguage(i18n.language) },
       },
     });
     return { error };
   };
 
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-
-    return { error };
-  };
+  const signIn = signInWithIdentifier;
 
   const signInWithSocial = async (provider: SocialProvider) => {
     const { error } = await supabase.auth.signInWithOAuth({

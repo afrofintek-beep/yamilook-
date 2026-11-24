@@ -800,7 +800,16 @@
     "codeHint": "Msimbo hutambulisha anwani. Haki ya kuitumia itathibitishwa kabla ya kutolewa cheti.",
     "confirmLaterHint": "Unaweza kukamilisha usajili na kushiriki. Thibitisha anwani baadaye katika Wasifu → Thibitisha Banda yangu.",
     "residenceNotice": "Kuwepo sasa hakuthibitishi makazi. Manufaa ya eneo yanahitaji Banda iliyothibitishwa; kusafiri hakubadilishi Banda yako kiotomatiki.",
-    "confirmBanda": "Thibitisha Banda na uendelee"
+    "confirmBanda": "Thibitisha Banda na uendelee",
+    "setupRequired": "Ongeza picha ya wasifu na uchapishe chapisho lako la kwanza kwenye Muxi ili kukamilisha usanidi.",
+    "firstPost": "Chapisho la kwanza kwenye Muxi",
+    "firstPostHint": "Jitambulishe au salimia jumuiya.",
+    "postAudience": "Nani anaweza kuona chapisho hili?",
+    "audienceContacts": "Wawasiliani",
+    "audienceEveryone": "Kila mtu",
+    "audienceMe": "Mimi tu",
+    "publishAndFinish": "Chapisha na ukamilishe",
+    "photoFormat": "Picha ya JPG, PNG au WebP, hadi 5 MB."
   },
   "groupCalls": {
     "conferenceLabel": "Mkutano",

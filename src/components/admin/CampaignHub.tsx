@@ -9,16 +9,20 @@ import { FounderInviteAssistant } from './FounderInviteAssistant';
 import { InvitationCampaignAdmin } from './InvitationCampaignAdmin';
 import { SharedRegistrationLinks, type SharedLink } from './SharedRegistrationLinks';
 import { ShareRegistrationInvite } from '../ShareRegistrationInvite';
+import { TrustedInvitesPanel } from './TrustedInvitesPanel';
+import { trustedCopy } from '@/features/trusted-invites/copy';
+import { useLocation } from 'react-router-dom';
 
 const labels = { active: 'Activas', draft: 'Rascunhos', suspended: 'Suspensas', closed: 'Encerradas' };
 const normalise = (text: string) => text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 export function CampaignHub() {
   const locale = useUiLocale();
+  const { hash } = useLocation();
   const [links, setLinks] = useState<SharedLink[]>([]);
   const [campaigns, setCampaigns] = useState<InvitationCampaign[]>([]);
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('');
-  const [panel, setPanel] = useState('');
+  const [panel, setPanel] = useState(() => hash === '#convites-confianca' ? 'trusted' : '');
   const [status, setStatus] = useState('');
   const [loading, setLoading] = useState(true);
   const refresh = useCallback(async () => {
@@ -32,6 +36,12 @@ export function CampaignHub() {
     finally { setLoading(false); }
   }, []);
   useEffect(() => { void refresh(); }, [refresh]);
+  useEffect(() => { if (hash === '#convites-confianca') setPanel('trusted'); }, [hash]);
+  useEffect(() => {
+    if (panel !== 'trusted') return;
+    const frame = requestAnimationFrame(() => document.getElementById('convites-confianca')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+    return () => cancelAnimationFrame(frame);
+  }, [panel]);
   const rows = [
     ...links.map(link => ({ id: link.id, name: link.name, end: link.expires_at, state: link.uses_count >= link.max_uses ? 'closed' : link.status, type: 'Convite colectivo', link, campaign: undefined })),
     ...campaigns.map(campaign => ({ id: campaign.id, name: campaign.name, end: campaign.ends_at, state: campaign.status, type: campaign.promoter_id ? 'Campanha de promotor' : 'Campanha controlada', campaign, link: undefined })),
@@ -43,12 +53,14 @@ export function CampaignHub() {
     <div className="flex flex-wrap gap-2">
       <Button onClick={() => setPanel('create')}>{uiText('Criar campanha')}</Button>
       <Button variant="outline" onClick={() => setPanel('individual')}>{uiText('Criar convite individual')}</Button>
+      <Button variant="outline" onClick={() => setPanel('trusted')}>{trustedCopy(locale).title}</Button>
       <Button variant="ghost" onClick={refresh}>{uiText('Atualizar')}</Button>
     </div>
     {panel === 'create' && <div className="flex gap-2"><Button variant="outline" onClick={() => setPanel('collective')}>{uiText('Convite colectivo')}</Button><Button variant="outline" onClick={() => setPanel('promoter')}>{uiText('Campanha de promotor')}</Button></div>}
     {panel === 'collective' && <CreateLink onCreated={() => {setPanel(''); void refresh();}} />}
     {panel === 'promoter' && <InvitationCampaignAdmin onSaved={refresh} />}
-    {panel === 'individual' && <FounderInviteAssistant />}
+    {panel === 'individual' && <FounderInviteAssistant onOpenTrusted={() => setPanel('trusted')} />}
+    {panel === 'trusted' && <TrustedInvitesPanel />}
     <Input aria-label={uiText('Pesquisar campanhas')} placeholder={uiText('Pesquisar campanhas por nome')} value={query} onChange={e => setQuery(e.target.value)} />
     <select aria-label={uiText('Estado')} value={filter} onChange={e => setFilter(e.target.value)} className="rounded-md border bg-background p-2">
       <option value="">{uiText('Todos os estados')}</option>{Object.entries(labels).map(([key,label]) => <option key={key} value={key}>{uiText(label)}</option>)}

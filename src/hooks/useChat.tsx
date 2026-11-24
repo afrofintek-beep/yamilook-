@@ -281,6 +281,7 @@ export function useConversations() {
     if (userId) {
       channelRef.current = supabase
         .channel(`conversations-updates-${instanceIdRef.current}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'message_reactions' }, () => { void fetchConversations(); })
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'conversation_participants', filter: `user_id=eq.${userId}` }, () => { void fetchConversations(); })
         .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => {
           fetchConversations();

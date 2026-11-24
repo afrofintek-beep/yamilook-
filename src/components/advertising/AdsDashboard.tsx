@@ -1,3 +1,5 @@
+import { Navigate } from 'react-router-dom';
+import { useBusinessRegistrationAccess } from '@/hooks/useBusinessRegistrationAccess';
 import { uiLocale, uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
@@ -48,6 +50,7 @@ interface AdsDashboardProps {
 type StatType = 'credits' | 'ads' | 'impressions' | 'clicks';
 
 export function AdsDashboard({ onBack }: AdsDashboardProps) {
+  const access = useBusinessRegistrationAccess();
   useUiLocale();
   const {
     businessProfile,
@@ -113,6 +116,9 @@ export function AdsDashboard({ onBack }: AdsDashboardProps) {
     const config = variants[status] || { variant: 'outline', label: status };
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
+
+  if (!businessProfile && (loading || access.isLoading)) return <p role="status">…</p>;
+  if (!businessProfile && !access.data) return <Navigate to="/profile" replace />;
 
   // No business profile - show onboarding
   if (!loading && !businessProfile) {

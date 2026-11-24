@@ -37,7 +37,10 @@ export const money = (value: number) => new Intl.NumberFormat('pt-AO', { style: 
 export const orderLink = (id: string) => `${window.location.origin}${window.location.pathname.startsWith("/papos-app/") ? "/papos-app" : ""}/payment-point/${id}`;
 export function parseOrderLink(value: string): string {
   const url = new URL(value);
-  if (url.origin !== window.location.origin) throw new Error('Este QR não pertence à Yamilook.');
+  const publicOrigins = ['https://yamilook.com', 'https://www.yamilook.com'];
+  const walletOrigins = [...publicOrigins, 'https://kosolola.com', 'https://www.kosolola.com'];
+  const acceptsYamilookOrder = walletOrigins.includes(window.location.origin) && publicOrigins.includes(url.origin);
+  if (url.origin !== window.location.origin && !acceptsYamilookOrder) throw new Error('Este QR não pertence à Yamilook.');
   const match = url.pathname.match(/^\/(?:papos-app\/)?payment-point\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\/?$/i);
   if (!match) throw new Error('QR de pagamento inválido.');
   return match[1];

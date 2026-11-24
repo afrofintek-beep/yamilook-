@@ -1,3 +1,4 @@
+import { WalletSessionConfirmation } from './WalletSessionConfirmation';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,14 +21,16 @@ function formatOnBlur(value: string) {
   }
 }
 
-type Preferences = { blocked:boolean; per_transfer:number; per_day:number; keys:string[] };
-async function preferences(blocked?:boolean, transfer?:number, daily?:number) {
+export type Preferences = { blocked:boolean; per_transfer:number; per_day:number; keys:string[] };
+export async function preferences(blocked?:boolean, transfer?:number, daily?:number) {
   const {supabase} = await import('@/integrations/supabase/client');
   const {data,error} = await supabase.rpc('wallet_preferences' as never,{p_blocked:blocked,p_transfer:transfer,p_daily:daily} as never);
   if (error) throw new Error(error.message);
   return data as Preferences;
 }
-export function TransferSecurity() {
+export function TransferSecurity({onChange}:{onChange?:(value:Preferences)=>void}) {
+  const [confirmSession,setConfirmSession] = useState(false);
+  const [pendingToggle,setPendingToggle] = useState(true);
   const [prefs,setPrefs] = useState<Preferences>();
   const [transfer,setTransfer] = useState('');
   const [daily,setDaily] = useState('');
@@ -41,15 +44,24 @@ export function TransferSecurity() {
     if (!prefs) return;
     setBusy(true);
     try {
-      show(toggle ? await preferences(!prefs.blocked) : await preferences(undefined,parseLimit(transfer),parseLimit(daily)));
+      const updated = toggle ? await preferences(!prefs.blocked) : await preferences(undefined,parseLimit(transfer),parseLimit(daily));
+      show(updated);
+      onChange?.(updated);
       setMessage('Definições guardadas.');
-    } catch(e) {setMessage((e as Error).message);}
+    } catch(e) {
+      const error = (e as Error).message;
+      setMessage(error);
+      if (error.includes('segundo factor')) { setPendingToggle(toggle); setConfirmSession(true); }
+    }
     finally {setBusy(false);}
   }
+  if (confirmSession) return <WalletSessionConfirmation inline
+    onClose={() => { setConfirmSession(false); setMessage(''); }}
+    onConfirmed={() => { setConfirmSession(false); void save(pendingToggle); }} />;
   return <section className="space-y-3">
     {prefs && <>
       <p>Saídas de dinheiro {prefs.blocked ? 'bloqueadas' : 'activas'}.</p>
-      <Button disabled={busy} onClick={()=>save(true)}>{prefs.blocked ? 'Desbloquear' : 'Bloquear'} saídas de dinheiro</Button>
+      <Button disabled={busy} onClick={()=>{ if (prefs.blocked) { setPendingToggle(true); setConfirmSession(true); } else void save(true); }}>{prefs.blocked ? 'Desbloquear' : 'Bloquear'} saídas de dinheiro</Button>
       <label className="block">Limite por operação (Kz)<Input inputMode="decimal" value={transfer} onBlur={()=>setTransfer(formatOnBlur(transfer))} onChange={e=>setTransfer(e.target.value)}/></label>
       <label className="block">Limite diário (Kz)<Input inputMode="decimal" value={daily} onBlur={()=>setDaily(formatOnBlur(daily))} onChange={e=>setDaily(e.target.value)}/></label>
       <Button disabled={busy} onClick={()=>save(false)}>Guardar limites</Button>

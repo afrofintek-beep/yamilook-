@@ -2,38 +2,12 @@ import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useCallback, useRef } from 'react';
 import { motion, useMotionValue, useTransform, PanInfo } from 'framer-motion';
 import { Archive, Forward, Copy, Reply, Star, Pin, BellOff } from 'lucide-react';
-import { ConversationItem } from './ConversationItem';
+import { ConversationItem, type ConversationItemProps } from './ConversationItem';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useLongPress } from '@/hooks/useLongPress';
 
-interface SwipeableConversationItemProps {
-  conversation: {
-    id: string;
-    type: string;
-    name: string | null;
-    avatar_url: string | null;
-    participants?: {
-      user_id: string;
-      profile?: {
-        id: string;
-        display_name: string;
-        username: string;
-        avatar_url: string | null;
-        is_online: boolean;
-        last_seen: string | null;
-      };
-    }[];
-    last_message?: {
-      content: string | null;
-      message_type: string;
-      sender_id: string;
-      created_at: string;
-    };
-    unread_count?: number;
-  };
-  currentUserId: string;
-  onClick: () => void;
+interface SwipeableConversationItemProps extends Omit<ConversationItemProps, 'isActive'> {
   isPinned?: boolean;
   isMuted?: boolean;
   isStarred?: boolean;
@@ -57,6 +31,8 @@ export function SwipeableConversationItem({
   conversation,
   currentUserId,
   onClick,
+  onOpenProfile,
+  onStartCall,
   isPinned,
   isMuted,
   isStarred,
@@ -144,7 +120,7 @@ export function SwipeableConversationItem({
     closeActions();
   }, [closeActions]);
 
-  const handleClick = useCallback(() => {
+  const handleRowAction = (action: () => void) => {
     if (wasLongPress() || Date.now() < ignoreClickUntil.current) return;
     if (isSelectionMode && onSelect) {
       onSelect(conversation.id);
@@ -153,9 +129,11 @@ export function SwipeableConversationItem({
     if (isOpen) {
       closeActions();
     } else if (!isDragging.current) {
-      onClick();
+      action();
     }
-  }, [isOpen, closeActions, onClick, isSelectionMode, onSelect, conversation.id, wasLongPress]);
+  };
+
+  const handleClick = () => handleRowAction(onClick);
 
   // In selection mode, render simplified view with checkbox
   if (isSelectionMode) {
@@ -297,6 +275,8 @@ export function SwipeableConversationItem({
           conversation={conversation}
           currentUserId={currentUserId}
           onClick={handleClick}
+          onOpenProfile={onOpenProfile && ((userId) => handleRowAction(() => onOpenProfile(userId)))}
+          onStartCall={onStartCall && ((...args) => handleRowAction(() => onStartCall(...args)))}
         />
       </motion.div>
 

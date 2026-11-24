@@ -1,4 +1,5 @@
 {
+  "Pagar": "Khokha",
   "Erro ao carregar a página": "Iphutha ekulayisheni ikhasi",
   "Não foi possível apresentar esta página. Tenta novamente ou recarrega a aplicação.": "Leli khasi alikwazanga ukuboniswa. Zama futhi noma layisha kabusha uhlelo lokusebenza.",
   "Tentar novamente": "Zama futhi",
@@ -3503,5 +3504,17 @@
   "Email do promotor (campanha de 10 convites)": "I-imeyili yomgqugquzeli (umkhankaso wezimemo eziyi-10)",
   "Convite para {{campaign}}": "Isimemo sokujoyina i-{{campaign}}",
   "Recebeste um convite pessoal para te inscreveres na Yamilook.": "Uthole isimemo sakho sokubhalisa ku-Yamilook.",
-  "Aceitar convite e inscrever-me": "Yamukela isimemo bese ubhalisa"
+  "Aceitar convite e inscrever-me": "Yamukela isimemo bese ubhalisa",
+  "Aplica-se apenas às mensagens enviadas depois de guardar. O prazo conta a partir do envio; as mensagens anteriores mantêm-se. A opção mínima é 24 horas.": "Kusebenza kuphela emilayezweni ethunyelwa ngemva kokulondoloza. Isikhathi siqala ukubalwa lapho umlayezo uthunyelwa. Imilayezo yangaphambilini iyagcinwa. Isikhathi esincane amahora angu-24.",
+  "Disappearing messages enabled": "Imilayezo enyamalalayo ivuliwe",
+  "Disappearing messages disabled": "Imilayezo enyamalalayo ivaliwe",
+  "A duração não foi confirmada. Tenta novamente.": "Asikwazanga ukuqinisekisa isikhathi. Zama futhi.",
+  "Maximizar vídeo": "Khulisa ividiyo",
+  "Voltar à conversa": "Buyela engxoxweni",
+  "Seguir quem fala": "Landela okhulumayo",
+  "Destacar {{name}}": "Gqamisa u-{{name}}",
+  "Destacar o meu vídeo": "Gqamisa ividiyo yami",
+  "A falar": "Uyakhuluma",
+  "Áudio ao vivo": "Umsindo obukhoma",
+  "Sem ligação": "Akuxhunyiwe"
 }

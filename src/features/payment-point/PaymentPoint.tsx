@@ -2,7 +2,8 @@ import { useReceiveLabels } from '@/features/payment-point/receive-labels';
 import { ReceiveOptions } from './ReceiveOptions';
 import { useMessageNotification } from '@/hooks/useMessageNotification';
 import { PaymentRejected } from './api';
-import { TransferSecurity } from './TransferSecurity';
+import { WalletSessionConfirmation } from './WalletSessionConfirmation';
+import { TransferSecurity, preferences } from './TransferSecurity';
 import { WalletHeader, WalletNavigation } from './WalletNavigation';
 import { useHiddenBalance } from './useHiddenBalance';
 import { MovementHistory } from './MovementHistory';
@@ -48,6 +49,7 @@ export default function PaymentPoint() {
     setDialog(next);
   }
   const { user } = useAuth();
+  const [outgoingBlocked, setOutgoingBlocked] = useState<boolean | null>(null);
   const [overview, setOverview] = useState<Overview>();
   const [order, setOrder] = useState<PaymentOrder>();
   const [externalOrderBlocked, setExternalOrderBlocked] = useState(false);
@@ -74,6 +76,7 @@ export default function PaymentPoint() {
   const [amount, setAmount] = useState('');
   const [destination, setDestination] = useState('');
   const [error, setError] = useState('');
+  const [confirmSession, setConfirmSession] = useState(false);
   const [busy, setBusy] = useState(false);
   const [uncertain, setUncertain] = useState(false);
   const pendingKey = 'wallet-pending:' + user?.id;
@@ -86,10 +89,12 @@ export default function PaymentPoint() {
   }, [id]);
   useEffect(() => {
     let active = true;
-    setOrder(undefined); setError('');
+    setOrder(undefined); setError(''); setOutgoingBlocked(null);
     const load = async () => {
       try {
-        const summary = await paymentAction<Overview>('overview');
+        const [summary, security] = await Promise.all([
+          paymentAction<Overview>('overview'), preferences(),
+        ]);
         const selected = id ? await paymentAction<PaymentOrder>('view', id) : undefined;
         if (active) {
           const saved = sessionStorage.getItem(pendingKey);
@@ -102,6 +107,7 @@ export default function PaymentPoint() {
               setUncertain(false);
             } else setUncertain(true);
           } else setUncertain(false);
+          setOutgoingBlocked(security.blocked);
           setOverview(summary); setOrder(selected); setError(''); }
       } catch (e) { if (active) setError((e as Error).message); }
     };
@@ -117,14 +123,25 @@ export default function PaymentPoint() {
     let submitted = false;
     try {
       if (action === 'pay' || action === 'withdraw' || action === 'refund') {
+        const security = await preferences();
+        setOutgoingBlocked(security.blocked);
+        if (security.blocked) throw new Error('As saídas de dinheiro estão bloqueadas');
         const destination = action === 'withdraw' ? text?.trim() : action === 'refund' ? order?.buyer_id : order?.seller_id;
         const amount = action === 'withdraw' ? cents : order?.amount;
         if (!reference || !destination || !amount) throw new Error('Confirme o destino e o valor da operação.');
-        const { authorizeDebit } = await import('./authorize');
+        const { authorizeDebit, WalletSessionVerificationRequired } = await import('./authorize');
         const saved = sessionStorage.getItem(pendingKey);
         const operation = JSON.stringify({action,reference,cents,text});
         if (saved && operation !== saved) throw new Error('Consulte primeiro o resultado da operação anterior.');
-        await authorizeDebit({action, id:reference, amount, destination, currency:'AOA'});
+        try {
+          await authorizeDebit({action, id:reference, amount, destination, currency:'AOA'});
+        } catch (error) {
+          if (error instanceof WalletSessionVerificationRequired) {
+            setConfirmSession(true);
+            return;
+          }
+          throw error;
+        }
         sessionStorage.setItem(pendingKey,operation);
         submitted = true;
       }
@@ -158,6 +175,11 @@ export default function PaymentPoint() {
       else { await navigator.clipboard.writeText(url); setError('Ligação copiada.'); }
     } catch (e) { if ((e as Error).name !== 'AbortError') setError('Não foi possível partilhar a ligação.'); }
   }
+  const debitUnavailable = outgoingBlocked !== false;
+  const securityNotice = outgoingBlocked === true && <div role="status" className="rounded-lg border p-3 space-y-2">
+    <p>As saídas de dinheiro estão bloqueadas.</p>
+    <Button variant="outline" onClick={() => { setError(''); setDialog('security'); }}>Abrir segurança</Button>
+  </div>;
   const wallet = overview?.wallet;
   const displayMoney = (value: number) => hidden ? '•••• Kz' : money(value);
   const ownOrders = overview?.orders.filter(item => item.seller_id === user?.id) || [];
@@ -192,9 +214,10 @@ export default function PaymentPoint() {
       <div role="status" className="rounded-xl border border-amber-400/40 bg-amber-400/10 px-3 py-2 text-sm text-foreground">
         Ambiente de testes · Valores simulados
       </div>
+      {securityNotice}
       {uncertain && <div role="status" className="rounded-lg border p-3">
         <p>A confirmar a operação. A carteira consulta o estado automaticamente.</p>
-        <Button disabled={busy} variant="outline" onClick={()=>{
+        <Button disabled={busy || debitUnavailable} variant="outline" onClick={()=>{
           const saved = sessionStorage.getItem(pendingKey);
           if (!saved) return;
           const pending = JSON.parse(saved);
@@ -238,10 +261,11 @@ export default function PaymentPoint() {
         <p className="text-sm text-muted-foreground">Crie um pedido com valor e motivo. Partilhe a ligação ou apresente o QR ao cliente.</p>
       </section>}
       {order && <section className="rounded-2xl border p-4 space-y-3">
-        <h2 className="font-semibold">{copy.testRequest}</h2>
+        <h2 className="font-semibold">{order.status === 'paid' ? 'Comprovativo de pagamento simulado' : copy.testRequest}</h2>
+        {order.status === 'paid' && <p className="break-all text-xs">Referência: {order.id}</p>}
         <p>Recebe {order.seller_name || 'Utilizador Yamilook'} · carteira …{order.seller_id.slice(-6)}</p>
         <p className="text-sm">Comissão de teste {money(0)} · Total {money(order.amount)}</p>
-        <p className="text-2xl font-semibold">{money(order.amount)}</p><p>{order.description}</p>
+        <p className="text-2xl font-semibold">{money(order.amount)}</p><p className="break-words">Motivo: {order.description}</p>
         <p role="status">{externalOrderConfirmed ? appyCopy.states.confirmed + ' · ' + money(order.amount) : order.status === 'paid'
           ? (order.own ? copy.received : 'Pagamento simulado concluído') + ' · ' + money(order.amount)
           : order.status === 'pending' && order.own
@@ -256,10 +280,10 @@ export default function PaymentPoint() {
             <div className="bg-white p-4 rounded-lg w-fit"><QRCodeSVG value={orderLink(order.id)} size={200} /></div>
             <Button onClick={share}>{copy.share}</Button>
             <Button variant="outline" disabled={busy || externalOrderBlocked} onClick={() => run('cancel', order.id)}>Cancelar pedido</Button>
-          </> : <Button disabled={busy || externalOrderBlocked || !wallet || wallet.purchased + wallet.earned < order.amount} onClick={() => run('pay', order.id)}>Simular pagamento de {money(order.amount)} a {order.seller_name || order.seller_id}</Button>}
+          </> : <Button disabled={busy || debitUnavailable || externalOrderBlocked || !wallet || wallet.purchased + wallet.earned < order.amount} onClick={() => run('pay', order.id)}>Confirmar simulação</Button>}
           {!order.own && wallet && wallet.purchased + wallet.earned < order.amount && <div className="space-y-2"><p>Carregue saldo de teste para pagar este pedido.</p><Button onClick={() => openDialog('topup')}>Carregar saldo</Button></div>}
         </>}
-        {order.own && order.status === 'paid' && order.payment_provider !== 'appypay' && !externalOrderConfirmed && <Button variant="outline" disabled={busy} onClick={() => {
+        {order.own && order.status === 'paid' && order.payment_provider !== 'appypay' && !externalOrderConfirmed && <Button variant="outline" disabled={busy || debitUnavailable} onClick={() => {
           if (window.confirm(`Reembolsar ${money(order.amount)} ao comprador?`)) void run('refund', order.id);
         }}>Reembolsar compra</Button>}
       </section>}
@@ -276,12 +300,13 @@ export default function PaymentPoint() {
         {(tab === 'wallet' || tab === 'movements') && <MovementHistory overview={overview} hidden={hidden} recent={tab === 'wallet'} withdrawals={renderWithdrawals} />}
       </>}
     </main>
+    {confirmSession && <WalletSessionConfirmation onClose={() => setConfirmSession(false)} />}
     <WalletNavigation tab={id ? '' : tab} />
     <Dialog open={!!dialog} onOpenChange={open => { if (!open && !busy) { setDialog(null); setError(''); } }}>
       <DialogContent className="max-h-[85dvh] overflow-y-auto"><DialogHeader><DialogTitle>
         {dialog === 'security' ? 'Segurança das transferências' : dialog === 'info' ? 'Sobre o saldo' : dialog === 'create' ? (tab === 'business' ? copy.request : copy.how) : dialog === 'scan' ? 'Ler QR' : dialog === 'topup' ? 'Carregar saldo de teste' : 'Pedir levantamento de teste'}
       </DialogTitle></DialogHeader>
-      {dialog === 'security' && <TransferSecurity />}
+      {dialog === 'security' && <TransferSecurity onChange={value => { setOutgoingBlocked(value.blocked); setError(''); }} />}
       {dialog === 'info' && <div className="space-y-3 text-sm">
         <p><strong>Disponível para pagar</strong> reúne os carregamentos e os ganhos recebidos.</p>
         <p><strong>Para levantar</strong> indica os ganhos elegíveis para levantamento neste piloto.</p>
@@ -292,7 +317,8 @@ export default function PaymentPoint() {
       {dialog === 'create' && tab === 'business' && <RequestPayment business onCreated={async newId => { setDialog(null); navigate(`/payment-point/${newId}`); }} />}
       {dialog === 'scan' && <ScanPayment onScan={newId => { setDialog(null); navigate(`/payment-point/${newId}`); }} />}
       {(dialog === 'topup' || dialog === 'withdraw') && <div className="space-y-3">
-        {dialog === 'withdraw' && <p className="text-sm text-muted-foreground">Esta operação utiliza valores simulados.</p>}
+        {dialog === 'withdraw' && securityNotice}
+        <p className="text-sm text-muted-foreground">Esta operação utiliza valores simulados.</p>
         {dialog === 'withdraw' && <p className="text-sm">Disponível para levantamento: {money(wallet?.earned || 0)}. Apenas os ganhos recebidos são elegíveis neste piloto.</p>}
         <label className="block text-sm">Valor em kwanzas<Input value={amount} inputMode="decimal" disabled={busy || (dialog === 'topup' && externalTopupBlocked)} onChange={e => { setAmount(e.target.value); requestId.current = crypto.randomUUID(); }} /></label>
         {dialog === 'withdraw' && <label className="block text-sm">Destino de teste<Input placeholder="Ex. Conta de teste Maria" value={destination} disabled={busy} maxLength={120} onChange={e => { setDestination(e.target.value); requestId.current = crypto.randomUUID(); }} /></label>}
@@ -305,7 +331,7 @@ export default function PaymentPoint() {
           </div>
           {user && <AppyPaySandbox key={`${user.id}:topup`} userId={user.id} amountMinor={parsedTopupAmount} canCreate={!busy}
             onConfirmed={refresh} onBlockedChange={setExternalTopupBlocked} />}
-        </> : <Button disabled={busy || !wallet?.earned} onClick={() => submitAmount('withdraw')}>{busy ? 'A processar…' : 'Confirmar teste'}</Button>}
+        </> : <Button disabled={busy || debitUnavailable || !wallet?.earned} onClick={() => submitAmount('withdraw')}>{busy ? 'A processar…' : 'Confirmar teste'}</Button>}
       </div>}
       </DialogContent>
     </Dialog>

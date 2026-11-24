@@ -11,8 +11,7 @@ import {
   Plus,
   Bell,
   CheckSquare,
-  Phone,
-  Video
+  Phone
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -61,12 +60,13 @@ export default function Home() {
 
   const totalUnread = conversations.reduce((sum, c) => sum + (c.unread_count || 0), 0);
 
-  // Handler for starting calls from CallsTabContent
   const handleStartCallFromTab = useCallback(async (userId: string, type: 'voice' | 'video') => {
-    if (activeCallContext) {
-      await activeCallContext.startCall(userId, type);
-    }
+    await activeCallContext?.startCall(userId, type);
   }, [activeCallContext]);
+
+  const openContactProfile = useCallback((userId: string) => {
+    navigate(`/profile/${encodeURIComponent(userId)}`);
+  }, [navigate]);
 
   // Selection mode handlers
   const toggleSelectionMode = useCallback(() => {
@@ -324,6 +324,8 @@ export default function Home() {
                     conversation={conversation}
                     currentUserId={user?.id || ''}
                     onClick={() => navigate(`/chat/${conversation.id}`)}
+                    onOpenProfile={surface === 'papos' ? openContactProfile : undefined}
+                    onStartCall={surface === 'papos' ? activeCallContext?.startCall : undefined}
                     isPinned={conversation.is_pinned ?? undefined}
                     isMuted={conversation.is_muted ?? undefined}
                     isSelectionMode={selectionMode}

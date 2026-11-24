@@ -148,7 +148,7 @@ describe('useAuth Hook', () => {
       password: 'Password123!',
       options: {
         emailRedirectTo: 'https://www.yamilook.com/onboarding',
-        data: { display_name: 'New User', username: 'newuser' },
+        data: { display_name: 'New User', username: 'newuser', registration_email_language: 'pt' },
       },
     });
   });

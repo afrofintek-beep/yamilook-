@@ -6,6 +6,7 @@ import {Farewell} from './Farewell';
 import {ShieldCheck} from 'lucide-react';
 import './access-control.css';
 import {accessLink,locaccess,validHandle,type Policy} from './api';
+import {parseGoogleEntry} from './google-entry';
 export function useAccessControl(id:string|undefined,code:string|undefined){
  const key=JSON.stringify([id,code]);const current=useRef(key);current.current=key;
  const [snapshot,setSnapshot]=useState<{key:string;policy:Policy}|null>(null),[error,setError]=useState(''),[busy,setBusy]=useState(false);
@@ -22,23 +23,27 @@ export function AccessControl({control}:{control:ReturnType<typeof useAccessCont
  const locale=useUiLocale();
  const [query,setQuery]=useState(''),[people,setPeople]=useState<AccessPerson[]>([]);
  const [radius,setRadius]=useState('500'),[hours,setHours]=useState('24');
+ const [entryCoordinates,setEntryCoordinates]=useState('');
  const [submitting,setSubmitting]=useState(false),[outcome,setOutcome]=useState<{count:number;failed:boolean}|null>(null);
  const submittingRef=useRef(false),alive=useRef(true);
  useEffect(()=>{alive.current=true;return()=>{alive.current=false}},[]);
  const locked=control.busy||submitting;
+ const googleEntry=parseGoogleEntry(entryCoordinates);
+ const invalidEntry=entryCoordinates.trim().length>0&&!googleEntry;
  const toggle=(person:AccessPerson)=>{if(locked)return;setOutcome(null);setPeople(previous=>previous.some(p=>p.id===person.id)?previous.filter(p=>p.id!==person.id):[...previous,person]);};
  const authorize=async()=>{
-  if(submittingRef.current||control.busy||!control.policy||!people.length)return;
+  if(submittingRef.current||control.busy||!control.policy||!people.length||invalidEntry)return;
   submittingRef.current=true;setSubmitting(true);setOutcome(null);
   let count=0;
   try{
    for(const person of people){
     if(!alive.current)break;
-    await control.change('grant',{username:person.username,recipient_id:person.id,radius:Number(radius),hours:Number(hours)});
+    await control.change('grant',{username:person.username,recipient_id:person.id,radius:Number(radius),hours:Number(hours),
+     ...(googleEntry?{google_entry:googleEntry}:{})});
     count++;
     if(alive.current)setPeople(previous=>previous.filter(p=>p.id!==person.id));
    }
-   if(alive.current){setOutcome({count,failed:false});setQuery('');}
+   if(alive.current){setOutcome({count,failed:false});setQuery('');setEntryCoordinates('');}
   }catch{if(alive.current)setOutcome({count,failed:true});}
   finally{submittingRef.current=false;if(alive.current)setSubmitting(false);}
  };
@@ -56,11 +61,22 @@ export function AccessControl({control}:{control:ReturnType<typeof useAccessCont
     </ul></div>}
     <div className="locaccess-options"><label className="grid gap-1 text-sm">{t("Revelar a morada")}<select className="locaccess-select" disabled={locked} value={radius} onChange={e=>setRadius(e.target.value)}><option value="100">{t("A 100 metros")}</option><option value="250">{t("A 250 metros")}</option><option value="500">{t("A 500 metros")}</option><option value="0">{t("Imediatamente")}</option></select></label>
     <label className="grid gap-1 text-sm">{t("Validade")}<select className="locaccess-select" disabled={locked} value={hours} onChange={e=>setHours(e.target.value)}><option value="1">{t("1 hora")}</option><option value="24">{t("24 horas")}</option><option value="168">{t("7 dias")}</option></select></label></div>
-    <Button className="locaccess-authorize" disabled={locked||!control.policy||!people.length}>{people.length>1?t('Autorizar pessoas seleccionadas ({{count}})',{count:people.length}):t("Autorizar pessoa seleccionada")}</Button>
+    <details className="rounded-lg border p-3">
+     <summary className="cursor-pointer font-medium">{t('Entrada pública no Google Maps')}</summary>
+     <label className="mt-2 grid gap-1 text-sm">
+      {t('Coordenadas da portaria ou entrada pública')}
+      <input className="min-h-11 rounded-md border bg-background px-3" dir="ltr" autoComplete="off"
+       placeholder="-8.912345, 13.234567" value={entryCoordinates} disabled={locked}
+       aria-invalid={invalidEntry} maxLength={64} onChange={event=>setEntryCoordinates(event.target.value)}/>
+     </label>
+     <p className="mt-2 text-sm text-muted-foreground">{t('Opcional. Introduz apenas um ponto público que autorizas enviar ao Google Maps.')}</p>
+     {invalidEntry&&<p role="alert" className="text-sm">{t('Indica coordenadas válidas para a entrada pública.')}</p>}
+    </details>
+    <Button className="locaccess-authorize" disabled={locked||!control.policy||!people.length||invalidEntry}>{people.length>1?t('Autorizar pessoas seleccionadas ({{count}})',{count:people.length}):t("Autorizar pessoa seleccionada")}</Button>
     <p className="locaccess-confirmation">{t("Pesquisar e seleccionar não concede acesso. Confirma no botão acima.")}</p>
    </form>
   {outcome&&<p role={outcome.failed?'alert':'status'}>{t(outcome.failed?'Acessos autorizados: {{count}}. Não foi possível concluir. As pessoas restantes continuam seleccionadas.':'Acessos autorizados: {{count}}.',{count:outcome.count})}</p>}
-  {grants.map(g=><div key={g.id} className="flex flex-wrap items-center justify-between gap-2 border-t pt-3"><div className="text-sm"><strong>@{g.username.replace(/^@+/,'')}</strong><p>{t('{{mode}} · até {{date}}',{mode:g.radius?t('{{distance}} metros',{distance:g.radius}):t('Imediato'),date:new Date(g.expiresAt).toLocaleString(locale==='pt-banda'?'pt-AO':locale,{timeZone:'Africa/Luanda'})})}</p></div><Button variant="outline" disabled={locked} onClick={()=>void control.change('revoke',{grant_id:g.id}).catch(()=>{})}>{t("Fechar acesso")}</Button></div>)}
+  {grants.map(g=><div key={g.id} className="flex flex-wrap items-center justify-between gap-2 border-t pt-3"><div className="text-sm"><strong>@{g.username.replace(/^@+/,'')}</strong><p>{t('{{mode}} · até {{date}}',{mode:g.radius?t('{{distance}} metros',{distance:g.radius}):t('Imediato'),date:new Date(g.expiresAt).toLocaleString(locale==='pt-banda'?'pt-AO':locale,{timeZone:'Africa/Luanda'})})}</p>{g.hasExternalRoute&&<p>{t('Entrada pública no Google Maps')}</p>}</div><Button variant="outline" disabled={locked} onClick={()=>void control.change('revoke',{grant_id:g.id}).catch(()=>{})}>{t("Fechar acesso")}</Button></div>)}
   {control.policy&&control.source&&<Farewell key={control.policy.handle} source={control.source} grants={grants} reload={control.retry} disabled={locked}/>}
   {grants.length>0&&<Button variant="link" className="locaccess-close" disabled={locked} onClick={()=>void control.change('close').catch(()=>{})}>{t("Encerrar sem mensagem")}</Button>}
   <p className="locaccess-note">{t("O acesso à tua morada respeita as autorizações, a distância e a validade que definires. A proximidade indicada não comprova presença física. Ao fechar o acesso, novas consultas são bloqueadas e a localização é ocultada em até 20 segundos. Esta acção não elimina informações já consultadas ou partilhadas.")}</p>

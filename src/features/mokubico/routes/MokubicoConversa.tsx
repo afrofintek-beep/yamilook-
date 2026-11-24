@@ -1,16 +1,15 @@
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { scrollChatToEnd } from '@/lib/chat-scroll';
 import { useEffect, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ArrowLeft, Loader2, Lock, Mic, MicOff, Send, PhoneOff, Users, Check, CheckCheck, Video, VideoOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { VideoTrack } from '@/components/live/VideoTrack';
+import { MokubicoParticipants } from '../components/MokubicoParticipants';
 import { useMokubicoRoom } from '../hooks/useMokubicoRoom';
 import { useEndConversa } from '../hooks/useMokubicoConversas';
 import { useActiveCall } from '@/components/calls/ActiveCallProvider';
@@ -37,10 +36,10 @@ export default function MokubicoConversa({ id, minimized, onPin }: { id: string;
   const [conversa, setConversa] = useState<ConversaInfo | null>(null);
   const [text, setText] = useState('');
   const messagesViewportRef = useRef<HTMLDivElement>(null);
-  const stageRef = useRef<HTMLDivElement>(null);
+  const [expanded, setExpanded] = useState(false);
 
   const isHost = !!conversa && conversa.host_id === user?.id;
-  const room = useMokubicoRoom(id ?? null, conversa?.livekit_room_name ?? null, !minimized);
+  const room = useMokubicoRoom(id ?? null, conversa?.livekit_room_name ?? null, !minimized && !expanded);
   const directBusy = useActiveCall()?.mediaBusy;
   const [paused, setPaused] = useState(false);
   const [resumeMic, setResumeMic] = useState(true);
@@ -54,8 +53,12 @@ export default function MokubicoConversa({ id, minimized, onPin }: { id: string;
     window.addEventListener('yamilook:direct-media', pause);
     return () => window.removeEventListener('yamilook:direct-media', pause);
   }, [room.connected, room.connecting, room.micOn, room.leave]);
-  const self = room.peers.find((p) => p.id === room.selfId);
-  const others = room.peers.filter((p) => p.id !== room.selfId);
+  const remotePreview = room.connected ? room.peers.find((peer) => peer.id !== room.selfId) : undefined;
+  const showExpanded = expanded && room.connected && conversa?.status === 'live';
+
+  useEffect(() => {
+    if (!room.connected || conversa?.status !== 'live') setExpanded(false);
+  }, [room.connected, conversa?.status]);
 
   useEffect(() => {
     if (!id) return;
@@ -77,7 +80,9 @@ export default function MokubicoConversa({ id, minimized, onPin }: { id: string;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state, conversa?.status, conversa?.media_enabled, directBusy, paused]);
 
-  useEffect(() => { scrollChatToEnd(messagesViewportRef.current, 'smooth'); }, [room.messages.length]);
+  useEffect(() => {
+    if (!minimized && !showExpanded) scrollChatToEnd(messagesViewportRef.current, 'smooth');
+  }, [minimized, room.messages.length, showExpanded]);
 
   useEffect(() => {
     onPin(paused || room.connected || room.connecting ? id : undefined);
@@ -104,7 +109,7 @@ export default function MokubicoConversa({ id, minimized, onPin }: { id: string;
 
   if (minimized && directBusy) return null;
   if (minimized) return <aside className="fixed right-3 top-[max(1rem,env(safe-area-inset-top))] z-[80] max-w-48 rounded-xl border bg-background p-2 shadow-lg">
-    {others[0]?.videoTrack && <VideoTrack track={others[0].videoTrack} className="h-24 w-full rounded-lg object-cover" />}
+    {remotePreview?.videoTrack && <VideoTrack track={remotePreview.videoTrack} className="h-24 w-full rounded-lg object-cover" />}
     <button className="block p-2"
     onClick={() => navigate(`/mokubico/conversa/${id}`)}>{conversa?.title} · {uiText("Voltar à chamada")}</button>
     {room.connected && <Button variant="ghost" onClick={room.toggleMic}>{room.micOn ? uiText("Desligar microfone") : uiText("Ligar microfone")}</Button>}
@@ -134,6 +139,9 @@ export default function MokubicoConversa({ id, minimized, onPin }: { id: string;
 
   const ended = conversa?.status !== 'live';
   const media = conversa?.media_enabled ?? true; // free Quintal = text-only
+  const mediaStatus = room.connected
+    ? `${room.peers.length || 1} · ${uiText("Áudio ao vivo")}`
+    : room.connecting ? uiText("A entrar…") : uiText("Sem ligação");
 
   return (
     <div className="flex flex-col h-screen-safe overflow-hidden bg-background">
@@ -151,7 +159,7 @@ export default function MokubicoConversa({ id, minimized, onPin }: { id: string;
               ? uiText("terminada")
               : !media
                 ? uiText("só texto")
-                : `${room.peers.length || 1} · ${room.connected ? 'ao vivo' : room.connecting ? 'a entrar…' : 'offline'}`}
+                : mediaStatus}
           </p>
         </div>
         {isHost && !ended && (
@@ -161,68 +169,24 @@ export default function MokubicoConversa({ id, minimized, onPin }: { id: string;
         )}
       </header>
 
-      {/* Participants (voice/video) — only when media is enabled. */}
-      {media && (
-      <div ref={stageRef} className="relative px-4 py-4 shrink-0 border-b border-border/50 min-h-[8.5rem]">
-        {room.error ? (
-          <p className="text-xs text-destructive text-center">{room.error}</p>
+      {media && !ended && (
+        room.error ? (
+          <p role="status" className="shrink-0 border-b border-border/50 p-4 text-center text-xs text-destructive">{room.error}</p>
         ) : (
-          <>
-            <div className="flex gap-2 overflow-x-auto pb-1 pr-24">
-              {others.map((p) => (
-                <div
-                  key={p.id}
-                  className={cn(
-                    'relative w-28 h-28 rounded-2xl overflow-hidden bg-muted flex items-center justify-center shrink-0 transition-shadow',
-                    p.speaking && 'ring-2 ring-green-500',
-                  )}
-                >
-                  {p.videoTrack ? (
-                    <VideoTrack track={p.videoTrack} className="w-full h-full object-cover" />
-                  ) : (
-                    <Avatar className="h-14 w-14">
-                      <AvatarImage src={room.avatars[p.id] ?? undefined} />
-                      <AvatarFallback>{p.name.charAt(0).toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                  )}
-                  <span className="absolute bottom-1 left-2 right-2 truncate text-[11px] text-white drop-shadow">{p.name}</span>
-                </div>
-              ))}
-              {others.length === 0 && (
-                <p className="text-xs text-muted-foreground self-center">
-                  {room.connecting ? uiText("A entrar…") : uiText("À espera de mais pessoas…")}
-                </p>
-              )}
-            </div>
-
-            {self && (
-              <motion.div
-                drag
-                dragConstraints={stageRef}
-                dragMomentum={false}
-                className={cn(
-                  'absolute bottom-3 right-4 z-10 w-20 h-28 rounded-xl overflow-hidden bg-muted border-2 border-background shadow-lg flex items-center justify-center cursor-grab active:cursor-grabbing',
-                  self.speaking && 'ring-2 ring-green-500',
-                )}
-              >
-                {self.videoTrack ? (
-                  <VideoTrack track={self.videoTrack} muted className="w-full h-full object-cover -scale-x-100" />
-                ) : (
-                  <Avatar className="h-10 w-10">
-                    <AvatarImage src={room.avatars[self.id] ?? undefined} />
-                    <AvatarFallback>{self.name.charAt(0).toUpperCase()}</AvatarFallback>
-                  </Avatar>
-                )}
-                <span className="absolute bottom-0.5 left-1.5 text-[10px] text-white drop-shadow">{uiText("Tu")}</span>
-              </motion.div>
-            )}
-          </>
-        )}
-      </div>
+          <MokubicoParticipants
+            peers={room.connected ? room.peers : []}
+            selfId={room.selfId}
+            avatars={room.avatars}
+            connecting={room.connecting}
+            expanded={showExpanded}
+            onExpandedChange={setExpanded}
+          />
+        )
       )}
 
       {/* Text chat */}
-      <div ref={messagesViewportRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-3 space-y-2">
+      <div ref={messagesViewportRef} hidden={showExpanded}
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-3 space-y-2">
         {room.messages.length === 0 ? (
           <p className="text-xs text-muted-foreground text-center py-8">{uiText("Sê o primeiro a escrever.")}</p>
         ) : (
@@ -255,7 +219,7 @@ export default function MokubicoConversa({ id, minimized, onPin }: { id: string;
       {ended ? (
         <div className="p-4 border-t border-border text-center text-sm text-muted-foreground shrink-0">{uiText("Esta conversa terminou.")}</div>
       ) : (
-        <div className="p-3 border-t border-border flex items-center gap-2 shrink-0 safe-bottom">
+        <div className={cn("p-3 border-t border-border flex items-center gap-2 shrink-0 safe-bottom", showExpanded && "justify-center")}>
           {media ? (
             <>
               <Button
@@ -264,6 +228,8 @@ export default function MokubicoConversa({ id, minimized, onPin }: { id: string;
                 className="rounded-full h-11 w-11 shrink-0"
                 onClick={room.toggleMic}
                 disabled={!room.connected}
+                aria-label={room.micOn ? uiText("Desligar microfone") : uiText("Ligar microfone")}
+                title={room.micOn ? uiText("Desligar microfone") : uiText("Ligar microfone")}
               >
                 {room.micOn ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
               </Button>
@@ -273,6 +239,7 @@ export default function MokubicoConversa({ id, minimized, onPin }: { id: string;
                 className="rounded-full h-11 w-11 shrink-0"
                 onClick={room.toggleCamera}
                 disabled={!room.connected}
+                aria-label={room.camOn ? uiText("Desligar câmara") : uiText("Ligar câmara")}
                 title={room.camOn ? uiText("Desligar câmara") : uiText("Ligar câmara")}
               >
                 {room.camOn ? <Video className="h-5 w-5" /> : <VideoOff className="h-5 w-5" />}
@@ -287,17 +254,21 @@ export default function MokubicoConversa({ id, minimized, onPin }: { id: string;
             >
               <Lock className="h-4 w-4" />{uiText(" Pro")}</button>
           )}
-          <Input
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') send(); }}
-            placeholder={uiText("Escreve uma mensagem…")}
-            className="h-11 rounded-full"
-          />
-          <Button size="icon" className="rounded-full h-11 w-11 shrink-0" onClick={send} disabled={!text.trim()}>
-            <Send className="h-5 w-5" />
-          </Button>
-          <Button size="icon" variant="destructive" className="rounded-full h-11 w-11 shrink-0" onClick={leave}>
+          {!showExpanded && (
+            <>
+              <Input
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') send(); }}
+                placeholder={uiText("Escreve uma mensagem…")}
+                className="h-11 min-w-0 rounded-full"
+              />
+              <Button size="icon" className="rounded-full h-11 w-11 shrink-0" onClick={send} disabled={!text.trim()} aria-label={uiText("Enviar mensagem")}>
+                <Send className="h-5 w-5" />
+              </Button>
+            </>
+          )}
+          <Button size="icon" variant="destructive" className="rounded-full h-11 w-11 shrink-0" onClick={leave} aria-label={uiText("Sair da sala")} title={uiText("Sair da sala")}>
             <PhoneOff className="h-5 w-5" />
           </Button>
         </div>

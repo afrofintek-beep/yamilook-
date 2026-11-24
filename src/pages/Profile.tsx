@@ -1,3 +1,4 @@
+import { useBusinessRegistrationAccess } from '@/hooks/useBusinessRegistrationAccess';
 import { useWalletAccess } from '@/features/payment-point/WalletAccess';
 import ProfileInitiatives from "@/features/social-initiatives/ProfileInitiatives";
 import { socialInitiativesEnabled } from "@/features/social-initiatives/api";
@@ -104,6 +105,7 @@ export default function Profile() {
 }
 
 function ProfileContent() {
+  const businessAccess = useBusinessRegistrationAccess();
   const walletAccess = useWalletAccess();
   useUiLocale();
   useEffect(() => { window.scrollTo(0, 0); }, []);
@@ -710,9 +712,9 @@ function ProfileContent() {
                     <Wallet className="w-4 h-4 mr-2" />
                     CARTEIRA
                   </DropdownMenuItem>}
-                  <DropdownMenuItem onClick={() => navigate('/meus-negocios')} className="rounded-lg">
+                  {businessAccess.data && <DropdownMenuItem onClick={() => navigate('/meus-negocios')} className="rounded-lg">
                     <Store className="w-4 h-4 mr-2" />{t('entry.myBusinesses')}
-                  </DropdownMenuItem>
+                  </DropdownMenuItem>}
                   <DropdownMenuItem onClick={() => navigate('/advertising')} className="rounded-lg">
                     <Megaphone className="w-4 h-4 mr-2" />
                     {t('settings.advertisingSettings', 'Publicidade')}

@@ -37,6 +37,8 @@ const AfrolocExperience = lazy(() => import("./features/afroloc-experience/Afrol
 const Home = lazy(() => import("./pages/Home"));
 const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
+const TrustedInviteRegistration = lazy(() => import("./features/trusted-invites/TrustedInviteRegistration"));
+const ResumeRegistration = lazy(() => import("./pages/ResumeRegistration"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
@@ -241,7 +243,7 @@ function ProtectedRoute({ children, skipOnboardingCheck }: { children: React.Rea
   }
   
   if (!user) {
-    return <Navigate to={(protectedLocation.pathname.startsWith("/afroloc") || (protectedLocation.pathname==="/notifications" || protectedLocation.pathname==="/meus-negocios")) ? `/login?next=${encodeURIComponent(protectedLocation.pathname+protectedLocation.search)}` : "/welcome"} replace />;
+    return <Navigate to={(protectedLocation.pathname.startsWith("/afroloc") || (protectedLocation.pathname==="/notifications" || protectedLocation.pathname==="/meus-negocios")) ? `/login?next=${encodeURIComponent(protectedLocation.pathname+protectedLocation.search+(protectedLocation.hash==='#njila'?'#njila':''))}` : "/welcome"} replace />;
   }
 
   // Do not expose protected content while the profile is still being fetched.
@@ -267,7 +269,7 @@ function ProtectedRoute({ children, skipOnboardingCheck }: { children: React.Rea
 
   // Redirect to onboarding if not completed (except on the onboarding page itself)
   if (!skipOnboardingCheck && profile && !profile.onboarding_completed) {
-    return <Navigate to={(protectedLocation.pathname.startsWith("/afroloc/acesso/") || (protectedLocation.pathname==="/notifications" || protectedLocation.pathname==="/meus-negocios")) ? `/onboarding?next=${encodeURIComponent(protectedLocation.pathname+protectedLocation.search)}` : "/onboarding"} replace />;
+    return <Navigate to={(protectedLocation.pathname.startsWith("/afroloc/acesso/") || (protectedLocation.pathname==="/notifications" || protectedLocation.pathname==="/meus-negocios")) ? `/onboarding?next=${encodeURIComponent(protectedLocation.pathname+protectedLocation.search+(protectedLocation.hash==='#njila'?'#njila':''))}` : "/onboarding"} replace />;
   }
   
   return <>{children}</>;
@@ -415,7 +417,11 @@ function AnimatedRoutes() {
           </Route>
           <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
           <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
+          {/* Keep the recovery code visible after a trusted account establishes its session. */}
+          <Route path="/convite-confianca" element={<TrustedInviteRegistration />} />
           <Route path="/welcome" element={<PublicRoute><Welcome /></PublicRoute>} />
+          <Route path="/app/retomar" element={<PublicRoute><ResumeRegistration /></PublicRoute>} />
+          <Route path="/retomar" element={<PublicRoute><ResumeRegistration /></PublicRoute>} />
           <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
           <Route path="/reset-password" element={<ResetPassword />} />
           {/* Open to everyone (authed or not) — ecosystem deep-link target */}
