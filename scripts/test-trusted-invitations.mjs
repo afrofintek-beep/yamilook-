@@ -80,7 +80,7 @@ async function fixture() {
   `);
   await db.exec(await readFile(new URL('../supabase/migrations/20261123225604_trusted_invitations.sql', import.meta.url),'utf8'));
   await db.exec(await readFile(new URL('../supabase/migrations/20261123230817_trusted_profile_username_guard.sql', import.meta.url),'utf8'));
-  await db.exec(await readFile(new URL('../supabase/migrations/20261123230432_trusted_auth_reservation.sql', import.meta.url),'utf8'));
+  await db.exec(await readFile(new URL('../supabase/migrations/20261124013342_trusted_auth_reservation.sql', import.meta.url),'utf8'));
   let counter = 0;
   const sent = [];
   const attributes = [];
