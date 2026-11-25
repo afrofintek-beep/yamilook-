@@ -3,13 +3,14 @@ export async function cardImage(svg:SVGSVGElement):Promise<Blob>{
  const width=svg.viewBox.baseVal.width*2,height=svg.viewBox.baseVal.height*2;
  const copy=svg.cloneNode(true) as SVGSVGElement;copy.removeAttribute('style');copy.setAttribute('width',String(width));copy.setAttribute('height',String(height));
  const source=new XMLSerializer().serializeToString(copy);
- const url=URL.createObjectURL(new Blob([source],{type:'image/svg+xml;charset=utf-8'}));
- try{
-  const image=new Image();await new Promise<void>((resolve,reject)=>{image.onload=()=>resolve();image.onerror=()=>reject(new Error('image'));image.src=url});
+ // A self-contained data URL avoids WebKit blob-SVG image decoding stalls.
+ const url='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(source);
+ {
+  const image=new Image();await new Promise<void>((resolve,reject)=>{const timer=setTimeout(()=>finish(new Error('image timeout')),10000);function finish(error?:Error){clearTimeout(timer);image.onload=null;image.onerror=null;if(error)reject(error);else resolve();}image.onload=()=>finish();image.onerror=()=>finish(new Error('image'));image.src=url});
   const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;
   const ctx=canvas.getContext('2d');if(!ctx)throw new Error('canvas');ctx.drawImage(image,0,0,canvas.width,canvas.height);
-  return await new Promise<Blob>((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error('image')),'image/png'));
- }finally{URL.revokeObjectURL(url)}
+  return await new Promise<Blob>((resolve,reject)=>{const timer=setTimeout(()=>reject(new Error('PNG timeout')),10000);try{canvas.toBlob(b=>{clearTimeout(timer);if(b?.size&&b.type==='image/png')resolve(b);else reject(new Error('image'));},'image/png');}catch(error){clearTimeout(timer);reject(error);}});
+ }
 }
 export function downloadCard(blob:Blob){const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download='AFROLOC-cartao.png';link.click();setTimeout(()=>URL.revokeObjectURL(url),60000);}
 export async function shareCard(blob:Blob,text:string):Promise<'shared'|'downloaded'|'cancelled'>{

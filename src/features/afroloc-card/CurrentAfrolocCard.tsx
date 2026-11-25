@@ -100,7 +100,8 @@ function CardScreen({userId,requested}:{userId:string;requested?:string}){
  const photoReady=!avatar||photo?.url===avatar||photoFailed===avatar;
  useEffect(()=>{let active=true;setImageError(false);if(!hasAddress||!access.url||!svg.current||!photoReady)return;void cardImage(svg.current).then(blob=>{if(active)setImage({key,blob})}).catch(()=>{if(active)setImageError(true)});return()=>{active=false};},[key,photoReady,hasAddress,access.url]);
  const unexpired=()=>!address?.expiresAt||Date.parse(address.expiresAt)>Date.now();
- const ready=!!access.url&&!access.busy&&!!address&&unexpired()&&fresh&&!busy&&!postal.busy&&photoReady&&image?.key===key&&!sharing;
+ const readiness={access:!!access.url&&!access.busy,address:!!address&&unexpired(),snapshot:fresh&&!busy,postal:!postal.busy,photo:photoReady,png:image?.key===key,sharing:!sharing};
+ const ready=Object.values(readiness).every(Boolean);
  const text=address?cardText(name,t('ACESSO PROTEGIDO'),protectedLines,notice)+'\n'+access.url:'';
  const share=async()=>{if(!ready||!image||!unexpired())return;setSharing(true);setFeedback('');try{const result=await shareCard(image.blob,text);if(result!=='cancelled')setFeedback(result==='downloaded'?'Imagem guardada. Podes anexá-la à tua mensagem.':'Cartão partilhado.');}catch{setFeedback('Não foi possível partilhar. Usa Guardar imagem ou Copiar dados.');}finally{setSharing(false)}};
  const print=()=>{if(!ready||!image)return;const w=window.open('','_blank');if(!w){setFeedback('Permita abrir a janela de impressão.');return;}const img=w.document.createElement('img'),u=URL.createObjectURL(image.blob);img.style.cssText='width:100%;max-width:180mm;display:block;margin:auto';img.onload=()=>{w.focus();w.print();URL.revokeObjectURL(u)};img.src=u;w.document.title=t('Cartão AFROLOC');w.document.body.replaceChildren(img);};
@@ -155,7 +156,7 @@ function CardScreen({userId,requested}:{userId:string;requested?:string}){
    </section>
    <div hidden aria-hidden="true"><CardPreview ref={svg} link={access.url||null} name={name} code={t('ACESSO PROTEGIDO')} lines={protectedLines} photo={photoData} notice={notice} rtl={locale==='ar'} title={cardTitle} qrLabel={t('Abrir acesso protegido')}/></div>
    <div className="grid grid-cols-2 gap-3">
-    <Button className="h-12 gap-2" aria-label={t('Partilhar cartão')} disabled={!ready} onClick={()=>void share()}><Share2 className="h-4 w-4"/>{t('Partilhar')}</Button>
+    <Button className="h-12 gap-2" aria-label={t('Partilhar cartão')} data-card-blockers={Object.entries(readiness).filter(([,ok])=>!ok).map(([reason])=>reason).join(',')} disabled={!ready} onClick={()=>void share()}><Share2 className="h-4 w-4"/>{t('Partilhar')}</Button>
     <Button variant="outline" className="h-12 gap-2" disabled={!access.url} onClick={()=>{if(access.url)window.location.assign(access.url)}}><MapPin className="h-4 w-4"/>{t('Ver no mapa')}</Button>
    </div>
    <Button className="w-full h-12" variant="outline" disabled={!access.url} onClick={()=>{if(!access.url)return;const target=new URL(access.url,window.location.href);target.hash='njila';prepareJourneyCompass();if(target.origin===window.location.origin)navigate(target.pathname+target.search+target.hash);else window.location.assign(target.href)}}>{t('Abrir na NJILA')}</Button>

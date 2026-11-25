@@ -47,7 +47,7 @@ test('mobile owner card shares a protected PNG QR, updates data and keeps contac
  await expect.poll(()=>requests.includes('locaccess_action')).toBe(true);
  try{await expect(share).toBeEnabled({timeout:30000});}catch(error){
   // Only synthetic fixture data; avoid logging tokens, headers or private addresses.
-  console.log('Card readiness diagnostics',JSON.stringify({pathname:new URL(page.url()).pathname,requests:[...new Set(requests)],errors,alerts:await page.getByRole('alert').allTextContents(),statuses:await page.getByRole('status').allTextContents()}));throw error;
+  console.log('Card readiness diagnostics',JSON.stringify({blockers:await share.getAttribute('data-card-blockers'),pathname:new URL(page.url()).pathname,requests:[...new Set(requests)],errors,alerts:await page.getByRole('alert').allTextContents(),statuses:await page.getByRole('status').allTextContents()}));throw error;
  }
  await expect(ownerCard.locator('svg[role=img]')).toHaveAttribute('aria-label',new RegExp(code));
  await expect(ownerCard.locator('image[data-card-photo]')).toHaveAttribute('href',/^data:image\/png/);
@@ -70,7 +70,7 @@ test('mobile owner card shares a protected PNG QR, updates data and keeps contac
  const first=await readShared();
  expect(first.reference).toEqual({kind:'access',url:protectedUrl(firstHandle)});expect(first.type).toBe('image/png');expect(first.publicCode).toBeNull();
  expect(first.text).not.toContain(code);expect(first.text).not.toContain('923123456');expect(first.text).not.toContain('private@example.invalid');
- await page.getByText('Dados a incluir na partilha',{exact:true}).click();
+ await page.locator('summary').filter({hasText:'Dados a incluir na partilha'}).click();
  await page.getByRole('checkbox',{name:'Telefone',exact:true}).check();await expect(share).toBeEnabled();await share.click();
  expect((await readShared()).text).toContain('923123456');
  currentCode='AO-ZU-G10-ABC-DEF';await page.getByRole('button',{name:'Opções do cartão'}).click();await page.getByRole('menuitem',{name:'Actualizar cartão'}).click();
