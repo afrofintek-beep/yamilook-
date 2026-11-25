@@ -77,7 +77,7 @@ export function DisappearingMessagesSheet({
     if (error || !data || data.disappearing_messages_duration !== selectedDuration) {
       toast({ title: uiText("Não foi possível guardar"), description: uiText("A duração não foi confirmada. Tenta novamente."), variant: 'destructive' });
     } else {
-      toast({ title: uiText(selectedDuration ? "Disappearing messages enabled" : "Disappearing messages disabled") });
+      toast({ title: selectedDuration ? uiText("Disappearing messages enabled") : uiText("Disappearing messages disabled") });
       onOpenChange(false);
     }
 
