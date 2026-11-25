@@ -353,5 +353,21 @@
   "Continuar a partilhar": "ማጋራትን ቀጥል",
   "Campanhas e convites": "ዘመቻዎችና ግብዣዎች",
   "Criar campanha": "ዘመቻ ፍጠር",
-  "Criar convite individual": "የግል ግብዣ ፍጠር"
+  "Criar convite individual": "የግል ግብዣ ፍጠር",
+  "Não foi possível guardar. Verifique a imagem e a ligação.": "ማስቀመጥ አልተቻለም። ምስሉንና ግንኙነቱን ያረጋግጡ።",
+  "Identificador público (@)": "ይፋዊ መለያ (@)",
+  "Use 3 a 30 letras sem acentos, números ou sublinhados.": "ከ3 እስከ 30 የላቲን ፊደላት ያለ ልዩ ምልክት፣ ቁጥሮች ወይም የታችኛው ሰረዝ ይጠቀሙ።",
+  "O que faz o seu negócio?": "ንግድዎ ምን ይሠራል?",
+  "Código público da AFROLOC do estabelecimento (opcional)": "የንግድ ቦታው ይፋዊ AFROLOC ኮድ (አማራጭ)",
+  "Zona de atendimento (opcional)": "የአገልግሎት አካባቢ (አማራጭ)",
+  "Alterar fotografia": "ፎቶ ቀይር",
+  "Escolher logótipo ou fotografia": "አርማ ወይም ፎቶ ምረጥ",
+  "Escolha uma imagem até 12 MB.": "እስከ 12 MB የሆነ ምስል ይምረጡ።",
+  "Documentação da empresa": "የድርጅት ሰነዶች",
+  "NIF": "የግብር መለያ ቁጥር (NIF)",
+  "Alvará": "የንግድ ፈቃድ",
+  "Outros documentos": "ሌሎች ሰነዶች",
+  "Saber mais": "ተጨማሪ ይወቁ",
+  "A verificação documental estará disponível numa fase futura. Podes criar o perfil do teu negócio sem apresentar documentos.": "የሰነድ ማረጋገጫ በወደፊት ደረጃ ይገኛል። ሰነዶችን ሳያቀርቡ የንግድዎን መገለጫ መፍጠር ይችላሉ።",
+  "Editar perfil de {{name}}": "የ{{name}} መገለጫ አርትዕ"
 }
