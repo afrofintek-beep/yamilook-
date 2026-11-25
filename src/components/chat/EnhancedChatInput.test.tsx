@@ -5,6 +5,8 @@ import userEvent from '@testing-library/user-event';
 import { act, cleanup, fireEvent, render as renderComponent, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { EnhancedChatInput } from './EnhancedChatInput';
+const integrations=vi.hoisted(()=>({googleMaps:false,maguela:false,loading:false}));
+vi.mock('@/features/integration-access/useIntegrationAccess',()=>({useIntegrationAccess:()=>integrations}));
 
 // Exercise the real router and query hooks with an authenticated test account,
 // but deny wallet access by default; no network or real payments.
@@ -25,7 +27,7 @@ vi.mock('./GifPicker', () => ({ GifPicker: () => null }));
 vi.mock('./EmojiPanel', () => ({ EmojiPanel: () => null }));
 vi.mock('./ScheduleMessageSheet', () => ({ ScheduleMessageSheet: () => null }));
 afterEach(cleanup);
-beforeEach(() => {uploadMedia.mockReset();walletRpc.mockReset();walletRpc.mockResolvedValue({data:{allowed:false,admin:false},error:null});});
+beforeEach(() => {Object.assign(integrations,{googleMaps:false,maguela:false,loading:false});uploadMedia.mockReset();walletRpc.mockReset();walletRpc.mockResolvedValue({data:{allowed:false,admin:false},error:null});});
 
 describe('Papos draft recovery', () => {
   it('keeps the text and reply on failure, then clears them after a successful retry', async () => {
@@ -107,4 +109,38 @@ it('shares an AFROLOC address only after confirming the draft, without requestin
   await user.type(screen.getByLabelText('Código AFROLOC'), 'draft');
   rerender(<EnhancedChatInput {...props} conversationId="other" />);
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+});
+it('hides the Google location attachment but keeps AFROLOC available',async()=>{
+ const user=userEvent.setup();
+ render(<EnhancedChatInput onSend={vi.fn()} onTyping={vi.fn()} conversationId="chat"/>);
+ await user.click(screen.getByRole('button',{name:'Adicionar à mensagem'}));
+ expect(screen.queryByRole('menuitem',{name:'Localização',exact:true})).toBeNull();
+ expect(screen.getByRole('menuitem',{name:'Endereço AFROLOC'})).toBeVisible();
+});
+it('closes a prepared Google location when permission is revoked',async()=>{
+ integrations.googleMaps=true;
+ const user=userEvent.setup();
+ Object.defineProperty(navigator,'geolocation',{configurable:true,value:{getCurrentPosition:vi.fn(success=>success({coords:{latitude:-8.93,longitude:13.18}}))}});
+ const props={onSend:vi.fn(),onTyping:vi.fn(),conversationId:'chat'};
+ const view=render(<EnhancedChatInput {...props}/>);
+ await user.click(screen.getByRole('button',{name:'Adicionar à mensagem'}));
+ await user.click(screen.getByRole('menuitem',{name:'Localização',exact:true}));
+ expect(screen.getByRole('dialog')).toHaveTextContent('Partilhar localização');
+ integrations.googleMaps=false;view.rerender(<EnhancedChatInput {...props}/>);
+ expect(screen.queryByRole('dialog')).toBeNull();
+ expect(screen.getByRole('textbox',{name:'Mensagem'})).toHaveValue('');
+ expect(props.onSend).not.toHaveBeenCalled();
+});
+it('ignores a GPS result arriving after Google permission is revoked',async()=>{
+ integrations.googleMaps=true;
+ const user=userEvent.setup();let finish!:(value:unknown)=>void;
+ Object.defineProperty(navigator,'geolocation',{configurable:true,value:{getCurrentPosition:vi.fn(success=>{finish=success})}});
+ const props={onSend:vi.fn(),onTyping:vi.fn(),conversationId:'chat'};
+ const view=render(<EnhancedChatInput {...props}/>);
+ await user.click(screen.getByRole('button',{name:'Adicionar à mensagem'}));
+ await user.click(screen.getByRole('menuitem',{name:'Localização',exact:true}));
+ integrations.googleMaps=false;view.rerender(<EnhancedChatInput {...props}/>);
+ await act(async()=>finish({coords:{latitude:-8.93,longitude:13.18}}));
+ expect(screen.queryByRole('dialog')).toBeNull();
+ expect(props.onSend).not.toHaveBeenCalled();
 });

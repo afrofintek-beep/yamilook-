@@ -57,6 +57,7 @@ const Feed = lazy(() => import("./pages/Feed"));
 const Discover = lazy(() => import("./pages/Discover"));
 const DevTools = lazy(() => import("./pages/DevTools"));
 const Admin = lazy(() => import("./pages/Admin"));
+const AccessDashboard = lazy(() => import('./features/access-dashboard/AccessDashboard'));
 const Moderation = lazy(() => import("./pages/Moderation"));
 const PublicBusiness = lazy(() => import("./pages/PublicBusiness"));
 const MyBusiness = lazy(() => import("./pages/MyBusiness"));
@@ -358,6 +359,7 @@ function AnimatedRoutes() {
           <Route path="/dev" element={<DevTools />} />
           <Route path="/dev-tools" element={<DevTools />} />
           <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
+          <Route path="/admin/acessos" element={<ProtectedRoute><AccessDashboard /></ProtectedRoute>} />
           <Route path="/admin/monetization" element={<ProtectedRoute><AdminMonetization /></ProtectedRoute>} />
           <Route path="/admin/applications" element={<ProtectedRoute><AdminApplications /></ProtectedRoute>} />
           <Route path="/afroloc/acesso/:handle" element={<ProtectedRoute><AccessVisit /></ProtectedRoute>} />

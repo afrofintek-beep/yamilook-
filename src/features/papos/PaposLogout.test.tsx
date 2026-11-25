@@ -8,11 +8,14 @@ import { PaposGate } from './PaposApp';
 import { supabase } from '@/integrations/supabase/client';
 import { AppSurfaceContext } from '@/lib/app-surface';
 const { auth } = vi.hoisted(()=>({auth:{user:null as null|{id:string},profile:null as null|{display_name:string,onboarding_completed:boolean},loading:false,signOut:vi.fn(),signIn:vi.fn(),updateProfile:vi.fn(),refreshProfile:vi.fn()}}));
+const { integrationAccess } = vi.hoisted(() => ({ integrationAccess: { admin: false, wallet: false, googleMaps: false, maguela: false, businessRegistration: false, loading: false } }));
+vi.mock('@/features/integration-access/useIntegrationAccess', () => ({ useIntegrationAccess: () => integrationAccess }));
 vi.mock('@/hooks/useAuth',()=>({useAuth:()=>auth,AuthProvider:({children}:{children:React.ReactNode})=>children}));
 vi.mock('@/integrations/supabase/client',()=>({supabase:{rpc:vi.fn((name: string)=>Promise.resolve({data:name === 'can_issue_user_invitation' ? true : name === 'list_invitation_campaigns' ? [{ id: 'campaign', name: 'Campanha KOSOLOLA', status: 'active', eligible: true, starts_at: '2020-01-01', ends_at: '2099-01-01', max_per_user: 10, max_total: 100, my_issued: 0, total_issued: 0 }] : name === 'campaign_report' ? { issued: 0, used: 0, expired: 0, pending: 0, invitations: [] } : name === 'issue_campaign_invitation' ? { code: 'A123456789ABCDEF', expires_at: '2030-01-01' } : [],error:null}))}}));
 vi.mock('@/components/settings/ArchivedChatsSheet',()=>({ArchivedChatsSheet:()=>null}));
 vi.mock('@/components/settings/BlockedUsersSheet',()=>({BlockedUsersSheet:()=>null}));
 beforeEach(()=>{
+  integrationAccess.admin = false;
   auth.user={id:'user'};auth.profile={display_name:'Nome privado',onboarding_completed:true};auth.signOut.mockReset();
 });
 afterEach(cleanup);
@@ -63,4 +66,15 @@ it('opens authorized campaign invitations from KOSOLOLA settings without legacy 
   expect(new URL(whatsapp.getAttribute('href')!).searchParams.get('text')).toContain('KOSOLOLA');
   expect(screen.getByRole('link', { name: 'Preparar email' })).toBeInTheDocument();
   expect(supabase.rpc).not.toHaveBeenCalledWith('issue_shareable_user_invitation', expect.anything());
+});
+
+it('opens the central access dashboard from the actual KOSOLOLA settings for administrators', () => {
+  integrationAccess.admin = true;
+  setup();
+  expect(screen.getByRole('link', { name: 'Gerir acessos' })).toHaveAttribute('href', 'https://www.yamilook.com/admin/acessos?lang=pt');
+});
+
+it('hides the access dashboard entry in KOSOLOLA settings for ordinary profiles', () => {
+  setup();
+  expect(screen.queryByRole('link', { name: 'Gerir acessos' })).not.toBeInTheDocument();
 });

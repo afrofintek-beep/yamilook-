@@ -8,6 +8,8 @@ import { saveOnboardingDraft } from '@/lib/onboarding-draft';
 
 const state = vi.hoisted(() => ({ user: null as any, profile: null as any, signUp: vi.fn(), rpc: vi.fn() }));
 vi.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ ...state, loading: false, refreshProfile: vi.fn() }) }));
+// Personal signup has no business-registration access; that permission has its own hook tests.
+vi.mock('@/hooks/useBusinessRegistrationAccess', () => ({ useBusinessRegistrationAccess: () => ({ data: false, isLoading: false }) }));
 vi.mock('@/integrations/supabase/client', () => ({ supabase: {
   rpc: state.rpc, auth: { getSession: vi.fn().mockResolvedValue({ data: { session: null } }) },
 } }));

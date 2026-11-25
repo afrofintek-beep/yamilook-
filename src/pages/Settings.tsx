@@ -1,4 +1,5 @@
 import { PhoneAccess } from '@/features/phone-access/PhoneAccess';
+import { AccessDashboardLink } from '@/features/access-dashboard/AccessDashboardLink';
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { pilotPath } from '@/features/dangereux/paths';
 import MaguelaIdentityManagement from '@/components/account-link/MaguelaIdentityManagement';
@@ -363,7 +364,7 @@ export default function Settings() {
       {/* Content */}
       <ScrollArea className="min-h-0 flex-1 [&_[data-radix-scroll-area-viewport]]:overscroll-y-contain">
         <div className="pb-8">
-          <div className="p-4 space-y-4"><AuthorizedAfrolocLink />{user&&<MaguelaIdentityManagement key={user.id}/>}</div>
+          <div className="p-4 space-y-4"><AccessDashboardLink /><AuthorizedAfrolocLink />{user&&<MaguelaIdentityManagement key={user.id}/>}</div>
           <div className="px-4"><PhoneAccess mode="link" /></div>
           {/* Profile Section */}
           <motion.button

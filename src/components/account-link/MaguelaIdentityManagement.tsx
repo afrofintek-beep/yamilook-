@@ -1,9 +1,15 @@
 import {useEffect,useRef,useState} from 'react';
+import {useIntegrationAccess} from '@/features/integration-access/useIntegrationAccess';
 import {supabase} from '@/integrations/supabase/client';
 import {Button} from '@/components/ui/button';
 import {uiText as t,useUiLocale} from '@/i18n/ui-copy';
 
 export default function MaguelaIdentityManagement(){
+ const access=useIntegrationAccess();
+ const enabled=import.meta.env.VITE_MAGUELA_IDENTITY_MANAGEMENT_ENABLED==='true';
+ return enabled&&!access.loading&&access.maguela?<AuthorizedIdentityManagement/>:null;
+}
+function AuthorizedIdentityManagement(){
  useUiLocale();
  const [linked,setLinked]=useState<boolean|null>(null),[busy,setBusy]=useState(false),[confirm,setConfirm]=useState(false),[notice,setNotice]=useState<'revoked'|'unknown'|null>(null);
  const generation=useRef(0),lock=useRef(false);

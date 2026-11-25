@@ -1,4 +1,5 @@
 import {MaguelaPickupControl} from './MaguelaPickup';
+import {useIntegrationAccess} from '@/features/integration-access/useIntegrationAccess';
 import {uiText as t,useUiLocale} from '@/i18n/ui-copy';
 import {useEffect,useRef,useState} from 'react';
 import {PersonSearch,type AccessPerson} from './PersonSearch';
@@ -22,17 +23,22 @@ export function useAccessControl(id:string|undefined,code:string|undefined){
 }
 export function AccessControl({control}:{control:ReturnType<typeof useAccessControl>}){
  const locale=useUiLocale();
+ const integrationAccess=useIntegrationAccess();
+ const googleMaps=!integrationAccess.loading&&integrationAccess.googleMaps;
+ const maguela=!integrationAccess.loading&&integrationAccess.maguela;
+ const googleMapsAllowed=useRef(googleMaps);googleMapsAllowed.current=googleMaps;
  const [query,setQuery]=useState(''),[people,setPeople]=useState<AccessPerson[]>([]);
  const [radius,setRadius]=useState('500'),[hours,setHours]=useState('24');
  const [entryCoordinates,setEntryCoordinates]=useState('');
+ useEffect(()=>{if(!googleMaps)setEntryCoordinates('');},[googleMaps]);
  const [offlineContinuation,setOfflineContinuation]=useState(false);
  useEffect(()=>{setOfflineContinuation(false)},[control.source?.id,control.source?.code,control.policy?.handle]);
  const [submitting,setSubmitting]=useState(false),[outcome,setOutcome]=useState<{count:number;failed:boolean}|null>(null);
  const submittingRef=useRef(false),alive=useRef(true);
  useEffect(()=>{alive.current=true;return()=>{alive.current=false}},[]);
  const locked=control.busy||submitting;
- const googleEntry=parseGoogleEntry(entryCoordinates);
- const invalidEntry=entryCoordinates.trim().length>0&&!googleEntry;
+ const googleEntry=googleMaps?parseGoogleEntry(entryCoordinates):null;
+ const invalidEntry=googleMaps&&entryCoordinates.trim().length>0&&!googleEntry;
  const toggle=(person:AccessPerson)=>{if(locked)return;setOutcome(null);setPeople(previous=>previous.some(p=>p.id===person.id)?previous.filter(p=>p.id!==person.id):[...previous,person]);};
  const authorize=async()=>{
   if(submittingRef.current||control.busy||!control.policy||!people.length||invalidEntry)return;
@@ -42,7 +48,7 @@ export function AccessControl({control}:{control:ReturnType<typeof useAccessCont
    for(const person of people){
     if(!alive.current)break;
     await control.change('grant',{username:person.username,recipient_id:person.id,radius:Number(radius),hours:Number(hours),offline_continuation:offlineContinuation,
-     ...(googleEntry?{google_entry:googleEntry}:{})});
+     ...(googleMapsAllowed.current&&googleEntry?{google_entry:googleEntry}:{})});
     count++;
     if(alive.current)setPeople(previous=>previous.filter(p=>p.id!==person.id));
    }
@@ -64,7 +70,7 @@ export function AccessControl({control}:{control:ReturnType<typeof useAccessCont
     </ul></div>}
     <div className="locaccess-options"><label className="grid gap-1 text-sm">{t("Revelar a morada")}<select className="locaccess-select" disabled={locked} value={radius} onChange={e=>setRadius(e.target.value)}><option value="100">{t("A 100 metros")}</option><option value="250">{t("A 250 metros")}</option><option value="500">{t("A 500 metros")}</option><option value="0">{t("Imediatamente")}</option></select></label>
     <label className="grid gap-1 text-sm">{t("Validade")}<select className="locaccess-select" disabled={locked} value={hours} onChange={e=>setHours(e.target.value)}><option value="1">{t("1 hora")}</option><option value="24">{t("24 horas")}</option><option value="168">{t("7 dias")}</option></select></label></div>
-    <details className="rounded-lg border p-3">
+    {googleMaps&&<details className="rounded-lg border p-3">
      <summary className="cursor-pointer font-medium">{t('Entrada pública no Google Maps')}</summary>
      <label className="mt-2 grid gap-1 text-sm">
       {t('Coordenadas da portaria ou entrada pública')}
@@ -74,7 +80,7 @@ export function AccessControl({control}:{control:ReturnType<typeof useAccessCont
      </label>
      <p className="mt-2 text-sm text-muted-foreground">{t('Opcional. Introduz apenas um ponto público que autorizas enviar ao Google Maps.')}</p>
      {invalidEntry&&<p role="alert" className="text-sm">{t('Indica coordenadas válidas para a entrada pública.')}</p>}
-    </details>
+    </details>}
     <div className="rounded-lg border p-3">
      <label className="flex min-h-11 items-center gap-3 text-sm font-medium">
       <input type="checkbox" checked={offlineContinuation} disabled={locked} className="h-5 w-5"
@@ -87,7 +93,7 @@ export function AccessControl({control}:{control:ReturnType<typeof useAccessCont
     <p className="locaccess-confirmation">{t("Pesquisar e seleccionar não concede acesso. Confirma no botão acima.")}</p>
    </form>
   {outcome&&<p role={outcome.failed?'alert':'status'}>{t(outcome.failed?'Acessos autorizados: {{count}}. Não foi possível concluir. As pessoas restantes continuam seleccionadas.':'Acessos autorizados: {{count}}.',{count:outcome.count})}</p>}
-  {grants.map(g=><div key={g.id} className="flex flex-wrap items-center justify-between gap-2 border-t pt-3"><div className="text-sm"><strong>@{g.username.replace(/^@+/,'')}</strong><p>{t('{{mode}} · até {{date}}',{mode:g.radius?t('{{distance}} metros',{distance:g.radius}):t('Imediato'),date:new Date(g.expiresAt).toLocaleString(locale==='pt-banda'?'pt-AO':locale,{timeZone:'Africa/Luanda'})})}</p>{g.hasExternalRoute&&<p>{t('Entrada pública no Google Maps')}</p>}{g.offlineContinuation===true&&<p>{t('Continuidade breve sem rede permitida')}</p>}</div><Button variant="outline" disabled={locked} onClick={()=>void control.change('revoke',{grant_id:g.id}).catch(()=>{})}>{t("Fechar acesso")}</Button>{control.policy&&<MaguelaPickupControl key={g.id+g.expiresAt} handle={control.policy.handle} grantId={g.id} disabled={locked}/>}</div>)}
+  {grants.map(g=><div key={g.id} className="flex flex-wrap items-center justify-between gap-2 border-t pt-3"><div className="text-sm"><strong>@{g.username.replace(/^@+/,'')}</strong><p>{t('{{mode}} · até {{date}}',{mode:g.radius?t('{{distance}} metros',{distance:g.radius}):t('Imediato'),date:new Date(g.expiresAt).toLocaleString(locale==='pt-banda'?'pt-AO':locale,{timeZone:'Africa/Luanda'})})}</p>{googleMaps&&g.hasExternalRoute&&<p>{t('Entrada pública no Google Maps')}</p>}{g.offlineContinuation===true&&<p>{t('Continuidade breve sem rede permitida')}</p>}</div><Button variant="outline" disabled={locked} onClick={()=>void control.change('revoke',{grant_id:g.id}).catch(()=>{})}>{t("Fechar acesso")}</Button>{maguela&&control.policy&&<MaguelaPickupControl key={g.id+g.expiresAt} handle={control.policy.handle} grantId={g.id} disabled={locked}/>}</div>)}
   {control.policy&&control.source&&<Farewell key={control.policy.handle} source={control.source} grants={grants} reload={control.retry} disabled={locked}/>}
   {grants.length>0&&<Button variant="link" className="locaccess-close" disabled={locked} onClick={()=>void control.change('close').catch(()=>{})}>{t("Encerrar sem mensagem")}</Button>}
   <p className="locaccess-note">{t("O acesso à tua morada respeita as autorizações, a distância e a validade que definires. A proximidade indicada não comprova presença física. Ao fechar o acesso, novas consultas são bloqueadas e a localização é ocultada em até 20 segundos. Esta acção não elimina informações já consultadas ou partilhadas.")}</p>

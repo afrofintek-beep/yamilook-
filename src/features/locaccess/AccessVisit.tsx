@@ -1,4 +1,5 @@
 import {MaguelaPickupVisit} from './MaguelaPickup';
+import {useIntegrationAccess} from '@/features/integration-access/useIntegrationAccess';
 import {prepareJourneyCompass} from '../locaccess/useJourneyCompass';
 import {uiText as t,useUiLocale} from '@/i18n/ui-copy';
 import {NjilaJourney} from './NjilaJourney';
@@ -20,21 +21,29 @@ function JourneyVisit({onBack}:{onBack:()=>void}){
 }
 function LocationVisit({onJourney}:{onJourney:()=>void}){
  useUiLocale();
+ const integrationAccess=useIntegrationAccess();
+ const googleMaps=!integrationAccess.loading&&integrationAccess.googleMaps;
+ const maguela=!integrationAccess.loading&&integrationAccess.maguela;
+ const googleMapsAllowed=useRef(googleMaps);googleMapsAllowed.current=googleMaps;
  const {handle=''}=useParams();const [tracking,setTracking]=useState(false),[result,setResult]=useState<Result|null>(null),[message,setMessage]=useState('A verificar a autorização…');
  const [retry,setRetry]=useState(0);
  const [openingRoute,setOpeningRoute]=useState(false),[routeError,setRouteError]=useState(false);
  const routeRequest=useRef<AbortController|null>(null);
- useEffect(()=>()=>routeRequest.current?.abort(),[]);
+ useEffect(()=>{
+  googleMapsAllowed.current=googleMaps;
+  if(!googleMaps){routeRequest.current?.abort();routeRequest.current=null;setOpeningRoute(false);setRouteError(false);}
+  return()=>{googleMapsAllowed.current=false;routeRequest.current?.abort();};
+ },[googleMaps]);
 
  const openRoute=async()=>{
-  if(routeRequest.current||!validHandle(handle)||document.hidden||!navigator.onLine)return;
+  if(!googleMapsAllowed.current||routeRequest.current||!validHandle(handle)||document.hidden||!navigator.onLine)return;
   const request=new AbortController();
   routeRequest.current=request;
   setOpeningRoute(true);
   setRouteError(false);
   try {
    const route=await locaccess<ExternalRoute>('external_route',{handle});
-   if(request.signal.aborted||document.hidden||!navigator.onLine)return;
+   if(!googleMapsAllowed.current||request.signal.aborted||document.hidden||!navigator.onLine)return;
    const url=googleEntryUrl(route);
    if(url)openGoogleEntry(url);
    else setRouteError(true);
@@ -42,7 +51,7 @@ function LocationVisit({onJourney}:{onJourney:()=>void}){
    if(!request.signal.aborted)setRouteError(true);
   }finally{
    if(!request.signal.aborted)setOpeningRoute(false);
-   routeRequest.current=null;
+   if(routeRequest.current===request)routeRequest.current=null;
   }
  };
  useEffect(()=>{let active=true,connected=navigator.onLine,epoch=0,fix:Fix|null=null,watch:number|undefined,expiry:ReturnType<typeof setTimeout>|undefined;
@@ -80,7 +89,7 @@ function LocationVisit({onJourney}:{onJourney:()=>void}){
   <h1 className="text-xl font-semibold">{t("Localização AFROLOC")}</h1><p className="text-sm text-muted-foreground">{t("LOCACCESS · Consulta experimental protegida")}</p><p role="status">{t(message,{distance:result?.radius||0})}</p>
   {(result?.status==='ready'||result?.status==='proximity')&&<Button onClick={onJourney}>{t('Abrir na NJILA')}</Button>}
   {result?.status==='ready'&&result.point?<AccessMap point={result.point}/>:result?.status==='proximity'&&result.area?<AccessMap point={result.area} approximate/>:null}
-  {result?.hasExternalRoute===true&&(
+  {googleMaps&&result?.hasExternalRoute===true&&(
    <details className="rounded-lg border p-3">
     <summary className="cursor-pointer font-medium">{t('Formas de lá chegar')}</summary>
     <p className="my-2 text-sm text-muted-foreground">{t('Usa o Google Maps até à entrada pública. Para chegar à morada, continua na NJILA.')}</p>
@@ -89,8 +98,8 @@ function LocationVisit({onJourney}:{onJourney:()=>void}){
     </Button>
    </details>
   )}
-  {(result?.status==='ready'||result?.status==='proximity')&&!result.owner&&<MaguelaPickupVisit key={handle} handle={handle}/>}
-  {routeError&&<p role="alert">{t('O percurso no Google Maps já não está disponível. Verifica o acesso.')}</p>}
+  {maguela&&(result?.status==='ready'||result?.status==='proximity')&&!result.owner&&<MaguelaPickupVisit key={handle} handle={handle}/>}
+  {googleMaps&&routeError&&<p role="alert">{t('O percurso no Google Maps já não está disponível. Verifica o acesso.')}</p>}
   {result?.status==='proximity'&&<Button disabled={tracking} onClick={()=>{if(navigator.geolocation)setTracking(true);else setMessage('Este dispositivo não disponibiliza a localização.')}}>{t(tracking?'A verificar proximidade…':'Activar localização e verificar proximidade')}</Button>}
   <Button variant="outline" onClick={()=>setRetry(n=>n+1)}>{t("Verificar novamente")}</Button>
  </main>;
