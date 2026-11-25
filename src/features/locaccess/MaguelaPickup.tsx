@@ -1,10 +1,11 @@
 import {useEffect,useRef,useState} from 'react';
 import {Button} from '@/components/ui/button';
 import {maguelaPickup,validPickupReference} from './maguela-pickup';
-import {uiText as t} from '@/i18n/ui-copy';
+import {uiText as t, useUiLocale} from '@/i18n/ui-copy';
 
 /** Owner explicitly designates a public landmark for a single existing recipient. */
 export function MaguelaPickupControl({handle,grantId,disabled}:{handle:string;grantId:string;disabled:boolean}){
+ useUiLocale();
  const [reference,setReference]=useState(''),[busy,setBusy]=useState(false),[message,setMessage]=useState(''),[designated,setDesignated]=useState(false);
  const seq=useRef(0),lock=useRef(false);
  useEffect(()=>{const id=++seq.current;setReference('');setDesignated(false);setMessage('');
@@ -37,6 +38,7 @@ export function MaguelaPickupControl({handle,grantId,disabled}:{handle:string;gr
 
 /** No cross-origin token, URL parameter, private coordinate or persistent browser storage. */
 export function MaguelaPickupVisit({handle}:{handle:string}){
+ useUiLocale();
  const [reference,setReference]=useState(''),[message,setMessage]=useState(''),[busy,setBusy]=useState(false);
  const sequence=useRef(0),deadline=useRef(0),timer=useRef<ReturnType<typeof setTimeout>|undefined>();
  const clear=()=>{sequence.current++;deadline.current=0;clearTimeout(timer.current);setReference('');setBusy(false);};
