@@ -1,0 +1,46 @@
+name: MASSA UNITEL Money sandbox boundary
+on:
+  pull_request:
+    paths:
+      - 'src/features/payment-point/**'
+      - 'supabase/functions/_shared/massa-unitel*'
+      - 'supabase/functions/massa-unitel*/**'
+      - 'supabase/functions/_shared/massa-appypay*'
+      - 'supabase/migrations/*massa_unitel*.sql'
+      - 'supabase/migrations/*massa_appypay*.sql'
+      - 'supabase/migrations/*payment_point*.sql'
+      - 'supabase/migrations/*wallet*.sql'
+      - 'supabase/config.toml'
+      - 'tests/massa-unitel/**'
+      - 'tests/massa-appypay/**'
+      - 'tests/payment-point/**'
+      - 'package*.json'
+      - '.github/workflows/massa-unitel.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  sandbox-boundary:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      VITE_SUPABASE_URL: https://example.supabase.co
+      VITE_SUPABASE_PUBLISHABLE_KEY: unit-test-key
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      # Isolated PGlite, simulated provider responses, no provider credentials.
+      - run: node --test --test-concurrency=1 tests/payment-point/ledger.test.mjs tests/massa-appypay/*.test.mjs tests/massa-unitel/*.test.mjs
+      - run: npm test -- src/features/payment-point
+      - run: npx tsc --noEmit -p tsconfig.app.json
+      - run: >-
+          npm exec tsc -- --noEmit --target es2022 --module esnext --moduleResolution bundler
+          --lib es2022,dom --allowImportingTsExtensions --skipLibCheck
+          supabase/functions/_shared/massa-unitel.ts
+          supabase/functions/_shared/massa-unitel-service.ts
+          supabase/functions/massa-unitel/handler.ts
+      - run: npm run build

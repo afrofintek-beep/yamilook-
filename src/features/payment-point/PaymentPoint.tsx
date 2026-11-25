@@ -22,6 +22,9 @@ import { ScanPayment } from './ScanPayment';
 import { AppyPaySandbox } from './AppyPaySandbox';
 import { useAppyPayLabels } from './appypay-labels';
 import type { AppyPayAttempt } from './appypay-api';
+import { UnitelMoneySandbox } from './UnitelMoneySandbox';
+import { useUnitelLabels } from './unitel-labels';
+import type { UnitelAttempt } from './unitel-api';
 
 const labels: Record<string, string> = {
   pending: 'Pendente', processing: 'Em processamento', completed: 'Concluído', rejected: 'Rejeitado',
@@ -33,6 +36,7 @@ export default function PaymentPoint() {
   const { id } = useParams();
   const copy = useReceiveLabels();
   const appyCopy = useAppyPayLabels();
+  const unitelCopy = useUnitelLabels();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const requestedTab = searchParams.get('tab') || 'wallet';
@@ -55,6 +59,9 @@ export default function PaymentPoint() {
   const [externalOrderBlocked, setExternalOrderBlocked] = useState(false);
   const [externalTopupBlocked, setExternalTopupBlocked] = useState(false);
   const [externalAttempt, setExternalAttempt] = useState<AppyPayAttempt | null>(null);
+  const [unitelOrderBlocked, setUnitelOrderBlocked] = useState(false);
+  const [unitelAttempt, setUnitelAttempt] = useState<UnitelAttempt | null>(null);
+  const orderPaymentBlocked = externalOrderBlocked || unitelOrderBlocked;
   const { notifyMessage } = useMessageNotification();
   const pendingSellerOrder = useRef<string>();
   useEffect(() => {
@@ -115,9 +122,11 @@ export default function PaymentPoint() {
     return () => { active = false; clearInterval(timer); };
   }, [id,pendingKey]);
   async function run(action: string, reference?: string, cents?: number, text?: string) {
-    if ((action === 'pay' || action === 'cancel') && externalOrderBlocked) return;
+    if ((action === 'pay' || action === 'cancel') && orderPaymentBlocked) return;
     if (action === 'topup' && externalTopupBlocked) return;
-    if (action === 'refund' && (order?.payment_provider === 'appypay' || externalAttempt?.state === 'confirmed')) return;
+    if (action === 'refund' && (['appypay', 'unitel'].includes(order?.payment_provider || '')
+      || (externalAttempt?.order_id === order?.id && externalAttempt?.state === 'confirmed')
+      || (unitelAttempt?.order_id === order?.id && unitelAttempt?.state === 'confirmed'))) return;
     if (actionLock.current) return;
     actionLock.current = true; setBusy(true); setError('');
     let submitted = false;
@@ -186,7 +195,9 @@ export default function PaymentPoint() {
   const pendingOrders = ownOrders.filter(item => item.status === 'pending' && new Date(item.expires_at) > new Date());
   const visibleOrders = tab === 'business' ? ownOrders : overview?.orders || [];
   const parsedTopupAmount = (() => { try { return parseAmount(amount); } catch { return undefined; } })();
-  const externalOrderConfirmed = order?.status === 'confirmed'
+  const unitelOrderConfirmed = (order?.payment_provider === 'unitel' && ['paid', 'confirmed'].includes(order.status))
+    || (unitelAttempt?.order_id === order?.id && unitelAttempt?.state === 'confirmed');
+  const externalOrderConfirmed = unitelOrderConfirmed || order?.status === 'confirmed'
     || (order?.payment_provider === 'appypay' && order?.status === 'paid')
     || (externalAttempt?.order_id === order?.id && externalAttempt?.state === 'confirmed');
   function renderWithdrawals(pendingOnly: boolean) {
@@ -266,24 +277,27 @@ export default function PaymentPoint() {
         <p>Recebe {order.seller_name || 'Utilizador Yamilook'} · carteira …{order.seller_id.slice(-6)}</p>
         <p className="text-sm">Comissão de teste {money(0)} · Total {money(order.amount)}</p>
         <p className="text-2xl font-semibold">{money(order.amount)}</p><p className="break-words">Motivo: {order.description}</p>
-        <p role="status">{externalOrderConfirmed ? appyCopy.states.confirmed + ' · ' + money(order.amount) : order.status === 'paid'
+        <p role="status">{externalOrderConfirmed ? (unitelOrderConfirmed ? unitelCopy.states.confirmed : appyCopy.states.confirmed) + ' · ' + money(order.amount) : order.status === 'paid'
           ? (order.own ? copy.received : 'Pagamento simulado concluído') + ' · ' + money(order.amount)
           : order.status === 'pending' && order.own
             ? (Date.parse(order.expires_at) > Date.now() ? copy.awaiting : 'Pedido expirado')
             : labels[order.status] + ' · teste'}</p>
         <p className="text-xs text-muted-foreground">Válido até {new Date(order.expires_at).toLocaleString('pt-AO')}</p>
         {user && <AppyPaySandbox key={`${user.id}:${order.id}`} userId={user.id} orderId={order.id} amountMinor={order.amount}
-          readOnly={!!order.own} canCreate={!busy && !uncertain && order.status === 'pending' && Date.parse(order.expires_at) > Date.now()}
+          readOnly={!!order.own} canCreate={!busy && !uncertain && !unitelOrderBlocked && order.status === 'pending' && Date.parse(order.expires_at) > Date.now()}
           onConfirmed={refresh} onBlockedChange={setExternalOrderBlocked} onAttempt={setExternalAttempt} />}
+        {user && <UnitelMoneySandbox key={`unitel:${user.id}:${order.id}`} userId={user.id} orderId={order.id} amountMinor={order.amount}
+          readOnly={!!order.own} canCreate={!busy && !uncertain && !externalOrderBlocked && order.status === 'pending' && Date.parse(order.expires_at) > Date.now()}
+          onConfirmed={refresh} onBlockedChange={setUnitelOrderBlocked} onAttempt={setUnitelAttempt} />}
         {order.status === 'pending' && new Date(order.expires_at) > new Date() && <>
           {order.own ? <>
             <div className="bg-white p-4 rounded-lg w-fit"><QRCodeSVG value={orderLink(order.id)} size={200} /></div>
             <Button onClick={share}>{copy.share}</Button>
-            <Button variant="outline" disabled={busy || externalOrderBlocked} onClick={() => run('cancel', order.id)}>Cancelar pedido</Button>
-          </> : <Button disabled={busy || debitUnavailable || externalOrderBlocked || !wallet || wallet.purchased + wallet.earned < order.amount} onClick={() => run('pay', order.id)}>Confirmar simulação</Button>}
+            <Button variant="outline" disabled={busy || orderPaymentBlocked} onClick={() => run('cancel', order.id)}>Cancelar pedido</Button>
+          </> : <Button disabled={busy || debitUnavailable || orderPaymentBlocked || !wallet || wallet.purchased + wallet.earned < order.amount} onClick={() => run('pay', order.id)}>Confirmar simulação</Button>}
           {!order.own && wallet && wallet.purchased + wallet.earned < order.amount && <div className="space-y-2"><p>Carregue saldo de teste para pagar este pedido.</p><Button onClick={() => openDialog('topup')}>Carregar saldo</Button></div>}
         </>}
-        {order.own && order.status === 'paid' && order.payment_provider !== 'appypay' && !externalOrderConfirmed && <Button variant="outline" disabled={busy || debitUnavailable} onClick={() => {
+        {order.own && order.status === 'paid' && !['appypay', 'unitel'].includes(order.payment_provider || '') && !externalOrderConfirmed && <Button variant="outline" disabled={busy || debitUnavailable} onClick={() => {
           if (window.confirm(`Reembolsar ${money(order.amount)} ao comprador?`)) void run('refund', order.id);
         }}>Reembolsar compra</Button>}
       </section>}
