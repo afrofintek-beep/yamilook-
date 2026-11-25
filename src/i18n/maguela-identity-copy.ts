@@ -1,0 +1,122 @@
+export const maguelaIdentityCopy: Record<string, Record<string,string>> = {
+  "pt": {
+    "Contas associadas MAGUELA": "Contas associadas MAGUELA",
+    "A associação não concede acesso a moradas privadas ou carteiras.": "A associação não concede acesso a moradas privadas ou carteiras.",
+    "Consultar associação MAGUELA": "Consultar associação MAGUELA",
+    "Associação activa": "Associação activa",
+    "Nenhuma associação activa confirmada": "Nenhuma associação activa confirmada",
+    "Revogar associação MAGUELA": "Revogar associação MAGUELA",
+    "Confirma a revogação da associação e dos códigos pendentes?": "Confirma a revogação da associação e dos códigos pendentes?",
+    "Revogação confirmada pela MAGUELA.": "Revogação confirmada pela MAGUELA.",
+    "Não foi possível confirmar o estado. Tenta novamente.": "Não foi possível confirmar o estado. Tenta novamente.",
+    "Cancelar revogação": "Cancelar revogação"
+  },
+  "en": {
+    "Contas associadas MAGUELA": "MAGUELA linked accounts",
+    "A associação não concede acesso a moradas privadas ou carteiras.": "Linking does not grant access to private addresses or wallets.",
+    "Consultar associação MAGUELA": "Check MAGUELA link",
+    "Associação activa": "Active link",
+    "Nenhuma associação activa confirmada": "No active link confirmed",
+    "Revogar associação MAGUELA": "Revoke MAGUELA link",
+    "Confirma a revogação da associação e dos códigos pendentes?": "Confirm revocation of the link and pending codes?",
+    "Revogação confirmada pela MAGUELA.": "Revocation confirmed by MAGUELA.",
+    "Não foi possível confirmar o estado. Tenta novamente.": "Could not confirm the status. Try again.",
+    "Cancelar revogação": "Cancel revocation"
+  },
+  "fr": {
+    "Contas associadas MAGUELA": "Comptes associés MAGUELA",
+    "A associação não concede acesso a moradas privadas ou carteiras.": "L’association ne donne pas accès aux adresses privées ni aux portefeuilles.",
+    "Consultar associação MAGUELA": "Consulter l’association MAGUELA",
+    "Associação activa": "Association active",
+    "Nenhuma associação activa confirmada": "Aucune association active confirmée",
+    "Revogar associação MAGUELA": "Révoquer l’association MAGUELA",
+    "Confirma a revogação da associação e dos códigos pendentes?": "Confirmez-vous la révocation de l’association et des codes en attente ?",
+    "Revogação confirmada pela MAGUELA.": "Révocation confirmée par MAGUELA.",
+    "Não foi possível confirmar o estado. Tenta novamente.": "Impossible de confirmer le statut. Réessayez.",
+    "Cancelar revogação": "Annuler la révocation"
+  },
+  "ar": {
+    "Contas associadas MAGUELA": "حسابات MAGUELA المرتبطة",
+    "A associação não concede acesso a moradas privadas ou carteiras.": "الربط لا يمنح الوصول إلى العناوين الخاصة أو المحافظ.",
+    "Consultar associação MAGUELA": "التحقق من ربط MAGUELA",
+    "Associação activa": "ربط نشط",
+    "Nenhuma associação activa confirmada": "لم يتم تأكيد وجود ربط نشط",
+    "Revogar associação MAGUELA": "إلغاء ربط MAGUELA",
+    "Confirma a revogação da associação e dos códigos pendentes?": "هل تؤكد إلغاء الربط والرموز المعلقة؟",
+    "Revogação confirmada pela MAGUELA.": "أكدت MAGUELA الإلغاء.",
+    "Não foi possível confirmar o estado. Tenta novamente.": "تعذر تأكيد الحالة. حاول مرة أخرى.",
+    "Cancelar revogação": "إلغاء عملية السحب"
+  },
+  "am": {
+    "Contas associadas MAGUELA": "የ MAGUELA የተገናኙ መለያዎች",
+    "A associação não concede acesso a moradas privadas ou carteiras.": "መለያዎችን ማገናኘት የግል አድራሻዎችን ወይም ቦርሳዎችን የመጠቀም ፈቃድ አይሰጥም።",
+    "Consultar associação MAGUELA": "የ MAGUELA ግንኙነት ይመልከቱ",
+    "Associação activa": "ንቁ ግንኙነት",
+    "Nenhuma associação activa confirmada": "ንቁ ግንኙነት አልተረጋገጠም",
+    "Revogar associação MAGUELA": "የ MAGUELA ግንኙነት ሰርዝ",
+    "Confirma a revogação da associação e dos códigos pendentes?": "ግንኙነቱንና ተጠባባቂ ኮዶችን መሰረዝ ያረጋግጣሉ?",
+    "Revogação confirmada pela MAGUELA.": "ስረዛው በ MAGUELA ተረጋግጧል።",
+    "Não foi possível confirmar o estado. Tenta novamente.": "ሁኔታውን ማረጋገጥ አልተቻለም። እንደገና ይሞክሩ።",
+    "Cancelar revogação": "ስረዛውን አቁም"
+  },
+  "sw": {
+    "Contas associadas MAGUELA": "Akaunti zilizounganishwa za MAGUELA",
+    "A associação não concede acesso a moradas privadas ou carteiras.": "Muunganisho hautoi ruhusa ya kufikia anwani binafsi au pochi.",
+    "Consultar associação MAGUELA": "Angalia muunganisho wa MAGUELA",
+    "Associação activa": "Muunganisho hai",
+    "Nenhuma associação activa confirmada": "Hakuna muunganisho hai uliothibitishwa",
+    "Revogar associação MAGUELA": "Batilisha muunganisho wa MAGUELA",
+    "Confirma a revogação da associação e dos códigos pendentes?": "Unathibitisha kubatilisha muunganisho na misimbo inayosubiri?",
+    "Revogação confirmada pela MAGUELA.": "Ubatilishaji umethibitishwa na MAGUELA.",
+    "Não foi possível confirmar o estado. Tenta novamente.": "Haikuwezekana kuthibitisha hali. Jaribu tena.",
+    "Cancelar revogação": "Ghairi ubatilishaji"
+  },
+  "ln": {
+    "Contas associadas MAGUELA": "Ba comptes MAGUELA ekangisami",
+    "A associação não concede acesso a moradas privadas ou carteiras.": "Connexion epesaka ndingisa ya adresse privée to portefeuille te.",
+    "Consultar associação MAGUELA": "Talá connexion MAGUELA",
+    "Associação activa": "Connexion ezali active",
+    "Nenhuma associação activa confirmada": "Connexion active endimami te",
+    "Revogar associação MAGUELA": "Longolá connexion MAGUELA",
+    "Confirma a revogação da associação e dos códigos pendentes?": "Ondimi kolongola connexion mpe ba kode oyo ezali kozela?",
+    "Revogação confirmada pela MAGUELA.": "MAGUELA endimisi bolongoli.",
+    "Não foi possível confirmar o estado. Tenta novamente.": "Tokoki te kondimisa état. Meká lisusu.",
+    "Cancelar revogação": "Tiká bolongoli"
+  },
+  "yo": {
+    "Contas associadas MAGUELA": "Àwọn àkọọ́lẹ̀ MAGUELA tí a so pọ̀",
+    "A associação não concede acesso a moradas privadas ou carteiras.": "Ìsopọ̀ kò fúnni ní àṣẹ sí àdírẹ́sì àdáni tàbí àpò owó.",
+    "Consultar associação MAGUELA": "Ṣàyẹ̀wò ìsopọ̀ MAGUELA",
+    "Associação activa": "Ìsopọ̀ ń ṣiṣẹ́",
+    "Nenhuma associação activa confirmada": "A kò jẹ́rìí ìsopọ̀ tó ń ṣiṣẹ́",
+    "Revogar associação MAGUELA": "Fagilé ìsopọ̀ MAGUELA",
+    "Confirma a revogação da associação e dos códigos pendentes?": "Ṣé o jẹ́rìí fífagilé ìsopọ̀ àti àwọn kóòdù tó ń dúró?",
+    "Revogação confirmada pela MAGUELA.": "MAGUELA ti jẹ́rìí fífagilé.",
+    "Não foi possível confirmar o estado. Tenta novamente.": "A kò lè jẹ́rìí ipò náà. Gbìyànjú lẹ́ẹ̀kan sí i.",
+    "Cancelar revogação": "Dá fífagilé dúró"
+  },
+  "sn": {
+    "Contas associadas MAGUELA": "Maakaundi eMAGUELA akabatanidzwa",
+    "A associação não concede acesso a moradas privadas ou carteiras.": "Kubatana hakupi mvumo yekuwana kero dzakavanzika kana zvikwama zvemari.",
+    "Consultar associação MAGUELA": "Tarisa kubatana kweMAGUELA",
+    "Associação activa": "Kubatana kuri kushanda",
+    "Nenhuma associação activa confirmada": "Hapana kubatana kuri kushanda kwasimbiswa",
+    "Revogar associação MAGUELA": "Bvisa kubatana kweMAGUELA",
+    "Confirma a revogação da associação e dos códigos pendentes?": "Unosimbisa kubvisa kubatana nemakodhi akamirira?",
+    "Revogação confirmada pela MAGUELA.": "Kubviswa kwasimbiswa neMAGUELA.",
+    "Não foi possível confirmar o estado. Tenta novamente.": "Hatina kukwanisa kusimbisa mamiriro. Edza zvakare.",
+    "Cancelar revogação": "Kanzura kubvisa"
+  },
+  "zu": {
+    "Contas associadas MAGUELA": "Ama-akhawunti axhunyiwe e-MAGUELA",
+    "A associação não concede acesso a moradas privadas ou carteiras.": "Ukuxhumana akunikezi imvume yokufinyelela amakheli angasese noma izikhwama zemali.",
+    "Consultar associação MAGUELA": "Hlola ukuxhumana kwe-MAGUELA",
+    "Associação activa": "Ukuxhumana kuyasebenza",
+    "Nenhuma associação activa confirmada": "Akukho ukuxhumana okusebenzayo okuqinisekisiwe",
+    "Revogar associação MAGUELA": "Hoxisa ukuxhumana kwe-MAGUELA",
+    "Confirma a revogação da associação e dos códigos pendentes?": "Uyaqinisekisa ukuhoxisa ukuxhumana namakhodi asalindile?",
+    "Revogação confirmada pela MAGUELA.": "Ukuhoxiswa kuqinisekiswe yi-MAGUELA.",
+    "Não foi possível confirmar o estado. Tenta novamente.": "Isimo asikwazanga ukuqinisekiswa. Zama futhi.",
+    "Cancelar revogação": "Khansela ukuhoxisa"
+  }
+};
