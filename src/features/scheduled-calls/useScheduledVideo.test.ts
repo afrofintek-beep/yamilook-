@@ -49,7 +49,9 @@ describe('Scheduled video connection',()=>{
     state.denyCamera=true;
     await act(()=>result.current.join(false,true,true));
     expect(result.current.room).toBe(state.rooms[0]);
-    expect(result.current.error).toContain('Ligado sem');
+    expect(result.current.error).toContain('Não foi possível ligar a câmara');
+    expect(state.rooms[0].localParticipant.setMicrophoneEnabled).toHaveBeenCalledWith(true);
+    expect(state.rooms[0].disconnect).not.toHaveBeenCalled();
     expect(state.rooms[0].localParticipant.setCameraEnabled).toHaveBeenCalledWith(true);
   });
   it('disconnects on unmount and blocks a late credential response',async()=>{
@@ -111,8 +113,31 @@ it('does not refresh authorization failures',async()=>{
 });
 
 it('never connects or asks for devices before waiting-room admission',async()=>{
- state.invoke.mockResolvedValue({data:{waiting:true},error:null});
+ state.invoke.mockResolvedValueOnce({data:{waiting:true},error:null});
  const {result}=renderHook(()=>useScheduledVideo('session'));
- await act(()=>result.current.join(false,true,true));
- expect(state.rooms).toHaveLength(0);expect(result.current.error).toContain('sala de espera');
-});
+ let pending!:Promise<void>;
+ act(()=>{pending=result.current.join(false,true,true);});
+ await waitFor(()=>expect(result.current.waiting).toContain('admissão do organizador'));
+ expect(state.rooms).toHaveLength(0);
+ expect(result.current.loading).toBe(true);
+ expect(result.current.error).toBe('');
+ await act(async()=>{await pending;});
+ expect(state.invoke).toHaveBeenCalledTimes(2);
+ expect(result.current.room).toBe(state.rooms[0]);
+ expect(state.rooms[0].localParticipant.setCameraEnabled).toHaveBeenCalledWith(true);
+ expect(state.rooms[0].localParticipant.setMicrophoneEnabled).toHaveBeenCalledWith(true);
+ expect(result.current.waiting).toBe('');
+},10000);
+it('leaving the waiting room prevents subsequent connection and device requests',async()=>{
+ state.invoke.mockResolvedValueOnce({data:{waiting:true},error:null});
+ const {result}=renderHook(()=>useScheduledVideo('session'));
+ let pending!:Promise<void>;
+ act(()=>{pending=result.current.join(false,true,true);});
+ await waitFor(()=>expect(result.current.waiting).toContain('admissão do organizador'));
+ act(()=>result.current.leave());
+ await act(async()=>{await pending;});
+ expect(state.invoke).toHaveBeenCalledTimes(1);
+ expect(state.rooms).toHaveLength(0);
+ expect(result.current.room).toBeNull();
+ expect(result.current.waiting).toBe('');
+},10000);
