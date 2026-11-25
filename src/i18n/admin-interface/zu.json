@@ -336,5 +336,12 @@
   "Inscrições: {{used}} de {{limit}} · Emails confirmados: {{confirmed}}": "Ukubhalisa: {{used}} kokungu-{{limit}} · Ama-imeyili aqinisekisiwe: {{confirmed}}",
   "Válido até {{date}}": "Sisebenza kuze kube {{date}}",
   "Copiado!": "Kukopishiwe!",
-  "Cada conta criada ocupa uma vaga, mesmo antes da confirmação do email. Reencaminhar a ligação permite que outras pessoas utilizem as vagas disponíveis.": "I-akhawunti ngayinye eyakhiwayo ithatha indawo eyodwa, ngisho nangaphambi kokuqinisekiswa kwe-imeyili. Ukudlulisela isixhumanisi kuvumela abanye abantu ukuthi basebenzise izindawo ezisele."
+  "Cada conta criada ocupa uma vaga, mesmo antes da confirmação do email. Reencaminhar a ligação permite que outras pessoas utilizem as vagas disponíveis.": "I-akhawunti ngayinye eyakhiwayo ithatha indawo eyodwa, ngisho nangaphambi kokuqinisekiswa kwe-imeyili. Ukudlulisela isixhumanisi kuvumela abanye abantu ukuthi basebenzise izindawo ezisele.",
+  "Activas": "Ayasebenza",
+  "Suspensas": "Amisiwe",
+  "Encerradas": "Avaliwe",
+  "Activa": "Iyasebenza",
+  "Convite colectivo": "Isimemo seqembu",
+  "Campanha de promotor": "Umkhankaso womgqugquzeli",
+  "Campanha controlada": "Umkhankaso olawulwayo"
 }
