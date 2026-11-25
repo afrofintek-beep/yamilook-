@@ -336,5 +336,12 @@
   "Inscrições: {{used}} de {{limit}} · Emails confirmados: {{confirmed}}": "ምዝገባዎች፦ {{used}} ከ {{limit}} · የተረጋገጡ ኢሜይሎች፦ {{confirmed}}",
   "Válido até {{date}}": "እስከ {{date}} ድረስ የሚሰራ",
   "Copiado!": "ተቀድቷል!",
-  "Cada conta criada ocupa uma vaga, mesmo antes da confirmação do email. Reencaminhar a ligação permite que outras pessoas utilizem as vagas disponíveis.": "እያንዳንዱ የተፈጠረ መለያ ኢሜይሉ ከመረጋገጡ በፊትም አንድ ቦታ ይይዛል። አገናኙን ማስተላለፍ ሌሎች ሰዎች ያሉትን ቦታዎች እንዲጠቀሙ ያስችላል።"
+  "Cada conta criada ocupa uma vaga, mesmo antes da confirmação do email. Reencaminhar a ligação permite que outras pessoas utilizem as vagas disponíveis.": "እያንዳንዱ የተፈጠረ መለያ ኢሜይሉ ከመረጋገጡ በፊትም አንድ ቦታ ይይዛል። አገናኙን ማስተላለፍ ሌሎች ሰዎች ያሉትን ቦታዎች እንዲጠቀሙ ያስችላል።",
+  "Activas": "ንቁ",
+  "Suspensas": "የታገዱ",
+  "Encerradas": "የተዘጉ",
+  "Activa": "ንቁ",
+  "Convite colectivo": "የቡድን ግብዣ",
+  "Campanha de promotor": "የአስተዋዋቂ ዘመቻ",
+  "Campanha controlada": "ቁጥጥር ያለው ዘመቻ"
 }
