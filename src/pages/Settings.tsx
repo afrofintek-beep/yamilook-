@@ -1,6 +1,7 @@
 import { PhoneAccess } from '@/features/phone-access/PhoneAccess';
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { pilotPath } from '@/features/dangereux/paths';
+import MaguelaIdentityManagement from '@/components/account-link/MaguelaIdentityManagement';
 import AuthorizedAfrolocLink from '@/components/account-link/AuthorizedAfrolocLink';
 import { genderCtx } from '@/lib/i18n-gender';
 import React, { useState, useCallback } from 'react';
@@ -362,7 +363,7 @@ export default function Settings() {
       {/* Content */}
       <ScrollArea className="min-h-0 flex-1 [&_[data-radix-scroll-area-viewport]]:overscroll-y-contain">
         <div className="pb-8">
-          <div className="p-4"><AuthorizedAfrolocLink /></div>
+          <div className="p-4 space-y-4"><AuthorizedAfrolocLink />{user&&<MaguelaIdentityManagement key={user.id}/>}</div>
           <div className="px-4"><PhoneAccess mode="link" /></div>
           {/* Profile Section */}
           <motion.button
