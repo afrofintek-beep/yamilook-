@@ -343,5 +343,15 @@
   "Activa": "ንቁ",
   "Convite colectivo": "የቡድን ግብዣ",
   "Campanha de promotor": "የአስተዋዋቂ ዘመቻ",
-  "Campanha controlada": "ቁጥጥር ያለው ዘመቻ"
+  "Campanha controlada": "ቁጥጥር ያለው ዘመቻ",
+  "Este convite já não está disponível.": "ይህ ግብዣ ከአሁን በኋላ አይገኝም።",
+  "Não foi possível verificar as vagas. Tenta novamente.": "ክፍት ቦታዎችን ማረጋገጥ አልተቻለም። እንደገና ሞክር።",
+  "Convite copiado.": "ግብዣው ተቀድቷል።",
+  "Não foi possível partilhar o convite.": "ግብዣውን ማጋራት አልተቻለም።",
+  "Partilhar convite": "ግብዣ አጋራ",
+  "Vagas disponíveis: {{count}}": "ክፍት ቦታዎች፦ {{count}}",
+  "Continuar a partilhar": "ማጋራትን ቀጥል",
+  "Campanhas e convites": "ዘመቻዎችና ግብዣዎች",
+  "Criar campanha": "ዘመቻ ፍጠር",
+  "Criar convite individual": "የግል ግብዣ ፍጠር"
 }
