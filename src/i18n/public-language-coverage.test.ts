@@ -15,7 +15,9 @@ const placeholders = (text: string) => [...text.matchAll(/{{\s*([^}]+)\s*}}/g)].
 describe('ten-language public entry rollout', () => {
   it('keeps the three deferred languages out of every public language list', () => {
     expect(appLanguages.map(language => language.code)).toEqual(['en', 'fr', 'pt', 'ar', 'am', 'sw', 'ln', 'yo', 'sn', 'zu']);
-    expect(Object.keys(entryTranslations).sort()).toEqual(appLanguages.map(language => language.code).sort());
+    expect(Object.keys(entryTranslations).sort()).toEqual([...appLanguages.map(language => language.code), 'pt-banda'].sort());
+    expect(normalizeAppLanguage('pt-banda')).toBe('pt-banda');
+    expect(Object.keys(entryTranslations['pt-banda']).sort()).toEqual(Object.keys(entryTranslations.pt).sort());
     for (const code of ['kmb', 'umb', 'kg', 'KMB-AO', 'umb-AO', 'kg-CD']) expect(normalizeAppLanguage(code)).toBe('pt');
   });
 
