@@ -65,8 +65,8 @@ const googleForm = () => within(screen.getByRole('form', { name: 'Google Maps' }
 async function people(profileId = 'ana') {
   fireEvent.click(screen.getByRole('tab', { name: 'Perfis' }));
   const panel = within(screen.getByRole('tabpanel', { name: 'Perfis' }));
-  await waitFor(() => expect(panel.getByRole('option', { name: 'Ana Simões · @ana' })).toBeInTheDocument());
-  fireEvent.change(panel.getByRole('combobox', { name: 'Escolher perfil' }), { target: { value: profileId } });
+  await waitFor(() => expect(panel.getByRole('button', { name: 'Ana Simões @ana' })).toBeInTheDocument());
+  fireEvent.click(panel.getByRole('button', { name: profileId === 'ana' ? 'Ana Simões @ana' : 'Administrador @admin' }));
   return panel;
 }
 
@@ -196,6 +196,36 @@ describe('central access dashboard', () => {
     expect(mocks.override).not.toHaveBeenCalled();
   });
 
+  it('shows @ searches as visible results and clears the selection when the search changes', async () => {
+    const grimaldo = { ...ana, id: 'grimaldo', username: 'grimaldodarocha93_', displayName: 'GRIMALDO' };
+    mocks.search.mockImplementation(async query => query === 'grimaldo' ? [grimaldo] : []);
+    await setup();
+    fireEvent.click(screen.getByRole('tab', { name: 'Grupos' }));
+    const panel = within(screen.getByRole('tabpanel', { name: 'Grupos' }));
+    fireEvent.change(panel.getByRole('combobox', { name: 'Escolher grupo' }), { target: { value: 'pilot' } });
+    const search = panel.getByRole('textbox', { name: 'Pesquisar nome ou @utilizador' });
+    fireEvent.change(search, { target: { value: '@grimaldo' } });
+    const result = await panel.findByRole('button', { name: 'GRIMALDO @grimaldodarocha93_' });
+    expect(mocks.search).toHaveBeenCalledWith('grimaldo');
+    fireEvent.click(result);
+    expect(result).toHaveAttribute('aria-pressed', 'true');
+    expect(panel.getByRole('button', { name: 'Adicionar membro' })).toBeEnabled();
+    fireEvent.change(search, { target: { value: 'outro' } });
+    expect(panel.getByRole('button', { name: 'Adicionar membro' })).toBeDisabled();
+    expect(panel.queryByRole('button', { name: 'GRIMALDO @grimaldodarocha93_' })).not.toBeInTheDocument();
+    await panel.findByText('Nenhum perfil encontrado.');
+  });
+
+  it('shows a failed profile search and lets the administrator retry', async () => {
+    mocks.search.mockRejectedValueOnce(new Error('Network unavailable')).mockResolvedValue([ana]);
+    await setup();
+    fireEvent.click(screen.getByRole('tab', { name: 'Perfis' }));
+    const panel = within(screen.getByRole('tabpanel', { name: 'Perfis' }));
+    await panel.findByText('Não foi possível pesquisar os perfis.');
+    fireEvent.click(panel.getByRole('button', { name: 'Tentar novamente' }));
+    await panel.findByRole('button', { name: 'Ana Simões @ana' });
+  });
+
   it('creates a group and confirms membership additions and removals', async () => {
     await setup();
     fireEvent.click(screen.getByRole('tab', { name: 'Grupos' }));
@@ -204,8 +234,8 @@ describe('central access dashboard', () => {
     fireEvent.click(panel.getByRole('button', { name: 'Criar grupo' }));
     await panel.findByRole('option', { name: 'Promotores (0)' });
     fireEvent.change(panel.getByRole('combobox', { name: 'Escolher grupo' }), { target: { value: 'new-group' } });
-    await panel.findByRole('option', { name: 'Ana Simões · @ana' });
-    fireEvent.change(panel.getByRole('combobox', { name: 'Escolher perfil' }), { target: { value: 'ana' } });
+    await panel.findByRole('button', { name: 'Ana Simões @ana' });
+    fireEvent.click(panel.getByRole('button', { name: 'Ana Simões @ana' }));
     fireEvent.click(panel.getByRole('button', { name: 'Adicionar membro' }));
     const remove = await panel.findByRole('button', { name: 'Retirar membro' });
     expect(mocks.member).toHaveBeenCalledWith('new-group', 'ana', true);
