@@ -336,5 +336,12 @@
   "Inscrições: {{used}} de {{limit}} · Emails confirmados: {{confirmed}}": "Ìforúkọsílẹ̀: {{used}} nínú {{limit}} · Àwọn ímeèlì tí a ti jẹ́rìí sí: {{confirmed}}",
   "Válido até {{date}}": "Ó wúlò títí di {{date}}",
   "Copiado!": "A ti dà á kọ!",
-  "Cada conta criada ocupa uma vaga, mesmo antes da confirmação do email. Reencaminhar a ligação permite que outras pessoas utilizem as vagas disponíveis.": "Àkọọ́lẹ̀ kọ̀ọ̀kan tí a ṣẹ̀dá gba àyè kan, kódà ṣáájú ìmúdájú ímeèlì. Fífi ọ̀nà àsopọ̀ ránṣẹ́ sí ẹlòmíràn jẹ́ kí wọ́n lo àwọn àyè tó kù."
+  "Cada conta criada ocupa uma vaga, mesmo antes da confirmação do email. Reencaminhar a ligação permite que outras pessoas utilizem as vagas disponíveis.": "Àkọọ́lẹ̀ kọ̀ọ̀kan tí a ṣẹ̀dá gba àyè kan, kódà ṣáájú ìmúdájú ímeèlì. Fífi ọ̀nà àsopọ̀ ránṣẹ́ sí ẹlòmíràn jẹ́ kí wọ́n lo àwọn àyè tó kù.",
+  "Activas": "Tó ń ṣiṣẹ́",
+  "Suspensas": "Tí a dá dúró",
+  "Encerradas": "Tí a ti pa",
+  "Activa": "Tó ń ṣiṣẹ́",
+  "Convite colectivo": "Ìpè ẹgbẹ́",
+  "Campanha de promotor": "Ìpolongo olùgbéga",
+  "Campanha controlada": "Ìpolongo tí a ń ṣàkóso"
 }

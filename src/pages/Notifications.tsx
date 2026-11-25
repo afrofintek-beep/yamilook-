@@ -368,10 +368,10 @@ export default function Notifications() {
     try {
       const {error}=await respondFriendRequest(requestId,accept);
       if(error)throw error;
-      toast({title:uiText(accept ? 'Pedido aceite!' : 'Pedido rejeitado')});
+      toast({title:accept ? uiText('Pedido aceite!') : uiText('Pedido rejeitado')});
       setNotifications(prev=>prev.filter(n=>n.action_data?.request_id!==requestId));
     } catch {
-      toast({title:uiText(accept ? 'Erro ao aceitar pedido' : 'Erro ao rejeitar pedido'),variant:'destructive'});
+      toast({title:accept ? uiText('Erro ao aceitar pedido') : uiText('Erro ao rejeitar pedido'),variant:'destructive'});
     } finally {busy.current=false;setResponding(null);}
   };
 

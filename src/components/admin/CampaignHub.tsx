@@ -13,7 +13,8 @@ import { TrustedInvitesPanel } from './TrustedInvitesPanel';
 import { trustedCopy } from '@/features/trusted-invites/copy';
 import { useLocation } from 'react-router-dom';
 
-const labels = { active: 'Activas', draft: 'Rascunhos', suspended: 'Suspensas', closed: 'Encerradas' };
+const labels = () => ({ active: uiText('Activas'), draft: uiText('Rascunhos'), suspended: uiText('Suspensas'), closed: uiText('Encerradas') });
+const stateLabel = (state: string) => ({ active: uiText('Activa'), suspended: uiText('Suspensa'), closed: uiText('Encerrada'), draft: uiText('Rascunho') } as Record<string,string>)[state] ?? state;
 const normalise = (text: string) => text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 export function CampaignHub() {
   const locale = useUiLocale();
@@ -63,11 +64,11 @@ export function CampaignHub() {
     {panel === 'trusted' && <TrustedInvitesPanel />}
     <Input aria-label={uiText('Pesquisar campanhas')} placeholder={uiText('Pesquisar campanhas por nome')} value={query} onChange={e => setQuery(e.target.value)} />
     <select aria-label={uiText('Estado')} value={filter} onChange={e => setFilter(e.target.value)} className="rounded-md border bg-background p-2">
-      <option value="">{uiText('Todos os estados')}</option>{Object.entries(labels).map(([key,label]) => <option key={key} value={key}>{uiText(label)}</option>)}
+      <option value="">{uiText('Todos os estados')}</option>{Object.entries(labels()).map(([key,label]) => <option key={key} value={key}>{label}</option>)}
     </select>
     <p role="status">{status || (loading ? uiText('A carregar…') : !rows.length ? uiText('Nenhuma campanha encontrada.') : '')}</p>
     {rows.map(({id,name,end,state,type,link,campaign}) => <article key={id} className="space-y-2 rounded-xl border p-4">
-      <h3 className="font-semibold">{name}</h3><p>{uiText(type)} · {uiText(({ active:'Activa', suspended:'Suspensa', closed:'Encerrada', draft:'Rascunho' })[state] ?? state)}</p>
+      <h3 className="font-semibold">{name}</h3><p>{type === 'Convite colectivo' ? uiText('Convite colectivo') : type === 'Campanha de promotor' ? uiText('Campanha de promotor') : uiText('Campanha controlada')} · {stateLabel(state)}</p>
       <p>{uiText('Válido até {{date}}', {date:new Date(end).toLocaleString(locale)})}</p>
       {link && <p>{uiText('Inscrições: {{used}} de {{limit}}', {used:link.uses_count,limit:link.max_uses})} · {uiText('Vagas disponíveis: {{count}}',{count:state === 'active' ? (link.remaining ?? Math.max(0,link.max_uses-link.uses_count)) : 0})}</p>}
       <div className="flex flex-wrap items-start gap-2">

@@ -336,5 +336,12 @@
   "Inscrições: {{used}} de {{limit}} · Emails confirmados: {{confirmed}}": "التسجيلات: {{used}} من {{limit}} · عناوين البريد المؤكدة: {{confirmed}}",
   "Válido até {{date}}": "صالح حتى {{date}}",
   "Copiado!": "تم النسخ!",
-  "Cada conta criada ocupa uma vaga, mesmo antes da confirmação do email. Reencaminhar a ligação permite que outras pessoas utilizem as vagas disponíveis.": "يستهلك كل حساب يُنشأ مكانًا واحدًا، حتى قبل تأكيد البريد الإلكتروني. تتيح إعادة إرسال الرابط لأشخاص آخرين استخدام الأماكن المتاحة."
+  "Cada conta criada ocupa uma vaga, mesmo antes da confirmação do email. Reencaminhar a ligação permite que outras pessoas utilizem as vagas disponíveis.": "يستهلك كل حساب يُنشأ مكانًا واحدًا، حتى قبل تأكيد البريد الإلكتروني. تتيح إعادة إرسال الرابط لأشخاص آخرين استخدام الأماكن المتاحة.",
+  "Activas": "نشطة",
+  "Suspensas": "معلقة",
+  "Encerradas": "مغلقة",
+  "Activa": "نشطة",
+  "Convite colectivo": "دعوة جماعية",
+  "Campanha de promotor": "حملة المروّج",
+  "Campanha controlada": "حملة خاضعة للرقابة"
 }

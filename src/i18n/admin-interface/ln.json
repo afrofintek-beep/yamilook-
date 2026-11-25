@@ -336,5 +336,12 @@
   "Inscrições: {{used}} de {{limit}} · Emails confirmados: {{confirmed}}": "Bakomi nkombo: {{used}} kati na {{limit}} · Ba-email endimami: {{confirmed}}",
   "Válido até {{date}}": "Ekosala kino {{date}}",
   "Copiado!": "Ekopiami!",
-  "Cada conta criada ocupa uma vaga, mesmo antes da confirmação do email. Reencaminhar a ligação permite que outras pessoas utilizem as vagas disponíveis.": "Compte nyonso oyo esalemi ezwaka esika moko, ata liboso ya kondima email. Kotindela bato mosusu lien epesaka bango nzela ya kosalela bisika oyo etikali."
+  "Cada conta criada ocupa uma vaga, mesmo antes da confirmação do email. Reencaminhar a ligação permite que outras pessoas utilizem as vagas disponíveis.": "Compte nyonso oyo esalemi ezwaka esika moko, ata liboso ya kondima email. Kotindela bato mosusu lien epesaka bango nzela ya kosalela bisika oyo etikali.",
+  "Activas": "Ezali kosala",
+  "Suspensas": "Esili kotelemisama",
+  "Encerradas": "Ekangami",
+  "Activa": "Ezali kosala",
+  "Convite colectivo": "Libyangi ya lisangá",
+  "Campanha de promotor": "Campagne ya promoteur",
+  "Campanha controlada": "Campagne oyo etambwisami"
 }

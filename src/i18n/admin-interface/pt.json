@@ -336,5 +336,12 @@
   "Inscrições: {{used}} de {{limit}} · Emails confirmados: {{confirmed}}": "Inscrições: {{used}} de {{limit}} · Emails confirmados: {{confirmed}}",
   "Válido até {{date}}": "Válido até {{date}}",
   "Copiado!": "Copiado!",
-  "Cada conta criada ocupa uma vaga, mesmo antes da confirmação do email. Reencaminhar a ligação permite que outras pessoas utilizem as vagas disponíveis.": "Cada conta criada ocupa uma vaga, mesmo antes da confirmação do email. Reencaminhar a ligação permite que outras pessoas utilizem as vagas disponíveis."
+  "Cada conta criada ocupa uma vaga, mesmo antes da confirmação do email. Reencaminhar a ligação permite que outras pessoas utilizem as vagas disponíveis.": "Cada conta criada ocupa uma vaga, mesmo antes da confirmação do email. Reencaminhar a ligação permite que outras pessoas utilizem as vagas disponíveis.",
+  "Activas": "Activas",
+  "Suspensas": "Suspensas",
+  "Encerradas": "Encerradas",
+  "Activa": "Activa",
+  "Convite colectivo": "Convite colectivo",
+  "Campanha de promotor": "Campanha de promotor",
+  "Campanha controlada": "Campanha controlada"
 }

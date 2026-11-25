@@ -336,5 +336,12 @@
   "Inscrições: {{used}} de {{limit}} · Emails confirmados: {{confirmed}}": "Vakanyoresa: {{used}} pa {{limit}} · Maemail akasimbiswa: {{confirmed}}",
   "Válido até {{date}}": "Inoshanda kusvika {{date}}",
   "Copiado!": "Yakopwa!",
-  "Cada conta criada ocupa uma vaga, mesmo antes da confirmação do email. Reencaminhar a ligação permite que outras pessoas utilizem as vagas disponíveis.": "Akaunti imwe neimwe inogadzirwa inotora nzvimbo imwe, kunyange email isati yasimbiswa. Kutumira link kune vamwe kunovabvumira kushandisa nzvimbo dzasara."
+  "Cada conta criada ocupa uma vaga, mesmo antes da confirmação do email. Reencaminhar a ligação permite que outras pessoas utilizem as vagas disponíveis.": "Akaunti imwe neimwe inogadzirwa inotora nzvimbo imwe, kunyange email isati yasimbiswa. Kutumira link kune vamwe kunovabvumira kushandisa nzvimbo dzasara.",
+  "Activas": "Ari kushanda",
+  "Suspensas": "Akambomiswa",
+  "Encerradas": "Akavharwa",
+  "Activa": "Riri kushanda",
+  "Convite colectivo": "Kukoka boka",
+  "Campanha de promotor": "Mushandirapamwe wemusimudziri",
+  "Campanha controlada": "Mushandirapamwe unodzorwa"
 }
