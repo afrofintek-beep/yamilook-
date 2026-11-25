@@ -1,6 +1,7 @@
+import { adminAreaKeys } from '@/features/admin-areas/catalog';
 import { supabase } from '@/integrations/supabase/client';
 
-export const featureKeys = ['google_maps', 'maguela', 'wallet', 'business_registration'] as const;
+export const featureKeys = ['google_maps', 'maguela', 'wallet', 'business_registration', ...adminAreaKeys] as const;
 export type FeatureKey = typeof featureKeys[number];
 export type Mode = 'admins' | 'selected' | 'criteria' | 'all';
 export type Criteria = { role: 'any' | 'moderator' | 'user'; groupIds: string[]; minAccountAgeDays: number };
@@ -19,7 +20,7 @@ export class AccessDashboardError extends Error {
   constructor(readonly code: 'conflict' | 'invalid' | 'forbidden' | 'unavailable') { super(code); }
 }
 async function request(action: string, data: Record<string, unknown> = {}): Promise<unknown> {
-  const result = await supabase.rpc('access_dashboard_manage' as never, { p_action: action, p_data: data } as never);
+  const result = await supabase.rpc('access_dashboard_manage_v2' as never, { p_action: action, p_data: data } as never);
   if (result.error) {
     const code = result.error.code;
     throw new AccessDashboardError(code === '40001' ? 'conflict' : code === '42501' || code === '28000' ? 'forbidden' : code?.startsWith('22') || code === '23505' ? 'invalid' : 'unavailable');

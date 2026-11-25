@@ -1,3 +1,6 @@
+import { useAdminAreas } from '@/features/admin-areas/useAdminAreas';
+import type { AdminArea } from '@/features/admin-areas/catalog';
+import { adminAreaCopy } from '@/features/admin-areas/copy';
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -8,15 +11,16 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ShieldAlert, Users, Banknote, FileText, ShieldCheck, Crown } from 'lucide-react';
 
 export default function AdminMonetization() {
-  useUiLocale();
+  const copy = adminAreaCopy(useUiLocale());
+  const access = useAdminAreas();
   const navigate = useNavigate();
 
   const links = [
     { label: uiText("Gestão de Mentores"), icon: Users, path: '/admin/mentors' },
     { label: uiText("Mokubico Pro — Faturação"), icon: Crown, path: '/admin/billing' },
-    { label: uiText("Candidaturas de Criadores"), icon: Users, path: '/admin/applications' },
-    { label: uiText("Certificações AFROLOC"), icon: ShieldCheck, path: '/admin/afroloc-certifications' },
-    { label: uiText("Pedidos de Payout"), icon: Banknote, path: '/admin/payouts' },
+    { label: uiText("Candidaturas de Criadores"), icon: Users, area: 'admin_creators', path: '/admin/applications' },
+    { label: uiText("Certificações AFROLOC"), icon: ShieldCheck, area: 'admin_certifications', path: '/admin/afroloc-certifications' },
+    { label: uiText("Pedidos de Payout"), icon: Banknote, area: 'admin_payouts', path: '/admin/payouts' },
   ];
 
   return (
@@ -31,10 +35,10 @@ export default function AdminMonetization() {
       <main className="max-w-lg mx-auto px-4 pt-4 space-y-4">
         <Alert>
           <ShieldAlert className="h-4 w-4" />
-          <AlertDescription className="text-sm">{uiText("Área restrita a administradores. Acesso verificado por role.")}</AlertDescription>
+          <AlertDescription className="text-sm">{copy.permissionHint}</AlertDescription>
         </Alert>
 
-        {links.map((l) => (
+        {links.filter(l => l.area ? access.allowed[l.area as AdminArea] : access.admin).map((l) => (
           <Card
             key={l.path}
             className="border-none shadow-sm cursor-pointer active:scale-[0.98] transition-transform"

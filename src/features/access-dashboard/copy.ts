@@ -1,3 +1,4 @@
+import { adminAreaCopy } from '@/features/admin-areas/copy';
 const pt = {
   title: 'Dashboard de acessos',
   description: 'Define quem pode utilizar cada funcionalidade na Yamilook e na KOSOLOLA.',
@@ -63,8 +64,9 @@ const pt = {
   invalidExpiry: 'Define uma data de validade futura ou deixa o campo em branco.',
 };
 
-export type AccessDashboardCopy = typeof pt;
-export const accessDashboardTranslations: Record<string, AccessDashboardCopy> = {
+type BaseCopy = typeof pt;
+export type AccessDashboardCopy = BaseCopy & { adminAreas: ReturnType<typeof adminAreaCopy> };
+export const accessDashboardTranslations: Record<string, BaseCopy> = {
   pt,
   en: {
     title: 'Access dashboard', description: 'Choose who can use each feature in Yamilook and KOSOLOLA.',
@@ -1256,5 +1258,5 @@ export const accessDashboardTranslations: Record<string, AccessDashboardCopy> = 
 };
 
 export function accessDashboardCopy(locale: string): AccessDashboardCopy {
-  return accessDashboardTranslations[locale.split('-')[0]] || pt;
+  return { ...(accessDashboardTranslations[locale.split('-')[0]] || pt), adminAreas: adminAreaCopy(locale) };
 }

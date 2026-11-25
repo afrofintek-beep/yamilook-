@@ -59,12 +59,28 @@ Os RPCs anteriores de integrações e carteira delegam neste mecanismo. A revoga
 
 As páginas activas revalidam as permissões a cada 15 segundos e ao retomar a aplicação. Offline, os controlos ocultam-se até uma nova confirmação. Erros e mudanças de conta não reutilizam permissões anteriores. As respostas de GPS/Google/MAGUELA em curso são descartadas quando os controlos protegidos são desmontados após perda de permissão.
 
+## Áreas administrativas
+
+O painel gere também oito permissões de operação por área — campanhas e convites, convites de confiança, candidaturas de criador, monetização, endereços da comunidade, certificações AFROLOC, pagamentos e ferramentas técnicas. As entradas ficam reunidas em `/admin/areas` e no dashboard. Perfis com uma delegação encontram esta entrada nas definições da Yamilook e da KOSOLOLA. A gestão das políticas continua reservada aos administradores.
+
+As permissões usam os mesmos grupos, critérios, excepções, calendários e histórico. As novas áreas começam em modo seleccionado. Certificações começa com o critério Moderador, preservando a autorização anterior dos moderadores, que passa a poder ser retirada por uma excepção de bloqueio. Os administradores activos têm acesso automático.
+
+Campanhas e convites de confiança têm páginas próprias. Os antigos atalhos por fragmento redireccionam para estas páginas. As operações de campanhas, convites, certificação, atribuição de endereços e pagamentos consultam as permissões no servidor. As candidaturas e os documentos privados usam RLS por área. As operações de pagamentos conservam as validações de estado, a retenção e a restituição única de Kumbu. O menu Monetização apresenta os gestores autorizados, com mentores e facturação ainda sujeitos às permissões próprias existentes.
+
+Ferramentas técnicas exige confirmação explícita para criar ou apagar dados de teste. A criação continua dependente da configuração de ferramentas de desenvolvimento no servidor. A limpeza é transaccional, verifica o domínio de teste tanto na conta de autenticação como no perfil e regista a operação. A integração não executa criação nem limpeza de dados.
+
+O contrato `access_dashboard_manage` continua a devolver as quatro funcionalidades anteriores para clientes já instalados. A versão actual usa `access_dashboard_manage_v2` para o catálogo completo. `admin_area_status` informa apenas as permissões da sessão corrente. Os controlos revalidam a sessão, ocultam-se offline e desmontam as operações após revogação. Os testes PostgreSQL cobrem isolamento das áreas, recusa de auto-atribuição, compatibilidade, RLS, revogação de convites, restituição única e rollback da limpeza.
+
 ## Publicação
 
 Aplicar, pela ordem indicada, antes de publicar o frontend:
 
 1. `20261125135733_restricted_integration_access.sql`
 2. `20261125152635_admin_visibility_dashboard.sql`
+3. `20261125182000_admin_area_access.sql`
+4. `20261125182100_admin_area_operations.sql`
+
+Actualizar também a função `seed-test-users` antes de publicar o frontend.
 
 Até estar disponível o contrato completo das quatro funcionalidades, o frontend recusa permissões. A implementação e os testes locais não aplicam estas migrações ao serviço activo nem publicam a aplicação.
 

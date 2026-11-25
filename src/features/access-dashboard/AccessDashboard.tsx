@@ -17,9 +17,11 @@ import { featureLabel, accessReasonLabel, auditActionLabel } from './labels';
 import { PolicyEditor } from './PolicyEditor';
 import { ProfilePicker } from './ProfilePicker';
 import { formatLuanda, fromLuandaInput, toLuandaInput } from './time';
+import { adminAreaKeys } from '@/features/admin-areas/catalog';
+import { AdminAreaLinks } from '@/features/admin-areas/AdminAreas';
 import { HistoryDetails } from './HistoryDetails';
 
-const FEATURE_KEYS: FeatureKey[] = ['google_maps', 'maguela', 'wallet', 'business_registration'];
+const FEATURE_KEYS: FeatureKey[] = ['google_maps', 'maguela', 'wallet', 'business_registration', ...adminAreaKeys];
 type Mutate = (change: () => Promise<void>) => Promise<boolean>;
 
 export default function AccessDashboard() {
@@ -61,6 +63,7 @@ function Dashboard({ locale, copy }: { locale: string; copy: AccessDashboardCopy
       if (!alive.current) return false;
       await Promise.all([
         client.invalidateQueries({ queryKey: ['integration-access'] }),
+        client.invalidateQueries({ queryKey: ['admin-area-access'] }),
         client.invalidateQueries({ queryKey: ['feature-access'] }),
         client.invalidateQueries({ queryKey: ['wallet-access'] }),
         client.invalidateQueries({ queryKey: ['access-dashboard-preview'] }),
@@ -121,10 +124,10 @@ function Dashboard({ locale, copy }: { locale: string; copy: AccessDashboardCopy
           </article>)}
         </section>
       </>}
+      <AdminAreaLinks />
       <section className="space-y-3 border-t pt-6"><h2 className="text-xl font-semibold">{copy.otherManagers}</h2><p className="text-sm text-muted-foreground">{copy.managersHint}</p><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {[
-          [copy.invitations, '/admin#convites-coletivos'], [copy.trustedInvitations, '/admin#convites-confianca'],
-          [copy.mentors, '/admin/mentors'], [copy.certifications, '/admin/afroloc-certifications'],
+          [copy.mentors, '/admin/mentors'],
           [copy.services, '/servicos-do-bairro'], [copy.dangereux, '/app/dangereux/'],
         ].map(([label, href]) => <a key={href} href={href} aria-label={label} className="flex min-h-20 flex-col justify-center rounded-xl border bg-card p-4 hover:bg-muted"><span className="font-medium">{label}</span><span className="mt-1 text-sm text-muted-foreground">{copy.openManager}</span></a>)}
       </div></section>

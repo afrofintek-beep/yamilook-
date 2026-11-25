@@ -1,0 +1,30 @@
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
+import AdminTechnical from './AdminTechnical';
+const requests = vi.hoisted(() => ({ rpc: vi.fn(), invoke: vi.fn() }));
+vi.mock('@/integrations/supabase/client', () => ({ supabase: { rpc: requests.rpc, functions: { invoke: requests.invoke } } }));
+vi.mock('./AdminAreas', () => ({ AdminAreaPage: ({ children }: { children: React.ReactNode }) => children }));
+vi.mock('@/i18n/ui-copy', () => ({ useUiLocale: () => 'pt', uiText: (text: string) => text }));
+beforeEach(() => { requests.rpc.mockReset(); requests.invoke.mockReset(); });
+afterEach(cleanup);
+it('requires explicit confirmation before creating test data and supports cancelling', async () => {
+  requests.invoke.mockResolvedValue({ data: { success: true }, error: null });
+  render(<AdminTechnical />);
+  fireEvent.click(screen.getByRole('button', { name: 'Criar/Atualizar Dados de Teste' }));
+  expect(requests.invoke).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
+  expect(requests.invoke).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'Criar/Atualizar Dados de Teste' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Confirmar' }));
+  await waitFor(() => expect(requests.invoke).toHaveBeenCalledExactlyOnceWith('seed-test-users'));
+  expect(await screen.findByText('Dados de teste criados!')).toBeVisible();
+});
+it('uses the atomic server purge and reports failure without claiming deletion', async () => {
+  requests.rpc.mockResolvedValue({ data: null, error: { message: 'permission revoked' } });
+  render(<AdminTechnical />);
+  fireEvent.click(screen.getByRole('button', { name: 'Apagar Dados de Teste' }));
+  expect(requests.rpc).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'Confirmar' }));
+  expect(await screen.findByText('Erro ao apagar dados de teste')).toBeVisible();
+  expect(requests.rpc).toHaveBeenCalledExactlyOnceWith('admin_clear_test_data', {});
+});

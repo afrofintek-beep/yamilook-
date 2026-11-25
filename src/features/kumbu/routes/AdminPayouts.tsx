@@ -1,3 +1,4 @@
+import { adminAreaCopy } from '@/features/admin-areas/copy';
 import { uiText, useUiLocale, uiLocale } from '@/i18n/ui-copy';
 import { uiServerMessage } from '@/i18n/server-copy';
 import { useState, useEffect, useCallback } from 'react';
@@ -29,7 +30,7 @@ const payoutStatus: Record<string, string> = {
 };
 
 export default function AdminPayouts() {
-  useUiLocale();
+  const areaCopy = adminAreaCopy(useUiLocale());
   const navigate = useNavigate();
   const [filter, setFilter] = useState<PayoutFilter>('pending');
   const [payouts, setPayouts] = useState<Tables<'payout_requests'>[]>([]);
@@ -84,7 +85,7 @@ export default function AdminPayouts() {
       <main className="max-w-2xl mx-auto px-4 pt-4 space-y-4">
         <Alert>
           <ShieldAlert className="h-4 w-4" />
-          <AlertDescription className="text-sm">{uiText("Acesso reservado a administradores.")}</AlertDescription>
+          <AlertDescription className="text-sm">{areaCopy.permissionHint}</AlertDescription>
         </Alert>
 
         <Tabs value={filter} onValueChange={(v) => setFilter(v as PayoutFilter)}>

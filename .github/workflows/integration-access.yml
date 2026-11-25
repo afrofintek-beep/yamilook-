@@ -4,6 +4,12 @@ on:
     paths:
       - 'src/features/integration-access/**'
       - 'src/features/access-dashboard/**'
+      - 'src/features/admin-areas/**'
+      - 'src/components/admin/CampaignHub*'
+      - 'src/features/kumbu/routes/Admin*'
+      - 'supabase/functions/seed-test-users/**'
+      - 'supabase/migrations/*admin_area*.sql'
+      - 'tests/admin-areas/**'
       - 'src/features/payment-point/WalletAccess*'
       - 'src/hooks/useBusinessRegistrationAccess*'
       - 'src/pages/Admin.tsx'
@@ -42,5 +48,6 @@ jobs:
       - run: npm ci
       - run: node tests/integration-access/database.cjs
       - run: node tests/access-dashboard/database.cjs
-      - run: npm test -- --maxWorkers=2 src/features/access-dashboard src/features/integration-access src/features/payment-point/WalletAccess.test.tsx src/hooks/useBusinessRegistrationAccess.test.ts src/features/papos/PaposLogout.test.tsx src/features/locaccess/AccessVisit.test.tsx src/features/locaccess/PersonSearch.test.tsx src/features/locaccess/MaguelaPickup.test.tsx src/components/account-link/MaguelaIdentityManagement.test.tsx src/components/chat/LocationCard.test.tsx src/components/chat/EnhancedChatInput.test.tsx src/pages/Onboarding.language.test.tsx src/pages/Onboarding.confirmation.test.tsx
+      - run: node tests/admin-areas/database.cjs
+      - run: npm test -- --maxWorkers=2 src/features/admin-areas src/components/admin/CampaignHub.test.tsx src/features/access-dashboard src/features/integration-access src/features/payment-point/WalletAccess.test.tsx src/hooks/useBusinessRegistrationAccess.test.ts src/features/papos/PaposLogout.test.tsx src/features/locaccess/AccessVisit.test.tsx src/features/locaccess/PersonSearch.test.tsx src/features/locaccess/MaguelaPickup.test.tsx src/components/account-link/MaguelaIdentityManagement.test.tsx src/components/chat/LocationCard.test.tsx src/components/chat/EnhancedChatInput.test.tsx src/pages/Onboarding.language.test.tsx src/pages/Onboarding.confirmation.test.tsx
       - run: npx tsc --noEmit -p tsconfig.app.json

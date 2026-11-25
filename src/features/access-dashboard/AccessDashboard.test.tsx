@@ -1,3 +1,4 @@
+vi.mock('@/features/admin-areas/useAdminAreas', () => ({ useAdminAreas: () => ({ allowed: { admin_campaigns: true, admin_trusted_invites: true }, any: true, admin: true, loading: false, error: null }) }));
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
@@ -227,9 +228,9 @@ describe('central access dashboard', () => {
     expect(mocks.override).not.toHaveBeenCalled(); expect(mocks.save).not.toHaveBeenCalled();
   });
 
-  it('offers actual managers for other modules instead of permission switches', async () => {
+  it('links the integrated campaign pages and the remaining specialist managers', async () => {
     await setup();
-    expect(screen.getByRole('link', { name: 'Convites de confiança' })).toHaveAttribute('href', '/admin#convites-confianca');
+    expect(screen.getByRole('link', { name: 'Convites de confiança' })).toHaveAttribute('href', '/admin/convites-confianca');
     expect(screen.getByRole('link', { name: 'Mentores' })).toHaveAttribute('href', '/admin/mentors');
     expect(screen.getByRole('link', { name: 'Administração do Dangereux' })).toHaveAttribute('href', '/app/dangereux/');
   });

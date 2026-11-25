@@ -1,3 +1,4 @@
+vi.mock('@/features/admin-areas/useAdminAreas', () => ({ useAdminAreas: () => ({ allowed: {}, any: false, admin: false, loading: false, error: null }) }));
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useNavigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
