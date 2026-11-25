@@ -73,13 +73,15 @@ Até estar disponível o contrato completo das quatro funcionalidades, o fronten
 ```sh
 node tests/integration-access/database.cjs
 node tests/access-dashboard/database.cjs
-npm test -- --maxWorkers=2 src/features/access-dashboard src/features/integration-access src/features/payment-point/WalletAccess.test.tsx src/hooks/useBusinessRegistrationAccess.test.ts src/features/papos/PaposLogout.test.tsx src/features/locaccess/AccessVisit.test.tsx src/features/locaccess/PersonSearch.test.tsx src/features/locaccess/MaguelaPickup.test.tsx src/components/account-link/MaguelaIdentityManagement.test.tsx src/components/chat/LocationCard.test.tsx src/components/chat/EnhancedChatInput.test.tsx
+npm test -- --maxWorkers=2 src/features/access-dashboard src/features/integration-access src/features/payment-point/WalletAccess.test.tsx src/hooks/useBusinessRegistrationAccess.test.ts src/features/papos/PaposLogout.test.tsx src/features/locaccess/AccessVisit.test.tsx src/features/locaccess/PersonSearch.test.tsx src/features/locaccess/MaguelaPickup.test.tsx src/components/account-link/MaguelaIdentityManagement.test.tsx src/components/chat/LocationCard.test.tsx src/components/chat/EnhancedChatInput.test.tsx src/pages/Onboarding.language.test.tsx src/pages/Onboarding.confirmation.test.tsx
 npx tsc --noEmit -p tsconfig.app.json
 npm run build
 ```
 
 As verificações SQL executam as migrações reais em PGlite (PostgreSQL local de teste), com as dependências mínimas de autenticação e os dados legados. Cobrem importações, sessão/conta/papel, acesso directo, pausa/calendário, critérios, excepções, grupos, concorrência, histórico, adaptadores e avaliação financeira de serviço. Os testes da interface cobrem os estados de autorização, gestão, rascunhos, simulador, conversão de horário, tradução e controlos das duas aplicações.
 
-Verificação final sobre a base principal `6c09c1cb5c9030aaac636410e9a2c12d19348fb6`: 111 testes de interface/API e 154 verificações de base de dados aprovados, TypeScript sem erros e build de produção concluído. O dashboard tem 142 mensagens nos dez idiomas suportados. A inspecção visual em navegador não foi possível porque o Chromium local não conseguiu criar o socket necessário no executor; não foram realizados testes contra a produção.
+Verificação final sobre a base principal `6c09c1cb5c9030aaac636410e9a2c12d19348fb6`: 127 testes de interface/API e 154 verificações de base de dados aprovados, TypeScript sem erros e build de produção concluído. O dashboard tem 142 mensagens nos dez idiomas suportados. A inspecção visual em navegador não foi possível porque o Chromium local não conseguiu criar o socket necessário no executor; não foram realizados testes contra a produção.
 
 Nota da base: `src/i18n/ui-source-coverage.test.ts` falha também no commit principal acima, com os mesmos 21 textos preexistentes sem cobertura. A comparação numa cópia limpa confirmou que este dashboard não acrescenta pendências a essa lista.
+
+A suite remota também identifica falhas preexistentes no teste de sintaxe de `EntryLanguageSelector`, no estado de reconexão de `VideoCall` e no selector de SVG do cartão AFROLOC no WebKit. A comparação com os runs da base principal confirmou a origem anterior dessas falhas. Os testes de inscrição pessoal foram adaptados à dependência de permissões central e incluídos no workflow deste dashboard.

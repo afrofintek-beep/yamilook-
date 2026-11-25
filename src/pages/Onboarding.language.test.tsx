@@ -6,6 +6,8 @@ import { appLanguages } from '@/i18n/afroloc-languages';
 import Onboarding from './Onboarding';
 
 vi.mock('@/integrations/supabase/client', () => ({ supabase: {} }));
+// These language scenarios cover personal signup without business-registration access.
+vi.mock('@/hooks/useBusinessRegistrationAccess', () => ({ useBusinessRegistrationAccess: () => ({ data: false, isLoading: false }) }));
 vi.mock('@/hooks/useAuth', () => ({ useAuth: () => ({
   user: null, profile: null, loading: false, updateProfile: vi.fn(), signUp: vi.fn(), refreshProfile: vi.fn(),
 }) }));
