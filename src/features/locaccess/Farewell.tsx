@@ -11,7 +11,8 @@ const suggestions = {
   Festa: 'Foi bom celebrar contigo! Fica aqui uma recordação deste dia.',
   Outra: 'A partilha do meu endereço terminou.',
 };
-type Recipient = {batch:string; id:string; username:string; message:string; date:string};
+import {parseFarewellResponse} from './farewell-response';
+import type {Recipient} from './farewell-response';
 type Props = {source:{id:string;code:string}; grants:Grant[]; reload:()=>void; disabled:boolean};
 
 async function cardPhoto(file?:File):Promise<Blob> {
@@ -40,9 +41,9 @@ export function Farewell({source,grants,reload,disabled}:Props){
   async function request(action:string,extra={}){
     const {data,error}=await supabase.rpc('locaccess_farewell' as never,{p_action:action,p_data:{...source,...extra}} as never);
     if(error)throw new Error(error.code==='P0001'?error.message:'Não foi possível contactar o serviço de recordações. Tenta novamente.');
-    return data as unknown as {batch:string;pending:Recipient[]};
+    return parseFarewellResponse(data,action);
   }
-  useEffect(()=>{let live=true;request('list').then(r=>{if(live)setPending(r.pending)}).catch(()=>{if(live)setStatus('Não foi possível consultar as recordações pendentes.')});return()=>{live=false}},[source.id,source.code]);
+  useEffect(()=>{let live=true;setPending([]);request('list').then(r=>{if(live)setPending(r.pending)}).catch(()=>{if(live)setStatus('Não foi possível consultar as recordações pendentes.')});return()=>{live=false}},[source.id,source.code]);
   useEffect(()=>{if(!media){setUrl('');return}const next=URL.createObjectURL(media);setUrl(next);return()=>URL.revokeObjectURL(next)},[media]);
   function start(which=''){
     setBatch(which);setSelected(grants.map(g=>g.id));setMedia(null);setPreview(false);setStatus('');setOpen(true);
@@ -59,7 +60,7 @@ export function Farewell({source,grants,reload,disabled}:Props){
       let rows=pending.filter(p=>p.batch===batch);
       if(!batch){
         const result=await request('close',{grants:grants.map(g=>g.id),selected});
-        closed=true;setBatch(result.batch);setPending(result.pending);reload();
+        closed=true;setBatch(result.batch!);setPending(result.pending);reload();
         rows=result.pending.filter(p=>p.batch===result.batch);
       }
       if(!later){
