@@ -1,13 +1,14 @@
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import PublicProfile from './PublicProfile';
 const { rpc, request }=vi.hoisted(()=>({rpc:vi.fn(),request:vi.fn()}));
-vi.mock('@/integrations/supabase/client',()=>({supabase:{rpc}}));
+vi.mock('@/integrations/supabase/client',()=>({supabase:{rpc,from:()=>({select:()=>({eq:()=>({maybeSingle:async()=>({data:null,error:null})})})})}}));
 const profile={id:'author',username:'tony_dinguanza',display_name:'Tony',created_at:'2026-01-01',afroloc_certified:false,is_creator:false};
 beforeEach(()=>{vi.resetAllMocks();rpc.mockImplementation(()=>({abortSignal:request}));request.mockResolvedValue({data:profile,error:null});});
 afterEach(cleanup);
-function mount(path='/u/tony_dinguanza'){return render(<MemoryRouter initialEntries={[path]}><Routes><Route path="/u/:username" element={<PublicProfile/>}/></Routes></MemoryRouter>);}
+function mount(path='/u/tony_dinguanza'){const client=new QueryClient({defaultOptions:{queries:{retry:false,gcTime:0}}});return render(<QueryClientProvider client={client}><MemoryRouter initialEntries={[path]}><Routes><Route path="/u/:username" element={<PublicProfile/>}/></Routes></MemoryRouter></QueryClientProvider>);}
 it('renders public profile with a normalized lookup value',async()=>{
   mount('/u/%20tony_dinguanza%20');expect(await screen.findByRole('heading',{name:'Tony'})).toBeInTheDocument();expect(rpc).toHaveBeenCalledWith('get_public_profile',{p_username:'tony_dinguanza'});
 });

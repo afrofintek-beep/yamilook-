@@ -1,9 +1,11 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import i18n, { changeAppLanguage } from '@/i18n';
 import { appLanguages } from '@/i18n/afroloc-languages';
 import Welcome from '@/pages/Welcome';
+
+vi.mock('@/hooks/useAuth',()=>({useAuth:()=>({user:null,profile:null,loading:false})}));
 
 afterEach(async () => { cleanup(); await changeAppLanguage('pt'); });
 
@@ -16,7 +18,7 @@ describe('public language selection', () => {
     expect(screen.getByRole('radio', { name: 'Urbano' })).toBeChecked();
     expect(screen.getByRole('combobox')).toHaveValue('pt');
     expect(localStorage.setItem).toHaveBeenCalledWith('i18nextLng', 'pt-banda');
-    expect(screen.getByRole('link', { name: i18n.t('entry.createAccount') })).toHaveAttribute('href', '/onboarding?invite=qr-one-use');
+    expect(screen.getByRole('link', { name: new RegExp(i18n.t('entry.personal').replace(/[.*+?^${}()|[\]\\]/g,'\\name: i18n.t('entry.createAccount')')) })).toHaveAttribute('href', '/register?invite=qr-one-use');
     fireEvent.click(screen.getByRole('radio', { name: 'Formal' }));
     await waitFor(() => expect(i18n.language).toBe('pt'));
     fireEvent.change(screen.getByRole('combobox'), { target: { value: 'en' } });
@@ -39,10 +41,10 @@ describe('public language selection', () => {
     render(<MemoryRouter initialEntries={['/welcome?invite=single-use-code&ref=founder']}><Welcome /></MemoryRouter>);
     expect(screen.getAllByRole('option')).toHaveLength(10);
     fireEvent.change(screen.getByRole('combobox'), { target: { value: 'ar' } });
-    await waitFor(() => expect(screen.getByRole('heading').textContent).toBe(`${i18n.getResource('ar', 'translation', 'entry.title')} 👋🏾`));
+    await waitFor(() => expect(screen.getByRole('heading',{level:1}).textContent).toBe(`${i18n.getResource('ar', 'translation', 'entry.title')} 👋🏾`));
     expect(document.documentElement.dir).toBe('rtl');
     expect(localStorage.setItem).toHaveBeenCalledWith('i18nextLng', 'ar');
-    expect(screen.getByRole('link', { name: i18n.t('entry.createAccount') }).getAttribute('href')).toBe('/onboarding?invite=single-use-code&ref=founder');
+    expect(screen.getByRole('link', { name: i18n.t('entry.createAccount') }).getAttribute('href')).toBe('/register?invite=single-use-code&ref=founder');
     fireEvent.change(screen.getByRole('combobox'), { target: { value: 'fr' } });
     await waitFor(() => expect(document.documentElement.dir).toBe('ltr'));
     expect(screen.getByRole('heading').textContent).toBe('Bienvenue sur YAMILOOK 👋🏾');
