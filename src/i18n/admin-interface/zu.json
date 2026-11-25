@@ -343,5 +343,15 @@
   "Activa": "Iyasebenza",
   "Convite colectivo": "Isimemo seqembu",
   "Campanha de promotor": "Umkhankaso womgqugquzeli",
-  "Campanha controlada": "Umkhankaso olawulwayo"
+  "Campanha controlada": "Umkhankaso olawulwayo",
+  "Este convite já não está disponível.": "Lesi simemo asisatholakali.",
+  "Não foi possível verificar as vagas. Tenta novamente.": "Asikwazanga ukuhlola izikhala. Zama futhi.",
+  "Convite copiado.": "Isimemo sikopishiwe.",
+  "Não foi possível partilhar o convite.": "Asikwazanga ukwabelana ngesimemo.",
+  "Partilhar convite": "Yabelana ngesimemo",
+  "Vagas disponíveis: {{count}}": "Izikhala ezikhona: {{count}}",
+  "Continuar a partilhar": "Qhubeka nokwabelana",
+  "Campanhas e convites": "Imikhankaso nezimemo",
+  "Criar campanha": "Dala umkhankaso",
+  "Criar convite individual": "Dala isimemo somuntu oyedwa"
 }
