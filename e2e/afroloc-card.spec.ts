@@ -19,6 +19,7 @@ test('mobile owner card shares a protected PNG QR, updates data and keeps contac
   requests.push(String(table));
   if(table==='account_current_session_id')data=sessionId;
   if(table==='account_register_session')data=true;
+  if(table==='locaccess_farewell')data={batch:null,pending:[]};
   if(table==='account_list_login_alerts')data=[];
   if(table==='token')data={access_token:token(),refresh_token:'renewed-test-only',expires_in:7200,token_type:'bearer',user:{id:me,email:'test@example.invalid'}};
   if(table==='user')data={id:me,email:'test@example.invalid'};
