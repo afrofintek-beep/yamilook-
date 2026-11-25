@@ -1,3 +1,4 @@
+import { maguelaIdentityCopy } from './maguela-identity-copy';
 import { maguelaPickupCopy } from './maguela-pickup-copy';
 import { entryTranslations } from './entry-translations';
 import { appLanguages, normalizeAppLanguage } from './afroloc-languages';
@@ -97,7 +98,7 @@ const loadLanguage = async (lng: string) => {
     residenceLoaders[`./residence/${code}.json`]?.() ?? Promise.resolve(ptResidence),
     afrolocLoaders[`./afroloc/${code}.json`]?.() ?? Promise.resolve(ptAfroloc),
   ]);
-  return { translation: { ...resources.translation, entry: entryTranslations[code] || entryTranslations.pt }, interface: { ...interfaceCopy, ...adminCopy, ...manualCopy, ...residenceCopy, ...afrolocCopy, ...(maguelaPickupCopy[code] || maguelaPickupCopy.pt) } };
+  return { translation: { ...resources.translation, entry: entryTranslations[code] || entryTranslations.pt }, interface: { ...interfaceCopy, ...adminCopy, ...manualCopy, ...residenceCopy, ...afrolocCopy, ...(maguelaPickupCopy[code] || maguelaPickupCopy.pt), ...(maguelaIdentityCopy[code] || maguelaIdentityCopy.pt) } };
 };
 
 i18n
@@ -105,7 +106,7 @@ i18n
   .use(initReactI18next)
   .init({
     resources: {
-      pt: { translation: { ...pt, entry: entryTranslations.pt }, interface: { ...ptInterface, ...ptAdminInterface, ...ptManuals, ...ptResidence, ...ptAfroloc, ...maguelaPickupCopy.pt } },
+      pt: { translation: { ...pt, entry: entryTranslations.pt }, interface: { ...ptInterface, ...ptAdminInterface, ...ptManuals, ...ptResidence, ...ptAfroloc, ...maguelaPickupCopy.pt, ...maguelaIdentityCopy.pt } },
     },
     fallbackLng: { yo: ['en', 'pt'], sn: ['en', 'pt'], zu: ['en', 'pt'], default: ['pt'] },
     interpolation: {
