@@ -343,5 +343,15 @@
   "Activa": "Activa",
   "Convite colectivo": "Convite colectivo",
   "Campanha de promotor": "Campanha de promotor",
-  "Campanha controlada": "Campanha controlada"
+  "Campanha controlada": "Campanha controlada",
+  "Este convite já não está disponível.": "Este convite já não está disponível.",
+  "Não foi possível verificar as vagas. Tenta novamente.": "Não foi possível verificar as vagas. Tenta novamente.",
+  "Convite copiado.": "Convite copiado.",
+  "Não foi possível partilhar o convite.": "Não foi possível partilhar o convite.",
+  "Partilhar convite": "Partilhar convite",
+  "Vagas disponíveis: {{count}}": "Vagas disponíveis: {{count}}",
+  "Continuar a partilhar": "Continuar a partilhar",
+  "Campanhas e convites": "Campanhas e convites",
+  "Criar campanha": "Criar campanha",
+  "Criar convite individual": "Criar convite individual"
 }
