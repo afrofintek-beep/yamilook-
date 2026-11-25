@@ -343,5 +343,15 @@
   "Activa": "نشطة",
   "Convite colectivo": "دعوة جماعية",
   "Campanha de promotor": "حملة المروّج",
-  "Campanha controlada": "حملة خاضعة للرقابة"
+  "Campanha controlada": "حملة خاضعة للرقابة",
+  "Este convite já não está disponível.": "هذه الدعوة لم تعد متاحة.",
+  "Não foi possível verificar as vagas. Tenta novamente.": "تعذّر التحقق من الأماكن المتاحة. حاول مجددًا.",
+  "Convite copiado.": "تم نسخ الدعوة.",
+  "Não foi possível partilhar o convite.": "تعذّرت مشاركة الدعوة.",
+  "Partilhar convite": "مشاركة الدعوة",
+  "Vagas disponíveis: {{count}}": "الأماكن المتاحة: {{count}}",
+  "Continuar a partilhar": "متابعة المشاركة",
+  "Campanhas e convites": "الحملات والدعوات",
+  "Criar campanha": "إنشاء حملة",
+  "Criar convite individual": "إنشاء دعوة فردية"
 }

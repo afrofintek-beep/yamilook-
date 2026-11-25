@@ -343,5 +343,15 @@
   "Activa": "Active",
   "Convite colectivo": "Group invitation",
   "Campanha de promotor": "Promoter campaign",
-  "Campanha controlada": "Controlled campaign"
+  "Campanha controlada": "Controlled campaign",
+  "Este convite já não está disponível.": "This invitation is no longer available.",
+  "Não foi possível verificar as vagas. Tenta novamente.": "Could not check available places. Try again.",
+  "Convite copiado.": "Invitation copied.",
+  "Não foi possível partilhar o convite.": "Could not share the invitation.",
+  "Partilhar convite": "Share invitation",
+  "Vagas disponíveis: {{count}}": "Available places: {{count}}",
+  "Continuar a partilhar": "Continue sharing",
+  "Campanhas e convites": "Campaigns and invitations",
+  "Criar campanha": "Create campaign",
+  "Criar convite individual": "Create individual invitation"
 }

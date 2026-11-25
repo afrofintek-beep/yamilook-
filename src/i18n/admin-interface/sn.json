@@ -343,5 +343,15 @@
   "Activa": "Riri kushanda",
   "Convite colectivo": "Kukoka boka",
   "Campanha de promotor": "Mushandirapamwe wemusimudziri",
-  "Campanha controlada": "Mushandirapamwe unodzorwa"
+  "Campanha controlada": "Mushandirapamwe unodzorwa",
+  "Este convite já não está disponível.": "Kukoka uku hakuchawanikwi.",
+  "Não foi possível verificar as vagas. Tenta novamente.": "Hatina kukwanisa kutarisa nzvimbo dzasara. Edza zvakare.",
+  "Convite copiado.": "Kukoka kwakopwa.",
+  "Não foi possível partilhar o convite.": "Hatina kukwanisa kugovera kukoka.",
+  "Partilhar convite": "Govera kukoka",
+  "Vagas disponíveis: {{count}}": "Nzvimbo dziripo: {{count}}",
+  "Continuar a partilhar": "Ramba uchigovera",
+  "Campanhas e convites": "Mishandirapamwe nekukoka",
+  "Criar campanha": "Gadzira mushandirapamwe",
+  "Criar convite individual": "Gadzira kukoka kwemunhu mumwe"
 }
