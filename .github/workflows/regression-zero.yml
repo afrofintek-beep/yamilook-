@@ -1,0 +1,54 @@
+name: Regression Zero full validation
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/regression-zero.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  full-suite:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      VITE_SUPABASE_URL: https://example.supabase.co
+      VITE_SUPABASE_PUBLISHABLE_KEY: test-key
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - name: Full Vitest suite
+        run: npm test -- --maxWorkers=3
+      - name: Typecheck independently
+        if: success() || failure()
+        run: npx tsc --noEmit -p tsconfig.app.json
+      - name: Production build independently
+        if: success() || failure()
+        run: npm run build
+      - name: Account-link protocol boundaries
+        if: success() || failure()
+        run: npm run test:account-link
+      - name: LOCACCESS database permissions and expiry
+        if: success() || failure()
+        run: node tests/locaccess/database.cjs
+  mobile:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps webkit
+      - run: npx playwright test -c playwright.mobile.config.ts
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: regression-zero-mobile-failures
+          path: test-results/
+          retention-days: 7
