@@ -1,8 +1,20 @@
+import { MemoryRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import type { ReactNode } from 'react';
 import userEvent from '@testing-library/user-event';
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render as renderComponent, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { EnhancedChatInput } from './EnhancedChatInput';
 
+// Exercise the real router and query hooks with an authenticated test account,
+// but deny wallet access by default; no network or real payments.
+const { walletRpc } = vi.hoisted(() => ({ walletRpc: vi.fn() }));
+vi.mock('@/hooks/useAuth',()=>({useAuth:()=>({user:{id:'test-user'},profile:null,loading:false})}));
+vi.mock('@/integrations/supabase/client',()=>({supabase:{rpc:walletRpc}}));
+function render(node:ReactNode){
+ const client=new QueryClient({defaultOptions:{queries:{retry:false,gcTime:0}}});
+ return renderComponent(node,{wrapper:({children}:{children:ReactNode})=><QueryClientProvider client={client}><MemoryRouter>{children}</MemoryRouter></QueryClientProvider>});
+}
 const { uploadMedia } = vi.hoisted(() => ({ uploadMedia: vi.fn() }));
 vi.mock('@/hooks/useMediaUpload', () => ({
   useVoiceRecorder: () => ({ isRecording: false }),
@@ -13,7 +25,7 @@ vi.mock('./GifPicker', () => ({ GifPicker: () => null }));
 vi.mock('./EmojiPanel', () => ({ EmojiPanel: () => null }));
 vi.mock('./ScheduleMessageSheet', () => ({ ScheduleMessageSheet: () => null }));
 afterEach(cleanup);
-beforeEach(() => uploadMedia.mockReset());
+beforeEach(() => {uploadMedia.mockReset();walletRpc.mockReset();walletRpc.mockResolvedValue({data:{allowed:false,admin:false},error:null});});
 
 describe('Papos draft recovery', () => {
   it('keeps the text and reply on failure, then clears them after a successful retry', async () => {
