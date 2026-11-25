@@ -1,4 +1,4 @@
-import { CampaignHub } from '@/components/admin/CampaignHub';
+import { AdminAreaLinks } from '@/features/admin-areas/AdminAreas';
 import { AccessDashboardLink } from '@/features/access-dashboard/AccessDashboardLink';
 import { accessDashboardCopy } from '@/features/access-dashboard/copy';
 import InitiativeAdmin from "@/features/social-initiatives/InitiativeAdmin";
@@ -8,7 +8,7 @@ import { isRecentlyOnline } from '@/lib/online-presence';
 import { usePresenceClock } from '@/hooks/usePresenceClock';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { loadAdminPages, matchesAdminUser } from '@/lib/admin-user-search';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { 
@@ -30,11 +30,6 @@ import {
   MoreVertical,
   Ban,
   CheckCircle,
-  FileCheck,
-  Coins,
-  Award,
-  Wallet,
-  ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -102,6 +97,11 @@ export default function Admin() {
   const presenceNow = usePresenceClock();
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { hash } = useLocation();
+  useEffect(() => {
+    const destination = ({ '#convites-coletivos': '/admin/campanhas', '#convites-confianca': '/admin/convites-confianca' } as Record<string, string>)[hash];
+    if (destination) navigate(destination, { replace: true });
+  }, [hash, navigate]);
   const { user, loading: authLoading } = useAuth();
   const { isAdmin, loading: adminLoading } = useAdmin();
   
@@ -111,8 +111,6 @@ export default function Admin() {
   const usersRequest = useRef(0);
   const [loadingStats, setLoadingStats] = useState(true);
   const [loadingUsers, setLoadingUsers] = useState(true);
-  const [seeding, setSeeding] = useState(false);
-  const [clearingData, setClearingData] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [userFilter, setUserFilter] = useState<'all' | 'admins' | 'moderators' | 'online'>('all');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -314,67 +312,6 @@ export default function Admin() {
     });
   };
 
-  const handleSeedData = async () => {
-    setSeeding(true);
-    try {
-      const response = await supabase.functions.invoke('seed-test-users');
-      
-      if (response.error) {
-        throw new Error(response.error.message);
-      }
-
-      const results = response.data?.results;
-      toast.success(uiText("Dados de teste criados!"), {
-        description: uiText("{{posts}} publicações, {{messages}} mensagens, {{conversations}} conversas", { posts: results?.posts ?? 0, messages: results?.messages ?? 0, conversations: results?.conversations ?? 0 })
-      });
-      
-      fetchStats();
-      fetchUsersWithRoles();
-    } catch (error) {
-      console.error('Seed error:', error);
-      toast.error(uiText("Erro ao criar dados de teste"));
-    } finally {
-      setSeeding(false);
-    }
-  };
-
-  const handleClearTestData = async () => {
-    if (!confirm(uiText("Tens a certeza que queres apagar TODOS os dados de teste? Esta ação é irreversível."))) {
-      return;
-    }
-
-    setClearingData(true);
-    try {
-      const { data: testUsers } = await supabase
-        .from('profiles')
-        .select('id')
-        .like('email', '%@yamilook.test');
-
-      if (testUsers && testUsers.length > 0) {
-        const userIds = testUsers.map(u => u.id);
-
-        await supabase.from('status_views').delete().in('viewer_id', userIds);
-        await supabase.from('statuses').delete().in('user_id', userIds);
-        await supabase.from('post_comments').delete().in('user_id', userIds);
-        await supabase.from('post_likes').delete().in('user_id', userIds);
-        await supabase.from('posts').delete().in('user_id', userIds);
-        await supabase.from('messages').delete().in('sender_id', userIds);
-        await supabase.from('conversation_participants').delete().in('user_id', userIds);
-        await supabase.from('contacts').delete().in('user_id', userIds);
-
-        toast.success(uiText("Dados de teste apagados!"));
-        fetchStats();
-        fetchUsersWithRoles();
-      } else {
-        toast.info(uiText("Não há dados de teste para apagar"));
-      }
-    } catch (error) {
-      console.error('Clear error:', error);
-      toast.error(uiText("Erro ao apagar dados de teste"));
-    } finally {
-      setClearingData(false);
-    }
-  };
 
   if (authLoading || adminLoading) {
     return (
@@ -457,76 +394,7 @@ export default function Admin() {
 
         {/* Sub-painéis de gestão */}
         <Card><CardHeader><CardTitle>{integrationCopy.title}</CardTitle><CardDescription>{integrationCopy.dashboardHint}</CardDescription></CardHeader><CardContent><AccessDashboardLink /></CardContent></Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="w-5 h-5" />{uiText("Gestão")}</CardTitle>
-            <CardDescription>{uiText("Candidaturas, monetização, certificações e pagamentos")}</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {[
-              { label: uiText("Candidaturas de criador"), icon: FileCheck, to: '/admin/applications' },
-              { label: uiText("Monetização"), icon: Coins, to: '/admin/monetization' },
-              { label: uiText("Endereços da comunidade"), icon: Award, to: '/afroloc/comunidade' },
-              { label: uiText("Certificações AFROLOC"), icon: Award, to: '/admin/afroloc-certifications' },
-              { label: uiText("Pagamentos (payouts)"), icon: Wallet, to: '/admin/payouts' },
-            ].map((item) => (
-              <Button
-                key={item.to}
-                variant="outline"
-                className="w-full justify-between gap-2"
-                onClick={() => navigate(item.to)}
-              >
-                <span className="flex items-center gap-2">
-                  <item.icon className="w-4 h-4" />
-                  {item.label}
-                </span>
-                <ChevronRight className="w-4 h-4 opacity-50" />
-              </Button>
-            ))}
-          </CardContent>
-        </Card>
-
-        {/* Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Database className="w-5 h-5" />{uiText("Dados de Teste")}</CardTitle>
-            <CardDescription>{uiText("Gerir dados de teste para desenvolvimento")}</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <Button
-              onClick={handleSeedData}
-              disabled={seeding}
-              className="w-full gap-2"
-            >
-              {seeding ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <RefreshCw className="w-4 h-4" />
-              )}
-              {seeding ? uiText("A criar...") : uiText("Criar/Atualizar Dados de Teste")}
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleClearTestData}
-              disabled={clearingData}
-              className="w-full gap-2"
-            >
-              {clearingData ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Trash2 className="w-4 h-4" />
-              )}
-              {clearingData ? uiText("A apagar...") : uiText("Apagar Dados de Teste")}
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Founder invitation workflow — uses server-authorized invitation RPC */}
-
-
-        <CampaignHub />
+        <AdminAreaLinks />
         {socialInitiativesEnabled && <InitiativeAdmin />}
 
         {/* MVP Candidates Manager */}

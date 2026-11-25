@@ -18,7 +18,7 @@ describe('access dashboard API contract', () => {
   it('retains the saved before/after audit values with a complete feature catalogue', async () => {
     const data = dashboard(); rpc.mockResolvedValue({ data, error: null });
     expect(await loadDashboard()).toEqual(data);
-    expect(rpc).toHaveBeenCalledWith('access_dashboard_manage', { p_action: 'dashboard', p_data: {} });
+    expect(rpc).toHaveBeenCalledWith('access_dashboard_manage_v2', { p_action: 'dashboard', p_data: {} });
   });
 
   it('rejects missing or duplicate policies instead of showing an incomplete manager', async () => {
@@ -44,13 +44,13 @@ describe('access dashboard API contract', () => {
     rpc.mockResolvedValue({ data: { ok: true }, error: null });
     await savePolicy(policy);
     const { updatedAt: _updatedAt, ...payload } = policy;
-    expect(rpc).toHaveBeenCalledWith('access_dashboard_manage', { p_action: 'save_policy', p_data: payload });
+    expect(rpc).toHaveBeenCalledWith('access_dashboard_manage_v2', { p_action: 'save_policy', p_data: payload });
   });
 
   it('keeps removing an exception distinct from explicitly blocking a profile', async () => {
     rpc.mockResolvedValue({ data: { ok: true }, error: null });
     await setOverride('maguela', 'ana', 'inherit', null, '');
-    expect(rpc).toHaveBeenLastCalledWith('access_dashboard_manage', { p_action: 'set_override', p_data: {
+    expect(rpc).toHaveBeenLastCalledWith('access_dashboard_manage_v2', { p_action: 'set_override', p_data: {
       feature: 'maguela', userId: 'ana', effect: 'inherit', expiresAt: null, note: '',
     } });
   });

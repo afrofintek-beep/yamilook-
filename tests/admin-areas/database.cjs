@@ -1,0 +1,93 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const accessFixture = require('../access-dashboard/fixture.cjs');
+(async () => {
+  const { db, users, sessions, migration } = await accessFixture();
+  await db.exec(fs.readFileSync('tests/admin-areas/schema.sql','utf8'));
+  await db.exec(migration('_admin_area_access.sql'));
+  await db.exec(migration('_admin_area_operations.sql'));
+  const login = async n => db.query("select set_config('test.uid',$1,false),set_config('test.sid',$2,false)", [n === null ? '' : users[n],n === null ? '' : sessions[n]]);
+  const asUser = async (sql,args=[]) => {
+    await db.exec('set role authenticated');
+    try { return (await db.query(sql,args)).rows; } finally { await db.exec('reset role'); }
+  };
+  const call = async (action,data={}) => (await asUser('select public.access_dashboard_manage_v2($1,$2) result',[action,JSON.stringify(data)]))[0].result;
+  const allowed = async area => (await asUser('select public.admin_area_allowed($1) result',[area]))[0].result;
+  const set = async (area,n,effect) => call('set_override',{feature:area,userId:users[n],effect,expiresAt:null,note:'Regression verification'});
+  let checks=0;
+  const equal=(a,b,message)=>{assert.deepEqual(a,b,message);checks++;};
+  const denied=async (fn,pattern)=>{await assert.rejects(fn,pattern);checks++;};
+  await login(0);
+  equal((await call('dashboard')).policies.length,12,'extended catalogue');
+  equal((await asUser("select public.access_dashboard_manage('dashboard') result"))[0].result.policies.length,4,'old dashboard contract');
+  equal((await asUser("select public.access_dashboard_manage('preview',$1) result",[JSON.stringify({userId:users[1]})]))[0].result.length,4,'old preview contract');
+  const keys=(await call('dashboard')).policies.filter(p=>p.feature.startsWith('admin_')).map(p=>p.feature);
+  for(const area of keys) equal(await allowed(area),true,'administrator access');
+  await login(1);
+  for(const area of keys) equal(await allowed(area),false,'ordinary profile starts denied');
+  await denied(()=>call('dashboard'),/Administrator required/);
+  await denied(()=>asUser("select public.admin_clear_test_data()"),/Sem permissão/);
+  await login(2);
+  equal(await allowed('admin_certifications'),true,'existing moderator certification preserved');
+  equal(await allowed('admin_payouts'),false,'moderation does not grant financial operations');
+  await login(0);
+  await set('admin_creators',1,'allow'); await set('admin_campaigns',1,'allow');
+  await set('admin_certifications',2,'deny');
+  await login(2);equal(await allowed('admin_certifications'),false,'explicit block revokes moderator review');
+  await login(1);
+  equal(await allowed('admin_creators'),true,'explicit grant');
+  equal(await allowed('admin_payouts'),false,'grant isolation');
+  await denied(()=>call('set_override',{feature:'admin_payouts',userId:users[1],effect:'allow',expiresAt:null,note:''}),/Administrator required/);
+  await asUser('select private.invitation_require_admin()').then(()=>{throw new Error('private schema must remain private');},error=>{assert.match(error.message,/permission denied/);checks++;});
+  // Call the existing public invoker through its normal boundary.
+  await db.exec("grant usage on schema private to authenticated; grant execute on function private.create_registration_link(uuid,text,integer,integer) to authenticated; create function public.create_registration_link(p_request_id uuid,p_name text,p_max_uses integer,p_ttl_hours integer) returns jsonb language sql security invoker as $$select private.create_registration_link(p_request_id,p_name,p_max_uses,p_ttl_hours)$$;");
+  const link=(await asUser("select public.create_registration_link(gen_random_uuid(),'Delegated campaign',10,24) result"))[0].result;
+  equal(link.created_by,users[1],'actual delegate recorded as creator');
+  equal((await db.query('select private.validate_registration_link($1) result',[link.code])).rows[0].result.valid,true,'delegated link can be consumed');
+  await login(0);await set('admin_campaigns',1,'deny');await login(1);
+  equal((await db.query('select private.validate_registration_link($1) result',[link.code])).rows[0].result.valid,false,'revoked issuer invalidates unused link');
+  await denied(()=>asUser("select public.create_registration_link(gen_random_uuid(),'Denied',10,24)"),/administrador/);
+  // Creator reads, updates and private documents use the same delegated permission.
+  await db.query("insert into creator_applications(id,user_id,status) values($1,$2,'pending')",[users[3],users[3]]);
+  await db.exec("insert into storage.objects(bucket_id,name) values('creator-documents','application.pdf'),('private-bucket','unrelated.pdf')");
+  equal((await asUser('select * from creator_applications')).length,1,'delegate reads application');
+  equal((await asUser('select name from storage.objects')).length,1,'document access stays in the creator bucket');
+  await asUser("update creator_applications set status='approved' where id=$1",[users[3]]);
+  equal((await db.query("select count(*)::int n from integration_access_private.audit where action='creator_review'")).rows[0].n,1,'review audited');
+  await login(0);await set('admin_creators',1,'deny');await login(1);
+  equal((await asUser('select * from creator_applications')).length,0,'revocation enforced by RLS');
+  // Financial operations retain transition validation and a single refund.
+  await db.query("insert into payout_requests(id,user_id,status,amount_kumbu,created_at) values($1,$2,'pending',20,now())",[users[3],users[3]]);
+  await denied(()=>asUser("select public.process_payout($1,'approve')",[users[3]]),/Sem permissão/);
+  await login(0);await set('admin_payouts',1,'allow');await login(1);
+  await asUser("select public.process_payout($1,'approve')",[users[3]]);
+  await denied(()=>asUser("select public.process_payout($1,'approve')",[users[3]]),/pendente/);
+  await asUser("select public.process_payout($1,'reject')",[users[3]]);
+  await denied(()=>asUser("select public.process_payout($1,'reject')",[users[3]]),/finalizado/);
+  equal((await db.query('select kumbu_available from profiles where id=$1',[users[3]])).rows[0].kumbu_available,20,'refund exactly once');
+  // Purge matches the authentication email as well as the editable profile.
+  await login(0);await set('admin_test_data',1,'allow');await login(1);
+  await db.query("update auth.users set email='seed@yamilook.test' where id=$1",[users[4]]);
+  await db.query("update profiles set email='seed@yamilook.test' where id=any($1)",[[users[3],users[4]]]);
+  await db.query('insert into posts(id,user_id) values($1,$1),($2,$2)',[users[3],users[4]]);
+  await db.query('insert into statuses(id,user_id) values($1,$1)',[users[4]]);
+  await db.exec("create function public.fail_purge() returns trigger language plpgsql as $$begin raise exception 'injected deletion failure';end$$; create trigger fail_purge before delete on posts for each row execute function public.fail_purge();");
+  await denied(()=>asUser('select public.admin_clear_test_data()'),/injected deletion failure/);
+  equal((await db.query('select count(*)::int n from statuses')).rows[0].n,1,'earlier deletions rolled back after failure');
+  await db.exec('drop trigger fail_purge on posts; drop function public.fail_purge()');
+  equal((await asUser('select public.admin_clear_test_data() result'))[0].result.testAccounts,1,'only actual test authentication account');
+  equal((await db.query('select user_id from posts')).rows,[{user_id:users[3]}],'real account retained');
+  await login(0);await set('admin_trusted_invites',1,'allow');await login(1);
+  equal((await db.query('select private.trusted_admin_active($1) allowed',[users[1]])).rows[0].allowed,true,'trusted issuer uses delegated authority');
+  await login(0);await set('admin_trusted_invites',1,'deny');await login(1);
+  equal((await db.query('select private.trusted_admin_active($1) allowed',[users[1]])).rows[0].allowed,false,'revocation invalidates trusted issuer');
+  // Expired permissions, banned accounts and revoked sessions are denied at the server.
+  await db.query("update integration_access_private.overrides set expires_at=now()-interval '1 second' where user_id=$1 and feature='admin_test_data'",[users[1]]);
+  equal(await allowed('admin_test_data'),false,'expiry enforced');
+  await db.query("update auth.users set banned_until=now()+interval '1 day' where id=$1",[users[1]]);
+  equal(await allowed('admin_payouts'),false,'banned account denied');
+  await db.query('delete from auth.sessions where id=$1',[sessions[1]]);
+  await denied(()=>allowed('admin_payouts'),/Session expired or revoked/);
+  console.log(`Admin areas: ${checks} database checks passed.`);
+  await db.close();
+})().catch(error=>{console.error(error);process.exit(1)});

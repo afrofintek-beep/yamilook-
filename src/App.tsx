@@ -1,3 +1,4 @@
+import { AdminAreaGuard, AdminAreaPage } from '@/features/admin-areas/AdminAreas';
 import { WalletAccessGate } from '@/features/payment-point/WalletAccess';
 import {FriendRequestAlerts} from '@/features/friend-requests/alerts';
 import { isPilotPath, pilotRoutes } from './features/dangereux/paths';
@@ -56,6 +57,10 @@ const Status = lazy(() => import("./pages/Status"));
 const Feed = lazy(() => import("./pages/Feed"));
 const Discover = lazy(() => import("./pages/Discover"));
 const DevTools = lazy(() => import("./pages/DevTools"));
+const AdminAreas = lazy(() => import('./features/admin-areas/AdminAreas'));
+const AdminCampaigns = lazy(() => import('./features/admin-areas/AdminCampaigns'));
+const AdminTrustedInvites = lazy(() => import('./features/admin-areas/AdminTrustedInvites'));
+const AdminTechnical = lazy(() => import('./features/admin-areas/AdminTechnical'));
 const Admin = lazy(() => import("./pages/Admin"));
 const AccessDashboard = lazy(() => import('./features/access-dashboard/AccessDashboard'));
 const Moderation = lazy(() => import("./pages/Moderation"));
@@ -359,16 +364,21 @@ function AnimatedRoutes() {
           <Route path="/dev" element={<DevTools />} />
           <Route path="/dev-tools" element={<DevTools />} />
           <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
+          <Route path="/admin/areas" element={<ProtectedRoute><AdminAreas /></ProtectedRoute>} />
+          <Route path="/admin/campanhas" element={<ProtectedRoute><AdminCampaigns /></ProtectedRoute>} />
+          <Route path="/admin/convites-confianca" element={<ProtectedRoute><AdminTrustedInvites /></ProtectedRoute>} />
+          <Route path="/admin/ferramentas" element={<ProtectedRoute><AdminTechnical /></ProtectedRoute>} />
+          <Route path="/admin/enderecos" element={<ProtectedRoute><AdminAreaPage area="admin_addresses"><AfrolocRegistry /></AdminAreaPage></ProtectedRoute>} />
           <Route path="/admin/acessos" element={<ProtectedRoute><AccessDashboard /></ProtectedRoute>} />
-          <Route path="/admin/monetization" element={<ProtectedRoute><AdminMonetization /></ProtectedRoute>} />
-          <Route path="/admin/applications" element={<ProtectedRoute><AdminApplications /></ProtectedRoute>} />
+          <Route path="/admin/monetization" element={<ProtectedRoute><AdminAreaGuard area="admin_monetization"><AdminMonetization /></AdminAreaGuard></ProtectedRoute>} />
+          <Route path="/admin/applications" element={<ProtectedRoute><AdminAreaGuard area="admin_creators"><AdminApplications /></AdminAreaGuard></ProtectedRoute>} />
           <Route path="/afroloc/acesso/:handle" element={<ProtectedRoute><AccessVisit /></ProtectedRoute>} />
           <Route path="/afroloc/cartao" element={<ProtectedRoute><CurrentAfrolocCard /></ProtectedRoute>} />
           <Route path="/afroloc" element={<ProtectedRoute><CurrentAfrolocCard /></ProtectedRoute>} />
           <Route path="/afroloc/comunidade" element={<ProtectedRoute><AfrolocRegistry /></ProtectedRoute>} />
           <Route path="/afroloc/enderecos" element={<ProtectedRoute><AfrolocExperience /></ProtectedRoute>} />
-          <Route path="/admin/afroloc-certifications" element={<ProtectedRoute><AdminAfrolocCertifications /></ProtectedRoute>} />
-          <Route path="/admin/payouts" element={<ProtectedRoute><AdminPayoutsPage /></ProtectedRoute>} />
+          <Route path="/admin/afroloc-certifications" element={<ProtectedRoute><AdminAreaGuard area="admin_certifications"><AdminAfrolocCertifications /></AdminAreaGuard></ProtectedRoute>} />
+          <Route path="/admin/payouts" element={<ProtectedRoute><AdminAreaGuard area="admin_payouts"><AdminPayoutsPage /></AdminAreaGuard></ProtectedRoute>} />
           <Route path="/admin/mentors" element={<ProtectedRoute><AdminMentors /></ProtectedRoute>} />
           <Route path="/admin/billing" element={<ProtectedRoute><AdminBilling /></ProtectedRoute>} />
           <Route path="/moderation" element={<ProtectedRoute><Moderation /></ProtectedRoute>} />

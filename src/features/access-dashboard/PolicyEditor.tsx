@@ -1,3 +1,4 @@
+import { isAdminArea } from '@/features/admin-areas/catalog';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -61,6 +62,7 @@ export function PolicyEditor({ policy, groups, busy, saving = false, copy, onSav
   };
   return <form className="space-y-5 rounded-xl border bg-card p-4 md:p-6" aria-label={featureLabel(policy.feature, copy)} onSubmit={event => { event.preventDefault(); void save(); }}>
     <div className="flex flex-wrap items-start justify-between gap-3"><h2 className="text-xl font-semibold">{featureLabel(policy.feature, copy)}</h2>{dirty && <span className="rounded-full bg-primary/10 px-3 py-1 text-sm text-primary">{copy.reviewDraft}</span>}</div>
+    {isAdminArea(policy.feature) && <p className="text-sm text-muted-foreground">{copy.adminAreas.permissionHint}</p>}
     {policy.feature === 'wallet' && <p className="text-sm text-muted-foreground">{copy.walletHint}</p>}
     {policy.feature === 'business_registration' && <p className="text-sm text-muted-foreground">{copy.businessHint}</p>}
     <label className="flex min-h-11 items-center justify-between gap-3 rounded-lg border p-3"><span className="font-medium">{draft.enabled ? copy.enabled : copy.paused}</span><Switch aria-label={copy.enabled} checked={draft.enabled} disabled={busy} onCheckedChange={enabled => edit({ enabled })} /></label>

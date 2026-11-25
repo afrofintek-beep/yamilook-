@@ -1,7 +1,9 @@
+import { isAdminArea } from '@/features/admin-areas/catalog';
 import type { FeatureKey } from './api';
 import type { AccessDashboardCopy } from './copy';
 
 export function featureLabel(feature: FeatureKey, copy: AccessDashboardCopy): string {
+  if (isAdminArea(feature)) return copy.adminAreas.labels[feature];
   return ({ google_maps: copy.featureGoogleMaps, maguela: copy.featureMaguela, wallet: copy.featureWallet, business_registration: copy.featureBusiness })[feature];
 }
 
@@ -16,6 +18,9 @@ export function accessReasonLabel(reason: string, copy: AccessDashboardCopy): st
 }
 
 export function auditActionLabel(action: string, copy: AccessDashboardCopy): string {
+  const operational = { creator_review: 'admin_creators', certification_review: 'admin_certifications', payout_approve: 'admin_payouts', payout_process: 'admin_payouts', payout_reject: 'admin_payouts', test_data_cleared: 'admin_test_data' } as const;
+  const area = operational[action as keyof typeof operational];
+  if (area) return copy.adminAreas.labels[area];
   return ({
     legacy_import: copy.actionImport,
     policy: copy.actionPolicy, policy_saved: copy.actionPolicy, save_policy: copy.actionPolicy,

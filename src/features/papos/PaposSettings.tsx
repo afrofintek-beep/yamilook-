@@ -19,6 +19,7 @@ import { BlockedUsersSheet } from '@/components/settings/BlockedUsersSheet';
 import PaposBrand from './PaposBrand';
 import { ConnectedDevices } from '@/components/settings/ConnectedDevices';
 import { BackupManager } from '@/components/settings/BackupManager';
+import { AdminAreasLink } from '@/features/admin-areas/AdminAreas';
 import { AccessDashboardLink } from '@/features/access-dashboard/AccessDashboardLink';
 export default function PaposSettings() {
   const { t } = useTranslation();
@@ -54,7 +55,7 @@ export default function PaposSettings() {
       <Button variant="outline" className="w-full" onClick={() => setInviteOpen(true)}>{t('settings.inviteFriends', { defaultValue: i18n.t('settingsScreen.text0') })}</Button>
       <PaposLanguageSelector />
       <AuthorizedAfrolocLink />
-      <AccessDashboardLink external />
+      <AccessDashboardLink external /><AdminAreasLink external />
       <CallRingtoneSettings />
       <CallPushSettings />
       <ConnectedDevices />

@@ -242,7 +242,7 @@ Deno.serve(async (req) => {
 
     // Verify admin role before allowing seed operations
     const { data: hasAdminRole, error: roleError } = await supabaseUser
-      .rpc('has_role', { _user_id: user.id, _role: 'admin' });
+      .rpc('admin_area_allowed', { p_area: 'admin_test_data' });
 
     if (roleError || !hasAdminRole) {
       return new Response(

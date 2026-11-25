@@ -1,3 +1,5 @@
+import { useAdminAreas } from '@/features/admin-areas/useAdminAreas';
+import { useAuth } from '@/hooks/useAuth';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -68,6 +70,12 @@ function AssignHolder({address,refresh}:{address:Row;refresh:()=>Promise<boolean
   </div>;
 }
 export default function AfrolocRegistry() {
+  const access = useAdminAreas();
+  const { user } = useAuth();
+  const administrative = access.allowed.admin_addresses;
+  return <Registry key={`${user?.id}:${administrative}`} administrative={administrative} />;
+}
+function Registry({ administrative }: { administrative: boolean }) {
   const [rows,setRows]=useState<Row[]>([]);
   const [admin,setAdmin]=useState(false);
   const [catalog,setCatalog]=useState<Division[]>([]);
@@ -81,8 +89,8 @@ export default function AfrolocRegistry() {
   async function refresh() {
     const data=await call<{admin:boolean;rows:Row[]}>('afroloc_registry',{action:'list'});
     setRows(data.rows);
-    setAdmin(data.admin);
-    return data.admin;
+    setAdmin(data.admin && administrative);
+    return data.admin && administrative;
   }
   useEffect(()=>{refresh().then(async allowed=>{
     if (allowed) setCatalog((await call<{divisions:Division[]}>('afroloc_experience_action',{p_action:'catalog'})).divisions);
