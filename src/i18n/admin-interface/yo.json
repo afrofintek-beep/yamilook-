@@ -343,5 +343,15 @@
   "Activa": "Tó ń ṣiṣẹ́",
   "Convite colectivo": "Ìpè ẹgbẹ́",
   "Campanha de promotor": "Ìpolongo olùgbéga",
-  "Campanha controlada": "Ìpolongo tí a ń ṣàkóso"
+  "Campanha controlada": "Ìpolongo tí a ń ṣàkóso",
+  "Este convite já não está disponível.": "Ìpè yìí kò sí mọ́.",
+  "Não foi possível verificar as vagas. Tenta novamente.": "A kò lè ṣàyẹ̀wò àwọn ààyè tó kù. Gbìyànjú lẹ́ẹ̀kan sí i.",
+  "Convite copiado.": "A ti da ìpè kọ.",
+  "Não foi possível partilhar o convite.": "A kò lè pín ìpè náà.",
+  "Partilhar convite": "Pín ìpè",
+  "Vagas disponíveis: {{count}}": "Ààyè tó wà: {{count}}",
+  "Continuar a partilhar": "Tẹ̀síwájú láti pín",
+  "Campanhas e convites": "Àwọn ìpolongo àti ìpè",
+  "Criar campanha": "Ṣẹ̀dá ìpolongo",
+  "Criar convite individual": "Ṣẹ̀dá ìpè fún ẹnìkan"
 }
