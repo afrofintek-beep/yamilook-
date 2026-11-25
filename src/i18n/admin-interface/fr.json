@@ -336,5 +336,12 @@
   "Inscrições: {{used}} de {{limit}} · Emails confirmados: {{confirmed}}": "Inscriptions : {{used}} sur {{limit}} · Emails confirmés : {{confirmed}}",
   "Válido até {{date}}": "Valable jusqu’au {{date}}",
   "Copiado!": "Copié !",
-  "Cada conta criada ocupa uma vaga, mesmo antes da confirmação do email. Reencaminhar a ligação permite que outras pessoas utilizem as vagas disponíveis.": "Chaque compte créé occupe une place, même avant la confirmation de l’email. Transmettre le lien permet à d’autres personnes d’utiliser les places disponibles."
+  "Cada conta criada ocupa uma vaga, mesmo antes da confirmação do email. Reencaminhar a ligação permite que outras pessoas utilizem as vagas disponíveis.": "Chaque compte créé occupe une place, même avant la confirmation de l’email. Transmettre le lien permet à d’autres personnes d’utiliser les places disponibles.",
+  "Activas": "Actives",
+  "Suspensas": "Suspendues",
+  "Encerradas": "Clôturées",
+  "Activa": "Active",
+  "Convite colectivo": "Invitation collective",
+  "Campanha de promotor": "Campagne de promoteur",
+  "Campanha controlada": "Campagne contrôlée"
 }
