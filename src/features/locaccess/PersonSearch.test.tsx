@@ -1,5 +1,6 @@
 import {act,cleanup,fireEvent,render,screen} from '@testing-library/react';
 import {afterEach,beforeEach,expect,it,vi} from 'vitest';
+vi.mock('./maguela-pickup',()=>({maguelaPickup:vi.fn().mockResolvedValue({status:'denied'}),validPickupReference:()=>true}));
 const api=vi.hoisted(()=>({call:vi.fn()}));
 vi.mock('./api',()=>({locaccess:api.call,validHandle:()=>true,accessLink:()=>''}));
 vi.mock('./Farewell',()=>({Farewell:()=>null}));
