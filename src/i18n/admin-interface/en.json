@@ -353,5 +353,21 @@
   "Continuar a partilhar": "Continue sharing",
   "Campanhas e convites": "Campaigns and invitations",
   "Criar campanha": "Create campaign",
-  "Criar convite individual": "Create individual invitation"
+  "Criar convite individual": "Create individual invitation",
+  "Não foi possível guardar. Verifique a imagem e a ligação.": "Could not save. Check the image and connection.",
+  "Identificador público (@)": "Public identifier (@)",
+  "Use 3 a 30 letras sem acentos, números ou sublinhados.": "Use 3 to 30 unaccented letters, digits or underscores.",
+  "O que faz o seu negócio?": "What does your business do?",
+  "Código público da AFROLOC do estabelecimento (opcional)": "Public AFROLOC code of the establishment (optional)",
+  "Zona de atendimento (opcional)": "Service area (optional)",
+  "Alterar fotografia": "Change photo",
+  "Escolher logótipo ou fotografia": "Choose logo or photo",
+  "Escolha uma imagem até 12 MB.": "Choose an image up to 12 MB.",
+  "Documentação da empresa": "Company documentation",
+  "NIF": "Tax identification number (NIF)",
+  "Alvará": "Business licence",
+  "Outros documentos": "Other documents",
+  "Saber mais": "Learn more",
+  "A verificação documental estará disponível numa fase futura. Podes criar o perfil do teu negócio sem apresentar documentos.": "Document verification will be available in a future phase. You can create your business profile without submitting documents.",
+  "Editar perfil de {{name}}": "Edit {{name}}'s profile"
 }

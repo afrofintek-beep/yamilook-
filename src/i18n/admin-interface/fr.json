@@ -353,5 +353,21 @@
   "Continuar a partilhar": "Continuer à partager",
   "Campanhas e convites": "Campagnes et invitations",
   "Criar campanha": "Créer une campagne",
-  "Criar convite individual": "Créer une invitation individuelle"
+  "Criar convite individual": "Créer une invitation individuelle",
+  "Não foi possível guardar. Verifique a imagem e a ligação.": "Impossible d’enregistrer. Vérifiez l’image et la connexion.",
+  "Identificador público (@)": "Identifiant public (@)",
+  "Use 3 a 30 letras sem acentos, números ou sublinhados.": "Utilisez 3 à 30 lettres sans accent, chiffres ou tirets bas.",
+  "O que faz o seu negócio?": "Quelle est l’activité de votre entreprise ?",
+  "Código público da AFROLOC do estabelecimento (opcional)": "Code AFROLOC public de l’établissement (facultatif)",
+  "Zona de atendimento (opcional)": "Zone de service (facultative)",
+  "Alterar fotografia": "Modifier la photo",
+  "Escolher logótipo ou fotografia": "Choisir un logo ou une photo",
+  "Escolha uma imagem até 12 MB.": "Choisissez une image de 12 Mo maximum.",
+  "Documentação da empresa": "Documents de l’entreprise",
+  "NIF": "Numéro fiscal (NIF)",
+  "Alvará": "Licence commerciale",
+  "Outros documentos": "Autres documents",
+  "Saber mais": "En savoir plus",
+  "A verificação documental estará disponível numa fase futura. Podes criar o perfil do teu negócio sem apresentar documentos.": "La vérification des documents sera disponible ultérieurement. Tu peux créer le profil de ton activité sans fournir de documents.",
+  "Editar perfil de {{name}}": "Modifier le profil de {{name}}"
 }

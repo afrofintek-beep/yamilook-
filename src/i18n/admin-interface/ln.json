@@ -353,5 +353,21 @@
   "Continuar a partilhar": "Koba kokabola",
   "Campanhas e convites": "Bakampanye mpe mabiangi",
   "Criar campanha": "Salá kampanye",
-  "Criar convite individual": "Salá libyangi ya moto moko"
+  "Criar convite individual": "Salá libyangi ya moto moko",
+  "Não foi possível guardar. Verifique a imagem e a ligação.": "Tokoki kobomba te. Talá elilingi mpe boyokani ya internet.",
+  "Identificador público (@)": "Elembo ya polele (@)",
+  "Use 3 a 30 letras sem acentos, números ou sublinhados.": "Salelá balɛtrɛ 3 kino 30 oyo ezali na bilembo ya mongongo te, mituya to elembo ya nse.",
+  "O que faz o seu negócio?": "Mombongo na yo esalaka nini?",
+  "Código público da AFROLOC do estabelecimento (opcional)": "Kode AFROLOC ya polele ya esika ya mombongo (ekoki kozanga)",
+  "Zona de atendimento (opcional)": "Esika ya kopesa misala (ekoki kozanga)",
+  "Alterar fotografia": "Bongolá foto",
+  "Escolher logótipo ou fotografia": "Poná logo to foto",
+  "Escolha uma imagem até 12 MB.": "Poná elilingi oyo eleki 12 MB te.",
+  "Documentação da empresa": "Mikanda ya kompanyi",
+  "NIF": "Nimero ya mpako (NIF)",
+  "Alvará": "Mokanda ya ndingisa ya mombongo",
+  "Outros documentos": "Mikanda mosusu",
+  "Saber mais": "Yebá mingi",
+  "A verificação documental estará disponível numa fase futura. Podes criar o perfil do teu negócio sem apresentar documentos.": "Kotala bosolo ya mikanda ekosalema na etape oyo ekoya. Okoki kosala profil ya mombongo na yo kozanga kopesa mikanda.",
+  "Editar perfil de {{name}}": "Bongisá profil ya {{name}}"
 }

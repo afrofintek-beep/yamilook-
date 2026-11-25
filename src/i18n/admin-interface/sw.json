@@ -353,5 +353,21 @@
   "Continuar a partilhar": "Endelea kushiriki",
   "Campanhas e convites": "Kampeni na mialiko",
   "Criar campanha": "Unda kampeni",
-  "Criar convite individual": "Unda mwaliko wa mtu mmoja"
+  "Criar convite individual": "Unda mwaliko wa mtu mmoja",
+  "Não foi possível guardar. Verifique a imagem e a ligação.": "Imeshindikana kuhifadhi. Angalia picha na muunganisho.",
+  "Identificador público (@)": "Kitambulisho cha umma (@)",
+  "Use 3 a 30 letras sem acentos, números ou sublinhados.": "Tumia herufi 3 hadi 30 zisizo na alama za lafudhi, tarakimu au mistari ya chini.",
+  "O que faz o seu negócio?": "Biashara yako inafanya nini?",
+  "Código público da AFROLOC do estabelecimento (opcional)": "Msimbo wa umma wa AFROLOC wa eneo la biashara (si lazima)",
+  "Zona de atendimento (opcional)": "Eneo la huduma (si lazima)",
+  "Alterar fotografia": "Badilisha picha",
+  "Escolher logótipo ou fotografia": "Chagua nembo au picha",
+  "Escolha uma imagem até 12 MB.": "Chagua picha isiyozidi MB 12.",
+  "Documentação da empresa": "Nyaraka za kampuni",
+  "NIF": "Nambari ya utambulisho wa kodi (NIF)",
+  "Alvará": "Leseni ya biashara",
+  "Outros documentos": "Nyaraka nyingine",
+  "Saber mais": "Jifunze zaidi",
+  "A verificação documental estará disponível numa fase futura. Podes criar o perfil do teu negócio sem apresentar documentos.": "Uthibitishaji wa nyaraka utapatikana katika awamu ijayo. Unaweza kuunda wasifu wa biashara bila kuwasilisha nyaraka.",
+  "Editar perfil de {{name}}": "Hariri wasifu wa {{name}}"
 }

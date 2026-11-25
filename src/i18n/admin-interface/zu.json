@@ -353,5 +353,21 @@
   "Continuar a partilhar": "Qhubeka nokwabelana",
   "Campanhas e convites": "Imikhankaso nezimemo",
   "Criar campanha": "Dala umkhankaso",
-  "Criar convite individual": "Dala isimemo somuntu oyedwa"
+  "Criar convite individual": "Dala isimemo somuntu oyedwa",
+  "Não foi possível guardar. Verifique a imagem e a ligação.": "Akukwazanga ukulondoloza. Hlola isithombe nokuxhumeka.",
+  "Identificador público (@)": "Isihlonzi somphakathi (@)",
+  "Use 3 a 30 letras sem acentos, números ou sublinhados.": "Sebenzisa izinhlamvu ezi-3 kuya kwezingama-30 ezingenazimpawu zokuphimisa, izinombolo noma imigqa engezansi.",
+  "O que faz o seu negócio?": "Ibhizinisi lakho lenzani?",
+  "Código público da AFROLOC do estabelecimento (opcional)": "Ikhodi yomphakathi ye-AFROLOC yendawo yebhizinisi (ongakukhetha)",
+  "Zona de atendimento (opcional)": "Indawo yesevisi (ongakukhetha)",
+  "Alterar fotografia": "Shintsha isithombe",
+  "Escolher logótipo ou fotografia": "Khetha uphawu lwebhizinisi noma isithombe",
+  "Escolha uma imagem até 12 MB.": "Khetha isithombe esingadluli ku-12 MB.",
+  "Documentação da empresa": "Imibhalo yenkampani",
+  "NIF": "Inombolo kamazisi wentela (NIF)",
+  "Alvará": "Ilayisensi yebhizinisi",
+  "Outros documentos": "Eminye imibhalo",
+  "Saber mais": "Funda kabanzi",
+  "A verificação documental estará disponível numa fase futura. Podes criar o perfil do teu negócio sem apresentar documentos.": "Ukuqinisekiswa kwemibhalo kuzotholakala esigabeni esizayo. Ungadala iphrofayela yebhizinisi lakho ngaphandle kokuletha imibhalo.",
+  "Editar perfil de {{name}}": "Hlela iphrofayela ka-{{name}}"
 }
