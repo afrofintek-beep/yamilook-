@@ -353,5 +353,21 @@
   "Continuar a partilhar": "Ramba uchigovera",
   "Campanhas e convites": "Mishandirapamwe nekukoka",
   "Criar campanha": "Gadzira mushandirapamwe",
-  "Criar convite individual": "Gadzira kukoka kwemunhu mumwe"
+  "Criar convite individual": "Gadzira kukoka kwemunhu mumwe",
+  "Não foi possível guardar. Verifique a imagem e a ligação.": "Hatina kukwanisa kuchengetedza. Tarisa mufananidzo nekubatana kweindaneti.",
+  "Identificador público (@)": "Chiziviso cheruzhinji (@)",
+  "Use 3 a 30 letras sem acentos, números ou sublinhados.": "Shandisa mabhii 3 kusvika 30 asina zviratidzo zvemataurirwo, manhamba kana mitsetse yepasi.",
+  "O que faz o seu negócio?": "Bhizinesi rako rinoitei?",
+  "Código público da AFROLOC do estabelecimento (opcional)": "Kodhi yeruzhinji yeAFROLOC yenzvimbo yebhizinesi (sarudzo)",
+  "Zona de atendimento (opcional)": "Nzvimbo yebasa (sarudzo)",
+  "Alterar fotografia": "Chinja mufananidzo",
+  "Escolher logótipo ou fotografia": "Sarudza logo kana mufananidzo",
+  "Escolha uma imagem até 12 MB.": "Sarudza mufananidzo usingapfuuri 12 MB.",
+  "Documentação da empresa": "Magwaro ekambani",
+  "NIF": "Nhamba yekuzivikanwa kwemutero (NIF)",
+  "Alvará": "Rezinesi rebhizinesi",
+  "Outros documentos": "Mamwe magwaro",
+  "Saber mais": "Dzidza zvimwe",
+  "A verificação documental estará disponível numa fase futura. Podes criar o perfil do teu negócio sem apresentar documentos.": "Kuongororwa kwemagwaro kuchawanikwa muchikamu chinotevera. Unogona kugadzira peji rebhizinesi rako usingaendesi magwaro.",
+  "Editar perfil de {{name}}": "Gadzirisa peji ra{{name}}"
 }
