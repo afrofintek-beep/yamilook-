@@ -197,3 +197,15 @@ verify_jwt = false
 # Internally authenticates the user and checks the live account session.
 [functions.maguela-identity-bridge]
 verify_jwt = false
+
+# Disabled without an explicitly provisioned, isolated UNITEL sandbox. Auth is verified in code.
+[functions.massa-unitel]
+verify_jwt = false
+
+# Callback is a hint; only an authenticated status query can confirm payment.
+[functions.massa-unitel-webhook]
+verify_jwt = false
+
+# Requires the dedicated server-side reconciliation token.
+[functions.massa-unitel-reconcile]
+verify_jwt = false
