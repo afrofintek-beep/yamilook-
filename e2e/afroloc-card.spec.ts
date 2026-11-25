@@ -7,7 +7,7 @@ test('mobile owner card shares a protected PNG QR, updates data and keeps contac
  const firstHandle='11111111-1111-4111-8111-111111111112',nextHandle='11111111-1111-4111-8111-111111111113';
  const protectedUrl=(handle:string)=>'https://www.yamilook.com/afroloc/acesso/'+handle+'?lang=pt';
  let denyAccess=false;
- await page.route('https://ljcxqwjvjgobhisqkujr.supabase.co/functions/v1/afroloc-postal-card',route=>route.fulfill({json:{status:'unavailable'},headers:{'access-control-allow-origin':'*','access-control-allow-headers':'authorization,content-type'}}));
+ await page.route('https://ljcxqwjvjgobhisqkujr.supabase.co/functions/v1/afroloc-postal-card',route=>route.fulfill({json:{status:'unavailable'},headers:{'access-control-allow-origin':'*','access-control-allow-headers':'authorization,content-type','access-control-allow-methods':'POST,OPTIONS'}}));
  await page.route('**/127.0.0.1:54321/**',async route=>{
   const table=new URL(route.request().url()).pathname.split('/').pop();let data:unknown=[];
   if(table==='user')data={id:me,email:'test@example.invalid'};
@@ -42,22 +42,11 @@ test('mobile owner card shares a protected PNG QR, updates data and keeps contac
  // Decode the exported pixels, not the owner's on-screen code.
  const readShared=()=>page.evaluate(async()=>{
   const data=(window as unknown as {shared:ShareData}).shared;
-  const file=data.files![0],url=URL.createObjectURL(file);
-  try{
-   const image=new Image();await new Promise<void>((resolve,reject)=>{image.onload=()=>resolve();image.onerror=reject;image.src=url;});
-   const scale=Math.min(1,2400/Math.max(image.naturalWidth,image.naturalHeight));
-   const canvas=document.createElement('canvas');canvas.width=Math.round(image.naturalWidth*scale);canvas.height=Math.round(image.naturalHeight*scale);
-   const ctx=canvas.getContext('2d')!;ctx.drawImage(image,0,0,canvas.width,canvas.height);
-   const pixels=ctx.getImageData(0,0,canvas.width,canvas.height);
-   const modulePathQR='/src/lib/afroloc-card-import.ts';
-   const {readAfrolocCard}=await import(/* @vite-ignore */ modulePathQR);
-   // The legacy importer must reject protected cards rather than reveal an address.
-   let publicCode:string|null=null;try{publicCode=await readAfrolocCard(file);}catch{/* expected for protected access */}
-   const {default:jsQR}=await import('jsqr');
-   const modulePath='/src/shared/afroloc-card/protocol.ts';const {readCardReference}=await import(/* @vite-ignore */ modulePath);
-   const qr=jsQR(pixels.data,pixels.width,pixels.height,{inversionAttempts:'attemptBoth'});
-   return {text:data.text,reference:qr?readCardReference(qr.data):null,type:file.type,publicCode};
-  }finally{URL.revokeObjectURL(url);}
+  const file=data.files![0];
+  const modulePath='/src/lib/afroloc-card-import.ts';
+  const {readAfrolocCard,readAfrolocCardReference}=await import(/* @vite-ignore */ modulePath);
+  let publicCode:string|null=null;try{publicCode=await readAfrolocCard(file);}catch{/* expected for protected access */}
+  return {text:data.text,reference:await readAfrolocCardReference(file),type:file.type,publicCode};
  });
  const first=await readShared();
  expect(first.reference).toEqual({kind:'access',url:protectedUrl(firstHandle)});expect(first.type).toBe('image/png');expect(first.publicCode).toBeNull();
