@@ -1,5 +1,9 @@
 export type BridgeDeps={
  enabled:()=>boolean;
+ managementEnabled:()=>boolean;
+ liveSession:(req:Request,subject:string)=>Promise<boolean>;
+ status:(subject:string)=>Promise<{linked:boolean}|null>;
+ revoke:(subject:string)=>Promise<{revoked:true}|null>;
  authenticate:(req:Request)=>Promise<string>;
  eligible:(req:Request,subject:string)=>Promise<boolean>;
  redeem:(challenge:string,subject:string)=>Promise<{linked:false;pending:true;confirmation:string}|null>;
@@ -9,7 +13,7 @@ export function createBridge(deps:BridgeDeps){
  return async(req:Request)=>{
   if(req.method==="OPTIONS")return reply({});
   if(req.method!=="POST")return reply({ok:false},405);
-  if(!deps.enabled())return reply({ok:false,reason:"integration_pending"},503);
+  if(!deps.enabled()&&!deps.managementEnabled())return reply({ok:false,reason:"integration_pending"},503);
   try{
    const subject=await deps.authenticate(req);
    if(!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(subject))return reply({ok:false},401);
@@ -18,6 +22,19 @@ export function createBridge(deps:BridgeDeps){
    while(true){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;if(size>1024){await reader.cancel();return reply({ok:false},400)}chunks.push(value)}
    const bytes=new Uint8Array(size);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.byteLength}
    const input=JSON.parse(new TextDecoder().decode(bytes));
+   if(input?.action==="status"||input?.action==="revoke"){
+    const revoke=input.action==="revoke";
+    if(Object.keys(input).some(k=>!(revoke?["action","consent"]:["action"]).includes(k))||(revoke&&input.consent!==true))return reply({ok:false,reason:"invalid_request"},400);
+    if(!deps.managementEnabled())return reply({ok:false,reason:"integration_pending"},503);
+    if(!await deps.liveSession(req,subject))return reply({ok:false,reason:"verification_required"},403);
+    if(revoke){
+     const result=await deps.revoke(subject);
+     return result?.revoked===true?reply({ok:true,revoked:true}):reply({ok:false,reason:"association_unavailable"},503);
+    }
+    const result=await deps.status(subject);
+    return typeof result?.linked==="boolean"?reply({ok:true,linked:result.linked}):reply({ok:false,reason:"association_unavailable"},503);
+   }
+   if(!deps.enabled())return reply({ok:false,reason:"integration_pending"},503);
    if(input?.action!=="confirm"||input.consent!==true||typeof input.challenge!=="string"||! /^[a-f0-9]{64}$/.test(input.challenge)||Object.keys(input).some(k=>!["action","consent","challenge"].includes(k)))return reply({ok:false,reason:"invalid_request"},400);
    if(!await deps.eligible(req,subject))return reply({ok:false,reason:"verification_required"},403);
    const staged=await deps.redeem(input.challenge,subject);
