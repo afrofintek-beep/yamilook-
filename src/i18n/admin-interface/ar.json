@@ -353,5 +353,21 @@
   "Continuar a partilhar": "متابعة المشاركة",
   "Campanhas e convites": "الحملات والدعوات",
   "Criar campanha": "إنشاء حملة",
-  "Criar convite individual": "إنشاء دعوة فردية"
+  "Criar convite individual": "إنشاء دعوة فردية",
+  "Não foi possível guardar. Verifique a imagem e a ligação.": "تعذّر الحفظ. تحقق من الصورة والاتصال.",
+  "Identificador público (@)": "المعرّف العام (@)",
+  "Use 3 a 30 letras sem acentos, números ou sublinhados.": "استخدم من 3 إلى 30 حرفًا لاتينيًا دون علامات تشكيل أو أرقامًا أو شرطات سفلية.",
+  "O que faz o seu negócio?": "ما نشاط مشروعك؟",
+  "Código público da AFROLOC do estabelecimento (opcional)": "رمز AFROLOC العام للمنشأة (اختياري)",
+  "Zona de atendimento (opcional)": "منطقة الخدمة (اختيارية)",
+  "Alterar fotografia": "تغيير الصورة",
+  "Escolher logótipo ou fotografia": "اختيار شعار أو صورة",
+  "Escolha uma imagem até 12 MB.": "اختر صورة لا تتجاوز 12 ميغابايت.",
+  "Documentação da empresa": "وثائق الشركة",
+  "NIF": "رقم التعريف الضريبي (NIF)",
+  "Alvará": "رخصة النشاط التجاري",
+  "Outros documentos": "وثائق أخرى",
+  "Saber mais": "معرفة المزيد",
+  "A verificação documental estará disponível numa fase futura. Podes criar o perfil do teu negócio sem apresentar documentos.": "سيصبح التحقق من الوثائق متاحًا في مرحلة لاحقة. يمكنك إنشاء ملف نشاطك التجاري دون تقديم وثائق.",
+  "Editar perfil de {{name}}": "تعديل ملف {{name}}"
 }
