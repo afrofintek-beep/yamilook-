@@ -353,5 +353,21 @@
   "Continuar a partilhar": "Tẹ̀síwájú láti pín",
   "Campanhas e convites": "Àwọn ìpolongo àti ìpè",
   "Criar campanha": "Ṣẹ̀dá ìpolongo",
-  "Criar convite individual": "Ṣẹ̀dá ìpè fún ẹnìkan"
+  "Criar convite individual": "Ṣẹ̀dá ìpè fún ẹnìkan",
+  "Não foi possível guardar. Verifique a imagem e a ligação.": "A kò lè fi pamọ́. Ṣàyẹ̀wò àwòrán àti ìsopọ̀.",
+  "Identificador público (@)": "Àmì ìdánimọ̀ gbogbogbò (@)",
+  "Use 3 a 30 letras sem acentos, números ou sublinhados.": "Lo lẹ́tà 3 sí 30 tí kò ní àmì ohùn, nọ́mbà tàbí àmì ìsàlẹ̀.",
+  "O que faz o seu negócio?": "Kí ni iṣẹ́ ajé rẹ ń ṣe?",
+  "Código público da AFROLOC do estabelecimento (opcional)": "Kóòdù AFROLOC gbogbogbò ti ibi iṣẹ́ (àṣàyàn)",
+  "Zona de atendimento (opcional)": "Agbègbè iṣẹ́ (àṣàyàn)",
+  "Alterar fotografia": "Yí fọ́tò padà",
+  "Escolher logótipo ou fotografia": "Yan àmì ilé-iṣẹ́ tàbí fọ́tò",
+  "Escolha uma imagem até 12 MB.": "Yan àwòrán tí kò ju 12 MB lọ.",
+  "Documentação da empresa": "Àwọn ìwé ilé-iṣẹ́",
+  "NIF": "Nọ́mbà ìdánimọ̀ owó-orí (NIF)",
+  "Alvará": "Ìwé àṣẹ iṣẹ́ ajé",
+  "Outros documentos": "Àwọn ìwé mìíràn",
+  "Saber mais": "Kọ́ sí i",
+  "A verificação documental estará disponível numa fase futura. Podes criar o perfil do teu negócio sem apresentar documentos.": "Ìmúdájú àwọn ìwé yóò wà ní ìpele ọjọ́ iwájú. O lè ṣẹ̀dá profaili iṣẹ́ ajé rẹ láìfi ìwé kankan sílẹ̀.",
+  "Editar perfil de {{name}}": "Ṣàtúnṣe profaili {{name}}"
 }
