@@ -3,6 +3,7 @@ import {uiText as t} from '@/i18n/ui-copy';
 import {act,cleanup,fireEvent,render,screen,waitFor,within} from '@testing-library/react';
 import {MemoryRouter} from 'react-router-dom';
 import {afterEach,beforeEach,expect,it,vi} from 'vitest';
+vi.mock('@/features/integration-access/useIntegrationAccess',()=>({useIntegrationAccess:()=>({googleMaps:false,maguela:false,loading:false})}));
 const state=vi.hoisted(()=>({user:'me',profile:{id:'me',display_name:'Titular',username:'titular',avatar_url:null,phone_number:'923123456',email:'titular@example.invalid',country_code:'AO',city:'Luanda',neighborhood:'Centro',afroloc_code:'AO-LDA-ING-000-DIG-G10-35Q1-N23WC',afroloc_certification_status:'pending'},saved:[] as {id:string;code:string;label:string;status:string;created_at:string;expires_at:string}[],postal:null as null|{status:'ready';kind:'example'|'linked';reference:string},fail:false,share:vi.fn().mockResolvedValue('shared')}));
 vi.mock('@/hooks/useAuth',()=>({useAuth:()=>({user:{id:state.user}})}));
 vi.mock('@/integrations/supabase/client',()=>({supabase:{from:()=>({select:()=>({eq:()=>({single:async()=>({data:{...state.profile},error:state.fail?new Error('offline'):null})})})}),rpc:async(name:string)=>({data:name==='locaccess_action'?{handle:'00000000-0000-4000-8000-000000000001',enabled:false,grants:[]}:null,error:null}),functions:{invoke:async()=>({data:{addresses:state.saved},error:null})}}}));

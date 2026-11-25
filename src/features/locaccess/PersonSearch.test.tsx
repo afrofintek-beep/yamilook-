@@ -1,5 +1,7 @@
 import {act,cleanup,fireEvent,render,screen} from '@testing-library/react';
 import {afterEach,beforeEach,expect,it,vi} from 'vitest';
+const integrations=vi.hoisted(()=>({googleMaps:true,maguela:false,loading:false}));
+vi.mock('@/features/integration-access/useIntegrationAccess',()=>({useIntegrationAccess:()=>integrations}));
 vi.mock('./maguela-pickup',()=>({maguelaPickup:vi.fn().mockResolvedValue({status:'denied'}),validPickupReference:()=>true}));
 const api=vi.hoisted(()=>({call:vi.fn()}));
 vi.mock('./api',()=>({locaccess:api.call,validHandle:()=>true,accessLink:()=>''}));
@@ -9,7 +11,7 @@ const person={id:'11111111-1111-4111-8111-111111111111',username:'ataide',displa
 const change=vi.fn();
 const show=()=>{render(<AccessControl control={{policy:{handle:'test',grants:[]},url:'',busy:false,error:'',change,retry:vi.fn()} as never}/>)};
 const search=async(query='@ataide')=>{fireEvent.change(screen.getByRole('searchbox'),{target:{value:query}});await act(async()=>vi.advanceTimersByTimeAsync(251))};
-beforeEach(()=>{vi.useFakeTimers();api.call.mockReset();change.mockReset().mockResolvedValue(undefined)});
+beforeEach(()=>{Object.assign(integrations,{googleMaps:true,maguela:false,loading:false});vi.useFakeTimers();api.call.mockReset();change.mockReset().mockResolvedValue(undefined)});
 afterEach(()=>{cleanup();vi.useRealTimers()});
 it('requires explicit selection and binds permission to the selected account',async()=>{
  api.call.mockResolvedValue([person]);show();const grant=screen.getByRole('button',{name:'Autorizar pessoa seleccionada'});expect(grant).toBeDisabled();await search();expect(api.call).toHaveBeenCalledWith('search',{query:'ataide'});expect(grant).toBeDisabled();
@@ -75,4 +77,26 @@ it('does not carry an offline choice into another address',()=>{
 it('stops new authorizations after leaving the screen',async()=>{
  await selectBoth();let done!:()=>void;change.mockImplementationOnce(()=>new Promise<void>(resolve=>{done=resolve}));
  fireEvent.click(screen.getByRole('button',{name:'Autorizar pessoas seleccionadas (2)'}));cleanup();await act(async()=>done());expect(change).toHaveBeenCalledTimes(1);
+});
+it('hides integration options without hiding ordinary access controls',()=>{
+ Object.assign(integrations,{googleMaps:false,maguela:false});
+ const control={policy:{handle:'test',grants:[{id:'grant',username:'ana',radius:250,expiresAt:'2099-01-01T12:00:00Z',hasExternalRoute:true}]},url:'',busy:false,error:'',change,retry:vi.fn()};
+ render(<AccessControl control={control as never}/>);
+ expect(screen.queryByText('Entrada pública no Google Maps')).toBeNull();
+ expect(screen.queryByText('Ponto de recolha MAGUELA')).toBeNull();
+ expect(screen.getByRole('searchbox')).toBeEnabled();
+ expect(screen.getByRole('button',{name:'Fechar acesso'})).toBeEnabled();
+ expect(screen.getByRole('checkbox',{name:'Permitir continuidade breve sem rede na NJILA'})).toBeVisible();
+});
+it('drops a prepared Google entry if permission is revoked before the owner grants access',async()=>{
+ api.call.mockResolvedValue([person]);
+ const control={policy:{handle:'test',grants:[]},url:'',busy:false,error:'',change,retry:vi.fn()};
+ const view=render(<AccessControl control={control as never}/>);
+ fireEvent.click(screen.getByText('Entrada pública no Google Maps'));
+ fireEvent.change(screen.getByLabelText('Coordenadas da portaria ou entrada pública'),{target:{value:'-8.8, 13.3'}});
+ await search();fireEvent.click(screen.getByRole('button',{name:/^António Ataíde/}));
+ integrations.googleMaps=false;view.rerender(<AccessControl control={control as never}/>);
+ await act(async()=>fireEvent.click(screen.getByRole('button',{name:'Autorizar pessoa seleccionada'})));
+ expect(change).toHaveBeenCalledWith('grant',{username:'ataide',recipient_id:person.id,radius:500,hours:24,offline_continuation:false});
+ expect(screen.queryByText('Entrada pública no Google Maps')).toBeNull();
 });

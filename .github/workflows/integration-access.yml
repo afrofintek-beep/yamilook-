@@ -1,0 +1,45 @@
+name: Central access dashboard
+on:
+  pull_request:
+    paths:
+      - 'src/features/integration-access/**'
+      - 'src/features/access-dashboard/**'
+      - 'src/features/payment-point/WalletAccess*'
+      - 'src/hooks/useBusinessRegistrationAccess*'
+      - 'src/pages/Admin.tsx'
+      - 'src/pages/Settings.tsx'
+      - 'src/features/papos/PaposSettings.tsx'
+      - 'src/features/papos/PaposLogout.test.tsx'
+      - 'src/App.tsx'
+      - 'src/features/locaccess/AccessControl.tsx'
+      - 'src/features/locaccess/AccessVisit.tsx'
+      - 'src/features/locaccess/MaguelaPickup.tsx'
+      - 'src/components/account-link/MaguelaIdentityManagement.tsx'
+      - 'src/components/chat/LocationCard.tsx'
+      - 'src/components/chat/EnhancedChatInput.tsx'
+      - 'supabase/migrations/*restricted_integration_access.sql'
+      - 'supabase/migrations/*admin_visibility_dashboard.sql'
+      - 'tests/integration-access/**'
+      - 'tests/access-dashboard/**'
+      - '.github/workflows/integration-access.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  access:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      VITE_SUPABASE_URL: https://example.supabase.co
+      VITE_SUPABASE_PUBLISHABLE_KEY: test-key
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: node tests/integration-access/database.cjs
+      - run: node tests/access-dashboard/database.cjs
+      - run: npm test -- --maxWorkers=2 src/features/access-dashboard src/features/integration-access src/features/payment-point/WalletAccess.test.tsx src/hooks/useBusinessRegistrationAccess.test.ts src/features/papos/PaposLogout.test.tsx src/features/locaccess/AccessVisit.test.tsx src/features/locaccess/PersonSearch.test.tsx src/features/locaccess/MaguelaPickup.test.tsx src/components/account-link/MaguelaIdentityManagement.test.tsx src/components/chat/LocationCard.test.tsx src/components/chat/EnhancedChatInput.test.tsx
+      - run: npx tsc --noEmit -p tsconfig.app.json

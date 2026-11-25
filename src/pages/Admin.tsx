@@ -1,4 +1,6 @@
 import { CampaignHub } from '@/components/admin/CampaignHub';
+import { AccessDashboardLink } from '@/features/access-dashboard/AccessDashboardLink';
+import { accessDashboardCopy } from '@/features/access-dashboard/copy';
 import InitiativeAdmin from "@/features/social-initiatives/InitiativeAdmin";
 import { socialInitiativesEnabled } from "@/features/social-initiatives/api";
 import { uiText, useUiLocale, uiLocale } from '@/i18n/ui-copy';
@@ -96,7 +98,7 @@ interface UserWithRole extends UserProfile {
 }
 
 export default function Admin() {
-  useUiLocale();
+  const integrationCopy = accessDashboardCopy(useUiLocale());
   const presenceNow = usePresenceClock();
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -454,6 +456,7 @@ export default function Admin() {
         </motion.div>
 
         {/* Sub-painéis de gestão */}
+        <Card><CardHeader><CardTitle>{integrationCopy.title}</CardTitle><CardDescription>{integrationCopy.dashboardHint}</CardDescription></CardHeader><CardContent><AccessDashboardLink /></CardContent></Card>
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -539,12 +542,14 @@ export default function Admin() {
         <TopicPostManager />
 
         {/* Users Tab */}
-        <Tabs defaultValue="users">
-          <TabsList className="w-full">
-            <TabsTrigger value="users" className="flex-1 gap-2">
+        <Tabs defaultValue={window.location.hash === '#integrations' ? 'integrations' : 'users'}>
+          <TabsList className="grid h-auto w-full grid-cols-3">
+            <TabsTrigger value="users" className="min-w-0 flex-col gap-1 whitespace-normal px-1 py-2 sm:flex-row">
               <Users className="w-4 h-4" />{uiText("Utilizadores")}</TabsTrigger>
-            <TabsTrigger value="activity" className="flex-1 gap-2">
+            <TabsTrigger value="activity" className="min-w-0 flex-col gap-1 whitespace-normal px-1 py-2 sm:flex-row">
               <Activity className="w-4 h-4" />{uiText("Atividade")}</TabsTrigger>
+            <TabsTrigger value="integrations" className="min-w-0 flex-col gap-1 whitespace-normal px-1 py-2 sm:flex-row">
+              <Shield className="w-4 h-4" />{integrationCopy.title}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="users" className="mt-4 space-y-4">
@@ -695,6 +700,10 @@ export default function Admin() {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="integrations" className="mt-4">
+            <div className="space-y-3 rounded-xl border p-4"><p className="text-sm">{integrationCopy.dashboardHint}</p><AccessDashboardLink /></div>
           </TabsContent>
 
           <TabsContent value="activity" className="mt-4">

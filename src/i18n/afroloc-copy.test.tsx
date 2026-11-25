@@ -1,5 +1,6 @@
 import {act,cleanup,fireEvent,render,screen} from '@testing-library/react';
 import {afterEach,expect,it,vi} from 'vitest';
+vi.mock('@/features/integration-access/useIntegrationAccess',()=>({useIntegrationAccess:()=>({googleMaps:true,maguela:false,loading:false})}));
 import {changeAppLanguage} from './index';
 import {uiText} from './ui-copy';
 import {AccessControl} from '@/features/locaccess/AccessControl';

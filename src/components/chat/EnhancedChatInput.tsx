@@ -1,6 +1,7 @@
 import { useReceiveLabels } from '@/features/payment-point/receive-labels';
 import { notifyPaymentRequest } from '@/lib/call-push';
 import { useWalletAccess } from '@/features/payment-point/WalletAccess';
+import { useIntegrationAccess } from '@/features/integration-access/useIntegrationAccess';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -90,6 +91,10 @@ export function EnhancedChatInput({
   const [params, setParams] = useSearchParams();
   const navigate = useNavigate();
   const access = useWalletAccess();
+  const integrationAccess = useIntegrationAccess();
+  const googleMaps = !integrationAccess.loading && integrationAccess.googleMaps;
+  const googleMapsAllowed = useRef(googleMaps);
+  googleMapsAllowed.current = googleMaps;
   const { user } = useAuth();
   const [requestForm, setRequestForm] = useState(false);
   const eligibility = useQuery({
@@ -120,6 +125,11 @@ export function EnhancedChatInput({
     setPaymentConversation(null);
     return () => { locationRequest.current += 1; };
   }, [conversationId]);
+  useEffect(() => {
+    locationRequest.current += 1;
+    setLocating(false);
+    setLocationDraft(null);
+  }, [googleMaps, user?.id]);
   useEffect(() => {
     if (params.get('requestPayment') !== '1') return;
     setPaymentConversation(conversationId);
@@ -200,7 +210,7 @@ export function EnhancedChatInput({
   };
 
   const handleLocation = () => {
-    if (disabled || locating || sendingRef.current) return;
+    if (!googleMapsAllowed.current || disabled || locating || sendingRef.current) return;
     setSendError('');
     if (!navigator.geolocation) {
       setSendError('Este navegador não permite obter a localização.');
@@ -210,7 +220,7 @@ export function EnhancedChatInput({
     setLocating(true);
     navigator.geolocation.getCurrentPosition(
       ({ coords }) => {
-        if (request !== locationRequest.current) return;
+        if (!googleMapsAllowed.current || request !== locationRequest.current) return;
         setLocating(false);
         const location = `📍 https://www.google.com/maps?q=${coords.latitude},${coords.longitude}`;
         setLocationName('');
@@ -219,7 +229,7 @@ export function EnhancedChatInput({
         setLocationDraft(location);
       },
       (error) => {
-        if (request !== locationRequest.current) return;
+        if (!googleMapsAllowed.current || request !== locationRequest.current) return;
         setLocating(false);
         setSendError(error.code === 1
           ? 'Acesso à localização recusado. Permite a localização nas definições do navegador e tenta novamente.'
@@ -482,8 +492,8 @@ export function EnhancedChatInput({
               </DropdownMenuItem>
               <DropdownMenuItem onSelect={() => setAddressConversation(conversationId)} disabled={disabled || sending}>
                 <MapPin className="w-4 h-4 mr-2" />{uiText("Endereço AFROLOC")}</DropdownMenuItem>
-              <DropdownMenuItem onSelect={handleLocation} disabled={disabled || locating || sending}>
-                <MapPin className="w-4 h-4 mr-2" />{uiText("Localização")}</DropdownMenuItem>
+              {googleMaps && <DropdownMenuItem onSelect={handleLocation} disabled={disabled || locating || sending}>
+                <MapPin className="w-4 h-4 mr-2" />{uiText("Localização")}</DropdownMenuItem>}
             </DropdownMenuContent>
           </DropdownMenu>
 
@@ -609,7 +619,7 @@ export function EnhancedChatInput({
           setMessage(current => current ? `${current}\n${content}` : content);
           requestAnimationFrame(() => textareaRef.current?.focus());
         }} />}
-      <Dialog open={locationDraft !== null} onOpenChange={open => { if (!open) setLocationDraft(null); }}>
+      <Dialog open={googleMaps && locationDraft !== null} onOpenChange={open => { if (!open) setLocationDraft(null); }}>
         <DialogContent className="max-w-sm">
           <DialogHeader><DialogTitle>{uiText("Partilhar localização")}</DialogTitle><DialogDescription>{uiText("Acrescenta os detalhes. A localização será colocada na mensagem para confirmares o envio.")}</DialogDescription></DialogHeader>
           <label className="space-y-1 text-sm">{uiText("Nome do local")}<Input value={locationName} maxLength={100} onChange={e => setLocationName(e.target.value)} placeholder={uiText("Ex.: Escritório AFROFINTEK")} /></label>
@@ -618,6 +628,7 @@ export function EnhancedChatInput({
           <p className="text-xs text-muted-foreground">{uiText("O código é fornecido por ti e não é verificado neste envio. As coordenadas não certificam um endereço.")}</p>
           <a className="text-sm underline" href="/afroloc/enderecos" target="_blank" rel="noopener noreferrer">{uiText("Abrir AFROLOC para consultar ou registar endereço")}</a>
           <Button disabled={disabled || sending} onClick={() => {
+            if (!googleMapsAllowed.current || !locationDraft || disabled || sendingRef.current) return;
             const details = [locationName.trim(), locationReference.trim(), afrolocCode.trim() ? uiText("AFROLOC (não verificado): {{value1}}", { value1: (afrolocCode.trim()) ?? "" }) : '', locationDraft].filter(Boolean).join('\n');
             setMessage(current => current ? `${current}\n${details}` : details);
             setLocationDraft(null);

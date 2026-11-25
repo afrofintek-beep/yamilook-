@@ -9,5 +9,5 @@ export function parseFarewellResponse(value:unknown,action:string):{batch:string
   if(!row||typeof row!=='object'||!uuid(row.batch)||!uuid(row.id)||!uuid(row.message)||typeof row.username!=='string'||!row.username.trim()||typeof row.date!=='string'||!Number.isFinite(Date.parse(row.date)))throw invalid();
   return {batch:row.batch,id:row.id,username:row.username,message:row.message,date:row.date};
  });
- return {batch,pending:rows};
+ return {batch:typeof batch==='string'?batch:null,pending:rows};
 }
