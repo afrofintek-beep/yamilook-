@@ -3544,5 +3544,8 @@
   "Não foi possível ligar o microfone.": "Could not turn on the microphone.",
   "Verifica as permissões do navegador e tenta novamente.": "Check browser permissions and try again.",
   "O prazo de 15 minutos para editar terminou.": "The 15-minute editing period has ended.",
-  "Chamada terminada.": "Call ended."
+  "Chamada terminada.": "Call ended.",
+  "Carteira": "Wallet",
+  "Abrir a carteira": "Open wallet",
+  "Levantar Kumbu": "Withdraw Kumbu"
 }
