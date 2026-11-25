@@ -343,5 +343,15 @@
   "Activa": "Ezali kosala",
   "Convite colectivo": "Libyangi ya lisangá",
   "Campanha de promotor": "Campagne ya promoteur",
-  "Campanha controlada": "Campagne oyo etambwisami"
+  "Campanha controlada": "Campagne oyo etambwisami",
+  "Este convite já não está disponível.": "Libyangi oyo ezali lisusu te.",
+  "Não foi possível verificar as vagas. Tenta novamente.": "Tokoki kotala bisika oyo etikali te. Meká lisusu.",
+  "Convite copiado.": "Libyangi ekopiami.",
+  "Não foi possível partilhar o convite.": "Tokoki kokabola libyangi te.",
+  "Partilhar convite": "Kabola libyangi",
+  "Vagas disponíveis: {{count}}": "Bisika oyo etikali: {{count}}",
+  "Continuar a partilhar": "Koba kokabola",
+  "Campanhas e convites": "Bakampanye mpe mabiangi",
+  "Criar campanha": "Salá kampanye",
+  "Criar convite individual": "Salá libyangi ya moto moko"
 }
