@@ -343,5 +343,15 @@
   "Activa": "Linaloendelea",
   "Convite colectivo": "Mwaliko wa kikundi",
   "Campanha de promotor": "Kampeni ya mtangazaji",
-  "Campanha controlada": "Kampeni inayodhibitiwa"
+  "Campanha controlada": "Kampeni inayodhibitiwa",
+  "Este convite já não está disponível.": "Mwaliko huu haupatikani tena.",
+  "Não foi possível verificar as vagas. Tenta novamente.": "Imeshindikana kuangalia nafasi. Jaribu tena.",
+  "Convite copiado.": "Mwaliko umenakiliwa.",
+  "Não foi possível partilhar o convite.": "Imeshindikana kushiriki mwaliko.",
+  "Partilhar convite": "Shiriki mwaliko",
+  "Vagas disponíveis: {{count}}": "Nafasi zilizopo: {{count}}",
+  "Continuar a partilhar": "Endelea kushiriki",
+  "Campanhas e convites": "Kampeni na mialiko",
+  "Criar campanha": "Unda kampeni",
+  "Criar convite individual": "Unda mwaliko wa mtu mmoja"
 }
