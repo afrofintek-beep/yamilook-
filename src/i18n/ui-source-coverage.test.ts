@@ -11,7 +11,9 @@ import residencePortuguese from './residence/pt.json';
 
 import afrolocPortuguese from './afroloc/pt.json';
 
-const copy = { ...portuguese, ...adminPortuguese, ...manualPortuguese, ...residencePortuguese, ...afrolocPortuguese };
+import { maguelaPickupCopy } from './maguela-pickup-copy';
+import { maguelaIdentityCopy } from './maguela-identity-copy';
+const copy = { ...maguelaPickupCopy.pt, ...maguelaIdentityCopy.pt, ...portuguese, ...adminPortuguese, ...manualPortuguese, ...residencePortuguese, ...afrolocPortuguese };
 
 it('has a dictionary entry for every fixed UI source and never translates a runtime value', () => {
   const root = process.cwd();
