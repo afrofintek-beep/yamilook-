@@ -353,5 +353,21 @@
   "Continuar a partilhar": "Continuar a partilhar",
   "Campanhas e convites": "Campanhas e convites",
   "Criar campanha": "Criar campanha",
-  "Criar convite individual": "Criar convite individual"
+  "Criar convite individual": "Criar convite individual",
+  "Não foi possível guardar. Verifique a imagem e a ligação.": "Não foi possível guardar. Verifique a imagem e a ligação.",
+  "Identificador público (@)": "Identificador público (@)",
+  "Use 3 a 30 letras sem acentos, números ou sublinhados.": "Use 3 a 30 letras sem acentos, números ou sublinhados.",
+  "O que faz o seu negócio?": "O que faz o seu negócio?",
+  "Código público da AFROLOC do estabelecimento (opcional)": "Código público da AFROLOC do estabelecimento (opcional)",
+  "Zona de atendimento (opcional)": "Zona de atendimento (opcional)",
+  "Alterar fotografia": "Alterar fotografia",
+  "Escolher logótipo ou fotografia": "Escolher logótipo ou fotografia",
+  "Escolha uma imagem até 12 MB.": "Escolha uma imagem até 12 MB.",
+  "Documentação da empresa": "Documentação da empresa",
+  "NIF": "NIF",
+  "Alvará": "Alvará",
+  "Outros documentos": "Outros documentos",
+  "Saber mais": "Saber mais",
+  "A verificação documental estará disponível numa fase futura. Podes criar o perfil do teu negócio sem apresentar documentos.": "A verificação documental estará disponível numa fase futura. Podes criar o perfil do teu negócio sem apresentar documentos.",
+  "Editar perfil de {{name}}": "Editar perfil de {{name}}"
 }
