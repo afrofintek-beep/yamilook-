@@ -336,5 +336,12 @@
   "Inscrições: {{used}} de {{limit}} · Emails confirmados: {{confirmed}}": "Usajili: {{used}} kati ya {{limit}} · Barua pepe zilizothibitishwa: {{confirmed}}",
   "Válido até {{date}}": "Halali hadi {{date}}",
   "Copiado!": "Imenakiliwa!",
-  "Cada conta criada ocupa uma vaga, mesmo antes da confirmação do email. Reencaminhar a ligação permite que outras pessoas utilizem as vagas disponíveis.": "Kila akaunti inayoundwa hutumia nafasi moja, hata kabla ya kuthibitisha barua pepe. Kusambaza kiungo kunaruhusu watu wengine kutumia nafasi zilizobaki."
+  "Cada conta criada ocupa uma vaga, mesmo antes da confirmação do email. Reencaminhar a ligação permite que outras pessoas utilizem as vagas disponíveis.": "Kila akaunti inayoundwa hutumia nafasi moja, hata kabla ya kuthibitisha barua pepe. Kusambaza kiungo kunaruhusu watu wengine kutumia nafasi zilizobaki.",
+  "Activas": "Yanayoendelea",
+  "Suspensas": "Yaliyosimamishwa",
+  "Encerradas": "Yaliyofungwa",
+  "Activa": "Linaloendelea",
+  "Convite colectivo": "Mwaliko wa kikundi",
+  "Campanha de promotor": "Kampeni ya mtangazaji",
+  "Campanha controlada": "Kampeni inayodhibitiwa"
 }
