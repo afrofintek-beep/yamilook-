@@ -193,3 +193,7 @@ verify_jwt = false
 # Requires the dedicated server-side reconciliation token.
 [functions.massa-appypay-reconcile]
 verify_jwt = false
+
+# Internally authenticates the user and checks the live account session.
+[functions.maguela-identity-bridge]
+verify_jwt = false
