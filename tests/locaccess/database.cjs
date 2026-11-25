@@ -177,4 +177,39 @@ await db.query('delete from auth.sessions where id=$1',[sessions[1]]);await asse
 ok(!(await db.query("select has_function_privilege('anon','public.locaccess_action(text,jsonb)','execute') as allowed")).rows[0].allowed,'anonymous cannot invoke');
 ok(!(await db.query("select has_table_privilege('authenticated','locaccess_private.addresses','select') as allowed")).rows[0].allowed,'table not exposed');
 ok(!(await db.query("select has_function_privilege('authenticated','public.locaccess_reference_protected(text)','execute') as allowed")).rows[0].allowed,'cannot enumerate protected codes');
+
+// MAGUELA authorization is separate, owner-controlled, and contains no private point.
+await db.exec(fs.readFileSync('supabase/migrations/20261125013000_locaccess_maguela_pickup.sql','utf8'));
+await db.query("update profiles set afroloc_code=$1 where id=$2",[source.code,ids[0]]);
+await db.query('insert into auth.sessions values($1,$2)',[sessions[1],ids[1]]);
+const pickup=async(a,d)=>{await db.exec('set role authenticated');try{return (await db.query('select public.locaccess_maguela_pickup($1,$2) as result',[a,JSON.stringify(d)])).rows[0].result}finally{await db.exec('reset role')}};
+await login(0);policy=await action('grant',{...source,username:'guest',radius:250,hours:24});
+const grantId=policy.grants.find(g=>g.username==='guest').id, args={handle,grant_id:grantId}, ref='AO-PUBLIC-PORTARIA';
+await login(1);ok((await pickup('resolve',{handle})).status==='denied','visit alone does not authorize pickup');
+ok((await pickup('set',{...args,reference:ref})).status==='denied','recipient cannot self-authorize');
+await login(0);
+ok((await pickup('set',{...args,reference:source.code})).status==='denied','cannot designate protected residence');
+ok((await pickup('set',{...args,reference:'https://example.invalid'})).status==='denied','no arbitrary URL');
+ok((await pickup('set',{...args,reference:ref})).status==='designated','owner explicitly designates separate pickup');
+await login(1);const result=await pickup('resolve',{handle});
+ok(result.status==='ready'&&result.reference===ref,'authorized recipient receives designation');
+ok(Object.keys(result).sort().join(',')==='expiresAt,reference,status','no private coordinates, code or identity');
+ok(Date.parse(result.expiresAt)-Date.now()<=21000,'lookup expires within 20 seconds');
+await login(2);ok((await pickup('resolve',{handle})).status==='denied','forwarded handle does not authorize');
+await login(0);ok((await pickup('clear',args)).status==='cleared','owner removes pickup consent');
+await login(1);ok((await pickup('resolve',{handle})).status==='denied','withdrawn consent denied');
+await login(0);await pickup('set',{...args,reference:ref});await action('revoke',{...source,grant_id:grantId});
+await login(1);ok((await pickup('resolve',{handle})).status==='denied','revoked visit invalidates pickup');
+await login(0);await action('grant',{...source,username:'guest',radius:250,hours:24});
+await db.query("update locaccess_private.grants set updated_at=updated_at+interval '1 second' where id=$1",[grantId]);
+await login(1);ok((await pickup('resolve',{handle})).status==='denied','renewed grant does not inherit pickup consent');
+await login(0);await pickup('set',{...args,reference:ref});
+await db.query("update locaccess_private.grants set expires_at=now()-interval '1 second' where id=$1",[grantId]);
+await login(1);ok((await pickup('resolve',{handle})).status==='denied','expired grant denied');
+await login(0);await action('grant',{...source,username:'guest',radius:250,hours:24});await pickup('set',{...args,reference:ref});
+await db.query("update profiles set afroloc_code='AO-CHANGED-AGAIN' where id=$1",[ids[0]]);
+await login(1);ok((await pickup('resolve',{handle})).status==='denied','changed source denies pickup');
+ok(!(await db.query("select has_table_privilege('authenticated','locaccess_private.maguela_pickups','select') as allowed")).rows[0].allowed,'no direct table reads');
+ok(!(await db.query("select has_function_privilege('anon','public.locaccess_maguela_pickup(text,jsonb)','execute') as allowed")).rows[0].allowed,'anonymous denied');
+
 console.log(`${checks} LOCACCESS database checks passed`);await db.close();})().catch(e=>{console.error(e.message);process.exit(1)});

@@ -1,3 +1,4 @@
+import {MaguelaPickupVisit} from './MaguelaPickup';
 import {prepareJourneyCompass} from '../locaccess/useJourneyCompass';
 import {uiText as t,useUiLocale} from '@/i18n/ui-copy';
 import {NjilaJourney} from './NjilaJourney';
@@ -88,6 +89,7 @@ function LocationVisit({onJourney}:{onJourney:()=>void}){
     </Button>
    </details>
   )}
+  {(result?.status==='ready'||result?.status==='proximity')&&!result.owner&&<MaguelaPickupVisit key={handle} handle={handle}/>}
   {routeError&&<p role="alert">{t('O percurso no Google Maps já não está disponível. Verifica o acesso.')}</p>}
   {result?.status==='proximity'&&<Button disabled={tracking} onClick={()=>{if(navigator.geolocation)setTracking(true);else setMessage('Este dispositivo não disponibiliza a localização.')}}>{t(tracking?'A verificar proximidade…':'Activar localização e verificar proximidade')}</Button>}
   <Button variant="outline" onClick={()=>setRetry(n=>n+1)}>{t("Verificar novamente")}</Button>
