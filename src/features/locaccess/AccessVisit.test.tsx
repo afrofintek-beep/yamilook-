@@ -1,6 +1,7 @@
 import {act,cleanup,fireEvent,render,screen} from '@testing-library/react';
 import {MemoryRouter,Routes,Route} from 'react-router-dom';
 import {afterEach,beforeEach,expect,it,vi} from 'vitest';
+vi.mock('./maguela-pickup',()=>({maguelaPickup:vi.fn().mockResolvedValue({status:'denied'}),validPickupReference:()=>true}));
 const api=vi.hoisted(()=>({call:vi.fn()}));
 vi.mock('./api',()=>({locaccess:api.call,validHandle:()=>true}));
 vi.mock('./AccessMap',()=>({AccessMap:({approximate}:{approximate?:boolean})=><div>{approximate?'Área aproximada':'Ponto exacto'}</div>}));
