@@ -2,7 +2,7 @@ export type BridgeDeps={
  enabled:()=>boolean;
  authenticate:(req:Request)=>Promise<string>;
  eligible:(req:Request,subject:string)=>Promise<boolean>;
- redeem:(challenge:string,subject:string)=>Promise<boolean>;
+ redeem:(challenge:string,subject:string)=>Promise<{linked:false;pending:true;confirmation:string}|null>;
 };
 const reply=(value:unknown,status=200)=>new Response(JSON.stringify(value),{status,headers:{"content-type":"application/json","cache-control":"no-store","access-control-allow-origin":"https://www.yamilook.com","access-control-allow-headers":"authorization,apikey,content-type,x-client-info","access-control-allow-methods":"POST, OPTIONS","vary":"Origin"}});
 export function createBridge(deps:BridgeDeps){
@@ -20,8 +20,9 @@ export function createBridge(deps:BridgeDeps){
    const input=JSON.parse(new TextDecoder().decode(bytes));
    if(input?.action!=="confirm"||input.consent!==true||typeof input.challenge!=="string"||! /^[a-f0-9]{64}$/.test(input.challenge)||Object.keys(input).some(k=>!["action","consent","challenge"].includes(k)))return reply({ok:false,reason:"invalid_request"},400);
    if(!await deps.eligible(req,subject))return reply({ok:false,reason:"verification_required"},403);
-   const linked=await deps.redeem(input.challenge,subject);
-   return linked?reply({ok:true,linked:true}):reply({ok:false,reason:"association_unavailable"},409);
+   const staged=await deps.redeem(input.challenge,subject);
+   if(staged?.linked!==false||staged.pending!==true||typeof staged.confirmation!=="string"||!/^[a-f0-9]{64}$/.test(staged.confirmation))return reply({ok:false,reason:"association_unavailable"},409);
+   return reply({ok:true,linked:false,pending:true,confirmation:staged.confirmation});
   }catch{return reply({ok:false,reason:"association_unavailable"},403)}
  };
 }
