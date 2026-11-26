@@ -12,7 +12,14 @@ beforeEach(() => {
   prefs.ringtone_pattern='default';prefs.ringtone_enabled=true;prefs.ringtone_volume=0.5;
   audio.resume.mockImplementation(async () => { audio.state = 'running'; });
   audio.createGain.mockImplementation(() => ({ connect: vi.fn(), disconnect: vi.fn(), gain: { value: 0, setValueAtTime: vi.fn(), linearRampToValueAtTime: vi.fn() } }));
-  audio.createOscillator.mockImplementation(() => ({ type: '', frequency: { value: 0 }, connect: vi.fn(), disconnect: vi.fn(), start: vi.fn(), stop: vi.fn() }));
+  audio.createOscillator.mockImplementation(() => ({
+    type: '',
+    frequency: { value: 0, setValueAtTime: vi.fn() },
+    connect: vi.fn(),
+    disconnect: vi.fn(),
+    start: vi.fn(),
+    stop: vi.fn(),
+  }));
 });
 afterEach(() => { cleanup(); vi.useRealTimers(); });
 describe('call ringtone lifecycle', () => {
@@ -33,13 +40,27 @@ describe('call ringtone lifecycle', () => {
     await act(async()=>second.result.current.startRingtone());
     expect(audio.createOscillator).not.toHaveBeenCalled();
   });
-  it('plays the selected tone and stops all resources on answer/decline', async () => {
-    const { result } = renderHook(() => useRingtone({ pattern: 'modern', vibrationEnabled: false }));
+  it.each([
+    { pattern: 'modern', notes: [[523.25, 0], [659.25, 0.19], [783.99, 0.372], [1046.50, 0.59], [783.99, 0.9]], end: 1.27, cycle: 2700 },
+    { pattern: 'gentle', notes: [[440, 0], [659.25, 0.5], [554.37, 0.995]], end: 1.58, cycle: 3700 },
+    { pattern: 'urgent', notes: [[587.33, 0], [880, 0.135], [739.99, 0.29], [987.77, 0.555], [880, 0.725]], end: 1.04, cycle: 2100 },
+  ])('plays the saved $pattern melody and cancels scheduled notes when the call ends', async ({ pattern, notes, end, cycle }) => {
+    prefs.ringtone_pattern = pattern;
+    const { result } = renderHook(() => useRingtone({ vibrationEnabled: false }));
     await act(async () => result.current.startRingtone());
-    expect(audio.createOscillator.mock.results.map(r => r.value.frequency.value)).toEqual([523, 659]);
+    expect(audio.createOscillator).toHaveBeenCalledOnce();
+    const firstOscillator = audio.createOscillator.mock.results[0].value;
+    expect(firstOscillator.frequency.setValueAtTime.mock.calls).toEqual(notes);
+    expect(firstOscillator.stop).toHaveBeenCalledWith(end);
+    await act(async () => vi.advanceTimersByTime(cycle - 1));
+    expect(firstOscillator.disconnect).toHaveBeenCalledOnce();
+    expect(audio.createOscillator).toHaveBeenCalledOnce();
+    await act(async () => vi.advanceTimersByTime(1));
+    const secondOscillator = audio.createOscillator.mock.results[1].value;
     act(() => result.current.stopRingtone());
-    for (const oscillator of audio.createOscillator.mock.results) expect(oscillator.value.stop).toHaveBeenCalled();
-    expect(audio.createGain.mock.results[0].value.disconnect).toHaveBeenCalled();
+    expect(secondOscillator.stop).toHaveBeenLastCalledWith();
+    expect(secondOscillator.disconnect).toHaveBeenCalledOnce();
+    expect(audio.createGain.mock.results[1].value.disconnect).toHaveBeenCalledOnce();
     await act(async () => vi.advanceTimersByTime(10000));
     expect(audio.createOscillator).toHaveBeenCalledTimes(2);
   });

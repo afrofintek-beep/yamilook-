@@ -2,7 +2,22 @@ import { useEffect, useRef, useCallback } from 'react';
 import { useSettings } from './useSettings';
 import { getSharedAudioContext } from '@/lib/audio-context';
 
-// Ringtone patterns configuration
+type RingtoneNote = readonly [frequency: number, startMs: number, endMs: number];
+
+type RingtonePattern = {
+  ringDuration: number;
+  silenceDuration: number;
+  vibrationInterval?: number;
+} & ({
+  frequencies: readonly number[];
+} | {
+  notes: readonly RingtoneNote[];
+  waveform: OscillatorType;
+  attackMs: number;
+  releaseMs: number;
+  level: number;
+});
+
 const RINGTONE_PATTERNS = {
   waiting: { frequencies: [440], ringDuration: 300, silenceDuration: 8000 },
   default: {
@@ -16,26 +31,61 @@ const RINGTONE_PATTERNS = {
     silenceDuration: 1500,
   },
   modern: {
-    frequencies: [523, 659], // C5 and E5
-    ringDuration: 600,
-    silenceDuration: 400,
+    notes: [
+      [523.25, 0, 185],
+      [659.25, 190, 365],
+      [783.99, 372, 555],
+      [1046.50, 590, 850],
+      [783.99, 900, 1270],
+    ],
+    waveform: 'triangle',
+    attackMs: 14,
+    releaseMs: 100,
+    level: 0.7,
+    ringDuration: 1270,
+    silenceDuration: 1430,
+    vibrationInterval: 1000,
   },
   gentle: {
-    frequencies: [330, 392], // E4 and G4
-    ringDuration: 1200,
-    silenceDuration: 2500,
+    notes: [
+      [440, 0, 450],
+      [659.25, 500, 940],
+      [554.37, 995, 1580],
+    ],
+    waveform: 'sine',
+    attackMs: 70,
+    releaseMs: 260,
+    level: 0.5,
+    ringDuration: 1580,
+    silenceDuration: 2120,
+    vibrationInterval: 3700,
   },
   urgent: {
-    frequencies: [587, 784], // D5 and G5
-    ringDuration: 400,
-    silenceDuration: 200,
+    notes: [
+      [587.33, 0, 125],
+      [880, 135, 280],
+      [739.99, 290, 455],
+      [987.77, 555, 715],
+      [880, 725, 1040],
+    ],
+    waveform: 'triangle',
+    attackMs: 10,
+    releaseMs: 55,
+    level: 0.9,
+    ringDuration: 1040,
+    silenceDuration: 1060,
+    vibrationInterval: 600,
   },
   silent: {
     frequencies: [],
     ringDuration: 0,
     silenceDuration: 3000,
   },
-};
+} satisfies Record<string, RingtonePattern>;
+
+function getRingtonePattern(pattern: keyof typeof RINGTONE_PATTERNS): RingtonePattern {
+  return RINGTONE_PATTERNS[pattern] || RINGTONE_PATTERNS.default;
+}
 
 // Vibration patterns for different ringtone styles
 const VIBRATION_PATTERNS = {
@@ -118,14 +168,14 @@ export function useRingtone(options?: RingtoneOptions) {
   // Create a ring sound
   const createRing = useCallback(async () => {
     const generation = generationRef.current;
-    if (!isPlayingRef.current || pendingRingRef.current === generation) return;
+    if (!isPlayingRef.current || pendingRingRef.current === generation || gainNodeRef.current) return;
     const effectiveSettings = getEffectiveSettings();
     
     if (!effectiveSettings.ringtoneEnabled) return;
     
-    const patternConfig = RINGTONE_PATTERNS[effectiveSettings.pattern] || RINGTONE_PATTERNS.default;
+    const patternConfig = getRingtonePattern(effectiveSettings.pattern);
     
-    if (patternConfig.frequencies.length === 0) return; // Silent pattern
+    if ('frequencies' in patternConfig && patternConfig.frequencies.length === 0) return;
     
     let audioContext: AudioContext;
     try { audioContext = initAudioContext(); } catch { return; }
@@ -152,35 +202,48 @@ export function useRingtone(options?: RingtoneOptions) {
     gainNode.gain.value = effectiveSettings.volume;
     gainNodeRef.current = gainNode;
 
-    // Create oscillators for dual-tone
-    const oscillators: OscillatorNode[] = [];
-    patternConfig.frequencies.forEach((freq) => {
+    const ringStart = audioContext.currentTime;
+    const ringEnd = ringStart + patternConfig.ringDuration / 1000;
+    let oscillators: OscillatorNode[];
+
+    if ('notes' in patternConfig) {
       const oscillator = audioContext.createOscillator();
-      oscillator.type = 'sine';
-      oscillator.frequency.value = freq;
-      oscillator.connect(gainNode);
-      oscillators.push(oscillator);
-    });
+      oscillator.type = patternConfig.waveform;
+      oscillators = [oscillator];
+      const peak = effectiveSettings.volume * patternConfig.level;
+
+      for (const [frequency, startMs, endMs] of patternConfig.notes) {
+        const start = ringStart + startMs / 1000;
+        oscillator.frequency.setValueAtTime(frequency, start);
+        gainNode.gain.setValueAtTime(0, start);
+        gainNode.gain.linearRampToValueAtTime(peak, ringStart + (startMs + patternConfig.attackMs) / 1000);
+        gainNode.gain.setValueAtTime(peak, ringStart + (endMs - patternConfig.releaseMs) / 1000);
+        gainNode.gain.linearRampToValueAtTime(0, ringStart + endMs / 1000);
+      }
+    } else {
+      oscillators = patternConfig.frequencies.map((frequency) => {
+        const oscillator = audioContext.createOscillator();
+        oscillator.type = 'sine';
+        oscillator.frequency.value = frequency;
+        return oscillator;
+      });
+      gainNode.gain.setValueAtTime(0, ringStart);
+      gainNode.gain.linearRampToValueAtTime(effectiveSettings.volume, ringStart + 0.1);
+      gainNode.gain.setValueAtTime(effectiveSettings.volume, ringEnd - 0.1);
+      gainNode.gain.linearRampToValueAtTime(0, ringEnd);
+    }
 
     oscillatorsRef.current = oscillators;
-
-    // Start oscillators
-    oscillators.forEach((osc) => osc.start());
-
-    // Fade in
-    gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-    gainNode.gain.linearRampToValueAtTime(effectiveSettings.volume, audioContext.currentTime + 0.1);
-
-    // Schedule fade out and stop
-    const ringEndTime = audioContext.currentTime + patternConfig.ringDuration / 1000;
-    gainNode.gain.setValueAtTime(effectiveSettings.volume, ringEndTime - 0.1);
-    gainNode.gain.linearRampToValueAtTime(0, ringEndTime);
+    for (const oscillator of oscillators) {
+      oscillator.connect(gainNode);
+      oscillator.start(ringStart);
+      oscillator.stop(ringEnd);
+    }
 
     // Stop oscillators after ring duration
     ringTimeoutRef.current = setTimeout(() => {
       oscillators.forEach((osc) => {
         try {
-          osc.stop();
           osc.disconnect();
         } catch {
           // Ignore if already stopped
@@ -218,9 +281,8 @@ export function useRingtone(options?: RingtoneOptions) {
     // Vibrate immediately
     vibrate(vibrationPattern);
 
-    // Set up interval for repeated vibration (matches ring cycle)
-    const patternConfig = RINGTONE_PATTERNS[effectiveSettings.pattern] || RINGTONE_PATTERNS.default;
-    const totalCycle = patternConfig.ringDuration + patternConfig.silenceDuration;
+    const patternConfig = getRingtonePattern(effectiveSettings.pattern);
+    const totalCycle = patternConfig.vibrationInterval ?? (patternConfig.ringDuration + patternConfig.silenceDuration);
     
     vibrationIntervalRef.current = setInterval(() => {
       if (isPlayingRef.current) {
@@ -268,7 +330,7 @@ export function useRingtone(options?: RingtoneOptions) {
     }
 
     // Set up interval for repeated rings
-    const patternConfig = RINGTONE_PATTERNS[effectiveSettings.pattern] || RINGTONE_PATTERNS.default;
+    const patternConfig = getRingtonePattern(effectiveSettings.pattern);
     const totalCycle = patternConfig.ringDuration + patternConfig.silenceDuration;
     
     intervalRef.current = setInterval(() => {
