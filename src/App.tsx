@@ -1,3 +1,4 @@
+import MaguelaLogin from "./pages/MaguelaLogin";
 import { AdminAreaGuard, AdminAreaPage } from '@/features/admin-areas/AdminAreas';
 import { WalletAccessGate } from '@/features/payment-point/WalletAccess';
 import {FriendRequestAlerts} from '@/features/friend-requests/alerts';
@@ -322,6 +323,7 @@ function AnimatedRoutes() {
           <Route path="/profile/:userId" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/contacts" element={<ProtectedRoute><Contacts /></ProtectedRoute>} />
           <Route path="/chat/:conversationId" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
+          <Route path="/maguela-login" element={<MaguelaLogin />} />
           <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
           <Route path="/calls" element={<ProtectedRoute><Calls /></ProtectedRoute>} />
           <Route path="/scheduled-call/:sessionId" element={<ProtectedRoute><ScheduledCallRoom /></ProtectedRoute>} />
