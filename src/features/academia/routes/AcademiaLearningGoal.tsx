@@ -5,7 +5,7 @@ import { ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { EmojiTextarea } from '@/components/chat/EmojiTextField';
 import { LearningChallengeCard } from '../components/LearningChallengeCard';
 import { learningStatus, useLearningAction, useLearningGoal, type LearningGoal } from '../hooks/useAcademiaLearning';
 const salesPlan = 'Vamos definir a tua oferta e o cliente, calcular custos e preço e preparar uma apresentação comercial. Cada trabalho recebe feedback antes de avançarmos.';
@@ -15,7 +15,7 @@ function MentorPlan({ goal }: { goal: LearningGoal }) {
   return <form aria-label={uiText("Plano de acompanhamento")} className="rounded-xl border p-4 space-y-3" onSubmit={e => { e.preventDefault(); save.mutate({ action: 'plan', goalId: goal.id, payload: { plan: plan.trim(), template: template ? 'first_sale' : '' } }); }}>
     <h2 className="font-semibold">{goal.status === 'requested' ? uiText("Aceitar e definir o plano") : uiText("Atualizar o plano")}</h2>
     {goal.status === 'requested' && <label className="flex gap-2 items-start text-sm"><input type="checkbox" checked={template} onChange={e => { setTemplate(e.target.checked); if (e.target.checked) setPlan(salesPlan); }} />{uiText("Usar modelo “Da ideia à primeira venda” com três desafios")}</label>}
-    <label className="block space-y-1"><span className="text-sm">{uiText("Como vais acompanhar o aluno?")}</span><Textarea required minLength={10} maxLength={4000} value={plan} onChange={e => setPlan(e.target.value)} /></label>
+    <div className="space-y-1"><label htmlFor={`plan-${goal.id}`} className="text-sm">{uiText("Como vais acompanhar o aluno?")}</label><EmojiTextarea id={`plan-${goal.id}`} required minLength={10} maxLength={4000} value={plan} onValueChange={setPlan} /></div>
     {save.error && <p role="alert" className="text-destructive text-sm">{save.error.message}</p>}
     <Button disabled={save.isPending || plan.trim().length < 10}>{save.isPending ? uiText("A guardar…") : goal.status === 'requested' ? uiText("Aceitar acompanhamento") : uiText("Guardar plano")}</Button>
     {save.isSuccess && <p role="status" className="text-sm">{uiText("Plano guardado.")}</p>}
@@ -30,7 +30,7 @@ function NewChallenge({ goalId }: { goalId: string }) {
   }}>
     <h2 className="font-semibold">{uiText("Propor um desafio")}</h2>
     <label className="block space-y-1"><span className="text-sm">{uiText("Título do desafio")}</span><Input required minLength={3} maxLength={160} value={title} onChange={e => setTitle(e.target.value)} /></label>
-    <label className="block space-y-1"><span className="text-sm">{uiText("O que deve ser entregue e como será avaliado?")}</span><Textarea required minLength={3} maxLength={3000} value={instructions} onChange={e => setInstructions(e.target.value)} /></label>
+    <div className="space-y-1"><label htmlFor={`instructions-${goalId}`} className="text-sm">{uiText("O que deve ser entregue e como será avaliado?")}</label><EmojiTextarea id={`instructions-${goalId}`} required minLength={3} maxLength={3000} value={instructions} onValueChange={setInstructions} /></div>
     <label className="block space-y-1"><span className="text-sm">{uiText("Competência a demonstrar")}</span><Input required minLength={3} maxLength={100} value={skill} onChange={e => setSkill(e.target.value)} placeholder={uiText("Ex.: formação de preços")} /></label>
     {save.error && <p role="alert" className="text-destructive text-sm">{save.error.message}</p>}
     <Button disabled={save.isPending || Math.min(title.trim().length, instructions.trim().length, skill.trim().length) < 3}>{save.isPending ? uiText("A guardar…") : uiText("Adicionar desafio")}</Button>
@@ -63,7 +63,7 @@ export default function AcademiaLearningGoal() {
         {save.error && <p role="alert" className="text-destructive">{save.error.message}</p>}
         {mentor && active && <Button disabled={save.isPending || !data.challenges.length || approved.length !== data.challenges.length} onClick={() => save.mutate({ action: 'complete', goalId: goal.id })}>{uiText("Concluir percurso validado")}</Button>}
         {!closed && <section className="border-t pt-4 space-y-3"><Button variant="ghost" onClick={() => setClosing(!closing)}>{goal.status === 'requested' && mentor ? uiText("Recusar acompanhamento") : uiText("Encerrar acompanhamento")}</Button>
-          {closing && <form className="space-y-2" onSubmit={e => { e.preventDefault(); save.mutate({ action: 'cancel', goalId: goal.id, payload: { reason: reason.trim() } }); }}><label className="block space-y-1"><span className="text-sm">{uiText("Motivo do encerramento")}</span><Textarea required minLength={3} maxLength={1000} value={reason} onChange={e => setReason(e.target.value)} /></label><Button variant="destructive" disabled={save.isPending || reason.trim().length < 3}>{uiText("Confirmar encerramento")}</Button></form>}
+          {closing && <form className="space-y-2" onSubmit={e => { e.preventDefault(); save.mutate({ action: 'cancel', goalId: goal.id, payload: { reason: reason.trim() } }); }}><div className="space-y-1"><label htmlFor={`closure-reason-${goalId}`} className="text-sm">{uiText("Motivo do encerramento")}</label><EmojiTextarea id={`closure-reason-${goalId}`} required minLength={3} maxLength={1000} value={reason} onValueChange={setReason} /></div><Button variant="destructive" disabled={save.isPending || reason.trim().length < 3}>{uiText("Confirmar encerramento")}</Button></form>}
         </section>}
       </>}
     </div>

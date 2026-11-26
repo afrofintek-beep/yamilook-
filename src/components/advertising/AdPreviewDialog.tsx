@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { EmojiTextarea } from '@/components/chat/EmojiTextField';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
@@ -200,10 +200,10 @@ export function AdPreviewDialog({
 
                     <div>
                       <Label htmlFor="edit-description" className="text-xs">{uiText("Descrição")}</Label>
-                      <Textarea
+                      <EmojiTextarea
                         id="edit-description"
                         value={editDescription}
-                        onChange={(e) => setEditDescription(e.target.value)}
+                        onValueChange={setEditDescription}
                         placeholder={uiText("Descreve o teu negócio ou promoção...")}
                         className="mt-1 min-h-[80px]"
                       />

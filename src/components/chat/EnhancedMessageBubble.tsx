@@ -1,3 +1,4 @@
+import { EmojiTextarea } from './EmojiTextField';
 import { PaymentMessage, paymentIdFromMessage } from '@/features/payment-point/PaymentMessage';
 import { AfrolocAddressCard } from './AfrolocAddressCard';
 import { parseChatAfroloc } from '@/lib/chat-afroloc';
@@ -688,10 +689,12 @@ export function EnhancedMessageBubble({
       />
 
       {editDraft !== null && <ResponsiveModal open onOpenChange={open => { if (!open && !savingEdit) setEditDraft(null); }} srTitle={uiText("Editar mensagem")}>
-        <label className="block font-medium">{uiText("Editar mensagem")}
-          <textarea autoFocus rows={4} disabled={savingEdit} value={editDraft} onChange={event => setEditDraft(event.target.value)}
-            className="mt-2 w-full select-text rounded-xl border bg-background p-3 text-base" />
-        </label>
+        <div className="space-y-2">
+          <label htmlFor={`edit-message-${message.id}`} className="block font-medium">{uiText("Editar mensagem")}</label>
+          <EmojiTextarea id={`edit-message-${message.id}`} autoFocus rows={4} disabled={savingEdit}
+            value={editDraft} onValueChange={setEditDraft}
+            className="select-text bg-background text-base" />
+        </div>
         {editError && <p role="alert" className="text-sm text-destructive">{editError}</p>}
         <div className="mt-3 flex justify-end gap-2">
           <button disabled={savingEdit} onClick={() => setEditDraft(null)} className="rounded-xl px-4 py-2">{uiText("Cancelar")}</button>

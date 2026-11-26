@@ -1,3 +1,4 @@
+import { EmojiTextarea } from '@/components/chat/EmojiTextField';
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
@@ -10,7 +11,6 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 
 interface EditMessageDialogProps {
   open: boolean;
@@ -77,9 +77,9 @@ export function EditMessageDialog({ open, onClose, message, onSave }: EditMessag
         ) : (
           <>
             <div className="space-y-4 py-4">
-              <Textarea
+              <EmojiTextarea
                 value={content}
-                onChange={(e) => setContent(e.target.value)}
+                onValueChange={setContent}
                 placeholder={uiText("Edit your message...")}
                 className="min-h-[100px] resize-none"
                 autoFocus

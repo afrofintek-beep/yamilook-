@@ -1,3 +1,4 @@
+import { EmojiTextarea } from '@/components/chat/EmojiTextField';
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -5,7 +6,6 @@ import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Mail, Mic, Star, Clock, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
@@ -130,11 +130,11 @@ export default function VoiceDetail() {
           <Card className="border-palco-border bg-palco-surface">
             <CardContent className="p-4">
               <Label htmlFor="customText" className="text-sm font-medium text-palco-text mb-2 block">{uiText("Queres ajustar a tua Voz? (opcional)")}</Label>
-              <Textarea
+              <EmojiTextarea
                 id="customText"
                 placeholder={uiText("Escreve uma versão mais clara ou detalhada da tua pergunta...")}
                 value={customText}
-                onChange={(e) => setCustomText(e.target.value)}
+                onValueChange={setCustomText}
                 className="min-h-[100px] bg-palco-bg border-palco-border text-palco-text placeholder:text-palco-text-secondary resize-none"
                 maxLength={500}
               />

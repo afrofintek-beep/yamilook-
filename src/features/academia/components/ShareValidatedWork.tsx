@@ -1,7 +1,7 @@
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
+import { EmojiTextarea } from '@/components/chat/EmojiTextField';
 import { useCommunities, useOwnWork, useGoalCommunity, useCommunityAction, type PublicWork, type Community } from '../hooks/useAcademiaCommunity';
 import type { LearningChallenge } from '../hooks/useAcademiaLearning';
 import { shareValidatedWork, workShareUrl } from '../community-links';
@@ -17,7 +17,7 @@ function PublicationForm({ challenge, existing, fixedCommunity, communities }: {
     <form aria-label={uiText("Publicar {{value1}}", { value1: (challenge.title) ?? "" })} className="space-y-3" onSubmit={e => { e.preventDefault(); save.mutate({ action:'work_publish',targetId:challenge.id,payload:{caption:caption.trim(),community_slug:slug,consent,include_evidence:evidence} }); }}>
       <p className="text-sm break-words"><strong>{challenge.title}</strong> · {challenge.skill}</p>
       <label className="block space-y-1"><span className="text-sm">{uiText("Comunidade da apresentação")}</span><select required className="w-full rounded-md border bg-background p-2" value={slug} disabled={!!fixedCommunity || !!existing} onChange={e => setCommunity(e.target.value)}><option value="">{uiText("Escolhe uma comunidade")}</option>{communities.map(c => <option key={c.slug} value={c.slug}>{c.title}</option>)}</select></label>
-      <label className="block space-y-1"><span className="text-sm">{uiText("O que queres mostrar sobre o teu trabalho?")}</span><Textarea required minLength={3} maxLength={1000} value={caption} onChange={e => setCaption(e.target.value)} /></label>
+      <div className="space-y-1"><label htmlFor={`work-caption-${challenge.id}`} className="text-sm">{uiText("O que queres mostrar sobre o teu trabalho?")}</label><EmojiTextarea id={`work-caption-${challenge.id}`} required minLength={3} maxLength={1000} value={caption} onValueChange={setCaption} /></div>
       <label className="flex items-start gap-2 text-sm"><input type="checkbox" checked={evidence} onChange={e => setEvidence(e.target.checked)} />{uiText("Incluir a ligação do ficheiro que o mentor validou, se existir. Confirmei que pode ser partilhada publicamente.")}</label>
       <label className="flex items-start gap-2 text-sm"><input required type="checkbox" checked={consent} onChange={e => setConsent(e.target.checked)} />{uiText("Quero tornar públicos esta apresentação, o meu nome e o nome do mentor.")}</label>
       <Button disabled={save.isPending || !consent || !slug || caption.trim().length<3}>{save.isPending?uiText("A publicar…"):existing?.published?uiText("Atualizar apresentação pública"):uiText("Publicar apresentação")}</Button>

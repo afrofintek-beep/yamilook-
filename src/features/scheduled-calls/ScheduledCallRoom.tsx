@@ -1,3 +1,4 @@
+import { EmojiInput } from '@/components/chat/EmojiTextField';
 import { uiText, useUiLocale, uiLocale } from '@/i18n/ui-copy';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -79,7 +80,7 @@ export default function ScheduledCallRoom() {
           <h2 className="font-semibold">{uiText("Chat da sessão")}</h2><p className="text-xs text-muted-foreground">{uiText("Mensagens disponíveis apenas durante esta ligação.")}</p>
           <div role="log" aria-live="polite" className="max-h-64 overflow-y-auto space-y-2">{video.messages.map(m=><p key={m.id} className="text-sm break-words"><strong>{m.name}: </strong>{m.text}</p>)}</div>
           <form className="flex gap-2" onSubmit={async e=>{e.preventDefault();if(await video.send(text))setText('');}}>
-            <input aria-label={uiText("Mensagem")} maxLength={1000} value={text} onChange={e=>setText(e.target.value)} className="min-w-0 flex-1 bg-muted rounded-lg px-3 py-2" /><Button type="submit" disabled={!text.trim()}>{uiText("Enviar")}</Button>
+            <EmojiInput wrapperClassName="flex-1" aria-label={uiText("Mensagem")} maxLength={1000} value={text} onValueChange={setText} className="min-w-0 bg-muted rounded-lg px-3 py-2" /><Button type="submit" disabled={!text.trim()}>{uiText("Enviar")}</Button>
           </form>
         </section>
       </>}

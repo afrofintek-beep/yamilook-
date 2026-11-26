@@ -1,3 +1,4 @@
+import { EmojiTextarea } from '@/components/chat/EmojiTextField';
 import { phoneAccessEnabled } from '@/features/phone-access/api';
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect, useCallback } from 'react';
@@ -14,7 +15,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 
 interface SearchResult {
@@ -146,9 +146,9 @@ export function AddContactSheet({
               <label className="text-sm font-medium">
                 {pt ? uiText("Mensagem (opcional)") : uiText("Add a message (optional)")}
               </label>
-              <Textarea
+              <EmojiTextarea
                 value={message}
-                onChange={(e) => setMessage(e.target.value)}
+                onValueChange={setMessage}
                 placeholder={uiText("Hey! I'd like to connect with you...")}
                 className="resize-none"
                 rows={3}

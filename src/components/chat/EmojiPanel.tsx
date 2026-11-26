@@ -9,7 +9,7 @@ interface Props {
 
 const TONE_KEY = 'yamilook-emoji-tone';
 
-/** African-first emoji picker for the chat. Category chips switch the grid; a
+/** African-first emoji picker for text composers. Category chips switch the grid; a
  *  skin-tone selector re-tones people/hand emojis (default darkest, up to the
  *  lightest/European); the "Outros" group holds the general set. */
 export function EmojiPanel({ onSelect }: Props) {
@@ -43,6 +43,7 @@ export function EmojiPanel({ onSelect }: Props) {
           <button
             key={g.key}
             type="button"
+            aria-pressed={active === g.key}
             onClick={() => setActive(g.key)}
             className={cn(
               'px-2.5 py-1 rounded-full text-xs whitespace-nowrap shrink-0 transition-colors',

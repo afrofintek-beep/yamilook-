@@ -1,3 +1,4 @@
+import { EmojiTextarea } from '@/components/chat/EmojiTextField';
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 /* @refresh reset */
 import { useState, useRef, useEffect } from 'react';
@@ -8,7 +9,6 @@ import { Radio, Camera, Mic, MicOff, CameraOff, Sparkles } from 'lucide-react';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useLiveStreamContext } from '@/components/live/LiveStreamProvider';
 import { useToast } from '@/hooks/use-toast';
@@ -430,10 +430,10 @@ export function StartLiveSheet({ open, onOpenChange }: StartLiveSheetProps) {
 
             <div className="space-y-2">
               <Label htmlFor="description">{uiText("Descrição (opcional)")}</Label>
-              <Textarea
+              <EmojiTextarea
                 id="description"
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onValueChange={setDescription}
                 placeholder={uiText("Conta à banda o que podem esperar...")}
                 rows={3}
                 maxLength={500}

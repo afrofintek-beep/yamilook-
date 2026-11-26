@@ -1,11 +1,13 @@
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useEffect, useId, useRef, useState } from 'react';
 import { Input } from '@/components/ui/input';
+import { EmojiPickerButton } from '@/components/chat/EmojiPickerButton';
 import { supabase } from '@/integrations/supabase/client';
 import { activeMention, insertMention } from '@/lib/comment-mentions';
+import { cn } from '@/lib/utils';
 
 type Person = { id: string | null; username: string | null; display_name: string | null; avatar_url: string | null };
-export function MentionInput({ value, onValueChange, onSubmit, ...props }: Omit<React.ComponentProps<typeof Input>, 'value' | 'onChange' | 'onSubmit'> & { value: string; onValueChange: (value: string) => void; onSubmit: () => void }) {
+export function MentionInput({ value, onValueChange, onSubmit, className, ...props }: Omit<React.ComponentProps<typeof Input>, 'value' | 'onChange' | 'onSubmit'> & { value: string; onValueChange: (value: string) => void; onSubmit: () => void }) {
   useUiLocale();
   const ref = useRef<HTMLInputElement>(null);
   const id = useId();
@@ -42,7 +44,7 @@ export function MentionInput({ value, onValueChange, onSubmit, ...props }: Omit<
         <span className="truncate">{p.display_name}<span className="block text-xs text-muted-foreground">@{p.username}</span></span>
       </button>)}
     </div>}
-    <Input {...props} ref={ref} value={value} role="combobox" aria-autocomplete="list" aria-expanded={visible} aria-controls={visible ? id : undefined} aria-activedescendant={visible ? `${id}-${selected}` : undefined}
+    <Input {...props} ref={ref} className={cn(className, 'pe-12')} value={value} role="combobox" aria-autocomplete="list" aria-expanded={visible} aria-controls={visible ? id : undefined} aria-activedescendant={visible ? `${id}-${selected}` : undefined}
       onChange={e => { onValueChange(e.target.value); setCursor(e.target.selectionStart ?? e.target.value.length); setDismissed(false); }}
       onSelect={e => setCursor(e.currentTarget.selectionStart ?? value.length)}
       onKeyDown={e => {
@@ -53,6 +55,13 @@ export function MentionInput({ value, onValueChange, onSubmit, ...props }: Omit<
           else if (e.key === 'Enter') choose(people[selected]);
           else setSelected(i => (i + (e.key === 'ArrowDown' ? 1 : -1) + people.length) % people.length);
         } else if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); onSubmit(); }
+      }} />
+    <EmojiPickerButton fieldRef={ref} disabled={props.disabled || props.readOnly}
+      className="absolute end-0.5 top-1/2 -translate-y-1/2"
+      onInsert={(next, position) => {
+        onValueChange(next);
+        setCursor(position);
+        setDismissed(true);
       }} />
   </div>;
 }

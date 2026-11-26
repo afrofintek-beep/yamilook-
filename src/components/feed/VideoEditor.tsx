@@ -1,3 +1,4 @@
+import { EmojiInput } from '@/components/chat/EmojiTextField';
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useRef, useEffect } from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
@@ -9,7 +10,6 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
-import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { EDITOR_TRACKS, createInstrumental, VideoEditorAudio } from '@/lib/video-editor-audio';
 
@@ -638,10 +638,10 @@ export function VideoEditor({ file, onSave, onCancel }: VideoEditorProps) {
             <div className="space-y-3">
               {/* Add new text */}
               <div className="flex gap-2">
-                <Input
+                <EmojiInput wrapperClassName="flex-1"
                   aria-label={uiText("Texto para o vídeo")}
                   value={newText}
-                  onChange={e => setNewText(e.target.value)}
+                  onValueChange={setNewText}
                   placeholder={uiText("Escreve aqui…")}
                   className="bg-white/5 border-white/10 text-white placeholder:text-white/30 text-sm"
                   onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addTextOverlay(); } }}

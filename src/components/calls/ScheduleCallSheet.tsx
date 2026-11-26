@@ -1,3 +1,4 @@
+import { EmojiTextarea } from '@/components/chat/EmojiTextField';
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect, useRef } from 'react';
 import { format } from '@/i18n/ui-date';
@@ -13,7 +14,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Calendar } from '@/components/ui/calendar';
 import {
@@ -205,12 +205,12 @@ export function ScheduleCallSheet({ open, onOpenChange, existingCall }: Schedule
             {/* Description */}
             <div className="space-y-2">
               <Label htmlFor="description">{uiText("Descrição")}</Label>
-              <Textarea
+              <EmojiTextarea
                 id="description"
                 maxLength={2000}
                 placeholder={uiText("Adiciona uma descrição...")}
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onValueChange={setDescription}
                 rows={3}
               />
             </div>

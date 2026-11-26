@@ -1,3 +1,4 @@
+import { EmojiInput } from '@/components/chat/EmojiTextField';
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence, PanInfo } from 'framer-motion';
@@ -20,7 +21,6 @@ import {
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import {
   DropdownMenu,
@@ -76,6 +76,7 @@ export function StatusViewer({
   const [currentGroupIndex, setCurrentGroupIndex] = useState(0);
   const [currentStatusIndex, setCurrentStatusIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [replyEmojiOpen, setReplyEmojiOpen] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const [progress, setProgress] = useState(0);
   const [replyText, setReplyText] = useState('');
@@ -121,7 +122,7 @@ export function StatusViewer({
 
   // Progress timer
   useEffect(() => {
-    if (!open || isPaused || !currentStatus) return;
+    if (!open || isPaused || replyEmojiOpen || !currentStatus) return;
 
     const duration = currentStatus.type === 'video' ? 15000 : STATUS_DURATION;
     const startTime = Date.now();
@@ -145,7 +146,7 @@ export function StatusViewer({
         cancelAnimationFrame(progressRef.current);
       }
     };
-  }, [open, isPaused, currentStatus?.id, currentGroupIndex, currentStatusIndex]);
+  }, [open, isPaused, replyEmojiOpen, currentStatus?.id, currentGroupIndex, currentStatusIndex]);
 
   const goToNext = useCallback(() => {
     if (!currentGroup) return;
@@ -320,7 +321,7 @@ export function StatusViewer({
           className="fixed inset-0 z-[100] bg-black"
         >
           <motion.div
-            drag="y"
+            drag={replyEmojiOpen ? false : "y"}
             dragConstraints={{ top: 0, bottom: 0 }}
             onDragEnd={handleSwipe}
             className="h-full w-full"
@@ -536,13 +537,14 @@ export function StatusViewer({
 
                   {/* Reply input */}
                   <div className="flex gap-2">
-                    <Input
+                    <EmojiInput wrapperClassName="flex-1"
                       placeholder={t('status.reply')}
                       value={replyText}
-                      onChange={(e) => setReplyText(e.target.value)}
+                      onValueChange={setReplyText}
+                      onEmojiOpenChange={setReplyEmojiOpen}
                       onFocus={() => setIsPaused(true)}
                       onBlur={() => setIsPaused(false)}
-                      className="flex-1 bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                      className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
                     />
                     <Button
                       size="icon"

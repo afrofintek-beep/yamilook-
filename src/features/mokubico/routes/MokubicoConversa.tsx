@@ -1,3 +1,4 @@
+import { EmojiInput } from '@/components/chat/EmojiTextField';
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { scrollChatToEnd } from '@/lib/chat-scroll';
 import { useEffect, useRef, useState } from 'react';
@@ -5,7 +6,6 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { ArrowLeft, Loader2, Lock, Mic, MicOff, Send, PhoneOff, Users, Check, CheckCheck, Video, VideoOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { VideoTrack } from '@/components/live/VideoTrack';
@@ -219,7 +219,7 @@ export default function MokubicoConversa({ id, minimized, onPin }: { id: string;
       {ended ? (
         <div className="p-4 border-t border-border text-center text-sm text-muted-foreground shrink-0">{uiText("Esta conversa terminou.")}</div>
       ) : (
-        <div className={cn("p-3 border-t border-border flex items-center gap-2 shrink-0 safe-bottom", showExpanded && "justify-center")}>
+        <div className={cn("p-3 border-t border-border flex flex-wrap items-center gap-2 shrink-0 safe-bottom sm:flex-nowrap", showExpanded ? "justify-center" : "justify-center sm:justify-start")}>
           {media ? (
             <>
               <Button
@@ -255,18 +255,18 @@ export default function MokubicoConversa({ id, minimized, onPin }: { id: string;
               <Lock className="h-4 w-4" />{uiText(" Pro")}</button>
           )}
           {!showExpanded && (
-            <>
-              <Input
+            <div className="order-first flex w-full min-w-0 items-center gap-2 sm:order-none sm:w-auto sm:flex-1">
+              <EmojiInput wrapperClassName="flex-1"
                 value={text}
-                onChange={(e) => setText(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') send(); }}
+                onValueChange={setText}
+                onKeyDown={(e) => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) send(); }}
                 placeholder={uiText("Escreve uma mensagem…")}
                 className="h-11 min-w-0 rounded-full"
               />
               <Button size="icon" className="rounded-full h-11 w-11 shrink-0" onClick={send} disabled={!text.trim()} aria-label={uiText("Enviar mensagem")}>
                 <Send className="h-5 w-5" />
               </Button>
-            </>
+            </div>
           )}
           <Button size="icon" variant="destructive" className="rounded-full h-11 w-11 shrink-0" onClick={leave} aria-label={uiText("Sair da sala")} title={uiText("Sair da sala")}>
             <PhoneOff className="h-5 w-5" />

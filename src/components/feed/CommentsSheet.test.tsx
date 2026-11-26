@@ -184,6 +184,22 @@ describe('CommentsSheet', () => {
     expect(screen.queryByRole('link', { name: '@recipient' })).not.toBeInTheDocument();
   });
 
+  it('adds an emoji to a comment draft and keeps the mention in the submitted text', async () => {
+    mockAddComment.mockResolvedValueOnce({ id: 'saved-comment' });
+    render(<CommentsSheet {...defaultProps} />);
+    await screen.findByText('This is a great post!');
+    const input = screen.getByRole<HTMLInputElement>('combobox');
+    fireEvent.change(input, { target: { value: 'Hello @recipient' } });
+    input.setSelectionRange(5, 5);
+    fireEvent.click(screen.getByRole('button', { name: 'Emojis' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Emoji 💛' }));
+    expect(input).toHaveValue('Hello💛 @recipient');
+    expect(mockAddComment).not.toHaveBeenCalled();
+
+    fireEvent.keyDown(input, { key: 'Enter' });
+    await waitFor(() => expect(mockAddComment).toHaveBeenCalledWith('post-1', 'Hello💛 @recipient', undefined));
+  });
+
   it('closes the comments sheet when opening a mentioned profile', async () => {
     mockGetComments.mockResolvedValueOnce([{ ...mockComments[0], content: 'Hello @recipient' }]);
     render(<CommentsSheet {...defaultProps} />);
