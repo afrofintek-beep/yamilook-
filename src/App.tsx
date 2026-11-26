@@ -37,6 +37,7 @@ const AfrolocRegistry = lazy(() => import("./features/afroloc-experience/Afroloc
 const AfrolocExperience = lazy(() => import("./features/afroloc-experience/AfrolocExperience"));
 const Home = lazy(() => import("./pages/Home"));
 const Login = lazy(() => import("./pages/Login"));
+const MaguelaAuthorization = lazy(() => import("./features/maguela-login/Authorization"));
 const Register = lazy(() => import("./pages/Register"));
 const TrustedInviteRegistration = lazy(() => import("./features/trusted-invites/TrustedInviteRegistration"));
 const ResumeRegistration = lazy(() => import("./pages/ResumeRegistration"));
@@ -428,6 +429,7 @@ function AnimatedRoutes() {
             <Route path="/live/:sessionId" element={<Live />} />
           </Route>
           <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+          <Route path="/maguela-login" element={<MaguelaAuthorization />} />
           <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
           {/* Keep the recovery code visible after a trusted account establishes its session. */}
           <Route path="/convite-confianca" element={<TrustedInviteRegistration />} />

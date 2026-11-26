@@ -1,10 +1,14 @@
 import {createClient} from "npm:@supabase/supabase-js@2.90.1";
 import {actor,admin,rpc} from "../_shared/account-link.ts";
 import {createBridge} from "./handler.ts";
-const endpoint="https://api.maguela.com/v1/identity-link/";
+const api="https://api.maguela.com/v1/";
+const endpoint=api+"identity-link/";
+function sessionClient(req:Request){
+ const authorization=req.headers.get("Authorization")??"";
+ return createClient(Deno.env.get("SUPABASE_URL")!,Deno.env.get("SUPABASE_ANON_KEY")!,{global:{headers:{Authorization:authorization}},auth:{persistSession:false,autoRefreshToken:false}});
+}
 async function liveSession(req:Request,_subject:string){
- const auth=req.headers.get("Authorization")??"";
- const client=createClient(Deno.env.get("SUPABASE_URL")!,Deno.env.get("SUPABASE_ANON_KEY")!,{global:{headers:{Authorization:auth}},auth:{persistSession:false,autoRefreshToken:false}});
+ const client=sessionClient(req);
  const {data,error}=await client.rpc("account_current_session_id");
  return !error&&typeof data==="string"&&data.length>0;
 }
@@ -16,6 +20,17 @@ async function callPartner(path:"redeem"|"partner/status"|"partner/revoke",body:
 Deno.serve(createBridge({
  enabled:()=>Deno.env.get("MAGUELA_IDENTITY_BRIDGE_V2_ENABLED")==="true"&&Deno.env.get("MAGUELA_IDENTITY_BRIDGE_ENABLED")==="true"&&(Deno.env.get("MAGUELA_IDENTITY_PARTNER_KEY")??"").length>=32,
  managementEnabled:()=>Deno.env.get("MAGUELA_IDENTITY_MANAGEMENT_ENABLED")==="true"&&(Deno.env.get("MAGUELA_IDENTITY_PARTNER_KEY")??"").length>=32,
+ loginEnabled:()=>Deno.env.get("MAGUELA_ECOSYSTEM_LOGIN_ENABLED")==="true"&&(Deno.env.get("MAGUELA_IDENTITY_PARTNER_KEY")??"").length>=32,
+ async authorizeLogin(req,subject,origin,challenge){
+  if(!await liveSession(req,subject))return null;
+  const client=sessionClient(req);
+  const {data,error}=await client.rpc("integration_access_manage",{p_action:"status",p_user_id:null,p_feature:null});
+  if(error||data?.userId!==subject||data?.maguela!==true)return null;
+  const response=await fetch(api+"auth/ecosystem/grant",{method:"POST",redirect:"error",cache:"no-store",signal:AbortSignal.timeout(5000),headers:{"content-type":"application/json","x-maguela-identity-key":Deno.env.get("MAGUELA_IDENTITY_PARTNER_KEY")!},body:JSON.stringify({subject,origin,challenge})});
+  if(!response.ok)return null;
+  const grant=await response.json();
+  return typeof grant?.code==="string"?grant.code:null;
+ },
  authenticate:actor,
  liveSession,
  async status(subject){const data=await callPartner("partner/status",{subject});return typeof data?.linked==="boolean"?{linked:data.linked}:null;},
