@@ -17,3 +17,18 @@ test('does not forward extra partner fields or first challenge',async()=>{const 
 test('management requires independent enablement and a live session',async()=>{for(const patch of [{managementEnabled:()=>false},{managementEnabled:()=>true,liveSession:async()=>false}]){const {handler}=fixture(patch);const res=await handler(req({action:'status'}));assert.ok([403,503].includes(res.status));}});
 test('management derives subject on server and remains available with creation disabled',async()=>{const calls=[];const {handler}=fixture({enabled:()=>false,managementEnabled:()=>true,status:async(...args)=>{calls.push(args);return {linked:true}},revoke:async(...args)=>{calls.push(args);return {revoked:true}}});assert.deepEqual(await (await handler(req({action:'status'}))).json(),{ok:true,linked:true});assert.deepEqual(await (await handler(req({action:'revoke',consent:true}))).json(),{ok:true,revoked:true});assert.deepEqual(calls,[[uid],[uid]]);assert.equal((await handler(req(valid))).status,503);});
 test('management rejects supplied identity, missing consent and malformed replies',async()=>{const {handler}=fixture({managementEnabled:()=>true,status:async()=>null,revoke:async()=>null});for(const data of [{action:'status',subject:uid},{action:'revoke',consent:false},{action:'revoke',consent:true,subject:uid}])assert.equal((await handler(req(data))).status,400);assert.equal((await handler(req({action:'status'}))).status,503);assert.equal((await handler(req({action:'revoke',consent:true}))).status,503);});
+
+test('ecosystem login requires separate enablement and explicit consent', async () => {
+  const input = { action: 'authorize-login', origin: 'https://maguela.example', challenge, consent: true };
+  const { handler: disabled } = fixture();
+  assert.equal((await disabled(req(input))).status, 503);
+  const calls = [];
+  const { handler } = fixture({
+    loginEnabled: () => true,
+    authorizeLogin: async (_request, ...args) => { calls.push(args); return confirmation; },
+  });
+  assert.equal((await handler(req({ ...input, consent: false }))).status, 400);
+  assert.equal((await handler(req({ ...input, subject: uid }))).status, 400);
+  assert.deepEqual(await (await handler(req(input))).json(), { ok: true, code: confirmation });
+  assert.deepEqual(calls, [[uid, input.origin, challenge]]);
+});
