@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { EmojiTextarea } from '@/components/chat/EmojiTextField';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -62,14 +62,14 @@ export function MentorSettings() {
     {lastReason && <p className="text-sm break-words">{uiText("Última indicação: {{value1}}", { value1: `\u2068${lastReason}\u2069` })}</p>}
     {!editing ? <Button variant="outline" onClick={() => { setSpecialty(mentor.specialty); setBio(mentor.mentor_bio ?? ''); setExperience(mentor.experience); setEditing(true); }}>{resubmit ? uiText("Actualizar e recandidatar-me") : uiText("Editar apresentação")}</Button> : <div className="space-y-3">
       <Label htmlFor="edit-specialty">{uiText("Especialidade")}</Label><Input id="edit-specialty" maxLength={120} value={specialty} onChange={e => setSpecialty(e.target.value)} />
-      <Label htmlFor="edit-bio">{uiText("Biografia")}</Label><Textarea id="edit-bio" maxLength={2000} value={bio} onChange={e => setBio(e.target.value)} />
-      <Label htmlFor="edit-experience">{uiText("Experiência")}</Label><Textarea id="edit-experience" maxLength={2000} value={experience} onChange={e => setExperience(e.target.value)} />
+      <Label htmlFor="edit-bio">{uiText("Biografia")}</Label><EmojiTextarea id="edit-bio" maxLength={2000} value={bio} onValueChange={setBio} />
+      <Label htmlFor="edit-experience">{uiText("Experiência")}</Label><EmojiTextarea id="edit-experience" maxLength={2000} value={experience} onValueChange={setExperience} />
       <p className="text-xs text-muted-foreground">{uiText("Biografia e experiência: mínimo de 10 caracteres cada.")}</p>
       <div className="flex flex-wrap gap-2"><Button disabled={busy || specialty.trim().length < 2 || bio.trim().length < 10 || experience.trim().length < 10} onClick={save}>{resubmit ? uiText("Reenviar candidatura") : uiText("Guardar")}</Button><Button variant="ghost" disabled={busy} onClick={() => setEditing(false)}>{uiText("Cancelar")}</Button></div>
     </div>}
     {mentor.status !== 'inactive' && <details><summary className="cursor-pointer py-3">{uiText("Pedir desactivação")}</summary>
       <p className="text-sm">{uiText("A conta YAMILOOK e o histórico serão preservados. O suporte deverá resolver as sessões, turmas e planos pendentes antes de desactivar.")}</p>
-      <Label htmlFor="exit-reason">{uiText("Motivo")}</Label><Textarea id="exit-reason" maxLength={1000} value={reason} onChange={e => setReason(e.target.value)} />
+      <Label htmlFor="exit-reason">{uiText("Motivo")}</Label><EmojiTextarea id="exit-reason" maxLength={1000} value={reason} onValueChange={setReason} />
       <Button variant="outline" disabled={busy || reason.trim().length < 3} onClick={requestExit}>{uiText("Enviar pedido de desactivação")}</Button>
     </details>}
   </section>;

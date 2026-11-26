@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useId } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
+import { EmojiPickerButton } from '@/components/chat/EmojiPickerButton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { MapPin, Globe, Users, Circle, Lock, Loader2 } from 'lucide-react';
@@ -39,6 +40,7 @@ export function EditPostSheet({ open, onOpenChange, post, onSave }: EditPostShee
   const sessionPost = useRef<string | null>(null);
   const original = useRef({ content, location, privacy });
   const scrollRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLTextAreaElement>(null);
 
   // Refresh a new session without overwriting typing on a background feed refresh.
   useEffect(() => {
@@ -124,14 +126,19 @@ export function EditPostSheet({ open, onOpenChange, post, onSave }: EditPostShee
               </div>
             )}
             <label htmlFor={`${fieldId}-text`} className="text-sm font-medium">{t('feed.postText')}</label>
-            <PostContentTextarea
-              id={`${fieldId}-text`}
-              value={content}
-              disabled={saving}
-              onChange={e => setContent(e.target.value)}
-              placeholder={t('feed.whatsOnYourMind')}
-              className="min-h-[180px] grow shrink-0 border-none bg-transparent p-0 shadow-none focus-visible:ring-0"
-            />
+            <div className="relative grow shrink-0">
+              <PostContentTextarea
+                fieldRef={contentRef}
+                id={`${fieldId}-text`}
+                value={content}
+                disabled={saving}
+                onChange={e => setContent(e.target.value)}
+                placeholder={t('feed.whatsOnYourMind')}
+                className="min-h-[180px] pe-12 border-none bg-transparent p-0 shadow-none focus-visible:ring-0"
+              />
+              <EmojiPickerButton fieldRef={contentRef} onInsert={setContent} disabled={saving}
+                className="absolute end-0.5 top-0.5" />
+            </div>
 
             <div className="shrink-0 space-y-3 border-t pt-4">
               <div className="space-y-1.5">

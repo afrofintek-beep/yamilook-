@@ -17,7 +17,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Send,
   Paperclip,
-  Smile,
   Mic,
   X,
   Image,
@@ -39,15 +38,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
 import { ReplyPreview } from './ReplyPreview';
 import { StickerPicker } from './StickerPicker';
 import { GifPicker } from './GifPicker';
-import { EmojiPanel } from './EmojiPanel';
+import { EmojiPickerButton } from './EmojiPickerButton';
 import { ScheduleMessageSheet } from './ScheduleMessageSheet';
 import { ViewOnceToggle } from './ViewOnceMedia';
 import { useVoiceRecorder, useMediaUpload } from '@/hooks/useMediaUpload';
@@ -143,7 +137,6 @@ export function EnhancedChatInput({
   const [sendError, setSendError] = useState('');
   const [showStickerPicker, setShowStickerPicker] = useState(false);
   const [showGifPicker, setShowGifPicker] = useState(false);
-  const [showEmojiMenu, setShowEmojiMenu] = useState(false);
   const [showScheduleSheet, setShowScheduleSheet] = useState(false);
   const [viewOnceEnabled, setViewOnceEnabled] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -171,23 +164,6 @@ export function EnhancedChatInput({
       textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`;
     }
   }, [message]);
-
-  // Insert an emoji at the caret (or append) and keep focus in the textarea.
-  const insertEmoji = (emoji: string) => {
-    const el = textareaRef.current;
-    const start = el?.selectionStart ?? message.length;
-    const end = el?.selectionEnd ?? message.length;
-    const next = message.slice(0, start) + emoji + message.slice(end);
-    setMessage(next);
-    setShowEmojiMenu(false);
-    requestAnimationFrame(() => {
-      if (el) {
-        el.focus();
-        const pos = start + emoji.length;
-        el.setSelectionRange(pos, pos);
-      }
-    });
-  };
 
   const handleSend = async () => {
     if (!message.trim() || sendingRef.current || disabled) return;
@@ -526,39 +502,17 @@ export function EnhancedChatInput({
               disabled={disabled || uploading}
               rows={1}
             />
-            <Popover open={showEmojiMenu} onOpenChange={setShowEmojiMenu}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-2 bottom-1.5 h-8 w-8 rounded-full"
-                  disabled={disabled}
-                >
-                  <Smile className="w-5 h-5 text-muted-foreground" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-2" align="end">
-                <div className="flex flex-col gap-2">
-                  {/* Yamilook African-first emoji picker (+ "Outros") */}
-                  <EmojiPanel onSelect={insertEmoji} />
-                  <div className="h-px bg-border" />
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => { setShowStickerPicker(true); setShowEmojiMenu(false); }}
-                    className="justify-start"
-                  >
-                    <Sticker className="w-4 h-4 mr-2" />{uiText("Stickers")}</Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => { setShowGifPicker(true); setShowEmojiMenu(false); }}
-                    className="justify-start"
-                  >
-                    <Sparkles className="w-4 h-4 mr-2" />{uiText("GIFs")}</Button>
-                </div>
-              </PopoverContent>
-            </Popover>
+            <EmojiPickerButton fieldRef={textareaRef} onInsert={setMessage} disabled={disabled || uploading}
+              className="absolute end-2 bottom-1.5 h-8 w-8">
+              {close => <>
+                <Button type="button" variant="ghost" size="sm" className="justify-start"
+                  onClick={() => { setShowStickerPicker(true); close(); }}>
+                  <Sticker className="w-4 h-4 mr-2" />{uiText("Stickers")}</Button>
+                <Button type="button" variant="ghost" size="sm" className="justify-start"
+                  onClick={() => { setShowGifPicker(true); close(); }}>
+                  <Sparkles className="w-4 h-4 mr-2" />{uiText("GIFs")}</Button>
+              </>}
+            </EmojiPickerButton>
           </div>
 
           {message.trim() ? (

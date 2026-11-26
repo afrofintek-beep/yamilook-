@@ -1,10 +1,10 @@
+import { EmojiInput } from '@/components/chat/EmojiTextField';
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { LiveMessage } from '@/hooks/useLiveStream';
@@ -86,12 +86,12 @@ export function LiveChat({ messages, onSendMessage, isHost }: LiveChatProps) {
       {/* Input */}
       <div className="p-3 border-t border-border bg-background/80 backdrop-blur-sm">
         <div className="flex gap-2">
-          <Input
+          <EmojiInput wrapperClassName="flex-1"
             value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
+            onValueChange={setNewMessage}
             onKeyDown={handleKeyDown}
             placeholder={uiText("Send a message...")}
-            className="flex-1 rounded-full bg-muted border-0"
+            className="rounded-full bg-muted border-0"
             maxLength={200}
           />
           <Button

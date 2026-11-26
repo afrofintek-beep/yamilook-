@@ -14,7 +14,7 @@ import BottomNav from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { EmojiTextarea } from '@/components/chat/EmojiTextField';
 import {
   Sheet,
   SheetContent,
@@ -351,10 +351,10 @@ export default function AcademiaHome() {
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="mentor-bio" className="text-xs">{uiText("Biografia")}</Label>
-              <Textarea
+              <EmojiTextarea
                 id="mentor-bio" maxLength={2000}
                 value={mentorBio}
-                onChange={(e) => setMentorBio(e.target.value)}
+                onValueChange={setMentorBio}
                 placeholder={uiText("Conta um pouco sobre a tua experiência...")}
                 className="rounded-xl resize-none"
                 rows={4}
@@ -364,7 +364,7 @@ export default function AcademiaHome() {
 
           <div className="space-y-2 pb-4">
             <Label htmlFor="mentor-experience">{uiText("Experiência")}</Label>
-            <Textarea id="mentor-experience" maxLength={2000} value={experience} onChange={e => setExperience(e.target.value)} placeholder={uiText("Experiência prática, formação e trabalhos realizados")} />
+            <EmojiTextarea id="mentor-experience" maxLength={2000} value={experience} onValueChange={setExperience} placeholder={uiText("Experiência prática, formação e trabalhos realizados")} />
           </div>
           <SheetFooter>
             <Button

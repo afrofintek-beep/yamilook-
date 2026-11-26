@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { EmojiTextarea } from '@/components/chat/EmojiTextField';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
@@ -330,11 +330,11 @@ export function CreateAdSheet({ open, onOpenChange, preselectedPostId }: CreateA
           </div>
           <div className="space-y-2">
             <Label htmlFor="description">{uiText("Descrição")}</Label>
-            <Textarea
+            <EmojiTextarea
               id="description"
               placeholder={uiText("Descreve a tua oferta...")}
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onValueChange={setDescription}
               rows={3}
             />
           </div>

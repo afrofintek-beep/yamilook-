@@ -2,7 +2,7 @@ import { uiText, useUiLocale, uiLocale } from '@/i18n/ui-copy';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { EmojiTextarea } from '@/components/chat/EmojiTextField';
 import { learningStatus, useLearningAction, type LearningChallenge, type LearningSubmission } from '../hooks/useAcademiaLearning';
 import { ShareValidatedWork } from './ShareValidatedWork';
 import { safeEvidenceUrl } from '../learning-evidence';
@@ -23,7 +23,7 @@ export function LearningChallengeCard({ challenge, submissions, goalId, isMentor
         {link && <a className="text-sm underline" href={link} target="_blank" rel="noopener noreferrer" referrerPolicy="no-referrer">{uiText("Abrir trabalho partilhado")}</a>}
         {s.feedback && <p className="text-sm whitespace-pre-wrap break-words"><strong>{uiText("Feedback do mentor: ")}</strong>{s.feedback}</p>}
         {active && isMentor && s.status === 'pending' && challenge.status === 'submitted' && <form aria-label={uiText("Avaliar {{value1}}", { value1: (challenge.title) ?? "" })} className="space-y-2" onSubmit={e => e.preventDefault()}>
-          <label className="block space-y-1"><span className="text-sm">{uiText("Feedback para o aluno")}</span><Textarea required minLength={3} maxLength={3000} value={feedback} onChange={e => setFeedback(e.target.value)} /></label>
+          <div className="space-y-1"><label htmlFor={`feedback-${s.id}`} className="text-sm">{uiText("Feedback para o aluno")}</label><EmojiTextarea id={`feedback-${s.id}`} required minLength={3} maxLength={3000} value={feedback} onValueChange={setFeedback} /></div>
           <div className="flex flex-wrap gap-2">{(['revision', 'approved'] as const).map(decision => <Button key={decision} type="button" variant={decision === 'approved' ? 'default' : 'outline'} disabled={save.isPending || feedback.trim().length < 3} onClick={() => save.mutate({ action: 'review', goalId, payload: { challenge_id: challenge.id, submission_id: s.id, decision, feedback: feedback.trim() } }, { onSuccess: () => setFeedback('') })}>
             {decision === 'approved' ? uiText("Validar trabalho") : uiText("Pedir revisão")}
           </Button>)}</div>
@@ -34,7 +34,7 @@ export function LearningChallengeCard({ challenge, submissions, goalId, isMentor
       e.preventDefault();
       try { await save.mutateAsync({ action: 'submit', goalId, payload: { challenge_id: challenge.id, content: content.trim(), evidence_url: url.trim() } }); setContent(''); setUrl(''); } catch { /* alert below */ }
     }}>
-      <label className="block space-y-1"><span className="text-sm">{uiText("Descreve o trabalho que realizaste")}</span><Textarea required minLength={3} maxLength={4000} value={content} onChange={e => setContent(e.target.value)} /></label>
+      <div className="space-y-1"><label htmlFor={`submission-${challenge.id}`} className="text-sm">{uiText("Descreve o trabalho que realizaste")}</label><EmojiTextarea id={`submission-${challenge.id}`} required minLength={3} maxLength={4000} value={content} onValueChange={setContent} /></div>
       <label className="block space-y-1"><span className="text-sm">{uiText("Ligação para o trabalho (opcional)")}</span><Input type="url" pattern="https://.*" maxLength={2000} placeholder="https://…" value={url} onChange={e => setUrl(e.target.value)} /></label>
       <p className="text-xs text-muted-foreground">{uiText("Podes incluir uma ligação para uma fotografia, vídeo ou documento. Confirma que o mentor tem acesso ao ficheiro.")}</p>
       <Button disabled={save.isPending || content.trim().length < 3}>{save.isPending ? uiText("A enviar…") : challenge.status === 'revision' ? uiText("Enviar nova versão") : uiText("Entregar trabalho")}</Button>

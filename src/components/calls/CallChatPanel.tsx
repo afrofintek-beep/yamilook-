@@ -1,3 +1,4 @@
+import { EmojiTextarea } from '@/components/chat/EmojiTextField';
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useEffect, useRef, useState, type RefObject } from 'react';
 import { ArrowLeft } from 'lucide-react';
@@ -133,12 +134,12 @@ export function CallChatPanel({ conversationId, contactId, open, onClose, inputR
         onSubmit={send}
         className={`flex shrink-0 items-end gap-2 border-t bg-background px-3 ${inline ? "py-2" : "pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] pt-3"}`}
       >
-        <textarea
-          ref={inputRef}
+        <EmojiTextarea wrapperClassName="flex-1"
+          fieldRef={inputRef}
           aria-label={uiText("Escrever mensagem")}
           placeholder={uiText("Mensagem…")}
           value={draft}
-          onChange={event => setDraft(event.target.value)}
+          onValueChange={setDraft}
           onKeyDown={event => {
             if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
               event.preventDefault();
@@ -148,7 +149,7 @@ export function CallChatPanel({ conversationId, contactId, open, onClose, inputR
           disabled={sending}
           enterKeyHint="send"
           rows={1}
-          className="max-h-32 min-h-11 flex-1 min-w-0 resize-none rounded-2xl border bg-background px-4 py-3 text-base"
+          className="max-h-32 min-h-11 min-w-0 resize-none rounded-2xl border bg-background px-4 py-3 text-base"
         />
         <Button type="submit" disabled={!resolvedId || sending || !draft.trim()} className="min-h-11 shrink-0">
           {sending ? uiText("A enviar…") : uiText("Enviar")}

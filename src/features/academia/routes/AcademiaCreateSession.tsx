@@ -1,3 +1,4 @@
+import { EmojiTextarea } from '@/components/chat/EmojiTextField';
 import { uiText, useUiLocale, uiLocale } from '@/i18n/ui-copy';
 import { useMyMentor } from '../hooks/useMentorGovernance';
 import { useState, useMemo } from 'react';
@@ -5,7 +6,6 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, GraduationCap, AlertTriangle, ChevronRight, Type, FileText, LayoutGrid, Coins, Calendar, Users, Crown, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -242,9 +242,9 @@ export default function AcademiaCreateSession() {
                   <p className="text-xs text-muted-foreground">{uiText("Descreve o que a banda pode esperar.")}</p>
                 </div>
                 <div className="space-y-2">
-                  <Textarea
+                  <EmojiTextarea
                     value={description}
-                    onChange={(e) => setDescription(e.target.value)}
+                    onValueChange={setDescription}
                     placeholder={uiText("Descreve o conteúdo, os objectivos e o que a malta vai aprender...")}
                     rows={5}
                     maxLength={500}

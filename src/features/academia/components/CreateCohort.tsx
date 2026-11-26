@@ -1,13 +1,14 @@
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { EmojiTextarea } from '@/components/chat/EmojiTextField';
 import { useCommunityAction, type Community } from '../hooks/useAcademiaCommunity';
 import { communityLevels } from '../community-links';
 export function CreateCohort({ community }: { community: Community }) {
   useUiLocale();
+  const fieldId = useId();
   const save = useCommunityAction(), navigate = useNavigate();
   const [title, setTitle] = useState(''), [plan, setPlan] = useState(''), [challenge, setChallenge] = useState(''), [instructions, setInstructions] = useState(''), [skill, setSkill] = useState('');
   const [capacity, setCapacity] = useState(10), [level, setLevel] = useState('beginner'), [language, setLanguage] = useState('Português'), [locality, setLocality] = useState('Online'), [requirements, setRequirements] = useState('');
@@ -19,15 +20,15 @@ export function CreateCohort({ community }: { community: Community }) {
     <p className="text-sm text-muted-foreground">{uiText("Publica o plano e o primeiro desafio. Cada aluno terá um percurso privado contigo. A entrada nesta turma é gratuita e não utiliza Kumbu.")}</p>
     <Button type="button" variant="outline" onClick={() => { setTitle(community.starter_title); setChallenge(community.starter_title); setInstructions(community.starter_instructions); setSkill(community.starter_skill); setPlan('Vamos realizar o desafio por etapas. Vou acompanhar as entregas e dar feedback para cada aluno melhorar o trabalho.'); }}>{uiText("Usar exemplo desta comunidade")}</Button>
     <label className="block space-y-1"><span>{uiText("Nome da turma")}</span><Input required minLength={6} maxLength={160} value={title} onChange={e => setTitle(e.target.value)} /></label>
-    <label className="block space-y-1"><span>{uiText("Plano de acompanhamento")}</span><Textarea required minLength={10} maxLength={4000} value={plan} onChange={e => setPlan(e.target.value)} /></label>
+    <div className="space-y-1"><label htmlFor={`${fieldId}-plan`}>{uiText("Plano de acompanhamento")}</label><EmojiTextarea id={`${fieldId}-plan`} required minLength={10} maxLength={4000} value={plan} onValueChange={setPlan} /></div>
     <label className="block space-y-1"><span>{uiText("Primeiro desafio")}</span><Input required minLength={3} maxLength={160} value={challenge} onChange={e => setChallenge(e.target.value)} /></label>
-    <label className="block space-y-1"><span>{uiText("O que entregar e como será avaliado")}</span><Textarea required minLength={3} maxLength={3000} value={instructions} onChange={e => setInstructions(e.target.value)} /></label>
+    <div className="space-y-1"><label htmlFor={`${fieldId}-instructions`}>{uiText("O que entregar e como será avaliado")}</label><EmojiTextarea id={`${fieldId}-instructions`} required minLength={3} maxLength={3000} value={instructions} onValueChange={setInstructions} /></div>
     <label className="block space-y-1"><span>{uiText("Competência trabalhada")}</span><Input required minLength={3} maxLength={100} value={skill} onChange={e => setSkill(e.target.value)} /></label>
     <label className="block space-y-1"><span>{uiText("Vagas de entrada")}</span><select className="w-full rounded-md border bg-background p-3" value={capacity} onChange={e => setCapacity(Number(e.target.value))}>{[5,10,15,20].map(n => <option key={n}>{n}</option>)}</select></label>
     <label className="block space-y-1"><span>{uiText("Para quem é a turma")}</span><select className="w-full rounded-md border bg-background p-3" value={level} onChange={e => setLevel(e.target.value)}>{Object.entries(communityLevels).map(([id,label]) => <option key={id} value={id}>{label}</option>)}</select></label>
     <label className="block space-y-1"><span>{uiText("Língua de acompanhamento")}</span><Input required minLength={2} maxLength={60} value={language} onChange={e => setLanguage(e.target.value)} /></label>
     <label className="block space-y-1"><span>{uiText("Localidade ou online")}</span><Input required minLength={2} maxLength={100} value={locality} onChange={e => setLocality(e.target.value)} /></label>
-    <label className="block space-y-1"><span>{uiText("Material, ferramentas e condições necessárias")}</span><Textarea maxLength={1000} value={requirements} onChange={e => setRequirements(e.target.value)} placeholder={uiText("Ex.: telemóvel e papel. Explica eventuais materiais necessários.")} /></label>
+    <div className="space-y-1"><label htmlFor={`${fieldId}-requirements`}>{uiText("Material, ferramentas e condições necessárias")}</label><EmojiTextarea id={`${fieldId}-requirements`} maxLength={1000} value={requirements} onValueChange={setRequirements} placeholder={uiText("Ex.: telemóvel e papel. Explica eventuais materiais necessários.")} /></div>
     {save.error && <p role="alert" className="text-destructive">{save.error.message}</p>}
     <Button disabled={save.isPending}>{save.isPending ? uiText("A abrir…") : uiText("Publicar turma gratuita")}</Button>
   </form>;

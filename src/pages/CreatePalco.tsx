@@ -1,3 +1,4 @@
+import { EmojiTextarea } from '@/components/chat/EmojiTextField';
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
@@ -32,7 +33,6 @@ import YamilookLogo from '@/components/brand/YamilookLogo';
 import { ImageCropDialog } from '@/components/settings/ImageCropDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useCreatePalco, useUpdatePalco, usePalco, useCreateRoda } from '@/hooks/usePalco';
@@ -592,10 +592,10 @@ export default function CreatePalco() {
             {/* Description */}
             <div className="space-y-2">
               <Label className="text-palco-text">{uiText("Descrição")}</Label>
-              <Textarea
+              <EmojiTextarea
                 placeholder={uiText("Descreva o que as pessoas vão aprender...")}
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onValueChange={setDescription}
                 className="bg-palco-surface border-palco-border resize-none"
                 rows={4}
               />

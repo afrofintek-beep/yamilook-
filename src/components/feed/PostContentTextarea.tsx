@@ -1,10 +1,13 @@
-import { useLayoutEffect, useRef } from 'react';
+import { useLayoutEffect, useRef, type RefObject } from 'react';
 import { Textarea, type TextareaProps } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 
 /** Scroll the editor as a whole instead of trapping long text in a small box. */
-export function PostContentTextarea({ className, value, ...props }: TextareaProps) {
-  const ref = useRef<HTMLTextAreaElement>(null);
+export function PostContentTextarea({ className, value, fieldRef, ...props }: TextareaProps & {
+  fieldRef?: RefObject<HTMLTextAreaElement>;
+}) {
+  const localRef = useRef<HTMLTextAreaElement>(null);
+  const ref = fieldRef ?? localRef;
 
   useLayoutEffect(() => {
     const field = ref.current;
@@ -22,7 +25,7 @@ export function PostContentTextarea({ className, value, ...props }: TextareaProp
     });
     observer.observe(field);
     return () => observer.disconnect();
-  }, [value]);
+  }, [ref, value]);
 
   return <Textarea {...props} ref={ref} value={value} className={cn('resize-none overflow-hidden text-base leading-relaxed', className)} />;
 }

@@ -1,11 +1,11 @@
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Target } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { EmojiTextarea } from '@/components/chat/EmojiTextField';
 import { useAcademiaMentors } from '../hooks/useAcademia';
 import { learningStatus, useLearningAction, useLearningGoals } from '../hooks/useAcademiaLearning';
 
@@ -14,6 +14,7 @@ export default function AcademiaLearning() {
   const navigate = useNavigate(); const { user } = useAuth();
   const goals = useLearningGoals(); const mentors = useAcademiaMentors(); const create = useLearningAction();
   const [showForm, setShowForm] = useState(false); const [scope, setScope] = useState('learner');
+  const contextId = useId();
   const [title, setTitle] = useState(''); const [context, setContext] = useState(''); const [mentor, setMentor] = useState('');
   const available = (mentors.data || []).filter(m => m.id !== user?.id);
   const visible = (goals.data || []).filter(g => scope === 'learner' ? g.learner_id === user?.id : g.mentor_id === user?.id);
@@ -34,7 +35,7 @@ export default function AcademiaLearning() {
       }}>
         <Button type="button" variant="outline" onClick={() => { setTitle('Da ideia à primeira venda'); setContext('Quero preparar a minha oferta, calcular o preço e apresentar o meu produto ou serviço.'); }}>{uiText("Usar exemplo: primeira venda")}</Button>
         <label className="block space-y-1"><span>{uiText("Quero conseguir…")}</span><Input required minLength={6} maxLength={160} value={title} onChange={e => setTitle(e.target.value)} placeholder={uiText("Ex.: preparar o catálogo do meu negócio")} /></label>
-        <label className="block space-y-1"><span>{uiText("Conta ao mentor o teu ponto de partida")}</span><Textarea maxLength={2000} value={context} onChange={e => setContext(e.target.value)} /></label>
+        <div className="space-y-1"><label htmlFor={contextId}>{uiText("Conta ao mentor o teu ponto de partida")}</label><EmojiTextarea id={contextId} maxLength={2000} value={context} onValueChange={setContext} /></div>
         <label className="block space-y-1"><span>{uiText("Escolher mentor")}</span><select required value={mentor} onChange={e => setMentor(e.target.value)} className="w-full rounded-md border bg-background p-3">
           <option value="">{uiText("Seleciona um mentor")}</option>{available.map(m => <option key={m.id} value={m.id}>{m.name} — {m.specialty}</option>)}
         </select></label>

@@ -1,3 +1,4 @@
+import { EmojiTextarea } from '@/components/chat/EmojiTextField';
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState } from 'react';
 import {
@@ -9,7 +10,6 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { Star } from 'lucide-react';
 import { ACADEMIA_COPY } from '../copy';
 
@@ -49,9 +49,9 @@ export function ReviewModal({ open, onOpenChange, onSubmit }: ReviewModalProps) 
           ))}
         </div>
 
-        <Textarea
+        <EmojiTextarea
           value={comment}
-          onChange={(e) => setComment(e.target.value)}
+          onValueChange={setComment}
           placeholder={uiText("Deixa um comentário (opcional)")}
           rows={3}
           className="resize-none"

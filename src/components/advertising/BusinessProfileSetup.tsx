@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { EmojiTextarea } from '@/components/chat/EmojiTextField';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -276,11 +276,11 @@ export function BusinessProfileEditor({ open, onOpenChange, onComplete, advertis
 
         <div className="space-y-2">
           <Label htmlFor="description">{uiText("O que faz o seu negócio?")}</Label>
-          <Textarea
+          <EmojiTextarea
             id="description"
             placeholder={uiText("Descreva o seu negócio em poucas palavras...")}
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onValueChange={setDescription}
             rows={3}
           />
         </div>

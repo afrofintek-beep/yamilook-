@@ -47,7 +47,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { EmojiTextarea } from '@/components/chat/EmojiTextField';
 import { Label } from '@/components/ui/label';
 import { VozesPanel } from '@/components/palco/VozesPanel';
 import { useCurrencyRates } from '@/hooks/useCurrencyRates';
@@ -332,11 +332,12 @@ export default function PalcoManage() {
             </div>
             <div>
               <Label className="text-palco-text">{uiText("Descrição ")}<span className="text-red-500">*</span></Label>
-              <Textarea
+              <EmojiTextarea
+                wrapperClassName="mt-2"
                 placeholder={uiText("Descreva o que as pessoas vão aprender...")}
                 value={newRodaDescription}
-                onChange={(e) => setNewRodaDescription(e.target.value)}
-                className="bg-palco-bg border-palco-border text-palco-text mt-2 min-h-[100px]"
+                onValueChange={setNewRodaDescription}
+                className="bg-palco-bg border-palco-border text-palco-text min-h-[100px]"
                 maxLength={500}
               />
               <p className={cn(

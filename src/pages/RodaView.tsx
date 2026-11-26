@@ -1,3 +1,4 @@
+import { EmojiTextarea } from '@/components/chat/EmojiTextField';
 import { uiText, useUiLocale, uiLocale } from '@/i18n/ui-copy';
 import { useState, useEffect, forwardRef, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -22,7 +23,6 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Textarea } from '@/components/ui/textarea';
 import { useRoda, useJoinRoda, useSubmitVoz, usePalco, useStartQA, useVozes, useConfirmVozPayment, useMarkVozAnswered } from '@/hooks/usePalco';
 import { useRodaStream } from '@/hooks/useRodaStream';
 import { useAuth } from '@/hooks/useAuth';
@@ -616,10 +616,10 @@ const RodaView = forwardRef<HTMLDivElement>((_, ref) => {
           {palco?.allow_custom_voice_text && (
             <div className="mb-6">
               <label className="text-sm font-medium text-palco-text mb-2 block">{uiText("Sua pergunta (opcional)")}</label>
-              <Textarea
+              <EmojiTextarea
                 placeholder={uiText("Escreva sua pergunta aqui...")}
                 value={customText}
-                onChange={(e) => setCustomText(e.target.value)}
+                onValueChange={setCustomText}
                 className="bg-palco-bg border-palco-border resize-none"
                 rows={3}
               />

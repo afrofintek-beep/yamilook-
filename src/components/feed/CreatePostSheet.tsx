@@ -12,10 +12,10 @@ import {
   Users,
   Circle,
   Lock,
-  Smile,
   Scissors,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { EmojiPickerButton } from '@/components/chat/EmojiPickerButton';
 import { PostContentTextarea } from './PostContentTextarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -31,17 +31,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { usePosts } from '@/hooks/usePosts';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { AFRICAN_REACTIONS } from '@/lib/reactions';
 import { TopicSelector } from './TopicSelector';
 import { VideoEditor } from './VideoEditor';
 import { supabase } from '@/integrations/supabase/client';
@@ -60,24 +53,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-
-// African-inspired emoji set for Yamilook
-const AFRICAN_EMOJIS = [
-  // Yamilook Core Reactions
-  ...AFRICAN_REACTIONS.map(r => r.icon),
-  // African & Cultural Symbols
-  '🌍', '🦁', '🐘', '🦒', '🦓', '🦍', '🐆', '🦏',
-  '🌴', '🥁', '🎭', '✊🏿', '✊🏾', '✊🏽', '👑', '💎',
-  '🔥', '⚡', '🌟', '✨', '💫', '🌙', '☀️', '🌈',
-  // Hands & People (diverse skin tones)
-  '👏🏿', '👏🏾', '🙏🏿', '🙏🏾', '💪🏿', '💪🏾', '🙌🏿', '🙌🏾',
-  '👍🏿', '👍🏾', '❤️', '🧡', '💛', '💚', '💙', '💜',
-  // Expressions
-  '😊', '😄', '🥰', '😍', '🤩', '😎', '🥳', '😌',
-  '🤔', '😏', '😤', '😢', '😭', '🙄', '😴', '🤗',
-  // Food & Nature
-  '🍉', '🥭', '🍌', '🥥', '🌺', '🌻', '🌸', '🍀',
-];
 
 interface CreatePostSheetProps {
   open: boolean;
@@ -119,7 +94,7 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
     previewUrlsRef.current.forEach(url => URL.revokeObjectURL(url));
     previewUrlsRef.current = [];
   }, []);
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const contentRef = useRef<HTMLTextAreaElement>(null);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   const [editingVideoIndex, setEditingVideoIndex] = useState<number | null>(null);
@@ -251,11 +226,6 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
         maximumAge: 0,
       }
     );
-  };
-
-  const handleEmojiSelect = (emoji: string) => {
-    setContent(prev => prev + emoji);
-    setShowEmojiPicker(false);
   };
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -566,6 +536,7 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
 
             {/* Content input */}
             <PostContentTextarea
+              fieldRef={contentRef}
               aria-label={t('feed.postText')}
               placeholder={t('feed.createPlaceholder', 'O que se passa na tua banda?')}
               value={content}
@@ -694,32 +665,7 @@ export function CreatePostSheet({ open, onOpenChange }: CreatePostSheetProps) {
                 <MapPin className="w-5 h-5 text-red-500" />
               )}
             </Button>
-            <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
-              <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Smile className="w-5 h-5 text-yellow-500" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent
-                className="w-72 p-2 bg-card border border-border z-[100]"
-                side="top"
-                align="start"
-              >
-                <ScrollArea className="h-48">
-                  <div className="grid grid-cols-8 gap-1">
-                    {AFRICAN_EMOJIS.map((emoji, index) => (
-                      <button
-                        key={index}
-                        className="w-8 h-8 flex items-center justify-center text-xl hover:bg-muted rounded transition-colors"
-                        onClick={() => handleEmojiSelect(emoji)}
-                      >
-                        {emoji}
-                      </button>
-                    ))}
-                  </div>
-                </ScrollArea>
-              </PopoverContent>
-            </Popover>
+            <EmojiPickerButton fieldRef={contentRef} onInsert={setContent} align="start" />
 
             <input
               ref={fileInputRef}

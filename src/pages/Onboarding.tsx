@@ -1,3 +1,4 @@
+import { EmojiTextarea } from '@/components/chat/EmojiTextField';
 import { useBusinessRegistrationAccess } from '@/hooks/useBusinessRegistrationAccess';
 import { createSignupOnboarding, recoverSignupOnboarding, resumeOnboardingStep } from '@/lib/signup-onboarding';
 import { legalLabel } from '@/i18n/legal-labels';
@@ -981,7 +982,7 @@ export default function Onboarding() {
               </label>
               <label className="block space-y-2">
                 <span>{t('onboardingFlow.firstPost')}</span>
-                <Textarea value={firstPost} onChange={e => setFirstPost(e.target.value)} maxLength={2000} disabled={isRegistering} placeholder={t('onboardingFlow.firstPostHint')} />
+                <EmojiTextarea value={firstPost} onValueChange={setFirstPost} maxLength={2000} disabled={isRegistering} placeholder={t('onboardingFlow.firstPostHint')} />
               </label>
               <label className="block space-y-2">
                 <span>{t('onboardingFlow.postAudience')}</span>

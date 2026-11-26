@@ -15,7 +15,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { EmojiTextarea } from '@/components/chat/EmojiTextField';
 import { Label } from '@/components/ui/label';
 import {
   Sheet,
@@ -451,11 +451,12 @@ export function CreateRitmoSheet({ open, onOpenChange }: CreateRitmoSheetProps) 
                       {caption.length}/{MAX_CAPTION_LENGTH}
                     </span>
                   </Label>
-                  <Textarea
+                  <EmojiTextarea
                     id="caption"
                     placeholder={uiText("What's happening? 🪘")}
                     value={caption}
-                    onChange={(e) => setCaption(e.target.value.slice(0, MAX_CAPTION_LENGTH))}
+                    maxLength={MAX_CAPTION_LENGTH}
+                    onValueChange={setCaption}
                     className="resize-none rounded-xl"
                     rows={2}
                   />

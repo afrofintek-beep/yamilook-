@@ -1,8 +1,8 @@
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useState, useRef, useEffect } from 'react';
-import { Send, Paperclip, Smile, Mic } from 'lucide-react';
+import { Send, Paperclip, Mic } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
+import { EmojiTextarea } from './EmojiTextField';
 
 interface ChatInputProps {
   onSend: (content: string) => Promise<void>;
@@ -52,8 +52,8 @@ export function ChatInput({ onSend, onTyping, disabled }: ChatInputProps) {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setMessage(e.target.value);
+  const handleChange = (value: string) => {
+    setMessage(value);
     onTyping();
   };
 
@@ -69,26 +69,17 @@ export function ChatInput({ onSend, onTyping, disabled }: ChatInputProps) {
           <Paperclip className="w-5 h-5" />
         </Button>
 
-        <div className="flex-1 relative">
-          <Textarea
-            ref={textareaRef}
-            value={message}
-            onChange={handleChange}
-            onKeyDown={handleKeyDown}
-            placeholder={uiText("Type a message...")}
-            className="min-h-[44px] max-h-[120px] py-3 pr-12 rounded-2xl resize-none bg-secondary/50 border-0 focus-visible:ring-1 focus-visible:ring-primary/50"
-            disabled={disabled}
-            rows={1}
-          />
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute right-2 bottom-1.5 h-8 w-8 rounded-full"
-            disabled={disabled}
-          >
-            <Smile className="w-5 h-5 text-muted-foreground" />
-          </Button>
-        </div>
+        <EmojiTextarea
+          wrapperClassName="flex-1"
+          fieldRef={textareaRef}
+          value={message}
+          onValueChange={handleChange}
+          onKeyDown={handleKeyDown}
+          placeholder={uiText("Type a message...")}
+          className="min-h-[44px] max-h-[120px] py-3 rounded-2xl resize-none bg-secondary/50 border-0 focus-visible:ring-1 focus-visible:ring-primary/50"
+          disabled={disabled}
+          rows={1}
+        />
 
         {message.trim() ? (
           <Button

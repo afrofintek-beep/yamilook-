@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { EmojiTextarea } from '@/components/chat/EmojiTextField';
+import { useEffect, useId, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { createChatConversation } from '@/lib/chat-conversations';
 import { uploadPrivateChatFile } from '@/lib/private-chat-media';
@@ -52,6 +53,7 @@ export function Farewell({source,grants,reload,disabled}:Props){
   async function attach(file?:File){
     setBusy(true);try{setMedia(await cardPhoto(file));setStatus('')}catch{setStatus('Não foi possível abrir a imagem. Escolhe outra fotografia.')}finally{setBusy(false)}
   }
+  const messageId = useId();
   const guests=batch?pending.filter(p=>p.batch===batch):grants.filter(g=>selected.includes(g.id));
   async function finish(later:boolean){
     if(busy || !guests.length || (!later && !note.trim())) return;
@@ -86,7 +88,11 @@ export function Farewell({source,grants,reload,disabled}:Props){
       <legend>{preview?'Pré-visualização':batch?'Preparar recordação':'Encerrar partilha'}</legend>
       {!preview&&<>
         <label className="grid gap-1">Ocasião <select className="locaccess-select bg-background text-foreground" value={occasion} onChange={e=>{const key=e.target.value as keyof typeof suggestions;setOccasion(key);setNote(suggestions[key])}}>{Object.keys(suggestions).map(s=><option key={s}>{s}</option>)}</select></label>
-        <label className="grid">Mensagem<textarea className="min-h-28 rounded border bg-background p-3 text-base text-foreground" rows={4} maxLength={2000} value={note} onChange={e=>setNote(e.target.value)}/></label>
+        <div className="grid gap-1">
+          <label htmlFor={messageId}>Mensagem</label>
+          <EmojiTextarea id={messageId} className="min-h-28 rounded border bg-background text-base"
+            rows={4} maxLength={2000} value={note} onValueChange={setNote} disabled={busy || disabled} />
+        </div>
         <details><summary>Juntar cartão ou fotografia</summary><div className="grid gap-2 py-2">
           <Button variant="outline" onClick={()=>void attach()}>Usar cartão de agradecimento</Button>
           <label>Escolher fotografia <input type="file" accept="image/*" onChange={e=>{const file=e.target.files?.[0];if(file)void attach(file)}}/></label>

@@ -1,3 +1,4 @@
+import { EmojiInput, EmojiTextarea } from '@/components/chat/EmojiTextField';
 import { uiText, useUiLocale } from '@/i18n/ui-copy';
 import { useAuth } from '@/hooks/useAuth';
 import { genderCtx } from '@/lib/i18n-gender';
@@ -20,8 +21,6 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import {
   Sheet,
@@ -255,9 +254,9 @@ export function CreateStatusSheet({ open, onOpenChange }: CreateStatusSheetProps
                 className="flex-1 flex items-center justify-center p-8 relative"
                 style={{ background: selectedBackground }}
               >
-                <Textarea
+                <EmojiTextarea wrapperClassName="w-full"
                   value={textContent}
-                  onChange={(e) => setTextContent(e.target.value)}
+                  onValueChange={setTextContent}
                   placeholder={t('status.typeStatus')}
                   className="bg-transparent border-none text-white text-2xl font-bold text-center resize-none focus-visible:ring-0 placeholder:text-white/50"
                   rows={4}
@@ -384,10 +383,10 @@ export function CreateStatusSheet({ open, onOpenChange }: CreateStatusSheetProps
 
               {/* Caption & settings - fixed at bottom */}
               <div className="max-h-[45%] shrink-0 overflow-y-auto p-4 border-t bg-background space-y-3">
-                <Input
+                <EmojiInput
                   placeholder={t('status.addCaption')}
                   value={caption}
-                  onChange={(e) => setCaption(e.target.value)}
+                  onValueChange={setCaption}
                   className="rounded-xl"
                 />
 
